@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int                 @id @default(autoincrement())
+  email           String              @unique
+  name            String
+  role            String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  coachedAthletes AthleteProfile[]    @relation("CoachAthletes")
+  athleteProfile  AthleteProfile?
+  templates       SessionTemplate[]
+  completions     SessionCompletion[]
+}
+
+model AthleteProfile {
+  id         Int          @id @default(autoincrement())
+  userId     Int          @unique
+  coachId    Int
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coach      User         @relation("CoachAthletes", fields: [coachId], references: [id], onDelete: Cascade)
+  planWeeks  PlanWeek[]
+}
+
+model PlanWeek {
+  id         Int              @id @default(autoincrement())
+  athleteId  Int
+  weekStart  DateTime
+  weeklyNote String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  athlete    AthleteProfile   @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  sessions   PlannedSession[]
+
+  @@unique([athleteId, weekStart])
+}
+
+model PlannedSession {
+  id               Int                 @id @default(autoincrement())
+  planWeekId       Int
+  scheduledDate    DateTime
+  sportType        String
+  title            String
+  summary          String?
+  durationMinutes  Int?
+  distanceKm       Float?
+  intensity        String?
+  sortOrder        Int                 @default(0)
+  sourceTemplateId Int?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  planWeek         PlanWeek            @relation(fields: [planWeekId], references: [id], onDelete: Cascade)
+  sourceTemplate   SessionTemplate?    @relation(fields: [sourceTemplateId], references: [id], onDelete: SetNull)
+  blocks           SessionBlock[]
+  completion       SessionCompletion?
+
+  @@index([planWeekId, scheduledDate])
+}
+
+model SessionBlock {
+  id           Int              @id @default(autoincrement())
+  sessionId     Int
+  blockType     String
+  title         String
+  instructions  String?
+  sortOrder     Int              @default(0)
+  session       PlannedSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, sortOrder])
+}
+
+model SessionTemplate {
+  id         Int                    @id @default(autoincrement())
+  coachId    Int
+  sportType  String
+  name       String
+  summary    String?
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+  coach      User                   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  sessions   PlannedSession[]
+  blocks     SessionTemplateBlock[]
+}
+
+model SessionTemplateBlock {
+  id           Int               @id @default(autoincrement())
+  templateId    Int
+  blockType     String
+  title         String
+  instructions  String?
+  sortOrder     Int               @default(0)
+  template      SessionTemplate   @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId, sortOrder])
+}
+
+model SessionCompletion {
+  id           Int              @id @default(autoincrement())
+  sessionId     Int              @unique
+  athleteId     Int
+  isDone        Boolean          @default(false)
+  completedAt   DateTime?
+  notes         String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  session       PlannedSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  athlete       User             @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  @@index([athleteId])
+}
