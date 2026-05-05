@@ -55,6 +55,14 @@ select {
   font: inherit;
 }
 
+@layer base {
+  button,
+  a,
+  [role="button"] {
+    cursor: pointer;
+  }
+}
+
 ::selection {
   background: rgba(90, 124, 255, 0.35);
 }
