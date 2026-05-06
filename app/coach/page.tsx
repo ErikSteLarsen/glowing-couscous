@@ -1,14 +1,20 @@
 import { format } from 'date-fns';
+import { redirect } from 'next/navigation';
 import { ActionLink, Badge, EmptyState, PageShell, StatTile, Surface, TopBar } from '@/components/ui';
+import { getCurrentUser } from '@/lib/auth-session';
 import { getCoachOverview } from '@/lib/demo-data';
+import { CoachRequestsPanel } from '@/components/CoachRequestsPanel';
 
 export default async function CoachPage() {
-  const coach = await getCoachOverview();
+  const user = await getCurrentUser();
+  if (!user || user.role !== 'COACH') redirect('/login');
+
+  const coach = await getCoachOverview(user.id);
 
   if (!coach) {
     return (
       <PageShell>
-        <EmptyState title="No coach data found" description="Seed the database to load the demo coach dashboard." />
+        <EmptyState title="No data found" description="Something went wrong loading your dashboard." />
       </PageShell>
     );
   }
@@ -33,15 +39,8 @@ export default async function CoachPage() {
       <TopBar
         eyebrow="Coach dashboard"
         title={coach.name}
-        description="Athlete list and upcoming week status. This is the planning hub for the MVP coach workflow."
-        actions={
-          <>
-            <ActionLink href="/coach/templates">Templates</ActionLink>
-            <ActionLink href="/" tone="secondary">
-              Switch role
-            </ActionLink>
-          </>
-        }
+        description="Athlete list and upcoming week status."
+        actions={<ActionLink href="/coach/templates">Templates</ActionLink>}
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -57,6 +56,8 @@ export default async function CoachPage() {
           detail="4 or more sessions scheduled"
         />
       </div>
+
+      <CoachRequestsPanel />
 
       <Surface>
         <div className="flex items-center justify-between gap-4">
@@ -84,7 +85,6 @@ export default async function CoachPage() {
                   </p>
                   {row.weeklyNote ? <p className="max-w-2xl text-sm text-slate-300">{row.weeklyNote}</p> : null}
                 </div>
-
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="rounded-2xl border border-white/10 bg-black/10 px-4 py-3 text-center">
                     <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Sessions</p>

@@ -11,9 +11,9 @@ export const sportLabels = {
   REST: 'Rest',
 } as const;
 
-export async function getCoachOverview() {
-  const coach = await prisma.user.findFirst({
-    where: { role: 'COACH' },
+export async function getCoachOverview(coachId: number) {
+  const coach = await prisma.user.findUnique({
+    where: { id: coachId },
     include: {
       coachedAthletes: {
         include: {
@@ -38,13 +38,8 @@ export async function getCoachOverview() {
   return coach;
 }
 
-export async function getCoachTemplates() {
-  const coach = await prisma.user.findFirst({ where: { role: 'COACH' } });
-  if (!coach) {
-    return [];
-  }
-
-  return templateService.listForCoach(coach.id);
+export async function getCoachTemplates(coachId: number) {
+  return templateService.listForCoach(coachId);
 }
 
 export function getWeekDays(baseDate: Date) {

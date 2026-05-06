@@ -1,11 +1,14 @@
+import { redirect } from 'next/navigation';
 import { PageShell, TopBar } from '@/components/ui';
-import { getCurrentCoach } from '@/lib/demo-session';
-import { templateService } from '@/lib/template-service';
+import { getCurrentUser } from '@/lib/auth-session';
+import { getCoachTemplates } from '@/lib/demo-data';
 import { CoachTemplatesClient } from './CoachTemplatesClient';
 
 export default async function CoachTemplatesPage() {
-  const coach = await getCurrentCoach();
-  const templates = coach ? await templateService.listForCoach(coach.id) : [];
+  const user = await getCurrentUser();
+  if (!user || user.role !== 'COACH') redirect('/login');
+
+  const templates = await getCoachTemplates(user.id);
 
   return (
     <PageShell>
