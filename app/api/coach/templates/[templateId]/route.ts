@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentCoach } from '@/lib/demo-session';
+import { requireCoach } from '@/lib/api-auth';
 import { templateService } from '@/lib/template-service';
 
 export async function PATCH(
@@ -7,14 +7,12 @@ export async function PATCH(
   { params }: { params: Promise<{ templateId: string }> },
 ) {
   try {
-    const coach = await getCurrentCoach();
-    if (!coach) {
-      return NextResponse.json({ error: 'Coach not found' }, { status: 404 });
-    }
+    const { user, error } = await requireCoach();
+    if (error) return error;
 
     const { templateId } = await params;
     const body = await request.json();
-    const result = await templateService.saveForCoach(coach.id, body, Number(templateId));
+    const result = await templateService.saveForCoach(user.id, body, Number(templateId));
 
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: 400 });
@@ -32,13 +30,11 @@ export async function DELETE(
   { params }: { params: Promise<{ templateId: string }> },
 ) {
   try {
-    const coach = await getCurrentCoach();
-    if (!coach) {
-      return NextResponse.json({ error: 'Coach not found' }, { status: 404 });
-    }
+    const { user, error } = await requireCoach();
+    if (error) return error;
 
     const { templateId } = await params;
-    const result = await templateService.deleteForCoach(coach.id, Number(templateId));
+    const result = await templateService.deleteForCoach(user.id, Number(templateId));
 
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: 404 });

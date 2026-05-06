@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentCoach } from '@/lib/demo-session';
+import { requireCoach } from '@/lib/api-auth';
 import { templateService } from '@/lib/template-service';
 
 export async function POST(request: NextRequest) {
   try {
-    const coach = await getCurrentCoach();
-    if (!coach) {
-      return NextResponse.json({ error: 'Coach not found' }, { status: 404 });
-    }
+    const { user, error } = await requireCoach();
+    if (error) return error;
 
     const body = await request.json();
-    const result = await templateService.saveForCoach(coach.id, body);
+    const result = await templateService.saveForCoach(user.id, body);
 
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: 400 });

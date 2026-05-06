@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { plannerService } from '@/lib/planner-service';
 import { prisma } from '@/lib/prisma';
+import { requireCoach } from '@/lib/api-auth';
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> },
 ) {
   try {
+    const { error } = await requireCoach();
+    if (error) return error;
+
     const { sessionId } = await params;
     const body = await request.json();
     const session = await prisma.plannedSession.findUnique({
@@ -39,6 +43,9 @@ export async function DELETE(
   { params }: { params: Promise<{ sessionId: string }> },
 ) {
   try {
+    const { error } = await requireCoach();
+    if (error) return error;
+
     const { sessionId } = await params;
     const session = await prisma.plannedSession.findUnique({
       where: { id: Number(sessionId) },
