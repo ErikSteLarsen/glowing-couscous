@@ -1,11 +1,16 @@
 const { PrismaClient } = require('@prisma/client');
 const { startOfWeek, addDays, addHours } = require('date-fns');
+const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
 const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
 
 async function main() {
+  const passwordHash = await bcrypt.hash('demo1234', 12);
+
+  await prisma.coachRequest.deleteMany();
+  await prisma.account.deleteMany();
   await prisma.sessionCompletion.deleteMany();
   await prisma.sessionBlock.deleteMany();
   await prisma.plannedSession.deleteMany();
@@ -20,23 +25,16 @@ async function main() {
       email: 'coach@demo.local',
       name: 'Coach Ingrid',
       role: 'COACH',
+      passwordHash,
     },
   });
 
   const [athleteOneUser, athleteTwoUser] = await Promise.all([
     prisma.user.create({
-      data: {
-        email: 'maria@demo.local',
-        name: 'Maria Solberg',
-        role: 'ATHLETE',
-      },
+      data: { email: 'maria@demo.local', name: 'Maria Solberg', role: 'ATHLETE', passwordHash },
     }),
     prisma.user.create({
-      data: {
-        email: 'anders@demo.local',
-        name: 'Anders Vik',
-        role: 'ATHLETE',
-      },
+      data: { email: 'anders@demo.local', name: 'Anders Vik', role: 'ATHLETE', passwordHash },
     }),
   ]);
 
