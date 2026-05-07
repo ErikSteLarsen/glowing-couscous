@@ -48,8 +48,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      session.user.id = token.userId as number;
-      session.user.role = token.role as string | null;
+      // Cast through unknown to reconcile next-auth's base string id type with our numeric id
+      (session.user as unknown as { id: number }).id = token.userId as number;
+      (session.user as unknown as { role: string | null }).role = token.role as string | null;
       return session;
     },
   },

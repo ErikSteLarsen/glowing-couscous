@@ -12,21 +12,22 @@ export function CoachRequestsPanel() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/coach/requests')
+    const controller = new AbortController();
+    fetch('/api/coach/requests', { signal: controller.signal })
       .then((r) => r.json())
-      .then((data) => {
-        setRequests(data.requests ?? []);
-        setLoading(false);
-      });
+      .then((data) => setRequests(data.requests ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+    return () => controller.abort();
   }, []);
 
   async function handleAction(requestId: number, action: 'accept' | 'reject') {
-    await fetch(`/api/coach/requests/${requestId}`, {
+    const res = await fetch(`/api/coach/requests/${requestId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action }),
     });
-    setRequests((prev) => prev.filter((r) => r.id !== requestId));
+    if (res.ok) setRequests((prev) => prev.filter((r) => r.id !== requestId));
   }
 
   if (loading || requests.length === 0) return null;

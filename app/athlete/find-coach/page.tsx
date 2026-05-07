@@ -7,7 +7,7 @@ type CoachResult = { id: number; name: string; email: string };
 export default function FindCoachPage() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<CoachResult[]>([]);
-  const [searched, setSearched] = useState(false);
+  const [lastSubmittedQuery, setLastSubmittedQuery] = useState('');
   const [requested, setRequested] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
 
@@ -18,7 +18,7 @@ export default function FindCoachPage() {
     const res = await fetch(`/api/coaches?q=${encodeURIComponent(query)}`);
     const data = await res.json();
     setResults(data.coaches ?? []);
-    setSearched(true);
+    setLastSubmittedQuery(query);
     setLoading(false);
   }
 
@@ -81,8 +81,8 @@ export default function FindCoachPage() {
           </div>
         )}
 
-        {searched && results.length === 0 && !loading && (
-          <p className="mt-4 text-sm text-slate-400">No coaches found for &ldquo;{query}&rdquo;.</p>
+        {lastSubmittedQuery && results.length === 0 && !loading && (
+          <p className="mt-4 text-sm text-slate-400">No coaches found for &ldquo;{lastSubmittedQuery}&rdquo;.</p>
         )}
       </Surface>
     </PageShell>

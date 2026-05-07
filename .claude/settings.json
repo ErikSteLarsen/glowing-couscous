@@ -2,6 +2,7 @@
   "permissions": {
     "allow": [
       "Bash(pnpm dev)",
+      "Bash(pnpm lint *)",
       "Bash(git *)"
     ]
   }

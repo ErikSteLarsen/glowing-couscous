@@ -18,14 +18,17 @@ export async function PATCH(
   }
 
   if (action === 'accept') {
-    const existing = await prisma.athleteProfile.findUnique({ where: { userId: request.athleteId } });
-    if (existing) {
-      return NextResponse.json({ error: 'Athlete already has a coach' }, { status: 409 });
+    try {
+      await prisma.$transaction([
+        prisma.coachRequest.update({ where: { id: request.id }, data: { status: 'ACCEPTED' } }),
+        prisma.athleteProfile.create({ data: { userId: request.athleteId, coachId: user.id } }),
+      ]);
+    } catch (e: unknown) {
+      if ((e as { code?: string }).code === 'P2002') {
+        return NextResponse.json({ error: 'Athlete already has a coach' }, { status: 409 });
+      }
+      throw e;
     }
-    await prisma.$transaction([
-      prisma.coachRequest.update({ where: { id: request.id }, data: { status: 'ACCEPTED' } }),
-      prisma.athleteProfile.create({ data: { userId: request.athleteId, coachId: user.id } }),
-    ]);
   } else if (action === 'reject') {
     await prisma.coachRequest.update({ where: { id: request.id }, data: { status: 'REJECTED' } });
   } else {
