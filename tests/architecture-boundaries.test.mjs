@@ -84,6 +84,16 @@ test('athlete onboarding surfaces request state in profile and coach-search UI',
   assert.match(routeSource, /Request already pending/);
 });
 
+test('athlete week view exposes a current-week shortcut and smarter default day selection', async () => {
+  const athletePageSource = await read('app/athlete/page.tsx');
+  const weekViewSource = await read('components/AthleteWeekView.tsx');
+
+  assert.match(athletePageSource, /This week/);
+  assert.match(athletePageSource, /Viewed week|Week of/);
+  assert.match(weekViewSource, /findIndex\(\(day\) => day\.sessions\.length > 0\)/);
+  assert.match(weekViewSource, /useState\(initialSelectedIndex\)/);
+});
+
 test('package scripts include the architecture test command', async () => {
   const packageJson = await read('package.json');
 

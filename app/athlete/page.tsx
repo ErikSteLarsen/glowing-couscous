@@ -17,8 +17,11 @@ export default async function AthletePage({
 
   const { weekStart: weekStartParam } = await searchParams;
   const fallbackWeekStart = resolveWeekStartDate(weekStartParam);
+  const currentWeekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
+  const isViewingCurrentWeek = currentWeekStart === format(fallbackWeekStart, 'yyyy-MM-dd');
   const previousWeekStart = format(addDays(fallbackWeekStart, -7), 'yyyy-MM-dd');
   const nextWeekStart = format(addDays(fallbackWeekStart, 7), 'yyyy-MM-dd');
+  const viewedWeekLabel = `Viewed week: ${format(fallbackWeekStart, 'd MMM')} - ${format(addDays(fallbackWeekStart, 6), 'd MMM yyyy')}`;
 
   const athleteContext = await athleteService.loadWeekByUserId(user.id, weekStartParam ?? fallbackWeekStart);
   if (!athleteContext) redirect('/athlete/profile');
@@ -31,9 +34,14 @@ export default async function AthletePage({
         <TopBar
           eyebrow="Athlete week"
           title={user.name}
-          description="Your coach hasn't created a plan for this week yet."
+          description={`Your coach hasn't created a plan for this week yet. ${viewedWeekLabel}`}
           actions={
             <>
+              {!isViewingCurrentWeek ? (
+                <ActionLink href={`/athlete?weekStart=${currentWeekStart}`} tone="secondary">
+                  This week
+                </ActionLink>
+              ) : null}
               <ActionLink href={`/athlete?weekStart=${previousWeekStart}`} tone="secondary">
                 Previous week
               </ActionLink>
@@ -69,9 +77,14 @@ export default async function AthletePage({
       <TopBar
         eyebrow="Athlete week"
         title={user.name}
-        description={`Weekly plan from ${plannerSnapshot.athlete.coachName}.`}
+        description={`Weekly plan from ${plannerSnapshot.athlete.coachName}. ${viewedWeekLabel}`}
         actions={
           <>
+            {!isViewingCurrentWeek ? (
+              <ActionLink href={`/athlete?weekStart=${currentWeekStart}`} tone="secondary">
+                This week
+              </ActionLink>
+            ) : null}
             <ActionLink href={`/athlete?weekStart=${plannerSnapshot.week.previousStart}`} tone="secondary">
               Previous week
             </ActionLink>

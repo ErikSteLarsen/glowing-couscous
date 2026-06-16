@@ -42,7 +42,9 @@ type AthleteWeekViewProps = {
 };
 
 export function AthleteWeekView({ weeklyNote, weekStart, days, todayIndex }: AthleteWeekViewProps) {
-  const [selectedIndex, setSelectedIndex] = useState(todayIndex >= 0 ? todayIndex : 0);
+  const firstDayWithSessions = days.findIndex((day) => day.sessions.length > 0);
+  const initialSelectedIndex = todayIndex >= 0 ? todayIndex : firstDayWithSessions >= 0 ? firstDayWithSessions : 0;
+  const [selectedIndex, setSelectedIndex] = useState(initialSelectedIndex);
   const selectedDay = days[selectedIndex];
 
   return (
