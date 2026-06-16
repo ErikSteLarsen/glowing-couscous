@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { PageShell, Surface, TopBar } from '@/components/ui';
+import { SignOutButton } from '@/components/SignOutButton';
 
 type CoachResult = { id: number; name: string; email: string };
 
@@ -39,6 +40,7 @@ export default function FindCoachPage() {
         eyebrow="Find a coach"
         title="Search coaches"
         description="Search by name or email, then send a join request."
+        actions={<SignOutButton />}
       />
       <Surface>
         <form onSubmit={handleSearch} className="flex gap-3">

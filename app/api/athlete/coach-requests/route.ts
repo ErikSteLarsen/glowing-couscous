@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAthlete } from '@/lib/api-auth';
-import { prisma } from '@/lib/prisma';
+import { coachRequestService } from '@/lib/coach-request-service';
+
+export async function GET() {
+  const { user, error } = await requireAthlete();
+  if (error) return error;
+
+  const requests = await coachRequestService.listForAthlete(user.id);
+
+  return NextResponse.json({
+    requests: requests.map((request) => ({
+      id: request.id,
+      status: request.status,
+      updatedAt: request.updatedAt.toISOString(),
+      coach: request.coach,
+    })),
+  });
+}
 
 export async function POST(req: NextRequest) {
   const { user, error } = await requireAthlete();
@@ -12,18 +28,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid coachId' }, { status: 400 });
   }
 
-  const coach = await prisma.user.findUnique({ where: { id: coachId, role: 'COACH' } });
-  if (!coach) return NextResponse.json({ error: 'Coach not found' }, { status: 404 });
-
-  try {
-    await prisma.coachRequest.create({
-      data: { athleteId: user.id, coachId, status: 'PENDING' },
-    });
-    return NextResponse.json({ ok: true }, { status: 201 });
-  } catch (e: unknown) {
-    if ((e as { code?: string }).code === 'P2002') {
-      return NextResponse.json({ error: 'Request already sent' }, { status: 409 });
-    }
-    throw e;
+  const result = await coachRequestService.createForAthlete(user.id, coachId);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
   }
+
+  return NextResponse.json({ ok: true }, { status: 201 });
 }

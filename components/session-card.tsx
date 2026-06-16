@@ -1,8 +1,6 @@
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui';
-import { sportLabels } from '@/lib/demo-data';
-
-type SportKey = keyof typeof sportLabels;
+import { getSportLabel } from '@/lib/sport';
 
 type SessionCardProps = {
   session: {
@@ -28,7 +26,7 @@ type SessionCardProps = {
 };
 
 export function SessionCard({ session, compact = false }: SessionCardProps) {
-  const sportLabel = sportLabels[session.sportType as SportKey] ?? session.sportType;
+  const sportLabel = getSportLabel(session.sportType);
 
   return (
     <article className="rounded-2xl border border-white/10 bg-white/5 p-4">

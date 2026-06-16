@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { ActionLink, PageShell, TopBar } from '@/components/ui';
 import { CoachPlannerClient } from './CoachPlannerClient';
 import { plannerService } from '@/lib/planner-service';
+import { SignOutButton } from '@/components/SignOutButton';
 
 export default async function CoachAthletePlannerPage({
   params,
@@ -34,6 +35,7 @@ export default async function CoachAthletePlannerPage({
               Previous week
             </ActionLink>
             <ActionLink href={`/coach/athletes/${plannerSnapshot.athlete.profileId}?weekStart=${plannerSnapshot.week.nextStart}`}>Next week</ActionLink>
+            <SignOutButton />
           </>
         }
       />

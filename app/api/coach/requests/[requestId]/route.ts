@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCoach } from '@/lib/api-auth';
-import { prisma } from '@/lib/prisma';
+import { coachRequestService } from '@/lib/coach-request-service';
 
 export async function PATCH(
   req: NextRequest,
@@ -11,28 +11,13 @@ export async function PATCH(
 
   const { requestId } = await params;
   const { action } = await req.json();
-
-  const request = await prisma.coachRequest.findUnique({ where: { id: Number(requestId) } });
-  if (!request || request.coachId !== user.id) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  if (action !== 'accept' && action !== 'reject') {
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }
 
-  if (action === 'accept') {
-    try {
-      await prisma.$transaction([
-        prisma.coachRequest.update({ where: { id: request.id }, data: { status: 'ACCEPTED' } }),
-        prisma.athleteProfile.create({ data: { userId: request.athleteId, coachId: user.id } }),
-      ]);
-    } catch (e: unknown) {
-      if ((e as { code?: string }).code === 'P2002') {
-        return NextResponse.json({ error: 'Athlete already has a coach' }, { status: 409 });
-      }
-      throw e;
-    }
-  } else if (action === 'reject') {
-    await prisma.coachRequest.update({ where: { id: request.id }, data: { status: 'REJECTED' } });
-  } else {
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+  const result = await coachRequestService.decideForCoach(user.id, Number(requestId), action);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
   return NextResponse.json({ ok: true });

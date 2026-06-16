@@ -1,14 +1,13 @@
 import { formatISO } from 'date-fns';
-import { prisma } from '@/lib/prisma';
 import {
   createEmptyWorkoutContentDraft,
   createSessionDraftFromWorkoutContent,
   createTemplateDraftFromWorkoutContent,
   createWorkoutContentDraftFromRecord,
 } from '@/lib/workout-editor';
-import { normalizeWorkoutBlockDrafts, serializeWorkoutBlocksForPersistence, validateWorkoutBlocks, WorkoutBlockDraft } from '@/lib/workout-spec';
+import { normalizeWorkoutBlockDrafts, validateWorkoutBlocks, WorkoutBlockDraft } from '@/lib/workout-spec';
+import { SPORT_OPTIONS } from '@/lib/sport';
 
-export const SPORT_OPTIONS = ['RUNNING', 'BIKING', 'SWIMMING', 'STRENGTH', 'STRETCHING', 'REST'] as const;
 export const BLOCK_OPTIONS = ['WARMUP', 'MAIN_SET', 'COOLDOWN', 'INTERVALS', 'REPS', 'REST', 'NOTE'] as const;
 
 export type SessionDraft = {
@@ -80,67 +79,6 @@ export function validateTemplateDraft(draft: TemplateDraft) {
   }
 
   return validateWorkoutBlocks(draft.blocks, BLOCK_OPTIONS);
-}
-
-export async function saveCoachTemplate(coachId: number, draftInput: unknown, templateId?: number) {
-  const draft = normalizeTemplateDraft(draftInput);
-  const validationError = validateTemplateDraft(draft);
-
-  if (validationError) {
-    return { error: validationError };
-  }
-
-  const templateData = {
-    coachId,
-    sportType: draft.sportType,
-    name: draft.name,
-    summary: draft.summary || null,
-  };
-
-  if (!templateId) {
-    await prisma.sessionTemplate.create({
-      data: {
-        ...templateData,
-        blocks: {
-          create: serializeWorkoutBlocksForPersistence(draft.blocks),
-        },
-      },
-    });
-
-    return { error: null };
-  }
-
-  const existing = await prisma.sessionTemplate.findUnique({ where: { id: templateId } });
-  if (!existing || existing.coachId !== coachId) {
-    return { error: 'Template not found.' };
-  }
-
-  await prisma.$transaction([
-    prisma.sessionTemplateBlock.deleteMany({ where: { templateId } }),
-    prisma.sessionTemplate.update({
-      where: { id: templateId },
-      data: {
-        sportType: draft.sportType,
-        name: draft.name,
-        summary: draft.summary || null,
-        blocks: {
-          create: serializeWorkoutBlocksForPersistence(draft.blocks),
-        },
-      },
-    }),
-  ]);
-
-  return { error: null };
-}
-
-export async function deleteCoachTemplate(coachId: number, templateId: number) {
-  const template = await prisma.sessionTemplate.findUnique({ where: { id: templateId } });
-  if (!template || template.coachId !== coachId) {
-    return { error: 'Template not found.' };
-  }
-
-  await prisma.sessionTemplate.delete({ where: { id: templateId } });
-  return { error: null };
 }
 
 export function templateToDraft(template: {

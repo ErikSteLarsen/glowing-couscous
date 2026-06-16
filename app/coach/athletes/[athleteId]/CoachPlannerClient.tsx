@@ -8,7 +8,8 @@ import { WorkoutBlocksEditor } from '@/components/WorkoutBlocksEditor';
 import { SessionCard } from '@/components/session-card';
 import { Badge } from '@/components/ui';
 import { WeekStrip } from '@/components/week-strip';
-import { createEmptySessionDraft, SessionDraft, SPORT_OPTIONS, templateToDraft } from '@/lib/planner';
+import { createEmptySessionDraft, SessionDraft, templateToDraft } from '@/lib/planner';
+import { SPORT_OPTIONS } from '@/lib/sport';
 import { createWorkoutContentDraftFromRecord } from '@/lib/workout-editor';
 import { addWorkoutBlock, mapWorkoutBlockRecordsToDraft, removeWorkoutBlock, updateWorkoutBlock } from '@/lib/workout-spec';
 
@@ -245,7 +246,11 @@ export function CoachPlannerClient({
           </div>
 
           <div className="mt-5">
-            <WeekStrip days={weekDays} selectedIndex={selectedIndex} />
+            <WeekStrip
+              days={weekDays}
+              selectedIndex={selectedIndex}
+              onSelectDay={(index) => setSelectedDate(weekDays[index]?.isoDate ?? selectedDay.isoDate)}
+            />
           </div>
         </section>
 
@@ -286,18 +291,9 @@ export function CoachPlannerClient({
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Selected day</p>
               <h3 className="mt-2 text-xl font-semibold text-white">{selectedDay.fullLabel}</h3>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {weekDays.map((day) => (
-                <button
-                  key={day.isoDate}
-                  type="button"
-                  onClick={() => setSelectedDate(day.isoDate)}
-                  className={`rounded-2xl px-3 py-2 text-sm font-medium ${selectedDate === day.isoDate ? 'bg-[rgba(90,124,255,0.18)] text-white' : 'bg-white/5 text-slate-200'}`}
-                >
-                  {day.shortLabel}
-                </button>
-              ))}
-            </div>
+            <Badge tone={selectedDay.sessions.length > 0 ? 'brand' : 'neutral'}>
+              {selectedDay.sessions.length} {selectedDay.sessions.length === 1 ? 'session' : 'sessions'}
+            </Badge>
           </div>
 
           <div className="mt-5 space-y-4">

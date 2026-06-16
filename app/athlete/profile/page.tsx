@@ -1,27 +1,57 @@
 import { redirect } from 'next/navigation';
 import { ActionLink, EmptyState, PageShell, TopBar } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth-session';
-import { prisma } from '@/lib/prisma';
+import { athleteService } from '@/lib/athlete-service';
+import { SignOutButton } from '@/components/SignOutButton';
 
 export default async function AthleteProfilePage() {
   const user = await getCurrentUser();
   if (!user || user.role !== 'ATHLETE') redirect('/login');
 
-  const profile = await prisma.athleteProfile.findUnique({ where: { userId: user.id } });
-  if (profile) redirect('/athlete');
+  const profileState = await athleteService.loadProfileState(user.id);
+  if (profileState.profile) redirect('/athlete');
+
+  const latestRequest = profileState.latestRequest;
 
   return (
     <PageShell>
       <TopBar
         eyebrow="Your profile"
         title={user.name}
-        description="You don't have a coach yet. Find a coach to get your weekly training plan."
-        actions={<ActionLink href="/athlete/find-coach">Find a coach</ActionLink>}
+        description={
+          latestRequest?.status === 'PENDING'
+            ? `Your request to ${latestRequest.coach.name} is still waiting for approval.`
+            : latestRequest?.status === 'REJECTED'
+              ? `${latestRequest.coach.name} declined your last request. You can look for another coach.`
+            : "You don't have a coach yet. Find a coach to get your weekly training plan."
+        }
+        actions={
+          latestRequest?.status === 'PENDING' ? (
+            <SignOutButton />
+          ) : (
+            <>
+              <ActionLink href="/athlete/find-coach">Find a coach</ActionLink>
+              <SignOutButton />
+            </>
+          )
+        }
       />
-      <EmptyState
-        title="No training plan yet"
-        description="Once a coach accepts your request, your weekly plan will appear here."
-      />
+      {latestRequest?.status === 'PENDING' ? (
+        <EmptyState
+          title={`Waiting for ${latestRequest.coach.name}`}
+          description={`Your join request is pending. We'll show your weekly plan here once ${latestRequest.coach.name} accepts it.`}
+        />
+      ) : latestRequest?.status === 'REJECTED' ? (
+        <EmptyState
+          title="Request declined"
+          description={`Your last request was declined by ${latestRequest.coach.name}. Search again to request a different coach.`}
+        />
+      ) : (
+        <EmptyState
+          title="No training plan yet"
+          description="Once a coach accepts your request, your weekly plan will appear here."
+        />
+      )}
     </PageShell>
   );
 }

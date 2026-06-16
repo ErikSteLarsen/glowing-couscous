@@ -5,11 +5,9 @@ import { useRouter } from 'next/navigation';
 import { CoachEditorDrawer } from '@/components/CoachEditorDrawer';
 import { WorkoutBlocksEditor } from '@/components/WorkoutBlocksEditor';
 import { Badge, Surface } from '@/components/ui';
-import { createEmptyTemplateDraft, SPORT_OPTIONS, TemplateDraft, templateRecordToDraft } from '@/lib/planner';
-import { sportLabels } from '@/lib/demo-data';
+import { createEmptyTemplateDraft, TemplateDraft, templateRecordToDraft } from '@/lib/planner';
+import { getSportLabel, SPORT_OPTIONS } from '@/lib/sport';
 import { addWorkoutBlock, removeWorkoutBlock, updateWorkoutBlock } from '@/lib/workout-spec';
-
-type SportKey = keyof typeof sportLabels;
 
 type TemplateRecord = {
   id: number;
@@ -134,7 +132,7 @@ export function CoachTemplatesClient({ templates }: CoachTemplatesClientProps) {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-lg font-semibold text-white">{template.name}</h2>
-                  <Badge tone="brand">{sportLabels[template.sportType as SportKey] ?? template.sportType}</Badge>
+                  <Badge tone="brand">{getSportLabel(template.sportType)}</Badge>
                 </div>
                 <p className="mt-2 text-sm text-slate-300">{template.summary || 'No summary added yet.'}</p>
               </div>

@@ -2,8 +2,9 @@ import { format } from 'date-fns';
 import { redirect } from 'next/navigation';
 import { ActionLink, Badge, EmptyState, PageShell, StatTile, Surface, TopBar } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth-session';
-import { getCoachOverview } from '@/lib/demo-data';
+import { getCoachOverview } from '@/lib/coach-service';
 import { CoachRequestsPanel } from '@/components/CoachRequestsPanel';
+import { SignOutButton } from '@/components/SignOutButton';
 
 export default async function CoachPage() {
   const user = await getCurrentUser();
@@ -40,7 +41,12 @@ export default async function CoachPage() {
         eyebrow="Coach dashboard"
         title={coach.name}
         description="Athlete list and upcoming week status."
-        actions={<ActionLink href="/coach/templates">Templates</ActionLink>}
+        actions={
+          <>
+            <ActionLink href="/coach/templates">Templates</ActionLink>
+            <SignOutButton />
+          </>
+        }
       />
 
       <div className="grid gap-4 sm:grid-cols-3">

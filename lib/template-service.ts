@@ -2,77 +2,85 @@ import { prisma } from '@/lib/prisma';
 import { normalizeTemplateDraft, validateTemplateDraft } from '@/lib/planner';
 import { serializeWorkoutBlocksForPersistence } from '@/lib/workout-spec';
 
-export const templateService = {
-  async listForCoach(coachId: number) {
-    return prisma.sessionTemplate.findMany({
-      where: { coachId },
-      include: {
-        blocks: {
-          orderBy: { sortOrder: 'asc' },
-        },
-      },
-      orderBy: [{ sportType: 'asc' }, { name: 'asc' }],
-    });
-  },
+type TemplateServiceDeps = {
+  db?: typeof prisma;
+};
 
-  async saveForCoach(coachId: number, draftInput: unknown, templateId?: number) {
-    const draft = normalizeTemplateDraft(draftInput);
-    const validationError = validateTemplateDraft(draft);
-
-    if (validationError) {
-      return { error: validationError };
-    }
-
-    const templateData = {
-      coachId,
-      sportType: draft.sportType,
-      name: draft.name,
-      summary: draft.summary || null,
-    };
-
-    if (!templateId) {
-      await prisma.sessionTemplate.create({
-        data: {
-          ...templateData,
+export function createTemplateService({ db = prisma }: TemplateServiceDeps = {}) {
+  return {
+    async listForCoach(coachId: number) {
+      return db.sessionTemplate.findMany({
+        where: { coachId },
+        include: {
           blocks: {
-            create: serializeWorkoutBlocksForPersistence(draft.blocks),
+            orderBy: { sortOrder: 'asc' },
           },
         },
+        orderBy: [{ sportType: 'asc' }, { name: 'asc' }],
       });
+    },
+
+    async saveForCoach(coachId: number, draftInput: unknown, templateId?: number) {
+      const draft = normalizeTemplateDraft(draftInput);
+      const validationError = validateTemplateDraft(draft);
+
+      if (validationError) {
+        return { error: validationError };
+      }
+
+      const templateData = {
+        coachId,
+        sportType: draft.sportType,
+        name: draft.name,
+        summary: draft.summary || null,
+      };
+
+      if (!templateId) {
+        await db.sessionTemplate.create({
+          data: {
+            ...templateData,
+            blocks: {
+              create: serializeWorkoutBlocksForPersistence(draft.blocks),
+            },
+          },
+        });
+
+        return { error: null };
+      }
+
+      const existing = await db.sessionTemplate.findUnique({ where: { id: templateId } });
+      if (!existing || existing.coachId !== coachId) {
+        return { error: 'Template not found.' };
+      }
+
+      await db.$transaction([
+        db.sessionTemplateBlock.deleteMany({ where: { templateId } }),
+        db.sessionTemplate.update({
+          where: { id: templateId },
+          data: {
+            sportType: draft.sportType,
+            name: draft.name,
+            summary: draft.summary || null,
+            blocks: {
+              create: serializeWorkoutBlocksForPersistence(draft.blocks),
+            },
+          },
+        }),
+      ]);
 
       return { error: null };
-    }
+    },
 
-    const existing = await prisma.sessionTemplate.findUnique({ where: { id: templateId } });
-    if (!existing || existing.coachId !== coachId) {
-      return { error: 'Template not found.' };
-    }
+    async deleteForCoach(coachId: number, templateId: number) {
+      const template = await db.sessionTemplate.findUnique({ where: { id: templateId } });
+      if (!template || template.coachId !== coachId) {
+        return { error: 'Template not found.' };
+      }
 
-    await prisma.$transaction([
-      prisma.sessionTemplateBlock.deleteMany({ where: { templateId } }),
-      prisma.sessionTemplate.update({
-        where: { id: templateId },
-        data: {
-          sportType: draft.sportType,
-          name: draft.name,
-          summary: draft.summary || null,
-          blocks: {
-            create: serializeWorkoutBlocksForPersistence(draft.blocks),
-          },
-        },
-      }),
-    ]);
+      await db.sessionTemplate.delete({ where: { id: templateId } });
+      return { error: null };
+    },
+  };
+}
 
-    return { error: null };
-  },
-
-  async deleteForCoach(coachId: number, templateId: number) {
-    const template = await prisma.sessionTemplate.findUnique({ where: { id: templateId } });
-    if (!template || template.coachId !== coachId) {
-      return { error: 'Template not found.' };
-    }
-
-    await prisma.sessionTemplate.delete({ where: { id: templateId } });
-    return { error: null };
-  },
-};
+export const templateService = createTemplateService();
