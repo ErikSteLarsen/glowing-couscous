@@ -34,7 +34,8 @@ All feature logic belongs behind these `lib/` modules. Do not reintroduce Prisma
 | `lib/workout-spec.ts` | Block draft normalization, validation, and persistence transforms |
 | `lib/workout-editor.ts` | Shared workout content draft shaping used by both session editing and template editing |
 | `lib/template-service.ts` | Coach template list/create/update/delete |
-| `lib/demo-session.ts` | Demo-user lookup (`getCurrentCoach`, `getCurrentAthleteUser`). Replace this module when adding real auth — keep the same boundary shape |
+| `lib/auth-session.ts` | Current-user lookup for server-rendered UI (`getCurrentUser`) |
+| `lib/api-auth.ts` | Role-based route guards for API handlers (`requireCoach`, `requireAthlete`) |
 
 ### Shared UI components
 
@@ -56,7 +57,7 @@ Route handlers live under `app/api/` and call into the service layer. Client com
 
 ### Auth
 
-Currently demo-only: `lib/demo-session.ts` returns the first seeded COACH or ATHLETE user. There is no session management. Seed data is the source of truth for users.
+Auth is implemented with Auth.js v5. Server components read the signed-in user through `lib/auth-session.ts`, and route handlers enforce role access through `lib/api-auth.ts`. Seed data still provides convenient local accounts, but the app now uses real login, signup, setup, and session middleware flows.
 
 ### UI conventions
 

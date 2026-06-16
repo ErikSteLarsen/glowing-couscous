@@ -1,51 +1,116 @@
 # Architecture Notes
 
-## Current Direction
+This document describes the **implemented** architecture, not old plans.
 
-The project has been refactored toward deeper modules so the codebase is easier to navigate and extend.
+## Route surface
 
-### Core Boundaries
+### Auth routes
 
-- `lib/planner-service.ts`
-  - Owns week-scoped planner loading and mutations.
-  - Pages and planner-related API routes should use this boundary instead of reaching into Prisma directly for planner rules.
+- `/` redirects to `/login`
+- `/login`
+- `/signup`
+- `/setup`
 
-- `lib/workout-spec.ts`
-  - Owns workout block draft behavior, normalization, validation, and persistence transforms.
+### Coach routes
 
-- `lib/workout-editor.ts`
-  - Owns shared workout content draft shaping used by both session editing and template editing.
+- `/coach`
+- `/coach/athletes/[athleteId]`
+- `/coach/templates`
 
-- `lib/template-service.ts`
-  - Owns coach template list/create/update/delete behavior.
-  - Template API routes and template pages should use this boundary.
+### Athlete routes
 
-- `lib/demo-session.ts`
-  - Owns the current demo-user lookup boundary for `coach` and `athlete`.
-  - This is intentionally small and is the place to replace when real authentication is added.
+- `/athlete`
+- `/athlete/profile`
+- `/athlete/find-coach`
 
-### Shared UI Boundaries
+### API areas
 
-- `components/WorkoutBlocksEditor.tsx`
-  - Shared block editing UI.
+- `app/api/auth/*`
+- `app/api/coach/*`
+- `app/api/athlete/*`
+- `app/api/coaches/route.ts`
 
-- `components/CoachEditorDrawer.tsx`
-  - Shared coach-side editor drawer shell.
+## Main runtime boundaries
 
-## What To Build Against
+### Auth boundary
 
-When adding features, prefer these rules:
+- `auth.ts` defines Auth.js providers, callbacks, and session shaping.
+- `middleware.ts` enforces login, role redirects, and setup redirects.
+- `lib/auth-session.ts` is the current-user lookup for server-rendered UI.
+- `lib/api-auth.ts` is the route-handler guard layer.
 
-- Planner behavior goes through `planner-service`.
-- Template behavior goes through `template-service`.
-- Current-user access goes through `demo-session`.
-- Shared workout content or block behavior goes through `workout-editor` and `workout-spec`.
-- Avoid reintroducing Prisma calls directly into route handlers when the behavior already belongs to one of the service modules.
+Use `auth-session` in pages and server components. Use `api-auth` in route handlers.
 
-## Best Next Steps Later
+### Planner boundary
 
-When work continues, the strongest next improvements are:
+- `lib/planner-service.ts` owns week-scoped planner loading and mutations.
+- Planner commands currently include session save/delete, weekly note save, copy previous week, and athlete completion updates.
+- Coach planner routes under `app/api/coach/athletes/[athleteId]/planner/...` should stay thin and delegate to this service.
 
-1. Replace `demo-session` with real auth/session handling while keeping the same boundary shape.
-2. Add boundary tests around `planner-service` and `template-service`.
-3. Consider a shared mutation helper for client-side `fetch + error + refresh` patterns if the number of interactive forms keeps growing.
+If a feature changes planner behavior, add it here first instead of scattering Prisma calls through pages and routes.
+
+### Template boundary
+
+- `lib/template-service.ts` owns coach template listing and persistence.
+- `app/api/coach/templates/*` should keep delegating to this service.
+
+### Coach-dashboard boundary
+
+- `lib/coach-service.ts` owns the coach dashboard read model.
+- `app/coach/page.tsx` should keep using this service instead of embedding Prisma reads.
+
+### Athlete boundary
+
+- `lib/athlete-service.ts` owns athlete profile and athlete-facing week/profile reads.
+- `app/athlete/page.tsx` and `app/athlete/profile/page.tsx` should stay thin and delegate to this service.
+
+### Coach-request boundary
+
+- `lib/coach-request-service.ts` owns coach search plus request list/create/decision flows.
+- `/api/coaches`, `/api/athlete/coach-requests`, and `/api/coach/requests/*` should stay thin and delegate to this service.
+
+### Calendar and sport-domain helpers
+
+- `lib/week.ts` owns Monday-based week shaping and grouping helpers.
+- `lib/sport.ts` owns shared sport constants and human-readable sport labels.
+
+### Workout-content boundary
+
+- `lib/workout-spec.ts` owns block normalization, validation helpers, and persistence shaping.
+- `lib/workout-editor.ts` owns shared workout draft shaping used by session and template editing.
+- `components/WorkoutBlocksEditor.tsx` is the shared block-editing UI.
+- `components/CoachEditorDrawer.tsx` is the shared coach-side editor shell.
+
+## Data ownership
+
+The source of truth for models is `prisma/schema.prisma`.
+
+Important ownership relationships:
+
+- `User.role` drives access and redirects.
+- `CoachRequest` tracks athlete-to-coach connection requests.
+- `AthleteProfile` represents an accepted coach-athlete relationship.
+- `PlanWeek` is unique per athlete and Monday week start.
+- `PlannedSession` belongs to a `PlanWeek`.
+- `SessionCompletion` belongs to a session and athlete user.
+- `SessionTemplate` is coach-owned and private.
+
+## Transitional areas
+
+The main read/write boundaries are now clearer, but they still need protection:
+
+- There is no automated regression coverage around `planner-service`, `template-service`, `coach-service`, or the auth guard layer.
+- Pages still compose several service outputs directly, so future work should avoid slipping business logic back into route components.
+
+## Safe extension rules
+
+1. Keep week logic Monday-based everywhere.
+2. Add planner behavior to `planner-service` before touching API handlers.
+3. Add template behavior to `template-service` before touching API handlers.
+4. Reuse shared workout-editor and block-editor primitives instead of duplicating draft logic.
+5. Prefer focused domain modules like `coach-service`, `week`, and `sport` over reviving mixed helper files.
+6. Keep future agents aligned with `.copilot/skills/project-architecture/` when boundary work is involved.
+
+## Highest-value architectural next step
+
+Add boundary-focused tests around planner, template, coach-dashboard, and auth behavior so the new module boundaries stay stable as features are added.
