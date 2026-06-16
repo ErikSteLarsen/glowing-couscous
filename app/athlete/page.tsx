@@ -94,6 +94,7 @@ export default async function AthletePage({
         }
       />
       <AthleteWeekView
+        key={plannerSnapshot.week.start}
         weeklyNote={plannerSnapshot.week.weeklyNote}
         weekStart={new Date(plannerSnapshot.week.start)}
         days={grouped}

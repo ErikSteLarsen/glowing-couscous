@@ -81,6 +81,8 @@ test('athlete onboarding surfaces request state in profile and coach-search UI',
   assert.match(profileSource, /Request pending|Waiting for/);
   assert.match(searchSource, /Request pending|Send request again|Back to profile/);
   assert.match(searchSource, /fetch\('\/api\/athlete\/coach-requests'\)/);
+  assert.match(routeSource, /athleteService/);
+  assert.match(routeSource, /loadCoachSearchState/);
   assert.match(routeSource, /Request already pending/);
 });
 
@@ -90,6 +92,7 @@ test('athlete week view exposes a current-week shortcut and smarter default day 
 
   assert.match(athletePageSource, /This week/);
   assert.match(athletePageSource, /Viewed week|Week of/);
+  assert.match(athletePageSource, /key=\{plannerSnapshot\.week\.start\}/);
   assert.match(weekViewSource, /findIndex\(\(day\) => day\.sessions\.length > 0\)/);
   assert.match(weekViewSource, /useState\(initialSelectedIndex\)/);
 });

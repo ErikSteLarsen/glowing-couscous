@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAthlete } from '@/lib/api-auth';
+import { athleteService } from '@/lib/athlete-service';
 import { coachRequestService } from '@/lib/coach-request-service';
 
 export async function GET() {
   const { user, error } = await requireAthlete();
   if (error) return error;
 
-  const requests = await coachRequestService.listForAthlete(user.id);
+  const coachSearchState = await athleteService.loadCoachSearchState(user.id);
 
   return NextResponse.json({
-    requests: requests.map((request) => ({
+    requests: coachSearchState.requests.map((request) => ({
       id: request.id,
       status: request.status,
       updatedAt: request.updatedAt.toISOString(),
