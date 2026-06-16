@@ -13,6 +13,8 @@ test('athlete pages and coach-request routes do not access prisma directly', asy
   const directPrismaPaths = [
     'app/athlete/page.tsx',
     'app/athlete/profile/page.tsx',
+    'app/coach/page.tsx',
+    'app/coach/templates/page.tsx',
     'app/api/coaches/route.ts',
     'app/api/athlete/coach-requests/route.ts',
     'app/api/coach/requests/route.ts',
@@ -29,10 +31,14 @@ test('athlete pages and coach-request routes do not access prisma directly', asy
   }
 });
 
-test('coach and template services expose factory constructors', async () => {
+test('service modules expose factory constructors', async () => {
+  const athleteServiceSource = await read('lib/athlete-service.ts');
+  const coachRequestServiceSource = await read('lib/coach-request-service.ts');
   const coachServiceSource = await read('lib/coach-service.ts');
   const templateServiceSource = await read('lib/template-service.ts');
 
+  assert.match(athleteServiceSource, /export function createAthleteService/);
+  assert.match(coachRequestServiceSource, /export function createCoachRequestService/);
   assert.match(coachServiceSource, /export function createCoachService/);
   assert.match(templateServiceSource, /export function createTemplateService/);
 });
@@ -43,4 +49,21 @@ test('project architecture skill files exist', async () => {
 
   assert.match(skillSource, /name: project-architecture/);
   assert.match(referenceSource, /# Project Architecture Reference/);
+});
+
+test('coach request decision flow guards resolved requests and invalid route params', async () => {
+  const serviceSource = await read('lib/coach-request-service.ts');
+  const routeSource = await read('app/api/coach/requests/[requestId]/route.ts');
+
+  assert.match(serviceSource, /request\.status !== 'PENDING'/);
+  assert.match(serviceSource, /status: 409/);
+  assert.match(routeSource, /const parsedRequestId = Number\(requestId\)/);
+  assert.match(routeSource, /Number\.isInteger\(parsedRequestId\)/);
+  assert.match(routeSource, /status: 400/);
+});
+
+test('package scripts include the architecture test command', async () => {
+  const packageJson = await read('package.json');
+
+  assert.match(packageJson, /"test": "node --test tests\/\*\.test\.mjs"/);
 });

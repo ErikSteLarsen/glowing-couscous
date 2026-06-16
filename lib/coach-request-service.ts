@@ -84,6 +84,9 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
       if (!request || request.coachId !== coachUserId) {
         return { ok: false, status: 404, error: 'Not found' };
       }
+      if (request.status !== 'PENDING') {
+        return { ok: false, status: 409, error: 'Request already resolved' };
+      }
 
       if (action === 'accept') {
         try {

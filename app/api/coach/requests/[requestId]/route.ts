@@ -10,12 +10,17 @@ export async function PATCH(
   if (error) return error;
 
   const { requestId } = await params;
+  const parsedRequestId = Number(requestId);
+  if (!Number.isInteger(parsedRequestId) || parsedRequestId <= 0) {
+    return NextResponse.json({ error: 'Invalid requestId' }, { status: 400 });
+  }
+
   const { action } = await req.json();
   if (action !== 'accept' && action !== 'reject') {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }
 
-  const result = await coachRequestService.decideForCoach(user.id, Number(requestId), action);
+  const result = await coachRequestService.decideForCoach(user.id, parsedRequestId, action);
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
