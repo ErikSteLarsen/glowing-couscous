@@ -94,6 +94,17 @@ test('athlete week view exposes a current-week shortcut and smarter default day 
   assert.match(weekViewSource, /useState\(initialSelectedIndex\)/);
 });
 
+test('template workflow supports duplication and library filtering', async () => {
+  const templateServiceSource = await read('lib/template-service.ts');
+  const duplicateRouteSource = await read('app/api/coach/templates/[templateId]/duplicate/route.ts');
+  const templatesClientSource = await read('app/coach/templates/CoachTemplatesClient.tsx');
+
+  assert.match(templateServiceSource, /duplicateForCoach/);
+  assert.match(duplicateRouteSource, /templateService\.duplicateForCoach/);
+  assert.match(templatesClientSource, /filterText/);
+  assert.match(templatesClientSource, /Duplicate template/);
+});
+
 test('package scripts include the architecture test command', async () => {
   const packageJson = await read('package.json');
 

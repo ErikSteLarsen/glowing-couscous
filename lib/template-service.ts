@@ -80,6 +80,39 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
       await db.sessionTemplate.delete({ where: { id: templateId } });
       return { error: null };
     },
+
+    async duplicateForCoach(coachId: number, templateId: number) {
+      const template = await db.sessionTemplate.findUnique({
+        where: { id: templateId },
+        include: {
+          blocks: {
+            orderBy: { sortOrder: 'asc' },
+          },
+        },
+      });
+      if (!template || template.coachId !== coachId) {
+        return { error: 'Template not found.' };
+      }
+
+      await db.sessionTemplate.create({
+        data: {
+          coachId,
+          sportType: template.sportType,
+          name: `${template.name} (Copy)`,
+          summary: template.summary,
+          blocks: {
+            create: template.blocks.map((block) => ({
+              blockType: block.blockType,
+              title: block.title,
+              instructions: block.instructions,
+              sortOrder: block.sortOrder,
+            })),
+          },
+        },
+      });
+
+      return { error: null };
+    },
   };
 }
 

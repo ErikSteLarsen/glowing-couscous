@@ -35,6 +35,18 @@ export function CoachTemplatesClient({ templates }: CoachTemplatesClientProps) {
   const [editingTemplateId, setEditingTemplateId] = useState<number | null>(null);
   const [draft, setDraft] = useState<TemplateDraft>(createEmptyTemplateDraft());
   const [errorMessage, setErrorMessage] = useState('');
+  const [filterText, setFilterText] = useState('');
+  const [sportFilter, setSportFilter] = useState('ALL');
+
+  const visibleTemplates = templates.filter((template) => {
+    const normalizedFilter = filterText.trim().toLowerCase();
+    const matchesText =
+      !normalizedFilter ||
+      template.name.toLowerCase().includes(normalizedFilter) ||
+      (template.summary ?? '').toLowerCase().includes(normalizedFilter);
+    const matchesSport = sportFilter === 'ALL' || template.sportType === sportFilter;
+    return matchesText && matchesSport;
+  });
 
   function openCreateDrawer() {
     setMode('create');
@@ -113,6 +125,21 @@ export function CoachTemplatesClient({ templates }: CoachTemplatesClientProps) {
     });
   }
 
+  function duplicateTemplate(templateId: number) {
+    setErrorMessage('');
+    startTransition(async () => {
+      const response = await fetch(`/api/coach/templates/${templateId}/duplicate`, { method: 'POST' });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({ error: 'Failed to duplicate template' }));
+        setErrorMessage(payload.error ?? 'Failed to duplicate template');
+        return;
+      }
+
+      router.refresh();
+    });
+  }
+
   return (
     <>
       <div className="flex justify-end">
@@ -125,8 +152,29 @@ export function CoachTemplatesClient({ templates }: CoachTemplatesClientProps) {
         </button>
       </div>
 
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+        <input
+          value={filterText}
+          onChange={(event) => setFilterText(event.target.value)}
+          className="w-full rounded-2xl border border-white/10 bg-black/10 px-4 py-3 text-sm text-white outline-none"
+          placeholder="Filter templates by name or summary"
+        />
+        <select
+          value={sportFilter}
+          onChange={(event) => setSportFilter(event.target.value)}
+          className="rounded-2xl border border-white/10 bg-black/10 px-4 py-3 text-sm text-white outline-none"
+        >
+          <option value="ALL">All sports</option>
+          {SPORT_OPTIONS.map((sport) => (
+            <option key={sport} value={sport}>
+              {getSportLabel(sport)}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="grid gap-5 lg:grid-cols-2">
-        {templates.map((template) => (
+        {visibleTemplates.map((template) => (
           <Surface key={template.id}>
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -159,10 +207,23 @@ export function CoachTemplatesClient({ templates }: CoachTemplatesClientProps) {
               >
                 Edit template
               </button>
+              <button
+                type="button"
+                onClick={() => duplicateTemplate(template.id)}
+                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200"
+              >
+                Duplicate template
+              </button>
             </div>
           </Surface>
         ))}
       </div>
+
+      {visibleTemplates.length === 0 ? (
+        <Surface>
+          <p className="text-sm text-slate-300">No templates match the current filters.</p>
+        </Surface>
+      ) : null}
 
       <CoachEditorDrawer
         isOpen={isDrawerOpen}
