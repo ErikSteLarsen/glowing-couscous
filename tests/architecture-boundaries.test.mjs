@@ -62,6 +62,28 @@ test('coach request decision flow guards resolved requests and invalid route par
   assert.match(routeSource, /status: 400/);
 });
 
+test('athlete request services support re-opened rejected requests and shared request-state reads', async () => {
+  const coachRequestServiceSource = await read('lib/coach-request-service.ts');
+  const athleteServiceSource = await read('lib/athlete-service.ts');
+
+  assert.match(coachRequestServiceSource, /existingRequest/);
+  assert.match(coachRequestServiceSource, /existingRequest\.status === 'REJECTED'/);
+  assert.match(coachRequestServiceSource, /db\.coachRequest\.update\(/);
+  assert.match(athleteServiceSource, /loadCoachSearchState/);
+  assert.match(athleteServiceSource, /listForAthlete/);
+});
+
+test('athlete onboarding surfaces request state in profile and coach-search UI', async () => {
+  const profileSource = await read('app/athlete/profile/page.tsx');
+  const searchSource = await read('app/athlete/find-coach/page.tsx');
+  const routeSource = await read('app/api/athlete/coach-requests/route.ts');
+
+  assert.match(profileSource, /Request pending|Waiting for/);
+  assert.match(searchSource, /Request pending|Send request again|Back to profile/);
+  assert.match(searchSource, /fetch\('\/api\/athlete\/coach-requests'\)/);
+  assert.match(routeSource, /Request already pending/);
+});
+
 test('package scripts include the architecture test command', async () => {
   const packageJson = await read('package.json');
 

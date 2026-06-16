@@ -50,6 +50,27 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
         return { ok: false, status: 404, error: 'Coach not found' };
       }
 
+      const existingRequest = await db.coachRequest.findUnique({
+        where: {
+          athleteId_coachId: {
+            athleteId: athleteUserId,
+            coachId,
+          },
+        },
+      });
+
+      if (existingRequest && existingRequest.status === 'PENDING') {
+        return { ok: false, status: 409, error: 'Request already pending' };
+      }
+
+      if (existingRequest && existingRequest.status === 'REJECTED') {
+        await db.coachRequest.update({
+          where: { id: existingRequest.id },
+          data: { status: 'PENDING' },
+        });
+        return { ok: true };
+      }
+
       try {
         await db.coachRequest.create({
           data: { athleteId: athleteUserId, coachId, status: 'PENDING' },
@@ -57,7 +78,7 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
         return { ok: true };
       } catch (error: unknown) {
         if ((error as { code?: string }).code === 'P2002') {
-          return { ok: false, status: 409, error: 'Request already sent' };
+          return { ok: false, status: 409, error: 'Request already pending' };
         }
         throw error;
       }

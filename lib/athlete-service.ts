@@ -7,6 +7,22 @@ type AthleteServiceDeps = {
 };
 
 export function createAthleteService({ db = prisma, planner = plannerService }: AthleteServiceDeps = {}) {
+  async function listRequestsForAthlete(userId: number) {
+    return db.coachRequest.findMany({
+      where: { athleteId: userId },
+      include: {
+        coach: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+    });
+  }
+
   return {
     async findProfileByUserId(userId: number) {
       return db.athleteProfile.findUnique({ where: { userId } });
@@ -22,28 +38,32 @@ export function createAthleteService({ db = prisma, planner = plannerService }: 
       return { profile, snapshot };
     },
 
+    async listForAthlete(userId: number) {
+      return listRequestsForAthlete(userId);
+    },
+
+    async loadCoachSearchState(userId: number) {
+      const [profile, requests] = await Promise.all([
+        db.athleteProfile.findUnique({ where: { userId } }),
+        listRequestsForAthlete(userId),
+      ]);
+
+      return {
+        profile,
+        requests,
+        latestRequest: requests[0] ?? null,
+      };
+    },
+
     async loadProfileState(userId: number) {
       const profile = await db.athleteProfile.findUnique({ where: { userId } });
       if (profile) {
         return { profile, latestRequest: null };
       }
 
-      const latestRequest = await db.coachRequest.findFirst({
-        where: {
-          athleteId: userId,
-          status: {
-            in: ['PENDING', 'REJECTED'],
-          },
-        },
-        include: {
-          coach: {
-            select: {
-              name: true,
-            },
-          },
-        },
-        orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
-      });
+      const latestRequest = (await listRequestsForAthlete(userId)).find(
+        (request) => request.status === 'PENDING' || request.status === 'REJECTED',
+      );
 
       return { profile: null, latestRequest };
     },
