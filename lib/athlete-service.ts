@@ -23,6 +23,10 @@ export function createAthleteService({ db = prisma, planner = plannerService }: 
     });
   }
 
+  function selectPrimaryRequest<T extends { status: string }>(requests: T[]) {
+    return requests.find((request) => request.status === 'PENDING') ?? requests[0] ?? null;
+  }
+
   return {
     async findProfileByUserId(userId: number) {
       return db.athleteProfile.findUnique({ where: { userId } });
@@ -51,7 +55,7 @@ export function createAthleteService({ db = prisma, planner = plannerService }: 
       return {
         profile,
         requests,
-        latestRequest: requests[0] ?? null,
+        latestRequest: selectPrimaryRequest(requests),
       };
     },
 
@@ -61,9 +65,7 @@ export function createAthleteService({ db = prisma, planner = plannerService }: 
         return { profile, latestRequest: null };
       }
 
-      const latestRequest = (await listRequestsForAthlete(userId)).find(
-        (request) => request.status === 'PENDING' || request.status === 'REJECTED',
-      );
+      const latestRequest = selectPrimaryRequest(await listRequestsForAthlete(userId));
 
       return { profile: null, latestRequest };
     },

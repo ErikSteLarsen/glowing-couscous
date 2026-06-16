@@ -67,9 +67,11 @@ test('athlete request services support re-opened rejected requests and shared re
   const athleteServiceSource = await read('lib/athlete-service.ts');
 
   assert.match(coachRequestServiceSource, /existingRequest/);
+  assert.match(coachRequestServiceSource, /existingPendingRequest/);
   assert.match(coachRequestServiceSource, /existingRequest\.status === 'REJECTED'/);
   assert.match(coachRequestServiceSource, /db\.coachRequest\.update\(/);
   assert.match(athleteServiceSource, /loadCoachSearchState/);
+  assert.match(athleteServiceSource, /request\.status === 'PENDING'/);
   assert.match(athleteServiceSource, /listForAthlete/);
 });
 
@@ -79,7 +81,7 @@ test('athlete onboarding surfaces request state in profile and coach-search UI',
   const routeSource = await read('app/api/athlete/coach-requests/route.ts');
 
   assert.match(profileSource, /Request pending|Waiting for/);
-  assert.match(searchSource, /Request pending|Send request again|Back to profile/);
+  assert.match(searchSource, /Request pending|Send request again|Back to profile|Wait for current request/);
   assert.match(searchSource, /fetch\('\/api\/athlete\/coach-requests'\)/);
   assert.match(routeSource, /athleteService/);
   assert.match(routeSource, /loadCoachSearchState/);
@@ -104,6 +106,7 @@ test('template workflow supports duplication and library filtering', async () =>
 
   assert.match(templateServiceSource, /duplicateForCoach/);
   assert.match(duplicateRouteSource, /templateService\.duplicateForCoach/);
+  assert.match(templatesClientSource, /libraryMessage/);
   assert.match(templatesClientSource, /filterText/);
   assert.match(templatesClientSource, /Duplicate template/);
 });

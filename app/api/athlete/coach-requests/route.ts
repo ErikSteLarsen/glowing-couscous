@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   const result = await coachRequestService.createForAthlete(user.id, coachId);
   if (!result.ok) {
     if (result.status === 409) {
-      return NextResponse.json({ error: 'Request already pending' }, { status: 409 });
+      return NextResponse.json({ error: result.error ?? 'Request already pending' }, { status: 409 });
     }
     return NextResponse.json({ error: result.error }, { status: result.status });
   }

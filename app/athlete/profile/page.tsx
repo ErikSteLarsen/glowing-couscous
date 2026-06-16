@@ -22,7 +22,7 @@ export default async function AthleteProfilePage() {
           latestRequest?.status === 'PENDING'
             ? `Your request to ${latestRequest.coach.name} is still waiting for approval.`
             : latestRequest?.status === 'REJECTED'
-              ? `${latestRequest.coach.name} declined your last request. You can look for another coach.`
+            ? `${latestRequest.coach.name} declined your last request. You can retry the same coach or look for another one.`
             : "You don't have a coach yet. Find a coach to get your weekly training plan."
         }
         actions={
@@ -44,7 +44,7 @@ export default async function AthleteProfilePage() {
       ) : latestRequest?.status === 'REJECTED' ? (
         <EmptyState
           title="Request declined"
-          description={`Your last request was declined by ${latestRequest.coach.name}. Search again to request a different coach.`}
+          description={`Your last request was declined by ${latestRequest.coach.name}. Search again to retry the same coach or request a different one.`}
         />
       ) : (
         <EmptyState

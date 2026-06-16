@@ -35,6 +35,7 @@ export function CoachTemplatesClient({ templates }: CoachTemplatesClientProps) {
   const [editingTemplateId, setEditingTemplateId] = useState<number | null>(null);
   const [draft, setDraft] = useState<TemplateDraft>(createEmptyTemplateDraft());
   const [errorMessage, setErrorMessage] = useState('');
+  const [libraryMessage, setLibraryMessage] = useState('');
   const [filterText, setFilterText] = useState('');
   const [sportFilter, setSportFilter] = useState('ALL');
 
@@ -53,6 +54,7 @@ export function CoachTemplatesClient({ templates }: CoachTemplatesClientProps) {
     setEditingTemplateId(null);
     setDraft(createEmptyTemplateDraft());
     setErrorMessage('');
+    setLibraryMessage('');
     setIsDrawerOpen(true);
   }
 
@@ -61,6 +63,7 @@ export function CoachTemplatesClient({ templates }: CoachTemplatesClientProps) {
     setEditingTemplateId(template.id);
     setDraft(templateRecordToDraft(template));
     setErrorMessage('');
+    setLibraryMessage('');
     setIsDrawerOpen(true);
   }
 
@@ -82,6 +85,7 @@ export function CoachTemplatesClient({ templates }: CoachTemplatesClientProps) {
 
   function submitTemplate() {
     setErrorMessage('');
+    setLibraryMessage('');
     const url = mode === 'create' ? '/api/coach/templates' : `/api/coach/templates/${editingTemplateId}`;
     const method = mode === 'create' ? 'POST' : 'PATCH';
 
@@ -111,6 +115,7 @@ export function CoachTemplatesClient({ templates }: CoachTemplatesClientProps) {
     }
 
     setErrorMessage('');
+    setLibraryMessage('');
     startTransition(async () => {
       const response = await fetch(`/api/coach/templates/${editingTemplateId}`, { method: 'DELETE' });
 
@@ -127,15 +132,17 @@ export function CoachTemplatesClient({ templates }: CoachTemplatesClientProps) {
 
   function duplicateTemplate(templateId: number) {
     setErrorMessage('');
+    setLibraryMessage('');
     startTransition(async () => {
       const response = await fetch(`/api/coach/templates/${templateId}/duplicate`, { method: 'POST' });
 
       if (!response.ok) {
         const payload = await response.json().catch(() => ({ error: 'Failed to duplicate template' }));
-        setErrorMessage(payload.error ?? 'Failed to duplicate template');
+        setLibraryMessage(payload.error ?? 'Failed to duplicate template');
         return;
       }
 
+      setLibraryMessage('Template duplicated.');
       router.refresh();
     });
   }
@@ -172,6 +179,8 @@ export function CoachTemplatesClient({ templates }: CoachTemplatesClientProps) {
           ))}
         </select>
       </div>
+
+      {libraryMessage ? <p className="text-sm text-amber-300">{libraryMessage}</p> : null}
 
       <div className="grid gap-5 lg:grid-cols-2">
         {visibleTemplates.map((template) => (
@@ -210,7 +219,8 @@ export function CoachTemplatesClient({ templates }: CoachTemplatesClientProps) {
               <button
                 type="button"
                 onClick={() => duplicateTemplate(template.id)}
-                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200"
+                disabled={isPending}
+                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 disabled:opacity-50"
               >
                 Duplicate template
               </button>

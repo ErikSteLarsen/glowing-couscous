@@ -28,6 +28,7 @@ export default function FindCoachPage() {
       Object.fromEntries(requestState.requests.map((request) => [request.coach.id, request.status])),
     [requestState.requests],
   );
+  const hasPendingRequest = requestState.latestRequest?.status === 'PENDING';
 
   useEffect(() => {
     void loadRequestState();
@@ -86,7 +87,7 @@ export default function FindCoachPage() {
 
     if (res.status === 409) {
       await loadRequestState();
-      setFeedbackMessage('Request pending. Back to profile while you wait for coach approval.');
+      setErrorMessage(payload.error ?? 'Request already pending');
       return;
     }
 
@@ -152,11 +153,13 @@ export default function FindCoachPage() {
                 <button
                   type="button"
                   onClick={() => handleRequest(coach.id)}
-                  disabled={requestsByCoachId[coach.id] === 'PENDING'}
+                  disabled={requestsByCoachId[coach.id] === 'PENDING' || (hasPendingRequest && requestsByCoachId[coach.id] !== 'REJECTED')}
                   className="cursor-pointer rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
                 >
                   {requestsByCoachId[coach.id] === 'PENDING'
                     ? 'Request pending'
+                    : hasPendingRequest
+                      ? 'Wait for current request'
                     : requestsByCoachId[coach.id] === 'REJECTED'
                       ? 'Send request again'
                       : 'Request to join'}
