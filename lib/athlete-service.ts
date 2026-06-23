@@ -1,6 +1,6 @@
-import { addDays, endOfWeek, format, isSameDay, startOfWeek } from 'date-fns';
+import { addDays, addMonths, differenceInCalendarDays, endOfMonth, endOfWeek, format, isSameDay, startOfMonth, startOfWeek } from 'date-fns';
 import { readOverviewCardsFromPrefsJson } from './overview-preferences.ts';
-import { prisma } from '@/lib/prisma';
+import { prisma } from './prisma.ts';
 import { deriveSessionMetrics } from './session-math.ts';
 import { getTempoZoneMeta } from './tempo-blocks.ts';
 
@@ -264,7 +264,22 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       return { profile: null, latestRequest };
     },
 
-    async loadCalendarView(userId: number, weekRef: Date | string) {
+    async loadCalendarView(userId: number, dateRef: Date | string, view: 'week' | 'month' = 'week') {
+      const referenceDate = new Date(dateRef);
+      const resolvedView = view === 'month' ? 'month' : 'week';
+      const periodStart =
+        resolvedView === 'month'
+          ? startOfMonth(referenceDate)
+          : startOfWeek(referenceDate, { weekStartsOn: 1 });
+      const queryStart =
+        resolvedView === 'month'
+          ? startOfWeek(periodStart, { weekStartsOn: 1 })
+          : periodStart;
+      const queryEnd =
+        resolvedView === 'month'
+          ? endOfWeek(endOfMonth(periodStart), { weekStartsOn: 1 })
+          : endOfWeek(referenceDate, { weekStartsOn: 1 });
+
       const athlete = await db.user.findUnique({
         where: { id: userId },
         include: {
@@ -274,8 +289,8 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
           sessions: {
             where: {
               date: {
-                gte: startOfWeek(new Date(weekRef), { weekStartsOn: 1 }),
-                lte: endOfWeek(new Date(weekRef), { weekStartsOn: 1 }),
+                gte: queryStart,
+                lte: queryEnd,
               },
             },
             include: {
@@ -293,8 +308,29 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         return null;
       }
 
-      const weekStart = startOfWeek(new Date(weekRef), { weekStartsOn: 1 });
       const sessions = athlete.sessions.map(mapSessionSummary);
+      const buildDay = (date: Date) => ({
+        label: format(date, 'EEE'),
+        dateLabel: format(date, 'd'),
+        isoDate: format(date, 'yyyy-MM-dd'),
+        isCurrentMonth:
+          date.getMonth() === periodStart.getMonth() &&
+          date.getFullYear() === periodStart.getFullYear(),
+        isToday: isSameDay(date, new Date()),
+        sessions: sessions.filter((session) => isSameDay(session.date, date)),
+      });
+      const days =
+        resolvedView === 'week'
+          ? Array.from({ length: 7 }, (_, index) => buildDay(addDays(periodStart, index)))
+          : [];
+      const totalMonthDays =
+        resolvedView === 'month' ? differenceInCalendarDays(queryEnd, queryStart) + 1 : 0;
+      const weeks =
+        resolvedView === 'month'
+          ? Array.from({ length: totalMonthDays / 7 }, (_, weekIndex) =>
+              Array.from({ length: 7 }, (_, dayIndex) => buildDay(addDays(queryStart, weekIndex * 7 + dayIndex))),
+            )
+          : [];
 
       return {
         athlete: {
@@ -302,20 +338,15 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
           name: athlete.name,
         },
         coachName: athlete.coach?.name ?? null,
-        week: {
-          start: weekStart,
-          previousStart: addDays(weekStart, -7),
-          nextStart: addDays(weekStart, 7),
+        view: resolvedView,
+        period: {
+          start: periodStart,
+          previousStart: resolvedView === 'month' ? addMonths(periodStart, -1) : addDays(periodStart, -7),
+          nextStart: resolvedView === 'month' ? addMonths(periodStart, 1) : addDays(periodStart, 7),
+          label: resolvedView === 'month' ? format(periodStart, 'MMMM yyyy') : `Week of ${format(periodStart, 'd MMM')}`,
         },
-        days: Array.from({ length: 7 }, (_, index) => {
-          const date = addDays(weekStart, index);
-          return {
-            label: format(date, 'EEE'),
-            dateLabel: format(date, 'd'),
-            isoDate: format(date, 'yyyy-MM-dd'),
-            sessions: sessions.filter((session) => isSameDay(session.date, date)),
-          };
-        }),
+        days,
+        weeks,
       };
     },
 
