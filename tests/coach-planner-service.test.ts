@@ -11,8 +11,8 @@ const read = (relativePath: string) => readFile(path.join(root, relativePath), '
 
 const block = {
   id: 1,
-  kind: 'work',
-  zone: 3,
+  kind: 'work' as const,
+  zone: 3 as const,
   durationSec: 1800,
   reps: null,
   targetType: null,
@@ -249,4 +249,18 @@ test('planner API routes and navigation use the coach planner service', async ()
   assert.match(navigation, /href: '\/coach\/planner'/);
   assert.match(oldBuilderPage, /redirect\('\/coach\/planner/);
   assert.match(templatesClient, /\/coach\/planner\?templateId=/);
+});
+
+test('planner page exposes calendar-first visual workout creation', async () => {
+  const pageSource = await read('app/(app)/coach/planner/page.tsx');
+  const clientSource = await read('app/(app)/coach/planner/PlannerClient.tsx');
+
+  assert.match(pageSource, /coachPlannerService\.loadWorkspace/);
+  assert.match(pageSource, /PlannerClient/);
+  assert.match(clientSource, /Click a day to plan/);
+  assert.match(clientSource, /Session canvas/);
+  assert.match(clientSource, /draggable/);
+  assert.match(clientSource, /duplicatePlannerBlock/);
+  assert.match(clientSource, /deriveSessionMetrics/);
+  assert.match(clientSource, /\/api\/coach\/planner\/sessions/);
 });
