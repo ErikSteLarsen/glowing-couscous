@@ -1,9 +1,8 @@
-import { format } from 'date-fns';
 import { redirect } from 'next/navigation';
-import { ActionLink, Badge, EmptyState, PageShell, StatTile, Surface, TopBar } from '@/components/ui';
+import { ActionLink, EmptyState, PageShell, StatTile, Surface, TopBar, Badge } from '@/components/ui';
+import { CoachRequestsPanel } from '@/components/CoachRequestsPanel';
 import { getCurrentUser } from '@/lib/auth-session';
 import { getCoachOverview } from '@/lib/coach-service';
-import { CoachRequestsPanel } from '@/components/CoachRequestsPanel';
 
 export default async function CoachPage() {
   const user = await getCurrentUser();
@@ -14,85 +13,71 @@ export default async function CoachPage() {
   if (!coach) {
     return (
       <PageShell size="wide">
-        <EmptyState title="No data found" description="Something went wrong loading your dashboard." />
+        <EmptyState title="No coach data found" description="The coach workspace could not be loaded." />
       </PageShell>
     );
   }
 
-  const athleteRows = coach.coachedAthletes.map((athlete) => {
-    const currentWeek = athlete.planWeeks[0];
-    const sessionCount = currentWeek?.sessions.length ?? 0;
-    const status = sessionCount >= 4 ? 'Well planned' : sessionCount > 0 ? 'Partially planned' : 'Empty week';
-    return {
-      id: athlete.id,
-      athleteName: athlete.user.name,
-      email: athlete.user.email,
-      sessionCount,
-      status,
-      weekStart: currentWeek?.weekStart ?? null,
-      weeklyNote: currentWeek?.weeklyNote ?? null,
-    };
-  });
-
   return (
     <PageShell size="wide">
       <TopBar
-        eyebrow="Coach dashboard"
-        title={coach.name}
-        description="Athlete list and upcoming week status."
+        eyebrow="Athletes"
+        title="Your athletes"
+        description={`${coach.athletes.length} active athletes${coach.pendingRequests.length ? ` · ${coach.pendingRequests.length} pending requests` : ''}.`}
+        actions={
+          <ActionLink href="/coach/templates" tone="secondary">
+            Open templates
+          </ActionLink>
+        }
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatTile label="Athletes" value={String(athleteRows.length)} detail="Coach-owned roster" />
+        <StatTile label="Athletes" value={String(coach.athletes.length)} detail="Active roster" />
         <StatTile
-          label="Planned sessions"
-          value={String(athleteRows.reduce((total, row) => total + row.sessionCount, 0))}
-          detail="Current week"
+          label="Pending requests"
+          value={String(coach.pendingRequests.length)}
+          detail="Awaiting coach response"
         />
         <StatTile
-          label="Strong weeks"
-          value={String(athleteRows.filter((row) => row.status === 'Well planned').length)}
-          detail="4 or more sessions scheduled"
+          label="Planned sessions"
+          value={String(coach.athletes.reduce((total, athlete) => total + athlete.plannedCount, 0))}
+          detail="Current week"
         />
       </div>
 
-      <CoachRequestsPanel />
+      {coach.pendingRequests.length > 0 ? <CoachRequestsPanel /> : null}
 
       <Surface>
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Roster</p>
-            <h2 className="mt-2 text-xl font-semibold text-white">Athletes and week readiness</h2>
-          </div>
-          <Badge tone="brand">Week planner only</Badge>
-        </div>
-
-        <div className="mt-5 space-y-4">
-          {athleteRows.map((row) => (
-            <div key={row.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-lg font-semibold text-white">{row.athleteName}</h3>
-                    <Badge tone={row.status === 'Well planned' ? 'success' : row.status === 'Empty week' ? 'warning' : 'neutral'}>
-                      {row.status}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-slate-300">{row.email}</p>
-                  <p className="text-sm text-slate-300">
-                    {row.weekStart ? `Week of ${format(row.weekStart, 'd MMM yyyy')}` : 'No active week plan yet'}
-                  </p>
-                  {row.weeklyNote ? <p className="max-w-2xl text-sm text-slate-300">{row.weeklyNote}</p> : null}
+        <div className="grid gap-3">
+          {coach.athletes.map((athlete) => (
+            <a
+              key={athlete.id}
+              href={`/coach/athletes/${athlete.id}`}
+              className="grid gap-4 rounded-[12px] border border-[var(--border)] bg-[#FBFAF7] p-4 lg:grid-cols-[1.6fr_1fr_1fr]"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-[15px] font-semibold text-[var(--text)]">{athlete.name}</h2>
+                  <Badge tone={athlete.flag.tone}>{athlete.flag.label}</Badge>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="rounded-2xl border border-white/10 bg-black/10 px-4 py-3 text-center">
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Sessions</p>
-                    <p className="mt-1 text-lg font-semibold text-white">{row.sessionCount}</p>
-                  </div>
-                  <ActionLink href={`/coach/athletes/${row.id}`}>Open planner</ActionLink>
-                </div>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">{athlete.email}</p>
               </div>
-            </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
+                  This week
+                </p>
+                <p className="metric-text mt-2 text-[18px] font-semibold text-[var(--text)]">
+                  {athlete.completedCount} / {athlete.plannedCount}
+                </p>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">{athlete.compliancePct}% complete</p>
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
+                  Next session
+                </p>
+                <p className="mt-2 text-sm text-[var(--text-secondary)]">{athlete.nextSession}</p>
+              </div>
+            </a>
           ))}
         </div>
       </Surface>

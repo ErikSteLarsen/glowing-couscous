@@ -1,46 +1,140 @@
-import { prisma } from '@/lib/prisma';
-import { normalizeTemplateDraft, validateTemplateDraft } from '@/lib/planner';
-import { serializeWorkoutBlocksForPersistence } from '@/lib/workout-spec';
+import { prisma } from './prisma.ts';
+import { SPORT_OPTIONS } from './sport.ts';
 
 type TemplateServiceDeps = {
   db?: typeof prisma;
 };
 
+type NormalizedBlock = {
+  kind: 'warmup' | 'work' | 'recovery' | 'cooldown';
+  zone: 1 | 2 | 3 | 4 | 5;
+  durationSec: number;
+  reps: number | null;
+  targetType: 'power' | 'pace' | 'hr' | null;
+  targetLow: number | null;
+  targetHigh: number | null;
+  note: string | null;
+};
+
+function mapLegacyBlockType(input: string) {
+  switch (input) {
+    case 'WARMUP':
+      return 'warmup';
+    case 'COOLDOWN':
+      return 'cooldown';
+    case 'REST':
+      return 'recovery';
+    default:
+      return 'work';
+  }
+}
+
+function normalizeBlocks(input: unknown): NormalizedBlock[] {
+  if (!Array.isArray(input) || input.length === 0) {
+    return [];
+  }
+
+  return input.map((block) => {
+    const item = (block ?? {}) as Record<string, unknown>;
+    const kindSource = typeof item.kind === 'string' ? item.kind : typeof item.blockType === 'string' ? mapLegacyBlockType(item.blockType) : 'work';
+    const normalizedKind =
+      kindSource === 'warmup' || kindSource === 'work' || kindSource === 'recovery' || kindSource === 'cooldown'
+        ? kindSource
+        : 'work';
+    const zone = Number(item.zone);
+    const rawDurationSec =
+      item.durationSec ?? (item.durationMinutes != null ? Number(item.durationMinutes) * 60 : 0);
+    const durationSec = Number(rawDurationSec);
+
+    return {
+      kind: normalizedKind,
+      zone: zone >= 1 && zone <= 5 ? (zone as 1 | 2 | 3 | 4 | 5) : 2,
+      durationSec: Number.isFinite(durationSec) && durationSec > 0 ? Math.round(durationSec) : 600,
+      reps: typeof item.reps === 'number' ? Math.round(item.reps) : null,
+      targetType:
+        item.targetType === 'power' || item.targetType === 'pace' || item.targetType === 'hr'
+          ? item.targetType
+          : null,
+      targetLow: typeof item.targetLow === 'number' ? Math.round(item.targetLow) : null,
+      targetHigh: typeof item.targetHigh === 'number' ? Math.round(item.targetHigh) : null,
+      note:
+        typeof item.note === 'string'
+          ? item.note.trim() || null
+          : typeof item.instructions === 'string'
+            ? item.instructions.trim() || null
+            : typeof item.title === 'string'
+              ? item.title.trim() || null
+              : null,
+    };
+  });
+}
+
+function normalizeTemplateDraft(input: unknown) {
+  const draft = (input ?? {}) as Record<string, unknown>;
+  const sport = typeof draft.sport === 'string' ? draft.sport : typeof draft.sportType === 'string' ? draft.sportType : '';
+  const name = typeof draft.name === 'string' ? draft.name.trim() : '';
+  const summary = typeof draft.summary === 'string' ? draft.summary.trim() : '';
+  const blocks = normalizeBlocks(draft.blocks);
+
+  if (!name) {
+    return { error: 'Template name is required.' as const };
+  }
+
+  if (!sport || !SPORT_OPTIONS.includes(sport as (typeof SPORT_OPTIONS)[number])) {
+    return { error: 'Sport is required.' as const };
+  }
+
+  if (blocks.length === 0) {
+    return { error: 'At least one block is required.' as const };
+  }
+
+  return {
+    error: null,
+    draft: {
+      name,
+      sport,
+      summary: summary || null,
+      blocks,
+    },
+  };
+}
+
 export function createTemplateService({ db = prisma }: TemplateServiceDeps = {}) {
   return {
     async listForCoach(coachId: number) {
-      return db.sessionTemplate.findMany({
-        where: { coachId },
+      return db.template.findMany({
+        where: { ownerId: coachId },
         include: {
           blocks: {
             orderBy: { sortOrder: 'asc' },
           },
         },
-        orderBy: [{ sportType: 'asc' }, { name: 'asc' }],
+        orderBy: [{ sport: 'asc' }, { name: 'asc' }],
       });
     },
 
     async saveForCoach(coachId: number, draftInput: unknown, templateId?: number) {
-      const draft = normalizeTemplateDraft(draftInput);
-      const validationError = validateTemplateDraft(draft);
-
-      if (validationError) {
-        return { error: validationError };
+      const normalized = normalizeTemplateDraft(draftInput);
+      if (normalized.error) {
+        return { error: normalized.error };
       }
 
       const templateData = {
-        coachId,
-        sportType: draft.sportType,
-        name: draft.name,
-        summary: draft.summary || null,
+        ownerId: coachId,
+        name: normalized.draft.name,
+        sport: normalized.draft.sport,
+        summary: normalized.draft.summary,
       };
 
-      if (!templateId) {
-        await db.sessionTemplate.create({
+      if (templateId === undefined) {
+        await db.template.create({
           data: {
             ...templateData,
             blocks: {
-              create: serializeWorkoutBlocksForPersistence(draft.blocks),
+              create: normalized.draft.blocks.map((block, index) => ({
+                ...block,
+                sortOrder: index,
+              })),
             },
           },
         });
@@ -48,21 +142,28 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
         return { error: null };
       }
 
-      const existing = await db.sessionTemplate.findUnique({ where: { id: templateId } });
-      if (!existing || existing.coachId !== coachId) {
+      if (!Number.isInteger(templateId) || templateId <= 0) {
+        return { error: 'Template id is invalid.' };
+      }
+
+      const existing = await db.template.findUnique({ where: { id: templateId } });
+      if (!existing || existing.ownerId !== coachId) {
         return { error: 'Template not found.' };
       }
 
       await db.$transaction([
-        db.sessionTemplateBlock.deleteMany({ where: { templateId } }),
-        db.sessionTemplate.update({
+        db.block.deleteMany({ where: { templateId } }),
+        db.template.update({
           where: { id: templateId },
           data: {
-            sportType: draft.sportType,
-            name: draft.name,
-            summary: draft.summary || null,
+            name: normalized.draft.name,
+            sport: normalized.draft.sport,
+            summary: normalized.draft.summary,
             blocks: {
-              create: serializeWorkoutBlocksForPersistence(draft.blocks),
+              create: normalized.draft.blocks.map((block, index) => ({
+                ...block,
+                sortOrder: index,
+              })),
             },
           },
         }),
@@ -72,17 +173,17 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
     },
 
     async deleteForCoach(coachId: number, templateId: number) {
-      const template = await db.sessionTemplate.findUnique({ where: { id: templateId } });
-      if (!template || template.coachId !== coachId) {
+      const template = await db.template.findUnique({ where: { id: templateId } });
+      if (!template || template.ownerId !== coachId) {
         return { error: 'Template not found.' };
       }
 
-      await db.sessionTemplate.delete({ where: { id: templateId } });
+      await db.template.delete({ where: { id: templateId } });
       return { error: null };
     },
 
     async duplicateForCoach(coachId: number, templateId: number) {
-      const template = await db.sessionTemplate.findUnique({
+      const template = await db.template.findUnique({
         where: { id: templateId },
         include: {
           blocks: {
@@ -90,21 +191,26 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
           },
         },
       });
-      if (!template || template.coachId !== coachId) {
+      if (!template || template.ownerId !== coachId) {
         return { error: 'Template not found.' };
       }
 
-      await db.sessionTemplate.create({
+      await db.template.create({
         data: {
-          coachId,
-          sportType: template.sportType,
+          ownerId: coachId,
           name: `${template.name} (Copy)`,
+          sport: template.sport,
           summary: template.summary,
           blocks: {
             create: template.blocks.map((block) => ({
-              blockType: block.blockType,
-              title: block.title,
-              instructions: block.instructions,
+              kind: block.kind,
+              zone: block.zone,
+              durationSec: block.durationSec,
+              reps: block.reps,
+              targetType: block.targetType,
+              targetLow: block.targetLow,
+              targetHigh: block.targetHigh,
+              note: block.note,
               sortOrder: block.sortOrder,
             })),
           },

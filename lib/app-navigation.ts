@@ -16,16 +16,18 @@ export function getPrimaryNavigation(
 ): NavItem[] {
   if (role === 'COACH') {
     return [
-      { label: 'Dashboard', href: '/coach', matchPrefix: '/coach' },
+      { label: 'Athletes', href: '/coach', matchPrefix: '/coach' },
+      { label: 'Plan builder', href: '/coach/builder', matchPrefix: '/coach/builder' },
       { label: 'Templates', href: '/coach/templates', matchPrefix: '/coach/templates' },
     ];
   }
 
   return [
-    { label: 'Week plan', href: '/athlete', matchPrefix: '/athlete' },
-    ...(hasActiveCoach
-      ? []
-      : [{ label: 'Coach discovery', href: '/athlete/find-coach', matchPrefix: '/athlete/find-coach' }]),
+    { label: 'Home', href: '/athlete', matchPrefix: '/athlete' },
+    { label: 'Calendar', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
+    { label: 'Activity', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
+    ...(hasActiveCoach ? [] : [{ label: 'Coach', href: '/athlete/find-coach', matchPrefix: '/athlete/find-coach' }]),
+    { label: 'Settings', href: '/settings', matchPrefix: '/settings' },
   ];
 }
 

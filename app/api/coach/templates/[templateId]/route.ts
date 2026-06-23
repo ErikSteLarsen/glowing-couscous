@@ -11,8 +11,13 @@ export async function PATCH(
     if (error) return error;
 
     const { templateId } = await params;
+    const parsedTemplateId = Number(templateId);
+    if (!Number.isInteger(parsedTemplateId) || parsedTemplateId <= 0) {
+      return NextResponse.json({ error: 'Invalid templateId' }, { status: 400 });
+    }
+
     const body = await request.json();
-    const result = await templateService.saveForCoach(user.id, body, Number(templateId));
+    const result = await templateService.saveForCoach(user.id, body, parsedTemplateId);
 
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: 400 });
@@ -34,7 +39,12 @@ export async function DELETE(
     if (error) return error;
 
     const { templateId } = await params;
-    const result = await templateService.deleteForCoach(user.id, Number(templateId));
+    const parsedTemplateId = Number(templateId);
+    if (!Number.isInteger(parsedTemplateId) || parsedTemplateId <= 0) {
+      return NextResponse.json({ error: 'Invalid templateId' }, { status: 400 });
+    }
+
+    const result = await templateService.deleteForCoach(user.id, parsedTemplateId);
 
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: 404 });

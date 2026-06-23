@@ -1,6 +1,15 @@
 'use client';
 import { useMemo, useState } from 'react';
-import { ActionLink, PageShell, Surface, TopBar } from '@/components/ui';
+import {
+  ActionLink,
+  dangerTextClassName,
+  formFieldClassName,
+  primaryButtonClassName,
+  successTextClassName,
+  PageShell,
+  Surface,
+  TopBar,
+} from '@/components/ui';
 
 type CoachResult = { id: number; name: string; email: string };
 type CoachRequestRecord = {
@@ -100,16 +109,16 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
       />
       <Surface>
         {requestState.latestRequest?.status === 'PENDING' ? (
-          <div className="mb-4 rounded-2xl border border-[rgba(90,124,255,0.28)] bg-[rgba(90,124,255,0.12)] px-4 py-3 text-sm text-slate-100">
+          <div className="mb-4 rounded-[12px] border border-[#DCE0D2] bg-[var(--brand-tint)] px-4 py-3 text-sm text-[#57654E]">
             Request pending with {requestState.latestRequest.coach.name}.{' '}
-            <span className="text-slate-200">Back to profile while you wait for approval.</span>
+            <span className="text-[#6A655C]">Back to profile while you wait for approval.</span>
           </div>
         ) : null}
 
-        {feedbackMessage ? <p className="mb-4 text-sm text-emerald-300">{feedbackMessage}</p> : null}
-        {errorMessage ? <p className="mb-4 text-sm text-amber-300">{errorMessage}</p> : null}
+        {feedbackMessage ? <p className={`mb-4 ${successTextClassName}`}>{feedbackMessage}</p> : null}
+        {errorMessage ? <p className={`mb-4 ${dangerTextClassName}`}>{errorMessage}</p> : null}
 
-        <div className="mb-4 rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+        <div className="mb-4 rounded-[12px] border border-dashed border-[var(--field-border)] bg-[var(--field-surface)] px-4 py-3 text-sm text-[var(--text-secondary)]">
           Messaging coming soon. For now, review coach details and send a join request.
         </div>
 
@@ -119,12 +128,12 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or email"
-            className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+            className={`${formFieldClassName} flex-1`}
           />
           <button
             type="submit"
             disabled={loading}
-            className="cursor-pointer rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+            className={primaryButtonClassName}
           >
             {loading ? 'Searching…' : 'Search'}
           </button>
@@ -141,16 +150,16 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
         {results.length > 0 && (
           <div className="mt-4 space-y-3">
             {results.map((coach) => (
-              <div key={coach.id} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+              <div key={coach.id} className="rounded-[12px] border border-[var(--field-border)] bg-[var(--field-surface)] px-4 py-3">
                 {requestsByCoachId[coach.id] === 'REJECTED' ? (
-                  <p className="mb-2 text-xs text-amber-300">
+                  <p className="mb-2 text-xs text-[var(--status-danger)]">
                     Your last request to this coach was declined. Send request again if you want to retry.
                   </p>
                 ) : null}
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-white">{coach.name}</p>
-                    <p className="text-xs text-slate-400">{coach.email}</p>
+                    <p className="text-sm font-semibold text-[var(--text)]">{coach.name}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">{coach.email}</p>
                   </div>
                   <button
                     type="button"
@@ -159,7 +168,7 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
                       requestsByCoachId[coach.id] === 'PENDING' ||
                       (hasPendingRequest && requestsByCoachId[coach.id] !== 'REJECTED')
                     }
-                    className="cursor-pointer rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+                    className={primaryButtonClassName}
                   >
                     {requestsByCoachId[coach.id] === 'PENDING'
                       ? 'Request pending'
@@ -176,7 +185,7 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
         )}
 
         {lastSubmittedQuery && results.length === 0 && !loading && (
-          <p className="mt-4 text-sm text-slate-400">No coaches found for &ldquo;{lastSubmittedQuery}&rdquo;.</p>
+          <p className="mt-4 text-sm text-[var(--text-secondary)]">No coaches found for &ldquo;{lastSubmittedQuery}&rdquo;.</p>
         )}
       </Surface>
     </PageShell>

@@ -22,7 +22,7 @@ After changing the Prisma schema, run `pnpm db:push` then `pnpm db:seed` to rebu
 
 **Import alias:** `@/*` maps to the project root.
 
-**Domain-level string enums:** Because the datasource is SQLite, domain values like `role`, `sportType`, and `blockType` are stored as constrained strings rather than Prisma enums. Valid values are `COACH`/`ATHLETE`, `RUNNING`/`BIKING`/`SWIMMING`/`STRENGTH`/`STRETCHING`/`REST`, and `WARMUP`/`MAIN_SET`/`COOLDOWN`/`INTERVALS`/`REPS`/`REST`/`NOTE`.
+**Domain-level string enums:** Because the datasource is SQLite, domain values are stored as constrained strings rather than Prisma enums. Current core values are `COACH`/`ATHLETE`, `RUNNING`/`BIKING`/`SWIMMING`/`STRENGTH`/`STRETCHING`/`REST`, session statuses such as `planned`/`completed`/`missed`, block kinds `warmup`/`work`/`recovery`/`cooldown`, and target types `power`/`pace`/`hr`.
 
 ### Service boundaries
 
@@ -30,7 +30,10 @@ All feature logic belongs behind these `lib/` modules. Do not reintroduce Prisma
 
 | Module | Owns |
 |---|---|
-| `lib/planner-service.ts` | Week-scoped planner loading and all planner mutations (sessions, weekly note, copy-previous-week, completion) |
+| `lib/planner-service.ts` | Coach-side week scheduling mutations and transitional planner loading for the remaining week-based APIs |
+| `lib/coach-service.ts` | Coach roster and athlete-detail read models |
+| `lib/athlete-service.ts` | Athlete Home, Calendar, Session, Activity, discovery, and profile reads |
+| `lib/assignment-service.ts` | Coach builder assignment creation and template-to-session scheduling |
 | `lib/workout-spec.ts` | Block draft normalization, validation, and persistence transforms |
 | `lib/workout-editor.ts` | Shared workout content draft shaping used by both session editing and template editing |
 | `lib/template-service.ts` | Coach template list/create/update/delete |
@@ -42,18 +45,25 @@ All feature logic belongs behind these `lib/` modules. Do not reintroduce Prisma
 - `components/WorkoutBlocksEditor.tsx` — block editing UI used by both session and template editors
 - `components/CoachEditorDrawer.tsx` — coach-side editor drawer shell
 - `components/ui.tsx` — shared primitives (`PageShell`, `TopBar`, `Surface`, `ActionLink`, etc.)
+- `components/tempo/*` — Tempo-specific primitives such as `SessionBlockBar`, `StatusBadge`, `MetricText`, and navigation/form controls
 
 ### Route structure
 
 ```
 /                              Landing / demo role entry
-/coach                         Coach dashboard (athlete list + week status)
-/coach/athletes/[athleteId]    Athlete planner (week strip + day detail)
+/coach                         Coach roster
+/coach/athletes/[athleteId]    Athlete detail
+/coach/builder                 Coach builder + assignment
 /coach/templates               Coach template library
-/athlete                       Athlete week view
+/athlete                       Athlete Home
+/athlete/calendar              Athlete Calendar
+/athlete/session/[sessionId]   Athlete session detail
+/athlete/live/[sessionId]      Athlete live execution
+/athlete/activity              Athlete activity history
+/settings                      Shared settings / overview preferences
 ```
 
-Route handlers live under `app/api/` and call into the service layer. Client components are colocated with their route (`CoachPlannerClient.tsx`, `CoachTemplatesClient.tsx`).
+Route handlers live under `app/api/` and call into the service layer. Client components are colocated with their route (`BuilderClient.tsx`, `CoachTemplatesClient.tsx`, `SessionDetailClient.tsx`).
 
 ### Auth
 

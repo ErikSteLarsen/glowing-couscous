@@ -3,7 +3,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Surface } from '@/components/ui';
+import {
+  ActionLink,
+  dangerTextClassName,
+  formFieldClassName,
+  formLabelClassName,
+  primaryButtonClassName,
+  successTextClassName,
+  Surface,
+} from '@/components/ui';
 
 type Account = {
   id: number;
@@ -64,23 +72,23 @@ export function ProfileClient({
       <Surface>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300">Display name</label>
+            <label className={formLabelClassName}>Display name</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white"
+              className={formFieldClassName}
             />
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+          <div className="rounded-[12px] border border-[var(--field-border)] bg-[var(--field-surface)] px-4 py-3 text-sm text-[var(--text-secondary)]">
             <p>Email: {account.email}</p>
             <p>Role: {account.role}</p>
           </div>
-          {error && <p className="text-sm text-red-400">{error}</p>}
-          {message && <p className="text-sm text-emerald-400">{message}</p>}
+          {error && <p className={dangerTextClassName}>{error}</p>}
+          {message && <p className={successTextClassName}>{message}</p>}
           <button
             type="submit"
             disabled={saving}
-            className="cursor-pointer rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 disabled:opacity-50"
+            className={primaryButtonClassName}
           >
             {saving ? 'Saving…' : 'Save changes'}
           </button>
@@ -89,24 +97,31 @@ export function ProfileClient({
       <Surface>
         {athleteState !== null ? (
           athleteState.latestRequest?.status === 'PENDING' ? (
-            <p className="text-sm text-slate-300">
-              Request pending: Waiting for {athleteState.latestRequest.coach.name} to accept your
-              request.
-            </p>
+            <div className="space-y-3">
+              <p className="text-sm text-[var(--text-secondary)]">
+                Request pending: Waiting for {athleteState.latestRequest.coach.name} to accept your request.
+              </p>
+              <ActionLink href="/athlete/find-coach" tone="secondary">Open coach discovery</ActionLink>
+            </div>
           ) : athleteState.latestRequest?.status === 'REJECTED' ? (
-            <p className="text-sm text-slate-300">
-              {athleteState.latestRequest.coach.name} declined your last request. You can retry or
-              find a different coach.
-            </p>
+            <div className="space-y-3">
+              <p className="text-sm text-[var(--text-secondary)]">
+                {athleteState.latestRequest.coach.name} declined your last request. You can retry or find a different coach.
+              </p>
+              <ActionLink href="/athlete/find-coach" tone="secondary">Find a coach</ActionLink>
+            </div>
           ) : athleteState.profile ? (
-            <p className="text-sm text-slate-300">You have an active coach.</p>
+            <p className="text-sm text-[var(--text-secondary)]">You have an active coach.</p>
           ) : (
-            <p className="text-sm text-slate-300">
-              You don&apos;t have a coach yet. Find a coach to get your weekly training plan.
-            </p>
+            <div className="space-y-3">
+              <p className="text-sm text-[var(--text-secondary)]">
+                You don&apos;t have a coach yet. Find a coach to get your weekly training plan.
+              </p>
+              <ActionLink href="/athlete/find-coach" tone="secondary">Find a coach</ActionLink>
+            </div>
           )
         ) : (
-          <p className="text-sm text-slate-300">
+          <p className="text-sm text-[var(--text-secondary)]">
             Coach profile details will expand here later.
           </p>
         )}

@@ -29,7 +29,7 @@ export function SessionCard({ session, compact = false }: SessionCardProps) {
   const sportLabel = getSportLabel(session.sportType);
 
   return (
-    <article className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <article className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -38,25 +38,25 @@ export function SessionCard({ session, compact = false }: SessionCardProps) {
             {session.completion?.isDone ? <Badge tone="success">Done</Badge> : null}
           </div>
           <div>
-            <h3 className="text-base font-semibold text-white">{session.title}</h3>
-            <p className="mt-1 text-sm text-slate-300">{session.summary || 'Detailed instructions open in the session panel.'}</p>
+            <h3 className="text-base font-semibold text-[var(--text)]">{session.title}</h3>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">{session.summary || 'Detailed instructions open in the session panel.'}</p>
           </div>
         </div>
-        <div className="text-right text-sm text-slate-300">
+        <div className="text-right text-sm text-[var(--text-secondary)]">
           <p>{format(session.scheduledDate, 'HH:mm')}</p>
           {session.durationMinutes ? <p>{session.durationMinutes} min</p> : null}
         </div>
       </div>
 
       {!compact && session.blocks?.length ? (
-        <div className="mt-4 space-y-2 border-t border-white/10 pt-4">
+        <div className="mt-4 space-y-2 border-t border-[var(--border)] pt-4">
           {session.blocks.map((block) => (
-            <div key={block.id} className="rounded-xl bg-black/10 px-3 py-2">
+            <div key={block.id} className="rounded-[10px] bg-[#FBFAF7] px-3 py-2">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-medium text-white">{block.title}</p>
-                <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">{block.blockType.replaceAll('_', ' ')}</span>
+                <p className="text-sm font-medium text-[var(--text)]">{block.title}</p>
+                <span className="text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">{block.blockType.replaceAll('_', ' ')}</span>
               </div>
-              {block.instructions ? <p className="mt-1 text-sm text-slate-300">{block.instructions}</p> : null}
+              {block.instructions ? <p className="mt-1 text-sm text-[var(--text-secondary)]">{block.instructions}</p> : null}
             </div>
           ))}
         </div>

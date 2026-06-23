@@ -21,24 +21,28 @@ export function WorkoutBlocksEditor({
   addLabel = 'Add block',
 }: WorkoutBlocksEditorProps) {
   return (
-    <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div className="space-y-3 rounded-[12px] border border-[var(--border)] bg-[#FBFAF7] p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="font-semibold text-white">{title}</p>
-          <p className="mt-1 text-sm text-slate-300">{description}</p>
+          <p className="font-semibold text-[var(--text)]">{title}</p>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">{description}</p>
         </div>
-        <button type="button" onClick={onAddBlock} className="rounded-2xl border border-white/10 bg-black/10 px-3 py-2 text-sm font-semibold text-slate-200">
+        <button
+          type="button"
+          onClick={onAddBlock}
+          className="min-h-11 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--text)]"
+        >
           {addLabel}
         </button>
       </div>
 
       <div className="space-y-3">
         {blocks.map((block, index) => (
-          <div key={`${block.blockType}-${index}`} className="rounded-2xl border border-white/10 bg-black/10 p-4">
+          <div key={`${block.blockType}-${index}`} className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-4">
             <div className="grid gap-3 sm:grid-cols-[0.9fr_1.3fr]">
-              <label className="space-y-2 text-sm text-slate-300">
+              <label className="space-y-2 text-sm text-[var(--text-secondary)]">
                 <span>Type</span>
-                <select value={block.blockType} onChange={(event) => onUpdateBlock(index, 'blockType', event.target.value)} className="w-full rounded-2xl border border-white/10 bg-[#0f1729] px-4 py-3 text-white outline-none">
+                <select value={block.blockType} onChange={(event) => onUpdateBlock(index, 'blockType', event.target.value)} className="min-h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] px-4 py-3 text-[var(--text)] outline-none">
                   {BLOCK_OPTIONS.map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -46,16 +50,16 @@ export function WorkoutBlocksEditor({
                   ))}
                 </select>
               </label>
-              <label className="space-y-2 text-sm text-slate-300">
+              <label className="space-y-2 text-sm text-[var(--text-secondary)]">
                 <span>Title</span>
-                <input value={block.title} onChange={(event) => onUpdateBlock(index, 'title', event.target.value)} className="w-full rounded-2xl border border-white/10 bg-[#0f1729] px-4 py-3 text-white outline-none" placeholder="Warmup" />
+                <input value={block.title} onChange={(event) => onUpdateBlock(index, 'title', event.target.value)} className="min-h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] px-4 py-3 text-[var(--text)] outline-none" placeholder="Warmup" />
               </label>
             </div>
-            <label className="mt-3 block space-y-2 text-sm text-slate-300">
+            <label className="mt-3 block space-y-2 text-sm text-[var(--text-secondary)]">
               <span>Instructions</span>
-              <textarea value={block.instructions} onChange={(event) => onUpdateBlock(index, 'instructions', event.target.value)} className="min-h-24 w-full rounded-2xl border border-white/10 bg-[#0f1729] px-4 py-3 text-white outline-none" placeholder="15 min easy + 4 strides" />
+              <textarea value={block.instructions} onChange={(event) => onUpdateBlock(index, 'instructions', event.target.value)} className="min-h-24 w-full rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] px-4 py-3 text-[var(--text)] outline-none" placeholder="15 min easy + 4 strides" />
             </label>
-            <button type="button" onClick={() => onRemoveBlock(index)} className="mt-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200" disabled={blocks.length === 1}>
+            <button type="button" onClick={() => onRemoveBlock(index)} className="mt-3 min-h-11 rounded-[10px] border border-[#FAD8BE] bg-[#FEEDE0] px-4 text-sm font-semibold text-[#B45516]" disabled={blocks.length === 1}>
               Remove block
             </button>
           </div>

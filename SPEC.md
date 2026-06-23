@@ -12,10 +12,10 @@ The app already ships these core behaviors:
 
 - Real authentication with Auth.js, credentials login/signup, and optional Google sign-in
 - Coach and athlete role-based entry points
-- Coach dashboard with roster status and coach-request handling
-- Coach week planner with weekly notes, session editing, and copy-previous-week behavior
-- Coach-owned private templates with structured workout blocks
-- Athlete coach-request onboarding, week view, and session completion notes
+- Coach roster, athlete detail, builder assignment, and coach-request handling
+- Coach-owned private templates with structured workout blocks and builder handoff
+- Athlete coach-request onboarding plus Tempo Home, Calendar, Session, Live, Activity, and Settings surfaces
+- Session completion persisted as activity/compliance data derived from structured blocks
 
 ## Current scope
 
@@ -26,10 +26,10 @@ The app already ships these core behaviors:
 
 ### Planning model
 
-- The app is week-first, not month-first.
-- Weeks start on Monday.
-- Each week can have a weekly note.
-- Sessions contain structured blocks such as warmup, main set, cooldown, intervals, reps, rest, and note content.
+- Training remains Monday-aligned even as the UI expands beyond a single week view.
+- Plans group athlete training windows and optional goal races.
+- Sessions derive duration, TSS, and zone distribution from structured blocks.
+- Coaches schedule templates onto athlete calendars through the builder.
 
 ### Activity types
 
@@ -42,16 +42,16 @@ The app already ships these core behaviors:
 
 ### UX shape
 
-- Coach planning uses a compact week strip plus focused day detail.
-- Session editing uses a slide-over / drawer pattern.
-- Athlete view prioritizes clarity over dense planning controls.
+- Coach workflow centers on roster -> athlete detail -> builder -> templates.
+- Athlete workflow centers on Home -> Calendar -> Session/Live -> Activity.
+- Session and template editing still use shared drawer/block-editor patterns.
 
 ## Near-term roadmap
 
 These are the strongest next moves for the product and codebase:
 
 1. Add automated test coverage around auth guards, planner behavior, template behavior, and the coach dashboard read model.
-2. Add lightweight coverage around the new pure utility modules that shape weeks and sport labels.
+2. Remove the remaining unused week-planner-era code paths once all Tempo surfaces have replacement coverage.
 3. Keep improving athlete onboarding, pending-request visibility, and cross-role navigation polish.
 
 ## Product principles
@@ -59,7 +59,8 @@ These are the strongest next moves for the product and codebase:
 - Keep coach planning fast and readable.
 - Keep athlete consumption simple and low-friction.
 - Prefer structured session content over freeform long text.
-- Reuse templates and copy-week flows before introducing heavy recurrence features.
+- Derive metrics from structured blocks instead of duplicating them across surfaces.
+- Reuse templates and builder assignment flows before introducing heavy recurrence features.
 - Preserve a small MVP surface rather than expanding into analytics or collaboration too early.
 
 ## Non-goals for this version
@@ -67,9 +68,9 @@ These are the strongest next moves for the product and codebase:
 - Multi-coach collaboration
 - Shared business/workspace accounts
 - Full recurring-session rules
-- Month-planner editing
+- Full month-planner editing
 - Deep analytics or performance dashboards
-- Detailed performed metrics beyond completion and notes
+- Multi-device live coaching or messaging
 - Custom sport definitions
 
 ## Notes for future planning

@@ -10,6 +10,7 @@ type PendingRequest = {
 export function CoachRequestsPanel() {
   const [requests, setRequests] = useState<PendingRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -22,40 +23,45 @@ export function CoachRequestsPanel() {
   }, []);
 
   async function handleAction(requestId: number, action: 'accept' | 'reject') {
+    setMessage('');
     const res = await fetch(`/api/coach/requests/${requestId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action }),
     });
-    if (res.ok) setRequests((prev) => prev.filter((r) => r.id !== requestId));
+    if (res.ok) {
+      setRequests((prev) => prev.filter((r) => r.id !== requestId));
+      setMessage(action === 'accept' ? 'Athlete added to your roster.' : 'Request rejected.');
+    }
   }
 
   if (loading || requests.length === 0) return null;
 
   return (
     <Surface>
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Athlete requests</p>
-      <h2 className="mt-2 text-xl font-semibold text-white">Pending join requests</h2>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Athlete requests</p>
+      <h2 className="mt-2 text-xl font-semibold text-[var(--text)]">Pending join requests</h2>
+      {message ? <p className="mt-2 text-sm text-[#57654E]">{message}</p> : null}
       <div className="mt-4 space-y-3">
         {requests.map((req) => (
           <div
             key={req.id}
-            className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+            className="flex items-center justify-between rounded-[12px] border border-[var(--border)] bg-[#FBFAF7] px-4 py-3"
           >
             <div>
-              <p className="text-sm font-semibold text-white">{req.athlete.name}</p>
-              <p className="text-xs text-slate-400">{req.athlete.email}</p>
+              <p className="text-sm font-semibold text-[var(--text)]">{req.athlete.name}</p>
+              <p className="text-xs text-[var(--text-secondary)]">{req.athlete.email}</p>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => handleAction(req.id, 'accept')}
-                className="cursor-pointer rounded-xl bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-500"
+                className="min-h-11 rounded-[10px] bg-[var(--text)] px-4 text-sm font-semibold text-white"
               >
                 Accept
               </button>
               <button
                 onClick={() => handleAction(req.id, 'reject')}
-                className="cursor-pointer rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-semibold text-slate-300 hover:bg-white/10"
+                className="min-h-11 rounded-[10px] border border-[#FAD8BE] bg-[#FEEDE0] px-4 text-sm font-semibold text-[#B45516]"
               >
                 Reject
               </button>

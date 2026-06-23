@@ -16,7 +16,7 @@ test('shared layout primitives define centered width tiers', async () => {
   assert.match(uiSource, /size\s*=\s*'default'/);
   assert.match(uiSource, /narrow:\s*'max-w-3xl'/);
   assert.match(uiSource, /default:\s*'max-w-5xl'/);
-  assert.match(uiSource, /wide:\s*'max-w-7xl'/);
+  assert.match(uiSource, /wide:\s*'max-w-\[1140px\]'/);
   assert.match(uiSource, /align\s*=\s*'left'/);
   assert.match(uiSource, /text-center/);
   assert.doesNotMatch(layoutSource, /max-w-screen-2xl/);
@@ -60,10 +60,10 @@ test('signed-in routes use grouped app shell while auth pages stay centered', as
 
   assert.match(shellSource, /useState\(false\)/);
   assert.match(shellSource, /AppSidebar/);
-  assert.match(shellSource, /lg:grid-cols-\[/);
+  assert.match(shellSource, /md:grid-cols-\[/);
   assert.match(sidebarSource, /getPrimaryNavigation/);
   assert.match(sidebarSource, /props\.mobileOpen/);
-  assert.match(sidebarSource, /onClick=\{props\.onClose\}/);
+  assert.match(sidebarSource, /onClick=\{props\.onClose\}|onClick=\{onNavigate\}/);
   assert.match(profileMenuSource, /profileActions/);
   assert.match(profileMenuSource, /SignOutButton/);
 });

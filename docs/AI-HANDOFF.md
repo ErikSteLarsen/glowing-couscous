@@ -4,7 +4,7 @@ This is the fastest way to understand the repo before changing code.
 
 ## What this app is
 
-Workout Planner is a coach-athlete planning app built around weekly training plans. Coaches own plan creation. Athletes consume the plan, complete sessions, and leave notes.
+Workout Planner is now a Tempo-aligned coach-athlete planning app. Coaches manage rosters, templates, and builder assignments; athletes use Home, Calendar, Session, Live, Activity, and Settings surfaces to follow the plan.
 
 ## Current shipped state
 
@@ -14,23 +14,24 @@ Workout Planner is a coach-athlete planning app built around weekly training pla
 - Credentials login and signup are implemented.
 - Google sign-in is supported when OAuth env vars are configured.
 - Users are routed by role: coaches to `/coach`, athletes to `/athlete`.
-- Athletes without a coach are redirected into the coach-request flow instead of the planner.
+- Athletes without a coach are redirected into the coach-request flow instead of the main Tempo surfaces.
 
 ### Main user flows
 
-- **Coach dashboard:** roster overview plus pending coach requests.
-- **Coach planner:** week navigation, day-focused planning, weekly note editing, session create/edit/delete, copy previous week.
-- **Coach templates:** create, edit, delete, and apply private session templates.
+- **Coach roster:** athlete overview plus pending coach requests.
+- **Coach athlete detail:** weekly status, recent planned-vs-done history, and builder handoff.
+- **Coach builder:** assign a template onto an athlete schedule.
+- **Coach templates:** create, edit, duplicate, delete, and load private session templates into the builder.
 - **Athlete onboarding:** find coach, send request, wait for approval, handle rejection.
-- **Athlete week view:** read weekly note, open sessions, mark completion, add notes.
+- **Athlete Tempo surfaces:** Home, Calendar, Session detail, Live execution, Activity history, and Settings preferences.
 
 ### Route map
 
 | Area | Routes |
 |---|---|
 | Auth | `/`, `/login`, `/signup`, `/setup` |
-| Coach | `/coach`, `/coach/athletes/[athleteId]`, `/coach/templates` |
-| Athlete | `/athlete`, `/athlete/profile`, `/athlete/find-coach` |
+| Coach | `/coach`, `/coach/athletes/[athleteId]`, `/coach/builder`, `/coach/templates` |
+| Athlete | `/athlete`, `/athlete/calendar`, `/athlete/session/[sessionId]`, `/athlete/live/[sessionId]`, `/athlete/activity`, `/settings`, `/athlete/profile`, `/athlete/find-coach` |
 | API | `/api/auth/*`, `/api/coach/*`, `/api/athlete/*`, `/api/coaches` |
 
 ## Data model
@@ -42,11 +43,11 @@ Important models:
 - `User` — coach or athlete account
 - `Account` — Auth.js provider link
 - `CoachRequest` — athlete-to-coach join request
-- `AthleteProfile` — accepted coach-athlete relationship
-- `PlanWeek` — one athlete week
-- `PlannedSession` and `SessionBlock` — planned training content
-- `SessionTemplate` and `SessionTemplateBlock` — coach-owned reusable templates
-- `SessionCompletion` — athlete done state and notes
+- `Plan` — athlete training window and goal-race context
+- `Session` and `Block` — planned training content with block-derived metrics
+- `Template` — coach-owned reusable workout definitions
+- `Activity` — completed session outcomes and compliance
+- `Assignment` — coach scheduling records
 
 ## Code boundaries that matter
 
@@ -59,14 +60,15 @@ Important models:
 
 ### Planner and templates
 
-- `lib/planner-service.ts` owns week loading and planner mutations.
+- `lib/planner-service.ts` owns the remaining coach-side week planner APIs and their mutations.
 - `lib/template-service.ts` owns template persistence.
-- `lib/coach-service.ts` owns the coach dashboard read model.
-- `lib/athlete-service.ts` owns athlete week/profile reads.
+- `lib/coach-service.ts` owns roster and athlete-detail read models.
+- `lib/assignment-service.ts` owns builder assignment creation and deduplication.
+- `lib/athlete-service.ts` owns athlete Home/Calendar/Session/Live/Activity/discovery/profile reads.
 - `lib/coach-request-service.ts` owns onboarding and coach-request flows.
 - `lib/week.ts` owns Monday-based week shaping and per-day session grouping.
 - `lib/sport.ts` owns shared sport constants and UI labels.
-- `lib/workout-spec.ts` owns block normalization and persistence shaping.
+- `lib/session-math.ts` owns duration/TSS/zone derivation from structured blocks.
 - `lib/workout-editor.ts` owns shared draft shaping used by planners and templates.
 
 ### Shared UI
@@ -79,9 +81,8 @@ Important models:
 
 These are the first places to be careful when extending the app:
 
-1. The main runtime boundaries are now much clearer, but there is still no committed automated test suite around them.
-2. The coach dashboard, planner, and template flows are good candidates for service-level tests because they now have cleaner seams.
-3. Athlete onboarding and request-state UX still has room for polish even though the core flow is in place.
+1. The Tempo routes now build and test cleanly, but service-level coverage is still lighter than the surface area.
+2. Athlete onboarding and request-state UX still has room for polish even though the core flow is in place.
 
 ## Safe extension rules
 
@@ -96,7 +97,7 @@ These are the first places to be careful when extending the app:
 
 ## Best next step
 
-The clearest next step is to **add boundary-focused tests around auth, planner, template, and coach-dashboard flows**.
+The clearest next step is to **deepen service-level coverage around auth, planner, assignment, template, and coach-detail flows**.
 
 Why this is the highest-value move:
 
@@ -106,17 +107,17 @@ Why this is the highest-value move:
 
 ## Recommended next work after that
 
-1. Add focused tests around `lib/api-auth.ts`, `lib/planner-service.ts`, `lib/template-service.ts`, and `lib/coach-service.ts`.
-2. Add a lightweight test strategy for the new pure utility modules such as `lib/week.ts` and `lib/sport.ts`.
-3. Continue polishing athlete onboarding and cross-role navigation now that auth is stable.
+1. Add focused tests around `lib/api-auth.ts`, `lib/planner-service.ts`, `lib/template-service.ts`, `lib/assignment-service.ts`, and `lib/coach-service.ts`.
+2. Continue polishing athlete onboarding and cross-role navigation now that the Tempo shell is stable.
 
 ## Fast file map for common tasks
 
 | Task | Start here |
 |---|---|
 | Change auth flow | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` |
-| Change coach planner behavior | `lib/planner-service.ts`, `lib/week.ts`, `app/coach/athletes/[athleteId]/page.tsx`, `app/api/coach/athletes/[athleteId]/planner/...` |
-| Change athlete week behavior | `app/athlete/page.tsx`, `app/api/athlete/sessions/[sessionId]/completion/route.ts` |
+| Change coach scheduling behavior | `lib/planner-service.ts`, `lib/assignment-service.ts`, `app/coach/builder/page.tsx`, `app/api/coach/assignments/route.ts`, `app/api/coach/sessions/[sessionId]/route.ts` |
+| Change coach roster / athlete detail | `lib/coach-service.ts`, `app/coach/page.tsx`, `app/coach/athletes/[athleteId]/page.tsx` |
+| Change athlete Tempo surfaces | `lib/athlete-service.ts`, `app/athlete/page.tsx`, `app/athlete/calendar/page.tsx`, `app/athlete/session/[sessionId]/page.tsx`, `app/athlete/activity/page.tsx`, `app/api/athlete/sessions/[sessionId]/completion/route.ts` |
 | Change template behavior | `lib/template-service.ts`, `lib/sport.ts`, `app/coach/templates/page.tsx`, `app/api/coach/templates/*` |
 | Change onboarding / coach requests | `app/athlete/find-coach/page.tsx`, `app/athlete/profile/page.tsx`, `app/api/athlete/coach-requests/route.ts`, `app/api/coach/requests/*` |
 

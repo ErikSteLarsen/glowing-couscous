@@ -24,15 +24,19 @@ export function CoachEditorDrawer({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm">
-      <div className="ml-auto flex h-full w-full max-w-2xl flex-col overflow-y-auto border-l border-white/10 bg-[#0f1729] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.4)]">
+    <div className="fixed inset-0 z-50 bg-[rgba(35,34,32,0.22)] backdrop-blur-sm">
+      <div className="ml-auto flex h-full w-full max-w-2xl flex-col overflow-y-auto border-l border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_24px_80px_rgba(35,34,32,0.18)]">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{eyebrow}</p>
-            <h3 className="mt-2 text-2xl font-semibold text-white">{title}</h3>
-            <p className="mt-2 text-sm text-slate-300">{description}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">{eyebrow}</p>
+            <h3 className="mt-2 text-2xl font-semibold text-[var(--text)]">{title}</h3>
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">{description}</p>
           </div>
-          <button type="button" onClick={onClose} className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200">
+          <button
+            type="button"
+            onClick={onClose}
+            className="min-h-11 rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] px-4 text-sm font-semibold text-[var(--text)]"
+          >
             Close
           </button>
         </div>

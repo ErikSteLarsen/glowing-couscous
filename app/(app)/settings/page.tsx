@@ -1,33 +1,27 @@
 import { redirect } from 'next/navigation';
-import { PageShell, Surface, TopBar } from '@/components/ui';
+import { PageShell, TopBar } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth-session';
+import { accountService } from '@/lib/account-service';
+import { readOverviewCardsFromPrefsJson } from '@/lib/overview-preferences';
+import { SettingsClient } from './SettingsClient';
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
   if (!user) redirect('/login');
 
+  const account = await accountService.getAccount(user.id);
+  if (!account) redirect('/login');
+
+  const initialOverviewCards = readOverviewCardsFromPrefsJson(account.prefsJson);
+
   return (
     <PageShell size="wide">
       <TopBar
         eyebrow="Settings"
-        title="App settings"
-        description="System-level preferences will grow here over time."
+        title="Preferences"
+        description="Choose how much overview information appears on the athlete home screen."
       />
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Surface>
-          <h2 className="text-lg font-semibold text-white">Units</h2>
-          <p className="mt-2 text-sm text-slate-300">
-            Metric and imperial preferences (kilometer vs mile) will be added here in a later
-            schema-backed pass.
-          </p>
-        </Surface>
-        <Surface>
-          <h2 className="text-lg font-semibold text-white">Notifications</h2>
-          <p className="mt-2 text-sm text-slate-300">
-            Notification preferences will be added here in a later schema-backed pass.
-          </p>
-        </Surface>
-      </div>
+      <SettingsClient role={account.role} initialOverviewCards={initialOverviewCards} />
     </PageShell>
   );
 }

@@ -15,11 +15,17 @@ This document describes the **implemented** architecture, not old plans.
 
 - `/coach`
 - `/coach/athletes/[athleteId]`
+- `/coach/builder`
 - `/coach/templates`
 
 ### Athlete routes
 
 - `/athlete`
+- `/athlete/calendar`
+- `/athlete/session/[sessionId]`
+- `/athlete/live/[sessionId]`
+- `/athlete/activity`
+- `/settings`
 - `/athlete/profile`
 - `/athlete/find-coach`
 
@@ -43,9 +49,8 @@ Use `auth-session` in pages and server components. Use `api-auth` in route handl
 
 ### Planner boundary
 
-- `lib/planner-service.ts` owns week-scoped planner loading and mutations.
-- Planner commands currently include session save/delete, weekly note save, copy previous week, and athlete completion updates.
-- Coach planner routes under `app/api/coach/athletes/[athleteId]/planner/...` should stay thin and delegate to this service.
+- `lib/planner-service.ts` owns coach-side week scheduling mutations for session save/delete flows.
+- Active API entry points are the coach session routes under `app/api/coach/sessions/*`.
 
 If a feature changes planner behavior, add it here first instead of scattering Prisma calls through pages and routes.
 
@@ -54,15 +59,20 @@ If a feature changes planner behavior, add it here first instead of scattering P
 - `lib/template-service.ts` owns coach template listing and persistence.
 - `app/api/coach/templates/*` should keep delegating to this service.
 
-### Coach-dashboard boundary
+### Coach boundary
 
-- `lib/coach-service.ts` owns the coach dashboard read model.
-- `app/coach/page.tsx` should keep using this service instead of embedding Prisma reads.
+- `lib/coach-service.ts` owns the coach roster and athlete-detail read models.
+- `app/coach/page.tsx` and `app/coach/athletes/[athleteId]/page.tsx` should keep using this service instead of embedding Prisma reads.
 
 ### Athlete boundary
 
-- `lib/athlete-service.ts` owns athlete profile and athlete-facing week/profile reads.
-- `app/athlete/page.tsx` and `app/athlete/profile/page.tsx` should stay thin and delegate to this service.
+- `lib/athlete-service.ts` owns athlete Home, Calendar, Session detail, Live, Activity, discovery, and profile reads.
+- Athlete pages under `app/(app)/athlete/**` plus `app/(app)/settings/page.tsx` should stay thin and delegate to this service where appropriate.
+
+### Assignment boundary
+
+- `lib/assignment-service.ts` owns coach builder assignment creation and duplicate-prevention rules.
+- `app/api/coach/assignments/route.ts` should stay thin and delegate to this service.
 
 ### Coach-request boundary
 
@@ -73,6 +83,7 @@ If a feature changes planner behavior, add it here first instead of scattering P
 
 - `lib/week.ts` owns Monday-based week shaping and grouping helpers.
 - `lib/sport.ts` owns shared sport constants and human-readable sport labels.
+- `lib/session-math.ts` owns derived duration, TSS, zone totals, and block-bar segments from Tempo blocks.
 
 ### Workout-content boundary
 
@@ -89,17 +100,19 @@ Important ownership relationships:
 
 - `User.role` drives access and redirects.
 - `CoachRequest` tracks athlete-to-coach connection requests.
-- `AthleteProfile` represents an accepted coach-athlete relationship.
-- `PlanWeek` is unique per athlete and Monday week start.
-- `PlannedSession` belongs to a `PlanWeek`.
-- `SessionCompletion` belongs to a session and athlete user.
-- `SessionTemplate` is coach-owned and private.
+- `User.coachId` represents the accepted coach-athlete relationship.
+- `Plan` owns goal/race windows for an athlete.
+- `Session` belongs to an athlete and may also belong to a `Plan` or `Template`.
+- `Block` is the structured source of truth for session duration, TSS, and zone distribution.
+- `Activity` stores performed session outcomes.
+- `Assignment` records coach scheduling actions onto athlete calendars.
+- `Template` is coach-owned and private.
 
 ## Transitional areas
 
-The main read/write boundaries are now clearer, but they still need protection:
+The main read/write boundaries are clearer, but they still need protection:
 
-- There is no automated regression coverage around `planner-service`, `template-service`, `coach-service`, or the auth guard layer.
+- The current automated coverage is strongest around architecture, shell, and utility seams; service-level regression coverage is still thinner than the UI surface area.
 - Pages still compose several service outputs directly, so future work should avoid slipping business logic back into route components.
 
 ## Safe extension rules
@@ -113,4 +126,4 @@ The main read/write boundaries are now clearer, but they still need protection:
 
 ## Highest-value architectural next step
 
-Add boundary-focused tests around planner, template, coach-dashboard, and auth behavior so the new module boundaries stay stable as features are added.
+Add deeper service-level coverage around planner, template, assignment, coach-detail, and auth behavior so the current Tempo boundaries stay stable as features are added.

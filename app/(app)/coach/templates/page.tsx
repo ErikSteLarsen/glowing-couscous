@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { PageShell, TopBar } from '@/components/ui';
+import { ActionLink, PageShell, TopBar } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth-session';
 import { templateService } from '@/lib/template-service';
 import { CoachTemplatesClient } from './CoachTemplatesClient';
@@ -13,12 +13,17 @@ export default async function CoachTemplatesPage() {
   return (
     <PageShell size="wide">
       <TopBar
-        eyebrow="Coach templates"
-        title="Private session templates"
-        description="Templates are coach-owned reusable sessions. In the MVP they are the main structured shortcut besides manual week-to-week copying."
+        eyebrow="Templates"
+        title="Session templates"
+        description="Reusable Tempo session structures. Load one into the builder, duplicate it, or remove it."
+        actions={
+          <ActionLink href="/coach/builder" tone="secondary">
+            Open builder
+          </ActionLink>
+        }
       />
 
-      <CoachTemplatesClient templates={templates.map((template) => ({ ...template }))} />
+      <CoachTemplatesClient templates={templates} />
     </PageShell>
   );
 }

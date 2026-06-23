@@ -6,13 +6,23 @@ export async function PATCH(req: NextRequest) {
   const { user, error } = await requireSignedInUser();
   if (error || !user) return error;
 
-  const { name } = await req.json();
-  const trimmedName = String(name ?? '').trim();
+  const { name, overviewCards } = (await req.json()) as {
+    name?: unknown;
+    overviewCards?: unknown;
+  };
 
-  if (!trimmedName) {
-    return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+  if (name !== undefined) {
+    const trimmedName = String(name ?? '').trim();
+    if (!trimmedName) {
+      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    }
+
+    await accountService.updateDisplayName(user.id, trimmedName);
   }
 
-  await accountService.updateDisplayName(user.id, trimmedName);
+  if (overviewCards !== undefined) {
+    await accountService.updateOverviewCards(user.id, overviewCards);
+  }
+
   return NextResponse.json({ ok: true });
 }

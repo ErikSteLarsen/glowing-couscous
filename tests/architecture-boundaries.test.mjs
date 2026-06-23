@@ -90,15 +90,15 @@ test('athlete onboarding surfaces request state in profile and coach-search UI',
   assert.match(routeSource, /Request already pending/);
 });
 
-test('athlete week view exposes a current-week shortcut and smarter default day selection', async () => {
+test('athlete home page uses Tempo dashboard sections and session entry points', async () => {
   const athletePageSource = await read('app/(app)/athlete/page.tsx');
-  const weekViewSource = await read('components/AthleteWeekView.tsx');
 
-  assert.match(athletePageSource, /This week/);
-  assert.match(athletePageSource, /Viewed week|Week of/);
-  assert.match(athletePageSource, /key=\{plannerSnapshot\.week\.start\}/);
-  assert.match(weekViewSource, /findIndex\(\(day\) => day\.sessions\.length > 0\)/);
-  assert.match(weekViewSource, /useState\(initialSelectedIndex\)/);
+  assert.match(athletePageSource, /Good morning/);
+  assert.match(athletePageSource, /Today/);
+  assert.match(athletePageSource, /Next days/);
+  assert.match(athletePageSource, /Open calendar/);
+  assert.match(athletePageSource, /Customise overview in Settings/);
+  assert.match(athletePageSource, /athlete\/session/);
 });
 
 test('template workflow supports duplication and library filtering', async () => {
@@ -108,9 +108,9 @@ test('template workflow supports duplication and library filtering', async () =>
 
   assert.match(templateServiceSource, /duplicateForCoach/);
   assert.match(duplicateRouteSource, /templateService\.duplicateForCoach/);
-  assert.match(templatesClientSource, /libraryMessage/);
+  assert.match(templatesClientSource, /setMessage/);
   assert.match(templatesClientSource, /filterText/);
-  assert.match(templatesClientSource, /Duplicate template/);
+  assert.match(templatesClientSource, /Duplicate/);
 });
 
 test('account route avoids direct prisma access in route handlers', async () => {
@@ -123,5 +123,29 @@ test('account route avoids direct prisma access in route handlers', async () => 
 test('package scripts include the architecture test command', async () => {
   const packageJson = await read('package.json');
 
-  assert.match(packageJson, /"test": "node --test tests\/\*\.test\.mjs"/);
+  assert.match(
+    packageJson,
+    /"test": "node --experimental-strip-types --test tests\/\*\.test\.mjs tests\/\*\.test\.ts"/,
+  );
+});
+
+test('planner service keeps a nonzero fallback duration for legacy blocks without a total duration', async () => {
+  const plannerServiceSource = await read('lib/planner-service.ts');
+
+  assert.match(plannerServiceSource, /fallbackDurationSec \|\| 600/);
+  assert.match(plannerServiceSource, /Math\.max\(\s*fallbackDurationSec \|\| 600,\s*totalDurationSec -/);
+});
+
+test('planner service preserves adjusted state when a coach edits an existing session', async () => {
+  const plannerServiceSource = await read('lib/planner-service.ts');
+
+  assert.match(plannerServiceSource, /select: \{ id: true, athleteId: true, adjusted: true \}/);
+  assert.match(plannerServiceSource, /adjusted: existing\.adjusted/);
+});
+
+test('completion undo writes planned status without implying adjusted-state branching', async () => {
+  const completionRouteSource = await read('app/api/athlete/sessions/[sessionId]/completion/route.ts');
+
+  assert.match(completionRouteSource, /data: \{ status: 'planned' \}/);
+  assert.doesNotMatch(completionRouteSource, /session\.adjusted \? 'planned' : 'planned'/);
 });

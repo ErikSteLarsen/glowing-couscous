@@ -1,30 +1,46 @@
 @import "tailwindcss";
 
 @theme {
-  --color-surface-950: #0d1220;
-  --color-surface-900: #111827;
-  --color-surface-850: #172033;
-  --color-surface-800: #1d2840;
-  --color-surface-700: #273556;
-  --color-brand-500: #3b5af5;
-  --color-brand-400: #5a7cff;
-  --color-brand-300: #86a4ff;
-  --color-brand-200: #b4c8ff;
-  --color-brand-100: #d8e3ff;
+  --color-paper: #F3F2EE;
+  --color-surface: #FFFFFF;
+  --color-sunken: #ECEAE4;
+  --color-border: #E6E2DB;
+  --color-ink-3: #9C968B;
+  --color-ink-2: #6A655C;
+  --color-ink: #232220;
+  --color-sage: #6E7E63;
+  --color-sage-tint: #E9ECE3;
+  --color-zone-1: #3B82F6;
+  --color-zone-1-tint: #E8F0FE;
+  --color-zone-2: #22C55E;
+  --color-zone-2-tint: #E3F7EC;
+  --color-zone-3: #EAB308;
+  --color-zone-3-tint: #FBF1D5;
+  --color-zone-4: #F97316;
+  --color-zone-4-tint: #FEEDE0;
+  --color-zone-5: #EF4444;
+  --color-zone-5-tint: #FCE8E7;
 }
 
 :root {
-  --background: #0d1220;
-  --surface: #111827;
-  --surface-elevated: #172033;
-  --border: #24314e;
-  --border-strong: #314267;
-  --text: #e8eefc;
-  --text-muted: #9fb0d3;
-  --brand: #5a7cff;
-  --brand-strong: #3b5af5;
-  --success: #2fb36d;
-  --warning: #d8a33f;
+  --background: var(--color-paper);
+  --surface: var(--color-surface);
+  --sunken: var(--color-sunken);
+  --border: var(--color-border);
+  --field-surface: #FBFAF7;
+  --field-border: #D8D3C8;
+  --field-focus: #C8D0BB;
+  --field-selected-border: #DCE0D2;
+  --field-selected-text: #57654E;
+  --text: var(--color-ink);
+  --text-secondary: var(--color-ink-2);
+  --text-muted: var(--color-ink-3);
+  --brand: var(--color-sage);
+  --brand-tint: var(--color-sage-tint);
+  --status-success: #57654E;
+  --status-danger: #B45516;
+  --shadow-raised: 0 6px 20px -8px rgba(35, 34, 32, 0.14);
+  --shadow-overlay: 0 24px 50px -18px rgba(35, 34, 32, 0.22);
 }
 
 * {
@@ -32,15 +48,16 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at top, #16233d 0%, #0d1220 45%);
+  background: var(--background);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-schibsted), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -63,8 +80,13 @@ select {
   }
 }
 
+.metric-text {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
 ::selection {
-  background: rgba(90, 124, 255, 0.35);
+  background: #DCE2D3;
 }
 
 ::-webkit-scrollbar {
@@ -73,14 +95,14 @@ select {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0d1220;
+  background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #273556;
+  background: #C9C3B8;
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #314267;
+  background: #B6B0A4;
 }

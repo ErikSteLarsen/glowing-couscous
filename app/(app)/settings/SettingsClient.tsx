@@ -1,0 +1,110 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { OVERVIEW_CARD_IDS, type OverviewCardId } from '@/lib/overview-preferences';
+import { Toggle } from '@/components/tempo/Toggle';
+
+const overviewLabels: Record<OverviewCardId, { title: string; description: string }> = {
+  coachNote: {
+    title: 'Coach note',
+    description: 'Show the right-rail coaching note on Home when a coach is connected.',
+  },
+  lastActivity: {
+    title: 'Last activity',
+    description: 'Keep the most recent completed session visible on Home.',
+  },
+  weekLoad: {
+    title: 'Weekly load',
+    description: 'Show total planned duration and TSS for the current week.',
+  },
+  trend: {
+    title: 'Fitness trend',
+    description: 'Display recent TSS bars in the Home side rail.',
+  },
+};
+
+export function SettingsClient({
+  role,
+  initialOverviewCards,
+}: {
+  role: string | null;
+  initialOverviewCards: OverviewCardId[];
+}) {
+  const [overviewCards, setOverviewCards] = useState(initialOverviewCards);
+  const [message, setMessage] = useState('');
+  const [isPending, startTransition] = useTransition();
+
+  function updateCard(cardId: OverviewCardId, enabled: boolean) {
+    const nextCards = enabled
+      ? OVERVIEW_CARD_IDS.filter((id) => id === cardId || overviewCards.includes(id))
+      : overviewCards.filter((id) => id !== cardId);
+
+    setOverviewCards(nextCards);
+    setMessage('');
+    startTransition(async () => {
+      const response = await fetch('/api/account/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ overviewCards: nextCards }),
+      });
+
+      if (!response.ok) {
+        setMessage('Could not save overview settings.');
+        return;
+      }
+
+      setMessage('Overview settings updated.');
+    });
+  }
+
+  return (
+    <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+      {role === 'ATHLETE' ? (
+        <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
+            Overview
+          </p>
+          <div className="mt-4 space-y-3">
+            {OVERVIEW_CARD_IDS.map((cardId) => {
+              const meta = overviewLabels[cardId];
+              const checked = overviewCards.includes(cardId);
+
+              return (
+                <div
+                  key={cardId}
+                  className="flex min-h-11 items-center justify-between gap-4 rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] px-4 py-3"
+                >
+                  <div>
+                    <p className="text-[13.5px] font-semibold text-[var(--text)]">{meta.title}</p>
+                    <p className="mt-1 text-[12px] leading-[1.5] text-[var(--text-secondary)]">
+                      {meta.description}
+                    </p>
+                  </div>
+                  <Toggle checked={checked} onChange={(enabled) => updateCard(cardId, enabled)} disabled={isPending} />
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      <div className="space-y-6">
+        <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
+          <p className="text-[15px] font-semibold text-[var(--text)]">Units</p>
+          <p className="mt-2 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
+            Metric remains the active default for distance and pace across Tempo screens.
+          </p>
+        </section>
+        <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
+          <p className="text-[15px] font-semibold text-[var(--text)]">Notifications</p>
+          <p className="mt-2 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
+            Notification delivery preferences stay intentionally minimal until the athlete and coach mobile flows are fully migrated.
+          </p>
+        </section>
+        {message ? <p className="text-sm text-[#B45516]">{message}</p> : null}
+      </div>
+    </div>
+  );
+}

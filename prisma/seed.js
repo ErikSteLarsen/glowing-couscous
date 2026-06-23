@@ -1,264 +1,363 @@
 const { PrismaClient } = require('@prisma/client');
-const { startOfWeek, addDays, addHours } = require('date-fns');
+const { addDays, addHours, endOfWeek, startOfWeek, subWeeks } = require('date-fns');
 const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
 const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
 
+function overviewCards(...cards) {
+  return JSON.stringify({ overviewCards: cards });
+}
+
+function zoneDistribution(blocks) {
+  const totals = [0, 0, 0, 0, 0];
+
+  for (const block of blocks) {
+    totals[block.zone - 1] += block.durationSec;
+  }
+
+  return JSON.stringify(totals);
+}
+
+async function createTemplateWithBlocks(data) {
+  return prisma.template.create({
+    data: {
+      ownerId: data.ownerId,
+      name: data.name,
+      sport: data.sport,
+      summary: data.summary,
+      blocks: {
+        create: data.blocks.map((block, index) => ({
+          ...block,
+          sortOrder: index,
+        })),
+      },
+    },
+    include: {
+      blocks: {
+        orderBy: { sortOrder: 'asc' },
+      },
+    },
+  });
+}
+
+async function createSessionWithBlocks(data) {
+  return prisma.session.create({
+    data: {
+      athleteId: data.athleteId,
+      planId: data.planId ?? null,
+      templateId: data.templateId ?? null,
+      assignedById: data.assignedById ?? null,
+      date: data.date,
+      timeLabel: data.timeLabel ?? null,
+      sport: data.sport,
+      title: data.title,
+      summary: data.summary ?? null,
+      status: data.status ?? 'planned',
+      source: data.source,
+      adjusted: data.adjusted ?? false,
+      blocks: {
+        create: data.blocks.map((block, index) => ({
+          ...block,
+          sortOrder: index,
+        })),
+      },
+    },
+    include: {
+      blocks: {
+        orderBy: { sortOrder: 'asc' },
+      },
+    },
+  });
+}
+
 async function main() {
   const passwordHash = await bcrypt.hash('demo1234', 12);
 
+  await prisma.assignment.deleteMany();
+  await prisma.activity.deleteMany();
+  await prisma.block.deleteMany();
+  await prisma.session.deleteMany();
+  await prisma.plan.deleteMany();
+  await prisma.template.deleteMany();
   await prisma.coachRequest.deleteMany();
   await prisma.account.deleteMany();
-  await prisma.sessionCompletion.deleteMany();
-  await prisma.sessionBlock.deleteMany();
-  await prisma.plannedSession.deleteMany();
-  await prisma.sessionTemplateBlock.deleteMany();
-  await prisma.sessionTemplate.deleteMany();
-  await prisma.planWeek.deleteMany();
-  await prisma.athleteProfile.deleteMany();
   await prisma.user.deleteMany();
 
-  const coach = await prisma.user.create({
+  const coachErik = await prisma.user.create({
     data: {
       email: 'coach@demo.local',
-      name: 'Coach Ingrid',
+      name: 'Erik Krogh',
       role: 'COACH',
+      selfCoached: false,
       passwordHash,
+      prefsJson: overviewCards(),
     },
   });
 
-  const [athleteOneUser, athleteTwoUser] = await Promise.all([
-    prisma.user.create({
-      data: { email: 'maria@demo.local', name: 'Maria Solberg', role: 'ATHLETE', passwordHash },
-    }),
-    prisma.user.create({
-      data: { email: 'anders@demo.local', name: 'Anders Vik', role: 'ATHLETE', passwordHash },
-    }),
-  ]);
-
-  const [athleteOne, athleteTwo] = await Promise.all([
-    prisma.athleteProfile.create({
-      data: {
-        userId: athleteOneUser.id,
-        coachId: coach.id,
-      },
-    }),
-    prisma.athleteProfile.create({
-      data: {
-        userId: athleteTwoUser.id,
-        coachId: coach.id,
-      },
-    }),
-  ]);
-
-  const [tempoTemplate, strengthTemplate] = await Promise.all([
-    prisma.sessionTemplate.create({
-      data: {
-        coachId: coach.id,
-        sportType: 'RUNNING',
-        name: 'Tempo Builder',
-        summary: 'Short threshold session for controlled quality work.',
-        blocks: {
-          create: [
-            { blockType: 'WARMUP', title: 'Easy warmup', instructions: '15 min easy + 4 strides', sortOrder: 0 },
-            { blockType: 'MAIN_SET', title: 'Tempo set', instructions: '3 x 8 min steady threshold, 2 min jog between', sortOrder: 1 },
-            { blockType: 'COOLDOWN', title: 'Cooldown', instructions: '10 min easy jog', sortOrder: 2 },
-          ],
-        },
-      },
-    }),
-    prisma.sessionTemplate.create({
-      data: {
-        coachId: coach.id,
-        sportType: 'STRENGTH',
-        name: 'General Strength',
-        summary: 'Foundational lower-body and trunk session.',
-        blocks: {
-          create: [
-            { blockType: 'WARMUP', title: 'Prep', instructions: '8 min dynamic mobility', sortOrder: 0 },
-            { blockType: 'REPS', title: 'Main lifts', instructions: '3 rounds: split squat, RDL, calf raise, plank', sortOrder: 1 },
-            { blockType: 'COOLDOWN', title: 'Reset', instructions: '5 min easy mobility', sortOrder: 2 },
-          ],
-        },
-      },
-    }),
-  ]);
-
-  const [weekOne, weekTwo] = await Promise.all([
-    prisma.planWeek.create({
-      data: {
-        athleteId: athleteOne.id,
-        weekStart,
-        weeklyNote: 'Focus on consistent aerobic work this week. Keep Tuesday controlled and arrive fresh for the weekend long session.',
-      },
-    }),
-    prisma.planWeek.create({
-      data: {
-        athleteId: athleteTwo.id,
-        weekStart,
-        weeklyNote: 'Reduced load week. Prioritize technique in the pool and keep strength work crisp but short.',
-      },
-    }),
-  ]);
-
-  const mariaSessions = await Promise.all([
-    prisma.plannedSession.create({
-      data: {
-        planWeekId: weekOne.id,
-        scheduledDate: addHours(addDays(weekStart, 0), 7),
-        sportType: 'RUNNING',
-        title: 'Easy aerobic run',
-        summary: 'Comfortable effort, keep it conversational.',
-        durationMinutes: 50,
-        intensity: 'Easy',
-        sortOrder: 0,
-        blocks: {
-          create: [
-            { blockType: 'WARMUP', title: 'Settle in', instructions: '10 min very easy', sortOrder: 0 },
-            { blockType: 'MAIN_SET', title: 'Aerobic run', instructions: '35 min steady easy running', sortOrder: 1 },
-            { blockType: 'COOLDOWN', title: 'Finish relaxed', instructions: '5 min walk and light stretch', sortOrder: 2 },
-          ],
-        },
-      },
-    }),
-    prisma.plannedSession.create({
-      data: {
-        planWeekId: weekOne.id,
-        scheduledDate: addHours(addDays(weekStart, 1), 17),
-        sportType: 'RUNNING',
-        title: tempoTemplate.name,
-        summary: tempoTemplate.summary,
-        durationMinutes: 60,
-        intensity: 'Moderate',
-        sortOrder: 0,
-        sourceTemplateId: tempoTemplate.id,
-        blocks: {
-          create: [
-            { blockType: 'WARMUP', title: 'Easy warmup', instructions: '15 min easy + 4 strides', sortOrder: 0 },
-            { blockType: 'MAIN_SET', title: 'Tempo set', instructions: '3 x 8 min steady threshold, 2 min jog between', sortOrder: 1 },
-            { blockType: 'COOLDOWN', title: 'Cooldown', instructions: '10 min easy jog', sortOrder: 2 },
-          ],
-        },
-      },
-    }),
-    prisma.plannedSession.create({
-      data: {
-        planWeekId: weekOne.id,
-        scheduledDate: addHours(addDays(weekStart, 3), 18),
-        sportType: 'STRENGTH',
-        title: strengthTemplate.name,
-        summary: strengthTemplate.summary,
-        durationMinutes: 40,
-        intensity: 'Steady',
-        sortOrder: 0,
-        sourceTemplateId: strengthTemplate.id,
-        blocks: {
-          create: [
-            { blockType: 'WARMUP', title: 'Prep', instructions: '8 min dynamic mobility', sortOrder: 0 },
-            { blockType: 'REPS', title: 'Main lifts', instructions: '3 rounds: split squat, RDL, calf raise, plank', sortOrder: 1 },
-            { blockType: 'COOLDOWN', title: 'Reset', instructions: '5 min easy mobility', sortOrder: 2 },
-          ],
-        },
-      },
-    }),
-    prisma.plannedSession.create({
-      data: {
-        planWeekId: weekOne.id,
-        scheduledDate: addHours(addDays(weekStart, 5), 9),
-        sportType: 'RUNNING',
-        title: 'Long run',
-        summary: 'Build time on feet. Keep fuel and pacing disciplined.',
-        durationMinutes: 95,
-        intensity: 'Easy to steady',
-        sortOrder: 0,
-        blocks: {
-          create: [
-            { blockType: 'WARMUP', title: 'Start easy', instructions: '15 min relaxed', sortOrder: 0 },
-            { blockType: 'MAIN_SET', title: 'Long aerobic block', instructions: '70 min mostly easy, last 10 min steady if feeling good', sortOrder: 1 },
-            { blockType: 'COOLDOWN', title: 'Reset', instructions: '10 min easy walk + stretch', sortOrder: 2 },
-          ],
-        },
-      },
-    }),
-  ]);
-
-  const andersSessions = await Promise.all([
-    prisma.plannedSession.create({
-      data: {
-        planWeekId: weekTwo.id,
-        scheduledDate: addHours(addDays(weekStart, 0), 6),
-        sportType: 'SWIMMING',
-        title: 'Technique swim',
-        summary: 'Low-stress pool session focused on feel for water.',
-        durationMinutes: 45,
-        intensity: 'Easy',
-        sortOrder: 0,
-        blocks: {
-          create: [
-            { blockType: 'WARMUP', title: 'Warmup', instructions: '300 m easy + drills', sortOrder: 0 },
-            { blockType: 'MAIN_SET', title: 'Technique set', instructions: '8 x 50 m drill/swim by 25', sortOrder: 1 },
-            { blockType: 'COOLDOWN', title: 'Cooldown', instructions: '200 m easy', sortOrder: 2 },
-          ],
-        },
-      },
-    }),
-    prisma.plannedSession.create({
-      data: {
-        planWeekId: weekTwo.id,
-        scheduledDate: addHours(addDays(weekStart, 2), 17),
-        sportType: 'BIKING',
-        title: 'Cadence spin',
-        summary: 'Short ride with controlled cadence changes.',
-        durationMinutes: 60,
-        intensity: 'Easy',
-        sortOrder: 0,
-        blocks: {
-          create: [
-            { blockType: 'WARMUP', title: 'Easy spin', instructions: '15 min relaxed', sortOrder: 0 },
-            { blockType: 'INTERVALS', title: 'Cadence work', instructions: '6 x 3 min high cadence, 2 min easy between', sortOrder: 1 },
-            { blockType: 'COOLDOWN', title: 'Spin down', instructions: '10 min easy', sortOrder: 2 },
-          ],
-        },
-      },
-    }),
-    prisma.plannedSession.create({
-      data: {
-        planWeekId: weekTwo.id,
-        scheduledDate: addHours(addDays(weekStart, 4), 7),
-        sportType: 'STRETCHING',
-        title: 'Mobility reset',
-        summary: 'Short movement session to stay fresh.',
-        durationMinutes: 20,
-        intensity: 'Light',
-        sortOrder: 0,
-        blocks: {
-          create: [
-            { blockType: 'NOTE', title: 'Mobility flow', instructions: '20 min hips, thoracic rotation, calves, and hamstrings', sortOrder: 0 },
-          ],
-        },
-      },
-    }),
-  ]);
-
-  await prisma.sessionCompletion.create({
+  const coachNora = await prisma.user.create({
     data: {
-      sessionId: mariaSessions[0].id,
-      athleteId: athleteOneUser.id,
-      isDone: true,
-      completedAt: addHours(addDays(weekStart, 0), 9),
-      notes: 'Felt smooth. Added 5 min extra easy jogging at the end.',
+      email: 'nora@demo.local',
+      name: 'Nora Skaret',
+      role: 'COACH',
+      selfCoached: false,
+      passwordHash,
+      prefsJson: overviewCards(),
     },
   });
 
-  await prisma.sessionCompletion.create({
+  const mara = await prisma.user.create({
     data: {
-      sessionId: andersSessions[0].id,
-      athleteId: athleteTwoUser.id,
-      isDone: false,
-      notes: 'Planned for early morning before work.',
+      email: 'mara@demo.local',
+      name: 'Mara Holt',
+      role: 'ATHLETE',
+      selfCoached: false,
+      coachId: coachErik.id,
+      passwordHash,
+      prefsJson: overviewCards('coachNote', 'lastActivity', 'weekLoad'),
     },
+  });
+
+  const jonas = await prisma.user.create({
+    data: {
+      email: 'jonas@demo.local',
+      name: 'Jonas Berg',
+      role: 'ATHLETE',
+      selfCoached: false,
+      coachId: coachErik.id,
+      passwordHash,
+      prefsJson: overviewCards('coachNote', 'weekLoad'),
+    },
+  });
+
+  const sofie = await prisma.user.create({
+    data: {
+      email: 'sofie@demo.local',
+      name: 'Sofie Lind',
+      role: 'ATHLETE',
+      selfCoached: true,
+      passwordHash,
+      prefsJson: overviewCards('lastActivity', 'weekLoad', 'trend'),
+    },
+  });
+
+  await prisma.coachRequest.create({
+    data: {
+      athleteId: sofie.id,
+      coachId: coachNora.id,
+      status: 'PENDING',
+    },
+  });
+
+  const [maraPlan, jonasPlan, sofiePlan] = await Promise.all([
+    prisma.plan.create({
+      data: {
+        athleteId: mara.id,
+        name: 'Oslo Marathon Build',
+        startDate: subWeeks(weekStart, 2),
+        endDate: addDays(endOfWeek(weekStart, { weekStartsOn: 1 }), 70),
+        goalRace: 'Oslo Marathon',
+      },
+    }),
+    prisma.plan.create({
+      data: {
+        athleteId: jonas.id,
+        name: '70.3 Progression',
+        startDate: subWeeks(weekStart, 1),
+        endDate: addDays(endOfWeek(weekStart, { weekStartsOn: 1 }), 84),
+        goalRace: 'Haugesund 70.3',
+      },
+    }),
+    prisma.plan.create({
+      data: {
+        athleteId: sofie.id,
+        name: 'Self-Coached 10K',
+        startDate: subWeeks(weekStart, 1),
+        endDate: addDays(endOfWeek(weekStart, { weekStartsOn: 1 }), 56),
+        goalRace: 'Autumn 10K',
+      },
+    }),
+  ]);
+
+  const thresholdTemplate = await createTemplateWithBlocks({
+    ownerId: coachErik.id,
+    name: 'Threshold 4×8′',
+    sport: 'RUNNING',
+    summary: 'Controlled threshold intervals with easy recovery.',
+    blocks: [
+      { kind: 'warmup', zone: 1, durationSec: 720, note: '12 min easy + strides' },
+      { kind: 'recovery', zone: 2, durationSec: 480, note: 'Settle into rhythm' },
+      { kind: 'work', zone: 4, durationSec: 480, reps: 4, targetType: 'power', targetLow: 250, targetHigh: 265, note: 'Threshold reps' },
+      { kind: 'recovery', zone: 2, durationSec: 120, reps: 3, note: '2 min jog between reps' },
+      { kind: 'cooldown', zone: 1, durationSec: 600, note: '10 min easy' },
+    ],
+  });
+
+  const enduranceTemplate = await createTemplateWithBlocks({
+    ownerId: coachErik.id,
+    name: 'Endurance 90′',
+    sport: 'BIKING',
+    summary: 'Long aerobic endurance session.',
+    blocks: [
+      { kind: 'warmup', zone: 1, durationSec: 600, note: '10 min easy spin' },
+      { kind: 'work', zone: 2, durationSec: 4200, targetType: 'hr', targetLow: 135, targetHigh: 148, note: 'Steady endurance riding' },
+      { kind: 'cooldown', zone: 1, durationSec: 600, note: '10 min easy spin down' },
+    ],
+  });
+
+  const maraThresholdBlocks = thresholdTemplate.blocks.map(({ kind, zone, durationSec, reps, targetType, targetLow, targetHigh, note }) => ({
+    kind,
+    zone,
+    durationSec,
+    reps,
+    targetType,
+    targetLow,
+    targetHigh,
+    note,
+  }));
+
+  const maraToday = await createSessionWithBlocks({
+    athleteId: mara.id,
+    planId: maraPlan.id,
+    templateId: thresholdTemplate.id,
+    assignedById: coachErik.id,
+    date: addHours(addDays(weekStart, 0), 6),
+    timeLabel: '06:30',
+    sport: 'RUNNING',
+    title: 'Threshold 4×8′',
+    summary: 'Keep the threshold reps controlled and negative-split the last two.',
+    source: 'coach',
+    blocks: maraThresholdBlocks,
+  });
+
+  const maraEvening = await createSessionWithBlocks({
+    athleteId: mara.id,
+    planId: maraPlan.id,
+    templateId: enduranceTemplate.id,
+    assignedById: coachErik.id,
+    date: addHours(addDays(weekStart, 0), 17),
+    timeLabel: '17:00',
+    sport: 'BIKING',
+    title: 'Easy spin',
+    summary: 'Flush the legs after the morning quality session.',
+    source: 'coach',
+    blocks: [
+      { kind: 'work', zone: 2, durationSec: 2700, targetType: 'hr', targetLow: 120, targetHigh: 138, note: 'Continuous easy spinning' },
+    ],
+  });
+
+  const maraNext = await createSessionWithBlocks({
+    athleteId: mara.id,
+    planId: maraPlan.id,
+    assignedById: coachErik.id,
+    date: addHours(addDays(weekStart, 3), 7),
+    timeLabel: '07:00',
+    sport: 'RUNNING',
+    title: 'VO2 6×3′',
+    summary: 'Short and sharp, stay relaxed between reps.',
+    source: 'coach',
+    blocks: [
+      { kind: 'warmup', zone: 1, durationSec: 900, note: '15 min easy' },
+      { kind: 'work', zone: 5, durationSec: 180, reps: 6, targetType: 'hr', targetLow: 170, targetHigh: 178, note: '6 x 3 min hard' },
+      { kind: 'recovery', zone: 2, durationSec: 120, reps: 5, note: '2 min easy between reps' },
+      { kind: 'cooldown', zone: 1, durationSec: 600, note: '10 min cool-down' },
+    ],
+  });
+
+  const jonasSession = await createSessionWithBlocks({
+    athleteId: jonas.id,
+    planId: jonasPlan.id,
+    templateId: enduranceTemplate.id,
+    assignedById: coachErik.id,
+    date: addHours(addDays(weekStart, 1), 7),
+    timeLabel: '07:00',
+    sport: 'BIKING',
+    title: 'Endurance 90′',
+    summary: 'Comfortable aerobic work with smooth cadence.',
+    source: 'coach',
+    blocks: enduranceTemplate.blocks.map(({ kind, zone, durationSec, reps, targetType, targetLow, targetHigh, note }) => ({
+      kind,
+      zone,
+      durationSec,
+      reps,
+      targetType,
+      targetLow,
+      targetHigh,
+      note,
+    })),
+  });
+
+  const sofieSession = await createSessionWithBlocks({
+    athleteId: sofie.id,
+    planId: sofiePlan.id,
+    date: addHours(addDays(weekStart, 2), 18),
+    timeLabel: '18:00',
+    sport: 'RUNNING',
+    title: 'Tempo 2×20′',
+    summary: 'Self-coached tempo session with smooth pacing.',
+    source: 'self',
+    adjusted: true,
+    blocks: [
+      { kind: 'warmup', zone: 1, durationSec: 900, note: '15 min warm-up' },
+      { kind: 'work', zone: 3, durationSec: 1200, reps: 2, targetType: 'pace', targetLow: 255, targetHigh: 265, note: '2 x 20 min tempo' },
+      { kind: 'recovery', zone: 2, durationSec: 300, note: '5 min float between reps' },
+      { kind: 'cooldown', zone: 1, durationSec: 600, note: '10 min easy' },
+    ],
+  });
+
+  await prisma.assignment.createMany({
+    data: [
+      { sessionId: maraToday.id, athleteId: mara.id, assignedBy: coachErik.id },
+      { sessionId: maraEvening.id, athleteId: mara.id, assignedBy: coachErik.id },
+      { sessionId: maraNext.id, athleteId: mara.id, assignedBy: coachErik.id },
+      { sessionId: jonasSession.id, athleteId: jonas.id, assignedBy: coachErik.id },
+    ],
+  });
+
+  await prisma.activity.createMany({
+    data: [
+      {
+        sessionId: maraToday.id,
+        athleteId: mara.id,
+        completedAt: addHours(addDays(weekStart, 0), 8),
+        durationSec: 4080,
+        tss: 78,
+        compliancePct: 96,
+        zoneDistributionJson: zoneDistribution(maraThresholdBlocks),
+        notes: 'Felt controlled. Held back slightly on rep one and finished strong.',
+      },
+      {
+        sessionId: jonasSession.id,
+        athleteId: jonas.id,
+        completedAt: addHours(addDays(weekStart, 1), 9),
+        durationSec: 5400,
+        tss: 72,
+        compliancePct: 100,
+        zoneDistributionJson: zoneDistribution(
+          enduranceTemplate.blocks.map((block) => ({
+            zone: block.zone,
+            durationSec: block.durationSec,
+          })),
+        ),
+        notes: 'Smooth ride, HR stayed where planned.',
+      },
+      {
+        sessionId: sofieSession.id,
+        athleteId: sofie.id,
+        completedAt: addHours(addDays(weekStart, 2), 20),
+        durationSec: 4200,
+        tss: 84,
+        compliancePct: 92,
+        zoneDistributionJson: zoneDistribution([
+          { zone: 1, durationSec: 900 },
+          { zone: 3, durationSec: 2400 },
+          { zone: 2, durationSec: 300 },
+          { zone: 1, durationSec: 600 },
+        ]),
+        notes: 'Shortened the cooldown slightly to get home before dark.',
+      },
+    ],
   });
 }
 

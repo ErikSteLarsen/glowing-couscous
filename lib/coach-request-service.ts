@@ -124,18 +124,29 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
       }
 
       if (action === 'accept') {
-        try {
-          await db.$transaction([
-            db.coachRequest.update({ where: { id: request.id }, data: { status: 'ACCEPTED' } }),
-            db.athleteProfile.create({ data: { userId: request.athleteId, coachId: coachUserId } }),
-          ]);
-          return { ok: true };
-        } catch (error: unknown) {
-          if ((error as { code?: string }).code === 'P2002') {
-            return { ok: false, status: 409, error: 'Athlete already has a coach' };
-          }
-          throw error;
+        const athlete = await db.user.findUnique({
+          where: { id: request.athleteId },
+          select: { id: true, role: true, coachId: true },
+        });
+
+        if (!athlete || athlete.role !== 'ATHLETE') {
+          return { ok: false, status: 404, error: 'Athlete not found' };
         }
+        if (athlete.coachId && athlete.coachId !== coachUserId) {
+          return { ok: false, status: 409, error: 'Athlete already has a coach' };
+        }
+
+        await db.$transaction([
+          db.coachRequest.update({ where: { id: request.id }, data: { status: 'ACCEPTED' } }),
+          db.user.update({
+            where: { id: request.athleteId },
+            data: {
+              coachId: coachUserId,
+              selfCoached: false,
+            },
+          }),
+        ]);
+        return { ok: true };
       }
 
       await db.coachRequest.update({ where: { id: request.id }, data: { status: 'REJECTED' } });
