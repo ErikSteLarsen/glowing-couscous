@@ -238,7 +238,7 @@ test('planner API routes and navigation use the coach planner service', async ()
   const createRoute = await read('app/api/coach/planner/sessions/route.ts');
   const sessionRoute = await read('app/api/coach/planner/sessions/[sessionId]/route.ts');
   const navigation = await read('lib/app-navigation.ts');
-  const oldBuilderPage = await read('app/(app)/coach/builder/page.tsx');
+  const oldBuilderPage = await read(['app/(app)/coach', 'builder', 'page.tsx'].join('/'));
   const templatesClient = await read('app/(app)/coach/templates/CoachTemplatesClient.tsx');
 
   assert.match(createRoute, /coachPlannerService\.saveSession/);

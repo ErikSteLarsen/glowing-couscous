@@ -15,7 +15,6 @@ export function getPrimaryNavigation(
   { hasActiveCoach = false }: { hasActiveCoach?: boolean } = {},
 ): NavItem[] {
   if (role === 'COACH') {
-    // Legacy source assertion marker for the renamed item: label: 'Plan builder'.
     return [
       { label: 'Athletes', href: '/coach', matchPrefix: '/coach' },
       { label: 'Planner', href: '/coach/planner', matchPrefix: '/coach/planner' },

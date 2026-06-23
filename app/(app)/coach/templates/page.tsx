@@ -15,10 +15,10 @@ export default async function CoachTemplatesPage() {
       <TopBar
         eyebrow="Templates"
         title="Session templates"
-        description="Reusable Tempo session structures. Load one into the builder, duplicate it, or remove it."
+        description="Reusable Tempo session structures. Load one into the planner, duplicate it, or remove it."
         actions={
-          <ActionLink href="/coach/builder" tone="secondary">
-            Open builder
+          <ActionLink href="/coach/planner" tone="secondary">
+            Open planner
           </ActionLink>
         }
       />

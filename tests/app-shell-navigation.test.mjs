@@ -22,7 +22,7 @@ test('root route and app navigation define signed-in entry points and role-aware
   assert.match(navSource, /export function getPrimaryNavigation/);
   assert.match(navSource, /hasActiveCoach/);
   assert.match(navSource, /label: 'Coach'/);
-  assert.match(navSource, /label: 'Plan builder'/);
+  assert.match(navSource, /label: 'Planner'/);
   assert.match(navSource, /href: '\/profile'/);
   assert.match(navSource, /href: '\/settings'/);
 });
@@ -56,7 +56,7 @@ test('coach athlete detail route uses coach-service detail loading instead of th
   assert.match(coachServiceSource, /export async function getCoachAthleteDetail\(coachId: number, athleteId: number\)/);
 
   assert.match(athleteDetailPageSource, /getCoachAthleteDetail/);
-  assert.match(athleteDetailPageSource, /ActionLink href=\{`\/coach\/builder\?athleteId=\$\{detail\.athlete\.id\}`\}/);
+  assert.match(athleteDetailPageSource, /ActionLink href=\{`\/coach\/planner\?athleteId=\$\{detail\.athlete\.id\}`\}/);
   assert.doesNotMatch(athleteDetailPageSource, /CoachPlannerClient/);
   assert.doesNotMatch(athleteDetailPageSource, /plannerService/);
   assert.doesNotMatch(athleteDetailPageSource, /Hybrid week planner|Previous week|Next week/);

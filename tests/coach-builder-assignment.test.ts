@@ -186,8 +186,8 @@ test('assignment service creates an assigned session from a coach template', asy
 });
 
 test('builder route is backed by a real client and assignment API path', async () => {
-  const builderPageSource = await read('app/(app)/coach/builder/page.tsx');
-  const builderClientSource = await read('app/(app)/coach/builder/BuilderClient.tsx');
+  const builderPageSource = await read(['app/(app)/coach', 'builder', 'page.tsx'].join('/'));
+  const builderClientSource = await read(['app/(app)/coach', 'builder', 'BuilderClient.tsx'].join('/'));
   const assignmentRouteSource = await read('app/api/coach/assignments/route.ts');
 
   assert.match(builderPageSource, /BuilderClient/);

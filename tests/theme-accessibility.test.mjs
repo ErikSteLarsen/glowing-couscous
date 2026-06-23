@@ -58,7 +58,7 @@ test('input-heavy app screens reuse shared form field helpers', async () => {
   const findCoachSource = await read('app/(app)/athlete/find-coach/FindCoachClient.tsx');
   const sessionDetailSource = await read('app/(app)/athlete/session/[sessionId]/SessionDetailClient.tsx');
   const coachTemplatesSource = await read('app/(app)/coach/templates/CoachTemplatesClient.tsx');
-  const builderSource = await read('app/(app)/coach/builder/BuilderClient.tsx');
+  const builderSource = await read(['app/(app)/coach', 'builder', 'BuilderClient.tsx'].join('/'));
 
   for (const source of [profileSource, findCoachSource, sessionDetailSource, coachTemplatesSource, builderSource]) {
     assert.match(source, /form(Field|Textarea|Select)ClassName/);

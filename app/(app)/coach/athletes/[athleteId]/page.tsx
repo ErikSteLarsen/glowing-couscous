@@ -40,7 +40,7 @@ export default async function CoachAthleteDetailPage({
             <ActionLink href="/coach" tone="secondary">
               Back to dashboard
             </ActionLink>
-            <ActionLink href={`/coach/builder?athleteId=${detail.athlete.id}`}>Open builder</ActionLink>
+            <ActionLink href={`/coach/planner?athleteId=${detail.athlete.id}`}>Open planner</ActionLink>
           </>
         }
       />
@@ -125,7 +125,7 @@ export default async function CoachAthleteDetailPage({
           ) : (
             <EmptyState
               title="No sessions planned this week"
-              description="Use the builder to assign a template or create the athlete's next block."
+              description="Use the planner to assign a template or create the athlete's next block."
             />
           )}
         </Surface>
