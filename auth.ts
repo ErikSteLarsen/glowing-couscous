@@ -41,9 +41,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (trigger === 'update' || (!token.role && token.userId)) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.userId as number },
-          select: { role: true },
+          select: { role: true, name: true, email: true },
         });
-        if (dbUser) token.role = dbUser.role;
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.name = dbUser.name;
+          token.email = dbUser.email;
+        }
       }
       return token;
     },
@@ -51,6 +55,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // Cast through unknown to reconcile next-auth's base string id type with our numeric id
       (session.user as unknown as { id: number }).id = token.userId as number;
       (session.user as unknown as { role: string | null }).role = token.role as string | null;
+      session.user.name = (token.name as string | undefined) ?? session.user.name;
+      session.user.email = (token.email as string | undefined) ?? session.user.email;
       return session;
     },
   },

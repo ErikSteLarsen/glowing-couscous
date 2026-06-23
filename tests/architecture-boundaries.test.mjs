@@ -11,14 +11,16 @@ async function read(relativePath) {
 
 test('athlete pages and coach-request routes do not access prisma directly', async () => {
   const directPrismaPaths = [
-    'app/athlete/page.tsx',
-    'app/athlete/profile/page.tsx',
-    'app/coach/page.tsx',
-    'app/coach/templates/page.tsx',
+    'app/(app)/athlete/page.tsx',
+    'app/(app)/athlete/find-coach/page.tsx',
+    'app/(app)/athlete/profile/page.tsx',
+    'app/(app)/coach/page.tsx',
+    'app/(app)/coach/templates/page.tsx',
     'app/api/coaches/route.ts',
     'app/api/athlete/coach-requests/route.ts',
     'app/api/coach/requests/route.ts',
     'app/api/coach/requests/[requestId]/route.ts',
+    'app/api/account/profile/route.ts',
   ];
 
   for (const relativePath of directPrismaPaths) {
@@ -76,8 +78,8 @@ test('athlete request services support re-opened rejected requests and shared re
 });
 
 test('athlete onboarding surfaces request state in profile and coach-search UI', async () => {
-  const profileSource = await read('app/athlete/profile/page.tsx');
-  const searchSource = await read('app/athlete/find-coach/page.tsx');
+  const profileSource = await read('app/(app)/profile/ProfileClient.tsx');
+  const searchSource = await read('app/(app)/athlete/find-coach/FindCoachClient.tsx');
   const routeSource = await read('app/api/athlete/coach-requests/route.ts');
 
   assert.match(profileSource, /Request pending|Waiting for/);
@@ -89,7 +91,7 @@ test('athlete onboarding surfaces request state in profile and coach-search UI',
 });
 
 test('athlete week view exposes a current-week shortcut and smarter default day selection', async () => {
-  const athletePageSource = await read('app/athlete/page.tsx');
+  const athletePageSource = await read('app/(app)/athlete/page.tsx');
   const weekViewSource = await read('components/AthleteWeekView.tsx');
 
   assert.match(athletePageSource, /This week/);
@@ -102,13 +104,20 @@ test('athlete week view exposes a current-week shortcut and smarter default day 
 test('template workflow supports duplication and library filtering', async () => {
   const templateServiceSource = await read('lib/template-service.ts');
   const duplicateRouteSource = await read('app/api/coach/templates/[templateId]/duplicate/route.ts');
-  const templatesClientSource = await read('app/coach/templates/CoachTemplatesClient.tsx');
+  const templatesClientSource = await read('app/(app)/coach/templates/CoachTemplatesClient.tsx');
 
   assert.match(templateServiceSource, /duplicateForCoach/);
   assert.match(duplicateRouteSource, /templateService\.duplicateForCoach/);
   assert.match(templatesClientSource, /libraryMessage/);
   assert.match(templatesClientSource, /filterText/);
   assert.match(templatesClientSource, /Duplicate template/);
+});
+
+test('account route avoids direct prisma access in route handlers', async () => {
+  const routeSource = await read('app/api/account/profile/route.ts');
+  assert.equal(routeSource.includes('prisma.'), false);
+  assert.match(routeSource, /requireSignedInUser/);
+  assert.match(routeSource, /accountService/);
 });
 
 test('package scripts include the architecture test command', async () => {

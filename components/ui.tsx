@@ -1,8 +1,22 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
-export function PageShell({ children }: { children: ReactNode }) {
-  return <div className="space-y-6">{children}</div>;
+const pageShellWidthClasses = {
+  narrow: 'max-w-3xl',
+  default: 'max-w-5xl',
+  wide: 'max-w-7xl',
+} as const;
+
+export function PageShell({
+  children,
+  size = 'default',
+  className = '',
+}: {
+  children: ReactNode;
+  size?: keyof typeof pageShellWidthClasses;
+  className?: string;
+}) {
+  return <div className={`mx-auto flex w-full flex-col gap-6 ${pageShellWidthClasses[size]} ${className}`}>{children}</div>;
 }
 
 export function TopBar({
@@ -10,22 +24,30 @@ export function TopBar({
   title,
   description,
   actions,
+  align = 'left',
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
+  align?: 'left' | 'center';
 }) {
+  const isCentered = align === 'center';
+
   return (
-    <div className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-[rgba(17,24,39,0.7)] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur sm:flex-row sm:items-end sm:justify-between">
+    <div
+      className={`flex flex-col gap-4 rounded-3xl border border-white/10 bg-[rgba(17,24,39,0.7)] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur ${
+        isCentered ? 'items-center text-center' : 'sm:flex-row sm:items-end sm:justify-between'
+      }`}
+    >
       <div className="space-y-2">
         {eyebrow ? <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">{eyebrow}</p> : null}
-        <div className="space-y-1">
+        <div className={`space-y-1 ${isCentered ? 'text-center' : ''}`}>
           <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">{title}</h1>
-          {description ? <p className="max-w-2xl text-sm text-slate-300 sm:text-base">{description}</p> : null}
+          {description ? <p className={`text-sm text-slate-300 sm:text-base ${isCentered ? 'mx-auto max-w-xl' : 'max-w-2xl'}`}>{description}</p> : null}
         </div>
       </div>
-      {actions ? <div className="flex flex-wrap gap-3">{actions}</div> : null}
+      {actions ? <div className={`flex flex-wrap gap-3 ${isCentered ? 'justify-center' : ''}`}>{actions}</div> : null}
     </div>
   );
 }

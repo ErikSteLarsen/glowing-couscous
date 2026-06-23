@@ -30,13 +30,14 @@ export default function SetupPage() {
   }
 
   return (
-    <PageShell>
+    <PageShell size="narrow" className="min-h-[calc(100vh-3rem)] justify-center">
       <TopBar
         eyebrow="Almost there"
         title="Choose your role"
         description="This sets how you use the app."
+        align="center"
       />
-      <Surface className="max-w-md">
+      <Surface className="mx-auto w-full max-w-md">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex gap-3">
             {(['COACH', 'ATHLETE'] as const).map((r) => (

@@ -1,38 +1,38 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ActionLink, PageShell, Surface, TopBar } from '@/components/ui';
-import { SignOutButton } from '@/components/SignOutButton';
 
 type CoachResult = { id: number; name: string; email: string };
 type CoachRequestRecord = {
   id: number;
   status: string;
-  updatedAt: string;
+  updatedAt: Date | string;
   coach: CoachResult;
 };
 
-export default function FindCoachPage() {
+type InitialState = {
+  profile: { id: number } | null;
+  requests: CoachRequestRecord[];
+  latestRequest: CoachRequestRecord | null;
+};
+
+export function FindCoachClient({ initialState }: { initialState: InitialState }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<CoachResult[]>([]);
   const [lastSubmittedQuery, setLastSubmittedQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [requestState, setRequestState] = useState<{
-    latestRequest: CoachRequestRecord | null;
-    requests: CoachRequestRecord[];
-  }>({ latestRequest: null, requests: [] });
+  const [requestState, setRequestState] = useState({
+    latestRequest: initialState.latestRequest,
+    requests: initialState.requests,
+  });
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   const requestsByCoachId = useMemo(
-    () =>
-      Object.fromEntries(requestState.requests.map((request) => [request.coach.id, request.status])),
+    () => Object.fromEntries(requestState.requests.map((r) => [r.coach.id, r.status])),
     [requestState.requests],
   );
   const hasPendingRequest = requestState.latestRequest?.status === 'PENDING';
-
-  useEffect(() => {
-    void loadRequestState();
-  }, []);
 
   async function loadRequestState() {
     const res = await fetch('/api/athlete/coach-requests');
@@ -40,7 +40,6 @@ export default function FindCoachPage() {
       setErrorMessage('Failed to load your request state.');
       return;
     }
-
     const data = (await res.json()) as { requests?: CoachRequestRecord[] };
     const requests = data.requests ?? [];
     setRequestState({
@@ -75,9 +74,7 @@ export default function FindCoachPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ coachId }),
     });
-    const payload = (await res.json().catch(() => ({ error: 'Failed to send request.' }))) as {
-      error?: string;
-    };
+    const payload = (await res.json().catch(() => ({ error: 'Failed to send request.' }))) as { error?: string };
 
     if (res.ok) {
       await loadRequestState();
@@ -97,10 +94,9 @@ export default function FindCoachPage() {
   return (
     <PageShell>
       <TopBar
-        eyebrow="Find a coach"
+        eyebrow="Coach discovery"
         title="Search coaches"
         description="Search by name or email, then send a join request."
-        actions={<SignOutButton />}
       />
       <Surface>
         {requestState.latestRequest?.status === 'PENDING' ? (
@@ -112,6 +108,10 @@ export default function FindCoachPage() {
 
         {feedbackMessage ? <p className="mb-4 text-sm text-emerald-300">{feedbackMessage}</p> : null}
         {errorMessage ? <p className="mb-4 text-sm text-amber-300">{errorMessage}</p> : null}
+
+        <div className="mb-4 rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+          Messaging coming soon. For now, review coach details and send a join request.
+        </div>
 
         <form onSubmit={handleSearch} className="flex gap-3">
           <input
@@ -132,7 +132,7 @@ export default function FindCoachPage() {
 
         {requestState.latestRequest?.status === 'PENDING' ? (
           <div className="mt-4">
-            <ActionLink href="/athlete/profile" tone="secondary">
+            <ActionLink href="/profile" tone="secondary">
               Back to profile
             </ActionLink>
           </div>
@@ -143,28 +143,33 @@ export default function FindCoachPage() {
             {results.map((coach) => (
               <div key={coach.id} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                 {requestsByCoachId[coach.id] === 'REJECTED' ? (
-                  <p className="mb-2 text-xs text-amber-300">Your last request to this coach was declined. Send request again if you want to retry.</p>
+                  <p className="mb-2 text-xs text-amber-300">
+                    Your last request to this coach was declined. Send request again if you want to retry.
+                  </p>
                 ) : null}
                 <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-white">{coach.name}</p>
-                  <p className="text-xs text-slate-400">{coach.email}</p>
+                  <div>
+                    <p className="text-sm font-semibold text-white">{coach.name}</p>
+                    <p className="text-xs text-slate-400">{coach.email}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRequest(coach.id)}
+                    disabled={
+                      requestsByCoachId[coach.id] === 'PENDING' ||
+                      (hasPendingRequest && requestsByCoachId[coach.id] !== 'REJECTED')
+                    }
+                    className="cursor-pointer rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+                  >
+                    {requestsByCoachId[coach.id] === 'PENDING'
+                      ? 'Request pending'
+                      : hasPendingRequest
+                        ? 'Wait for current request'
+                        : requestsByCoachId[coach.id] === 'REJECTED'
+                          ? 'Send request again'
+                          : 'Request to join'}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleRequest(coach.id)}
-                  disabled={requestsByCoachId[coach.id] === 'PENDING' || (hasPendingRequest && requestsByCoachId[coach.id] !== 'REJECTED')}
-                  className="cursor-pointer rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
-                >
-                  {requestsByCoachId[coach.id] === 'PENDING'
-                    ? 'Request pending'
-                    : hasPendingRequest
-                      ? 'Wait for current request'
-                    : requestsByCoachId[coach.id] === 'REJECTED'
-                      ? 'Send request again'
-                      : 'Request to join'}
-                </button>
-              </div>
               </div>
             ))}
           </div>

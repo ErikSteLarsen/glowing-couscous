@@ -4,7 +4,6 @@ import { ActionLink, Badge, EmptyState, PageShell, StatTile, Surface, TopBar } f
 import { getCurrentUser } from '@/lib/auth-session';
 import { getCoachOverview } from '@/lib/coach-service';
 import { CoachRequestsPanel } from '@/components/CoachRequestsPanel';
-import { SignOutButton } from '@/components/SignOutButton';
 
 export default async function CoachPage() {
   const user = await getCurrentUser();
@@ -14,7 +13,7 @@ export default async function CoachPage() {
 
   if (!coach) {
     return (
-      <PageShell>
+      <PageShell size="wide">
         <EmptyState title="No data found" description="Something went wrong loading your dashboard." />
       </PageShell>
     );
@@ -36,17 +35,11 @@ export default async function CoachPage() {
   });
 
   return (
-    <PageShell>
+    <PageShell size="wide">
       <TopBar
         eyebrow="Coach dashboard"
         title={coach.name}
         description="Athlete list and upcoming week status."
-        actions={
-          <>
-            <ActionLink href="/coach/templates">Templates</ActionLink>
-            <SignOutButton />
-          </>
-        }
       />
 
       <div className="grid gap-4 sm:grid-cols-3">

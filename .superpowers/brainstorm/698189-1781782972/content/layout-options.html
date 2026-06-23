@@ -1,0 +1,72 @@
+<h2>Which app shell feels right?</h2>
+<p class="subtitle">Goal: less centered SPA feel, clearer nav, predictable back flow.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">Option A — Full app shell</div>
+        <div class="mockup-body">
+          <div class="mock-nav">Top utility bar</div>
+          <div style="display:flex; gap:12px; min-height:260px; margin-top:12px;">
+            <div class="mock-sidebar" style="width:220px;">Logo<br>Dashboard<br>Planner<br>Templates<br>Settings<br>Sign out</div>
+            <div class="mock-content">
+              Wide page header<br><br>
+              Context back link on detail pages<br><br>
+              Main content uses full desktop width
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Persistent sidebar shell</h3>
+      <p>One signed-in frame. Sidebar owns global nav. Detail pages keep one local back link.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">Option B — Slim rail + content</div>
+        <div class="mockup-body">
+          <div style="display:flex; gap:12px; min-height:260px;">
+            <div class="mock-sidebar" style="width:88px;">Icons</div>
+            <div class="mock-content">
+              Wide content area<br><br>
+              Page header actions stay top-right<br><br>
+              Labels hidden until hover/open
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Slim rail</h3>
+      <p>More room for content. Faster to scan once learned. Less explicit for new users.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">Option C — Section shells</div>
+        <div class="mockup-body">
+          <div class="mock-nav">Role header</div>
+          <div style="display:flex; gap:12px; min-height:260px; margin-top:12px;">
+            <div class="mock-sidebar" style="width:220px;">Coach-only or athlete-only nav</div>
+            <div class="mock-content">
+              Different shell per area<br><br>
+              Can tune each role harder<br><br>
+              More code paths
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Separate shells by section</h3>
+      <p>Highest flexibility. Most maintenance. Risk less consistency.</p>
+    </div>
+  </div>
+</div>

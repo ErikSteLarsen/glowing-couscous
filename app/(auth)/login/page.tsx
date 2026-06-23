@@ -25,9 +25,9 @@ export default function LoginPage() {
   }
 
   return (
-    <PageShell>
-      <TopBar eyebrow="Workout Planner" title="Sign in" />
-      <Surface className="max-w-md">
+    <PageShell size="narrow" className="min-h-[calc(100vh-3rem)] justify-center">
+      <TopBar eyebrow="Workout Planner" title="Sign in" align="center" />
+      <Surface className="mx-auto w-full max-w-md">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-300">Email</label>

@@ -39,9 +39,9 @@ export default function SignupPage() {
   }
 
   return (
-    <PageShell>
-      <TopBar eyebrow="Workout Planner" title="Create account" />
-      <Surface className="max-w-md">
+    <PageShell size="narrow" className="min-h-[calc(100vh-3rem)] justify-center">
+      <TopBar eyebrow="Workout Planner" title="Create account" align="center" />
+      <Surface className="mx-auto w-full max-w-md">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex gap-3">
             {(['COACH', 'ATHLETE'] as const).map((r) => (
