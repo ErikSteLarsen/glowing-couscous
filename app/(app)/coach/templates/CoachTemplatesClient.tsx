@@ -105,7 +105,7 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
           placeholder="Filter templates"
         />
         <a
-          href="/coach/builder"
+          href="/coach/planner"
           className={primaryButtonClassName}
         >
           New template in builder
@@ -154,7 +154,7 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <a
-                    href={`/coach/builder?templateId=${template.id}`}
+                    href={`/coach/planner?templateId=${template.id}`}
                     className={primaryButtonClassName}
                   >
                     Load into builder

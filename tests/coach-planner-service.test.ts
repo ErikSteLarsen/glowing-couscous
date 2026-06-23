@@ -1,8 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { format } from 'date-fns';
 
 import { createCoachPlannerService } from '../lib/coach-planner-service.ts';
+
+const root = process.cwd();
+const read = (relativePath: string) => readFile(path.join(root, relativePath), 'utf8');
 
 const block = {
   id: 1,
@@ -227,4 +232,21 @@ test('coach planner deletes only sessions owned by roster athletes', async () =>
 
   assert.deepEqual(result, { ok: true, sessionId: 88 });
   assert.equal(deletedSessionId, 88);
+});
+
+test('planner API routes and navigation use the coach planner service', async () => {
+  const createRoute = await read('app/api/coach/planner/sessions/route.ts');
+  const sessionRoute = await read('app/api/coach/planner/sessions/[sessionId]/route.ts');
+  const navigation = await read('lib/app-navigation.ts');
+  const oldBuilderPage = await read('app/(app)/coach/builder/page.tsx');
+  const templatesClient = await read('app/(app)/coach/templates/CoachTemplatesClient.tsx');
+
+  assert.match(createRoute, /coachPlannerService\.saveSession/);
+  assert.match(createRoute, /requireCoach/);
+  assert.match(sessionRoute, /coachPlannerService\.saveSession/);
+  assert.match(sessionRoute, /coachPlannerService\.deleteSession/);
+  assert.match(navigation, /label: 'Planner'/);
+  assert.match(navigation, /href: '\/coach\/planner'/);
+  assert.match(oldBuilderPage, /redirect\('\/coach\/planner/);
+  assert.match(templatesClient, /\/coach\/planner\?templateId=/);
 });
