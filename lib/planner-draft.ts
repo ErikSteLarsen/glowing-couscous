@@ -3,6 +3,14 @@ import type { TempoBlock, TempoBlockKind, TempoZone } from './tempo-blocks.ts';
 
 export type PlannerTargetType = 'power' | 'pace' | 'hr';
 
+export type SessionOwnershipMode = 'coach-library' | 'training-plan' | 'athlete';
+
+export type PlannerSportMetrics = {
+  ftp: number | null;
+  thresholdPaceSecPerKm: number | null;
+  thresholdHr: number | null;
+};
+
 export type PlannerBlockDraft = {
   clientId: string;
   id?: number;
@@ -18,12 +26,15 @@ export type PlannerBlockDraft = {
 
 export type PlannerSessionDraft = {
   id?: number;
-  athleteId: number;
-  scheduledDate: string;
+  ownershipMode: SessionOwnershipMode;
+  athleteId: number | null;
+  scheduledDate: string | null;
+  planWeekday: 1 | 2 | 3 | 4 | 5 | 6 | 7 | null;
   sport: string;
   title: string;
   summary: string;
   sourceTemplateId: number | null;
+  sportMetrics: PlannerSportMetrics;
   blocks: PlannerBlockDraft[];
 };
 
@@ -53,6 +64,22 @@ function createClientId(prefix = 'block') {
   return `${prefix}-${nextClientId}`;
 }
 
+export function parseSportMetricsJson(json: string | null | undefined): PlannerSportMetrics {
+  const empty: PlannerSportMetrics = { ftp: null, thresholdPaceSecPerKm: null, thresholdHr: null };
+  if (!json) return empty;
+  try {
+    const parsed = JSON.parse(json) as Record<string, unknown>;
+    if (!parsed || typeof parsed !== 'object') return empty;
+    return {
+      ftp: typeof parsed.ftp === 'number' ? parsed.ftp : null,
+      thresholdPaceSecPerKm: typeof parsed.thresholdPaceSecPerKm === 'number' ? parsed.thresholdPaceSecPerKm : null,
+      thresholdHr: typeof parsed.thresholdHr === 'number' ? parsed.thresholdHr : null,
+    };
+  } catch {
+    return empty;
+  }
+}
+
 export function createPlannerBlockDraft(input: Partial<PlannerBlockDraft> = {}): PlannerBlockDraft {
   return {
     clientId: input.clientId ?? createClientId(),
@@ -69,17 +96,25 @@ export function createPlannerBlockDraft(input: Partial<PlannerBlockDraft> = {}):
 }
 
 export function createEmptyPlannerSessionDraft(input: {
-  athleteId: number;
-  scheduledDate: string;
+  ownershipMode?: SessionOwnershipMode;
+  athleteId?: number | null;
+  scheduledDate: string | null;
   sport?: string;
 }): PlannerSessionDraft {
   return {
-    athleteId: input.athleteId,
+    ownershipMode: input.ownershipMode ?? 'athlete',
+    athleteId: input.athleteId ?? null,
     scheduledDate: input.scheduledDate,
+    planWeekday: null,
     sport: input.sport ?? 'RUNNING',
     title: '',
     summary: '',
     sourceTemplateId: null,
+    sportMetrics: {
+      ftp: null,
+      thresholdPaceSecPerKm: null,
+      thresholdHr: null,
+    },
     blocks: [
       createPlannerBlockDraft({ kind: 'warmup', zone: 1, durationSec: 600, note: 'Easy warmup' }),
       createPlannerBlockDraft({ kind: 'work', zone: 3, durationSec: 1800, note: 'Main work' }),
@@ -90,15 +125,22 @@ export function createEmptyPlannerSessionDraft(input: {
 
 export function templateToPlannerDraft(
   template: PlannerTemplateRecord,
-  input: { athleteId: number; scheduledDate: string },
+  input: { ownershipMode?: SessionOwnershipMode; athleteId?: number | null; scheduledDate: string | null },
 ): PlannerSessionDraft {
   return {
-    athleteId: input.athleteId,
+    ownershipMode: input.ownershipMode ?? 'athlete',
+    athleteId: input.athleteId ?? null,
     scheduledDate: input.scheduledDate,
+    planWeekday: null,
     sport: template.sport,
     title: template.name,
     summary: template.summary ?? '',
     sourceTemplateId: template.id,
+    sportMetrics: {
+      ftp: null,
+      thresholdPaceSecPerKm: null,
+      thresholdHr: null,
+    },
     blocks: template.blocks
       .slice()
       .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -187,12 +229,15 @@ export function plannerDraftToTempoBlocks(blocks: PlannerBlockDraft[]): TempoBlo
 
 export function serializePlannerDraftForSave(draft: PlannerSessionDraft) {
   return {
+    ownershipMode: draft.ownershipMode,
     athleteId: draft.athleteId,
     scheduledDate: draft.scheduledDate,
+    planWeekday: draft.planWeekday,
     sport: draft.sport,
     title: draft.title.trim(),
     summary: draft.summary.trim(),
     sourceTemplateId: draft.sourceTemplateId,
+    sportMetrics: draft.sportMetrics,
     blocks: draft.blocks.map((block, index) => ({
       id: block.id,
       kind: block.kind,
@@ -209,12 +254,25 @@ export function serializePlannerDraftForSave(draft: PlannerSessionDraft) {
 }
 
 export function validatePlannerSessionDraft(draft: PlannerSessionDraft) {
-  if (!Number.isInteger(draft.athleteId) || draft.athleteId <= 0) {
-    return 'Choose an athlete before saving.';
+  if (draft.ownershipMode === 'coach-library') {
+    if (!draft.scheduledDate) return 'A coach session date is required.';
+    if (draft.planWeekday !== null) return 'Standalone coach sessions cannot have a training-plan weekday.';
   }
-  if (!draft.scheduledDate || Number.isNaN(new Date(draft.scheduledDate).getTime())) {
-    return 'A valid scheduled date is required.';
+
+  if (draft.ownershipMode === 'training-plan') {
+    if (draft.planWeekday === null) return 'Choose a weekday for the training-plan session.';
+    if (draft.scheduledDate) return 'Training-plan sessions use a weekday instead of a fixed date.';
   }
+
+  if (draft.ownershipMode === 'athlete') {
+    if (!Number.isInteger(draft.athleteId) || (draft.athleteId ?? 0) <= 0) {
+      return 'Choose an athlete before saving.';
+    }
+    if (!draft.scheduledDate || Number.isNaN(new Date(draft.scheduledDate).getTime())) {
+      return 'A valid scheduled date is required.';
+    }
+  }
+
   if (!draft.title.trim()) {
     return 'Session title is required.';
   }
@@ -263,3 +321,4 @@ function normalizeNullablePositiveInt(input: unknown) {
   const parsed = Number(input);
   return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed) : null;
 }
+

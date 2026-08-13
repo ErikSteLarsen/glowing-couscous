@@ -37,10 +37,14 @@ test('coach planner loads roster, templates, and a Monday-first visible week', a
         },
       },
       session: {
-        async findMany(args: { where: { athlete: { coachId: number }; date: { gte: Date; lte: Date } } }) {
-          assert.equal(args.where.athlete.coachId, 2);
-          assert.equal(format(args.where.date.gte, 'yyyy-MM-dd'), '2026-06-22');
-          assert.equal(format(args.where.date.lte, 'yyyy-MM-dd'), '2026-06-28');
+        async findMany(args: { where: Record<string, unknown> }) {
+          if ('coachOwnerId' in args.where) {
+            return [];
+          }
+          const typedWhere = args.where as { athlete: { coachId: number }; date: { gte: Date; lte: Date } };
+          assert.equal(typedWhere.athlete.coachId, 2);
+          assert.equal(format(typedWhere.date.gte, 'yyyy-MM-dd'), '2026-06-22');
+          assert.equal(format(typedWhere.date.lte, 'yyyy-MM-dd'), '2026-06-28');
           return [
             {
               id: 12,
@@ -60,6 +64,11 @@ test('coach planner loads roster, templates, and a Monday-first visible week', a
           ];
         },
       },
+      trainingPlan: {
+        async findMany() {
+          return [];
+        },
+      },
     } as never,
   });
 
@@ -71,6 +80,90 @@ test('coach planner loads roster, templates, and a Monday-first visible week', a
   assert.equal(view.days[0].isoDate, '2026-06-22');
   assert.equal(view.days[3].sessions[0].id, 12);
   assert.equal(view.days[3].sessions[0].durationSec, 1800);
+  assert.equal(view.librarySessions.length, 0);
+  assert.equal(view.trainingPlans.length, 0);
+});
+
+test('coach planner workspace loads without requiring athletes', async () => {
+  const service = createCoachPlannerService({
+    db: {
+      user: {
+        async findMany() {
+          return [];
+        },
+      },
+      template: {
+        async findMany() {
+          return [];
+        },
+      },
+      session: {
+        async findMany(args: { where: Record<string, unknown> }) {
+          if ('coachOwnerId' in args.where) {
+            return [
+              {
+                id: 41,
+                coachOwnerId: 2,
+                athleteId: null,
+                trainingPlanId: null,
+                date: new Date('2026-06-25T00:00:00.000Z'),
+                planWeekday: null,
+                sport: 'RUNNING',
+                title: 'Coach long run',
+                summary: null,
+                sportMetricsJson: null,
+                status: 'planned',
+                source: 'coach-library',
+                adjusted: false,
+                blocks: [],
+              },
+            ];
+          }
+          return [];
+        },
+      },
+      trainingPlan: {
+        async findMany() {
+          return [
+            {
+              id: 7,
+              coachOwnerId: 2,
+              name: 'Base week',
+              summary: null,
+              sport: 'RUNNING',
+              sessions: [
+                {
+                  id: 52,
+                  coachOwnerId: 2,
+                  athleteId: null,
+                  trainingPlanId: 7,
+                  date: new Date('2026-06-25T00:00:00.000Z'),
+                  planWeekday: 3,
+                  sport: 'RUNNING',
+                  title: 'Tempo day',
+                  summary: null,
+                  sportMetricsJson: '{"thresholdHr":168}',
+                  status: 'planned',
+                  source: 'training-plan',
+                  adjusted: false,
+                  blocks: [],
+                },
+              ],
+            },
+          ];
+        },
+      },
+    } as never,
+  });
+
+  const view = await service.loadWorkspace(2, '2026-06-25');
+
+  assert.equal(view.athletes.length, 0);
+  assert.equal(view.librarySessions.length, 1);
+  assert.equal(view.trainingPlans.length, 1);
+  assert.equal(view.trainingPlans[0].sessions[0].date, '2026-06-25');
+  assert.equal(view.trainingPlans[0].sessions[0].sportMetricsJson, '{"thresholdHr":168}');
+  assert.equal(view.days.length, 7);
 });
 
 test('coach planner creates a direct coach session and assignment record', async () => {
@@ -263,4 +356,58 @@ test('planner page exposes calendar-first visual workout creation', async () => 
   assert.match(clientSource, /duplicatePlannerBlock/);
   assert.match(clientSource, /deriveSessionMetrics/);
   assert.match(clientSource, /\/api\/coach\/planner\/sessions/);
+});
+
+test('planner page and client support coach library workspace modes', async () => {
+  const pageSource = await read('app/(app)/coach/planner/page.tsx');
+  const clientSource = await read('app/(app)/coach/planner/PlannerClient.tsx');
+
+  assert.doesNotMatch(pageSource, /No athletes available/);
+  assert.match(pageSource, /librarySessions=/);
+  assert.match(pageSource, /trainingPlans=/);
+  assert.match(clientSource, /Session library/);
+  assert.match(clientSource, /Training plans/);
+  assert.match(clientSource, /selectedWorkspaceMode/);
+  assert.match(clientSource, /draft\.ownershipMode === 'athlete'/);
+  assert.match(clientSource, /\/api\/coach\/planner\/sessions/);
+});
+
+test('loadWorkspace serializes library session dates to ISO date strings', async () => {
+  const service = createCoachPlannerService({
+    db: {
+      user: { async findMany() { return []; } },
+      template: { async findMany() { return []; } },
+      session: {
+        async findMany(args: { where: Record<string, unknown> }) {
+          if ('coachOwnerId' in args.where) {
+            return [{
+              id: 41, coachOwnerId: 2, athleteId: null, trainingPlanId: null,
+              date: new Date('2026-06-25T00:00:00.000Z'),
+              planWeekday: null, sport: 'RUNNING', title: 'Coach long run',
+              summary: null, sportMetricsJson: null, source: 'coach-library',
+              status: 'planned', adjusted: false, blocks: [],
+            }];
+          }
+          return [];
+        },
+      },
+      trainingPlan: { async findMany() { return []; } },
+    } as never,
+  });
+
+  const view = await service.loadWorkspace(2, '2026-06-25');
+  const session = view.librarySessions[0] as { date: unknown };
+  assert.equal(typeof session.date, 'string');
+  assert.equal(session.date, '2026-06-25');
+});
+
+test('planner client supports creating a new training plan', async () => {
+  const clientSource = await read('app/(app)/coach/planner/PlannerClient.tsx');
+  assert.match(clientSource, /New training plan/);
+  assert.match(clientSource, /\/api\/coach\/planner\/training-plans/);
+});
+
+test('planner client guards save and delete when training-plan mode has no selected plan', async () => {
+  const clientSource = await read('app/(app)/coach/planner/PlannerClient.tsx');
+  assert.match(clientSource, /No training plan selected/);
 });

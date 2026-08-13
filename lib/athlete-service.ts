@@ -181,8 +181,9 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
 
       const overviewCards = readOverviewCardsFromPrefsJson(athlete.prefsJson);
 
-      const sessions = athlete.sessions.map(mapSessionSummary);
-
+      const sessions = athlete.sessions
+        .filter((s): s is typeof s & { date: Date } => s.date !== null)
+        .map(mapSessionSummary);
       const today = new Date();
       const todaySessions = sessions.filter((session) => isSameDay(session.date, today));
       const nextDays = Array.from({ length: 4 }, (_, index) => {
@@ -308,7 +309,9 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         return null;
       }
 
-      const sessions = athlete.sessions.map(mapSessionSummary);
+      const sessions = athlete.sessions
+        .filter((s): s is typeof s & { date: Date } => s.date !== null)
+        .map(mapSessionSummary);
       const buildDay = (date: Date) => ({
         label: format(date, 'EEE'),
         dateLabel: format(date, 'd'),
@@ -448,11 +451,11 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         },
       });
 
-      if (!session || session.athleteId !== userId) {
+      if (!session || session.athleteId !== userId || !session.date || !session.athlete) {
         return null;
       }
 
-      const summary = mapSessionSummary(session);
+      const summary = mapSessionSummary({ ...session, date: session.date });
 
       return {
         athlete: {

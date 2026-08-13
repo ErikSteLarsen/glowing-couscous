@@ -28,6 +28,10 @@ export async function PATCH(
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
+    if (!session.athleteId || !session.date) {
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    }
+
     const hasAthlete = await coachService.hasAthlete(user.id, session.athleteId);
     if (!hasAthlete) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
@@ -69,6 +73,10 @@ export async function DELETE(
     });
 
     if (!session) {
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    }
+
+    if (!session.athleteId || !session.date) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 

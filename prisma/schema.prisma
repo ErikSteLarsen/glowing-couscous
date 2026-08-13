@@ -22,6 +22,8 @@ model User {
   athletes         User[]       @relation("CoachAthletes")
   plans            Plan[]       @relation("AthletePlans")
   sessions         Session[]    @relation("AthleteSessions")
+  coachOwnedSessions Session[]  @relation("CoachOwnedSessions")
+  trainingPlans    TrainingPlan[] @relation("CoachTrainingPlans")
   assignedSessions Session[]    @relation("AssignedBySessions")
   templates        Template[]   @relation("TemplateOwner")
   activities       Activity[]   @relation("AthleteActivities")
@@ -78,32 +80,54 @@ model Plan {
   @@index([athleteId, startDate, endDate])
 }
 
-model Session {
-  id           Int         @id @default(autoincrement())
-  athleteId    Int
-  planId       Int?
-  templateId   Int?
-  assignedById Int?
-  date         DateTime
-  timeLabel    String?
-  sport        String
-  title        String
+model TrainingPlan {
+  id           Int       @id @default(autoincrement())
+  coachOwnerId Int
+  name         String
   summary      String?
-  status       String      @default("planned")
-  source       String
-  adjusted     Boolean     @default(false)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  athlete      User        @relation("AthleteSessions", fields: [athleteId], references: [id], onDelete: Cascade)
-  plan         Plan?       @relation(fields: [planId], references: [id], onDelete: SetNull)
-  template     Template?   @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  assignedBy   User?       @relation("AssignedBySessions", fields: [assignedById], references: [id], onDelete: SetNull)
-  blocks       Block[]
-  activity     Activity?
-  assignments  Assignment[]
+  sport        String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  coachOwner   User      @relation("CoachTrainingPlans", fields: [coachOwnerId], references: [id], onDelete: Cascade)
+  sessions     Session[] @relation("TrainingPlanSessions")
+
+  @@index([coachOwnerId, sport])
+}
+
+model Session {
+  id               Int           @id @default(autoincrement())
+  athleteId        Int?
+  coachOwnerId     Int?
+  trainingPlanId   Int?
+  planId           Int?
+  templateId       Int?
+  assignedById     Int?
+  date             DateTime?
+  planWeekday      Int?
+  timeLabel        String?
+  sport            String
+  title            String
+  summary          String?
+  sportMetricsJson String?
+  status           String        @default("planned")
+  source           String
+  adjusted         Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  athlete          User?         @relation("AthleteSessions", fields: [athleteId], references: [id], onDelete: Cascade)
+  coachOwner       User?         @relation("CoachOwnedSessions", fields: [coachOwnerId], references: [id], onDelete: Cascade)
+  trainingPlan     TrainingPlan? @relation("TrainingPlanSessions", fields: [trainingPlanId], references: [id], onDelete: Cascade)
+  plan             Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
+  template         Template?     @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  assignedBy       User?         @relation("AssignedBySessions", fields: [assignedById], references: [id], onDelete: SetNull)
+  blocks           Block[]
+  activity         Activity?
+  assignments      Assignment[]
 
   @@index([athleteId, date])
   @@index([planId, date])
+  @@index([coachOwnerId, date])
+  @@index([trainingPlanId, planWeekday])
 }
 
 model Block {

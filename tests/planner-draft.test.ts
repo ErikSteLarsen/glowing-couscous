@@ -6,7 +6,9 @@ import {
   createEmptyPlannerSessionDraft,
   duplicatePlannerBlock,
   movePlannerBlock,
+  parseSportMetricsJson,
   plannerDraftToTempoBlocks,
+  serializePlannerDraftForSave,
   templateToPlannerDraft,
   updatePlannerBlock,
   validatePlannerSessionDraft,
@@ -121,4 +123,66 @@ test('plannerDraftToTempoBlocks projects block drafts into metric-ready Tempo bl
     reps: null,
     target: null,
   });
+});
+
+test('validatePlannerSessionDraft enforces standalone coach session rules', () => {
+  const draft = createEmptyPlannerSessionDraft({
+    ownershipMode: 'coach-library',
+    scheduledDate: '2026-06-25',
+  });
+
+  assert.equal(validatePlannerSessionDraft({ ...draft, scheduledDate: '' }), 'A coach session date is required.');
+  assert.equal(
+    validatePlannerSessionDraft({ ...draft, planWeekday: 3 }),
+    'Standalone coach sessions cannot have a training-plan weekday.',
+  );
+});
+
+test('validatePlannerSessionDraft enforces training-plan session weekday rules', () => {
+  const draft = createEmptyPlannerSessionDraft({
+    ownershipMode: 'training-plan',
+    scheduledDate: null,
+  });
+
+  assert.equal(validatePlannerSessionDraft({ ...draft, planWeekday: null }), 'Choose a weekday for the training-plan session.');
+  assert.equal(
+    validatePlannerSessionDraft({ ...draft, scheduledDate: '2026-06-25', planWeekday: 2 }),
+    'Training-plan sessions use a weekday instead of a fixed date.',
+  );
+});
+
+test('serializePlannerDraftForSave preserves shared sport metrics', () => {
+  const draft = {
+    ...createEmptyPlannerSessionDraft({
+      ownershipMode: 'coach-library',
+      scheduledDate: '2026-06-25',
+    }),
+    title: 'Bike threshold',
+    sport: 'BIKING',
+    sportMetrics: {
+      ftp: 305,
+      thresholdPaceSecPerKm: null,
+      thresholdHr: 172,
+    },
+  };
+
+  assert.deepEqual(serializePlannerDraftForSave(draft).sportMetrics, {
+    ftp: 305,
+    thresholdPaceSecPerKm: null,
+    thresholdHr: 172,
+  });
+});
+
+test('parseSportMetricsJson returns parsed metrics from a valid JSON string', () => {
+  const json = JSON.stringify({ ftp: 280, thresholdPaceSecPerKm: 255, thresholdHr: 168 });
+  const result = parseSportMetricsJson(json);
+  assert.deepEqual(result, { ftp: 280, thresholdPaceSecPerKm: 255, thresholdHr: 168 });
+});
+
+test('parseSportMetricsJson returns empty metrics for null, undefined, or invalid input', () => {
+  const empty = { ftp: null, thresholdPaceSecPerKm: null, thresholdHr: null };
+  assert.deepEqual(parseSportMetricsJson(null), empty);
+  assert.deepEqual(parseSportMetricsJson(undefined), empty);
+  assert.deepEqual(parseSportMetricsJson('not-json'), empty);
+  assert.deepEqual(parseSportMetricsJson('{}'), empty);
 });

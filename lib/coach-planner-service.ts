@@ -32,7 +32,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
       const referenceDate = parseReferenceDate(referenceDateInput);
       const weekStart = startOfWeek(referenceDate, { weekStartsOn: 1 });
       const weekEnd = endOfWeek(referenceDate, { weekStartsOn: 1 });
-      const [athletes, templates, sessions] = await Promise.all([
+      const [athletes, templates, librarySessions, trainingPlans, sessions] = await Promise.all([
         db.user.findMany({
           where: { coachId, role: 'ATHLETE' },
           orderBy: { name: 'asc' },
@@ -41,6 +41,21 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
         db.template.findMany({
           where: { ownerId: coachId },
           include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+          orderBy: [{ sport: 'asc' }, { name: 'asc' }],
+        }),
+        db.session.findMany({
+          where: { coachOwnerId: coachId, athleteId: null, trainingPlanId: null },
+          include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+          orderBy: [{ date: 'asc' }, { title: 'asc' }],
+        }),
+        db.trainingPlan.findMany({
+          where: { coachOwnerId: coachId },
+          include: {
+            sessions: {
+              include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+              orderBy: { planWeekday: 'asc' },
+            },
+          },
           orderBy: [{ sport: 'asc' }, { name: 'asc' }],
         }),
         db.session.findMany({
@@ -61,6 +76,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
           label: format(date, 'EEE'),
           dateLabel: format(date, 'd MMM'),
           sessions: sessions
+            .filter((session): session is typeof session & { date: Date } => session.date !== null)
             .filter((session) => formatISO(session.date, { representation: 'date' }) === isoDate)
             .map((session) => {
               const metrics = deriveSessionMetrics(
@@ -88,6 +104,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
                 status: session.status,
                 source: session.source,
                 adjusted: session.adjusted,
+                sportMetricsJson: session.sportMetricsJson ?? null,
                 durationSec: metrics.durationSec,
                 tss: metrics.tss,
                 segments: metrics.segments,
@@ -105,6 +122,17 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
         },
         athletes,
         templates,
+        librarySessions: librarySessions.map((session) => ({
+          ...session,
+          date: session.date ? formatISO(session.date, { representation: 'date' }) : null,
+        })),
+        trainingPlans: trainingPlans.map((plan) => ({
+          ...plan,
+          sessions: plan.sessions.map((session) => ({
+            ...session,
+            date: session.date ? formatISO(session.date, { representation: 'date' }) : null,
+          })),
+        })),
         days,
       };
     },
@@ -113,6 +141,14 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
       const validationError = validatePlannerSessionDraft(draft);
       if (validationError) {
         return { ok: false as const, error: validationError, status: 400 };
+      }
+
+      if (!draft.athleteId) {
+        return { ok: false as const, error: 'Choose an athlete before saving.', status: 400 };
+      }
+
+      if (!draft.scheduledDate) {
+        return { ok: false as const, error: 'A scheduled date is required.', status: 400 };
       }
 
       const athlete = await db.user.findFirst({
@@ -202,7 +238,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
         where: { id: sessionId },
         select: { id: true, athleteId: true, athlete: { select: { coachId: true } } },
       });
-      if (!session || session.athlete.coachId !== coachId) {
+      if (!session || !session.athlete || session.athlete.coachId !== coachId) {
         return { ok: false as const, error: 'Session not found.', status: 404 };
       }
 

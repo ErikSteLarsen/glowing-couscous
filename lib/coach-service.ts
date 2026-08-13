@@ -133,8 +133,10 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
       }
 
       const athletes = coach.athletes.map((athlete) => {
-        const sessions = athlete.sessions.map((session) =>
-          mapSessionSummary({
+        const sessions = athlete.sessions
+          .filter((s): s is typeof s & { date: Date } => s.date !== null)
+          .map((session) =>
+            mapSessionSummary({
             id: session.id,
             title: session.title,
             sport: session.sport,
@@ -254,26 +256,30 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
         }),
       ]);
 
-      const weekSummaries = weekSessions.map((session) =>
-        mapSessionSummary({
-          id: session.id,
-          title: session.title,
-          sport: session.sport,
-          date: session.date,
-          status: session.status,
-          adjusted: session.adjusted,
-          blocks: session.blocks,
-          activity: session.activity
-            ? {
-                durationSec: session.activity.durationSec,
-                tss: session.activity.tss,
-                compliancePct: session.activity.compliancePct,
-              }
-            : null,
-        }),
-      );
-      const recentSummaries = recentSessions.map((session) =>
-        mapSessionSummary({
+      const weekSummaries = weekSessions
+        .filter((s): s is typeof s & { date: Date } => s.date !== null)
+        .map((session) =>
+          mapSessionSummary({
+            id: session.id,
+            title: session.title,
+            sport: session.sport,
+            date: session.date,
+            status: session.status,
+            adjusted: session.adjusted,
+            blocks: session.blocks,
+            activity: session.activity
+              ? {
+                  durationSec: session.activity.durationSec,
+                  tss: session.activity.tss,
+                  compliancePct: session.activity.compliancePct,
+                }
+              : null,
+          }),
+        );
+      const recentSummaries = recentSessions
+        .filter((s): s is typeof s & { date: Date } => s.date !== null)
+        .map((session) =>
+          mapSessionSummary({
           id: session.id,
           title: session.title,
           sport: session.sport,
