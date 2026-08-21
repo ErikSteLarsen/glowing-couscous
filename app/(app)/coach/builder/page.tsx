@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 
-// Legacy source assertion markers for the retired builder UI: BuilderClient; const initialAthleteId = Number(athleteId).
 export default async function CoachBuilderRedirectPage({
   searchParams,
 }: {

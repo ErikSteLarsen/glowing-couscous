@@ -9,7 +9,7 @@ this documentation change.
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass: 112 tests | `pnpm test` |
+| Tests | Pass: 113 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build` |
 | Build warning | Present | Next.js reports the `middleware` convention is deprecated in favor of `proxy`; this is not currently a build failure. |
@@ -33,18 +33,18 @@ sessions complete with notes. Weeks are Monday-based.
 | Coach planner for athlete schedules | `shipped` | `lib/coach-planner-service.ts`, `lib/planner-draft.ts`, `/coach/planner` | Planner, draft, API, and compatibility tests pass. |
 | Coach-owned session library | `shipped` | `lib/coach-session-library-service.ts`, planner library API/UI | Dedicated service tests pass. |
 | Reusable coach training plans | `shipped` | `lib/coach-training-plan-service.ts`, training-plan APIs/UI | Dedicated service and planner tests pass. |
-| Coach template library and assignment | `shipped` | `lib/template-service.ts`, `lib/assignment-service.ts`, template APIs/UI | Live create/edit, source assignment, duplicate prevention, 112 tests, lint, and build pass; browser E2E coverage remains a gap. |
+| Coach template library and assignment | `shipped` | `lib/template-service.ts`, `lib/assignment-service.ts`, template APIs/UI | Live create/edit, source assignment, duplicate prevention, 113 tests, lint, and build pass; browser E2E coverage remains a gap. |
 | Athlete Home, Calendar, Session, Live, Activity | `shipped` | `lib/athlete-service.ts`, `lib/athlete-completion-service.ts`, athlete route tree, Tempo components | Calendar, completion, shell, source, and build coverage pass; live execution is a UI stepper, not device telemetry. |
-| Interactive athlete Live execution | `shipped` | `lib/athlete-execution.ts`, `LiveSessionClient`, `Stepper` | `LIVE-001`; local next/previous/restart/completion controls, 112 tests, lint, and build pass. Refresh intentionally restarts local state; no telemetry. |
-| Session completion and activity persistence | `shipped` | `lib/athlete-completion-service.ts`, completion API, `Activity` model | 112 tests, schema reset/seed, lint, and build pass; manual outcomes are explicitly labeled estimates. |
+| Interactive athlete Live execution | `shipped` | `lib/athlete-execution.ts`, `LiveSessionClient`, `Stepper` | `LIVE-001`; local next/previous/restart/completion controls, 113 tests, lint, and build pass. Refresh intentionally restarts local state; no telemetry. |
+| Session completion and activity persistence | `shipped` | `lib/athlete-completion-service.ts`, completion API, `Activity` model | 113 tests, schema reset/seed, lint, and build pass; manual outcomes are explicitly labeled estimates. |
 | Completion metric/history integrity | `shipped` | `lib/athlete-completion-service.ts`, Activity fields, planner mutation guards | `COMPLETION-002`; immutable completed sessions, note retention, stored outcome segments, and nullable compliance are verified. |
 | Structured workout blocks and derived metrics | `shipped` | `lib/tempo-blocks.ts`, `lib/session-math.ts`, `lib/planner-draft.ts` | Session-math and planner tests pass. |
-| Compatibility planner mutation path | `transitional` | `/api/coach/sessions/[sessionId]`, `lib/planner-service.ts`, `lib/planner.ts` | Required by current tests and route; do not extend for new features without an explicit migration decision. |
+| Compatibility planner mutation path | `transitional` | `/api/coach/sessions/[sessionId]`, `lib/planner-service.ts`, `lib/planner.ts` | Cross-week Plan reassignment, template ownership, completed-session immutability, and builder redirect cleanup are verified; keep transitional and do not extend for new features. |
 | Reusable source-copy assignment | `shipped` | `lib/assignment-service.ts`, `Assignment`, `TrainingPlanAssignment` | `ASSIGN-001`; template/library/training-plan snapshots, lineage, idempotency, schema reset/seed, 106 tests, lint, and build pass. |
-| Live planner/template workflows | `shipped` | `PlannerClient`, `SourceAssignmentPanel`, `CoachTemplatesClient` | `WORKFLOW-001`; source/date/week previews, reset confirmation, live template editor, 112 tests, lint, and build pass. |
+| Live planner/template workflows | `shipped` | `PlannerClient`, `SourceAssignmentPanel`, `CoachTemplatesClient` | `WORKFLOW-001`; source/date/week previews, reset confirmation, live template editor, 113 tests, lint, and build pass. |
 | Auth.js adapter and role setup hardening | `shipped` | `prisma/schema.prisma`, `lib/auth-principal.ts`, `lib/auth-role-service.ts`, `auth.ts`, setup route | `AUTH-002`; focused principal/role tests, Prisma validation, adapter smoke test, and full gates pass. External OAuth integration remains a gap. |
 | Coach-request lifecycle hardening | `shipped` | `lib/coach-request-service.ts`, `prisma/schema.prisma`, request UI | `REQUEST-002`; pending uniqueness, eligibility, atomic acceptance cleanup, UI errors, and full gates pass. |
-| API auth/input hardening | `shipped` | `lib/api-auth.ts`, `lib/route-params.ts`, protected API handlers | `API-001`; 112 tests, lint, build, and route inventory checks pass. Full session-backed route integration remains a gap. |
+| API auth/input hardening | `shipped` | `lib/api-auth.ts`, `lib/route-params.ts`, protected API handlers | `API-001`; 113 tests, lint, build, and route inventory checks pass. Full session-backed route integration remains a gap. |
 
 See `WORK-INDEX.md` for stable IDs and `features/` for detailed records.
 

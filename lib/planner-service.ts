@@ -23,13 +23,12 @@ export function createPlannerService({ db = prisma }: PlannerServiceDeps = {}) {
   return {
     forWeek(ref: PlannerWeekRef) {
       const athleteId = Number(ref.athleteId);
-      const weekStart = normalizeWeekStart(ref.weekStart);
 
       return {
         async execute(command: PlannerCommand): Promise<PlannerResult> {
           switch (command.type) {
             case 'save-session':
-              return saveSession({ db, athleteId, weekStart, command });
+              return saveSession({ db, athleteId, command });
             case 'delete-session':
               return deleteSession({ db, athleteId, command });
             default:
@@ -46,12 +45,10 @@ export const plannerService = createPlannerService();
 async function saveSession({
   db,
   athleteId,
-  weekStart,
   command,
 }: {
   db: typeof prisma;
   athleteId: number;
-  weekStart: Date;
   command: Extract<PlannerCommand, { type: 'save-session' }>;
 }): Promise<PlannerResult> {
   const draft = normalizeSessionDraft(command.draft);
@@ -66,7 +63,22 @@ async function saveSession({
     return { ok: false, error: 'A valid scheduled date is required.', status: 400 };
   }
 
-  const weekPlan = await ensureWeekPlan(db, athleteId, weekStart);
+  const scheduledWeekStart = startOfWeek(scheduledDate, { weekStartsOn: 1 });
+  const weekPlan = await ensureWeekPlan(db, athleteId, scheduledWeekStart);
+
+  if (draft.sourceTemplateId) {
+    const athlete = await db.user.findUnique({
+      where: { id: athleteId },
+      select: { coachId: true },
+    });
+    const template = athlete?.coachId
+      ? await db.template.findFirst({
+          where: { id: draft.sourceTemplateId, ownerId: athlete.coachId },
+          select: { id: true },
+        })
+      : null;
+    if (!template) return { ok: false, error: 'Template not found.', status: 404 };
+  }
   const blockCreates = mapDraftBlocksToTempoBlocks(draft.blocks, draft.durationMinutes);
   const data = {
     athleteId,
@@ -175,12 +187,6 @@ async function ensureWeekPlan(db: typeof prisma, athleteId: number, weekStart: D
       endDate: weekEnd,
     },
   });
-}
-
-function normalizeWeekStart(input: Date | string) {
-  const parsed = input instanceof Date ? input : new Date(input);
-  const safeDate = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
-  return startOfWeek(safeDate, { weekStartsOn: 1 });
 }
 
 function mapDraftBlocksToTempoBlocks(

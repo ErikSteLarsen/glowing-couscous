@@ -196,3 +196,12 @@ test('completion writes planned status through the completion service', async ()
   assert.doesNotMatch(completionRouteSource, /prisma\./);
   assert.doesNotMatch(completionRouteSource, /session\.adjusted \? 'planned' : 'planned'/);
 });
+
+test('compatibility planner reassigns cross-week edits and protects template ownership', async () => {
+  const plannerServiceSource = await read('lib/planner-service.ts');
+
+  assert.match(plannerServiceSource, /scheduledWeekStart = startOfWeek\(scheduledDate/);
+  assert.match(plannerServiceSource, /ownerId: athlete\.coachId/);
+  assert.match(plannerServiceSource, /Template not found/);
+  assert.match(plannerServiceSource, /Completed sessions are immutable/);
+});

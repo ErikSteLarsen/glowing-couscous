@@ -1,12 +1,15 @@
 # Task: Harden Compatibility Boundary And Align Documentation
 
-- **Status:** `planned`
-- **Agent:** `<assigned agent>`
+- **Status:** `completed`
+- **Agent:** `opencode-compat-2026-08-21`
 - **Created:** `2026-08-21`
 - **Task ID:** `COMPAT-002`
 - **Feature IDs:** `COMPAT-001`, `CLEANUP-001`, `COVERAGE-001`, `OPS-001`
 - **Related records:** [compatibility](../features/compatibility.md), [planner](../features/planner.md), [current status](../CURRENT-STATUS.md), [audit](2026-08-21-incompleteness-audit.md)
 - **Dependencies:** Complete or coordinate with completion-integrity and API-validation work before changing shared session semantics.
+- **Completed:** 2026-08-21
+- **Completion record:** [progress and verification](2026-08-21-compatibility-docs-progress.md)
+- **Decision:** [cross-week reassignment and builder cleanup](../decisions/0008-compatibility-cross-week-and-builder-cleanup.md)
 
 ## Problem
 

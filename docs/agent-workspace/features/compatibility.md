@@ -8,9 +8,12 @@
 
 ## Contract
 
-The older coach-session API remains live for compatibility. It accepts the old
-draft shape, maps legacy block types into Tempo `Block` rows, preserves an
-existing session's `adjusted` state, and allows owner-scoped update/delete.
+- The older coach-session API remains live for compatibility. It accepts the old
+  draft shape, maps legacy block types into Tempo `Block` rows, preserves an
+  existing session's `adjusted` state, uses the draft date's Monday Plan, checks
+  template ownership, and allows owner-scoped update/delete for incomplete sessions.
+- Activity-backed sessions are immutable; `/coach/builder` redirects to the
+  active planner while preserving supported query parameters.
 
 ## Live Path
 
@@ -25,17 +28,12 @@ existing session's `adjusted` state, and allows owner-scoped update/delete.
 
 - Architecture source tests assert the compatibility adapter, fallback block
   duration, and adjusted-state preservation on 2026-08-21.
-- Full `pnpm test`, lint, and build pass on 2026-08-21.
+- Full `pnpm test` (113 tests), lint, and build pass on 2026-08-21.
 
 ## Known Gaps
 
 - The boundary is easy to misunderstand because both planner generations use
   similar names and models.
-- Cross-week legacy edits can use the old week Plan with a new session date.
-- The compatibility path does not currently verify private template ownership.
-- The old builder client and comment-based source assertions are misleading.
-- `ARCHITECTURE.md` and `docs/AI-HANDOFF.md` still describe the old planner as
-  the primary owner in places.
 - Reference analysis is needed before deleting old helpers/components.
 
 ## Extension Rules

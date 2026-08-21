@@ -185,17 +185,14 @@ test('assignment service creates an assigned session from a coach template', asy
   assert.equal(calls.assignmentUpsert?.create.assignedAt.toISOString(), assignedAt.toISOString());
 });
 
-test('builder route is backed by a real client and assignment API path', async () => {
+test('builder route redirects to the active planner and assignment API path', async () => {
   const builderPageSource = await read(['app/(app)/coach', 'builder', 'page.tsx'].join('/'));
-  const builderClientSource = await read(['app/(app)/coach', 'builder', 'BuilderClient.tsx'].join('/'));
   const assignmentRouteSource = await read('app/api/coach/assignments/route.ts');
 
-  assert.match(builderPageSource, /BuilderClient/);
-  assert.match(builderPageSource, /athleteId\?: string/);
-  assert.match(builderPageSource, /const initialAthleteId = Number\(athleteId\)/);
-  assert.match(builderClientSource, /initialAthleteId: number \| null/);
+  assert.match(builderPageSource, /redirect\('\/coach\/planner'/);
+  assert.match(builderPageSource, /params\.set\('templateId'/);
+  assert.match(builderPageSource, /params\.set\('athleteId'/);
   assert.doesNotMatch(builderPageSource, /still in progress|next migration slice/i);
-  assert.match(builderClientSource, /isValid/);
   assert.match(assignmentRouteSource, /assignmentService\.assignSourceToAthlete/);
   assert.match(assignmentRouteSource, /parsePositiveInteger/);
 });
