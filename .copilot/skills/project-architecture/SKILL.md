@@ -7,11 +7,12 @@ description: Guides contributors through this repo's service-boundary architectu
 
 ## Quick start
 
-1. Read `docs/AI-HANDOFF.md`.
-2. Read `ARCHITECTURE.md`.
-3. Identify the owning `lib/` service before editing pages or route handlers.
-4. Keep Prisma-backed business logic out of `app/` unless no service owner exists yet.
-5. Update docs if boundaries move.
+1. Read `docs/agent-workspace/README.md`, `CURRENT-STATUS.md`, and `WORK-INDEX.md`.
+2. Read the related feature record and `docs/AI-HANDOFF.md`.
+3. Read `ARCHITECTURE.md`.
+4. Identify the owning `lib/` service before editing pages or route handlers.
+5. Keep Prisma-backed business logic out of `app/` unless no service owner exists yet.
+6. Update the agent workspace if boundaries, behavior, status, or verification changes.
 
 ## Workflows
 

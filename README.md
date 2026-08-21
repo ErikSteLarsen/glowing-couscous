@@ -11,6 +11,7 @@ Workout Planner is a weekly training planning app for coaches and athletes. Coac
 
 ## Documentation Map
 
+- `docs/agent-workspace/README.md` — **required starting point for agent work**; current status, related work, task tracking, decisions, and history.
 - `docs/AI-HANDOFF.md` — **best starting point for a new AI contributor**; explains current state, extension points, and recommended next work.
 - `ARCHITECTURE.md` — current implementation boundaries, route map, and safe places to add behavior.
 - `SPEC.md` — product scope, shipped feature summary, and near-term roadmap.

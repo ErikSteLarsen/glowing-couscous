@@ -2,6 +2,10 @@
 
 This is the fastest way to understand the repo before changing code.
 
+For coordination across agents, read `docs/agent-workspace/README.md` first.
+It links the current snapshot, feature status, active tasks, decisions, and
+append-only history. Update that workspace when work changes the repository.
+
 ## What this app is
 
 Workout Planner is now a Tempo-aligned coach-athlete planning app. Coaches manage rosters, templates, and builder assignments; athletes use Home, Calendar, Session, Live, Activity, and Settings surfaces to follow the plan.
@@ -123,6 +127,8 @@ Why this is the highest-value move:
 
 ## Read next
 
-1. `ARCHITECTURE.md` for the current implementation model
-2. `SPEC.md` for product scope and roadmap
-3. `CLAUDE.md` for repo-specific coding guidance
+1. `docs/agent-workspace/CURRENT-STATUS.md` for the verified current snapshot
+2. `docs/agent-workspace/WORK-INDEX.md` and the related feature record before taking work
+3. `ARCHITECTURE.md` for the current implementation model
+4. `SPEC.md` for product scope and roadmap
+5. `CLAUDE.md` for repo-specific coding guidance

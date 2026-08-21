@@ -16,6 +16,15 @@ Use `pnpm` — not npm or yarn. The lockfile is `pnpm-lock.yaml`.
 
 After changing the Prisma schema, run `pnpm db:push` then `pnpm db:seed` to rebuild the local database.
 
+## Agent Work Tracking
+
+Before starting a non-trivial task, read `docs/agent-workspace/README.md`,
+`docs/agent-workspace/CURRENT-STATUS.md`, `docs/agent-workspace/WORK-INDEX.md`,
+and the related feature record. Update the workspace after meaningful progress
+and before finishing: record the changed behavior, files, verification, date,
+and follow-up work. Use `docs/agent-workspace/tasks/TEMPLATE.md` for work that
+needs an active task record.
+
 ## Architecture
 
 **Stack:** Next.js 16 App Router, React 19, TypeScript, Tailwind CSS v4, Prisma + SQLite, date-fns, lucide-react.
@@ -30,7 +39,7 @@ All feature logic belongs behind these `lib/` modules. Do not reintroduce Prisma
 
 | Module | Owns |
 |---|---|
-| `lib/planner-service.ts` | Coach-side week scheduling mutations and transitional planner loading for the remaining week-based APIs |
+| `lib/planner-service.ts` | Compatibility coach-session mutations used by the remaining week-based API |
 | `lib/coach-service.ts` | Coach roster and athlete-detail read models |
 | `lib/athlete-service.ts` | Athlete Home, Calendar, Session, Activity, discovery, and profile reads |
 | `lib/assignment-service.ts` | Coach builder assignment creation and template-to-session scheduling |
