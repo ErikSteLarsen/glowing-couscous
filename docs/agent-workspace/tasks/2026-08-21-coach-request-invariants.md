@@ -1,12 +1,15 @@
 # Task: Enforce Coach-Request Lifecycle Invariants
 
-- **Status:** `planned`
-- **Agent:** `<assigned agent>`
+- **Status:** `completed`
+- **Agent:** `opencode-request-2026-08-21`
 - **Created:** `2026-08-21`
 - **Task ID:** `REQUEST-002`
 - **Feature IDs:** `ONBOARD-001`, `COVERAGE-001`
 - **Related records:** [onboarding](../features/onboarding.md), [auth](../features/auth.md), [audit](2026-08-21-incompleteness-audit.md)
 - **Dependencies:** Decide how the database enforces one pending request per athlete. Recommended: a nullable unique pending-athlete key on `CoachRequest`.
+- **Completed:** 2026-08-21
+- **Completion record:** [progress and verification](2026-08-21-coach-request-invariants-progress.md)
+- **Decision:** [database-backed pending uniqueness](../decisions/0005-pending-coach-request-uniqueness.md)
 
 ## Problem
 

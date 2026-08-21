@@ -3,7 +3,7 @@
 - **ID:** `ONBOARD-001`
 - **Status:** `shipped`
 - **Last verified:** `2026-08-21`
-- **Owner:** `lib/coach-request-service.ts` and athlete request-state reads in `lib/athlete-service.ts`
+- **Owner:** `lib/coach-request-service.ts`, `prisma/schema.prisma`, and athlete request-state reads in `lib/athlete-service.ts`
 - **Related work:** [baseline](../history/2026-08-21-baseline.md), [product scope](../../../SPEC.md), [request task](../tasks/2026-08-21-coach-request-invariants.md)
 
 ## Contract
@@ -29,19 +29,27 @@ A coach can list pending requests and accept or reject them.
 - Rejected requests can be reopened.
 - Accepting a request updates the athlete relationship and clears self-coached mode.
 - Resolved requests cannot be resolved again.
+- Request creation verifies the caller is an athlete without an active coach;
+  self-coached athletes remain eligible to request a coach.
+- `CoachRequest.pendingAthleteId` is unique while pending, so concurrent requests
+  resolve to one winner; resolved rows clear the key.
+- Acceptance atomically connects the athlete, clears self-coached mode, and
+  rejects competing pending requests.
+- Coach and athlete request UIs display load/action failures and block duplicate
+  in-flight actions.
 
 ## Verification
 
-- Coach-request service, route, and onboarding source tests pass in `pnpm test` on 2026-08-21.
+- Coach-request service, route, onboarding, and UI source tests pass in `pnpm test`
+  on 2026-08-21 (99 tests).
 - `pnpm lint && pnpm build` — pass on 2026-08-21.
+- `pnpm db:push --accept-data-loss && pnpm db:seed` — pass on the disposable
+  local SQLite database on 2026-08-21; the seeded pending row has its pending key.
 
 ## Known Gaps
 
 - Messaging is explicitly not implemented; the UI says it is coming soon.
 - Pending/rejected state presentation and cross-role navigation still need UX polish.
-- Service eligibility is not fully enforced for already-coached callers, and
-  the one-pending-request rule is not database-safe across concurrent requests.
-- Coach request list/action failures are currently too quiet in the UI.
 
 ## Extension Rules
 

@@ -90,6 +90,17 @@ test('athlete onboarding surfaces request state in profile and coach-search UI',
   assert.match(routeSource, /Request already pending/);
 });
 
+test('coach request UI surfaces failures and blocks duplicate actions', async () => {
+  const panelSource = await read('components/CoachRequestsPanel.tsx');
+  const discoverySource = await read('app/(app)/athlete/find-coach/FindCoachClient.tsx');
+
+  assert.match(panelSource, /Failed to load athlete requests/);
+  assert.match(panelSource, /actingRequestId/);
+  assert.match(panelSource, /disabled=\{actingRequestId !== null\}/);
+  assert.match(discoverySource, /requestingCoachId/);
+  assert.match(discoverySource, /Failed to send request/);
+});
+
 test('athlete home page uses Tempo dashboard sections and session entry points', async () => {
   const athletePageSource = await read('app/(app)/athlete/page.tsx');
 

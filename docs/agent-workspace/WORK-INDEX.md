@@ -22,7 +22,7 @@ by agents as work changes. Use the linked feature record before editing.
 | `ASSIGN-001` | Copy reusable sources to athlete schedules | `planned` | unified assignment module and source lineage | No library/plan assignment tests exist | [planner](features/planner.md) |
 | `WORKFLOW-001` | Complete planner/template UI workflows | `planned` | active planner, templates UI, builder redirect | Current UI lacks source assignment/template editor | [planner](features/planner.md) |
 | `AUTH-002` | Auth.js adapter contract and one-time setup | `shipped` | Prisma `User`, auth/session, setup route | [task](tasks/2026-08-21-auth-role-setup-progress.md); 88 tests, build, lint, Prisma validation | [auth](features/auth.md) |
-| `REQUEST-002` | Coach-request concurrency and eligibility | `planned` | coach-request module and schema | Concurrent lifecycle tests missing | [onboarding](features/onboarding.md) |
+| `REQUEST-002` | Coach-request concurrency and eligibility | `shipped` | coach-request module and schema | [task](tasks/2026-08-21-coach-request-invariants-progress.md); 99 tests, schema reset/seed, lint, build | [onboarding](features/onboarding.md) |
 | `API-001` | API principal and route input validation | `shipped` | `lib/api-auth.ts`, `lib/route-params.ts`, protected API handlers | [task](tasks/2026-08-21-api-auth-validation-progress.md); 92 tests, lint, build | [coverage](features/coverage.md) |
 | `COMPAT-002` | Compatibility hardening and docs alignment | `planned` | old planner adapter, builder redirect, architecture docs | Existing tests include misleading source assertions | [compatibility](features/compatibility.md) |
 | `COVERAGE-001` | Deepen service/API regression coverage | `planned` | Auth, request, completion, compatibility seams | See current gaps in snapshot | [coverage](features/coverage.md) |
@@ -56,6 +56,6 @@ one by creating a task progress entry and changing its status to `in-progress`.
 | `ASSIGN-001` | `planned` | None | [source-copy assignment](tasks/2026-08-21-source-copy-assignment.md) |
 | `WORKFLOW-001` | `planned` | `ASSIGN-001` command contract | [planner/template workflows](tasks/2026-08-21-planner-template-workflows.md) |
 | `AUTH-002` | `shipped` | Role setup and adapter decisions | [auth and role setup](tasks/2026-08-21-auth-role-setup.md), [completion record](tasks/2026-08-21-auth-role-setup-progress.md), [history](history/2026-08-21-auth-role-setup.md) |
-| `REQUEST-002` | `planned` | Pending-request uniqueness decision | [coach-request invariants](tasks/2026-08-21-coach-request-invariants.md) |
+| `REQUEST-002` | `shipped` | Pending-request uniqueness decision | [coach-request invariants](tasks/2026-08-21-coach-request-invariants.md), [completion record](tasks/2026-08-21-coach-request-invariants-progress.md), [history](history/2026-08-21-coach-request-invariants.md) |
 | `API-001` | `shipped` | Auth principal policy | [API auth and validation](tasks/2026-08-21-api-auth-validation.md), [completion record](tasks/2026-08-21-api-auth-validation-progress.md), [history](history/2026-08-21-api-auth-validation.md) |
 | `COMPAT-002` | `planned` | Completion/API semantics where shared | [compatibility and docs](tasks/2026-08-21-compatibility-docs.md) |

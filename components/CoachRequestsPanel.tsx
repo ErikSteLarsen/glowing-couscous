@@ -11,37 +11,51 @@ export function CoachRequestsPanel() {
   const [requests, setRequests] = useState<PendingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [actingRequestId, setActingRequestId] = useState<number | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
     fetch('/api/coach/requests', { signal: controller.signal })
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error('Request list failed');
+        return r.json();
+      })
       .then((data) => setRequests(data.requests ?? []))
-      .catch(() => {})
+      .catch(() => setError('Failed to load athlete requests.'))
       .finally(() => setLoading(false));
     return () => controller.abort();
   }, []);
 
   async function handleAction(requestId: number, action: 'accept' | 'reject') {
+    if (actingRequestId !== null) return;
     setMessage('');
-    const res = await fetch(`/api/coach/requests/${requestId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action }),
-    });
-    if (res.ok) {
+    setError('');
+    setActingRequestId(requestId);
+    try {
+      const res = await fetch(`/api/coach/requests/${requestId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      if (!res.ok) throw new Error('Request action failed');
       setRequests((prev) => prev.filter((r) => r.id !== requestId));
       setMessage(action === 'accept' ? 'Athlete added to your roster.' : 'Request rejected.');
+    } catch {
+      setError('Failed to update athlete request. Please try again.');
+    } finally {
+      setActingRequestId(null);
     }
   }
 
-  if (loading || requests.length === 0) return null;
+  if (loading || (requests.length === 0 && !error)) return null;
 
   return (
     <Surface>
       <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Athlete requests</p>
       <h2 className="mt-2 text-xl font-semibold text-[var(--text)]">Pending join requests</h2>
       {message ? <p className="mt-2 text-sm text-[#57654E]">{message}</p> : null}
+      {error ? <p className="mt-2 text-sm text-[#B45516]">{error}</p> : null}
       <div className="mt-4 space-y-3">
         {requests.map((req) => (
           <div
@@ -55,12 +69,14 @@ export function CoachRequestsPanel() {
             <div className="flex gap-2">
               <button
                 onClick={() => handleAction(req.id, 'accept')}
+                disabled={actingRequestId !== null}
                 className="min-h-11 rounded-[10px] bg-[var(--text)] px-4 text-sm font-semibold text-white"
               >
                 Accept
               </button>
               <button
                 onClick={() => handleAction(req.id, 'reject')}
+                disabled={actingRequestId !== null}
                 className="min-h-11 rounded-[10px] border border-[#FAD8BE] bg-[#FEEDE0] px-4 text-sm font-semibold text-[#B45516]"
               >
                 Reject

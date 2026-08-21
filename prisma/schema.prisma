@@ -55,14 +55,15 @@ model Account {
 }
 
 model CoachRequest {
-  id        Int      @id @default(autoincrement())
-  athleteId Int
-  coachId   Int
-  status    String   @default("PENDING")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  athlete   User     @relation("AthleteRequests", fields: [athleteId], references: [id], onDelete: Cascade)
-  coach     User     @relation("CoachRequests", fields: [coachId], references: [id], onDelete: Cascade)
+  id                Int      @id @default(autoincrement())
+  athleteId         Int
+  coachId           Int
+  pendingAthleteId  Int?     @unique
+  status            String   @default("PENDING")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  athlete           User     @relation("AthleteRequests", fields: [athleteId], references: [id], onDelete: Cascade)
+  coach             User     @relation("CoachRequests", fields: [coachId], references: [id], onDelete: Cascade)
 
   @@unique([athleteId, coachId])
 }

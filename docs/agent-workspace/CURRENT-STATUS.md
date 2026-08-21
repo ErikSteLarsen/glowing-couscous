@@ -9,7 +9,7 @@ this documentation change.
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass: 88 tests | `pnpm test` |
+| Tests | Pass: 99 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build` |
 | Build warning | Present | Next.js reports the `middleware` convention is deprecated in favor of `proxy`; this is not currently a build failure. |
@@ -29,7 +29,7 @@ sessions complete with notes. Weeks are Monday-based.
 | Auth, signup, setup, role redirects | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-principal.ts`, `lib/auth-role-service.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | Focused role/principal tests and adapter smoke test pass; external OAuth integration remains a gap. |
 | Responsive Tempo app shell and navigation | `shipped` | `components/AppShell.tsx`, `AppSidebar.tsx`, `lib/app-navigation.ts`, `app/globals.css` | Shell, accessibility, centering, and navigation tests pass. |
 | Coach roster and athlete detail | `shipped` | `lib/coach-service.ts`, `/coach`, `/coach/athletes/[athleteId]` | `tests/coach-service.test.ts` and route tests pass. |
-| Athlete coach discovery and request lifecycle | `shipped` | `lib/coach-request-service.ts`, `lib/athlete-service.ts`, discovery/profile routes | Request service and onboarding source tests pass; UX polish remains planned. |
+| Athlete coach discovery and request lifecycle | `shipped` | `lib/coach-request-service.ts`, `prisma/schema.prisma`, `lib/athlete-service.ts`, discovery/profile routes | Request invariants, UI errors/in-flight state, 99 tests, schema reset/seed, lint, and build pass; UX polish remains planned. |
 | Coach planner for athlete schedules | `shipped` | `lib/coach-planner-service.ts`, `lib/planner-draft.ts`, `/coach/planner` | Planner, draft, API, and compatibility tests pass. |
 | Coach-owned session library | `shipped` | `lib/coach-session-library-service.ts`, planner library API/UI | Dedicated service tests pass. |
 | Reusable coach training plans | `shipped` | `lib/coach-training-plan-service.ts`, training-plan APIs/UI | Dedicated service and planner tests pass. |
@@ -43,7 +43,7 @@ sessions complete with notes. Weeks are Monday-based.
 | Reusable source-copy assignment | `planned` | Unified assignment module and source lineage | Templates are partially assignable; library sessions and training plans cannot be copied to athletes. |
 | Live planner/template workflows | `planned` | Source-copy assignment command | Template create/edit UI is absent and the old builder UI is unreachable. |
 | Auth.js adapter and role setup hardening | `shipped` | `prisma/schema.prisma`, `lib/auth-principal.ts`, `lib/auth-role-service.ts`, `auth.ts`, setup route | `AUTH-002`; focused principal/role tests, Prisma validation, adapter smoke test, and full gates pass. External OAuth integration remains a gap. |
-| Coach-request lifecycle hardening | `planned` | Pending-request uniqueness decision | Concurrent pending requests and already-coached API callers are not fully constrained. |
+| Coach-request lifecycle hardening | `shipped` | `lib/coach-request-service.ts`, `prisma/schema.prisma`, request UI | `REQUEST-002`; pending uniqueness, eligibility, atomic acceptance cleanup, UI errors, and full gates pass. |
 | API auth/input hardening | `shipped` | `lib/api-auth.ts`, `lib/route-params.ts`, protected API handlers | `API-001`; 92 tests, lint, build, and route inventory checks pass. Full session-backed route integration remains a gap. |
 
 See `WORK-INDEX.md` for stable IDs and `features/` for detailed records.

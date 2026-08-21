@@ -146,6 +146,7 @@ async function main() {
     data: {
       athleteId: sofie.id,
       coachId: coachNora.id,
+      pendingAthleteId: sofie.id,
       status: 'PENDING',
     },
   });

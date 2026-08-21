@@ -56,6 +56,8 @@ Important models:
 `User.role` is nullable only for a first-time Auth.js user before setup.
 `User.name`, `image`, and `emailVerified` are nullable for adapter compatibility;
 application services normalize names for UI consumers.
+`CoachRequest.pendingAthleteId` is a nullable unique key populated only while a
+request is pending.
 
 ## Code boundaries that matter
 
@@ -101,6 +103,8 @@ These are the first places to be careful when extending the app:
 - If the feature changes planner behavior, extend `lib/planner-service.ts` first.
 - If the feature changes template behavior, extend `lib/template-service.ts`.
 - If the feature changes athlete onboarding or coach-request lifecycle behavior, extend `lib/coach-request-service.ts`.
+- Keep one-pending-request uniqueness in the database key and resolve competing
+  requests inside the service transaction.
 - If the feature changes athlete-facing week/profile reads, extend `lib/athlete-service.ts`.
 - Do not add new Prisma business logic directly to route handlers if an existing service already owns that behavior.
 - Keep Monday as the week boundary.

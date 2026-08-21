@@ -83,6 +83,8 @@ If a feature changes planner behavior, add it here first instead of scattering P
 
 - `lib/coach-request-service.ts` owns coach search plus request list/create/decision flows.
 - `/api/coaches`, `/api/athlete/coach-requests`, and `/api/coach/requests/*` should stay thin and delegate to this service.
+- `CoachRequest.pendingAthleteId` is the nullable unique concurrency key for
+  pending requests; the service clears it when requests resolve.
 
 ### Calendar and sport-domain helpers
 
@@ -109,6 +111,9 @@ Important ownership relationships:
 - `User.name`, `User.emailVerified`, and `User.image` use Auth.js-compatible
   nullability; application read services normalize nullable names to `''`.
 - `CoachRequest` tracks athlete-to-coach connection requests.
+- `CoachRequest.pendingAthleteId` is populated only for pending rows, so request
+  history can retain the unique athlete/coach pair without allowing competing
+  pending requests.
 - `User.coachId` represents the accepted coach-athlete relationship.
 - `Plan` owns goal/race windows for an athlete.
 - `Session` belongs to an athlete and may also belong to a `Plan` or `Template`.

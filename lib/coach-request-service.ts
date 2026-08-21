@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from './prisma.ts';
 
 type CoachRequestServiceDeps = {
   db?: typeof prisma;
@@ -52,6 +52,17 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
     },
 
     async createForAthlete(athleteUserId: number, coachId: number): Promise<CoachRequestResult> {
+      const athlete = await db.user.findUnique({
+        where: { id: athleteUserId },
+        select: { role: true, coachId: true, selfCoached: true },
+      });
+      if (!athlete || athlete.role !== 'ATHLETE') {
+        return { ok: false, status: 403, error: 'Only athletes can request a coach' };
+      }
+      if (athlete.coachId !== null) {
+        return { ok: false, status: 409, error: 'Athlete already has a coach' };
+      }
+
       const coach = await db.user.findUnique({ where: { id: coachId } });
       if (!coach || coach.role !== 'COACH') {
         return { ok: false, status: 404, error: 'Coach not found' };
@@ -87,19 +98,28 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
       if (existingRequest && existingRequest.status === 'REJECTED') {
         await db.coachRequest.update({
           where: { id: existingRequest.id },
-          data: { status: 'PENDING' },
+          data: { status: 'PENDING', pendingAthleteId: athleteUserId },
         });
         return { ok: true };
       }
 
+      if (existingRequest) {
+        return { ok: false, status: 409, error: 'Request already resolved' };
+      }
+
       try {
         await db.coachRequest.create({
-          data: { athleteId: athleteUserId, coachId, status: 'PENDING' },
+          data: {
+            athleteId: athleteUserId,
+            coachId,
+            pendingAthleteId: athleteUserId,
+            status: 'PENDING',
+          },
         });
         return { ok: true };
       } catch (error: unknown) {
         if ((error as { code?: string }).code === 'P2002') {
-          return { ok: false, status: 409, error: 'Request already pending' };
+          return { ok: false, status: 409, error: 'Another request is already pending' };
         }
         throw error;
       }
@@ -149,7 +169,18 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
         }
 
         await db.$transaction([
-          db.coachRequest.update({ where: { id: request.id }, data: { status: 'ACCEPTED' } }),
+          db.coachRequest.update({
+            where: { id: request.id },
+            data: { status: 'ACCEPTED', pendingAthleteId: null },
+          }),
+          db.coachRequest.updateMany({
+            where: {
+              athleteId: request.athleteId,
+              status: 'PENDING',
+              id: { not: request.id },
+            },
+            data: { status: 'REJECTED', pendingAthleteId: null },
+          }),
           db.user.update({
             where: { id: request.athleteId },
             data: {
@@ -161,7 +192,10 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
         return { ok: true };
       }
 
-      await db.coachRequest.update({ where: { id: request.id }, data: { status: 'REJECTED' } });
+      await db.coachRequest.update({
+        where: { id: request.id },
+        data: { status: 'REJECTED', pendingAthleteId: null },
+      });
       return { ok: true };
     },
   };

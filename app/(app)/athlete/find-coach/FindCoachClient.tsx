@@ -36,6 +36,7 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
   });
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [requestingCoachId, setRequestingCoachId] = useState<number | null>(null);
 
   const requestsByCoachId = useMemo(
     () => Object.fromEntries(requestState.requests.map((r) => [r.coach.id, r.status])),
@@ -76,28 +77,36 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
   }
 
   async function handleRequest(coachId: number) {
+    if (requestingCoachId !== null) return;
     setErrorMessage('');
     setFeedbackMessage('');
-    const res = await fetch('/api/athlete/coach-requests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ coachId }),
-    });
-    const payload = (await res.json().catch(() => ({ error: 'Failed to send request.' }))) as { error?: string };
+    setRequestingCoachId(coachId);
+    try {
+      const res = await fetch('/api/athlete/coach-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coachId }),
+      });
+      const payload = (await res.json().catch(() => ({ error: 'Failed to send request.' }))) as { error?: string };
 
-    if (res.ok) {
-      await loadRequestState();
-      setFeedbackMessage('Request pending. Back to profile while you wait for coach approval.');
-      return;
+      if (res.ok) {
+        await loadRequestState();
+        setFeedbackMessage('Request pending. Back to profile while you wait for coach approval.');
+        return;
+      }
+
+      if (res.status === 409) {
+        await loadRequestState();
+        setErrorMessage(payload.error ?? 'Request already pending');
+        return;
+      }
+
+      setErrorMessage(payload.error ?? 'Failed to send request.');
+    } catch {
+      setErrorMessage('Failed to send request. Please try again.');
+    } finally {
+      setRequestingCoachId(null);
     }
-
-    if (res.status === 409) {
-      await loadRequestState();
-      setErrorMessage(payload.error ?? 'Request already pending');
-      return;
-    }
-
-    setErrorMessage(payload.error ?? 'Failed to send request.');
   }
 
   return (
@@ -165,6 +174,7 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
                     type="button"
                     onClick={() => handleRequest(coach.id)}
                     disabled={
+                      requestingCoachId !== null ||
                       requestsByCoachId[coach.id] === 'PENDING' ||
                       (hasPendingRequest && requestsByCoachId[coach.id] !== 'REJECTED')
                     }
