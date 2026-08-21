@@ -29,6 +29,8 @@ They can mark a session complete or move it back to planned while saving notes.
 - Calendar supports a Monday-first week scroller and a full Monday-first month grid.
 - Session detail derives status, duration, TSS, targets, zone segments, and block metadata.
 - Live execution presents ordered blocks and a stepper-style execution view.
+- Live execution advances, goes back, restarts, and marks blocks complete through
+  local client state; refresh intentionally restarts the guidance state.
 - Completion upserts an `Activity`, derives metrics from planned blocks, sets
   session status to completed, and supports undo to planned.
 - Manual completion stores `manual-planned` estimates with nullable compliance,
@@ -40,7 +42,8 @@ They can mark a session complete or move it back to planned while saving notes.
 ## Verification
 
 - Calendar, session math, navigation, source, accessibility, and build checks pass on 2026-08-21.
-- `pnpm test` — 103 passing tests, including focused completion service and
+- `pnpm test` — 112 passing tests, including focused completion and execution
+  service tests and
   immutable planner behavior coverage.
 - `pnpm db:push --force-reset && pnpm db:seed` — pass on the disposable local
   SQLite database on 2026-08-21.
@@ -49,8 +52,6 @@ They can mark a session complete or move it back to planned while saving notes.
 
 - Completion currently records planned metrics with `compliancePct: 100`; it is
   not a performed-metrics import or sensor integration.
-- Live is currently a static block outline; it has no client-owned execution
-  state or advance/previous controls.
 - The live surface is guidance only and does not track current step state back to the server.
 - Athlete onboarding and navigation polish remain planned.
 
@@ -60,6 +61,8 @@ They can mark a session complete or move it back to planned while saving notes.
 - Add account preference/name behavior to `lib/account-service.ts`.
 - Add completion writes to `lib/athlete-completion-service.ts`; keep the route
   as an authentication, parsing, and serialization adapter.
+- Keep live transitions in the pure `lib/athlete-execution.ts` module and local
+  `LiveSessionClient`; do not add execution persistence or telemetry.
 - Keep completion ownership checks tied to `session.athleteId`.
 - Use stored Activity segments/source for outcome reads; do not derive old
   Activity history from mutable current Session blocks.

@@ -25,9 +25,12 @@ export function Stepper({ items }: { items: StepperItem[] }) {
             </div>
             {index < items.length - 1 ? <div className="mt-1 h-8 w-px bg-[var(--border)]" /> : null}
           </div>
-          <div className={`flex-1 rounded-[12px] border px-4 py-3 ${
+          <div
+            aria-current={item.active ? 'step' : undefined}
+            className={`flex-1 rounded-[12px] border px-4 py-3 ${
             item.active ? 'border-[#DCE0D2] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--surface)]'
-          }`}>
+          }`}
+          >
             <p className="text-sm font-semibold text-[var(--text)]">{item.title}</p>
             <p className="mt-1 text-[12px] leading-[1.5] text-[var(--text-secondary)]">{item.detail}</p>
           </div>

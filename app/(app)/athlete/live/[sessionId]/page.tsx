@@ -1,10 +1,10 @@
 import { notFound, redirect } from 'next/navigation';
 import { ActionLink, EmptyState, PageShell, Surface, TopBar } from '@/components/ui';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
-import { Stepper } from '@/components/tempo/Stepper';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
+import { LiveSessionClient } from './LiveSessionClient';
 
 export default async function AthleteLivePage({
   params,
@@ -41,15 +41,7 @@ export default async function AthleteLivePage({
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <Surface className="space-y-4">
           <SessionBlockBar segments={detail.session.segments} />
-          <Stepper
-            items={detail.session.blocks.map((block, index) => ({
-              id: block.id,
-              title: `${block.label} · ${formatDuration(block.durationSec)}`,
-              detail: [block.targetLabel, block.note].filter(Boolean).join(' · ') || 'Stay smooth and controlled.',
-              active: index === 0,
-              done: false,
-            }))}
-          />
+          <LiveSessionClient sessionId={detail.session.id} blocks={detail.session.blocks} />
         </Surface>
 
         <div className="space-y-4">

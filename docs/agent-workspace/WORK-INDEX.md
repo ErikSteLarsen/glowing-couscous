@@ -14,13 +14,13 @@ by agents as work changes. Use the linked feature record before editing.
 | `TPLAN-001` | Reusable coach training plans | `shipped` | `lib/coach-training-plan-service.ts`, planner modes | Dedicated training-plan tests | [planner](features/planner.md) |
 | `TEMPLATE-001` | Private template library and assignment services | `shipped` | `lib/template-service.ts`, `lib/assignment-service.ts`, templates/planner UI | Template, assignment, and workflow tests; browser E2E remains | [templates](features/templates.md) |
 | `ATHLETE-001` | Home, calendar, session, live, activity | `shipped` | `lib/athlete-service.ts`, `/athlete/**` | Calendar/source/build tests | [athlete](features/athlete.md) |
-| `LIVE-001` | Interactive athlete live execution | `planned` | `lib/athlete-execution.ts`, live client, `Stepper` | No execution-state test exists yet | [athlete](features/athlete.md) |
+| `LIVE-001` | Interactive athlete live execution | `shipped` | `lib/athlete-execution.ts`, live client, `Stepper` | [task](tasks/2026-08-21-athlete-live-execution-progress.md); 112 tests, lint, build | [athlete](features/athlete.md) |
 | `COMPLETE-001` | Completion, activity, notes | `shipped` | completion API, `Activity`, session detail client | Indirect route coverage; add focused service tests | [athlete](features/athlete.md) |
 | `COMPLETION-002` | Completion metric/history integrity | `shipped` | `lib/athlete-completion-service.ts`, `Activity`, session lifecycle | [task](tasks/2026-08-21-completion-integrity-progress.md); 103 tests, schema reset/seed, lint, build | [athlete](features/athlete.md) |
 | `DOMAIN-001` | Structured blocks, sports, metrics | `shipped` | `lib/tempo-blocks.ts`, `session-math.ts`, `planner-draft.ts` | Session math/planner tests | [workout-domain](features/workout-domain.md) |
 | `COMPAT-001` | Older coach session mutation adapter | `transitional` | `/api/coach/sessions/[sessionId]`, `lib/planner-service.ts` | Architecture boundary tests | [compatibility](features/compatibility.md) |
 | `ASSIGN-001` | Copy reusable sources to athlete schedules | `shipped` | `lib/assignment-service.ts`, source lineage schema | [task](tasks/2026-08-21-source-copy-assignment-progress.md); 106 tests, schema reset/seed, lint, build | [planner](features/planner.md) |
-| `WORKFLOW-001` | Complete planner/template UI workflows | `shipped` | active planner, templates UI, builder redirect | [task](tasks/2026-08-21-planner-template-workflows-progress.md); 107 tests, lint, build | [planner](features/planner.md) |
+| `WORKFLOW-001` | Complete planner/template UI workflows | `shipped` | active planner, templates UI, builder redirect | [task](tasks/2026-08-21-planner-template-workflows-progress.md); 112 tests, lint, build | [planner](features/planner.md) |
 | `AUTH-002` | Auth.js adapter contract and one-time setup | `shipped` | Prisma `User`, auth/session, setup route | [task](tasks/2026-08-21-auth-role-setup-progress.md); 88 tests, build, lint, Prisma validation | [auth](features/auth.md) |
 | `REQUEST-002` | Coach-request concurrency and eligibility | `shipped` | coach-request module and schema | [task](tasks/2026-08-21-coach-request-invariants-progress.md); 99 tests, schema reset/seed, lint, build | [onboarding](features/onboarding.md) |
 | `API-001` | API principal and route input validation | `shipped` | `lib/api-auth.ts`, `lib/route-params.ts`, protected API handlers | [task](tasks/2026-08-21-api-auth-validation-progress.md); 92 tests, lint, build | [coverage](features/coverage.md) |
@@ -51,7 +51,7 @@ one by creating a task progress entry and changing its status to `in-progress`.
 
 | Task | Status | Blocks / depends on | Brief |
 |---|---|---|---|
-| `LIVE-001` | `planned` | None | [athlete live execution](tasks/2026-08-21-athlete-live-execution.md) |
+| `LIVE-001` | `shipped` | None | [athlete live execution](tasks/2026-08-21-athlete-live-execution.md), [completion record](tasks/2026-08-21-athlete-live-execution-progress.md), [history](history/2026-08-21-athlete-live-execution.md) |
 | `COMPLETION-002` | `shipped` | Completed-session edit policy | [completion integrity](tasks/2026-08-21-completion-integrity.md), [completion record](tasks/2026-08-21-completion-integrity-progress.md), [history](history/2026-08-21-completion-integrity.md) |
 | `ASSIGN-001` | `shipped` | None | [source-copy assignment](tasks/2026-08-21-source-copy-assignment.md), [completion record](tasks/2026-08-21-source-copy-assignment-progress.md), [history](history/2026-08-21-source-copy-assignment.md) |
 | `WORKFLOW-001` | `shipped` | `ASSIGN-001` command contract | [planner/template workflows](tasks/2026-08-21-planner-template-workflows.md), [completion record](tasks/2026-08-21-planner-template-workflows-progress.md), [history](history/2026-08-21-planner-template-workflows.md) |

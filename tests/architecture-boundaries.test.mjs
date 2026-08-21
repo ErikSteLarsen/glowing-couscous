@@ -139,6 +139,21 @@ test('planner and template workflows expose source assignment and live editing',
   assert.match(templatesClientSource, /openEditor\(template\)/);
 });
 
+test('live route delegates execution state to an accessible client', async () => {
+  const livePageSource = await read('app/(app)/athlete/live/[sessionId]/page.tsx');
+  const liveClientSource = await read('app/(app)/athlete/live/[sessionId]/LiveSessionClient.tsx');
+  const stepperSource = await read('components/tempo/Stepper.tsx');
+
+  assert.match(livePageSource, /LiveSessionClient/);
+  assert.match(liveClientSource, /advanceExecution/);
+  assert.match(liveClientSource, /previousExecution/);
+  assert.match(liveClientSource, /restartExecution/);
+  assert.match(liveClientSource, /completion/);
+  assert.match(liveClientSource, /Previous block/);
+  assert.match(liveClientSource, /Next block/);
+  assert.match(stepperSource, /aria-current/);
+});
+
 test('account route avoids direct prisma access in route handlers', async () => {
   const routeSource = await read('app/api/account/profile/route.ts');
   assert.equal(routeSource.includes('prisma.'), false);
