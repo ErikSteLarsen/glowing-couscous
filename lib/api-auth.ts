@@ -1,25 +1,30 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
+import { parseSessionPrincipal } from '@/lib/auth-principal';
+import { hasAppRole } from '@/lib/auth-session';
 
 const forbidden = NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 const unauthorized = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
 export async function requireSignedInUser() {
   const session = await auth();
-  if (!session?.user) return { user: null, error: unauthorized };
-  return { user: session.user as { id: number; role: string | null; name?: string | null; email?: string | null }, error: null };
+  const user = parseSessionPrincipal(session?.user);
+  if (!user) return { user: null, error: unauthorized };
+  return { user, error: null };
 }
 
 export async function requireCoach() {
   const session = await auth();
-  if (!session?.user) return { user: null, error: unauthorized };
-  if (session.user.role !== 'COACH') return { user: null, error: forbidden };
-  return { user: session.user as { id: number; role: string; name?: string | null; email?: string | null }, error: null };
+  const user = parseSessionPrincipal(session?.user);
+  if (!user) return { user: null, error: unauthorized };
+  if (!hasAppRole(user) || user.role !== 'COACH') return { user: null, error: forbidden };
+  return { user, error: null };
 }
 
 export async function requireAthlete() {
   const session = await auth();
-  if (!session?.user) return { user: null, error: unauthorized };
-  if (session.user.role !== 'ATHLETE') return { user: null, error: forbidden };
-  return { user: session.user as { id: number; role: string; name?: string | null; email?: string | null }, error: null };
+  const user = parseSessionPrincipal(session?.user);
+  if (!user) return { user: null, error: unauthorized };
+  if (!hasAppRole(user) || user.role !== 'ATHLETE') return { user: null, error: forbidden };
+  return { user, error: null };
 }

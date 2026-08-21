@@ -94,7 +94,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
   }
 
   async function listRequestsForAthlete(userId: number) {
-    return db.coachRequest.findMany({
+    const requests = await db.coachRequest.findMany({
       where: { athleteId: userId },
       include: {
         coach: {
@@ -107,6 +107,11 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       },
       orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
     });
+
+    return requests.map((request) => ({
+      ...request,
+      coach: { ...request.coach, name: request.coach.name ?? '' },
+    }));
   }
 
   async function loadAthleteIdentity(userId: number) {
@@ -138,7 +143,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         id: athlete.id,
         coachId: athlete.coachId,
         selfCoached: athlete.selfCoached,
-        name: athlete.name,
+        name: athlete.name ?? '',
         email: athlete.email,
       };
     },
@@ -208,9 +213,11 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       return {
         athlete: {
           id: athlete.id,
-          name: athlete.name,
+          name: athlete.name ?? '',
         },
-        coach: athlete.coach,
+        coach: athlete.coach
+          ? { ...athlete.coach, name: athlete.coach.name ?? '' }
+          : null,
         overviewCards,
         todaySessions,
         nextDays,
@@ -338,7 +345,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       return {
         athlete: {
           id: athlete.id,
-          name: athlete.name,
+          name: athlete.name ?? '',
         },
         coachName: athlete.coach?.name ?? null,
         view: resolvedView,
@@ -389,7 +396,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       return {
         athlete: {
           id: athlete.id,
-          name: athlete.name,
+          name: athlete.name ?? '',
         },
         totals,
         activities: athlete.activities.map((activity) => ({
@@ -460,7 +467,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       return {
         athlete: {
           id: session.athlete.id,
-          name: session.athlete.name,
+          name: session.athlete.name ?? '',
         },
         coachName: session.athlete.coach?.name ?? null,
         session: {

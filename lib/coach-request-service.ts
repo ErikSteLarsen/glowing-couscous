@@ -18,7 +18,7 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
         return [];
       }
 
-      return db.user.findMany({
+      const coaches = await db.user.findMany({
         where: {
           role: 'COACH',
           OR: [{ name: { contains: q } }, { email: { contains: q } }],
@@ -26,10 +26,12 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
         select: { id: true, name: true, email: true },
         take: 10,
       });
+
+      return coaches.map((coach) => ({ ...coach, name: coach.name ?? '' }));
     },
 
     async listForAthlete(athleteUserId: number) {
-      return db.coachRequest.findMany({
+      const requests = await db.coachRequest.findMany({
         where: { athleteId: athleteUserId },
         include: {
           coach: {
@@ -42,6 +44,11 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
         },
         orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
       });
+
+      return requests.map((request) => ({
+        ...request,
+        coach: { ...request.coach, name: request.coach.name ?? '' },
+      }));
     },
 
     async createForAthlete(athleteUserId: number, coachId: number): Promise<CoachRequestResult> {
@@ -99,7 +106,7 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
     },
 
     async listPendingForCoach(coachUserId: number) {
-      return db.coachRequest.findMany({
+      const requests = await db.coachRequest.findMany({
         where: { coachId: coachUserId, status: 'PENDING' },
         include: {
           athlete: {
@@ -112,6 +119,11 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
         },
         orderBy: { createdAt: 'asc' },
       });
+
+      return requests.map((request) => ({
+        ...request,
+        athlete: { ...request.athlete, name: request.athlete.name ?? '' },
+      }));
     },
 
     async decideForCoach(coachUserId: number, requestId: number, action: CoachRequestAction): Promise<CoachRequestResult> {

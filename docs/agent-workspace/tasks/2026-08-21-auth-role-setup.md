@@ -1,12 +1,15 @@
 # Task: Make Auth.js And Role Setup Coherent
 
-- **Status:** `planned`
-- **Agent:** `<assigned agent>`
+- **Status:** `completed`
+- **Agent:** `opencode-auth-2026-08-21`
 - **Created:** `2026-08-21`
 - **Task ID:** `AUTH-002`
 - **Feature IDs:** `AUTH-001`, `COVERAGE-001`
 - **Related records:** [auth](../features/auth.md), [current status](../CURRENT-STATUS.md), [audit](2026-08-21-incompleteness-audit.md)
 - **Dependencies:** Decide whether role assignment is permanently one-time. This task recommends it is.
+- **Completed:** 2026-08-21
+- **Completion record:** [progress and verification](2026-08-21-auth-role-setup-progress.md)
+- **Decision:** [one-time roles and explicit OAuth linking](../decisions/0003-auth-role-and-account-linking.md)
 
 ## Problem
 

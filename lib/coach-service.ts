@@ -161,7 +161,7 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
 
         return {
           id: athlete.id,
-          name: athlete.name,
+          name: athlete.name ?? '',
           email: athlete.email,
           compliancePct,
           completedCount,
@@ -181,11 +181,11 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
 
       return {
         id: coach.id,
-        name: coach.name,
+        name: coach.name ?? '',
         athletes,
         pendingRequests: coach.coachRequests.map((request) => ({
           id: request.id,
-          athlete: request.athlete,
+          athlete: { ...request.athlete, name: request.athlete.name ?? '' },
           createdAt: request.createdAt,
         })),
       };
@@ -315,7 +315,7 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
       return {
         athlete: {
           id: athlete.id,
-          name: athlete.name,
+          name: athlete.name ?? '',
           email: athlete.email,
           coachName: athlete.coach?.name ?? 'Unknown coach',
           activePlan: athlete.plans[0]

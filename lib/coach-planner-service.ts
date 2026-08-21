@@ -120,7 +120,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
           end: weekEnd,
           label: `${format(weekStart, 'd MMM')} - ${format(weekEnd, 'd MMM yyyy')}`,
         },
-        athletes,
+        athletes: athletes.map((athlete) => ({ ...athlete, name: athlete.name ?? '' })),
         templates,
         librarySessions: librarySessions.map((session) => ({
           ...session,

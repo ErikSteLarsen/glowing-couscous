@@ -104,7 +104,7 @@ test('profile and settings routes use shared account service and profile alias r
   assert.match(accountServiceSource, /updateDisplayName/);
   assert.match(apiAuthSource, /export async function requireSignedInUser/);
   assert.doesNotMatch(authSessionSource, /if \(!session\?\.user\?\.role\) return null/);
-  assert.match(authSessionSource, /role: isAppRole\(session\.user\.role\) \? session\.user\.role : null/);
+  assert.match(authSessionSource, /parseSessionPrincipal\(session\.user\)/);
   assert.match(profileRouteSource, /accountService\.updateDisplayName/);
   assert.match(profilePageSource, /ProfileClient/);
   assert.match(profileClientSource, /useSession\(\)/);

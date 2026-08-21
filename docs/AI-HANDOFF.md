@@ -53,6 +53,10 @@ Important models:
 - `Activity` — completed session outcomes and compliance
 - `Assignment` — coach scheduling records
 
+`User.role` is nullable only for a first-time Auth.js user before setup.
+`User.name`, `image`, and `emailVerified` are nullable for adapter compatibility;
+application services normalize names for UI consumers.
+
 ## Code boundaries that matter
 
 ### Auth
@@ -61,6 +65,8 @@ Important models:
 - `middleware.ts` handles route protection and role redirects.
 - `lib/auth-session.ts` is the server-rendered current-user access point.
 - `lib/api-auth.ts` is the API route guard layer.
+- `lib/auth-principal.ts` validates session IDs and role claims.
+- `lib/auth-role-service.ts` owns one-time atomic role assignment.
 
 ### Planner and templates
 
@@ -98,6 +104,8 @@ These are the first places to be careful when extending the app:
 - Keep Monday as the week boundary.
 - Reuse shared editor primitives before building new planner/template editing UIs.
 - Use `.copilot/skills/project-architecture/` when making architecture-sensitive changes so new work follows the current owner map.
+- Do not use the setup endpoint for role changes; extend `auth-role-service` if
+  an explicit future account-management flow is introduced.
 
 ## Best next step
 

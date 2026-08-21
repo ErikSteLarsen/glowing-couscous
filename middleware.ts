@@ -5,6 +5,7 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const user = req.auth?.user;
   const role = user?.role;
+  const hasValidRole = role === 'COACH' || role === 'ATHLETE';
 
   if (pathname.startsWith('/api/')) return NextResponse.next();
 
@@ -15,8 +16,12 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  if (!role && pathname !== '/setup') {
+  if (!hasValidRole && pathname !== '/setup') {
     return NextResponse.redirect(new URL('/setup', req.url));
+  }
+
+  if (pathname === '/setup' && hasValidRole) {
+    return NextResponse.redirect(new URL(role === 'COACH' ? '/coach' : '/athlete', req.url));
   }
 
   if (role === 'COACH' && pathname.startsWith('/athlete')) {

@@ -9,7 +9,7 @@ this documentation change.
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass: 84 tests | `pnpm test` |
+| Tests | Pass: 88 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build` |
 | Build warning | Present | Next.js reports the `middleware` convention is deprecated in favor of `proxy`; this is not currently a build failure. |
@@ -42,7 +42,7 @@ sessions complete with notes. Weeks are Monday-based.
 | Compatibility planner mutation path | `transitional` | `/api/coach/sessions/[sessionId]`, `lib/planner-service.ts`, `lib/planner.ts` | Required by current tests and route; do not extend for new features without an explicit migration decision. |
 | Reusable source-copy assignment | `planned` | Unified assignment module and source lineage | Templates are partially assignable; library sessions and training plans cannot be copied to athletes. |
 | Live planner/template workflows | `planned` | Source-copy assignment command | Template create/edit UI is absent and the old builder UI is unreachable. |
-| Auth.js adapter and role setup hardening | `planned` | Prisma/Auth.js contract decision | Google first-login roleless users and one-time setup are not coherent. |
+| Auth.js adapter and role setup hardening | `shipped` | `prisma/schema.prisma`, `lib/auth-principal.ts`, `lib/auth-role-service.ts`, `auth.ts`, setup route | `AUTH-002`; focused principal/role tests, Prisma validation, adapter smoke test, and full gates pass. External OAuth integration remains a gap. |
 | Coach-request lifecycle hardening | `planned` | Pending-request uniqueness decision | Concurrent pending requests and already-coached API callers are not fully constrained. |
 | API auth/input hardening | `planned` | Principal policy | Dynamic IDs and JSON bodies are inconsistently validated; route behavior tests are sparse. |
 

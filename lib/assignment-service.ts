@@ -26,7 +26,7 @@ type AssignmentTemplateBlock = {
 
 type AssignmentDb = {
   user: {
-    findFirst(args: { where: { id: number; coachId: number; role: string } }): Promise<{ id: number; name: string } | null>;
+    findFirst(args: { where: { id: number; coachId: number; role: string } }): Promise<{ id: number } | null>;
   };
   template: {
     findFirst(args: {

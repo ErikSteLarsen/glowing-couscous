@@ -8,18 +8,20 @@ type AccountServiceDeps = {
 export function createAccountService({ db = prisma }: AccountServiceDeps = {}) {
   return {
     async getAccount(userId: number) {
-      return db.user.findUnique({
+      const account = await db.user.findUnique({
         where: { id: userId },
         select: { id: true, name: true, email: true, role: true, prefsJson: true },
       });
+      return account ? { ...account, name: account.name ?? '' } : null;
     },
 
     async updateDisplayName(userId: number, name: string) {
-      return db.user.update({
+      const account = await db.user.update({
         where: { id: userId },
         data: { name },
         select: { id: true, name: true, email: true, role: true, prefsJson: true },
       });
+      return { ...account, name: account.name ?? '' };
     },
 
     async updateOverviewCards(userId: number, overviewCards: unknown) {
@@ -31,7 +33,7 @@ export function createAccountService({ db = prisma }: AccountServiceDeps = {}) {
       const currentPrefs =
         existing?.prefsJson ? parsePrefsJson(existing.prefsJson) : {};
 
-      return db.user.update({
+      const account = await db.user.update({
         where: { id: userId },
         data: {
           prefsJson: JSON.stringify({
@@ -41,6 +43,7 @@ export function createAccountService({ db = prisma }: AccountServiceDeps = {}) {
         },
         select: { id: true, name: true, email: true, role: true, prefsJson: true },
       });
+      return { ...account, name: account.name ?? '' };
     },
   };
 }

@@ -44,6 +44,9 @@ This document describes the **implemented** architecture, not old plans.
 - `middleware.ts` enforces login, role redirects, and setup redirects.
 - `lib/auth-session.ts` is the current-user lookup for server-rendered UI.
 - `lib/api-auth.ts` is the route-handler guard layer.
+- `lib/auth-principal.ts` validates numeric application IDs and role claims
+  without framework imports.
+- `lib/auth-role-service.ts` owns the atomic one-time role assignment command.
 
 Use `auth-session` in pages and server components. Use `api-auth` in route handlers.
 
@@ -99,6 +102,10 @@ The source of truth for models is `prisma/schema.prisma`.
 Important ownership relationships:
 
 - `User.role` drives access and redirects.
+- `User.role` is nullable only during first-login setup; role assignment is
+  conditional and cannot be changed through the setup endpoint.
+- `User.name`, `User.emailVerified`, and `User.image` use Auth.js-compatible
+  nullability; application read services normalize nullable names to `''`.
 - `CoachRequest` tracks athlete-to-coach connection requests.
 - `User.coachId` represents the accepted coach-athlete relationship.
 - `Plan` owns goal/race windows for an athlete.
@@ -123,6 +130,8 @@ The main read/write boundaries are clearer, but they still need protection:
 4. Reuse shared workout-editor and block-editor primitives instead of duplicating draft logic.
 5. Prefer focused domain modules like `coach-service`, `week`, and `sport` over reviving mixed helper files.
 6. Keep future agents aligned with `.copilot/skills/project-architecture/` when boundary work is involved.
+7. Keep role setup behind `auth-role-service` and validate session principals
+   through `auth-principal` rather than casting Auth.js values.
 
 ## Highest-value architectural next step
 

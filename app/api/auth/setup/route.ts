@@ -1,18 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { createAuthRoleService } from '@/lib/auth-role-service';
+import { isAppRole, parseApplicationUserId } from '@/lib/auth-principal';
+
+const authRoleService = createAuthRoleService({ db: prisma });
 
 export async function PATCH(req: NextRequest) {
   const session = await auth();
-  if (!session?.user?.id) {
+  const userId = parseApplicationUserId(session?.user?.id);
+  if (userId === null) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { role } = await req.json();
-  if (!['COACH', 'ATHLETE'].includes(role)) {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  const role = body && typeof body === 'object' && 'role' in body ? body.role : null;
+  if (!isAppRole(role)) {
     return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
   }
 
-  await prisma.user.update({ where: { id: session.user.id }, data: { role } });
-  return NextResponse.json({ ok: true });
+  const result = await authRoleService.assignRole(userId, role);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
+  return NextResponse.json({ ok: true, role: result.role });
 }
