@@ -39,6 +39,7 @@ import {
   type PlannerTargetType,
   type PlannerTemplateRecord,
 } from '@/lib/planner-draft';
+import { SourceAssignmentPanel } from './SourceAssignmentPanel';
 
 type PlannerAthlete = { id: number; name: string; email: string };
 type PlannerSession = {
@@ -150,6 +151,7 @@ export function PlannerClient({
   const selectedPlan = trainingPlans.find((p) => p.id === selectedTrainingPlanId);
 
   function switchMode(mode: WorkspaceMode) {
+    if (draft.id && !window.confirm('Switching workspace will reset the loaded draft. Continue?')) return;
     setSelectedWorkspaceMode(mode);
     setSelectedBlockIndex(0);
     setMessage('');
@@ -481,7 +483,12 @@ export function PlannerClient({
               <select
                 className={formSelectClassName}
                 value={selectedTrainingPlanId ?? ''}
-                onChange={(event) => setSelectedTrainingPlanId(Number(event.target.value) || null)}
+               onChange={(event) => {
+                 if (draft.id && !window.confirm('Changing plans will reset the loaded session draft. Continue?')) return;
+                 setSelectedTrainingPlanId(Number(event.target.value) || null);
+                 setDraft(createEmptyPlannerSessionDraft({ ownershipMode: 'training-plan', athleteId: null, scheduledDate: null }));
+                 setSelectedBlockIndex(0);
+               }}
               >
                 <option value="">Choose plan</option>
                 {trainingPlans.map((plan) => (
@@ -641,6 +648,13 @@ export function PlannerClient({
             ))}
           </div>
         ) : null}
+        <SourceAssignmentPanel
+          athletes={athletes}
+          templates={templates}
+          librarySessions={librarySessions}
+          trainingPlans={trainingPlans}
+          initialDate={initialDate}
+        />
       </Surface>
 
       <Surface className="space-y-5">

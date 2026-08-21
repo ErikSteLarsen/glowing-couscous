@@ -1,12 +1,14 @@
 # Task: Complete Planner And Template User Workflows
 
-- **Status:** `planned`
-- **Agent:** `<assigned agent>`
+- **Status:** `completed`
+- **Agent:** `opencode-workflow-2026-08-21`
 - **Created:** `2026-08-21`
 - **Task ID:** `WORKFLOW-001`
 - **Feature IDs:** `PLAN-001`, `LIB-001`, `TPLAN-001`, `TEMPLATE-001`
 - **Related records:** [planner](../features/planner.md), [templates](../features/templates.md), [source assignment](2026-08-21-source-copy-assignment.md), [audit](2026-08-21-incompleteness-audit.md)
 - **Dependencies:** Depends on the source-copy assignment command contract. Can proceed after its service interface is available.
+- **Completed:** 2026-08-21
+- **Completion record:** [progress and verification](2026-08-21-planner-template-workflows-progress.md)
 
 ## Problem
 

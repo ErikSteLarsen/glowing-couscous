@@ -124,6 +124,21 @@ test('template workflow supports duplication and library filtering', async () =>
   assert.match(templatesClientSource, /Duplicate/);
 });
 
+test('planner and template workflows expose source assignment and live editing', async () => {
+  const plannerSource = await read('app/(app)/coach/planner/PlannerClient.tsx');
+  const assignmentPanelSource = await read('app/(app)/coach/planner/SourceAssignmentPanel.tsx');
+  const templatesClientSource = await read('app/(app)/coach/templates/CoachTemplatesClient.tsx');
+
+  assert.match(plannerSource, /SourceAssignmentPanel/);
+  assert.match(plannerSource, /Switching workspace will reset/);
+  assert.match(assignmentPanelSource, /assign reusable content/i);
+  assert.match(assignmentPanelSource, /training-plan/);
+  assert.match(assignmentPanelSource, /Target Monday week/);
+  assert.match(templatesClientSource, /openEditor/);
+  assert.match(templatesClientSource, /saveEditor/);
+  assert.match(templatesClientSource, /openEditor\(template\)/);
+});
+
 test('account route avoids direct prisma access in route handlers', async () => {
   const routeSource = await read('app/api/account/profile/route.ts');
   assert.equal(routeSource.includes('prisma.'), false);

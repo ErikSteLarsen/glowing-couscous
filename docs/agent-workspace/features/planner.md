@@ -42,20 +42,20 @@ and have no athlete.
   plan copies retain a unique source/athlete/Monday-week parent and child rows.
 - Repeated source assignment reuses the existing lineage rather than creating
   duplicate athlete sessions.
+- The active planner exposes source assignment with athlete/date or Monday-week
+  targets, previews resulting dates, and confirms before resetting loaded drafts.
+- The templates route exposes live create/edit controls using Tempo block fields.
 
 ## Verification
 
 - Planner, draft, library, training-plan, assignment, and route/source tests pass in `pnpm test` on 2026-08-21.
 - `pnpm lint && pnpm build` — pass on 2026-08-21.
+- `pnpm test` — 107 passing tests on 2026-08-21, including workflow source assertions.
 - `pnpm db:push --force-reset && pnpm db:seed` — pass on the disposable local
   SQLite database on 2026-08-21.
 
 ## Known Gaps
 
-- The active template UI has no create/edit editor, and the old builder client
-  is unreachable behind a redirect.
-- The active planner/template UI does not yet expose all source kinds; that is
-  tracked by `WORKFLOW-001`.
 - Several planner API handlers parse numeric IDs with `Number()` without a
   shared positive-integer helper; preserve the existing behavior unless fixing it deliberately.
 - Runtime validation accepts any non-null `planWeekday` value from untrusted
