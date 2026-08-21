@@ -53,8 +53,13 @@ export default async function AthleteActivityPage() {
               <div className="flex flex-wrap gap-4 text-[13px] text-[var(--text-secondary)]">
                 <MetricText>{formatDuration(activity.durationSec)}</MetricText>
                 <MetricText>{activity.tss} TSS</MetricText>
-                <MetricText>{activity.compliancePct}% compliance</MetricText>
+                <MetricText>
+                  {activity.compliancePct === null ? 'Compliance unavailable' : `${activity.compliancePct}% compliance`}
+                </MetricText>
               </div>
+              {activity.metricsSource === 'manual-planned' ? (
+                <p className="text-[12px] text-[var(--text-secondary)]">Planned estimate; no performed metrics recorded.</p>
+              ) : null}
               {activity.notes ? (
                 <div className="rounded-[10px] bg-[var(--brand-tint)] px-4 py-3 text-[13px] text-[var(--text)]">
                   {activity.notes}

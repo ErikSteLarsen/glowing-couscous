@@ -79,6 +79,8 @@ request is pending.
 - `lib/coach-service.ts` owns roster and athlete-detail read models.
 - `lib/assignment-service.ts` owns builder assignment creation and deduplication.
 - `lib/athlete-service.ts` owns athlete Home/Calendar/Session/Live/Activity/discovery/profile reads.
+- `lib/athlete-completion-service.ts` owns completion/reopen transactions and
+  Activity outcome writes.
 - `lib/coach-request-service.ts` owns onboarding and coach-request flows.
 - `lib/week.ts` owns Monday-based week shaping and per-day session grouping.
 - `lib/sport.ts` owns shared sport constants and UI labels.
@@ -112,6 +114,8 @@ These are the first places to be careful when extending the app:
 - Use `.copilot/skills/project-architecture/` when making architecture-sensitive changes so new work follows the current owner map.
 - Protected API routes must guard first, parse dynamic IDs with
   `route-params`, and leave ownership/business rules to their service.
+- Completed sessions are immutable through planner mutations; completion/reopen
+  behavior belongs in `athlete-completion-service`.
 - Do not use the setup endpoint for role changes; extend `auth-role-service` if
   an explicit future account-management flow is introduced.
 

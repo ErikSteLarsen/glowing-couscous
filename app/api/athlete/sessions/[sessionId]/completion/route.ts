@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { requireAthlete } from '@/lib/api-auth';
-import { deriveSessionMetrics } from '@/lib/session-math';
+import { athleteCompletionService } from '@/lib/athlete-completion-service';
 import { isJsonObject, parsePositiveInteger } from '@/lib/route-params';
 
 export async function PATCH(
@@ -29,94 +28,25 @@ export async function PATCH(
     }
     const isDone = body.isDone;
     const notes = body.notes;
-    if (isDone !== undefined && typeof isDone !== 'boolean') {
+    if (typeof isDone !== 'boolean') {
       return NextResponse.json({ error: 'Invalid isDone' }, { status: 400 });
     }
     if (notes !== undefined && typeof notes !== 'string') {
       return NextResponse.json({ error: 'Invalid notes' }, { status: 400 });
     }
-    const session = await prisma.session.findUnique({
-      where: { id: parsedSessionId },
-      include: {
-        blocks: {
-          orderBy: { sortOrder: 'asc' },
-        },
-        activity: true,
-      },
-    });
-
-    if (!session || session.athleteId !== user.id) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    const result = isDone
+      ? await athleteCompletionService.completeSession(user.id, parsedSessionId, { notes })
+      : await athleteCompletionService.reopenSession(user.id, parsedSessionId, { notes });
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
     }
-
-    if (!isDone) {
-      await prisma.$transaction([
-        prisma.activity.deleteMany({ where: { sessionId: session.id } }),
-        prisma.session.update({
-          where: { id: session.id },
-          data: { status: 'planned' },
-        }),
-      ]);
-
-      return NextResponse.json({
-        sessionId: session.id,
-        completion: { isDone: false, notes: notes ?? '', completedAt: null },
-      });
-    }
-
-    const metrics = deriveSessionMetrics(
-      session.blocks.map((block) => ({
-        kind: block.kind as 'warmup' | 'work' | 'recovery' | 'cooldown',
-        zone: block.zone as 1 | 2 | 3 | 4 | 5,
-        durationSec: block.durationSec,
-        reps: block.reps,
-        target:
-          block.targetType && block.targetLow !== null && block.targetHigh !== null
-            ? {
-                type: block.targetType as 'power' | 'pace' | 'hr',
-                low: block.targetLow,
-                high: block.targetHigh,
-              }
-            : null,
-      })),
-    );
-
-    const completedAt = new Date();
-
-    await prisma.$transaction([
-      prisma.activity.upsert({
-        where: { sessionId: session.id },
-        update: {
-          completedAt,
-          durationSec: metrics.durationSec,
-          tss: metrics.tss,
-          compliancePct: 100,
-          zoneDistributionJson: JSON.stringify(metrics.zoneDistributionSec),
-          notes: notes ?? null,
-        },
-        create: {
-          sessionId: session.id,
-          athleteId: user.id,
-          completedAt,
-          durationSec: metrics.durationSec,
-          tss: metrics.tss,
-          compliancePct: 100,
-          zoneDistributionJson: JSON.stringify(metrics.zoneDistributionSec),
-          notes: notes ?? null,
-        },
-      }),
-      prisma.session.update({
-        where: { id: session.id },
-        data: { status: 'completed' },
-      }),
-    ]);
 
     return NextResponse.json({
-      sessionId: session.id,
+      sessionId: result.sessionId,
       completion: {
-        isDone: true,
-        notes: notes ?? '',
-        completedAt: completedAt.toISOString(),
+        isDone: result.isDone,
+        notes: result.notes,
+        completedAt: result.completedAt?.toISOString() ?? null,
       },
     });
   } catch (error) {

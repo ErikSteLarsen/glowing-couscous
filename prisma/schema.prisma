@@ -110,7 +110,8 @@ model Session {
   timeLabel        String?
   sport            String
   title            String
-  summary          String?
+   summary          String?
+   athleteNotes     String?
   sportMetricsJson String?
   status           String        @default("planned")
   source           String
@@ -173,8 +174,10 @@ model Activity {
   completedAt          DateTime
   durationSec          Int
   tss                  Int
-  compliancePct        Int
+  compliancePct        Int?
   zoneDistributionJson String
+  segmentsJson         String
+  metricsSource        String   @default("manual-planned")
   notes                String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt

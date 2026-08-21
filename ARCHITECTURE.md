@@ -72,6 +72,8 @@ If a feature changes planner behavior, add it here first instead of scattering P
 ### Athlete boundary
 
 - `lib/athlete-service.ts` owns athlete Home, Calendar, Session detail, Live, Activity, discovery, and profile reads.
+- `lib/athlete-completion-service.ts` owns completion/reopen transactions,
+  manual metric provenance, notes retention, and Activity lifecycle writes.
 - Athlete pages under `app/(app)/athlete/**` plus `app/(app)/settings/page.tsx` should stay thin and delegate to this service where appropriate.
 
 ### Assignment boundary
@@ -119,6 +121,8 @@ Important ownership relationships:
 - `Session` belongs to an athlete and may also belong to a `Plan` or `Template`.
 - `Block` is the structured source of truth for session duration, TSS, and zone distribution.
 - `Activity` stores performed session outcomes.
+- `Activity` stores outcome metrics, persisted segments, metric provenance, and
+  nullable compliance when no performed data exists.
 - `Assignment` records coach scheduling actions onto athlete calendars.
 - `Template` is coach-owned and private.
 
@@ -141,6 +145,8 @@ The main read/write boundaries are clearer, but they still need protection:
    through `auth-principal` rather than casting Auth.js values.
 8. Keep route transport parsing in `route-params`; do not move ownership or
    business validation out of the domain service boundary.
+9. Treat sessions with Activity outcomes as immutable through planner mutation
+   paths; use `athlete-completion-service` for the explicit reopen transition.
 
 ## Highest-value architectural next step
 

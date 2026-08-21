@@ -2,6 +2,7 @@ import { endOfWeek, format, isSameDay, startOfWeek } from 'date-fns';
 import { prisma } from './prisma.ts';
 import { getWeekDays } from './week.ts';
 import { deriveSessionMetrics } from './session-math.ts';
+import { parseActivitySegments } from './activity-metrics.ts';
 
 type CoachServiceDeps = {
   db?: typeof prisma;
@@ -28,7 +29,9 @@ type SessionRecord = {
   activity: {
     durationSec: number;
     tss: number;
-    compliancePct: number;
+    compliancePct: number | null;
+    segmentsJson: string | null;
+    metricsSource: string;
   } | null;
 };
 
@@ -67,8 +70,11 @@ function mapSessionSummary(session: SessionRecord) {
     plannedTss: metrics.tss,
     actualTss: session.activity?.tss ?? null,
     tss: session.activity?.tss ?? metrics.tss,
-    completionPct: session.activity?.compliancePct ?? 0,
-    segments: metrics.segments,
+    completionPct: session.activity?.compliancePct ?? null,
+    metricsSource: session.activity?.metricsSource ?? null,
+    segments: session.activity?.segmentsJson
+      ? parseActivitySegments(session.activity.segmentsJson)
+      : metrics.segments,
   };
 }
 
@@ -146,9 +152,11 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
             blocks: session.blocks,
             activity: session.activity
               ? {
-                  durationSec: session.activity.durationSec,
-                  tss: session.activity.tss,
-                  compliancePct: session.activity.compliancePct,
+                   durationSec: session.activity.durationSec,
+                   tss: session.activity.tss,
+                   compliancePct: session.activity.compliancePct,
+                   segmentsJson: session.activity.segmentsJson,
+                   metricsSource: session.activity.metricsSource,
                 }
               : null,
           }),
@@ -272,6 +280,8 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
                   durationSec: session.activity.durationSec,
                   tss: session.activity.tss,
                   compliancePct: session.activity.compliancePct,
+                  segmentsJson: session.activity.segmentsJson,
+                  metricsSource: session.activity.metricsSource,
                 }
               : null,
           }),
@@ -292,6 +302,8 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
                 durationSec: session.activity.durationSec,
                 tss: session.activity.tss,
                 compliancePct: session.activity.compliancePct,
+                segmentsJson: session.activity.segmentsJson,
+                metricsSource: session.activity.metricsSource,
               }
             : null,
         }),

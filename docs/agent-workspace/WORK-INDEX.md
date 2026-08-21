@@ -16,7 +16,7 @@ by agents as work changes. Use the linked feature record before editing.
 | `ATHLETE-001` | Home, calendar, session, live, activity | `shipped` | `lib/athlete-service.ts`, `/athlete/**` | Calendar/source/build tests | [athlete](features/athlete.md) |
 | `LIVE-001` | Interactive athlete live execution | `planned` | `lib/athlete-execution.ts`, live client, `Stepper` | No execution-state test exists yet | [athlete](features/athlete.md) |
 | `COMPLETE-001` | Completion, activity, notes | `shipped` | completion API, `Activity`, session detail client | Indirect route coverage; add focused service tests | [athlete](features/athlete.md) |
-| `COMPLETION-002` | Completion metric/history integrity | `planned` | new completion module, `Activity`, session lifecycle | Planned service/transaction coverage | [athlete](features/athlete.md) |
+| `COMPLETION-002` | Completion metric/history integrity | `shipped` | `lib/athlete-completion-service.ts`, `Activity`, session lifecycle | [task](tasks/2026-08-21-completion-integrity-progress.md); 103 tests, schema reset/seed, lint, build | [athlete](features/athlete.md) |
 | `DOMAIN-001` | Structured blocks, sports, metrics | `shipped` | `lib/tempo-blocks.ts`, `session-math.ts`, `planner-draft.ts` | Session math/planner tests | [workout-domain](features/workout-domain.md) |
 | `COMPAT-001` | Older coach session mutation adapter | `transitional` | `/api/coach/sessions/[sessionId]`, `lib/planner-service.ts` | Architecture boundary tests | [compatibility](features/compatibility.md) |
 | `ASSIGN-001` | Copy reusable sources to athlete schedules | `planned` | unified assignment module and source lineage | No library/plan assignment tests exist | [planner](features/planner.md) |
@@ -52,7 +52,7 @@ one by creating a task progress entry and changing its status to `in-progress`.
 | Task | Status | Blocks / depends on | Brief |
 |---|---|---|---|
 | `LIVE-001` | `planned` | None | [athlete live execution](tasks/2026-08-21-athlete-live-execution.md) |
-| `COMPLETION-002` | `planned` | Completed-session edit policy | [completion integrity](tasks/2026-08-21-completion-integrity.md) |
+| `COMPLETION-002` | `shipped` | Completed-session edit policy | [completion integrity](tasks/2026-08-21-completion-integrity.md), [completion record](tasks/2026-08-21-completion-integrity-progress.md), [history](history/2026-08-21-completion-integrity.md) |
 | `ASSIGN-001` | `planned` | None | [source-copy assignment](tasks/2026-08-21-source-copy-assignment.md) |
 | `WORKFLOW-001` | `planned` | `ASSIGN-001` command contract | [planner/template workflows](tasks/2026-08-21-planner-template-workflows.md) |
 | `AUTH-002` | `shipped` | Role setup and adapter decisions | [auth and role setup](tasks/2026-08-21-auth-role-setup.md), [completion record](tasks/2026-08-21-auth-role-setup-progress.md), [history](history/2026-08-21-auth-role-setup.md) |

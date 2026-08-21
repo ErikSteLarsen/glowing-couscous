@@ -20,6 +20,28 @@ function zoneDistribution(blocks) {
   return JSON.stringify(totals);
 }
 
+const zoneMeta = {
+  1: { label: 'Z1', name: 'Recovery', solid: '#3B82F6', tint: '#E8F0FE' },
+  2: { label: 'Z2', name: 'Endurance', solid: '#22C55E', tint: '#E3F7EC' },
+  3: { label: 'Z3', name: 'Tempo', solid: '#EAB308', tint: '#FBF1D5' },
+  4: { label: 'Z4', name: 'Threshold', solid: '#F97316', tint: '#FEEDE0' },
+  5: { label: 'Z5', name: 'VO2 max', solid: '#EF4444', tint: '#FCE8E7' },
+};
+
+function activitySegments(blocks) {
+  return blocks.map((block, index) => {
+    const meta = zoneMeta[block.zone] ?? zoneMeta[1];
+    return {
+      key: `${block.kind}-${index}`,
+      zone: block.zone,
+      durationSec: block.durationSec,
+      label: `${meta.label} ${meta.name}`,
+      color: meta.solid,
+      tint: meta.tint,
+    };
+  });
+}
+
 async function createTemplateWithBlocks(data) {
   return prisma.template.create({
     data: {
@@ -326,6 +348,8 @@ async function main() {
         tss: 78,
         compliancePct: 96,
         zoneDistributionJson: zoneDistribution(maraThresholdBlocks),
+        segmentsJson: JSON.stringify(activitySegments(maraThresholdBlocks)),
+        metricsSource: 'recorded',
         notes: 'Felt controlled. Held back slightly on rep one and finished strong.',
       },
       {
@@ -341,6 +365,8 @@ async function main() {
             durationSec: block.durationSec,
           })),
         ),
+        segmentsJson: JSON.stringify(activitySegments(enduranceTemplate.blocks)),
+        metricsSource: 'recorded',
         notes: 'Smooth ride, HR stayed where planned.',
       },
       {
@@ -356,6 +382,13 @@ async function main() {
           { zone: 2, durationSec: 300 },
           { zone: 1, durationSec: 600 },
         ]),
+        segmentsJson: JSON.stringify(activitySegments([
+          { kind: 'warmup', zone: 1, durationSec: 900 },
+          { kind: 'work', zone: 3, durationSec: 2400 },
+          { kind: 'recovery', zone: 2, durationSec: 300 },
+          { kind: 'cooldown', zone: 1, durationSec: 600 },
+        ])),
+        metricsSource: 'recorded',
         notes: 'Shortened the cooldown slightly to get home before dark.',
       },
     ],

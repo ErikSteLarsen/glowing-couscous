@@ -97,11 +97,14 @@ async function saveSession({
 
   const existing = await db.session.findUnique({
     where: { id: command.sessionId },
-    select: { id: true, athleteId: true, adjusted: true },
+    select: { id: true, athleteId: true, adjusted: true, activity: { select: { id: true } } },
   });
 
   if (!existing || existing.athleteId !== athleteId) {
     return { ok: false, error: 'Session not found.', status: 404 };
+  }
+  if (existing.activity) {
+    return { ok: false, error: 'Completed sessions are immutable.', status: 409 };
   }
 
   await db.$transaction([
@@ -132,11 +135,14 @@ async function deleteSession({
 }): Promise<PlannerResult> {
   const session = await db.session.findUnique({
     where: { id: command.sessionId },
-    select: { id: true, athleteId: true },
+    select: { id: true, athleteId: true, activity: { select: { id: true } } },
   });
 
   if (!session || session.athleteId !== athleteId) {
     return { ok: false, error: 'Session not found.', status: 404 };
+  }
+  if (session.activity) {
+    return { ok: false, error: 'Completed sessions are immutable.', status: 409 };
   }
 
   await db.session.delete({ where: { id: command.sessionId } });

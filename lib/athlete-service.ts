@@ -3,6 +3,7 @@ import { readOverviewCardsFromPrefsJson } from './overview-preferences.ts';
 import { prisma } from './prisma.ts';
 import { deriveSessionMetrics } from './session-math.ts';
 import { getTempoZoneMeta } from './tempo-blocks.ts';
+import { parseActivitySegments } from './activity-metrics.ts';
 
 type AthleteServiceDeps = {
   db?: typeof prisma;
@@ -36,6 +37,9 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
     }>;
     activity?: {
       tss: number;
+      compliancePct?: number | null;
+      segmentsJson?: string | null;
+      metricsSource?: string;
     } | null;
   }) {
     const metrics = deriveSessionMetrics(
@@ -88,7 +92,11 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
           : null,
       durationSec: metrics.durationSec,
       tss: session.activity?.tss ?? metrics.tss,
-      segments: metrics.segments,
+      segments: session.activity?.segmentsJson
+        ? parseActivitySegments(session.activity.segmentsJson)
+        : metrics.segments,
+      compliancePct: session.activity?.compliancePct ?? null,
+      metricsSource: session.activity?.metricsSource ?? null,
       blockCount: session.blocks.length,
     };
   }
@@ -408,23 +416,9 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
           durationSec: activity.durationSec,
           tss: activity.tss,
           compliancePct: activity.compliancePct,
+          metricsSource: activity.metricsSource,
           notes: activity.notes,
-          segments: deriveSessionMetrics(
-            activity.session.blocks.map((block) => ({
-              kind: block.kind as 'warmup' | 'work' | 'recovery' | 'cooldown',
-              zone: block.zone as 1 | 2 | 3 | 4 | 5,
-              durationSec: block.durationSec,
-              reps: block.reps,
-              target:
-                block.targetType && block.targetLow !== null && block.targetHigh !== null
-                  ? {
-                      type: block.targetType as 'power' | 'pace' | 'hr',
-                      low: block.targetLow,
-                      high: block.targetHigh,
-                    }
-                  : null,
-            })),
-          ).segments,
+          segments: parseActivitySegments(activity.segmentsJson),
         })),
       };
     },

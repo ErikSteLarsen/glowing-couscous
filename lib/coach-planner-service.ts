@@ -162,10 +162,13 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
       if (sessionId !== undefined) {
         const existing = await db.session.findUnique({
           where: { id: sessionId },
-          select: { id: true, athleteId: true, adjusted: true },
+          select: { id: true, athleteId: true, adjusted: true, activity: { select: { id: true } } },
         });
         if (!existing || existing.athleteId !== draft.athleteId) {
           return { ok: false as const, error: 'Session not found.', status: 404 };
+        }
+        if (existing.activity) {
+          return { ok: false as const, error: 'Completed sessions are immutable.', status: 409 };
         }
       }
 
@@ -236,10 +239,18 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
     async deleteSession(coachId: number, sessionId: number) {
       const session = await db.session.findUnique({
         where: { id: sessionId },
-        select: { id: true, athleteId: true, athlete: { select: { coachId: true } } },
+        select: {
+          id: true,
+          athleteId: true,
+          activity: { select: { id: true } },
+          athlete: { select: { coachId: true } },
+        },
       });
       if (!session || !session.athlete || session.athlete.coachId !== coachId) {
         return { ok: false as const, error: 'Session not found.', status: 404 };
+      }
+      if (session.activity) {
+        return { ok: false as const, error: 'Completed sessions are immutable.', status: 409 };
       }
 
       await db.session.delete({ where: { id: sessionId } });

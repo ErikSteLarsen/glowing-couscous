@@ -111,7 +111,9 @@ export default async function CoachAthleteDetailPage({
                           <div className="mt-3 flex flex-wrap gap-4 text-sm text-[var(--text-secondary)]">
                             <MetricText>{formatDuration(session.durationSec)}</MetricText>
                             <MetricText>{session.tss} TSS</MetricText>
-                            <MetricText>{session.completionPct}% compliance</MetricText>
+                            <MetricText>
+                              {session.completionPct === null ? 'Compliance unavailable' : `${session.completionPct}% compliance`}
+                            </MetricText>
                           </div>
                         </article>
                       ))}
@@ -167,7 +169,9 @@ export default async function CoachAthleteDetailPage({
                     </div>
                     <div>
                       <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Compliance</dt>
-                      <dd className="mt-1 text-sm text-[var(--text)]">{session.completionPct}%</dd>
+                      <dd className="mt-1 text-sm text-[var(--text)]">
+                        {session.completionPct === null ? 'Unavailable' : `${session.completionPct}%`}
+                      </dd>
                     </div>
                   </dl>
                 </article>

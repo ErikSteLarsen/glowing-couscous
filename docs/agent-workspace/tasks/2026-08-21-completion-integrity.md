@@ -1,12 +1,15 @@
 # Task: Make Completion And Activity Semantics Consistent
 
-- **Status:** `planned`
-- **Agent:** `<assigned agent>`
+- **Status:** `completed`
+- **Agent:** `opencode-completion-2026-08-21`
 - **Created:** `2026-08-21`
 - **Task ID:** `COMPLETION-002`
 - **Feature IDs:** `COMPLETE-001`, `ATHLETE-001`, `PLAN-001`, `COMPAT-001`, `COVERAGE-001`
 - **Related records:** [athlete feature](../features/athlete.md), [compatibility](../features/compatibility.md), [coverage](../features/coverage.md), [audit](2026-08-21-incompleteness-audit.md)
 - **Dependencies:** Decide the completed-session edit policy before implementation. This task recommends completed sessions are immutable.
+- **Completed:** 2026-08-21
+- **Completion record:** [progress and verification](2026-08-21-completion-integrity-progress.md)
+- **Decision:** [immutable completed sessions](../decisions/0006-immutable-completed-sessions.md)
 
 ## Problem
 

@@ -55,6 +55,9 @@ export default async function AthleteSessionPage({
               <StatusBadge status={detail.session.status} />
               <MetricText>{formatDuration(detail.session.durationSec)}</MetricText>
               <MetricText>{detail.session.tss} TSS</MetricText>
+              {detail.session.metricsSource === 'manual-planned' ? (
+                <span className="text-[12px] text-[var(--text-secondary)]">Planned estimate</span>
+              ) : null}
               {detail.session.targetLabel ? <span className="text-[13px] text-[var(--text-secondary)]">{detail.session.targetLabel}</span> : null}
             </div>
             <SessionBlockBar segments={detail.session.segments} />

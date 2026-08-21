@@ -150,13 +150,19 @@ test('planner service keeps a nonzero fallback duration for legacy blocks withou
 test('planner service preserves adjusted state when a coach edits an existing session', async () => {
   const plannerServiceSource = await read('lib/planner-service.ts');
 
-  assert.match(plannerServiceSource, /select: \{ id: true, athleteId: true, adjusted: true \}/);
+  assert.match(plannerServiceSource, /activity: \{ select: \{ id: true \} \}/);
   assert.match(plannerServiceSource, /adjusted: existing\.adjusted/);
+  assert.match(plannerServiceSource, /Completed sessions are immutable/);
 });
 
-test('completion undo writes planned status without implying adjusted-state branching', async () => {
+test('completion writes planned status through the completion service', async () => {
   const completionRouteSource = await read('app/api/athlete/sessions/[sessionId]/completion/route.ts');
+  const completionServiceSource = await read('lib/athlete-completion-service.ts');
 
-  assert.match(completionRouteSource, /data: \{ status: 'planned' \}/);
+  assert.match(completionRouteSource, /athleteCompletionService\.reopenSession/);
+  assert.match(completionRouteSource, /typeof isDone !== 'boolean'/);
+  assert.match(completionServiceSource, /data: \{ status: 'planned', athleteNotes: retainedNotes \}/);
+  assert.match(completionServiceSource, /metricsSource: 'manual-planned'/);
+  assert.doesNotMatch(completionRouteSource, /prisma\./);
   assert.doesNotMatch(completionRouteSource, /session\.adjusted \? 'planned' : 'planned'/);
 });
