@@ -1,25 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCoach } from '@/lib/api-auth';
 import { assignmentService } from '@/lib/assignment-service';
+import { parsePositiveInteger, readJsonObject } from '@/lib/route-params';
 
 export async function POST(request: NextRequest) {
   try {
     const { user, error } = await requireCoach();
     if (error) return error;
 
-    const body = (await request.json()) as {
-      athleteId?: number;
-      templateId?: number;
-      scheduledDate?: string;
-    };
-    const parsedAthleteId = Number(body.athleteId);
-    const parsedTemplateId = Number(body.templateId);
+    const body = await readJsonObject(request);
+    if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const parsedAthleteId = parsePositiveInteger(body.value.athleteId);
+    const parsedTemplateId = parsePositiveInteger(body.value.templateId);
 
-    if (!Number.isInteger(parsedAthleteId) || parsedAthleteId <= 0) {
+    if (parsedAthleteId === null) {
       return NextResponse.json({ error: 'Invalid athleteId' }, { status: 400 });
     }
 
-    if (!Number.isInteger(parsedTemplateId) || parsedTemplateId <= 0) {
+    if (parsedTemplateId === null) {
       return NextResponse.json({ error: 'Invalid templateId' }, { status: 400 });
     }
 
@@ -27,7 +25,7 @@ export async function POST(request: NextRequest) {
       coachId: user.id,
       athleteId: parsedAthleteId,
       templateId: parsedTemplateId,
-      scheduledDate: typeof body.scheduledDate === 'string' ? body.scheduledDate : '',
+      scheduledDate: typeof body.value.scheduledDate === 'string' ? body.value.scheduledDate : '',
     });
 
     if (!result.ok) {

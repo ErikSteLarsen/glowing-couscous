@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCoach } from '@/lib/api-auth';
 import { coachPlannerService } from '@/lib/coach-planner-service';
-
-function parseSessionId(input: string) {
-  const parsed = Number(input);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
+import { parsePositiveInteger, readJsonObject } from '@/lib/route-params';
 
 export async function PATCH(
   request: NextRequest,
@@ -16,13 +12,14 @@ export async function PATCH(
     if (error) return error;
 
     const { sessionId } = await params;
-    const parsedSessionId = parseSessionId(sessionId);
-    if (!parsedSessionId) {
+    const parsedSessionId = parsePositiveInteger(sessionId);
+    if (parsedSessionId === null) {
       return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
     }
 
-    const body = await request.json();
-    const result = await coachPlannerService.saveSession(user.id, body, parsedSessionId);
+    const body = await readJsonObject<Parameters<typeof coachPlannerService.saveSession>[1]>(request);
+    if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const result = await coachPlannerService.saveSession(user.id, body.value, parsedSessionId);
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
@@ -43,8 +40,8 @@ export async function DELETE(
     if (error) return error;
 
     const { sessionId } = await params;
-    const parsedSessionId = parseSessionId(sessionId);
-    if (!parsedSessionId) {
+    const parsedSessionId = parsePositiveInteger(sessionId);
+    if (parsedSessionId === null) {
       return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
     }
 

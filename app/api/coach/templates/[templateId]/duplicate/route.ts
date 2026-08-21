@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCoach } from '@/lib/api-auth';
 import { templateService } from '@/lib/template-service';
+import { parsePositiveInteger } from '@/lib/route-params';
 
 export async function POST(
   _request: NextRequest,
@@ -10,8 +11,8 @@ export async function POST(
   if (error) return error;
 
   const { templateId } = await params;
-  const parsedTemplateId = Number(templateId);
-  if (!Number.isInteger(parsedTemplateId) || parsedTemplateId <= 0) {
+  const parsedTemplateId = parsePositiveInteger(templateId);
+  if (parsedTemplateId === null) {
     return NextResponse.json({ error: 'Invalid templateId' }, { status: 400 });
   }
 

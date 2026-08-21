@@ -59,8 +59,8 @@ test('coach request decision flow guards resolved requests and invalid route par
 
   assert.match(serviceSource, /request\.status !== 'PENDING'/);
   assert.match(serviceSource, /status: 409/);
-  assert.match(routeSource, /const parsedRequestId = Number\(requestId\)/);
-  assert.match(routeSource, /Number\.isInteger\(parsedRequestId\)/);
+  assert.match(routeSource, /parsePositiveInteger\(requestId\)/);
+  assert.match(routeSource, /parsedRequestId === null/);
   assert.match(routeSource, /status: 400/);
 });
 

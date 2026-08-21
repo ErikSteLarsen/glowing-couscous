@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAthlete } from '@/lib/api-auth';
 import { athleteService } from '@/lib/athlete-service';
 import { coachRequestService } from '@/lib/coach-request-service';
+import { isJsonObject, parsePositiveInteger } from '@/lib/route-params';
 
 export async function GET() {
   const { user, error } = await requireAthlete();
@@ -23,9 +24,17 @@ export async function POST(req: NextRequest) {
   const { user, error } = await requireAthlete();
   if (error) return error;
 
-  const body = await req.json();
-  const coachId = Number(body.coachId);
-  if (!coachId || Number.isNaN(coachId)) {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  if (!isJsonObject(body)) {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  const coachId = parsePositiveInteger(body.coachId);
+  if (coachId === null) {
     return NextResponse.json({ error: 'Invalid coachId' }, { status: 400 });
   }
 

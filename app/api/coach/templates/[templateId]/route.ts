@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCoach } from '@/lib/api-auth';
 import { templateService } from '@/lib/template-service';
+import { parsePositiveInteger, readJsonObject } from '@/lib/route-params';
 
 export async function PATCH(
   request: NextRequest,
@@ -11,13 +12,14 @@ export async function PATCH(
     if (error) return error;
 
     const { templateId } = await params;
-    const parsedTemplateId = Number(templateId);
-    if (!Number.isInteger(parsedTemplateId) || parsedTemplateId <= 0) {
+    const parsedTemplateId = parsePositiveInteger(templateId);
+    if (parsedTemplateId === null) {
       return NextResponse.json({ error: 'Invalid templateId' }, { status: 400 });
     }
 
-    const body = await request.json();
-    const result = await templateService.saveForCoach(user.id, body, parsedTemplateId);
+    const body = await readJsonObject<Parameters<typeof templateService.saveForCoach>[1]>(request);
+    if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const result = await templateService.saveForCoach(user.id, body.value, parsedTemplateId);
 
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: 400 });
@@ -39,8 +41,8 @@ export async function DELETE(
     if (error) return error;
 
     const { templateId } = await params;
-    const parsedTemplateId = Number(templateId);
-    if (!Number.isInteger(parsedTemplateId) || parsedTemplateId <= 0) {
+    const parsedTemplateId = parsePositiveInteger(templateId);
+    if (parsedTemplateId === null) {
       return NextResponse.json({ error: 'Invalid templateId' }, { status: 400 });
     }
 

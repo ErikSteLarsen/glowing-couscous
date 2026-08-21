@@ -1,12 +1,15 @@
 # Task: Centralize API Authorization And Input Validation
 
-- **Status:** `planned`
-- **Agent:** `<assigned agent>`
+- **Status:** `completed`
+- **Agent:** `opencode-api-2026-08-21`
 - **Created:** `2026-08-21`
 - **Task ID:** `API-001`
 - **Feature IDs:** `AUTH-001`, `COVERAGE-001`, `COMPAT-001`
 - **Related records:** [auth](../features/auth.md), [compatibility](../features/compatibility.md), [coverage](../features/coverage.md), [audit](2026-08-21-incompleteness-audit.md)
 - **Dependencies:** Auth role/principal policy from the auth task. Preserve intentional public Auth.js/signup/setup routes.
+- **Completed:** 2026-08-21
+- **Completion record:** [progress and verification](2026-08-21-api-auth-validation-progress.md)
+- **Decision:** [JWT principal guards and domain ownership reads](../decisions/0004-api-principal-validation.md)
 
 ## Problem
 

@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCoach } from '@/lib/api-auth';
 import { coachPlannerService } from '@/lib/coach-planner-service';
+import { readJsonObject } from '@/lib/route-params';
 
 export async function POST(request: NextRequest) {
   try {
     const { user, error } = await requireCoach();
     if (error) return error;
 
-    const body = await request.json();
-    const result = await coachPlannerService.saveSession(user.id, body);
+    const body = await readJsonObject<Parameters<typeof coachPlannerService.saveSession>[1]>(request);
+    if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    const result = await coachPlannerService.saveSession(user.id, body.value);
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }

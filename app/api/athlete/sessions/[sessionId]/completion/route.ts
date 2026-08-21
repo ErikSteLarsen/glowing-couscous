@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAthlete } from '@/lib/api-auth';
 import { deriveSessionMetrics } from '@/lib/session-math';
+import { isJsonObject, parsePositiveInteger } from '@/lib/route-params';
 
 export async function PATCH(
   request: NextRequest,
@@ -12,12 +13,28 @@ export async function PATCH(
     if (error) return error;
 
     const { sessionId } = await params;
-    const parsedSessionId = Number(sessionId);
-    if (!Number.isInteger(parsedSessionId) || parsedSessionId <= 0) {
+    const parsedSessionId = parsePositiveInteger(sessionId);
+    if (parsedSessionId === null) {
       return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
     }
 
-    const body = (await request.json()) as { isDone?: boolean; notes?: string };
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    if (!isJsonObject(body)) {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    const isDone = body.isDone;
+    const notes = body.notes;
+    if (isDone !== undefined && typeof isDone !== 'boolean') {
+      return NextResponse.json({ error: 'Invalid isDone' }, { status: 400 });
+    }
+    if (notes !== undefined && typeof notes !== 'string') {
+      return NextResponse.json({ error: 'Invalid notes' }, { status: 400 });
+    }
     const session = await prisma.session.findUnique({
       where: { id: parsedSessionId },
       include: {
@@ -32,7 +49,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
-    if (!body.isDone) {
+    if (!isDone) {
       await prisma.$transaction([
         prisma.activity.deleteMany({ where: { sessionId: session.id } }),
         prisma.session.update({
@@ -43,7 +60,7 @@ export async function PATCH(
 
       return NextResponse.json({
         sessionId: session.id,
-        completion: { isDone: false, notes: body.notes ?? '', completedAt: null },
+        completion: { isDone: false, notes: notes ?? '', completedAt: null },
       });
     }
 
@@ -75,7 +92,7 @@ export async function PATCH(
           tss: metrics.tss,
           compliancePct: 100,
           zoneDistributionJson: JSON.stringify(metrics.zoneDistributionSec),
-          notes: typeof body.notes === 'string' ? body.notes : null,
+          notes: notes ?? null,
         },
         create: {
           sessionId: session.id,
@@ -85,7 +102,7 @@ export async function PATCH(
           tss: metrics.tss,
           compliancePct: 100,
           zoneDistributionJson: JSON.stringify(metrics.zoneDistributionSec),
-          notes: typeof body.notes === 'string' ? body.notes : null,
+          notes: notes ?? null,
         },
       }),
       prisma.session.update({
@@ -98,7 +115,7 @@ export async function PATCH(
       sessionId: session.id,
       completion: {
         isDone: true,
-        notes: typeof body.notes === 'string' ? body.notes : '',
+        notes: notes ?? '',
         completedAt: completedAt.toISOString(),
       },
     });

@@ -67,6 +67,8 @@ application services normalize names for UI consumers.
 - `lib/api-auth.ts` is the API route guard layer.
 - `lib/auth-principal.ts` validates session IDs and role claims.
 - `lib/auth-role-service.ts` owns one-time atomic role assignment.
+- `lib/route-params.ts` owns strict positive-integer and JSON-object API input
+  parsing.
 
 ### Planner and templates
 
@@ -104,6 +106,8 @@ These are the first places to be careful when extending the app:
 - Keep Monday as the week boundary.
 - Reuse shared editor primitives before building new planner/template editing UIs.
 - Use `.copilot/skills/project-architecture/` when making architecture-sensitive changes so new work follows the current owner map.
+- Protected API routes must guard first, parse dynamic IDs with
+  `route-params`, and leave ownership/business rules to their service.
 - Do not use the setup endpoint for role changes; extend `auth-role-service` if
   an explicit future account-management flow is introduced.
 

@@ -197,7 +197,7 @@ test('builder route is backed by a real client and assignment API path', async (
   assert.doesNotMatch(builderPageSource, /still in progress|next migration slice/i);
   assert.match(builderClientSource, /isValid/);
   assert.match(assignmentRouteSource, /assignmentService\.assignTemplateToAthlete/);
-  assert.match(assignmentRouteSource, /Number\.isInteger/);
+  assert.match(assignmentRouteSource, /parsePositiveInteger/);
 });
 
 test('assignment service reuses an existing matching scheduled session instead of creating a duplicate', async () => {

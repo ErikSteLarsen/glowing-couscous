@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCoach } from '@/lib/api-auth';
 import { coachSessionLibraryService } from '@/lib/coach-session-library-service';
+import { readJsonObject } from '@/lib/route-params';
 
 export async function GET() {
   const { user, error } = await requireCoach();
@@ -14,7 +15,9 @@ export async function POST(request: NextRequest) {
   const { user, error } = await requireCoach();
   if (error) return error;
 
-  const result = await coachSessionLibraryService.saveForCoach(user.id, await request.json());
+  const body = await readJsonObject<Parameters<typeof coachSessionLibraryService.saveForCoach>[1]>(request);
+  if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  const result = await coachSessionLibraryService.saveForCoach(user.id, body.value);
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json({ ok: true, sessionId: result.sessionId }, { status: 201 });
 }

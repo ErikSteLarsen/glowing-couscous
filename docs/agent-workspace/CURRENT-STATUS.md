@@ -26,7 +26,7 @@ sessions complete with notes. Weeks are Monday-based.
 
 | Capability | Status | Primary implementation | Verification / gap |
 |---|---|---|---|
-| Auth, signup, setup, role redirects | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | Covered by shell/source tests and build; dedicated auth behavior tests remain a priority. |
+| Auth, signup, setup, role redirects | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-principal.ts`, `lib/auth-role-service.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | Focused role/principal tests and adapter smoke test pass; external OAuth integration remains a gap. |
 | Responsive Tempo app shell and navigation | `shipped` | `components/AppShell.tsx`, `AppSidebar.tsx`, `lib/app-navigation.ts`, `app/globals.css` | Shell, accessibility, centering, and navigation tests pass. |
 | Coach roster and athlete detail | `shipped` | `lib/coach-service.ts`, `/coach`, `/coach/athletes/[athleteId]` | `tests/coach-service.test.ts` and route tests pass. |
 | Athlete coach discovery and request lifecycle | `shipped` | `lib/coach-request-service.ts`, `lib/athlete-service.ts`, discovery/profile routes | Request service and onboarding source tests pass; UX polish remains planned. |
@@ -44,7 +44,7 @@ sessions complete with notes. Weeks are Monday-based.
 | Live planner/template workflows | `planned` | Source-copy assignment command | Template create/edit UI is absent and the old builder UI is unreachable. |
 | Auth.js adapter and role setup hardening | `shipped` | `prisma/schema.prisma`, `lib/auth-principal.ts`, `lib/auth-role-service.ts`, `auth.ts`, setup route | `AUTH-002`; focused principal/role tests, Prisma validation, adapter smoke test, and full gates pass. External OAuth integration remains a gap. |
 | Coach-request lifecycle hardening | `planned` | Pending-request uniqueness decision | Concurrent pending requests and already-coached API callers are not fully constrained. |
-| API auth/input hardening | `planned` | Principal policy | Dynamic IDs and JSON bodies are inconsistently validated; route behavior tests are sparse. |
+| API auth/input hardening | `shipped` | `lib/api-auth.ts`, `lib/route-params.ts`, protected API handlers | `API-001`; 92 tests, lint, build, and route inventory checks pass. Full session-backed route integration remains a gap. |
 
 See `WORK-INDEX.md` for stable IDs and `features/` for detailed records.
 
@@ -62,6 +62,8 @@ See `WORK-INDEX.md` for stable IDs and `features/` for detailed records.
 - Route handlers use `lib/api-auth.ts` for role guards. The signup, setup,
   and completion routes are current exceptions that still call Prisma
   directly for their behavior.
+- `lib/route-params.ts` owns strict positive-integer and JSON-object transport
+  parsing for API adapters.
 
 ### Active coach planning flow
 
@@ -124,7 +126,7 @@ and target types `power`/`pace`/`hr`.
    provenance, notes, and mutable-session history have explicit semantics.
 2. Implement source-copy assignment, then expose it through the planner and
    template UI without duplicating assignment logic.
-3. Make Auth.js/role setup and coach-request lifecycle invariants database-safe,
-   then centralize API principal and input validation.
+3. Make coach-request lifecycle invariants database-safe, then deepen full
+   session-backed API route coverage.
 4. Harden the compatibility adapter and align architecture/handoff docs before
    removing any old planner code.

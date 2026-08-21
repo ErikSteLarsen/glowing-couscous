@@ -47,6 +47,8 @@ This document describes the **implemented** architecture, not old plans.
 - `lib/auth-principal.ts` validates numeric application IDs and role claims
   without framework imports.
 - `lib/auth-role-service.ts` owns the atomic one-time role assignment command.
+- `lib/route-params.ts` owns strict positive-integer and JSON-object transport
+  parsing for API adapters.
 
 Use `auth-session` in pages and server components. Use `api-auth` in route handlers.
 
@@ -132,6 +134,8 @@ The main read/write boundaries are clearer, but they still need protection:
 6. Keep future agents aligned with `.copilot/skills/project-architecture/` when boundary work is involved.
 7. Keep role setup behind `auth-role-service` and validate session principals
    through `auth-principal` rather than casting Auth.js values.
+8. Keep route transport parsing in `route-params`; do not move ownership or
+   business validation out of the domain service boundary.
 
 ## Highest-value architectural next step
 

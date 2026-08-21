@@ -17,7 +17,7 @@ lint, or a successful build.
 - Planner draft, planner services, library sessions, training plans, templates,
   assignments, coach reads, calendar shaping, session math, preferences, shell,
   navigation, layout, and architecture boundaries have focused tests.
-- The current command runs 84 tests with no failures.
+- The current command runs 92 tests with no failures.
 - Several current tests are source-text assertions and do not exercise route
   authentication, JSON parsing, UI interactions, or persisted end-to-end behavior.
 
@@ -29,6 +29,18 @@ lint, or a successful build.
 - Completion persistence, undo, and ownership behavior.
 - API contract tests for the active planner/library/training-plan routes.
 - Live execution transitions and source-copy assignment idempotency.
+
+## API-001 Result
+
+- Protected route handlers use `requireCoach`, `requireAthlete`, or
+  `requireSignedInUser`; Auth.js, signup, and setup remain intentional public
+  exceptions.
+- `lib/route-params.ts` rejects non-canonical, non-positive, fractional, and
+  unsafe dynamic IDs before Prisma.
+- Protected JSON mutations reject malformed and non-object bodies with `400`.
+- `tests/route-params.test.ts` covers parser behavior, guard inventory, and all
+  dynamic protected route parser uses.
+- Full route integration tests with mocked sessions remain a future coverage gap.
 
 ## Extension Rules
 

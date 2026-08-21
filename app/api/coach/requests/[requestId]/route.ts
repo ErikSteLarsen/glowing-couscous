@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCoach } from '@/lib/api-auth';
 import { coachRequestService } from '@/lib/coach-request-service';
+import { readJsonObject, parsePositiveInteger } from '@/lib/route-params';
 
 export async function PATCH(
   req: NextRequest,
@@ -10,12 +11,14 @@ export async function PATCH(
   if (error) return error;
 
   const { requestId } = await params;
-  const parsedRequestId = Number(requestId);
-  if (!Number.isInteger(parsedRequestId) || parsedRequestId <= 0) {
+  const parsedRequestId = parsePositiveInteger(requestId);
+  if (parsedRequestId === null) {
     return NextResponse.json({ error: 'Invalid requestId' }, { status: 400 });
   }
 
-  const { action } = await req.json();
+  const body = await readJsonObject(req);
+  if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  const { action } = body.value;
   if (action !== 'accept' && action !== 'reject') {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }

@@ -1,15 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { isAppRole } from '@/lib/auth-principal';
+import { isJsonObject } from '@/lib/route-params';
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { name, email, password, role } = body;
-
-  if (!name || !email || !password || !['COACH', 'ATHLETE'].includes(role)) {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  if (!isJsonObject(body)) {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
   }
-  if (String(password).length < 8) {
+  const { name, email, password, role } = body;
+
+  if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string' || !isAppRole(role)) {
+    return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+  }
+  if (password.length < 8) {
     return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
   }
 
@@ -18,7 +28,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Email already in use' }, { status: 409 });
   }
 
-  const passwordHash = await bcrypt.hash(String(password), 12);
+  const passwordHash = await bcrypt.hash(password, 12);
   await prisma.user.create({ data: { name, email, passwordHash, role } });
 
   return NextResponse.json({ ok: true }, { status: 201 });

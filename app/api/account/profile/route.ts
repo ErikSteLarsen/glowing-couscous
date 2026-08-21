@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSignedInUser } from '@/lib/api-auth';
 import { accountService } from '@/lib/account-service';
+import { isJsonObject } from '@/lib/route-params';
 
 export async function PATCH(req: NextRequest) {
   const { user, error } = await requireSignedInUser();
   if (error || !user) return error;
 
-  const { name, overviewCards } = (await req.json()) as {
-    name?: unknown;
-    overviewCards?: unknown;
-  };
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  if (!isJsonObject(body)) {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  const { name, overviewCards } = body;
 
   if (name !== undefined) {
     const trimmedName = String(name ?? '').trim();

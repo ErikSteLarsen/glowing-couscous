@@ -156,8 +156,8 @@ test('coach session routes verify the target athlete belongs to the signed-in co
   const coachSessionRouteSource = await read('app/api/coach/sessions/[sessionId]/route.ts');
 
   assert.match(coachSessionRouteSource, /const \{ user, error \} = await requireCoach\(\)/);
-  assert.match(coachSessionRouteSource, /const parsedSessionId = Number\(sessionId\)/);
-  assert.match(coachSessionRouteSource, /Number\.isInteger\(parsedSessionId\)/);
+  assert.match(coachSessionRouteSource, /parsePositiveInteger\(sessionId\)/);
+  assert.match(coachSessionRouteSource, /parsedSessionId === null/);
   assert.match(coachSessionRouteSource, /coachService\./);
   assert.match(coachSessionRouteSource, /hasAthlete\(/);
 });
@@ -168,8 +168,8 @@ test('template and detail entry points validate dynamic ids before loading data'
   const athleteLivePageSource = await read('app/(app)/athlete/live/[sessionId]/page.tsx');
   const coachAthletePageSource = await read('app/(app)/coach/athletes/[athleteId]/page.tsx');
 
-  assert.match(templateRouteSource, /const parsedTemplateId = Number\(templateId\)/);
-  assert.match(templateRouteSource, /Number\.isInteger\(parsedTemplateId\)/);
+  assert.match(templateRouteSource, /parsePositiveInteger\(templateId\)/);
+  assert.match(templateRouteSource, /parsedTemplateId === null/);
   assert.match(athleteSessionPageSource, /const parsedSessionId = Number\(sessionId\)/);
   assert.match(athleteSessionPageSource, /notFound\(\)/);
   assert.match(athleteLivePageSource, /const parsedSessionId = Number\(sessionId\)/);

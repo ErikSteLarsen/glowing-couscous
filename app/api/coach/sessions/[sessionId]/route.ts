@@ -3,6 +3,7 @@ import { plannerService } from '@/lib/planner-service';
 import { prisma } from '@/lib/prisma';
 import { requireCoach } from '@/lib/api-auth';
 import { coachService } from '@/lib/coach-service';
+import { parsePositiveInteger, readJsonObject } from '@/lib/route-params';
 
 export async function PATCH(
   request: NextRequest,
@@ -13,12 +14,13 @@ export async function PATCH(
     if (error) return error;
 
     const { sessionId } = await params;
-    const parsedSessionId = Number(sessionId);
-    if (!Number.isInteger(parsedSessionId) || parsedSessionId <= 0) {
+    const parsedSessionId = parsePositiveInteger(sessionId);
+    if (parsedSessionId === null) {
       return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
     }
 
-    const body = await request.json();
+    const body = await readJsonObject(request);
+    if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     const session = await prisma.session.findUnique({
       where: { id: parsedSessionId },
       select: { id: true, athleteId: true, date: true },
@@ -40,7 +42,7 @@ export async function PATCH(
     const result = await plannerService.forWeek({ athleteId: session.athleteId, weekStart: session.date }).execute({
       type: 'save-session',
       sessionId: session.id,
-      draft: body,
+      draft: body.value,
     });
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: result.status ?? 400 });
@@ -62,8 +64,8 @@ export async function DELETE(
     if (error) return error;
 
     const { sessionId } = await params;
-    const parsedSessionId = Number(sessionId);
-    if (!Number.isInteger(parsedSessionId) || parsedSessionId <= 0) {
+    const parsedSessionId = parsePositiveInteger(sessionId);
+    if (parsedSessionId === null) {
       return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
     }
 
