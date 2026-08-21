@@ -4,7 +4,7 @@
 - **Status:** `shipped`
 - **Last verified:** `2026-08-21`
 - **Owner:** `lib/coach-request-service.ts` and athlete request-state reads in `lib/athlete-service.ts`
-- **Related work:** [baseline](../history/2026-08-21-baseline.md), [product scope](../../../SPEC.md)
+- **Related work:** [baseline](../history/2026-08-21-baseline.md), [product scope](../../../SPEC.md), [request task](../tasks/2026-08-21-coach-request-invariants.md)
 
 ## Contract
 
@@ -39,6 +39,9 @@ A coach can list pending requests and accept or reject them.
 
 - Messaging is explicitly not implemented; the UI says it is coming soon.
 - Pending/rejected state presentation and cross-role navigation still need UX polish.
+- Service eligibility is not fully enforced for already-coached callers, and
+  the one-pending-request rule is not database-safe across concurrent requests.
+- Coach request list/action failures are currently too quiet in the UI.
 
 ## Extension Rules
 

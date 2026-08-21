@@ -12,11 +12,19 @@ by agents as work changes. Use the linked feature record before editing.
 | `PLAN-001` | Athlete-week coach planner | `shipped` | `lib/coach-planner-service.ts`, `lib/planner-draft.ts`, `/coach/planner` | Planner/draft/API tests | [planner](features/planner.md) |
 | `LIB-001` | Coach-owned session library | `shipped` | `lib/coach-session-library-service.ts`, planner modes | Dedicated library tests | [planner](features/planner.md) |
 | `TPLAN-001` | Reusable coach training plans | `shipped` | `lib/coach-training-plan-service.ts`, planner modes | Dedicated training-plan tests | [planner](features/planner.md) |
-| `TEMPLATE-001` | Private templates and assignment | `shipped` | `lib/template-service.ts`, `lib/assignment-service.ts` | Template/assignment tests | [templates](features/templates.md) |
+| `TEMPLATE-001` | Private template library and assignment services | `transitional` | `lib/template-service.ts`, `lib/assignment-service.ts` | Template/assignment tests; active UI incomplete | [templates](features/templates.md) |
 | `ATHLETE-001` | Home, calendar, session, live, activity | `shipped` | `lib/athlete-service.ts`, `/athlete/**` | Calendar/source/build tests | [athlete](features/athlete.md) |
+| `LIVE-001` | Interactive athlete live execution | `planned` | `lib/athlete-execution.ts`, live client, `Stepper` | No execution-state test exists yet | [athlete](features/athlete.md) |
 | `COMPLETE-001` | Completion, activity, notes | `shipped` | completion API, `Activity`, session detail client | Indirect route coverage; add focused service tests | [athlete](features/athlete.md) |
+| `COMPLETION-002` | Completion metric/history integrity | `planned` | new completion module, `Activity`, session lifecycle | Planned service/transaction coverage | [athlete](features/athlete.md) |
 | `DOMAIN-001` | Structured blocks, sports, metrics | `shipped` | `lib/tempo-blocks.ts`, `session-math.ts`, `planner-draft.ts` | Session math/planner tests | [workout-domain](features/workout-domain.md) |
 | `COMPAT-001` | Older coach session mutation adapter | `transitional` | `/api/coach/sessions/[sessionId]`, `lib/planner-service.ts` | Architecture boundary tests | [compatibility](features/compatibility.md) |
+| `ASSIGN-001` | Copy reusable sources to athlete schedules | `planned` | unified assignment module and source lineage | No library/plan assignment tests exist | [planner](features/planner.md) |
+| `WORKFLOW-001` | Complete planner/template UI workflows | `planned` | active planner, templates UI, builder redirect | Current UI lacks source assignment/template editor | [planner](features/planner.md) |
+| `AUTH-002` | Auth.js adapter contract and one-time setup | `planned` | Prisma `User`, auth/session, setup route | OAuth/setup behavior not directly tested | [auth](features/auth.md) |
+| `REQUEST-002` | Coach-request concurrency and eligibility | `planned` | coach-request module and schema | Concurrent lifecycle tests missing | [onboarding](features/onboarding.md) |
+| `API-001` | API principal and route input validation | `planned` | `lib/api-auth.ts`, route parser, API handlers | 401/403/400 route tests missing | [coverage](features/coverage.md) |
+| `COMPAT-002` | Compatibility hardening and docs alignment | `planned` | old planner adapter, builder redirect, architecture docs | Existing tests include misleading source assertions | [compatibility](features/compatibility.md) |
 | `COVERAGE-001` | Deepen service/API regression coverage | `planned` | Auth, request, completion, compatibility seams | See current gaps in snapshot | [coverage](features/coverage.md) |
 | `CLEANUP-001` | Audit stale pre-Tempo helpers/components | `planned` | `lib/planner.ts`, `workout-spec.ts`, old components | Reference analysis required | [compatibility](features/compatibility.md) |
 | `OPS-001` | Agent coordination workspace | `shipped` | `docs/agent-workspace/`, root `AGENTS.md` | Documentation review and repo gates | [workspace](features/workspace.md) |
@@ -34,4 +42,20 @@ registered a multi-step task in this workspace.
 
 | Task | Status | Agent | Feature IDs | Last update |
 |---|---|---|---|---|
-| No active task recorded at baseline | — | — | — | 2026-08-21 |
+| No active task currently recorded | — | — | — | 2026-08-21 |
+
+## Planned Task Files
+
+These are implementation-ready briefs. They are `planned` until an agent claims
+one by creating a task progress entry and changing its status to `in-progress`.
+
+| Task | Status | Blocks / depends on | Brief |
+|---|---|---|---|
+| `LIVE-001` | `planned` | None | [athlete live execution](tasks/2026-08-21-athlete-live-execution.md) |
+| `COMPLETION-002` | `planned` | Completed-session edit policy | [completion integrity](tasks/2026-08-21-completion-integrity.md) |
+| `ASSIGN-001` | `planned` | None | [source-copy assignment](tasks/2026-08-21-source-copy-assignment.md) |
+| `WORKFLOW-001` | `planned` | `ASSIGN-001` command contract | [planner/template workflows](tasks/2026-08-21-planner-template-workflows.md) |
+| `AUTH-002` | `planned` | Role setup and adapter decisions | [auth and role setup](tasks/2026-08-21-auth-role-setup.md) |
+| `REQUEST-002` | `planned` | Pending-request uniqueness decision | [coach-request invariants](tasks/2026-08-21-coach-request-invariants.md) |
+| `API-001` | `planned` | Auth principal policy | [API auth and validation](tasks/2026-08-21-api-auth-validation.md) |
+| `COMPAT-002` | `planned` | Completion/API semantics where shared | [compatibility and docs](tasks/2026-08-21-compatibility-docs.md) |

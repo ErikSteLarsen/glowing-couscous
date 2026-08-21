@@ -4,7 +4,7 @@
 - **Status:** `shipped`
 - **Last verified:** `2026-08-21`
 - **Owner:** `lib/athlete-service.ts` for reads; completion API for activity writes
-- **Related work:** [baseline](../history/2026-08-21-baseline.md), [architecture](../../../ARCHITECTURE.md)
+- **Related work:** [baseline](../history/2026-08-21-baseline.md), [architecture](../../../ARCHITECTURE.md), [Live task](../tasks/2026-08-21-athlete-live-execution.md), [completion task](../tasks/2026-08-21-completion-integrity.md)
 
 ## Contract
 
@@ -42,6 +42,10 @@ They can mark a session complete or move it back to planned while saving notes.
 
 - Completion currently records planned metrics with `compliancePct: 100`; it is
   not a performed-metrics import or sensor integration.
+- Live is currently a static block outline; it has no client-owned execution
+  state or advance/previous controls.
+- Activity history is attached to mutable sessions and needs an explicit
+  completed-session edit policy and stable outcome reads.
 - The live surface is guidance only and does not track current step state back to the server.
 - Athlete onboarding and navigation polish remain planned.
 

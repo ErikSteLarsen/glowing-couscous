@@ -4,7 +4,7 @@
 - **Status:** `transitional`
 - **Last verified:** `2026-08-21`
 - **Owner:** `/api/coach/sessions/[sessionId]`, `lib/planner-service.ts`, `lib/planner.ts`, `lib/workout-spec.ts`
-- **Related work:** [architecture cleanup plan](../../../docs/superpowers/plans/2026-06-23-architecture-cleanup.md), [baseline](../history/2026-08-21-baseline.md), [decision](../decisions/0002-active-vs-compat-planner.md)
+- **Related work:** [architecture cleanup plan](../../../docs/superpowers/plans/2026-06-23-architecture-cleanup.md), [baseline](../history/2026-08-21-baseline.md), [decision](../decisions/0002-active-vs-compat-planner.md), [hardening task](../tasks/2026-08-21-compatibility-docs.md)
 
 ## Contract
 
@@ -31,6 +31,11 @@ existing session's `adjusted` state, and allows owner-scoped update/delete.
 
 - The boundary is easy to misunderstand because both planner generations use
   similar names and models.
+- Cross-week legacy edits can use the old week Plan with a new session date.
+- The compatibility path does not currently verify private template ownership.
+- The old builder client and comment-based source assertions are misleading.
+- `ARCHITECTURE.md` and `docs/AI-HANDOFF.md` still describe the old planner as
+  the primary owner in places.
 - Reference analysis is needed before deleting old helpers/components.
 
 ## Extension Rules

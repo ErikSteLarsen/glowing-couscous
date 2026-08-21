@@ -4,7 +4,7 @@
 - **Status:** `shipped`
 - **Last verified:** `2026-08-21`
 - **Owners:** `lib/coach-planner-service.ts`, `lib/coach-session-library-service.ts`, `lib/coach-training-plan-service.ts`
-- **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md), [planner history](../../../docs/superpowers/plans/2026-06-23-coach-planner.md)
+- **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md), [planner history](../../../docs/superpowers/plans/2026-06-23-coach-planner.md), [source assignment task](../tasks/2026-08-21-source-copy-assignment.md), [workflow task](../tasks/2026-08-21-planner-template-workflows.md)
 
 ## Contract
 
@@ -46,6 +46,11 @@ and have no athlete.
 
 - Training-plan commands validate ownership but do not yet expose an assignment
   operation from a reusable plan to an athlete schedule.
+- Standalone library sessions have CRUD but no copy-to-athlete command.
+- The active template UI has no create/edit editor, and the old builder client
+  is unreachable behind a redirect.
+- Active planner template reuse bypasses the dedicated assignment module and
+  does not inherit its duplicate-prevention behavior.
 - Several planner API handlers parse numeric IDs with `Number()` without a
   shared positive-integer helper; preserve the existing behavior unless fixing it deliberately.
 - Runtime validation accepts any non-null `planWeekday` value from untrusted

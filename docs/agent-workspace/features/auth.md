@@ -4,7 +4,7 @@
 - **Status:** `shipped`
 - **Last verified:** `2026-08-21`
 - **Owner:** `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts`
-- **Related work:** [current status](../CURRENT-STATUS.md), [history](../history/2026-08-21-baseline.md)
+- **Related work:** [current status](../CURRENT-STATUS.md), [history](../history/2026-08-21-baseline.md), [auth task](../tasks/2026-08-21-auth-role-setup.md), [API task](../tasks/2026-08-21-api-auth-validation.md)
 
 ## Contract
 
@@ -39,6 +39,10 @@ pages and API handlers must enforce the same role boundary.
 ## Known Gaps
 
 - Auth callback and API guard behavior lacks a focused service-level test suite.
+- The installed Prisma adapter contract needs to be reconciled with the
+  required `User.role` field and missing standard optional user fields.
+- Role setup is not currently one-time; a roleful user can call the setup API
+  to switch roles.
 - Signup, setup, and session completion still contain direct Prisma behavior.
 - Next.js reports the `middleware.ts` convention is deprecated in favor of `proxy.ts`.
 

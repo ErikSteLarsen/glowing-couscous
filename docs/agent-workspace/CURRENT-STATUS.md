@@ -33,11 +33,18 @@ sessions complete with notes. Weeks are Monday-based.
 | Coach planner for athlete schedules | `shipped` | `lib/coach-planner-service.ts`, `lib/planner-draft.ts`, `/coach/planner` | Planner, draft, API, and compatibility tests pass. |
 | Coach-owned session library | `shipped` | `lib/coach-session-library-service.ts`, planner library API/UI | Dedicated service tests pass. |
 | Reusable coach training plans | `shipped` | `lib/coach-training-plan-service.ts`, training-plan APIs/UI | Dedicated service and planner tests pass. |
-| Coach templates and template assignment | `shipped` | `lib/template-service.ts`, `lib/assignment-service.ts`, template APIs/UI | Template and assignment tests pass. |
+| Coach template library and assignment | `transitional` | `lib/template-service.ts`, `lib/assignment-service.ts`, template APIs/UI | List/duplicate/delete and service/API behavior exist, but live create/edit UI and active assignment workflow are incomplete. |
 | Athlete Home, Calendar, Session, Live, Activity | `shipped` | `lib/athlete-service.ts`, athlete route tree, Tempo components | Calendar, shell, source, and build coverage pass; live execution is a UI stepper, not device telemetry. |
+| Interactive athlete Live execution | `planned` | `lib/athlete-execution.ts` to be created, Live client, `Stepper` | Current route is static: block one is always active and no block can be advanced. |
 | Session completion and activity persistence | `shipped` | `app/api/athlete/sessions/[sessionId]/completion/route.ts`, `Activity` model | Completion behavior is covered indirectly; route still owns direct Prisma persistence and deserves a focused service/test seam. |
+| Completion metric/history integrity | `planned` | New completion module and lifecycle policy | Manual completion fabricates 100% compliance and mutable plan edits can change Activity history. |
 | Structured workout blocks and derived metrics | `shipped` | `lib/tempo-blocks.ts`, `lib/session-math.ts`, `lib/planner-draft.ts` | Session-math and planner tests pass. |
 | Compatibility planner mutation path | `transitional` | `/api/coach/sessions/[sessionId]`, `lib/planner-service.ts`, `lib/planner.ts` | Required by current tests and route; do not extend for new features without an explicit migration decision. |
+| Reusable source-copy assignment | `planned` | Unified assignment module and source lineage | Templates are partially assignable; library sessions and training plans cannot be copied to athletes. |
+| Live planner/template workflows | `planned` | Source-copy assignment command | Template create/edit UI is absent and the old builder UI is unreachable. |
+| Auth.js adapter and role setup hardening | `planned` | Prisma/Auth.js contract decision | Google first-login roleless users and one-time setup are not coherent. |
+| Coach-request lifecycle hardening | `planned` | Pending-request uniqueness decision | Concurrent pending requests and already-coached API callers are not fully constrained. |
+| API auth/input hardening | `planned` | Principal policy | Dynamic IDs and JSON bodies are inconsistently validated; route behavior tests are sparse. |
 
 See `WORK-INDEX.md` for stable IDs and `features/` for detailed records.
 
@@ -113,12 +120,11 @@ and target types `power`/`pace`/`hr`.
 
 ## Current Priorities
 
-1. Add focused tests around auth guards, planner compatibility, template,
-   assignment, coach-detail, request, and completion behavior where coverage is
-   still source-only or indirect.
-2. Keep all new planner work on the active `coach-planner-service` and related
-   owners; decide deliberately before touching compatibility code.
-3. Improve athlete onboarding, pending-request visibility, and cross-role
-   navigation without expanding the MVP into messaging or deep analytics.
-4. Audit and remove stale pre-Tempo components/helpers only when their live
-   references and compatibility role are proven.
+1. Implement the planned Live and completion tasks so execution state, metric
+   provenance, notes, and mutable-session history have explicit semantics.
+2. Implement source-copy assignment, then expose it through the planner and
+   template UI without duplicating assignment logic.
+3. Make Auth.js/role setup and coach-request lifecycle invariants database-safe,
+   then centralize API principal and input validation.
+4. Harden the compatibility adapter and align architecture/handoff docs before
+   removing any old planner code.
