@@ -1,9 +1,9 @@
 # Current Status
 
 This is the verified baseline recorded on **2026-08-21**. It was inspected on
-branch `main` at commit `57f9d453b44de7cd5216e7e2fb86dbec14738110` (`commit a
-lot of unstaged things?`, dated 2026-08-13). The worktree was clean before
-this documentation change.
+branch `main` at commit `7fb2a20e8dd3a2e7365d2af6c447d229e35b10a2` (`fix: harden
+compatibility planner boundary`). The worktree was clean after the completed
+planned-task sequence.
 
 ## Verification
 
@@ -59,8 +59,8 @@ See `WORK-INDEX.md` for stable IDs and `features/` for detailed records.
   mobile bottom navigation.
 - Server pages read through `lib/*-service.ts` modules. Client components own
   local draft state and call API routes for mutations.
-- Route handlers use `lib/api-auth.ts` for role guards. The signup, setup,
-  route is the current exception that still calls Prisma directly for its behavior.
+- Route handlers use `lib/api-auth.ts` for role guards. The signup route is the
+  current auth exception that still calls Prisma directly for its behavior.
 - `lib/route-params.ts` owns strict positive-integer and JSON-object transport
   parsing for API adapters.
 - `lib/athlete-completion-service.ts` owns completion/reopen transactions,
