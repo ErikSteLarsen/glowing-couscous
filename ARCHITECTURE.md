@@ -80,6 +80,9 @@ If a feature changes planner behavior, add it here first instead of scattering P
 
 - `lib/assignment-service.ts` owns coach builder assignment creation and duplicate-prevention rules.
 - `app/api/coach/assignments/route.ts` should stay thin and delegate to this service.
+- `assignment-service` owns the source union for template, library-session, and
+  training-plan snapshots; `Assignment` and `TrainingPlanAssignment` retain
+  explicit lineage and idempotency keys.
 
 ### Coach-request boundary
 
@@ -124,6 +127,8 @@ Important ownership relationships:
 - `Activity` stores outcome metrics, persisted segments, metric provenance, and
   nullable compliance when no performed data exists.
 - `Assignment` records coach scheduling actions onto athlete calendars.
+- `TrainingPlanAssignment` records a reusable-plan copy operation for one athlete
+  and Monday target week; child `Assignment` rows point to copied source sessions.
 - `Template` is coach-owned and private.
 
 ## Transitional areas
@@ -147,6 +152,8 @@ The main read/write boundaries are clearer, but they still need protection:
    business validation out of the domain service boundary.
 9. Treat sessions with Activity outcomes as immutable through planner mutation
    paths; use `athlete-completion-service` for the explicit reopen transition.
+10. Keep source-copy behavior in `assignment-service`; source authoring modules
+    must not introduce separate copy or synchronization paths.
 
 ## Highest-value architectural next step
 

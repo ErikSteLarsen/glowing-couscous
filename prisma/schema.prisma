@@ -34,6 +34,8 @@ model User {
   accounts         Account[]
   coachRequests    CoachRequest[] @relation("CoachRequests")
   athleteRequests  CoachRequest[] @relation("AthleteRequests")
+  trainingPlanAssignmentsReceived TrainingPlanAssignment[] @relation("TrainingPlanAssignmentAthlete")
+  trainingPlanAssignmentsSent     TrainingPlanAssignment[] @relation("TrainingPlanAssignmentAssigner")
 }
 
 model Account {
@@ -93,6 +95,7 @@ model TrainingPlan {
   updatedAt    DateTime  @updatedAt
   coachOwner   User      @relation("CoachTrainingPlans", fields: [coachOwnerId], references: [id], onDelete: Cascade)
   sessions     Session[] @relation("TrainingPlanSessions")
+  assignments  TrainingPlanAssignment[]
 
   @@index([coachOwnerId, sport])
 }
@@ -127,6 +130,7 @@ model Session {
   blocks           Block[]
   activity         Activity?
   assignments      Assignment[]
+  sourceAssignments Assignment[] @relation("SourceSessionAssignments")
 
   @@index([athleteId, date])
   @@index([planId, date])
@@ -187,16 +191,38 @@ model Activity {
   @@index([athleteId, completedAt])
 }
 
+model TrainingPlanAssignment {
+  id           Int       @id @default(autoincrement())
+  trainingPlanId Int
+  athleteId    Int
+  weekStart    DateTime
+  assignedBy   Int
+  assignedAt   DateTime  @default(now())
+  trainingPlan TrainingPlan @relation(fields: [trainingPlanId], references: [id], onDelete: Cascade)
+  athlete      User      @relation("TrainingPlanAssignmentAthlete", fields: [athleteId], references: [id], onDelete: Cascade)
+  assigner     User      @relation("TrainingPlanAssignmentAssigner", fields: [assignedBy], references: [id], onDelete: Cascade)
+  assignments  Assignment[]
+
+  @@unique([trainingPlanId, athleteId, weekStart])
+  @@index([athleteId, weekStart])
+}
+
 model Assignment {
-  id         Int      @id @default(autoincrement())
-  sessionId   Int
-  athleteId   Int
-  assignedBy  Int
-  assignedAt  DateTime @default(now())
-  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  athlete     User     @relation("AssignmentAthlete", fields: [athleteId], references: [id], onDelete: Cascade)
-  assigner    User     @relation("AssignmentAssigner", fields: [assignedBy], references: [id], onDelete: Cascade)
+  id                    Int      @id @default(autoincrement())
+  sessionId             Int
+  athleteId             Int
+  assignedBy            Int
+  assignedAt            DateTime @default(now())
+  sourceSessionId       Int?
+  targetDate            DateTime?
+  trainingPlanAssignmentId Int?
+  session               Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  athlete               User     @relation("AssignmentAthlete", fields: [athleteId], references: [id], onDelete: Cascade)
+  assigner              User     @relation("AssignmentAssigner", fields: [assignedBy], references: [id], onDelete: Cascade)
+  sourceSession         Session? @relation("SourceSessionAssignments", fields: [sourceSessionId], references: [id], onDelete: SetNull)
+  trainingPlanAssignment TrainingPlanAssignment? @relation(fields: [trainingPlanAssignmentId], references: [id], onDelete: SetNull)
 
   @@unique([sessionId, athleteId])
+  @@unique([sourceSessionId, athleteId, targetDate])
   @@index([athleteId, assignedAt])
 }

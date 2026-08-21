@@ -1,12 +1,15 @@
 # Task: Implement Source-Copy Assignment
 
-- **Status:** `planned`
-- **Agent:** `<assigned agent>`
+- **Status:** `completed`
+- **Agent:** `opencode-assignment-2026-08-21`
 - **Created:** `2026-08-21`
 - **Task ID:** `ASSIGN-001`
 - **Feature IDs:** `PLAN-001`, `LIB-001`, `TPLAN-001`, `TEMPLATE-001`, `COVERAGE-001`
 - **Related records:** [planner](../features/planner.md), [templates](../features/templates.md), [audit](2026-08-21-incompleteness-audit.md)
 - **Dependencies:** None for the backend. The planner/template UI task depends on this task's command contract.
+- **Completed:** 2026-08-21
+- **Completion record:** [progress and verification](2026-08-21-source-copy-assignment-progress.md)
+- **Decision:** [explicit source-copy lineage](../decisions/0007-source-copy-lineage.md)
 
 ## Problem
 

@@ -196,7 +196,7 @@ test('builder route is backed by a real client and assignment API path', async (
   assert.match(builderClientSource, /initialAthleteId: number \| null/);
   assert.doesNotMatch(builderPageSource, /still in progress|next migration slice/i);
   assert.match(builderClientSource, /isValid/);
-  assert.match(assignmentRouteSource, /assignmentService\.assignTemplateToAthlete/);
+  assert.match(assignmentRouteSource, /assignmentService\.assignSourceToAthlete/);
   assert.match(assignmentRouteSource, /parsePositiveInteger/);
 });
 

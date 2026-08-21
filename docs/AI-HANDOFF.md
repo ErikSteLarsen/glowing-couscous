@@ -78,6 +78,9 @@ request is pending.
 - `lib/template-service.ts` owns template persistence.
 - `lib/coach-service.ts` owns roster and athlete-detail read models.
 - `lib/assignment-service.ts` owns builder assignment creation and deduplication.
+- `lib/assignment-service.ts` also owns the source-copy union for templates,
+  library sessions, and training plans; copies are snapshots with explicit
+  lineage.
 - `lib/athlete-service.ts` owns athlete Home/Calendar/Session/Live/Activity/discovery/profile reads.
 - `lib/athlete-completion-service.ts` owns completion/reopen transactions and
   Activity outcome writes.
@@ -116,6 +119,8 @@ These are the first places to be careful when extending the app:
   `route-params`, and leave ownership/business rules to their service.
 - Completed sessions are immutable through planner mutations; completion/reopen
   behavior belongs in `athlete-completion-service`.
+- Reusable source assignment belongs in `assignment-service`; do not add live
+  synchronization between source records and copied athlete sessions.
 - Do not use the setup endpoint for role changes; extend `auth-role-service` if
   an explicit future account-management flow is introduced.
 

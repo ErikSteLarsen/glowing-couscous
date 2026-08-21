@@ -9,7 +9,7 @@ this documentation change.
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass: 103 tests | `pnpm test` |
+| Tests | Pass: 106 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build` |
 | Build warning | Present | Next.js reports the `middleware` convention is deprecated in favor of `proxy`; this is not currently a build failure. |
@@ -40,11 +40,11 @@ sessions complete with notes. Weeks are Monday-based.
 | Completion metric/history integrity | `shipped` | `lib/athlete-completion-service.ts`, Activity fields, planner mutation guards | `COMPLETION-002`; immutable completed sessions, note retention, stored outcome segments, and nullable compliance are verified. |
 | Structured workout blocks and derived metrics | `shipped` | `lib/tempo-blocks.ts`, `lib/session-math.ts`, `lib/planner-draft.ts` | Session-math and planner tests pass. |
 | Compatibility planner mutation path | `transitional` | `/api/coach/sessions/[sessionId]`, `lib/planner-service.ts`, `lib/planner.ts` | Required by current tests and route; do not extend for new features without an explicit migration decision. |
-| Reusable source-copy assignment | `planned` | Unified assignment module and source lineage | Templates are partially assignable; library sessions and training plans cannot be copied to athletes. |
+| Reusable source-copy assignment | `shipped` | `lib/assignment-service.ts`, `Assignment`, `TrainingPlanAssignment` | `ASSIGN-001`; template/library/training-plan snapshots, lineage, idempotency, schema reset/seed, 106 tests, lint, and build pass. |
 | Live planner/template workflows | `planned` | Source-copy assignment command | Template create/edit UI is absent and the old builder UI is unreachable. |
 | Auth.js adapter and role setup hardening | `shipped` | `prisma/schema.prisma`, `lib/auth-principal.ts`, `lib/auth-role-service.ts`, `auth.ts`, setup route | `AUTH-002`; focused principal/role tests, Prisma validation, adapter smoke test, and full gates pass. External OAuth integration remains a gap. |
 | Coach-request lifecycle hardening | `shipped` | `lib/coach-request-service.ts`, `prisma/schema.prisma`, request UI | `REQUEST-002`; pending uniqueness, eligibility, atomic acceptance cleanup, UI errors, and full gates pass. |
-| API auth/input hardening | `shipped` | `lib/api-auth.ts`, `lib/route-params.ts`, protected API handlers | `API-001`; 103 tests, lint, build, and route inventory checks pass. Full session-backed route integration remains a gap. |
+| API auth/input hardening | `shipped` | `lib/api-auth.ts`, `lib/route-params.ts`, protected API handlers | `API-001`; 106 tests, lint, build, and route inventory checks pass. Full session-backed route integration remains a gap. |
 
 See `WORK-INDEX.md` for stable IDs and `features/` for detailed records.
 
@@ -99,6 +99,8 @@ point for new planner behavior.
 - `Activity` stores outcome segments and metric provenance; compliance is nullable
   when no performed data exists.
 - `Assignment` records coach scheduling actions and prevents duplicate session/athlete rows.
+- `Assignment` can retain explicit source Session/target-date lineage, and
+  `TrainingPlanAssignment` groups one reusable-plan copy operation per athlete/week.
 - `TrainingPlan` owns reusable coach sessions placed on weekdays 1 through 7.
 
 SQLite stores domain enums as constrained strings. Current values include
@@ -126,8 +128,8 @@ and target types `power`/`pace`/`hr`.
 ## Current Priorities
 
 1. Implement the planned Live task so execution state has explicit semantics.
-2. Implement source-copy assignment, then expose it through the planner and
-   template UI without duplicating assignment logic.
+2. Expose source-copy assignment through the planner and template UI without
+   duplicating assignment logic.
 3. Deepen full
    session-backed API route coverage.
 4. Harden the compatibility adapter and align architecture/handoff docs before

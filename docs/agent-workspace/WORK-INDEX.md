@@ -19,7 +19,7 @@ by agents as work changes. Use the linked feature record before editing.
 | `COMPLETION-002` | Completion metric/history integrity | `shipped` | `lib/athlete-completion-service.ts`, `Activity`, session lifecycle | [task](tasks/2026-08-21-completion-integrity-progress.md); 103 tests, schema reset/seed, lint, build | [athlete](features/athlete.md) |
 | `DOMAIN-001` | Structured blocks, sports, metrics | `shipped` | `lib/tempo-blocks.ts`, `session-math.ts`, `planner-draft.ts` | Session math/planner tests | [workout-domain](features/workout-domain.md) |
 | `COMPAT-001` | Older coach session mutation adapter | `transitional` | `/api/coach/sessions/[sessionId]`, `lib/planner-service.ts` | Architecture boundary tests | [compatibility](features/compatibility.md) |
-| `ASSIGN-001` | Copy reusable sources to athlete schedules | `planned` | unified assignment module and source lineage | No library/plan assignment tests exist | [planner](features/planner.md) |
+| `ASSIGN-001` | Copy reusable sources to athlete schedules | `shipped` | `lib/assignment-service.ts`, source lineage schema | [task](tasks/2026-08-21-source-copy-assignment-progress.md); 106 tests, schema reset/seed, lint, build | [planner](features/planner.md) |
 | `WORKFLOW-001` | Complete planner/template UI workflows | `planned` | active planner, templates UI, builder redirect | Current UI lacks source assignment/template editor | [planner](features/planner.md) |
 | `AUTH-002` | Auth.js adapter contract and one-time setup | `shipped` | Prisma `User`, auth/session, setup route | [task](tasks/2026-08-21-auth-role-setup-progress.md); 88 tests, build, lint, Prisma validation | [auth](features/auth.md) |
 | `REQUEST-002` | Coach-request concurrency and eligibility | `shipped` | coach-request module and schema | [task](tasks/2026-08-21-coach-request-invariants-progress.md); 99 tests, schema reset/seed, lint, build | [onboarding](features/onboarding.md) |
@@ -53,7 +53,7 @@ one by creating a task progress entry and changing its status to `in-progress`.
 |---|---|---|---|
 | `LIVE-001` | `planned` | None | [athlete live execution](tasks/2026-08-21-athlete-live-execution.md) |
 | `COMPLETION-002` | `shipped` | Completed-session edit policy | [completion integrity](tasks/2026-08-21-completion-integrity.md), [completion record](tasks/2026-08-21-completion-integrity-progress.md), [history](history/2026-08-21-completion-integrity.md) |
-| `ASSIGN-001` | `planned` | None | [source-copy assignment](tasks/2026-08-21-source-copy-assignment.md) |
+| `ASSIGN-001` | `shipped` | None | [source-copy assignment](tasks/2026-08-21-source-copy-assignment.md), [completion record](tasks/2026-08-21-source-copy-assignment-progress.md), [history](history/2026-08-21-source-copy-assignment.md) |
 | `WORKFLOW-001` | `planned` | `ASSIGN-001` command contract | [planner/template workflows](tasks/2026-08-21-planner-template-workflows.md) |
 | `AUTH-002` | `shipped` | Role setup and adapter decisions | [auth and role setup](tasks/2026-08-21-auth-role-setup.md), [completion record](tasks/2026-08-21-auth-role-setup-progress.md), [history](history/2026-08-21-auth-role-setup.md) |
 | `REQUEST-002` | `shipped` | Pending-request uniqueness decision | [coach-request invariants](tasks/2026-08-21-coach-request-invariants.md), [completion record](tasks/2026-08-21-coach-request-invariants-progress.md), [history](history/2026-08-21-coach-request-invariants.md) |
