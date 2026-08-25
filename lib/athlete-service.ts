@@ -469,7 +469,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         session: {
           ...summary,
           notes: session.activity?.notes ?? '',
-          editor: createSessionEditorDraftFromPersisted('planned', {
+          editor: createSessionEditorDraftFromPersisted(session.activity ? 'actual' : 'planned', {
             ...session,
             scheduledDate: session.date,
             blocks: session.blocks,

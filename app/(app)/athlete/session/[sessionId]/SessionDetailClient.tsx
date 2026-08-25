@@ -63,18 +63,18 @@ export function SessionDetailClient({
     });
   }
 
-  function saveAdjustment() {
+  function saveEditor() {
     setMessage('');
     setMessageTone('success');
     startTransition(async () => {
-      const response = await fetch(`/api/athlete/sessions/${sessionId}`, {
+      const response = await fetch(`/api/athlete/sessions/${sessionId}${isDone ? '/actual' : ''}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(draft),
       });
 
       if (!response.ok) {
-        const payload = await response.json().catch(() => ({ error: 'Failed to save session adjustment' }));
+        const payload = await response.json().catch(() => ({ error: `Failed to save ${isDone ? 'actual correction' : 'session adjustment'}` }));
         setMessageTone('danger');
         setMessage(payload.error ?? 'Failed to save session adjustment');
         return;
@@ -82,7 +82,7 @@ export function SessionDetailClient({
 
       setIsEditing(false);
       setMessageTone('success');
-      setMessage('Planned session adjustment saved.');
+      setMessage(isDone ? 'Actual correction saved.' : 'Planned session adjustment saved.');
       router.refresh();
     });
   }
@@ -98,17 +98,21 @@ export function SessionDetailClient({
         </p>
       </div>
 
-      {!isDone && !isEditing ? (
+      {!isEditing ? (
         <button type="button" className={secondaryButtonClassName} onClick={() => setIsEditing(true)}>
-          Adjust planned session
+          {isDone ? 'Correct completed outcome' : 'Adjust planned session'}
         </button>
       ) : null}
 
       {isEditing ? (
         <div className="space-y-4 border-t border-[var(--border)] pt-4">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Planned adjustment</p>
-            <p className="mt-2 text-[13px] text-[var(--text-secondary)]">Only this scheduled session changes. The coach baseline and reusable source stay intact.</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{isDone ? 'Actual correction' : 'Planned adjustment'}</p>
+            <p className="mt-2 text-[13px] text-[var(--text-secondary)]">
+              {isDone
+                ? 'Correct what was actually completed. The coach baseline and completed status stay intact.'
+                : 'Only this scheduled session changes. The coach baseline and reusable source stay intact.'}
+            </p>
           </div>
           <SessionComposer
             draft={draft}
@@ -141,40 +145,44 @@ export function SessionDetailClient({
             <button type="button" className={secondaryButtonClassName} onClick={() => { setDraft(initialDraft); setIsEditing(false); }} disabled={isPending}>
               Cancel
             </button>
-            <button type="button" className={primaryButtonClassName} onClick={saveAdjustment} disabled={isPending}>
-              {isPending ? 'Saving...' : 'Save adjustment'}
+            <button type="button" className={primaryButtonClassName} onClick={saveEditor} disabled={isPending}>
+              {isPending ? 'Saving...' : isDone ? 'Save actual correction' : 'Save adjustment'}
             </button>
           </div>
         </div>
       ) : null}
 
-      <textarea
-        value={notes}
-        onChange={(event) => setNotes(event.target.value)}
-        className={`${formTextareaClassName} min-h-28`}
-        placeholder="How did the session feel?"
-      />
+      {!isEditing ? (
+        <>
+          <textarea
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
+            className={`${formTextareaClassName} min-h-28`}
+            placeholder="How did the session feel?"
+          />
 
-      <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={() => save(true)}
-          disabled={isPending}
-          className={primaryButtonClassName}
-        >
-          {isDone ? 'Update completion' : 'Mark complete'}
-        </button>
-        {isDone ? (
-          <button
-            type="button"
-            onClick={() => save(false)}
-            disabled={isPending}
-            className={secondaryButtonClassName}
-          >
-            Mark planned again
-          </button>
-        ) : null}
-      </div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => save(true)}
+              disabled={isPending}
+              className={primaryButtonClassName}
+            >
+              {isDone ? 'Update completion' : 'Mark complete'}
+            </button>
+            {isDone ? (
+              <button
+                type="button"
+                onClick={() => save(false)}
+                disabled={isPending}
+                className={secondaryButtonClassName}
+              >
+                Mark planned again
+              </button>
+            ) : null}
+          </div>
+        </>
+      ) : null}
 
       {message ? <p className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
     </Surface>
