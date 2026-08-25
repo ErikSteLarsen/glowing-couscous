@@ -48,6 +48,7 @@ All feature logic belongs behind these `lib/` modules. Do not reintroduce Prisma
 | `lib/template-service.ts` | Coach template list/create/update/delete |
 | `lib/auth-session.ts` | Current-user lookup for server-rendered UI (`getCurrentUser`) |
 | `lib/api-auth.ts` | Role-based route guards for API handlers (`requireCoach`, `requireAthlete`) |
+| `lib/session-snapshot-service.ts` | Canonical latest coach-baseline and actual snapshot serialization, validation, replacement, and comparison projection |
 
 ### Shared UI components
 

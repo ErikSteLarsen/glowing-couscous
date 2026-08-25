@@ -27,14 +27,14 @@ independent.
 
 ## Plan
 
-- [ ] Choose and document a durable schema representation for latest coach
+- [x] Choose and document a durable schema representation for latest coach
   baseline and latest actual snapshots; keep it scoped to the assigned session.
-- [ ] Add RPE, separate coach/athlete notes, skipped-block state, and actual
+- [x] Add RPE, separate coach/athlete notes, skipped-block state, and actual
   snapshot fields with bounded validation.
-- [ ] Ensure source/template IDs and other assignments do not create live sync
+- [x] Ensure source/template IDs and other assignments do not create live sync
   behavior.
-- [ ] Add schema/service tests covering one-version equality, baseline changes,
-   actual replacement, and template/source isolation.
+- [x] Add schema/service tests covering one-version equality, baseline changes,
+  actual replacement, and template/source isolation.
 
 ## Progress Log
 
@@ -49,6 +49,25 @@ independent.
 - Verification: Red tests not run yet; contract tests are next.
 - Blocker or next step: Define the snapshot service boundary and schema contract
   in failing tests before implementing persistence.
+
+### 2026-08-25
+
+- What changed: Added latest-value coach baseline and actual snapshot persistence,
+  source-copy baseline initialization, active coach planner baseline updates, and
+  completion Activity actual payloads.
+- Decision or discovery: `Session.coachBaselineJson` and
+  `Activity.actualSnapshotJson` store complete canonical editor payloads. The
+  explicit `rpe` and note columns support bounded access without introducing
+  actual-version history in the first release.
+- Files touched: `prisma/schema.prisma`, `lib/session-snapshot-service.ts`,
+  `lib/assignment-service.ts`, `lib/coach-planner-service.ts`,
+  `lib/athlete-completion-service.ts`, and focused service tests.
+- Verification: Snapshot/assignment/completion focused tests passed (28 tests);
+  `pnpm test` passed (134 tests); `pnpm db:push --force-reset && pnpm db:seed`,
+  `pnpm exec prisma validate`, `pnpm lint`, and `pnpm build` passed. Build retains
+  the existing middleware deprecation warning.
+- Blocker or next step: Planned coach/athlete adjustment ownership and schedule
+  semantics remain in `SESSION-PLAN-ADJUST-001`.
 
 ## Acceptance Criteria
 
@@ -68,7 +87,8 @@ independent.
 
 ## Handoff / Completion
 
-- **Final status:** `in-progress`
-- **History record:** not applicable until implementation
+- **Final status:** `completed`
+- **History record:** [session snapshots](../history/2026-08-25-session-snapshots.md)
 - **Feature records updated:** [session adjustments](../features/session-adjustments.md), [athlete](../features/athlete.md)
-- **Remaining work:** Planned mutation and completion services consume this persistence contract.
+- **Remaining work:** Planned mutation and completion-edit services consume this
+  persistence contract in the dependent tasks.

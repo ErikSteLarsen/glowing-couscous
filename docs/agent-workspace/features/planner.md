@@ -48,13 +48,16 @@ and have no athlete.
 - The active planner now uses `SessionComposer` with the canonical session draft;
   ownership modes and source-template context are retained by
   `session-editor-adapters`.
+- Assigned athlete sessions persist a complete latest coach baseline payload;
+  source copies remain independent from reusable source records.
 
 ## Verification
 
 - Planner, draft, library, training-plan, assignment, route/source, and editor
   migration tests pass in `pnpm test` on 2026-08-25.
 - `pnpm lint && pnpm build` — pass on 2026-08-21.
-- `pnpm test` — 127 passing tests on 2026-08-25, including workflow source assertions.
+- `pnpm test` — 134 passing tests on 2026-08-25, including workflow source and
+  snapshot assertions.
 - `pnpm db:push --force-reset && pnpm db:seed` — pass on the disposable local
   SQLite database on 2026-08-21.
 

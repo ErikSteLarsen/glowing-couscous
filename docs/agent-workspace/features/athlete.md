@@ -2,9 +2,9 @@
 
 - **IDs:** `ATHLETE-001`, `COMPLETE-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-22`
+- **Last verified:** `2026-08-25`
 - **Owner:** `lib/athlete-service.ts` for reads; `lib/athlete-completion-service.ts` for Activity writes
-- **Related work:** [baseline](../history/2026-08-21-baseline.md), [architecture](../../../ARCHITECTURE.md), [Live task](../tasks/2026-08-21-athlete-live-execution.md), [completion task](../tasks/2026-08-21-completion-integrity.md), [calendar month polish](../history/2026-08-22-calendar-month-polish.md), [calendar week overview](../history/2026-08-22-calendar-week-overview.md)
+- **Related work:** [baseline](../history/2026-08-21-baseline.md), [architecture](../../../ARCHITECTURE.md), [Live task](../tasks/2026-08-21-athlete-live-execution.md), [completion task](../tasks/2026-08-21-completion-integrity.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [calendar month polish](../history/2026-08-22-calendar-month-polish.md), [calendar week overview](../history/2026-08-22-calendar-week-overview.md)
 
 ## Contract
 
@@ -40,6 +40,9 @@ They can mark a session complete or move it back to planned while saving notes.
   local client state; refresh intentionally restarts the guidance state.
 - Completion upserts an `Activity`, derives metrics from planned blocks, sets
   session status to completed, and supports undo to planned.
+- Completion stores the complete latest actual editor payload and RPE on the
+  Activity, while retained notes remain available through the Activity/Session
+  fields and old outcomes remain independent of future planned edits.
 - Manual completion stores `manual-planned` estimates with nullable compliance,
   persisted segments, and notes retained on the Session across reopen.
 - Completed sessions cannot be edited or deleted through coach planner mutation
@@ -53,9 +56,10 @@ They can mark a session complete or move it back to planned while saving notes.
 
 - Calendar, session math, navigation, source, accessibility, cleanup, calendar
   layout, and build checks pass on 2026-08-22.
-- `pnpm test` — 115 passing tests, including focused completion and execution
-  service tests and
-  immutable planner behavior coverage.
+- `pnpm test` — 134 passing tests, including focused completion, snapshot,
+  assignment, and immutable planner behavior coverage.
+- `pnpm db:push --force-reset && pnpm db:seed`, `pnpm lint`, and `pnpm build` —
+  pass on 2026-08-25.
 - `pnpm db:push --force-reset && pnpm db:seed` — pass on the disposable local
   SQLite database on 2026-08-21.
 

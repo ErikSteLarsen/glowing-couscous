@@ -74,6 +74,8 @@ If a feature changes planner behavior, add it here first instead of scattering P
 - `lib/athlete-service.ts` owns athlete Home, Calendar, Session detail, Live, Activity, discovery, and profile reads.
 - `lib/athlete-completion-service.ts` owns completion/reopen transactions,
   manual metric provenance, notes retention, and Activity lifecycle writes.
+- `lib/session-snapshot-service.ts` owns canonical latest baseline/actual
+  payload serialization, bounded metadata validation, replacement, and loading.
 - Athlete pages under `app/(app)/athlete/**` plus `app/(app)/settings/page.tsx` should stay thin and delegate to this service where appropriate.
 
 ### Assignment boundary
@@ -125,7 +127,10 @@ Important ownership relationships:
 - `Block` is the structured source of truth for session duration, TSS, and zone distribution.
 - `Activity` stores performed session outcomes.
 - `Activity` stores outcome metrics, persisted segments, metric provenance, and
-  nullable compliance when no performed data exists.
+  nullable compliance when no performed data exists, plus the latest actual
+  canonical snapshot and RPE.
+- `Session` stores the latest coach baseline canonical snapshot, coach notes, and
+  planned RPE. Snapshot payloads are latest-value records, not version history.
 - `Assignment` records coach scheduling actions onto athlete calendars.
 - `TrainingPlanAssignment` records a reusable-plan copy operation for one athlete
   and Monday target week; child `Assignment` rows point to copied source sessions.
@@ -154,6 +159,8 @@ The main read/write boundaries are clearer, but they still need protection:
    paths; use `athlete-completion-service` for the explicit reopen transition.
 10. Keep source-copy behavior in `assignment-service`; source authoring modules
     must not introduce separate copy or synchronization paths.
+11. Keep baseline/actual snapshot serialization behind `session-snapshot-service`
+    and do not derive historical Activity outcomes from mutable Session blocks.
 
 ## Highest-value architectural next step
 

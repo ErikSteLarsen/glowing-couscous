@@ -2,9 +2,9 @@
 
 - **ID:** `SESSION-ADJUST-001`
 - **Status:** `in-progress`
-- **Last verified:** `2026-08-25` (canonical editor contract implemented and verified)
-- **Owners:** `lib/session-editor.ts`, planned session adjustment service, and completion/outcome service
-- **Related work:** [canonical editor task](../tasks/2026-08-25-canonical-session-editor.md), [decision 0010](../decisions/0010-session-adjustments-and-actual-outcomes.md), [planner](planner.md), [templates](templates.md), [athlete](athlete.md), [workout domain](workout-domain.md)
+- **Last verified:** `2026-08-25` (canonical editor and durable snapshots implemented and verified)
+- **Owners:** `lib/session-editor.ts`, `lib/session-snapshot-service.ts`, planned session adjustment service, and completion/outcome service
+- **Related work:** [canonical editor task](../tasks/2026-08-25-canonical-session-editor.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [decision 0010](../decisions/0010-session-adjustments-and-actual-outcomes.md), [planner](planner.md), [templates](templates.md), [athlete](athlete.md), [workout domain](workout-domain.md)
 
 ## Contract
 
@@ -34,8 +34,8 @@ corrections save immediately and recompute derived metrics.
   `components/SessionComposer.tsx` and canonical draft adapters; athlete
   editing remains future work.
 - `components/WorkoutBlocksEditor.tsx` uses a legacy block contract.
-- `Activity` has no RPE or performed block snapshot, and completed actuals
-  cannot currently be edited directly.
+- `Session` and `Activity` now retain the latest baseline/actual payloads, but
+  completed actuals cannot currently be edited directly.
 - Completed sessions are currently immutable through planner paths, and the
   current reopen flow deletes the Activity outcome.
 
@@ -54,14 +54,17 @@ corrections save immediately and recompute derived metrics.
   sport, summary, notes, sport metrics, and RPE alone do not create a difference.
 - `SESSION-EDITOR-MIGRATION-001` wires the canonical contract into the coach
   planner and template flows without changing route/service ownership rules.
+- `SESSION-SNAPSHOT-001` stores the complete latest coach baseline on the
+  assigned Session and the complete latest actual on Activity, with explicit
+  RPE/note columns and no actual-version history.
 
 ## Verification
 
-- `tests/session-editor.test.ts` covers the contract and passes with the
-  planner-draft and session-math tests.
-- `pnpm test` — 127 passing tests on 2026-08-25.
-- `pnpm lint` and `pnpm build` pass on 2026-08-25; build retains the existing
-  middleware deprecation warning.
+- `tests/session-editor.test.ts`, `tests/session-snapshot.test.ts`, and the
+  assignment/completion service tests cover the editor and snapshot boundaries.
+- `pnpm test` — 134 passing tests on 2026-08-25.
+- `pnpm db:push --force-reset && pnpm db:seed`, `pnpm lint`, and `pnpm build`
+  pass on 2026-08-25; build retains the existing middleware deprecation warning.
 
 ## Extension Rules
 

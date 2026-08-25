@@ -51,6 +51,9 @@ Important models:
 - `Session` and `Block` — planned training content with block-derived metrics
 - `Template` — coach-owned reusable workout definitions
 - `Activity` — completed session outcomes and compliance
+- `Session.coachBaselineJson` and `Activity.actualSnapshotJson` — latest
+  independent canonical baseline/actual payloads; no actual history in the first
+  release
 - `Assignment` — coach scheduling records
 
 `User.role` is nullable only for a first-time Auth.js user before setup.
@@ -84,6 +87,8 @@ request is pending.
 - `lib/athlete-service.ts` owns athlete Home/Calendar/Session/Live/Activity/discovery/profile reads.
 - `lib/athlete-completion-service.ts` owns completion/reopen transactions and
   Activity outcome writes.
+- `lib/session-snapshot-service.ts` owns canonical latest baseline/actual
+  snapshot serialization, bounded validation, and replacement/loading.
 - `lib/coach-request-service.ts` owns onboarding and coach-request flows.
 - `lib/week.ts` owns Monday-based week shaping and per-day session grouping.
 - `lib/sport.ts` owns shared sport constants and UI labels.
@@ -121,6 +126,8 @@ These are the first places to be careful when extending the app:
   behavior belongs in `athlete-completion-service`.
 - Reusable source assignment belongs in `assignment-service`; do not add live
   synchronization between source records and copied athlete sessions.
+- Keep baseline/actual payloads behind `session-snapshot-service`; never derive
+  stored Activity history from mutable current Session blocks.
 - Do not use the setup endpoint for role changes; extend `auth-role-service` if
   an explicit future account-management flow is introduced.
 

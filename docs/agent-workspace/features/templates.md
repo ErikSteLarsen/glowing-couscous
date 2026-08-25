@@ -31,11 +31,14 @@ a date without creating duplicate matching sessions.
   canonical session editor contract.
 - Assignment validates athlete roster ownership, template ownership, date, and
   week plan; repeated matching assignment reuses the existing session.
+- Template assignments persist a coach baseline payload on the copied Session;
+  later template edits do not synchronize into that payload.
 
 ## Verification
 
 - `tests/template-service.test.ts` and `tests/coach-builder-assignment.test.ts` pass on 2026-08-21.
-- `pnpm test` — 127 passing tests on 2026-08-25, including planner/template workflow and migration assertions.
+- `pnpm test` — 134 passing tests on 2026-08-25, including planner/template
+  workflow, migration, and snapshot assertions.
 - `pnpm lint && pnpm build` — pass on 2026-08-21.
 
 ## Known Gaps

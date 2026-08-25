@@ -26,7 +26,7 @@ by agents as work changes. Use the linked feature record before editing.
 | `API-001` | API principal and route input validation | `shipped` | `lib/api-auth.ts`, `lib/route-params.ts`, protected API handlers | [task](tasks/2026-08-21-api-auth-validation-progress.md); 92 tests, lint, build | [coverage](features/coverage.md) |
 | `COMPAT-002` | Compatibility hardening and docs alignment | `shipped` | old planner adapter, builder redirect, architecture docs | [task](tasks/2026-08-21-compatibility-docs-progress.md); 113 tests, lint, build | [compatibility](features/compatibility.md) |
 | `COVERAGE-001` | Deepen service/API regression coverage | `planned` | Auth, request, completion, compatibility seams | See current gaps in snapshot | [coverage](features/coverage.md) |
-| `SESSION-ADJUST-001` | Per-session coach/athlete adjustments and actual outcomes | `in-progress` | canonical editor, session adjustment/outcome services, comparison dialog | `SESSION-EDIT-001` shipped 2026-08-25; [task](tasks/2026-08-25-canonical-session-editor.md), [history](history/2026-08-25-canonical-session-editor.md) | [session adjustments](features/session-adjustments.md) |
+| `SESSION-ADJUST-001` | Per-session coach/athlete adjustments and actual outcomes | `in-progress` | canonical editor, snapshot/adjustment/outcome services, comparison dialog | `SESSION-SNAPSHOT-001` shipped 2026-08-25; [task](tasks/2026-08-25-canonical-session-editor.md), [snapshot task](tasks/2026-08-25-session-snapshots.md), [history](history/2026-08-25-canonical-session-editor.md) | [session adjustments](features/session-adjustments.md) |
 | `CLEANUP-001` | Audit stale pre-Tempo helpers/components | `shipped` | `components/AthleteWeekView.tsx` chain removed; remaining helpers stay transitional | Reference analysis, cleanup decision, 114 tests, lint, build; [history](history/2026-08-22-interactive-color-contrast.md) | [compatibility](features/compatibility.md) |
 | `OPS-001` | Agent coordination workspace | `shipped` | `docs/agent-workspace/`, root `AGENTS.md` | Documentation review and repo gates | [workspace](features/workspace.md) |
 
@@ -43,7 +43,7 @@ registered a multi-step task in this workspace.
 
 | Task | Status | Agent | Feature IDs | Last update |
 |---|---|---|---|---|
-| `SESSION-SNAPSHOT-001` | `in-progress` | OpenCode | `SESSION-ADJUST-001`, `DOMAIN-001`, `COMPLETE-001` | 2026-08-25; [task](tasks/2026-08-25-session-snapshots.md) |
+| No active task currently recorded | — | — | — | 2026-08-25; `SESSION-SNAPSHOT-001` completed |
 
 ## Planned Task Files
 
@@ -62,7 +62,7 @@ one by creating a task progress entry and changing its status to `in-progress`.
 | `COMPAT-002` | `shipped` | Completion/API semantics where shared | [compatibility and docs](tasks/2026-08-21-compatibility-docs.md), [completion record](tasks/2026-08-21-compatibility-docs-progress.md), [history](history/2026-08-21-compatibility-docs.md) |
 | `SESSION-EDIT-001` | `shipped` | None | [canonical session editor](tasks/2026-08-25-canonical-session-editor.md), [history](history/2026-08-25-canonical-session-editor.md) |
 | `SESSION-EDITOR-MIGRATION-001` | `shipped` | `SESSION-EDIT-001` | [planner/template editor migration](tasks/2026-08-25-editor-migration.md), [history](history/2026-08-25-editor-migration.md) |
-| `SESSION-SNAPSHOT-001` | `in-progress` | `SESSION-EDIT-001` | [coach baseline and actual snapshots](tasks/2026-08-25-session-snapshots.md) |
+| `SESSION-SNAPSHOT-001` | `shipped` | `SESSION-EDIT-001` | [coach baseline and actual snapshots](tasks/2026-08-25-session-snapshots.md), [history](history/2026-08-25-session-snapshots.md) |
 | `SESSION-PLAN-ADJUST-001` | `planned` | `SESSION-EDIT-001`, `SESSION-SNAPSHOT-001` | [planned session adjustments](tasks/2026-08-25-planned-session-adjustments.md) |
 | `SESSION-ACTUAL-001` | `planned` | `SESSION-EDIT-001`, `SESSION-SNAPSHOT-001`, `SESSION-PLAN-ADJUST-001` | [actual outcome editing](tasks/2026-08-25-actual-outcome-editing.md) |
 | `SESSION-COMPARE-001` | `planned` | `SESSION-ACTUAL-001` | [baseline and actual comparison](tasks/2026-08-25-baseline-actual-comparison.md) |

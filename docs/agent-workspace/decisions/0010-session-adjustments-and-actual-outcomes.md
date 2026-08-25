@@ -73,3 +73,11 @@ source-template context in `lib/session-editor-adapters.ts` rather than adding
 planner concerns to the generic contract. Existing service payloads remain
 compatibility adapters until the snapshot/persistence tasks add durable storage
 for skipped blocks, RPE, and separate coach/athlete notes.
+
+`SESSION-SNAPSHOT-001` uses latest-value JSON payloads rather than a new version
+history relation: `Session.coachBaselineJson` stores the complete latest coach
+baseline, and `Activity.actualSnapshotJson` stores the complete latest actual.
+`Session.coachNotes`, `Session.rpe`, and `Activity.rpe` provide explicit access
+to bounded metadata while the payload preserves skipped blocks, schedule, notes,
+targets, and derived-input content. Actual equality is projected away when the
+baseline/actual difference identity has no block or schedule difference.
