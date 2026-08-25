@@ -54,6 +54,18 @@ export function createSessionSnapshotJson(input: PersistedSessionRecord): string
   return serializeSessionSnapshot(createSessionEditorDraftFromPersisted('planned', input));
 }
 
+export function projectSessionSnapshotJson(
+  baselineJson: string | null | undefined,
+  actualJson: string | null | undefined,
+) {
+  const baseline = deserializeSessionSnapshot('planned', baselineJson);
+  const actualCandidate = deserializeSessionSnapshot('actual', actualJson);
+  return {
+    baseline,
+    actual: actualCandidate && (!baseline || hasBaselineActualDifference(baseline, actualCandidate)) ? actualCandidate : null,
+  };
+}
+
 export function validateSessionSnapshotDraft(draft: SessionEditorDraft): string | null {
   const editorError = validateSessionEditorDraft(draft);
   if (editorError) return editorError;
@@ -112,13 +124,7 @@ export function createSessionSnapshotService({
           select: { actualSnapshotJson: true },
         }),
       ]);
-      const baseline = deserializeSessionSnapshot('planned', session?.coachBaselineJson);
-      const actualCandidate = deserializeSessionSnapshot('actual', activity?.actualSnapshotJson);
-
-      return {
-        baseline,
-        actual: actualCandidate && (!baseline || hasBaselineActualDifference(baseline, actualCandidate)) ? actualCandidate : null,
-      };
+      return projectSessionSnapshotJson(session?.coachBaselineJson, activity?.actualSnapshotJson);
     },
   };
 }

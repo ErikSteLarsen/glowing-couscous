@@ -7,6 +7,7 @@ import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
+import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
 
 export default async function AthleteActivityPage() {
   const user = await getCurrentUser();
@@ -45,9 +46,16 @@ export default async function AthleteActivityPage() {
                     {format(activity.completedAt, 'EEE d MMM')} · {getSportLabel(activity.sport)}
                   </p>
                 </div>
-                <ActionLink href={`/athlete/session/${activity.sessionId}`} tone="ghost">
-                  Open
-                </ActionLink>
+                <div className="flex flex-wrap items-center gap-3">
+                  <ActionLink href={`/athlete/session/${activity.sessionId}`} tone="ghost">
+                    Open
+                  </ActionLink>
+                  <SessionComparisonDialog
+                    sessionId={activity.sessionId}
+                    endpoint={`/api/athlete/sessions/${activity.sessionId}/comparison`}
+                    label="Compare"
+                  />
+                </div>
               </div>
               <SessionBlockBar segments={activity.segments} />
               <div className="flex flex-wrap gap-4 text-[13px] text-[var(--text-secondary)]">
@@ -57,8 +65,8 @@ export default async function AthleteActivityPage() {
                   {activity.compliancePct === null ? 'Compliance unavailable' : `${activity.compliancePct}% compliance`}
                 </MetricText>
               </div>
-              {activity.metricsSource === 'manual-planned' ? (
-                <p className="text-[12px] text-[var(--text-secondary)]">Planned estimate; no performed metrics recorded.</p>
+              {activity.metricsSource === 'manual-planned' || activity.metricsSource === 'manual-actual' ? (
+                <p className="text-[12px] text-[var(--text-secondary)]">Manual outcome; no performed sensor metrics recorded.</p>
               ) : null}
               {activity.notes ? (
                 <div className="rounded-[10px] bg-[var(--brand-tint)] px-4 py-3 text-[13px] text-[var(--text)]">

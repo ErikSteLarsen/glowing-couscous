@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { SessionComposer } from '@/components/SessionComposer';
+import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
 import {
   dangerTextClassName,
   formFieldClassName,
@@ -99,9 +100,15 @@ export function SessionDetailClient({
       </div>
 
       {!isEditing ? (
-        <button type="button" className={secondaryButtonClassName} onClick={() => setIsEditing(true)}>
-          {isDone ? 'Correct completed outcome' : 'Adjust planned session'}
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button type="button" className={secondaryButtonClassName} onClick={() => setIsEditing(true)}>
+            {isDone ? 'Correct completed outcome' : 'Adjust planned session'}
+          </button>
+          <SessionComparisonDialog
+            sessionId={sessionId}
+            endpoint={`/api/athlete/sessions/${sessionId}/comparison`}
+          />
+        </div>
       ) : null}
 
       {isEditing ? (

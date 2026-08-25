@@ -8,6 +8,7 @@ import { getCurrentUser } from '@/lib/auth-session';
 import { getCoachAthleteDetail } from '@/lib/coach-service';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
+import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
 
 export default async function CoachAthleteDetailPage({
   params,
@@ -103,7 +104,14 @@ export default async function CoachAthleteDetailPage({
                               <h3 className="text-sm font-semibold text-[var(--text)]">{session.title}</h3>
                               <p className="mt-1 text-xs text-[var(--text-secondary)]">{getSportLabel(session.sport)}</p>
                             </div>
-                            <StatusBadge status={session.status} />
+                             <div className="flex flex-wrap items-center justify-end gap-2">
+                               <StatusBadge status={session.status} />
+                               <SessionComparisonDialog
+                                 sessionId={session.id}
+                                 endpoint={`/api/coach/sessions/${session.id}/comparison`}
+                                 label="Compare"
+                               />
+                             </div>
                           </div>
                           <div className="mt-3">
                             <SessionBlockBar segments={session.segments} compact />
@@ -149,7 +157,14 @@ export default async function CoachAthleteDetailPage({
                         {getSportLabel(session.sport)} · {format(session.date, 'EEE d MMM')}
                       </p>
                     </div>
-                    <StatusBadge status={session.status} />
+                     <div className="flex flex-wrap items-center justify-end gap-2">
+                       <StatusBadge status={session.status} />
+                       <SessionComparisonDialog
+                         sessionId={session.id}
+                         endpoint={`/api/coach/sessions/${session.id}/comparison`}
+                         label="Compare"
+                       />
+                     </div>
                   </div>
 
                   <div className="mt-3">
