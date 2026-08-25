@@ -87,5 +87,5 @@ and latest athlete actual from session detail and Activity history.
 
 - **Final status:** `completed`
 - **History record:** [baseline actual comparison](../history/2026-08-25-baseline-actual-comparison.md)
-- **Feature records updated:** [session adjustments](../features/session-adjustments.md), [athlete](../features/athlete.md)
+- **Feature records updated:** [session adjustments](../features/session-adjustments.md), [athlete](../features/athlete.md), [coach](../features/coach.md)
 - **Remaining work:** Manual browser verification and optional browser E2E remain follow-ups; route/component tests cover the implemented contract.

@@ -129,8 +129,8 @@ and target types `power`/`pace`/`hr`.
   alongside the active Tempo draft path. Remove or migrate them only after
   reference analysis and a decision record.
 - Next.js warns that `middleware.ts` is deprecated in favor of `proxy.ts`.
-- Browser verification of the planned athlete editor at narrow and wide viewports
-  has not been performed in this environment.
+- Browser verification of session adjustment, actual-edit, and comparison flows
+  at narrow and wide viewports has not been performed in this environment.
 - `pnpm db:push` resets local SQLite data according to repository guidance;
   use it deliberately and reseed afterward when schema work is involved.
 
