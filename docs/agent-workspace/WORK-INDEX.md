@@ -43,7 +43,7 @@ registered a multi-step task in this workspace.
 
 | Task | Status | Agent | Feature IDs | Last update |
 |---|---|---|---|---|
-| No active task currently recorded | — | — | — | 2026-08-25; `SESSION-ACTUAL-001` completed |
+| `SESSION-COMPARE-001` | `in-progress` | OpenCode | `SESSION-ADJUST-001`, `ATHLETE-001`, `COMPLETE-001` | 2026-08-25; [task](tasks/2026-08-25-baseline-actual-comparison.md) |
 
 ## Planned Task Files
 
@@ -65,4 +65,4 @@ one by creating a task progress entry and changing its status to `in-progress`.
 | `SESSION-SNAPSHOT-001` | `shipped` | `SESSION-EDIT-001` | [coach baseline and actual snapshots](tasks/2026-08-25-session-snapshots.md), [history](history/2026-08-25-session-snapshots.md) |
 | `SESSION-PLAN-ADJUST-001` | `shipped` | `SESSION-EDIT-001`, `SESSION-SNAPSHOT-001` | [planned session adjustments](tasks/2026-08-25-planned-session-adjustments.md), [history](history/2026-08-25-planned-session-adjustments.md) |
 | `SESSION-ACTUAL-001` | `shipped` | `SESSION-EDIT-001`, `SESSION-SNAPSHOT-001`, `SESSION-PLAN-ADJUST-001` | [actual outcome editing](tasks/2026-08-25-actual-outcome-editing.md), [history](history/2026-08-25-actual-outcome-editing.md) |
-| `SESSION-COMPARE-001` | `planned` | `SESSION-ACTUAL-001` | [baseline and actual comparison](tasks/2026-08-25-baseline-actual-comparison.md) |
+| `SESSION-COMPARE-001` | `in-progress` | `SESSION-ACTUAL-001` | [baseline and actual comparison](tasks/2026-08-25-baseline-actual-comparison.md) |

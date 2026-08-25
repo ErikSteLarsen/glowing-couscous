@@ -1,7 +1,7 @@
 # Task: Add Baseline And Actual Comparison
 
-- **Status:** `planned`
-- **Agent:** `unclaimed`
+- **Status:** `in-progress`
+- **Agent:** `OpenCode`
 - **Started:** `2026-08-25`
 - **Updated:** `2026-08-25`
 - **Task ID:** `SESSION-COMPARE-001`
@@ -33,7 +33,22 @@ and latest athlete actual from session detail and Activity history.
 - [ ] Show a single view when no block or schedule difference exists; do not add
   automatic block-level diff highlighting in the first release.
 - [ ] Add responsive and accessible UI tests for both roles, missing baseline,
-  equal versions, skipped blocks, and actual corrections.
+   equal versions, skipped blocks, and actual corrections.
+
+## Progress Log
+
+### 2026-08-25
+
+- What changed: Claimed `SESSION-COMPARE-001` after actual outcome editing
+  shipped.
+- Decision or discovery: Comparison will authorize the session before reading
+  existing baseline/actual payloads, reuse the snapshot difference identity, and
+  expose one reusable dialog to athlete session detail, Activity entries, and
+  coach athlete detail cards.
+- Files touched: This task and `WORK-INDEX.md`.
+- Verification: Red tests not run yet; comparison read-model tests are next.
+- Blocker or next step: Define the role-scoped comparison result and dialog
+  loading/error/empty states before implementation.
 
 ## Acceptance Criteria
 
@@ -51,7 +66,7 @@ and latest athlete actual from session detail and Activity history.
 
 ## Handoff / Completion
 
-- **Final status:** `planned`
+- **Final status:** `in-progress`
 - **History record:** not applicable until implementation
 - **Feature records updated:** [session adjustments](../features/session-adjustments.md), [athlete](../features/athlete.md)
 - **Remaining work:** Browser E2E remains a follow-up if route-level tests do not cover the dialog.
