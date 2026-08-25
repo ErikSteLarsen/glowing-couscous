@@ -70,6 +70,7 @@ type AssignmentTemplateBlock = {
   targetLow: number | null;
   targetHigh: number | null;
   note: string | null;
+  skipped?: boolean;
   sortOrder: number;
 };
 
@@ -310,6 +311,7 @@ export function createAssignmentService({ db = createDefaultDb(), now = () => ne
               targetLow: block.targetLow,
               targetHigh: block.targetHigh,
               note: block.note,
+              skipped: block.skipped ?? false,
               sortOrder: block.sortOrder,
             })),
           },
@@ -428,7 +430,7 @@ async function assignLibrarySession(db: SourceAssignmentDb, command: AssignSourc
         }),
         coachNotes: null,
         rpe: null,
-        blocks: { create: source.blocks },
+        blocks: { create: source.blocks.map((block) => ({ ...block, skipped: block.skipped ?? false })) },
       },
     });
     await tx.assignment.create({
@@ -512,7 +514,7 @@ async function assignTrainingPlan(db: SourceAssignmentDb, command: AssignSourceC
           }),
           coachNotes: null,
           rpe: null,
-          blocks: { create: sourceSession.blocks },
+          blocks: { create: sourceSession.blocks.map((block) => ({ ...block, skipped: block.skipped ?? false })) },
         },
       });
       await tx.assignment.create({

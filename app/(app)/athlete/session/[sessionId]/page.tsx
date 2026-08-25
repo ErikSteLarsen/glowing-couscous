@@ -100,6 +100,7 @@ export default async function AthleteSessionPage({
             sessionId={detail.session.id}
             initialDone={detail.session.status === 'completed'}
             initialNotes={detail.session.notes}
+            initialDraft={detail.session.editor}
           />
         </div>
       </div>

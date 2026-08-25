@@ -22,6 +22,7 @@ export type PlannerBlockDraft = {
   targetLow: number | null;
   targetHigh: number | null;
   note: string;
+  skipped?: boolean;
 };
 
 export type PlannerSessionDraft = {
@@ -92,6 +93,7 @@ export function createPlannerBlockDraft(input: Partial<PlannerBlockDraft> = {}):
     targetLow: normalizeNullablePositiveInt(input.targetLow),
     targetHigh: normalizeNullablePositiveInt(input.targetHigh),
     note: typeof input.note === 'string' ? input.note : '',
+    skipped: input.skipped === true,
   };
 }
 
@@ -248,6 +250,7 @@ export function serializePlannerDraftForSave(draft: PlannerSessionDraft) {
       targetLow: block.targetLow,
       targetHigh: block.targetHigh,
       note: block.note.trim() || null,
+      skipped: block.skipped === true,
       sortOrder: index,
     })),
   };
@@ -321,4 +324,3 @@ function normalizeNullablePositiveInt(input: unknown) {
   const parsed = Number(input);
   return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed) : null;
 }
-

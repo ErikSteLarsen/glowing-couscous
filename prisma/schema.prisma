@@ -153,6 +153,7 @@ model Block {
   targetLow  Int?
   targetHigh Int?
   note       String?
+  skipped    Boolean    @default(false)
   sortOrder  Int
   session    Session?  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   template   Template? @relation(fields: [templateId], references: [id], onDelete: Cascade)

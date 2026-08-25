@@ -4,6 +4,7 @@ import { prisma } from './prisma.ts';
 import { deriveSessionMetrics } from './session-math.ts';
 import { getTempoZoneMeta } from './tempo-blocks.ts';
 import { parseActivitySegments } from './activity-metrics.ts';
+import { createSessionEditorDraftFromPersisted } from './session-editor.ts';
 
 type AthleteServiceDeps = {
   db?: typeof prisma;
@@ -33,6 +34,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       targetLow: number | null;
       targetHigh: number | null;
       note: string | null;
+      skipped?: boolean;
       sortOrder: number;
     }>;
     activity?: {
@@ -43,7 +45,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
     } | null;
   }) {
     const metrics = deriveSessionMetrics(
-      session.blocks.map((block) => ({
+      session.blocks.filter((block) => !block.skipped).map((block) => ({
         kind: block.kind as 'warmup' | 'work' | 'recovery' | 'cooldown',
         zone: block.zone as 1 | 2 | 3 | 4 | 5,
         durationSec: block.durationSec,
@@ -467,6 +469,11 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         session: {
           ...summary,
           notes: session.activity?.notes ?? '',
+          editor: createSessionEditorDraftFromPersisted('planned', {
+            ...session,
+            scheduledDate: session.date,
+            blocks: session.blocks,
+          }),
           blocks: session.blocks.map((block) => {
             const meta = getTempoZoneMeta(block.zone as 1 | 2 | 3 | 4 | 5);
             return {
@@ -484,9 +491,10 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
                         : block.targetType === 'hr'
                           ? 'bpm'
                           : 'pace'
-                    }`
+              }`
                   : null,
               note: block.note,
+              skipped: block.skipped,
               color: meta.solid,
               tint: meta.tint,
             };

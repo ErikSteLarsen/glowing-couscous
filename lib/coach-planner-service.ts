@@ -173,7 +173,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
         }
       }
 
-      const scheduledDate = parseISO(draft.scheduledDate);
+       const scheduledDate = parseISO(`${draft.scheduledDate}T00:00:00.000Z`);
       const weekStart = startOfWeek(scheduledDate, { weekStartsOn: 1 });
       const weekEnd = endOfWeek(scheduledDate, { weekStartsOn: 1 });
       const plan =
@@ -200,6 +200,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
         targetLow: block.targetLow,
         targetHigh: block.targetHigh,
         note: block.note,
+        skipped: block.skipped,
         sortOrder: block.sortOrder,
       }));
       const sessionData = {
@@ -214,6 +215,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
         summary: draft.summary.trim() || null,
         status: 'planned',
         source: draft.sourceTemplateId ? 'template' : 'coach',
+        adjusted: false,
         coachBaselineJson: createSessionSnapshotJson({
           athleteId: draft.athleteId,
           planId: plan.id,
@@ -246,8 +248,8 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
       const assignedAt = now();
       await db.assignment.upsert({
         where: { sessionId_athleteId: { sessionId: savedSession.id, athleteId: draft.athleteId } },
-        update: { assignedBy: coachId, assignedAt },
-        create: { sessionId: savedSession.id, athleteId: draft.athleteId, assignedBy: coachId, assignedAt },
+        update: { assignedBy: coachId, assignedAt, targetDate: scheduledDate },
+        create: { sessionId: savedSession.id, athleteId: draft.athleteId, assignedBy: coachId, assignedAt, targetDate: scheduledDate },
       });
 
       return { ok: true as const, sessionId: savedSession.id };
@@ -291,6 +293,7 @@ async function updateExistingSession(
     summary: string | null;
     status: string;
     source: string;
+    adjusted: boolean;
     coachBaselineJson: string;
     coachNotes: string | null;
     rpe: number | null;

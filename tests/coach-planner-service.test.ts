@@ -306,6 +306,68 @@ test('coach planner updates only sessions owned by roster athletes', async () =>
   assert.equal(updatedSession, true);
 });
 
+test('coach planned edits clear adjusted state and move the current assignment date', async () => {
+  let updatedData: Record<string, unknown> | undefined;
+  let assignmentUpdate: Record<string, unknown> | undefined;
+  const service = createCoachPlannerService({
+    db: {
+      session: {
+        async findUnique() {
+          return { id: 88, athleteId: 5, adjusted: true, activity: null };
+        },
+        async update(args: { data: Record<string, unknown> }) {
+          updatedData = args.data;
+          return { id: 88 };
+        },
+      },
+      user: {
+        async findFirst() {
+          return { id: 5 };
+        },
+      },
+      plan: {
+        async findFirst() {
+          return { id: 77 };
+        },
+        async create() {
+          throw new Error('plan.create should not run when a plan exists');
+        },
+      },
+      block: {
+        async deleteMany() {
+          return { count: 1 };
+        },
+      },
+      assignment: {
+        async upsert(args: { update: Record<string, unknown> }) {
+          assignmentUpdate = args.update;
+          return { id: 99 };
+        },
+      },
+      $transaction: async (operations: Array<Promise<unknown>>) => Promise.all(operations),
+    } as never,
+  });
+
+  const result = await service.saveSession(
+    2,
+    {
+      athleteId: 5,
+      scheduledDate: '2026-06-27',
+      sport: 'RUNNING',
+      title: 'Coach overwrite',
+      summary: '',
+      sourceTemplateId: null,
+      blocks: [{ ...block, clientId: 'b1' }],
+    },
+    88,
+  );
+
+  assert.deepEqual(result, { ok: true, sessionId: 88 });
+  assert.equal(updatedData?.adjusted, false);
+  assert.equal((updatedData?.date as Date).toISOString().slice(0, 10), '2026-06-27');
+  assert.equal((assignmentUpdate?.targetDate as Date).toISOString().slice(0, 10), '2026-06-27');
+});
+
 test('coach planner deletes only sessions owned by roster athletes', async () => {
   let deletedSessionId: number | undefined;
   const service = createCoachPlannerService({

@@ -2,29 +2,36 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { SessionComposer } from '@/components/SessionComposer';
 import {
   dangerTextClassName,
+  formFieldClassName,
   formTextareaClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   successTextClassName,
   Surface,
 } from '@/components/ui';
+import { updateSessionEditorFields, type SessionEditorDraft } from '@/lib/session-editor';
 
 export function SessionDetailClient({
   sessionId,
   initialDone,
   initialNotes,
+  initialDraft,
 }: {
   sessionId: number;
   initialDone: boolean;
   initialNotes: string;
+  initialDraft: SessionEditorDraft;
 }) {
   const router = useRouter();
   const [notes, setNotes] = useState(initialNotes);
   const [isDone, setIsDone] = useState(initialDone);
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(initialDraft);
   const [isPending, startTransition] = useTransition();
 
   function save(nextDone: boolean) {
@@ -56,6 +63,30 @@ export function SessionDetailClient({
     });
   }
 
+  function saveAdjustment() {
+    setMessage('');
+    setMessageTone('success');
+    startTransition(async () => {
+      const response = await fetch(`/api/athlete/sessions/${sessionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(draft),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({ error: 'Failed to save session adjustment' }));
+        setMessageTone('danger');
+        setMessage(payload.error ?? 'Failed to save session adjustment');
+        return;
+      }
+
+      setIsEditing(false);
+      setMessageTone('success');
+      setMessage('Planned session adjustment saved.');
+      router.refresh();
+    });
+  }
+
   return (
     <Surface className="space-y-4">
       <div>
@@ -66,6 +97,56 @@ export function SessionDetailClient({
           Add a short note, then mark the session complete when you finish it.
         </p>
       </div>
+
+      {!isDone && !isEditing ? (
+        <button type="button" className={secondaryButtonClassName} onClick={() => setIsEditing(true)}>
+          Adjust planned session
+        </button>
+      ) : null}
+
+      {isEditing ? (
+        <div className="space-y-4 border-t border-[var(--border)] pt-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Planned adjustment</p>
+            <p className="mt-2 text-[13px] text-[var(--text-secondary)]">Only this scheduled session changes. The coach baseline and reusable source stay intact.</p>
+          </div>
+          <SessionComposer
+            draft={draft}
+            onChange={setDraft}
+            showSchedule
+            summaryPlaceholder="Session intent or adjustment context"
+          />
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-[var(--text-secondary)]">Athlete note</span>
+            <textarea
+              value={draft.athleteNotes}
+              onChange={(event) => setDraft(updateSessionEditorFields(draft, { athleteNotes: event.target.value }))}
+              className={`${formTextareaClassName} min-h-24`}
+              placeholder="What should your coach know?"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-[var(--text-secondary)]">Planned RPE (1-10)</span>
+            <input
+              type="number"
+              min="1"
+              max="10"
+              step="1"
+              value={draft.rpe ?? ''}
+              onChange={(event) => setDraft(updateSessionEditorFields(draft, { rpe: event.target.value ? Number(event.target.value) : null }))}
+              className={formFieldClassName}
+            />
+          </label>
+          <div className="flex flex-wrap gap-3">
+            <button type="button" className={secondaryButtonClassName} onClick={() => { setDraft(initialDraft); setIsEditing(false); }} disabled={isPending}>
+              Cancel
+            </button>
+            <button type="button" className={primaryButtonClassName} onClick={saveAdjustment} disabled={isPending}>
+              {isPending ? 'Saving...' : 'Save adjustment'}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <textarea
         value={notes}

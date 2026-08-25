@@ -15,6 +15,7 @@ const block = {
   targetLow: null,
   targetHigh: null,
   note: 'Steady',
+  skipped: false,
   sortOrder: 0,
 };
 

@@ -10,6 +10,7 @@ import {
   removeSessionEditorBlock,
   updateSessionEditorBlock,
   updateSessionEditorFields,
+  updateSessionEditorSchedule,
   type SessionEditorDraft,
   type SessionEditorTarget,
 } from '@/lib/session-editor';
@@ -32,12 +33,14 @@ export function SessionComposer({
   draft,
   onChange,
   showSportMetrics = false,
+  showSchedule = false,
   summaryPlaceholder = 'Coach notes or session intent',
   durationUnit = 'seconds',
 }: {
   draft: SessionEditorDraft;
   onChange: (draft: SessionEditorDraft) => void;
   showSportMetrics?: boolean;
+  showSchedule?: boolean;
   summaryPlaceholder?: string;
   durationUnit?: 'minutes' | 'seconds';
 }) {
@@ -122,6 +125,29 @@ export function SessionComposer({
           onChange={(event) => onChange(updateSessionEditorFields(draft, { summary: event.target.value }))}
         />
       </label>
+
+      {showSchedule ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-[var(--text-secondary)]">Scheduled date</span>
+            <input
+              className={formFieldClassName}
+              type="date"
+              value={draft.scheduledDate ?? ''}
+              onChange={(event) => onChange(updateSessionEditorSchedule(draft, { scheduledDate: event.target.value || null }))}
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-[var(--text-secondary)]">Time</span>
+            <input
+              className={formFieldClassName}
+              type="time"
+              value={draft.timeLabel ?? ''}
+              onChange={(event) => onChange(updateSessionEditorSchedule(draft, { timeLabel: event.target.value || null }))}
+            />
+          </label>
+        </div>
+      ) : null}
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Workout blocks</p>
