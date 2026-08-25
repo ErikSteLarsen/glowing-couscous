@@ -177,7 +177,8 @@ test('coach planner creates a direct coach session and assignment record', async
       sport: string;
       title: string;
       source: string;
-      blocks: { create: Array<{ kind: string; zone: number; durationSec: number; sortOrder: number }> };
+      coachBaselineJson: string;
+       blocks: { create: Array<{ kind: string; zone: number; durationSec: number; sortOrder: number }> };
     };
     assignmentUpsert?: unknown;
   } = {};
@@ -239,6 +240,7 @@ test('coach planner creates a direct coach session and assignment record', async
   assert.equal(calls.sessionCreate?.planId, 77);
   assert.equal(calls.sessionCreate?.assignedById, 2);
   assert.equal(calls.sessionCreate?.source, 'coach');
+  assert.equal(JSON.parse(calls.sessionCreate?.coachBaselineJson ?? '{}').title, 'Endurance build');
   assert.equal(calls.sessionCreate?.blocks.create[0].sortOrder, 0);
   assert.ok(calls.assignmentUpsert);
 });

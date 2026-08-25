@@ -111,6 +111,10 @@ test('library-session assignment snapshots blocks and is idempotent', async () =
   assert.deepEqual(result, { ok: true, sessionId: 40 });
   assert.equal(state.sessionsCreated.length, 1);
   assert.deepEqual((state.sessionsCreated[0] as { data: { title: string; blocks: { create: unknown[] } } }).data.blocks.create, [block]);
+  assert.equal(
+    JSON.parse((state.sessionsCreated[0] as { data: { coachBaselineJson: string } }).data.coachBaselineJson).title,
+    'Library threshold',
+  );
   assert.equal((state.assignmentsCreated[0] as { data: { sourceSessionId: number } }).data.sourceSessionId, 12);
 
   const reused = await service.assignSourceToAthlete({

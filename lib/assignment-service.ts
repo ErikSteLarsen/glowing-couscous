@@ -1,5 +1,6 @@
 import { addDays, endOfWeek, format, isValid, parseISO, startOfWeek } from 'date-fns';
 import { prisma } from './prisma.ts';
+import { createSessionSnapshotJson } from './session-snapshot-service.ts';
 
 type AssignmentCommand = {
   coachId: number;
@@ -122,6 +123,9 @@ type AssignmentDb = {
         status: string;
         source: string;
         adjusted: boolean;
+        coachBaselineJson: string;
+        coachNotes: string | null;
+        rpe: number | null;
         blocks: {
           create: AssignmentTemplateBlock[];
         };
@@ -284,6 +288,18 @@ export function createAssignmentService({ db = createDefaultDb(), now = () => ne
           status: 'planned',
           source: 'template',
           adjusted: false,
+          coachBaselineJson: createSessionSnapshotJson({
+            athleteId: command.athleteId,
+            templateId: template.id,
+            assignedById: command.coachId,
+            scheduledDate: command.scheduledDate,
+            sport: template.sport,
+            title: template.name,
+            summary: template.summary,
+            blocks: template.blocks,
+          }),
+          coachNotes: null,
+          rpe: null,
           blocks: {
             create: template.blocks.map((block) => ({
               kind: block.kind,
@@ -396,6 +412,22 @@ async function assignLibrarySession(db: SourceAssignmentDb, command: AssignSourc
         status: 'planned',
         source: 'library-copy',
         adjusted: false,
+        coachBaselineJson: createSessionSnapshotJson({
+          athleteId: command.athleteId,
+          planId: plan.id,
+          assignedById: command.coachId,
+          scheduledDate,
+          timeLabel: source.timeLabel,
+          sport: source.sport,
+          title: source.title,
+          summary: source.summary,
+          sportMetricsJson: source.sportMetricsJson,
+          status: 'planned',
+          source: 'library-copy',
+          blocks: source.blocks,
+        }),
+        coachNotes: null,
+        rpe: null,
         blocks: { create: source.blocks },
       },
     });
@@ -463,6 +495,23 @@ async function assignTrainingPlan(db: SourceAssignmentDb, command: AssignSourceC
           status: 'planned',
           source: 'training-plan-copy',
           adjusted: false,
+          coachBaselineJson: createSessionSnapshotJson({
+            athleteId: command.athleteId,
+            planId: plan.id,
+            assignedById: command.coachId,
+            scheduledDate: targetDate,
+            planWeekday: null,
+            timeLabel: sourceSession.timeLabel,
+            sport: sourceSession.sport,
+            title: sourceSession.title,
+            summary: sourceSession.summary,
+            sportMetricsJson: sourceSession.sportMetricsJson,
+            status: 'planned',
+            source: 'training-plan-copy',
+            blocks: sourceSession.blocks,
+          }),
+          coachNotes: null,
+          rpe: null,
           blocks: { create: sourceSession.blocks },
         },
       });

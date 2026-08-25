@@ -6,6 +6,7 @@ import {
   validatePlannerSessionDraft,
   type PlannerSessionDraft,
 } from './planner-draft.ts';
+import { createSessionSnapshotJson } from './session-snapshot-service.ts';
 
 type CoachPlannerDeps = {
   db?: typeof prisma;
@@ -213,6 +214,22 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
         summary: draft.summary.trim() || null,
         status: 'planned',
         source: draft.sourceTemplateId ? 'template' : 'coach',
+        coachBaselineJson: createSessionSnapshotJson({
+          athleteId: draft.athleteId,
+          planId: plan.id,
+          templateId: draft.sourceTemplateId,
+          assignedById: coachId,
+          scheduledDate: draft.scheduledDate,
+          sport: draft.sport,
+          title: draft.title,
+          summary: draft.summary,
+          sportMetrics: draft.sportMetrics,
+          status: 'planned',
+          source: draft.sourceTemplateId ? 'template' : 'coach',
+          blocks: serialized.blocks,
+        }),
+        coachNotes: null,
+        rpe: null,
       };
 
       const savedSession =
@@ -274,6 +291,9 @@ async function updateExistingSession(
     summary: string | null;
     status: string;
     source: string;
+    coachBaselineJson: string;
+    coachNotes: string | null;
+    rpe: number | null;
   },
   blocks: SessionBlockCreate[],
 ) {

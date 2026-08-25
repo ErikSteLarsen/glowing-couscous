@@ -1,5 +1,6 @@
 import { deriveSessionMetrics } from './session-math.ts';
 import { prisma } from './prisma.ts';
+import { createSessionSnapshotJson } from './session-snapshot-service.ts';
 
 const MAX_NOTES_LENGTH = 2000;
 
@@ -55,6 +56,23 @@ export function createAthleteCompletionService({ db = prisma }: { db?: Completio
               : null,
         })),
       );
+      const actualSnapshotJson = createSessionSnapshotJson({
+        id: session.id,
+        athleteId: session.athleteId,
+        scheduledDate: session.date,
+        timeLabel: session.timeLabel,
+        sport: session.sport,
+        title: session.title,
+        summary: session.summary,
+        coachNotes: session.coachNotes,
+        athleteNotes: retainedNotes,
+        rpe: session.rpe ?? null,
+        sportMetricsJson: session.sportMetricsJson,
+        status: 'completed',
+        source: session.source,
+        adjusted: session.adjusted,
+        blocks: session.blocks,
+      });
 
       await db.$transaction([
         db.activity.upsert({
@@ -62,6 +80,8 @@ export function createAthleteCompletionService({ db = prisma }: { db?: Completio
           update: {
             completedAt,
             notes: retainedNotes,
+            actualSnapshotJson,
+            rpe: session.rpe ?? null,
           },
           create: {
             sessionId: session.id,
@@ -74,6 +94,8 @@ export function createAthleteCompletionService({ db = prisma }: { db?: Completio
             segmentsJson: JSON.stringify(metrics.segments),
             metricsSource: 'manual-planned',
             notes: retainedNotes,
+            actualSnapshotJson,
+            rpe: session.rpe ?? null,
           },
         }),
         db.session.update({

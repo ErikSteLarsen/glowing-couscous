@@ -84,6 +84,8 @@ test('manual completion stores an estimate without fabricated compliance', async
   assert.equal(calls.activityUpsert && (calls.activityUpsert as any).create.compliancePct, null);
   assert.equal(calls.activityUpsert && (calls.activityUpsert as any).create.metricsSource, 'manual-planned');
   assert.equal(typeof (calls.activityUpsert as any).create.segmentsJson, 'string');
+  assert.equal(typeof (calls.activityUpsert as any).create.actualSnapshotJson, 'string');
+  assert.equal((calls.activityUpsert as any).create.rpe, null);
   assert.deepEqual(calls.sessionUpdate, {
     where: { id: 11 },
     data: { status: 'completed', athleteNotes: 'Controlled effort' },
@@ -110,10 +112,10 @@ test('completion is idempotent and updates the existing outcome instead of dupli
 
   assert.equal(result.ok, true);
   assert.equal((result as { completedAt: Date }).completedAt, completedAt);
-  assert.deepEqual(calls.activityUpsert && (calls.activityUpsert as any).update, {
-    completedAt,
-    notes: 'Existing note',
-  });
+  assert.equal((calls.activityUpsert as any).update.completedAt, completedAt);
+  assert.equal((calls.activityUpsert as any).update.notes, 'Existing note');
+  assert.equal(typeof (calls.activityUpsert as any).update.actualSnapshotJson, 'string');
+  assert.equal((calls.activityUpsert as any).update.rpe, null);
 });
 
 test('reopen retains notes while removing the outcome and restoring planned status', async () => {

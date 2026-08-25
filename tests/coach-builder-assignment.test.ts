@@ -26,6 +26,7 @@ test('assignment service creates an assigned session from a coach template', asy
       summary: string | null;
       source: string;
       adjusted: boolean;
+      coachBaselineJson: string;
       blocks: {
         create: Array<{
           kind: string;
@@ -179,6 +180,8 @@ test('assignment service creates an assigned session from a coach template', asy
   assert.equal(calls.sessionCreate?.sport, 'RUNNING');
   assert.equal(calls.sessionCreate?.title, 'Threshold 4×8′');
   assert.equal(calls.sessionCreate?.blocks.create.length, 2);
+  assert.equal(JSON.parse(calls.sessionCreate?.coachBaselineJson ?? '{}').scheduledDate, '2026-06-25');
+  assert.equal(JSON.parse(calls.sessionCreate?.coachBaselineJson ?? '{}').blocks.length, 2);
   assert.equal(calls.assignmentUpsert?.where.sessionId_athleteId.sessionId, 13);
   assert.equal(calls.assignmentUpsert?.create.athleteId, 5);
   assert.equal(calls.assignmentUpsert?.create.assignedBy, 2);

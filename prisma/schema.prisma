@@ -114,7 +114,10 @@ model Session {
   sport            String
   title            String
    summary          String?
+   coachNotes       String?
    athleteNotes     String?
+   coachBaselineJson String?
+   rpe              Int?
   sportMetricsJson String?
   status           String        @default("planned")
   source           String
@@ -183,6 +186,8 @@ model Activity {
   segmentsJson         String
   metricsSource        String   @default("manual-planned")
   notes                String?
+  actualSnapshotJson   String?
+  rpe                  Int?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   session              Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
