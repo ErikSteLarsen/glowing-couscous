@@ -1,6 +1,6 @@
 # Task: Persist Coach Baseline And Actual Snapshots
 
-- **Status:** `in-progress`
+- **Status:** `completed`
 - **Agent:** `OpenCode`
 - **Started:** `2026-08-25`
 - **Updated:** `2026-08-25`

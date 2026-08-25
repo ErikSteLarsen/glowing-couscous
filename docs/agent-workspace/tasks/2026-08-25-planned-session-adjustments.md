@@ -1,7 +1,7 @@
 # Task: Implement Planned Session Adjustments
 
-- **Status:** `planned`
-- **Agent:** `unclaimed`
+- **Status:** `in-progress`
+- **Agent:** `OpenCode`
 - **Started:** `2026-08-25`
 - **Updated:** `2026-08-25`
 - **Task ID:** `SESSION-PLAN-ADJUST-001`
@@ -35,7 +35,23 @@ completion, with explicit baseline and adjusted behavior.
 - [ ] Expose coach/athlete edit entry points and visible adjusted status on
   session/calendar surfaces.
 - [ ] Add ownership, completed-session, date-move, source-isolation, and
-  concurrent-save regression tests.
+   concurrent-save regression tests.
+
+## Progress Log
+
+### 2026-08-25
+
+- What changed: Claimed `SESSION-PLAN-ADJUST-001` after
+  `SESSION-SNAPSHOT-001` completed and corrected its task-record status.
+- Decision or discovery: Coach mutations remain in `coach-planner-service`; the
+  athlete command needs a separate assigned-session service so the compatibility
+  planner path is not extended. Both roles must mutate one Session instance,
+  preserve source lineage, and use the snapshot service for baseline updates.
+- Files touched: This task, the snapshot task status, and `WORK-INDEX.md`.
+- Verification: Red tests not run yet; ownership and schedule contract tests are
+  next.
+- Blocker or next step: Define the authorized planned-edit command and its
+  transaction semantics before implementation.
 
 ## Acceptance Criteria
 
@@ -53,7 +69,7 @@ completion, with explicit baseline and adjusted behavior.
 
 ## Handoff / Completion
 
-- **Final status:** `planned`
+- **Final status:** `in-progress`
 - **History record:** not applicable until implementation
 - **Feature records updated:** [session adjustments](../features/session-adjustments.md), [planner](../features/planner.md), [athlete](../features/athlete.md)
 - **Remaining work:** Completion/outcome editing depends on this session access contract.
