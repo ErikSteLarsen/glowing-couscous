@@ -73,7 +73,7 @@ They can mark a session complete or move it back to planned while saving notes.
 
 ## Known Gaps
 
-- Completion currently records planned metrics with `compliancePct: 100`; it is
+- Completion currently records manual metrics with nullable compliance; it is
   not a performed-metrics import or sensor integration.
 - The live surface is guidance only and does not track current step state back to the server.
 - Athlete onboarding and navigation polish remain planned.
