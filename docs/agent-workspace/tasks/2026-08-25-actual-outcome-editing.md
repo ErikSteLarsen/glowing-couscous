@@ -26,16 +26,16 @@ actually done and correct a completed actual directly.
 
 ## Plan
 
-- [ ] Add actual save/complete commands that persist full actual blocks,
+- [x] Add actual save/complete commands that persist full actual blocks,
   skipped state, athlete notes, and optional 1-10 RPE.
-- [ ] Recompute duration, TSS, zone distribution, and segments from latest actual
+- [x] Recompute duration, TSS, zone distribution, and segments from latest actual
   blocks on first completion and every direct correction.
-- [ ] Permit both coach and athlete authorized corrections to completed actuals;
+- [x] Permit both coach and athlete authorized corrections to completed actuals;
   save immediately while retaining completed status and leaving coach baseline
   unchanged.
-- [ ] Preserve separate coach notes and athlete notes; keep completion timestamps
+- [x] Preserve separate coach notes and athlete notes; keep completion timestamps
   and stored Activity history coherent.
-- [ ] Add service/API tests for completion, direct correction, permissions,
+- [x] Add service/API tests for completion, direct correction, permissions,
    invalid RPE/blocks, and idempotent metric updates.
 
 ## Progress Log
@@ -52,6 +52,25 @@ actually done and correct a completed actual directly.
 - Verification: Red tests not run yet; actual correction service tests are next.
 - Blocker or next step: Define a single actual-save command usable by athlete and
   coach adapters before changing the completion route.
+
+### 2026-08-25
+
+- What changed: Added `saveActualOutcome` to `athlete-completion-service`,
+  athlete and coach actual PATCH routes, direct Session/Block/Activity replacement,
+  and the completed-athlete correction editor.
+- Decision or discovery: First completion and correction share one transaction;
+  metrics use the canonical actual draft with skipped blocks excluded, Activity
+  uses `manual-actual`, the existing completion timestamp is retained, and the
+  coach baseline payload is copied unchanged.
+- Files touched: `lib/athlete-completion-service.ts`, actual API routes,
+  athlete session detail client/service, architecture boundary test, and focused
+  completion tests.
+- Verification: Actual completion/correction/API/component tests passed (7
+  tests); `pnpm test` passed (143 tests); `pnpm exec prisma validate`, `pnpm lint`,
+  and `pnpm build` passed. Build retains the existing middleware deprecation
+  warning.
+- Blocker or next step: Browser narrow/wide viewport and keyboard/focus checks
+  were not available; comparison surfaces remain `SESSION-COMPARE-001`.
 
 ## Acceptance Criteria
 
@@ -70,7 +89,7 @@ actually done and correct a completed actual directly.
 
 ## Handoff / Completion
 
-- **Final status:** `in-progress`
-- **History record:** not applicable until implementation
+- **Final status:** `completed`
+- **History record:** [actual outcome editing](../history/2026-08-25-actual-outcome-editing.md)
 - **Feature records updated:** [athlete](../features/athlete.md), [session adjustments](../features/session-adjustments.md)
-- **Remaining work:** Comparison dialog consumes the baseline and actual read model.
+- **Remaining work:** Comparison dialog consumes the baseline and actual read model; manual browser verification remains a gap.

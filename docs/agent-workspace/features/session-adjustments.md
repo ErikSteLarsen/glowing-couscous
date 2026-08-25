@@ -2,9 +2,9 @@
 
 - **ID:** `SESSION-ADJUST-001`
 - **Status:** `in-progress`
-- **Last verified:** `2026-08-25` (canonical editor, durable snapshots, and planned adjustments implemented and verified)
-- **Owners:** `lib/session-editor.ts`, `lib/session-snapshot-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/coach-planner-service.ts`, and completion/outcome service
-- **Related work:** [canonical editor task](../tasks/2026-08-25-canonical-session-editor.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [planned adjustment task](../tasks/2026-08-25-planned-session-adjustments.md), [decision 0010](../decisions/0010-session-adjustments-and-actual-outcomes.md), [planner](planner.md), [templates](templates.md), [athlete](athlete.md), [workout domain](workout-domain.md)
+- **Last verified:** `2026-08-25` (canonical editor, snapshots, planned adjustments, and actual outcome editing implemented and verified)
+- **Owners:** `lib/session-editor.ts`, `lib/session-snapshot-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/athlete-completion-service.ts`, `lib/coach-planner-service.ts`, and comparison surfaces
+- **Related work:** [canonical editor task](../tasks/2026-08-25-canonical-session-editor.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [planned adjustment task](../tasks/2026-08-25-planned-session-adjustments.md), [actual outcome task](../tasks/2026-08-25-actual-outcome-editing.md), [decision 0010](../decisions/0010-session-adjustments-and-actual-outcomes.md), [planner](planner.md), [templates](templates.md), [athlete](athlete.md), [workout domain](workout-domain.md)
 
 ## Contract
 
@@ -35,7 +35,7 @@ corrections save immediately and recompute derived metrics.
   editing remains future work.
 - `components/WorkoutBlocksEditor.tsx` uses a legacy block contract.
 - `Session` and `Activity` now retain the latest baseline/actual payloads, but
-  completed actuals cannot currently be edited directly.
+  comparison surfaces are not yet implemented.
 - Browser verification of the new athlete editor at narrow and wide viewports
   remains outstanding in this environment.
 - Completed sessions are currently immutable through planner paths, and the
@@ -62,12 +62,15 @@ corrections save immediately and recompute derived metrics.
 - `SESSION-PLAN-ADJUST-001` lets athletes edit one planned assignment and mark it
   adjusted, while coach planned edits overwrite the baseline and clear adjusted;
   schedule moves update the existing Plan and Assignment instead of copying.
+- `SESSION-ACTUAL-001` lets an owning athlete or roster coach replace actual
+  blocks, Activity metrics, notes, and RPE directly while retaining completed
+  status and the coach baseline.
 
 ## Verification
 
 - `tests/session-editor.test.ts`, `tests/session-snapshot.test.ts`, and the
   assignment/completion service tests cover the editor and snapshot boundaries.
-- `pnpm test` — 134 passing tests on 2026-08-25.
+- `pnpm test` — 143 passing tests on 2026-08-25.
 - `pnpm db:push --force-reset && pnpm db:seed`, `pnpm lint`, and `pnpm build`
   pass on 2026-08-25; build retains the existing middleware deprecation warning.
 - Browser narrow/wide viewport, loading, empty, error, keyboard/focus, contrast,

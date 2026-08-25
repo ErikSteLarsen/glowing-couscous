@@ -88,3 +88,9 @@ through `coach-planner-service` clear `adjusted` and replace the latest baseline
 Moving a planned session updates its existing Plan and Assignment target date in
 the same transaction; source/template lineage and other assigned Sessions are
 not synchronized.
+
+`SESSION-ACTUAL-001` exposes one `saveActualOutcome` command from
+`athlete-completion-service` to both athlete and roster-coach adapters. It replaces
+the current Session blocks and latest Activity payload transactionally, recomputes
+manual actual metrics from the canonical draft, retains the completion timestamp
+and completed status, and never overwrites `Session.coachBaselineJson`.

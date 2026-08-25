@@ -43,6 +43,9 @@ They can mark a session complete or move it back to planned while saving notes.
 - Completion stores the complete latest actual editor payload and RPE on the
   Activity, while retained notes remain available through the Activity/Session
   fields and old outcomes remain independent of future planned edits.
+- Owning athletes and roster coaches can correct a completed actual through the
+  shared canonical editor/API without reopening the session or changing its
+  completion status.
 - Athletes can open the shared session editor before completion, change one
   assigned session and its date/time, save an adjusted planned status, and leave
   the source/template baseline untouched.
@@ -59,7 +62,7 @@ They can mark a session complete or move it back to planned while saving notes.
 
 - Calendar, session math, navigation, source, accessibility, cleanup, calendar
   layout, and build checks pass on 2026-08-22.
-- `pnpm test` — 134 passing tests, including focused completion, snapshot,
+- `pnpm test` — 143 passing tests, including focused completion, snapshot,
   assignment, and immutable planner behavior coverage.
 - `pnpm db:push --force-reset && pnpm db:seed`, `pnpm lint`, and `pnpm build` —
   pass on 2026-08-25.
