@@ -26,7 +26,7 @@ by agents as work changes. Use the linked feature record before editing.
 | `API-001` | API principal and route input validation | `shipped` | `lib/api-auth.ts`, `lib/route-params.ts`, protected API handlers | [task](tasks/2026-08-21-api-auth-validation-progress.md); 92 tests, lint, build | [coverage](features/coverage.md) |
 | `COMPAT-002` | Compatibility hardening and docs alignment | `shipped` | old planner adapter, builder redirect, architecture docs | [task](tasks/2026-08-21-compatibility-docs-progress.md); 113 tests, lint, build | [compatibility](features/compatibility.md) |
 | `COVERAGE-001` | Deepen service/API regression coverage | `planned` | Auth, request, completion, compatibility seams | See current gaps in snapshot | [coverage](features/coverage.md) |
-| `SESSION-ADJUST-001` | Per-session coach/athlete adjustments and actual outcomes | `in-progress` | canonical editor, snapshot/adjustment/outcome services, comparison dialog | `SESSION-PLAN-ADJUST-001` shipped 2026-08-25; [snapshot task](tasks/2026-08-25-session-snapshots.md), [planned adjustment task](tasks/2026-08-25-planned-session-adjustments.md), [history](history/2026-08-25-planned-session-adjustments.md) | [session adjustments](features/session-adjustments.md) |
+| `SESSION-ADJUST-001` | Per-session coach/athlete adjustments and actual outcomes | `in-progress` | canonical editor, snapshot/adjustment/outcome services, comparison dialog | `SESSION-COMPARE-001` shipped 2026-08-25; [snapshot task](tasks/2026-08-25-session-snapshots.md), [planned adjustment task](tasks/2026-08-25-planned-session-adjustments.md), [actual outcome task](tasks/2026-08-25-actual-outcome-editing.md), [history](history/2026-08-25-baseline-actual-comparison.md) | [session adjustments](features/session-adjustments.md) |
 | `CLEANUP-001` | Audit stale pre-Tempo helpers/components | `shipped` | `components/AthleteWeekView.tsx` chain removed; remaining helpers stay transitional | Reference analysis, cleanup decision, 114 tests, lint, build; [history](history/2026-08-22-interactive-color-contrast.md) | [compatibility](features/compatibility.md) |
 | `OPS-001` | Agent coordination workspace | `shipped` | `docs/agent-workspace/`, root `AGENTS.md` | Documentation review and repo gates | [workspace](features/workspace.md) |
 
@@ -43,7 +43,7 @@ registered a multi-step task in this workspace.
 
 | Task | Status | Agent | Feature IDs | Last update |
 |---|---|---|---|---|
-| `SESSION-COMPARE-001` | `in-progress` | OpenCode | `SESSION-ADJUST-001`, `ATHLETE-001`, `COMPLETE-001` | 2026-08-25; [task](tasks/2026-08-25-baseline-actual-comparison.md) |
+| No active task currently recorded | — | — | — | 2026-08-25; `SESSION-COMPARE-001` completed |
 
 ## Planned Task Files
 
@@ -65,4 +65,4 @@ one by creating a task progress entry and changing its status to `in-progress`.
 | `SESSION-SNAPSHOT-001` | `shipped` | `SESSION-EDIT-001` | [coach baseline and actual snapshots](tasks/2026-08-25-session-snapshots.md), [history](history/2026-08-25-session-snapshots.md) |
 | `SESSION-PLAN-ADJUST-001` | `shipped` | `SESSION-EDIT-001`, `SESSION-SNAPSHOT-001` | [planned session adjustments](tasks/2026-08-25-planned-session-adjustments.md), [history](history/2026-08-25-planned-session-adjustments.md) |
 | `SESSION-ACTUAL-001` | `shipped` | `SESSION-EDIT-001`, `SESSION-SNAPSHOT-001`, `SESSION-PLAN-ADJUST-001` | [actual outcome editing](tasks/2026-08-25-actual-outcome-editing.md), [history](history/2026-08-25-actual-outcome-editing.md) |
-| `SESSION-COMPARE-001` | `in-progress` | `SESSION-ACTUAL-001` | [baseline and actual comparison](tasks/2026-08-25-baseline-actual-comparison.md) |
+| `SESSION-COMPARE-001` | `shipped` | `SESSION-ACTUAL-001` | [baseline and actual comparison](tasks/2026-08-25-baseline-actual-comparison.md), [history](history/2026-08-25-baseline-actual-comparison.md) |

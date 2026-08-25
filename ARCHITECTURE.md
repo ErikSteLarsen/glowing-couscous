@@ -78,6 +78,8 @@ If a feature changes planner behavior, add it here first instead of scattering P
   payload serialization, bounded metadata validation, replacement, and loading.
 - `lib/athlete-session-adjustment-service.ts` owns athlete authorization and
   planned edits to one assigned Session, including Plan/Assignment date movement.
+- `lib/session-comparison-service.ts` owns role-scoped baseline/actual reads;
+  comparison UI must consume this service rather than querying Prisma directly.
 - Athlete pages under `app/(app)/athlete/**` plus `app/(app)/settings/page.tsx` should stay thin and delegate to this service where appropriate.
 
 ### Assignment boundary
@@ -165,6 +167,8 @@ The main read/write boundaries are clearer, but they still need protection:
     and do not derive historical Activity outcomes from mutable Session blocks.
 12. Keep athlete planned mutations behind `athlete-session-adjustment-service`;
     do not extend the compatibility planner route for this behavior.
+13. Keep baseline/actual comparison behind `session-comparison-service` and
+    reuse the stored snapshot identity for equal-version projection.
 
 ## Highest-value architectural next step
 

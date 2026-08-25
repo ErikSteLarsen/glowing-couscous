@@ -46,10 +46,12 @@ They can mark a session complete or move it back to planned while saving notes.
 - Owning athletes and roster coaches can correct a completed actual through the
   shared canonical editor/API without reopening the session or changing its
   completion status.
+- Athletes can open the same stored baseline/actual comparison from Session
+  detail and Activity; equal versions remain a single view.
 - Athletes can open the shared session editor before completion, change one
   assigned session and its date/time, save an adjusted planned status, and leave
   the source/template baseline untouched.
-- Manual completion stores `manual-planned` estimates with nullable compliance,
+- Manual completion stores `manual-actual` estimates with nullable compliance,
   persisted segments, and notes retained on the Session across reopen.
 - Completed sessions cannot be edited or deleted through coach planner mutation
   paths while their Activity outcome exists.
@@ -62,7 +64,7 @@ They can mark a session complete or move it back to planned while saving notes.
 
 - Calendar, session math, navigation, source, accessibility, cleanup, calendar
   layout, and build checks pass on 2026-08-22.
-- `pnpm test` — 143 passing tests, including focused completion, snapshot,
+- `pnpm test` — 146 passing tests, including focused completion, snapshot,
   assignment, and immutable planner behavior coverage.
 - `pnpm db:push --force-reset && pnpm db:seed`, `pnpm lint`, and `pnpm build` —
   pass on 2026-08-25.

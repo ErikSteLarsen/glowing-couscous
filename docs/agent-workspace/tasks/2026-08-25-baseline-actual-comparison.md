@@ -1,6 +1,6 @@
 # Task: Add Baseline And Actual Comparison
 
-- **Status:** `in-progress`
+- **Status:** `completed`
 - **Agent:** `OpenCode`
 - **Started:** `2026-08-25`
 - **Updated:** `2026-08-25`
@@ -25,14 +25,14 @@ and latest athlete actual from session detail and Activity history.
 
 ## Plan
 
-- [ ] Add a read model exposing baseline and actual snapshots with role-scoped
+- [x] Add a read model exposing baseline and actual snapshots with role-scoped
   access for the athlete and roster coach.
-- [ ] Add a dialog reachable from athlete/coach session detail and Activity
+- [x] Add a dialog reachable from athlete/coach session detail and Activity
   entries with a toggle between complete “Coach baseline” and “Athlete actual”
   views.
-- [ ] Show a single view when no block or schedule difference exists; do not add
+- [x] Show a single view when no block or schedule difference exists; do not add
   automatic block-level diff highlighting in the first release.
-- [ ] Add responsive and accessible UI tests for both roles, missing baseline,
+- [x] Add responsive and accessible UI tests for both roles, missing baseline,
    equal versions, skipped blocks, and actual corrections.
 
 ## Progress Log
@@ -50,6 +50,25 @@ and latest athlete actual from session detail and Activity history.
 - Blocker or next step: Define the role-scoped comparison result and dialog
   loading/error/empty states before implementation.
 
+### 2026-08-25
+
+- What changed: Added `session-comparison-service`, athlete/coach comparison GET
+  routes, and `SessionComparisonDialog` on athlete session detail, Activity
+  entries, and coach athlete-detail session cards.
+- Decision or discovery: The comparison service authorizes the Session first and
+  projects stored snapshots through the existing baseline/actual identity. Equal
+  schedule/block content exposes one view; different versions toggle complete
+  stored drafts without inferred diff highlighting.
+- Files touched: `lib/session-comparison-service.ts`, snapshot projection helper,
+  comparison routes, `components/SessionComparisonDialog.tsx`, athlete Activity
+  and session surfaces, coach athlete detail, and comparison tests.
+- Verification: Comparison focused tests passed (3 tests); `pnpm test` passed
+  (146 tests); `pnpm db:push --force-reset && pnpm db:seed`, `pnpm lint`, and
+  `pnpm build` passed. Build retains the existing middleware deprecation warning.
+- Blocker or next step: Browser narrow/wide viewport, keyboard/focus, loading,
+  empty, error, contrast, and responsive inspection was not available in this
+  environment.
+
 ## Acceptance Criteria
 
 - Both coach and athlete can open the comparison only for an authorized session.
@@ -66,7 +85,7 @@ and latest athlete actual from session detail and Activity history.
 
 ## Handoff / Completion
 
-- **Final status:** `in-progress`
-- **History record:** not applicable until implementation
+- **Final status:** `completed`
+- **History record:** [baseline actual comparison](../history/2026-08-25-baseline-actual-comparison.md)
 - **Feature records updated:** [session adjustments](../features/session-adjustments.md), [athlete](../features/athlete.md)
-- **Remaining work:** Browser E2E remains a follow-up if route-level tests do not cover the dialog.
+- **Remaining work:** Manual browser verification and optional browser E2E remain follow-ups; route/component tests cover the implemented contract.

@@ -94,3 +94,8 @@ not synchronized.
 the current Session blocks and latest Activity payload transactionally, recomputes
 manual actual metrics from the canonical draft, retains the completion timestamp
 and completed status, and never overwrites `Session.coachBaselineJson`.
+
+`SESSION-COMPARE-001` uses a role-scoped read service and one shared dialog across
+athlete session detail, Activity, and coach athlete detail. It toggles complete
+stored drafts only when the existing schedule/block identity differs; equal
+versions and missing snapshots remain single-view states.
