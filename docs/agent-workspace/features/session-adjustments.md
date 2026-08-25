@@ -2,9 +2,9 @@
 
 - **ID:** `SESSION-ADJUST-001`
 - **Status:** `in-progress`
-- **Last verified:** `2026-08-25` (canonical editor and durable snapshots implemented and verified)
-- **Owners:** `lib/session-editor.ts`, `lib/session-snapshot-service.ts`, planned session adjustment service, and completion/outcome service
-- **Related work:** [canonical editor task](../tasks/2026-08-25-canonical-session-editor.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [decision 0010](../decisions/0010-session-adjustments-and-actual-outcomes.md), [planner](planner.md), [templates](templates.md), [athlete](athlete.md), [workout domain](workout-domain.md)
+- **Last verified:** `2026-08-25` (canonical editor, durable snapshots, and planned adjustments implemented and verified)
+- **Owners:** `lib/session-editor.ts`, `lib/session-snapshot-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/coach-planner-service.ts`, and completion/outcome service
+- **Related work:** [canonical editor task](../tasks/2026-08-25-canonical-session-editor.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [planned adjustment task](../tasks/2026-08-25-planned-session-adjustments.md), [decision 0010](../decisions/0010-session-adjustments-and-actual-outcomes.md), [planner](planner.md), [templates](templates.md), [athlete](athlete.md), [workout domain](workout-domain.md)
 
 ## Contract
 
@@ -36,6 +36,8 @@ corrections save immediately and recompute derived metrics.
 - `components/WorkoutBlocksEditor.tsx` uses a legacy block contract.
 - `Session` and `Activity` now retain the latest baseline/actual payloads, but
   completed actuals cannot currently be edited directly.
+- Browser verification of the new athlete editor at narrow and wide viewports
+  remains outstanding in this environment.
 - Completed sessions are currently immutable through planner paths, and the
   current reopen flow deletes the Activity outcome.
 
@@ -57,6 +59,9 @@ corrections save immediately and recompute derived metrics.
 - `SESSION-SNAPSHOT-001` stores the complete latest coach baseline on the
   assigned Session and the complete latest actual on Activity, with explicit
   RPE/note columns and no actual-version history.
+- `SESSION-PLAN-ADJUST-001` lets athletes edit one planned assignment and mark it
+  adjusted, while coach planned edits overwrite the baseline and clear adjusted;
+  schedule moves update the existing Plan and Assignment instead of copying.
 
 ## Verification
 
@@ -65,6 +70,8 @@ corrections save immediately and recompute derived metrics.
 - `pnpm test` — 134 passing tests on 2026-08-25.
 - `pnpm db:push --force-reset && pnpm db:seed`, `pnpm lint`, and `pnpm build`
   pass on 2026-08-25; build retains the existing middleware deprecation warning.
+- Browser narrow/wide viewport, loading, empty, error, keyboard/focus, contrast,
+  and responsive checks — not run; no browser inspection tool is available.
 
 ## Extension Rules
 

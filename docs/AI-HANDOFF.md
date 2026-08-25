@@ -89,6 +89,8 @@ request is pending.
   Activity outcome writes.
 - `lib/session-snapshot-service.ts` owns canonical latest baseline/actual
   snapshot serialization, bounded validation, and replacement/loading.
+- `lib/athlete-session-adjustment-service.ts` owns athlete authorization and
+  planned edits to one assigned Session, including Plan/Assignment date movement.
 - `lib/coach-request-service.ts` owns onboarding and coach-request flows.
 - `lib/week.ts` owns Monday-based week shaping and per-day session grouping.
 - `lib/sport.ts` owns shared sport constants and UI labels.
@@ -128,6 +130,8 @@ These are the first places to be careful when extending the app:
   synchronization between source records and copied athlete sessions.
 - Keep baseline/actual payloads behind `session-snapshot-service`; never derive
   stored Activity history from mutable current Session blocks.
+- Keep athlete planned mutations behind `athlete-session-adjustment-service`;
+  do not extend the compatibility planner route for this behavior.
 - Do not use the setup endpoint for role changes; extend `auth-role-service` if
   an explicit future account-management flow is introduced.
 

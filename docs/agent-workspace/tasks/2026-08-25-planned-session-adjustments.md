@@ -26,15 +26,15 @@ completion, with explicit baseline and adjusted behavior.
 
 ## Plan
 
-- [ ] Add a service command for authorized coach/athlete edits to an assigned
-  session, including all session fields and full block structure.
-- [ ] Mark athlete changes as adjusted; make a pre-completion coach edit the
-  current plan and latest coach baseline, replacing the athlete adjustment.
-- [ ] Move the current session assignment when its date changes without making a
-  copy or changing the source/template/other assignments.
-- [ ] Expose coach/athlete edit entry points and visible adjusted status on
-  session/calendar surfaces.
-- [ ] Add ownership, completed-session, date-move, source-isolation, and
+- [x] Add a service command for authorized coach/athlete edits to an assigned
+   session, including all session fields and full block structure.
+- [x] Mark athlete changes as adjusted; make a pre-completion coach edit the
+   current plan and latest coach baseline, replacing the athlete adjustment.
+- [x] Move the current session assignment when its date changes without making a
+   copy or changing the source/template/other assignments.
+- [x] Expose coach/athlete edit entry points and visible adjusted status on
+   session/calendar surfaces.
+- [x] Add ownership, completed-session, date-move, source-isolation, and
    concurrent-save regression tests.
 
 ## Progress Log
@@ -53,6 +53,27 @@ completion, with explicit baseline and adjusted behavior.
 - Blocker or next step: Define the authorized planned-edit command and its
   transaction semantics before implementation.
 
+### 2026-08-25
+
+- What changed: Added `athlete-session-adjustment-service`, the athlete planned
+  session PATCH route, shared `SessionComposer` schedule controls, and coach
+  overwrite behavior that clears adjusted state and updates the baseline.
+- Decision or discovery: Planned edits update one existing Session, its ordered
+  Blocks, its target Plan, and Assignment target date in one transaction. Source
+  and ownership fields are preserved; skipped blocks now persist on `Block`.
+- Files touched: `lib/athlete-session-adjustment-service.ts`,
+  `lib/coach-planner-service.ts`, `lib/athlete-service.ts`,
+  `components/SessionComposer.tsx`, athlete session route/client/page, schema,
+  and focused service/source tests.
+- Verification: Planned-adjustment/coach/assignment focused tests passed (18
+  tests); `pnpm test` passed (140 tests); `pnpm db:push --force-reset && pnpm db:seed`,
+  `pnpm exec prisma validate`, `pnpm lint`, and `pnpm build` passed. Build retains
+  the existing middleware deprecation warning.
+- Blocker or next step: Browser narrow/wide viewport, loading, empty, error,
+  keyboard/focus, contrast, and responsive inspection was not available in this
+  environment; automated source/component coverage passed. Actual-outcome editing
+  remains `SESSION-ACTUAL-001`.
+
 ## Acceptance Criteria
 
 - An athlete can edit only their assigned session, never the reusable source.
@@ -69,7 +90,7 @@ completion, with explicit baseline and adjusted behavior.
 
 ## Handoff / Completion
 
-- **Final status:** `in-progress`
-- **History record:** not applicable until implementation
+- **Final status:** `completed`
+- **History record:** [planned session adjustments](../history/2026-08-25-planned-session-adjustments.md)
 - **Feature records updated:** [session adjustments](../features/session-adjustments.md), [planner](../features/planner.md), [athlete](../features/athlete.md)
-- **Remaining work:** Completion/outcome editing depends on this session access contract.
+- **Remaining work:** Completion/outcome editing depends on this session access contract; manual browser inspection remains a verification gap.

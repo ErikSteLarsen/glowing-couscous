@@ -3,8 +3,8 @@
 - **IDs:** `ATHLETE-001`, `COMPLETE-001`
 - **Status:** `shipped`
 - **Last verified:** `2026-08-25`
-- **Owner:** `lib/athlete-service.ts` for reads; `lib/athlete-completion-service.ts` for Activity writes
-- **Related work:** [baseline](../history/2026-08-21-baseline.md), [architecture](../../../ARCHITECTURE.md), [Live task](../tasks/2026-08-21-athlete-live-execution.md), [completion task](../tasks/2026-08-21-completion-integrity.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [calendar month polish](../history/2026-08-22-calendar-month-polish.md), [calendar week overview](../history/2026-08-22-calendar-week-overview.md)
+- **Owner:** `lib/athlete-service.ts` for reads, `lib/athlete-session-adjustment-service.ts` for planned writes, and `lib/athlete-completion-service.ts` for Activity writes
+- **Related work:** [baseline](../history/2026-08-21-baseline.md), [architecture](../../../ARCHITECTURE.md), [Live task](../tasks/2026-08-21-athlete-live-execution.md), [completion task](../tasks/2026-08-21-completion-integrity.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [planned adjustment task](../tasks/2026-08-25-planned-session-adjustments.md), [calendar month polish](../history/2026-08-22-calendar-month-polish.md), [calendar week overview](../history/2026-08-22-calendar-week-overview.md)
 
 ## Contract
 
@@ -43,6 +43,9 @@ They can mark a session complete or move it back to planned while saving notes.
 - Completion stores the complete latest actual editor payload and RPE on the
   Activity, while retained notes remain available through the Activity/Session
   fields and old outcomes remain independent of future planned edits.
+- Athletes can open the shared session editor before completion, change one
+  assigned session and its date/time, save an adjusted planned status, and leave
+  the source/template baseline untouched.
 - Manual completion stores `manual-planned` estimates with nullable compliance,
   persisted segments, and notes retained on the Session across reopen.
 - Completed sessions cannot be edited or deleted through coach planner mutation
@@ -69,6 +72,8 @@ They can mark a session complete or move it back to planned while saving notes.
   not a performed-metrics import or sensor integration.
 - The live surface is guidance only and does not track current step state back to the server.
 - Athlete onboarding and navigation polish remain planned.
+- Browser verification of planned-edit loading, empty/error states, keyboard
+  focus, contrast, and narrow/wide responsive layouts remains outstanding.
 
 ## Extension Rules
 

@@ -49,6 +49,7 @@ All feature logic belongs behind these `lib/` modules. Do not reintroduce Prisma
 | `lib/auth-session.ts` | Current-user lookup for server-rendered UI (`getCurrentUser`) |
 | `lib/api-auth.ts` | Role-based route guards for API handlers (`requireCoach`, `requireAthlete`) |
 | `lib/session-snapshot-service.ts` | Canonical latest coach-baseline and actual snapshot serialization, validation, replacement, and comparison projection |
+| `lib/athlete-session-adjustment-service.ts` | Athlete-owned planned edits for one assigned Session, including date movement and adjusted status |
 
 ### Shared UI components
 

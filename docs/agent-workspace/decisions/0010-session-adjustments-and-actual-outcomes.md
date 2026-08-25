@@ -81,3 +81,10 @@ baseline, and `Activity.actualSnapshotJson` stores the complete latest actual.
 to bounded metadata while the payload preserves skipped blocks, schedule, notes,
 targets, and derived-input content. Actual equality is projected away when the
 baseline/actual difference identity has no block or schedule difference.
+
+`SESSION-PLAN-ADJUST-001` keeps planned edits on the assigned Session: athletes
+use `athlete-session-adjustment-service` and set `adjusted`, while coach edits
+through `coach-planner-service` clear `adjusted` and replace the latest baseline.
+Moving a planned session updates its existing Plan and Assignment target date in
+the same transaction; source/template lineage and other assigned Sessions are
+not synchronized.

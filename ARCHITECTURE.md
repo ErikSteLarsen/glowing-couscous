@@ -76,6 +76,8 @@ If a feature changes planner behavior, add it here first instead of scattering P
   manual metric provenance, notes retention, and Activity lifecycle writes.
 - `lib/session-snapshot-service.ts` owns canonical latest baseline/actual
   payload serialization, bounded metadata validation, replacement, and loading.
+- `lib/athlete-session-adjustment-service.ts` owns athlete authorization and
+  planned edits to one assigned Session, including Plan/Assignment date movement.
 - Athlete pages under `app/(app)/athlete/**` plus `app/(app)/settings/page.tsx` should stay thin and delegate to this service where appropriate.
 
 ### Assignment boundary
@@ -161,6 +163,8 @@ The main read/write boundaries are clearer, but they still need protection:
     must not introduce separate copy or synchronization paths.
 11. Keep baseline/actual snapshot serialization behind `session-snapshot-service`
     and do not derive historical Activity outcomes from mutable Session blocks.
+12. Keep athlete planned mutations behind `athlete-session-adjustment-service`;
+    do not extend the compatibility planner route for this behavior.
 
 ## Highest-value architectural next step
 

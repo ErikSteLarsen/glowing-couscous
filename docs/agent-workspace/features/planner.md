@@ -50,6 +50,9 @@ and have no athlete.
   `session-editor-adapters`.
 - Assigned athlete sessions persist a complete latest coach baseline payload;
   source copies remain independent from reusable source records.
+- Coach edits to planned athlete sessions clear adjusted status, replace the
+  baseline, preserve source ownership, and move the existing Assignment target
+  date rather than creating another Session.
 
 ## Verification
 
@@ -58,6 +61,7 @@ and have no athlete.
 - `pnpm lint && pnpm build` — pass on 2026-08-21.
 - `pnpm test` — 134 passing tests on 2026-08-25, including workflow source and
   snapshot assertions.
+- Planned adjustment/coach overwrite tests pass on 2026-08-25.
 - `pnpm db:push --force-reset && pnpm db:seed` — pass on the disposable local
   SQLite database on 2026-08-21.
 
