@@ -1,7 +1,7 @@
 # Task: Persist Coach Baseline And Actual Snapshots
 
-- **Status:** `planned`
-- **Agent:** `unclaimed`
+- **Status:** `in-progress`
+- **Agent:** `OpenCode`
 - **Started:** `2026-08-25`
 - **Updated:** `2026-08-25`
 - **Task ID:** `SESSION-SNAPSHOT-001`
@@ -34,7 +34,21 @@ independent.
 - [ ] Ensure source/template IDs and other assignments do not create live sync
   behavior.
 - [ ] Add schema/service tests covering one-version equality, baseline changes,
-  actual replacement, and template/source isolation.
+   actual replacement, and template/source isolation.
+
+## Progress Log
+
+### 2026-08-25
+
+- What changed: Claimed `SESSION-SNAPSHOT-001` after the canonical editor and
+  editor migration checkpoints.
+- Decision or discovery: Snapshot persistence must be scoped to the assigned
+  `Session`; mutable planned blocks and completed Activity history must not be
+  used as a live synchronization path for templates or source sessions.
+- Files touched: This task and `WORK-INDEX.md`.
+- Verification: Red tests not run yet; contract tests are next.
+- Blocker or next step: Define the snapshot service boundary and schema contract
+  in failing tests before implementing persistence.
 
 ## Acceptance Criteria
 
@@ -54,7 +68,7 @@ independent.
 
 ## Handoff / Completion
 
-- **Final status:** `planned`
+- **Final status:** `in-progress`
 - **History record:** not applicable until implementation
 - **Feature records updated:** [session adjustments](../features/session-adjustments.md), [athlete](../features/athlete.md)
 - **Remaining work:** Planned mutation and completion services consume this persistence contract.

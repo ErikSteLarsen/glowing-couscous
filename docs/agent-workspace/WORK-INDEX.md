@@ -43,7 +43,7 @@ registered a multi-step task in this workspace.
 
 | Task | Status | Agent | Feature IDs | Last update |
 |---|---|---|---|---|
-| No active task currently recorded | — | — | — | 2026-08-25 |
+| `SESSION-SNAPSHOT-001` | `in-progress` | OpenCode | `SESSION-ADJUST-001`, `DOMAIN-001`, `COMPLETE-001` | 2026-08-25; [task](tasks/2026-08-25-session-snapshots.md) |
 
 ## Planned Task Files
 
@@ -62,7 +62,7 @@ one by creating a task progress entry and changing its status to `in-progress`.
 | `COMPAT-002` | `shipped` | Completion/API semantics where shared | [compatibility and docs](tasks/2026-08-21-compatibility-docs.md), [completion record](tasks/2026-08-21-compatibility-docs-progress.md), [history](history/2026-08-21-compatibility-docs.md) |
 | `SESSION-EDIT-001` | `shipped` | None | [canonical session editor](tasks/2026-08-25-canonical-session-editor.md), [history](history/2026-08-25-canonical-session-editor.md) |
 | `SESSION-EDITOR-MIGRATION-001` | `shipped` | `SESSION-EDIT-001` | [planner/template editor migration](tasks/2026-08-25-editor-migration.md), [history](history/2026-08-25-editor-migration.md) |
-| `SESSION-SNAPSHOT-001` | `planned` | `SESSION-EDIT-001` | [coach baseline and actual snapshots](tasks/2026-08-25-session-snapshots.md) |
+| `SESSION-SNAPSHOT-001` | `in-progress` | `SESSION-EDIT-001` | [coach baseline and actual snapshots](tasks/2026-08-25-session-snapshots.md) |
 | `SESSION-PLAN-ADJUST-001` | `planned` | `SESSION-EDIT-001`, `SESSION-SNAPSHOT-001` | [planned session adjustments](tasks/2026-08-25-planned-session-adjustments.md) |
 | `SESSION-ACTUAL-001` | `planned` | `SESSION-EDIT-001`, `SESSION-SNAPSHOT-001`, `SESSION-PLAN-ADJUST-001` | [actual outcome editing](tasks/2026-08-25-actual-outcome-editing.md) |
 | `SESSION-COMPARE-001` | `planned` | `SESSION-ACTUAL-001` | [baseline and actual comparison](tasks/2026-08-25-baseline-actual-comparison.md) |
