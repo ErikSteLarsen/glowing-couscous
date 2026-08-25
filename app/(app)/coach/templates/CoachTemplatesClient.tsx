@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   EmptyState,
   dangerTextClassName,
+  dangerButtonClassName,
   formFieldClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
@@ -13,8 +14,14 @@ import {
 } from '@/components/ui';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { MetricText } from '@/components/tempo/MetricText';
-import { deriveSessionMetrics } from '@/lib/session-math';
-import { getSportLabel, SPORT_OPTIONS } from '@/lib/sport';
+import { SessionComposer } from '@/components/SessionComposer';
+import { deriveSessionEditorMetrics, type SessionEditorDraft } from '@/lib/session-editor';
+import {
+  createEmptyTemplateEditorDraft,
+  createTemplateEditorDraftFromRecord,
+  serializeTemplateEditorDraftForSave,
+} from '@/lib/session-editor-adapters';
+import { getSportLabel } from '@/lib/sport';
 
 type TemplateRecord = {
   id: number;
@@ -35,28 +42,6 @@ type TemplateRecord = {
   }>;
 };
 
-type TemplateDraftBlock = {
-  kind: 'warmup' | 'work' | 'recovery' | 'cooldown';
-  zone: number;
-  durationSec: number;
-  reps: number | null;
-  targetType: 'power' | 'pace' | 'hr' | null;
-  targetLow: number | null;
-  targetHigh: number | null;
-  note: string;
-};
-
-const emptyBlock = (): TemplateDraftBlock => ({
-  kind: 'work',
-  zone: 3,
-  durationSec: 900,
-  reps: null,
-  targetType: null,
-  targetLow: null,
-  targetHigh: null,
-  note: '',
-});
-
 function formatDuration(durationSec: number) {
   const hours = Math.floor(durationSec / 3600);
   const minutes = Math.round((durationSec % 3600) / 60);
@@ -71,10 +56,7 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingTemplateId, setEditingTemplateId] = useState<number | null>(null);
-  const [editorName, setEditorName] = useState('');
-  const [editorSport, setEditorSport] = useState('RUNNING');
-  const [editorSummary, setEditorSummary] = useState('');
-  const [editorBlocks, setEditorBlocks] = useState<TemplateDraftBlock[]>([emptyBlock()]);
+  const [editorDraft, setEditorDraft] = useState<SessionEditorDraft>(() => createEmptyTemplateEditorDraft());
 
   const visibleTemplates = useMemo(() => {
     const query = filterText.trim().toLowerCase();
@@ -125,21 +107,7 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
 
   function openEditor(template?: TemplateRecord) {
     setEditingTemplateId(template?.id ?? null);
-    setEditorName(template?.name ?? '');
-    setEditorSport(template?.sport ?? 'RUNNING');
-    setEditorSummary(template?.summary ?? '');
-    setEditorBlocks(
-      template?.blocks.map((block) => ({
-        kind: block.kind as TemplateDraftBlock['kind'],
-        zone: block.zone,
-        durationSec: block.durationSec,
-        reps: block.reps,
-        targetType: block.targetType as TemplateDraftBlock['targetType'],
-        targetLow: block.targetLow,
-        targetHigh: block.targetHigh,
-        note: block.note ?? '',
-      })) ?? [emptyBlock()],
-    );
+    setEditorDraft(template ? createTemplateEditorDraftFromRecord(template) : createEmptyTemplateEditorDraft());
     setEditorOpen(true);
     setMessage('');
   }
@@ -151,7 +119,7 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
         {
           method: editingTemplateId ? 'PATCH' : 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: editorName, sport: editorSport, summary: editorSummary, blocks: editorBlocks }),
+          body: JSON.stringify(serializeTemplateEditorDraftForSave(editorDraft)),
         },
       );
       const payload = await response.json().catch(() => ({})) as { error?: string };
@@ -196,28 +164,12 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
             </div>
             <button type="button" className={secondaryButtonClassName} onClick={() => setEditorOpen(false)}>Cancel</button>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <input className={formFieldClassName} placeholder="Template name" value={editorName} onChange={(event) => setEditorName(event.target.value)} />
-            <select className={formFieldClassName} value={editorSport} onChange={(event) => setEditorSport(event.target.value)}>
-              {SPORT_OPTIONS.map((sport) => <option key={sport} value={sport}>{getSportLabel(sport)}</option>)}
-            </select>
-          </div>
-          <textarea className={formFieldClassName} placeholder="Summary" value={editorSummary} onChange={(event) => setEditorSummary(event.target.value)} />
-          <div className="space-y-3">
-            {editorBlocks.map((block, index) => (
-              <div key={index} className="grid gap-2 rounded-[12px] border border-[var(--border)] p-3 sm:grid-cols-[1fr_90px_110px_1.5fr_auto]">
-                <select className={formFieldClassName} value={block.kind} onChange={(event) => setEditorBlocks((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, kind: event.target.value as TemplateDraftBlock['kind'] } : item))}>
-                  {['warmup', 'work', 'recovery', 'cooldown'].map((kind) => <option key={kind} value={kind}>{kind}</option>)}
-                </select>
-                <input className={formFieldClassName} type="number" min="1" max="5" value={block.zone} onChange={(event) => setEditorBlocks((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, zone: Number(event.target.value) } : item))} />
-                <input className={formFieldClassName} type="number" min="60" value={block.durationSec} onChange={(event) => setEditorBlocks((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, durationSec: Number(event.target.value) } : item))} />
-                <input className={formFieldClassName} placeholder="Block note" value={block.note} onChange={(event) => setEditorBlocks((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, note: event.target.value } : item))} />
-                <button type="button" className={secondaryButtonClassName} onClick={() => setEditorBlocks((current) => current.length === 1 ? current : current.filter((_, itemIndex) => itemIndex !== index))}>Remove</button>
-              </div>
-            ))}
-          </div>
+          <SessionComposer
+            draft={editorDraft}
+            onChange={setEditorDraft}
+            summaryPlaceholder="Summary"
+          />
           <div className="flex flex-wrap gap-3">
-            <button type="button" className={secondaryButtonClassName} onClick={() => setEditorBlocks((current) => [...current, emptyBlock()])}>Add block</button>
             <button type="button" className={primaryButtonClassName} disabled={isPending} onClick={saveEditor}>{isPending ? 'Saving…' : 'Save template'}</button>
           </div>
         </Surface>
@@ -228,22 +180,7 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
       ) : (
         <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {visibleTemplates.map((template) => {
-            const metrics = deriveSessionMetrics(
-              template.blocks.map((block) => ({
-                kind: block.kind as 'warmup' | 'work' | 'recovery' | 'cooldown',
-                zone: block.zone as 1 | 2 | 3 | 4 | 5,
-                durationSec: block.durationSec,
-                reps: block.reps,
-                target:
-                  block.targetType && block.targetLow !== null && block.targetHigh !== null
-                    ? {
-                        type: block.targetType as 'power' | 'pace' | 'hr',
-                        low: block.targetLow,
-                        high: block.targetHigh,
-                      }
-                    : null,
-              })),
-            );
+            const metrics = deriveSessionEditorMetrics(createTemplateEditorDraftFromRecord(template));
 
             return (
               <Surface key={template.id} className="space-y-4">
@@ -283,7 +220,7 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
                     type="button"
                     onClick={() => deleteTemplate(template.id)}
                     disabled={isPending}
-                    className="min-h-11 rounded-[10px] border border-[#FAD8BE] bg-[#FEEDE0] px-4 text-sm font-semibold text-[#B45516]"
+                    className={dangerButtonClassName}
                   >
                     Delete
                   </button>

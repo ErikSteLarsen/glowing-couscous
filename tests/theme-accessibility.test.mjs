@@ -29,6 +29,26 @@ test('shared form tokens and helpers support the light theme', async () => {
   assert.match(uiSource, /focus-visible:ring-offset-2/);
 });
 
+test('shared action tokens keep interactive colors explicit and reusable', async () => {
+  const uiSource = await read('components/ui.tsx');
+  const signOutSource = await read('components/SignOutButton.tsx');
+  const requestsSource = await read('components/CoachRequestsPanel.tsx');
+
+  assert.match(uiSource, /export const dangerButtonClassName/);
+  assert.match(uiSource, /focus-visible:ring-2/);
+  assert.doesNotMatch(uiSource, /brand-strong/);
+  assert.match(signOutSource, /primaryButtonClassName/);
+  assert.match(signOutSource, /secondaryButtonClassName/);
+  assert.match(requestsSource, /dangerButtonClassName/);
+});
+
+test('anchor color inheritance stays in the base layer so link utilities can win', async () => {
+  const globalsSource = await read('app/globals.css');
+
+  assert.match(globalsSource, /@layer base[\s\S]*a\s*\{[\s\S]*color:\s*inherit;/);
+  assert.doesNotMatch(globalsSource, /(?:^|\n)a \{\n  color: inherit;/);
+});
+
 test('auth pages reuse shared accessible form styling and document demo athlete access', async () => {
   const loginSource = await read('app/(auth)/login/page.tsx');
   const signupSource = await read('app/(auth)/signup/page.tsx');

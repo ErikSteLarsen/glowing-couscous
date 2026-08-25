@@ -14,9 +14,11 @@ export const formSelectClassName = `${formFieldClassName} pr-10`;
 export const formTextareaClassName =
   'w-full rounded-[10px] border border-[var(--field-border)] bg-[var(--field-surface)] px-4 py-3 text-sm text-[var(--text)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-[var(--brand)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
 export const primaryButtonClassName =
-  'inline-flex min-h-11 items-center justify-center rounded-[10px] bg-[var(--text)] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50';
+  'inline-flex min-h-11 items-center justify-center rounded-[10px] bg-[var(--text)] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-50';
 export const secondaryButtonClassName =
-  'inline-flex min-h-11 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--field-surface)] disabled:opacity-50';
+  'inline-flex min-h-11 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--field-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-50';
+export const dangerButtonClassName =
+  'inline-flex min-h-11 items-center justify-center rounded-[10px] border border-[#FAD8BE] bg-[#FEEDE0] px-4 py-2.5 text-sm font-semibold text-[#B45516] transition hover:bg-[#FDE5D3] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--status-danger)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-50';
 export const dangerTextClassName = 'text-sm text-[var(--status-danger)]';
 export const successTextClassName = 'text-sm text-[var(--status-success)]';
 

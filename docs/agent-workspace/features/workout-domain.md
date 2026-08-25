@@ -2,8 +2,8 @@
 
 - **ID:** `DOMAIN-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-21`
-- **Owner:** `lib/tempo-blocks.ts`, `lib/session-math.ts`, `lib/planner-draft.ts`, `lib/sport.ts`
+- **Last verified:** `2026-08-25`
+- **Owner:** `lib/tempo-blocks.ts`, `lib/session-math.ts`, `lib/planner-draft.ts`, `lib/session-editor.ts`, `lib/sport.ts`
 - **Related work:** [baseline](../history/2026-08-21-baseline.md), [schema](../../../prisma/schema.prisma)
 
 ## Contract
@@ -26,10 +26,14 @@ and visual segments come from those blocks.
 - Supported sports are running, biking, swimming, strength, stretching, and rest.
 - Active block kinds are warmup, work, recovery, and cooldown.
 - Planner validation requires positive duration and complete non-inverted target ranges.
+- The canonical session editor preserves Tempo-compatible non-skipped blocks,
+  represents skipped blocks explicitly, and derives metrics through
+  `session-math`.
 
 ## Verification
 
-- `tests/session-math.test.ts`, `tests/planner-draft.test.ts`, and template tests pass on 2026-08-21.
+- `tests/session-math.test.ts`, `tests/planner-draft.test.ts`,
+  `tests/session-editor.test.ts`, and template tests pass on 2026-08-25.
 - `pnpm lint && pnpm build` — pass on 2026-08-21.
 
 ## Known Gaps

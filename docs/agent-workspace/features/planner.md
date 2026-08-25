@@ -2,9 +2,9 @@
 
 - **IDs:** `PLAN-001`, `LIB-001`, `TPLAN-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-21`
-- **Owners:** `lib/coach-planner-service.ts`, `lib/coach-session-library-service.ts`, `lib/coach-training-plan-service.ts`
-- **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md), [planner history](../../../docs/superpowers/plans/2026-06-23-coach-planner.md), [source assignment task](../tasks/2026-08-21-source-copy-assignment.md), [workflow task](../tasks/2026-08-21-planner-template-workflows.md)
+- **Last verified:** `2026-08-25`
+- **Owners:** `lib/coach-planner-service.ts`, `lib/coach-session-library-service.ts`, `lib/coach-training-plan-service.ts`, `lib/session-editor-adapters.ts`, `components/SessionComposer.tsx`
+- **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md), [planner history](../../../docs/superpowers/plans/2026-06-23-coach-planner.md), [source assignment task](../tasks/2026-08-21-source-copy-assignment.md), [workflow task](../tasks/2026-08-21-planner-template-workflows.md), [editor migration](../tasks/2026-08-25-editor-migration.md)
 
 ## Contract
 
@@ -45,12 +45,16 @@ and have no athlete.
 - The active planner exposes source assignment with athlete/date or Monday-week
   targets, previews resulting dates, and confirms before resetting loaded drafts.
 - The templates route exposes live create/edit controls using Tempo block fields.
+- The active planner now uses `SessionComposer` with the canonical session draft;
+  ownership modes and source-template context are retained by
+  `session-editor-adapters`.
 
 ## Verification
 
-- Planner, draft, library, training-plan, assignment, and route/source tests pass in `pnpm test` on 2026-08-21.
+- Planner, draft, library, training-plan, assignment, route/source, and editor
+  migration tests pass in `pnpm test` on 2026-08-25.
 - `pnpm lint && pnpm build` — pass on 2026-08-21.
-- `pnpm test` — 107 passing tests on 2026-08-21, including workflow source assertions.
+- `pnpm test` — 127 passing tests on 2026-08-25, including workflow source assertions.
 - `pnpm db:push --force-reset && pnpm db:seed` — pass on the disposable local
   SQLite database on 2026-08-21.
 

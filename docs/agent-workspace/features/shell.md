@@ -2,7 +2,7 @@
 
 - **ID:** `SHELL-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-21`
+- **Last verified:** `2026-08-22`
 - **Owner:** `components/AppShell.tsx`, `components/AppSidebar.tsx`, `lib/app-navigation.ts`, `app/globals.css`
 - **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md)
 
@@ -27,12 +27,14 @@ marks the most specific route active.
 - Nested routes prefer the most specific matching navigation item.
 - Page shells provide narrow/default/wide width tiers; planner and calendar use wide layouts.
 - Global tokens define paper, surface, border, sage brand, zones, status colors,
-  focus styles, tabular metrics, and pointer behavior.
+  focus styles, tabular metrics, and pointer behavior. Shared primary,
+  secondary, and danger actions also define consistent focus and disabled
+  states.
 
 ## Verification
 
-- `pnpm test` — shell, navigation, accessibility, theme, and layout assertions pass on 2026-08-21.
-- `pnpm lint && pnpm build` — pass on 2026-08-21.
+- `pnpm test` — shell, navigation, accessibility, theme, layout, and cleanup assertions pass (115 tests) on 2026-08-22.
+- `pnpm lint && pnpm build` — pass on 2026-08-22.
 
 ## Known Gaps
 

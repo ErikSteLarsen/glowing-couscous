@@ -2,9 +2,9 @@
 
 - **IDs:** `ATHLETE-001`, `COMPLETE-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-21`
+- **Last verified:** `2026-08-22`
 - **Owner:** `lib/athlete-service.ts` for reads; `lib/athlete-completion-service.ts` for Activity writes
-- **Related work:** [baseline](../history/2026-08-21-baseline.md), [architecture](../../../ARCHITECTURE.md), [Live task](../tasks/2026-08-21-athlete-live-execution.md), [completion task](../tasks/2026-08-21-completion-integrity.md)
+- **Related work:** [baseline](../history/2026-08-21-baseline.md), [architecture](../../../ARCHITECTURE.md), [Live task](../tasks/2026-08-21-athlete-live-execution.md), [completion task](../tasks/2026-08-21-completion-integrity.md), [calendar month polish](../history/2026-08-22-calendar-month-polish.md), [calendar week overview](../history/2026-08-22-calendar-week-overview.md)
 
 ## Contract
 
@@ -26,7 +26,14 @@ They can mark a session complete or move it back to planned while saving notes.
 
 - Home summarizes today, next four days, recent activity, trend, week totals,
   and configurable overview cards.
-- Calendar supports a Monday-first week scroller and a full Monday-first month grid.
+- Calendar supports a full Monday-first week overview and a full Monday-first month grid.
+- The week overview always shows all seven Monday-to-Sunday days in a
+  responsive one, two, or three-column layout. Its today shortcut is only
+  shown when today is outside the visible week.
+- Each session summary card links to session detail as a whole, without a
+  separate nested `Open session` action.
+- Month navigation sits beside the displayed month in the overview card, with
+  labeled directional controls and readable grid overflow on narrow screens.
 - Session detail derives status, duration, TSS, targets, zone segments, and block metadata.
 - Live execution presents ordered blocks and a stepper-style execution view.
 - Live execution advances, goes back, restarts, and marks blocks complete through
@@ -38,11 +45,15 @@ They can mark a session complete or move it back to planned while saving notes.
 - Completed sessions cannot be edited or deleted through coach planner mutation
   paths while their Activity outcome exists.
 - Activity feed returns the latest twelve activities with totals and block segments.
+- The active athlete route tree uses the light Tempo surface; unreferenced
+  pre-convergence athlete week/session components were removed after reference
+  analysis so their dark-theme controls cannot be reused accidentally.
 
 ## Verification
 
-- Calendar, session math, navigation, source, accessibility, and build checks pass on 2026-08-21.
-- `pnpm test` — 112 passing tests, including focused completion and execution
+- Calendar, session math, navigation, source, accessibility, cleanup, calendar
+  layout, and build checks pass on 2026-08-22.
+- `pnpm test` — 115 passing tests, including focused completion and execution
   service tests and
   immutable planner behavior coverage.
 - `pnpm db:push --force-reset && pnpm db:seed` — pass on the disposable local

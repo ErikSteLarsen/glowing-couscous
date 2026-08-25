@@ -2,7 +2,7 @@
 
 - **ID:** `COACH-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-21`
+- **Last verified:** `2026-08-22`
 - **Owner:** `lib/coach-service.ts`
 - **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md)
 
@@ -30,7 +30,7 @@ calendar sessions, and recent prior sessions.
 ## Verification
 
 - `tests/coach-service.test.ts` — overview/detail and roster ownership assertions pass on 2026-08-21.
-- `pnpm test`, `pnpm lint`, and `pnpm build` — pass on 2026-08-21.
+- `pnpm test`, `pnpm lint`, and `pnpm build` — pass on 2026-08-22.
 
 ## Known Gaps
 

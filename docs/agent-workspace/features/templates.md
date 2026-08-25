@@ -2,9 +2,9 @@
 
 - **ID:** `TEMPLATE-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-21`
-- **Owners:** `lib/template-service.ts`, `lib/assignment-service.ts`
-- **Related work:** [baseline](../history/2026-08-21-baseline.md), [product scope](../../../SPEC.md), [workflow task](../tasks/2026-08-21-planner-template-workflows.md), [assignment task](../tasks/2026-08-21-source-copy-assignment.md)
+- **Last verified:** `2026-08-25`
+- **Owners:** `lib/template-service.ts`, `lib/assignment-service.ts`, `lib/session-editor-adapters.ts`, `components/SessionComposer.tsx`
+- **Related work:** [baseline](../history/2026-08-21-baseline.md), [product scope](../../../SPEC.md), [workflow task](../tasks/2026-08-21-planner-template-workflows.md), [assignment task](../tasks/2026-08-21-source-copy-assignment.md), [editor migration](../tasks/2026-08-25-editor-migration.md)
 
 ## Contract
 
@@ -27,19 +27,23 @@ a date without creating duplicate matching sessions.
 - Blocks are normalized and persisted in sort order with Tempo fields.
 - Duplicate creates a private copy with copied blocks.
 - The live editor creates and updates canonical Tempo block fields.
+- The live editor uses `SessionComposer` and initializes/serializes through the
+  canonical session editor contract.
 - Assignment validates athlete roster ownership, template ownership, date, and
   week plan; repeated matching assignment reuses the existing session.
 
 ## Verification
 
 - `tests/template-service.test.ts` and `tests/coach-builder-assignment.test.ts` pass on 2026-08-21.
-- `pnpm test` — 107 passing tests on 2026-08-21, including planner/template workflow assertions.
+- `pnpm test` — 127 passing tests on 2026-08-25, including planner/template workflow and migration assertions.
 - `pnpm lint && pnpm build` — pass on 2026-08-21.
 
 ## Known Gaps
 
 - Template service still contains normalization compatibility for older block
   names; do not remove it without checking persisted data and migration needs.
+- Existing template persistence ignores canonical fields not represented by the
+  current schema, including skipped state, RPE, and separate coach/athlete notes.
 - Assignment behavior has focused tests but no end-to-end browser test.
 
 ## Extension Rules

@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Surface } from '@/components/ui';
+import { dangerButtonClassName, primaryButtonClassName, Surface } from '@/components/ui';
 
 type PendingRequest = {
   id: number;
@@ -70,14 +70,14 @@ export function CoachRequestsPanel() {
               <button
                 onClick={() => handleAction(req.id, 'accept')}
                 disabled={actingRequestId !== null}
-                className="min-h-11 rounded-[10px] bg-[var(--text)] px-4 text-sm font-semibold text-white"
+                className={primaryButtonClassName}
               >
                 Accept
               </button>
               <button
                 onClick={() => handleAction(req.id, 'reject')}
                 disabled={actingRequestId !== null}
-                className="min-h-11 rounded-[10px] border border-[#FAD8BE] bg-[#FEEDE0] px-4 text-sm font-semibold text-[#B45516]"
+                className={dangerButtonClassName}
               >
                 Reject
               </button>

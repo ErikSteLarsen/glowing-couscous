@@ -10,35 +10,23 @@ import {
   dangerTextClassName,
   formFieldClassName,
   formSelectClassName,
-  formTextareaClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   successTextClassName,
 } from '@/components/ui';
-import { MetricText } from '@/components/tempo/MetricText';
-import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { SessionComposer } from '@/components/SessionComposer';
 import { formatDuration } from '@/lib/format-duration';
-import { deriveSessionMetrics } from '@/lib/session-math';
+import { deriveSessionEditorMetrics } from '@/lib/session-editor';
 import { getSportLabel, SPORT_OPTIONS } from '@/lib/sport';
-import { TEMPO_ZONE_META, type TempoBlockKind, type TempoZone } from '@/lib/tempo-blocks';
 import {
-  addPlannerBlock,
-  createEmptyPlannerSessionDraft,
-  createPlannerBlockDraft,
-  duplicatePlannerBlock,
-  movePlannerBlock,
-  parseSportMetricsJson,
-  plannerDraftToTempoBlocks,
-  removePlannerBlock,
-  serializePlannerDraftForSave,
-  templateToPlannerDraft,
-  updatePlannerBlock,
-  validatePlannerSessionDraft,
-  type PlannerSessionDraft,
-  type PlannerSportMetrics,
-  type PlannerTargetType,
-  type PlannerTemplateRecord,
-} from '@/lib/planner-draft';
+  createEmptyPlannerEditorDraft,
+  createPlannerEditorDraftFromPersisted,
+  createPlannerEditorDraftFromTemplate,
+  serializePlannerEditorDraftForSave,
+  validatePlannerEditorDraft,
+  type PlannerEditorDraft,
+  type PlannerEditorTemplateRecord,
+} from '@/lib/session-editor-adapters';
 import { SourceAssignmentPanel } from './SourceAssignmentPanel';
 
 type PlannerAthlete = { id: number; name: string; email: string };
@@ -57,7 +45,7 @@ type PlannerSession = {
   durationSec: number;
   tss: number;
   segments: Array<{ key: string; zone: number; durationSec: number; label: string; color: string }>;
-  blocks: PlannerTemplateRecord['blocks'];
+  blocks: PlannerEditorTemplateRecord['blocks'];
 };
 type PlannerLibrarySession = {
   id: number;
@@ -68,7 +56,7 @@ type PlannerLibrarySession = {
   date: string | null;
   planWeekday: number | null;
   sportMetricsJson: string | null;
-  blocks: PlannerTemplateRecord['blocks'];
+  blocks: PlannerEditorTemplateRecord['blocks'];
 };
 type PlannerTrainingPlan = {
   id: number;
@@ -88,11 +76,7 @@ type ApiPayload = { error?: string; sessionId?: number };
 const workspaceModes = ['library', 'training-plan', 'athlete'] as const;
 type WorkspaceMode = (typeof workspaceModes)[number];
 
-const blockKinds = ['warmup', 'work', 'recovery', 'cooldown'] as const;
-const targetTypes = ['power', 'pace', 'hr'] as const;
 const weekdayLabels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-const emptySportMetrics: PlannerSportMetrics = { ftp: null, thresholdPaceSecPerKm: null, thresholdHr: null };
 
 export function PlannerClient({
   athletes,
@@ -106,7 +90,7 @@ export function PlannerClient({
   initialDate,
 }: {
   athletes: PlannerAthlete[];
-  templates: PlannerTemplateRecord[];
+  templates: PlannerEditorTemplateRecord[];
   librarySessions: PlannerLibrarySession[];
   trainingPlans: PlannerTrainingPlan[];
   days: PlannerDay[];
@@ -124,40 +108,37 @@ export function PlannerClient({
   const [selectedTrainingPlanId, setSelectedTrainingPlanId] = useState<number | null>(
     trainingPlans[0]?.id ?? null,
   );
-  const [selectedBlockIndex, setSelectedBlockIndex] = useState(0);
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
   const [showCreatePlan, setShowCreatePlan] = useState(false);
   const [newPlanName, setNewPlanName] = useState('');
   const [newPlanSport, setNewPlanSport] = useState('RUNNING');
   const initialTemplate = templates.find((template) => template.id === initialTemplateId);
-  const [draft, setDraft] = useState<PlannerSessionDraft>(() => {
+  const [draft, setDraft] = useState<PlannerEditorDraft>(() => {
     const ownershipMode = athletes.length === 0 ? 'coach-library' : 'athlete';
     return initialTemplate
-      ? templateToPlannerDraft(initialTemplate, {
+      ? createPlannerEditorDraftFromTemplate(initialTemplate, {
           ownershipMode,
           athleteId: initialAthleteId,
           scheduledDate: initialDate,
         })
-      : createEmptyPlannerSessionDraft({ ownershipMode, athleteId: initialAthleteId, scheduledDate: initialDate });
+      : createEmptyPlannerEditorDraft({ ownershipMode, athleteId: initialAthleteId, scheduledDate: initialDate });
   });
 
   const visibleSessions = useMemo(
     () => days.flatMap((day) => day.sessions.filter((session) => session.athleteId === selectedAthleteId)),
     [days, selectedAthleteId],
   );
-  const metrics = deriveSessionMetrics(plannerDraftToTempoBlocks(draft.blocks));
-  const selectedBlock = draft.blocks[selectedBlockIndex] ?? draft.blocks[0];
+  const metrics = deriveSessionEditorMetrics(draft);
   const selectedPlan = trainingPlans.find((p) => p.id === selectedTrainingPlanId);
 
   function switchMode(mode: WorkspaceMode) {
     if (draft.id && !window.confirm('Switching workspace will reset the loaded draft. Continue?')) return;
     setSelectedWorkspaceMode(mode);
-    setSelectedBlockIndex(0);
     setMessage('');
     const ownershipMode = mode === 'athlete' ? 'athlete' : mode === 'library' ? 'coach-library' : 'training-plan';
     setDraft(
-      createEmptyPlannerSessionDraft({
+      createEmptyPlannerEditorDraft({
         ownershipMode,
         athleteId: mode === 'athlete' ? selectedAthleteId : null,
         scheduledDate: mode === 'training-plan' ? null : initialDate,
@@ -166,11 +147,10 @@ export function PlannerClient({
   }
 
   function startNewSession(isoDate: string) {
-    setSelectedBlockIndex(0);
     setMessage('');
     const ownershipMode = selectedWorkspaceMode === 'athlete' ? 'athlete' : 'coach-library';
     setDraft(
-      createEmptyPlannerSessionDraft({
+      createEmptyPlannerEditorDraft({
         ownershipMode,
         athleteId: ownershipMode === 'athlete' ? selectedAthleteId : null,
         scheduledDate: isoDate,
@@ -179,114 +159,46 @@ export function PlannerClient({
   }
 
   function startNewPlanSession() {
-    setSelectedBlockIndex(0);
     setMessage('');
-    setDraft(
-      createEmptyPlannerSessionDraft({ ownershipMode: 'training-plan', athleteId: null, scheduledDate: null }),
-    );
+    setDraft(createEmptyPlannerEditorDraft({ ownershipMode: 'training-plan', athleteId: null, scheduledDate: null }));
   }
 
   function loadSession(session: PlannerSession) {
     setSelectedAthleteId(session.athleteId);
-    setSelectedBlockIndex(0);
     setMessage('');
-    setDraft({
-      id: session.id,
-      ownershipMode: 'athlete',
-      athleteId: session.athleteId,
-      scheduledDate: session.scheduledDate,
-      planWeekday: null,
-      sport: session.sport,
-      title: session.title,
-      summary: session.summary ?? '',
+    setDraft(createPlannerEditorDraftFromPersisted({
+      ...session,
       sourceTemplateId: session.templateId,
-      sportMetrics: parseSportMetricsJson(session.sportMetricsJson),
-      blocks: session.blocks.map((block) =>
-        createPlannerBlockDraft({
-          clientId: `session-${session.id}-block-${block.id}`,
-          id: block.id,
-          kind: parseBlockKind(block.kind) ?? 'work',
-          zone: parseTempoZone(String(block.zone)),
-          durationSec: block.durationSec,
-          reps: block.reps,
-          targetType: parseTargetType(block.targetType ?? ''),
-          targetLow: block.targetLow,
-          targetHigh: block.targetHigh,
-          note: block.note ?? '',
-        }),
-      ),
-    });
+      ownershipMode: 'athlete',
+    }));
   }
 
   function loadLibrarySession(session: PlannerLibrarySession) {
-    setSelectedBlockIndex(0);
     setMessage('');
-    setDraft({
-      id: session.id,
+    setDraft(createPlannerEditorDraftFromPersisted({
+      ...session,
+      date: session.date,
       ownershipMode: 'coach-library',
-      athleteId: null,
       scheduledDate: session.date ?? initialDate,
-      planWeekday: null,
-      sport: session.sport,
-      title: session.title,
-      summary: session.summary ?? '',
-      sourceTemplateId: null,
-      sportMetrics: parseSportMetricsJson(session.sportMetricsJson),
-      blocks: session.blocks.map((block) =>
-        createPlannerBlockDraft({
-          clientId: `lib-${session.id}-block-${block.id}`,
-          id: block.id,
-          kind: parseBlockKind(block.kind) ?? 'work',
-          zone: parseTempoZone(String(block.zone)),
-          durationSec: block.durationSec,
-          reps: block.reps,
-          targetType: parseTargetType(block.targetType ?? ''),
-          targetLow: block.targetLow,
-          targetHigh: block.targetHigh,
-          note: block.note ?? '',
-        }),
-      ),
-    });
+    }));
   }
 
   function loadPlanSession(session: PlannerLibrarySession) {
-    setSelectedBlockIndex(0);
     setMessage('');
-    setDraft({
-      id: session.id,
+    setDraft(createPlannerEditorDraftFromPersisted({
+      ...session,
       ownershipMode: 'training-plan',
-      athleteId: null,
       scheduledDate: null,
       planWeekday: (session.planWeekday as 1 | 2 | 3 | 4 | 5 | 6 | 7) ?? null,
-      sport: session.sport,
-      title: session.title,
-      summary: session.summary ?? '',
-      sourceTemplateId: null,
-      sportMetrics: parseSportMetricsJson(session.sportMetricsJson),
-      blocks: session.blocks.map((block) =>
-        createPlannerBlockDraft({
-          clientId: `plan-${session.id}-block-${block.id}`,
-          id: block.id,
-          kind: parseBlockKind(block.kind) ?? 'work',
-          zone: parseTempoZone(String(block.zone)),
-          durationSec: block.durationSec,
-          reps: block.reps,
-          targetType: parseTargetType(block.targetType ?? ''),
-          targetLow: block.targetLow,
-          targetHigh: block.targetHigh,
-          note: block.note ?? '',
-        }),
-      ),
-    });
+    }));
   }
 
   function loadTemplate(templateId: string) {
     const template = templates.find((item) => item.id === Number(templateId));
     if (!template) return;
-    setSelectedBlockIndex(0);
     setMessage('');
     setDraft(
-      templateToPlannerDraft(template, {
+      createPlannerEditorDraftFromTemplate(template, {
         ownershipMode: draft.ownershipMode,
         athleteId: draft.ownershipMode === 'athlete' ? selectedAthleteId : null,
         scheduledDate: draft.scheduledDate,
@@ -300,7 +212,7 @@ export function PlannerClient({
       setMessage('No training plan selected. Choose or create a training plan first.');
       return;
     }
-    const validationError = validatePlannerSessionDraft(draft);
+    const validationError = validatePlannerEditorDraft(draft);
     if (validationError) {
       setMessageTone('danger');
       setMessage(validationError);
@@ -331,7 +243,7 @@ export function PlannerClient({
     const response = await fetch(endpoint, {
       method: draft.id ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(serializePlannerDraftForSave(draft)),
+      body: JSON.stringify(serializePlannerEditorDraftForSave(draft)),
     });
     const payload = await readApiPayload(response);
     if (!response.ok) {
@@ -375,7 +287,7 @@ export function PlannerClient({
     setMessageTone('success');
     setMessage('Session deleted.');
     setDraft(
-      createEmptyPlannerSessionDraft({
+      createEmptyPlannerEditorDraft({
         ownershipMode: draft.ownershipMode,
         athleteId: draft.ownershipMode === 'athlete' ? selectedAthleteId : null,
         scheduledDate: draft.ownershipMode === 'training-plan' ? null : draft.scheduledDate,
@@ -486,8 +398,7 @@ export function PlannerClient({
                onChange={(event) => {
                  if (draft.id && !window.confirm('Changing plans will reset the loaded session draft. Continue?')) return;
                  setSelectedTrainingPlanId(Number(event.target.value) || null);
-                 setDraft(createEmptyPlannerSessionDraft({ ownershipMode: 'training-plan', athleteId: null, scheduledDate: null }));
-                 setSelectedBlockIndex(0);
+                  setDraft(createEmptyPlannerEditorDraft({ ownershipMode: 'training-plan', athleteId: null, scheduledDate: null }));
                }}
               >
                 <option value="">Choose plan</option>
@@ -672,26 +583,6 @@ export function PlannerClient({
           </Badge>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <input
-            className={formFieldClassName}
-            value={draft.title}
-            placeholder="Session title"
-            onChange={(event) => setDraft({ ...draft, title: event.target.value })}
-          />
-          <select
-            className={formSelectClassName}
-            value={draft.sport}
-            onChange={(event) => setDraft({ ...draft, sport: event.target.value })}
-          >
-            {SPORT_OPTIONS.map((sport) => (
-              <option key={sport} value={sport}>
-                {getSportLabel(sport)}
-              </option>
-            ))}
-          </select>
-        </div>
-
         {/* Weekday selector — training-plan mode only */}
         {draft.ownershipMode === 'training-plan' ? (
           <label className="block space-y-2">
@@ -718,76 +609,22 @@ export function PlannerClient({
           </label>
         ) : null}
 
-        <textarea
-          className={formTextareaClassName}
-          value={draft.summary}
-          placeholder="Coach notes or session intent"
-          onChange={(event) => setDraft({ ...draft, summary: event.target.value })}
+        <SessionComposer
+          draft={draft}
+          onChange={(next) =>
+            setDraft((current) => ({
+              ...next,
+              ownershipMode: current.ownershipMode,
+              sourceTemplateId: current.sourceTemplateId,
+            }))
+          }
+          showSportMetrics
+          summaryPlaceholder="Coach notes or session intent"
+          durationUnit="minutes"
         />
-
-        <SessionBlockBar segments={metrics.segments} />
-
-        <div className="space-y-3">
-          {draft.blocks.map((block, index) => {
-            const zoneMeta = TEMPO_ZONE_META[block.zone];
-            return (
-              <button
-                key={block.clientId}
-                type="button"
-                draggable
-                onDragStart={(event) => event.dataTransfer.setData('text/plain', String(index))}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={(event) => {
-                  const fromIndex = Number(event.dataTransfer.getData('text/plain'));
-                  setDraft((current) => movePlannerBlock(current, fromIndex, index));
-                  setSelectedBlockIndex(index);
-                }}
-                onClick={() => setSelectedBlockIndex(index)}
-                className={`w-full rounded-[12px] border p-4 text-left transition ${
-                  selectedBlockIndex === index
-                    ? 'border-[#DCE0D2] bg-[var(--brand-tint)]'
-                    : 'border-[var(--border)] bg-[#FBFAF7]'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold capitalize text-[var(--text)]">{block.kind}</p>
-                    <p className="mt-1 text-xs text-[var(--text-secondary)]">{block.note || zoneMeta.name}</p>
-                  </div>
-                  <MetricText>{formatDuration(block.durationSec)}</MetricText>
-                </div>
-                <div
-                  className="mt-3 h-2 rounded-full"
-                  style={{
-                    background: zoneMeta.solid,
-                    width: `${Math.max(18, Math.min(100, (block.durationSec / Math.max(metrics.durationSec, 1)) * 100))}%`,
-                  }}
-                />
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          {blockKinds.map((kind) => (
-            <button
-              key={kind}
-              type="button"
-              className={secondaryButtonClassName}
-              onClick={() => setDraft((current) => addPlannerBlock(current, kind))}
-            >
-              Add {kind}
-            </button>
-          ))}
-        </div>
       </Surface>
 
       <Surface className="space-y-5">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Inspector</p>
-          <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">Tune selected block</h2>
-        </div>
-
         {templates.length > 0 ? (
           <label className="block space-y-2">
             <span className="text-sm font-medium text-[var(--text-secondary)]">Prefill from template</span>
@@ -806,185 +643,6 @@ export function PlannerClient({
             description="Create detailed sessions from scratch now; template creation can reuse this editor later."
           />
         )}
-
-        {selectedBlock ? (
-          <div className="space-y-4">
-            <select
-              className={formSelectClassName}
-              value={selectedBlock.kind}
-              onChange={(event) => {
-                const kind = parseBlockKind(event.target.value);
-                if (kind) setDraft((current) => updatePlannerBlock(current, selectedBlockIndex, { kind }));
-              }}
-            >
-              {blockKinds.map((kind) => (
-                <option key={kind} value={kind}>
-                  {kind}
-                </option>
-              ))}
-            </select>
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-[var(--text-secondary)]">Duration (minutes)</span>
-              <input
-                className={formFieldClassName}
-                type="number"
-                min="1"
-                value={Math.round(selectedBlock.durationSec / 60)}
-                onChange={(event) =>
-                  setDraft((current) =>
-                    updatePlannerBlock(current, selectedBlockIndex, { durationSec: Number(event.target.value) * 60 }),
-                  )
-                }
-              />
-            </label>
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-[var(--text-secondary)]">Intensity zone</span>
-              <input
-                className={formFieldClassName}
-                type="range"
-                min="1"
-                max="5"
-                value={selectedBlock.zone}
-                onChange={(event) => {
-                  const zone = parseTempoZone(event.target.value);
-                  setDraft((current) => updatePlannerBlock(current, selectedBlockIndex, { zone }));
-                }}
-              />
-            </label>
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-[var(--text-secondary)]">Target type</span>
-              <select
-                className={formSelectClassName}
-                value={selectedBlock.targetType ?? ''}
-                onChange={(event) =>
-                  setDraft((current) =>
-                    updatePlannerBlock(current, selectedBlockIndex, { targetType: parseTargetType(event.target.value) }),
-                  )
-                }
-              >
-                <option value="">No target</option>
-                {targetTypes.map((targetType) => (
-                  <option key={targetType} value={targetType}>
-                    {targetType}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                className={formFieldClassName}
-                type="number"
-                min="0"
-                placeholder="Target low"
-                value={selectedBlock.targetLow ?? ''}
-                onChange={(event) =>
-                  setDraft((current) =>
-                    updatePlannerBlock(current, selectedBlockIndex, {
-                      targetLow: parseNullableNumber(event.target.value),
-                    }),
-                  )
-                }
-              />
-              <input
-                className={formFieldClassName}
-                type="number"
-                min="0"
-                placeholder="Target high"
-                value={selectedBlock.targetHigh ?? ''}
-                onChange={(event) =>
-                  setDraft((current) =>
-                    updatePlannerBlock(current, selectedBlockIndex, {
-                      targetHigh: parseNullableNumber(event.target.value),
-                    }),
-                  )
-                }
-              />
-            </div>
-            <textarea
-              className={formTextareaClassName}
-              value={selectedBlock.note}
-              placeholder="Block cue or instructions"
-              onChange={(event) =>
-                setDraft((current) => updatePlannerBlock(current, selectedBlockIndex, { note: event.target.value }))
-              }
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                className={secondaryButtonClassName}
-                onClick={() => setDraft((current) => duplicatePlannerBlock(current, selectedBlockIndex))}
-              >
-                Copy block
-              </button>
-              <button
-                type="button"
-                className={secondaryButtonClassName}
-                onClick={() => {
-                  setDraft((current) => removePlannerBlock(current, selectedBlockIndex));
-                  setSelectedBlockIndex((current) => Math.max(0, current - 1));
-                }}
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        {/* Sport metrics */}
-        <div className="space-y-3 rounded-[12px] border border-[var(--border)] p-4">
-          <p className="text-sm font-semibold text-[var(--text)]">Sport metrics</p>
-          <label className="block space-y-1">
-            <span className="text-xs text-[var(--text-secondary)]">FTP (watts)</span>
-            <input
-              className={formFieldClassName}
-              type="number"
-              min="0"
-              placeholder="e.g. 280"
-              value={draft.sportMetrics.ftp ?? ''}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  sportMetrics: { ...current.sportMetrics, ftp: parseNullableNumber(event.target.value) },
-                }))
-              }
-            />
-          </label>
-          <label className="block space-y-1">
-            <span className="text-xs text-[var(--text-secondary)]">Threshold pace (sec/km)</span>
-            <input
-              className={formFieldClassName}
-              type="number"
-              min="0"
-              placeholder="e.g. 255"
-              value={draft.sportMetrics.thresholdPaceSecPerKm ?? ''}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  sportMetrics: {
-                    ...current.sportMetrics,
-                    thresholdPaceSecPerKm: parseNullableNumber(event.target.value),
-                  },
-                }))
-              }
-            />
-          </label>
-          <label className="block space-y-1">
-            <span className="text-xs text-[var(--text-secondary)]">Threshold HR (bpm)</span>
-            <input
-              className={formFieldClassName}
-              type="number"
-              min="0"
-              placeholder="e.g. 172"
-              value={draft.sportMetrics.thresholdHr ?? ''}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  sportMetrics: { ...current.sportMetrics, thresholdHr: parseNullableNumber(event.target.value) },
-                }))
-              }
-            />
-          </label>
-        </div>
 
         <div className="flex flex-col gap-3">
           <button type="button" disabled={isPending} className={primaryButtonClassName} onClick={saveSession}>
@@ -1023,23 +681,4 @@ async function readApiPayload(response: Response): Promise<ApiPayload> {
     error: typeof record.error === 'string' ? record.error : undefined,
     sessionId: typeof record.sessionId === 'number' ? record.sessionId : undefined,
   };
-}
-
-function parseBlockKind(input: string): TempoBlockKind | null {
-  return blockKinds.includes(input as TempoBlockKind) ? (input as TempoBlockKind) : null;
-}
-
-function parseTempoZone(input: string): TempoZone {
-  const parsed = Number(input);
-  return parsed >= 1 && parsed <= 5 ? (Math.round(parsed) as TempoZone) : 2;
-}
-
-function parseTargetType(input: string): PlannerTargetType | null {
-  return targetTypes.includes(input as PlannerTargetType) ? (input as PlannerTargetType) : null;
-}
-
-function parseNullableNumber(input: string) {
-  if (input === '') return null;
-  const parsed = Number(input);
-  return Number.isFinite(parsed) ? parsed : null;
 }

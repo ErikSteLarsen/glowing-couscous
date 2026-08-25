@@ -347,14 +347,16 @@ test('planner API routes and navigation use the coach planner service', async ()
 test('planner page exposes calendar-first visual workout creation', async () => {
   const pageSource = await read('app/(app)/coach/planner/page.tsx');
   const clientSource = await read('app/(app)/coach/planner/PlannerClient.tsx');
+  const composerSource = await read('components/SessionComposer.tsx');
 
   assert.match(pageSource, /coachPlannerService\.loadWorkspace/);
   assert.match(pageSource, /PlannerClient/);
   assert.match(clientSource, /Click a day to plan/);
   assert.match(clientSource, /Session canvas/);
-  assert.match(clientSource, /draggable/);
-  assert.match(clientSource, /duplicatePlannerBlock/);
-  assert.match(clientSource, /deriveSessionMetrics/);
+  assert.match(clientSource, /SessionComposer/);
+  assert.match(composerSource, /draggable/);
+  assert.match(composerSource, /duplicateSelectedBlock/);
+  assert.match(composerSource, /deriveSessionEditorMetrics/);
   assert.match(clientSource, /\/api\/coach\/planner\/sessions/);
 });
 

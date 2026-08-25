@@ -1,7 +1,15 @@
-import { addDays, addMonths, format } from 'date-fns';
+import { addMonths, format } from 'date-fns';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ActionLink, EmptyState, PageShell, Surface, TopBar, getSegmentedChoiceClassName } from '@/components/ui';
+import {
+  EmptyState,
+  PageShell,
+  secondaryButtonClassName,
+  Surface,
+  TopBar,
+  getSegmentedChoiceClassName,
+} from '@/components/ui';
 import { AthleteCalendarWeekScroller } from './AthleteCalendarWeekScroller';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
@@ -39,11 +47,11 @@ export default async function AthleteCalendarPage({
         description={
           selectedView === 'month'
             ? 'A lighter month overview so you can scan the full block at once, then drop back into week detail when needed.'
-            : 'A centered day scroller that keeps today in view while you move smoothly across the training weeks.'
+            : 'A full Monday-to-Sunday overview that keeps the whole training week in view while you move through the plan.'
         }
         actions={
           <>
-            <div className="inline-flex rounded-[12px] border border-[var(--field-border)] bg-[var(--field-surface)] p-1">
+            <div className="inline-flex gap-1 rounded-[12px] border border-[var(--field-border)] bg-[var(--field-surface)] p-1">
               <Link href={buildCalendarHref('week', resolvedReferenceDate)} className={getSegmentedChoiceClassName(selectedView === 'week')}>
                 Week
               </Link>
@@ -51,20 +59,6 @@ export default async function AthleteCalendarPage({
                 Month
               </Link>
             </div>
-            {selectedView === 'month' ? (
-              <>
-                <ActionLink href={buildCalendarHref('month', addMonths(resolvedReferenceDate, -1))} tone="secondary">
-                  Previous month
-                </ActionLink>
-                <ActionLink href={buildCalendarHref('month', addMonths(resolvedReferenceDate, 1))} tone="secondary">
-                  Next month
-                </ActionLink>
-              </>
-            ) : (
-              <ActionLink href={buildCalendarHref('week', addDays(new Date(), 0))} tone="secondary">
-                Back to today
-              </ActionLink>
-            )}
           </>
         }
       />
@@ -91,86 +85,108 @@ export default async function AthleteCalendarPage({
           todayIso={format(new Date(), 'yyyy-MM-dd')}
         />
       ) : (
-        <Surface className="space-y-4">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-            <div>
+        <Surface className="space-y-5 p-4 sm:p-5">
+          <div className="flex flex-col gap-4 border-b border-[var(--border)] pb-5 md:flex-row md:items-end md:justify-between">
+            <div className="space-y-1">
               <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">
                 Month overview
               </p>
-              <p className="mt-1 text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)]">{calendar.period.label}</p>
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)]">{calendar.period.label}</h2>
+                <nav aria-label="Month navigation" className="flex flex-wrap items-center gap-2">
+                  <Link
+                    href={buildCalendarHref('month', addMonths(resolvedReferenceDate, -1))}
+                    aria-label="Go to previous month"
+                    className={`${secondaryButtonClassName} gap-1.5 px-3 text-[13px]`}
+                  >
+                    <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+                    Previous
+                  </Link>
+                  <Link
+                    href={buildCalendarHref('month', addMonths(resolvedReferenceDate, 1))}
+                    aria-label="Go to next month"
+                    className={`${secondaryButtonClassName} gap-1.5 px-3 text-[13px]`}
+                  >
+                    Next
+                    <ChevronRight aria-hidden="true" className="h-4 w-4" />
+                  </Link>
+                </nav>
+              </div>
             </div>
-            <p className="text-[13px] text-[var(--text-secondary)]">
+            <p className="max-w-sm text-[13px] leading-5 text-[var(--text-secondary)] md:text-right">
               Compact daily summaries keep the full month readable.
             </p>
           </div>
 
-          <div className="space-y-3">
-            <div className="grid grid-cols-7 gap-2">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((label) => (
-                <p
-                  key={label}
-                  className="px-2 text-center text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]"
-                >
-                  {label}
-                </p>
-              ))}
-            </div>
+          <div className="overflow-x-auto pb-1">
+            <div className="min-w-[720px] space-y-3 sm:min-w-0">
+              <div className="grid grid-cols-7 gap-2">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((label) => (
+                  <p
+                    key={label}
+                    className="px-2 text-center text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]"
+                  >
+                    {label}
+                  </p>
+                ))}
+              </div>
 
-            <div className="grid gap-2">
-              {calendar.weeks.map((week, weekIndex) => (
-                <div key={`week-${weekIndex}`} className="grid grid-cols-7 gap-2">
-                  {week.map((day) => (
-                    <Link
-                      key={day.isoDate}
-                      href={
-                        day.sessions[0]
-                          ? `/athlete/session/${day.sessions[0].id}`
-                          : buildCalendarHref('week', new Date(`${day.isoDate}T12:00:00`))
-                      }
-                      className={`min-h-[128px] rounded-[12px] border p-3 transition hover:border-[var(--field-focus)] hover:bg-[var(--field-surface)] ${
-                        day.isCurrentMonth
-                          ? 'border-[var(--border)] bg-[var(--surface)]'
-                          : 'border-[var(--field-border)] bg-[var(--field-surface)] opacity-65'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <p className="text-[15px] font-semibold text-[var(--text)]">{day.dateLabel}</p>
-                          {day.isToday ? (
-                            <span className="rounded-full bg-[var(--brand-tint)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--field-selected-text)]">
-                              Today
-                            </span>
-                          ) : null}
-                        </div>
-                        <span className="rounded-full border border-[var(--field-border)] bg-[#FBFAF7] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
-                          {day.sessions.length}
-                        </span>
-                      </div>
-                      <div className="mt-3 space-y-2">
-                        {day.sessions.length > 0 ? (
-                          <>
-                            {day.sessions.slice(0, 2).map((session) => (
-                              <div key={session.id} className="rounded-[10px] bg-[#FBFAF7] px-2.5 py-2">
-                                <p className="truncate text-[12px] font-semibold text-[var(--text)]">{session.title}</p>
-                                <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
-                                  {session.timeLabel} · {getSportLabel(session.sport)}
-                                </p>
-                              </div>
-                            ))}
-                            {day.sessions.length > 2 ? (
-                              <p className="text-[11px] font-medium text-[var(--brand)]">
-                                +{day.sessions.length - 2} more
-                              </p>
+              <div className="grid gap-2">
+                {calendar.weeks.map((week, weekIndex) => (
+                  <div key={`week-${weekIndex}`} className="grid grid-cols-7 gap-2">
+                    {week.map((day) => (
+                      <Link
+                        key={day.isoDate}
+                        href={
+                          day.sessions[0]
+                            ? `/athlete/session/${day.sessions[0].id}`
+                            : buildCalendarHref('week', new Date(`${day.isoDate}T12:00:00`))
+                        }
+                        className={`min-h-[112px] rounded-[12px] border p-2.5 transition hover:border-[var(--field-focus)] hover:bg-[var(--field-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)] sm:min-h-[128px] sm:p-3 ${
+                          day.isCurrentMonth
+                            ? 'border-[var(--border)] bg-[var(--surface)]'
+                            : 'border-[var(--field-border)] bg-[var(--field-surface)] opacity-65'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <p className="text-[15px] font-semibold text-[var(--text)]">{day.dateLabel}</p>
+                            {day.isToday ? (
+                              <span className="rounded-full bg-[var(--brand-tint)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--field-selected-text)]">
+                                Today
+                              </span>
                             ) : null}
-                          </>
-                        ) : (
-                          <p className="text-[12px] text-[var(--text-muted)]">No session</p>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ))}
+                          </div>
+                          <span className="rounded-full border border-[var(--field-border)] bg-[#FBFAF7] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                            {day.sessions.length}
+                          </span>
+                        </div>
+                        <div className="mt-3 space-y-2">
+                          {day.sessions.length > 0 ? (
+                            <>
+                              {day.sessions.slice(0, 2).map((session) => (
+                                <div key={session.id} className="rounded-[10px] bg-[#FBFAF7] px-2.5 py-2">
+                                  <p className="truncate text-[12px] font-semibold text-[var(--text)]">{session.title}</p>
+                                  <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
+                                    {session.timeLabel} · {getSportLabel(session.sport)}
+                                  </p>
+                                </div>
+                              ))}
+                              {day.sessions.length > 2 ? (
+                                <p className="text-[11px] font-medium text-[var(--brand)]">
+                                  +{day.sessions.length - 2} more
+                                </p>
+                              ) : null}
+                            </>
+                          ) : (
+                            <p className="text-[12px] text-[var(--text-muted)]">No session</p>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </Surface>

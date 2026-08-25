@@ -3,16 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { addDays, endOfWeek, format, getISOWeek, startOfWeek } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 import { ActionLink, Surface, secondaryButtonClassName } from '@/components/ui';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
-import {
-  getVisibleDayCount,
-  getVisibleDayWindow,
-  getWeekScrollerSearchHref,
-  shouldExtendCalendarRange,
-} from '@/lib/calendar-scroller';
+import { getWeekScrollerSearchHref } from '@/lib/calendar-scroller';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -68,12 +64,10 @@ export function AthleteCalendarWeekScroller({
 }: AthleteCalendarWeekScrollerProps) {
   const [days, setDays] = useState(initialDays);
   const [activeDateIso, setActiveDateIso] = useState(initialActiveDateIso);
-  const [visibleCount, setVisibleCount] = useState(3);
   const [loadingBefore, setLoadingBefore] = useState(false);
   const [loadingAfter, setLoadingAfter] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
   const daysRef = useRef(initialDays);
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const requestedWeekStarts = useRef(new Set<string>());
   const pathname = usePathname();
   const router = useRouter();
@@ -85,17 +79,6 @@ export function AthleteCalendarWeekScroller({
   }, [days]);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-
-    const observer = new ResizeObserver(([entry]) => {
-      setVisibleCount(getVisibleDayCount(entry.contentRect.width));
-    });
-
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
     const nextHref = getWeekScrollerSearchHref(pathname, searchParamsString, activeDateIso);
     if (!nextHref) {
       return;
@@ -104,15 +87,14 @@ export function AthleteCalendarWeekScroller({
     router.replace(nextHref, { scroll: false });
   }, [activeDateIso, pathname, router, searchParamsString]);
 
-  const activeIndex = Math.max(
-    0,
-    days.findIndex((day) => day.isoDate === activeDateIso),
-  );
-  const activeDay = days[activeIndex] ?? days[0];
-  const visibleWindow = getVisibleDayWindow(activeIndex, visibleCount, days.length);
-  const visibleDays = days.slice(visibleWindow.start, visibleWindow.end);
+  const activeDay = days.find((day) => day.isoDate === activeDateIso) ?? days[0];
   const activeWeekStart = startOfWeek(toLocalNoonDate(activeDay.isoDate), { weekStartsOn: 1 });
   const activeWeekEnd = endOfWeek(toLocalNoonDate(activeDay.isoDate), { weekStartsOn: 1 });
+  const weekDays = days.filter((day) => {
+    const date = toLocalNoonDate(day.isoDate);
+    return date >= activeWeekStart && date <= activeWeekEnd;
+  });
+  const showBackToToday = !weekDays.some((day) => day.isoDate === todayIso);
   const weekLabel = useMemo(
     () => `Week ${getISOWeek(toLocalNoonDate(activeDay.isoDate))} · ${format(activeWeekStart, 'd MMM')} - ${format(activeWeekEnd, 'd MMM')}`,
     [activeDay.isoDate, activeWeekEnd, activeWeekStart],
@@ -159,18 +141,6 @@ export function AthleteCalendarWeekScroller({
     }
   }, []);
 
-  useEffect(() => {
-    const extension = shouldExtendCalendarRange(activeIndex, visibleCount, days.length);
-    const timers: number[] = [];
-    if (extension.before && !loadingBefore) {
-      timers.push(window.setTimeout(() => void loadAdjacentWeek('before'), 0));
-    }
-    if (extension.after && !loadingAfter) {
-      timers.push(window.setTimeout(() => void loadAdjacentWeek('after'), 0));
-    }
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, [activeIndex, days.length, loadAdjacentWeek, loadingAfter, loadingBefore, visibleCount]);
-
   const moveFocus = useCallback(
     async (direction: -1 | 1) => {
       const currentIndex = Math.max(
@@ -201,15 +171,20 @@ export function AthleteCalendarWeekScroller({
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">
-            Day scroller
+            Week overview
           </p>
           <p className="mt-1 text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)]">{weekLabel}</p>
           <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
-            Today stays centered while you move day by day through the plan.
+            The full Monday-to-Sunday week stays visible while you move through the plan.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {showBackToToday ? (
+            <ActionLink href={`/athlete/calendar?view=week&date=${todayIso}`} tone="secondary">
+              Back to today
+            </ActionLink>
+          ) : null}
           <button type="button" className={secondaryButtonClassName} onClick={() => void moveFocus(-1)}>
             <ChevronLeft className="mr-1 h-4 w-4" />
             Earlier
@@ -221,9 +196,9 @@ export function AthleteCalendarWeekScroller({
         </div>
       </div>
 
-      <div ref={containerRef} className="space-y-3">
-        <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${visibleDays.length}, minmax(0, 1fr))` }}>
-          {visibleDays.map((day) => {
+      <div className="space-y-3">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {weekDays.map((day) => {
             const isFocused = day.isoDate === activeDateIso;
             const isPast = day.isoDate < todayIso;
 
@@ -259,7 +234,12 @@ export function AthleteCalendarWeekScroller({
 
                 {day.sessions.length > 0 ? (
                   day.sessions.map((session) => (
-                    <div key={session.id} className="space-y-2 rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] p-3">
+                    <Link
+                      key={session.id}
+                      href={`/athlete/session/${session.id}`}
+                      aria-label={`Open ${session.title}`}
+                      className="group block space-y-2 rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] p-3 transition hover:border-[var(--field-focus)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+                    >
                       <div className="flex items-center gap-2">
                         <p className="text-[13px] font-semibold text-[var(--text)]">{session.title}</p>
                         <div className="ml-auto">
@@ -274,10 +254,7 @@ export function AthleteCalendarWeekScroller({
                         <MetricText>{formatDuration(session.durationSec)}</MetricText>
                         <MetricText>{session.tss} TSS</MetricText>
                       </div>
-                      <ActionLink href={`/athlete/session/${session.id}`} tone="ghost">
-                        Open session
-                      </ActionLink>
-                    </div>
+                    </Link>
                   ))
                 ) : (
                   <p className="text-[13px] text-[var(--text-muted)]">No session planned.</p>
@@ -290,8 +267,8 @@ export function AthleteCalendarWeekScroller({
         {requestError ? <p className="text-sm text-[var(--status-danger)]">{requestError}</p> : null}
 
         <div className="flex items-center justify-between text-[12px] text-[var(--text-muted)]">
-          <span>{loadingBefore ? 'Loading earlier days…' : 'Earlier days stay available as you scroll back.'}</span>
-          <span>{loadingAfter ? 'Loading more days…' : 'Keep moving later to continue into the next weeks.'}</span>
+          <span>{loadingBefore ? 'Loading earlier days…' : 'Earlier weeks load as you move back.'}</span>
+          <span>{loadingAfter ? 'Loading more days…' : 'Later weeks load as you move forward.'}</span>
         </div>
       </div>
     </Surface>

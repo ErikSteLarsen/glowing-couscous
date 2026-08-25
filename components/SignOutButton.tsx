@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { signOut } from 'next-auth/react';
+import { primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 
 type SignOutButtonProps = {
   tone?: 'primary' | 'secondary';
@@ -29,11 +30,7 @@ export function SignOutButton({ tone = 'secondary' }: SignOutButtonProps) {
         type="button"
         onClick={handleSignOut}
         disabled={isSigningOut}
-        className={
-          tone === 'primary'
-            ? 'cursor-pointer rounded-[10px] bg-[var(--text)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60'
-            : 'cursor-pointer rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[#FBFAF7] disabled:opacity-60'
-        }
+        className={tone === 'primary' ? primaryButtonClassName : secondaryButtonClassName}
       >
         {isSigningOut ? 'Signing out…' : 'Sign out'}
       </button>

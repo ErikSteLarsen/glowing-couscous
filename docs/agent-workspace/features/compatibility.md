@@ -21,8 +21,10 @@
   `plannerService.forWeek(...).execute(...)`.
 - `planner-service.ts` uses `normalizeSessionDraft` and `validateSessionDraft`.
 - `planner.ts` uses `workout-editor.ts` and `workout-spec.ts`.
-- `components/WorkoutBlocksEditor.tsx` and several old athlete components are
-  present but are not part of the active Tempo planner path.
+- `components/WorkoutBlocksEditor.tsx` remains as a transitional editor helper;
+  the previously unreferenced pre-Tempo athlete component chain was removed on
+  2026-08-22 after import/reference analysis. It was not part of the active
+  Tempo planner path.
 
 ## Verification
 
@@ -34,11 +36,14 @@
 
 - The boundary is easy to misunderstand because both planner generations use
   similar names and models.
-- Reference analysis is needed before deleting old helpers/components.
+- Reference analysis is still needed before deleting the remaining old planner
+  helpers/components.
 
 ## Extension Rules
 
 - New planner capabilities belong in the active planner services, not here.
 - Touch this path only for compatibility fixes or an explicit migration.
 - Before cleanup, search all imports, route tests, persisted-data assumptions,
-  and external consumers; record the removal decision and verification.
+  and external consumers; record the removal decision and verification. See
+  [decision 0009](../decisions/0009-active-tempo-ui-only.md) for the athlete UI
+  cleanup precedent.
