@@ -1,6 +1,6 @@
 # Task: Implement Planned Session Adjustments
 
-- **Status:** `in-progress`
+- **Status:** `completed`
 - **Agent:** `OpenCode`
 - **Started:** `2026-08-25`
 - **Updated:** `2026-08-25`
@@ -93,4 +93,4 @@ completion, with explicit baseline and adjusted behavior.
 - **Final status:** `completed`
 - **History record:** [planned session adjustments](../history/2026-08-25-planned-session-adjustments.md)
 - **Feature records updated:** [session adjustments](../features/session-adjustments.md), [planner](../features/planner.md), [athlete](../features/athlete.md)
-- **Remaining work:** Completion/outcome editing depends on this session access contract; manual browser inspection remains a verification gap.
+- **Remaining work:** Manual browser inspection remains a verification gap; comparison surfaces now consume the resulting snapshot/outcome contract.
