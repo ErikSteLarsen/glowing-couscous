@@ -15,6 +15,10 @@ import {
   type SessionEditorDraft,
 } from './session-editor.ts';
 import type { TempoBlockKind } from './tempo-blocks.ts';
+import {
+  createSessionEditorDraftFromSharedProjection,
+  type SharedWorkoutProjection,
+} from './share-link.ts';
 
 export type PlannerOwnershipMode = 'coach-library' | 'training-plan' | 'athlete';
 
@@ -112,6 +116,24 @@ export function createPlannerEditorDraftFromTemplate(
   };
 }
 
+export function createPlannerEditorDraftFromSharedProjection(
+  projection: SharedWorkoutProjection,
+  input: {
+    ownershipMode: Exclude<PlannerOwnershipMode, 'training-plan'>;
+    athleteId?: number | null;
+    scheduledDate?: string | null;
+  },
+): PlannerEditorDraft {
+  const draft = createSessionEditorDraftFromSharedProjection(projection);
+  return {
+    ...draft,
+    athleteId: input.athleteId ?? null,
+    scheduledDate: input.scheduledDate ?? null,
+    ownershipMode: input.ownershipMode,
+    sourceTemplateId: null,
+  };
+}
+
 export function addPlannerEditorBlock(draft: PlannerEditorDraft, kind: TempoBlockKind = 'work') {
   return preservePlannerContext(
     draft,
@@ -195,6 +217,10 @@ export function createTemplateEditorDraftFromRecord(template: PlannerEditorTempl
     summary: template.summary,
     blocks: template.blocks,
   });
+}
+
+export function createTemplateEditorDraftFromSharedProjection(projection: SharedWorkoutProjection) {
+  return createSessionEditorDraftFromSharedProjection(projection);
 }
 
 export function serializeTemplateEditorDraftForSave(draft: SessionEditorDraft) {
