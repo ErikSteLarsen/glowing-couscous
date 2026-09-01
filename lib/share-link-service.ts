@@ -6,6 +6,7 @@ import {
   createSharedProjectionSourceFromSession,
   createSharedWorkoutProjection,
   parseSharedWorkoutProjection,
+  isShareToken as isOpaqueShareToken,
   type SharedWorkoutProjection,
 } from './share-link.ts';
 import {
@@ -56,7 +57,6 @@ type TemplateShareSource = {
 };
 
 const NOT_FOUND = 'Share link not found.';
-const TOKEN_PATTERN = /^[A-Za-z0-9_-]{43,128}$/;
 
 export function createShareLinkService({
   db = prisma,
@@ -84,7 +84,7 @@ export function createShareLinkService({
             blocks: source.value.blocks,
           });
       const token = createToken();
-      if (!TOKEN_PATTERN.test(token)) {
+      if (!isOpaqueShareToken(token)) {
         throw new Error('Share token generator returned an invalid token.');
       }
 
@@ -130,6 +130,7 @@ export function createShareLinkService({
           ...block,
           id: block.id ?? undefined,
           clientId: `share-block-${index}`,
+          note: block.note ?? '',
         })),
       });
       if (result.error) return { ok: false as const, error: result.error, status: 400 };
@@ -165,7 +166,9 @@ export function createShareLinkService({
         sportMetrics: serialized.sportMetrics,
         blocks: serialized.blocks.map((block, index) => ({
           ...block,
+          id: block.id ?? undefined,
           clientId: `share-block-${index}`,
+          note: block.note ?? '',
         })),
       });
       if (!result.ok) return result;
@@ -181,7 +184,7 @@ export function hashShareToken(token: string) {
 }
 
 export function isShareToken(token: unknown): token is string {
-  return typeof token === 'string' && TOKEN_PATTERN.test(token);
+  return isOpaqueShareToken(token);
 }
 
 function createImportedDraft(
@@ -282,3 +285,5 @@ function canAccessSession(userId: number, session: SessionShareSource) {
 function hasExactlyOneSource(sessionId: number | null, templateId: number | null) {
   return (sessionId !== null) !== (templateId !== null);
 }
+
+export const shareLinkService = createShareLinkService();

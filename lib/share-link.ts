@@ -8,6 +8,9 @@ import {
 } from './session-editor.ts';
 
 export const SHARED_WORKOUT_SNAPSHOT_VERSION = 1 as const;
+export const SHARE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43,128}$/;
+
+export type ShareLinkAction = 'planner' | 'template';
 
 export type SharedWorkoutBlock = {
   kind: 'warmup' | 'work' | 'recovery' | 'cooldown';
@@ -41,6 +44,37 @@ export type SharedWorkoutSource = {
   summary?: string | null;
   blocks?: PersistedSessionBlock[] | null;
 };
+
+export function isShareAction(input: unknown): input is ShareLinkAction {
+  return input === 'planner' || input === 'template';
+}
+
+export function isShareToken(input: unknown): input is string {
+  return typeof input === 'string' && SHARE_TOKEN_PATTERN.test(input);
+}
+
+export function createSharePath(token: string, action?: ShareLinkAction) {
+  return `/share/${token}${action ? `?action=${action}` : ''}`;
+}
+
+export function getSafeShareCallbackPath(input: unknown): string | null {
+  if (typeof input !== 'string' || !input) return null;
+  try {
+    const url = new URL(input, 'https://share.invalid');
+    if (url.origin !== 'https://share.invalid' || !url.pathname.startsWith('/share/')) return null;
+    const token = url.pathname.slice('/share/'.length);
+    if (!isShareToken(token)) return null;
+    const action = url.searchParams.get('action');
+    if (action !== null && !isShareAction(action)) return null;
+    if (action !== null && url.searchParams.getAll('action').length !== 1) return null;
+    for (const key of url.searchParams.keys()) {
+      if (key !== 'action') return null;
+    }
+    return createSharePath(token, action === null ? undefined : action);
+  } catch {
+    return null;
+  }
+}
 
 export function createSharedWorkoutProjection(source: SharedWorkoutSource): SharedWorkoutProjection {
   const draft = createSessionEditorDraftFromPersisted('create', {

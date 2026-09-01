@@ -9,6 +9,7 @@ import { getCoachAthleteDetail } from '@/lib/coach-service';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
 import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
+import { ShareLinkButton } from '@/components/ShareLinkButton';
 
 export default async function CoachAthleteDetailPage({
   params,
@@ -106,11 +107,12 @@ export default async function CoachAthleteDetailPage({
                             </div>
                              <div className="flex flex-wrap items-center justify-end gap-2">
                                <StatusBadge status={session.status} />
-                               <SessionComparisonDialog
-                                 sessionId={session.id}
-                                 endpoint={`/api/coach/sessions/${session.id}/comparison`}
-                                 label="Compare"
-                               />
+                                <SessionComparisonDialog
+                                  sessionId={session.id}
+                                  endpoint={`/api/coach/sessions/${session.id}/comparison`}
+                                  label="Compare"
+                                />
+                                <ShareLinkButton sourceKind="session" sourceId={session.id} />
                              </div>
                           </div>
                           <div className="mt-3">
@@ -159,11 +161,12 @@ export default async function CoachAthleteDetailPage({
                     </div>
                      <div className="flex flex-wrap items-center justify-end gap-2">
                        <StatusBadge status={session.status} />
-                       <SessionComparisonDialog
-                         sessionId={session.id}
-                         endpoint={`/api/coach/sessions/${session.id}/comparison`}
-                         label="Compare"
-                       />
+                        <SessionComparisonDialog
+                          sessionId={session.id}
+                          endpoint={`/api/coach/sessions/${session.id}/comparison`}
+                          label="Compare"
+                        />
+                        <ShareLinkButton sourceKind="session" sourceId={session.id} />
                      </div>
                   </div>
 

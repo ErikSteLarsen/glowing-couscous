@@ -18,6 +18,7 @@ import {
   successTextClassName,
 } from '@/components/ui';
 import { SessionComposer } from '@/components/SessionComposer';
+import { ShareLinkButton } from '@/components/ShareLinkButton';
 import { formatDuration } from '@/lib/format-duration';
 import { deriveSessionEditorMetrics } from '@/lib/session-editor';
 import { getSportLabel, SPORT_OPTIONS } from '@/lib/sport';
@@ -547,15 +548,17 @@ export function PlannerClient({
               Saved library sessions
             </p>
             {librarySessions.map((session) => (
-              <button
-                key={session.id}
-                type="button"
-                onClick={() => loadLibrarySession(session)}
-                className={compactListButtonClassName}
-              >
-                <span className="block truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</span>
-                <span className="mt-1 block text-[12px] text-[var(--text-secondary)]">{getSportLabel(session.sport)}</span>
-              </button>
+              <div key={session.id} className="space-y-2 rounded-[9px] border border-[var(--border)] bg-[var(--surface)] p-2">
+                <button
+                  type="button"
+                  onClick={() => loadLibrarySession(session)}
+                  className={compactListButtonClassName}
+                >
+                  <span className="block truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</span>
+                  <span className="mt-1 block text-[12px] text-[var(--text-secondary)]">{getSportLabel(session.sport)}</span>
+                </button>
+                <ShareLinkButton sourceKind="session" sourceId={session.id} />
+              </div>
             ))}
           </div>
         ) : null}

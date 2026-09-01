@@ -12,6 +12,7 @@ import {
   Surface,
   TopBar,
 } from '@/components/ui';
+import { getSafeShareCallbackPath } from '@/lib/share-link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -22,6 +23,7 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const callbackUrl = readCallbackUrl();
     setLoading(true);
     setError('');
     const result = await signIn('credentials', { email, password, redirect: false });
@@ -29,7 +31,7 @@ export default function LoginPage() {
     if (result?.error) {
       setError('Invalid email or password');
     } else {
-      router.push('/');
+      router.push(callbackUrl ?? '/');
     }
   }
 
@@ -78,18 +80,32 @@ export default function LoginPage() {
           <div className="h-px flex-1 bg-[var(--border)]" />
         </div>
         <button
-          onClick={() => signIn('google', { callbackUrl: '/' })}
+          onClick={() => signIn('google', { callbackUrl: readCallbackUrl() ?? '/' })}
           className={`${secondaryButtonClassName} w-full`}
         >
           Continue with Google
         </button>
         <p className="mt-5 text-center text-sm text-[var(--text-secondary)]">
           No account?{' '}
-          <a href="/signup" className="font-medium text-[var(--brand)] hover:text-[var(--text)]">
+           <a
+             href="/signup"
+             onClick={(event) => {
+               const callbackUrl = readCallbackUrl();
+               if (!callbackUrl) return;
+               event.preventDefault();
+               router.push(`/signup?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+             }}
+             className="font-medium text-[var(--brand)] hover:text-[var(--text)]"
+           >
             Sign up
           </a>
         </p>
       </Surface>
     </PageShell>
   );
+}
+
+function readCallbackUrl() {
+  if (typeof window === 'undefined') return null;
+  return getSafeShareCallbackPath(new URLSearchParams(window.location.search).get('callbackUrl'));
 }

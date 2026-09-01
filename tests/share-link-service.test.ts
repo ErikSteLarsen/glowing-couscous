@@ -6,7 +6,9 @@ import {
   createTemplateEditorDraftFromSharedProjection,
 } from '../lib/session-editor-adapters.ts';
 import {
+  createSharePath,
   createSharedWorkoutProjection,
+  getSafeShareCallbackPath,
   parseSharedWorkoutProjection,
 } from '../lib/share-link.ts';
 import { createShareLinkService, hashShareToken } from '../lib/share-link-service.ts';
@@ -235,4 +237,80 @@ test('public preview uses the stored snapshot and rejects malformed or mixed lin
   assert.equal(preview?.title, 'Snapshot workout');
   assert.equal(await service.loadPreview('bad-token'), null);
   assert.equal(lookups, 1);
+});
+
+test('share continuation paths are local, token-bound, and action-bound', () => {
+  const token = 'd'.repeat(43);
+  assert.equal(createSharePath(token, 'planner'), `/share/${token}?action=planner`);
+  assert.equal(getSafeShareCallbackPath(`/share/${token}?action=template`), `/share/${token}?action=template`);
+  assert.equal(getSafeShareCallbackPath('https://evil.example/share/anything?action=planner'), null);
+  assert.equal(getSafeShareCallbackPath(`/share/${token}?next=https://evil.example`), null);
+  assert.equal(getSafeShareCallbackPath('/coach'), null);
+  assert.equal(getSafeShareCallbackPath(`/share/${token}?action=planner&action=template`), null);
+});
+
+test('recipient copy commands sanitize ownership and delegate only after explicit save', async () => {
+  const token = 'e'.repeat(43);
+  const snapshot = JSON.stringify(createSharedWorkoutProjection({
+    sourceKind: 'session',
+    title: 'Imported workout',
+    sport: 'RUNNING',
+    blocks: [{ kind: 'work', zone: 3, durationSec: 600, sortOrder: 0 }],
+  }));
+  let templateInput: Record<string, unknown> | undefined;
+  let athleteInput: Record<string, unknown> | undefined;
+  let coachInput: Record<string, unknown> | undefined;
+  const db = {
+    shareLink: {
+      async findUnique() {
+        return { sessionId: 22, templateId: null, snapshotJson: snapshot };
+      },
+    },
+  };
+  const service = createShareLinkService({
+    db: db as never,
+    templatePersistence: {
+      async saveForOwner(_ownerId: number, input: Record<string, unknown>) {
+        templateInput = input;
+        return { error: null };
+      },
+    } as never,
+    athletePlannerPersistence: {
+      async saveSession(_ownerId: number, input: Record<string, unknown>) {
+        athleteInput = input;
+        return { ok: true, sessionIds: [31] };
+      },
+    } as never,
+    coachLibraryPersistence: {
+      async saveForCoach(_ownerId: number, input: Record<string, unknown>) {
+        coachInput = input;
+        return { ok: true, sessionId: 32 };
+      },
+    } as never,
+  });
+
+  assert.equal((await service.loadPreview(token))?.title, 'Imported workout');
+  const draft = {
+    id: 999,
+    athleteId: 888,
+    coachOwnerId: 777,
+    templateId: 666,
+    scheduledDate: '2026-09-12',
+    title: 'Edited imported workout',
+    sport: 'RUNNING',
+    summary: 'Recipient edit',
+    coachNotes: 'Must not copy',
+    athleteNotes: 'Must not copy',
+    rpe: 10,
+    blocks: [{ kind: 'work', zone: 3, durationSec: 900, sortOrder: 0 }],
+  };
+
+  assert.deepEqual(await service.saveTemplateCopy(50, token, draft), { ok: true });
+  assert.deepEqual(await service.savePlannerCopy(50, 'ATHLETE', token, draft), { ok: true, sessionIds: [31] });
+  assert.deepEqual(await service.savePlannerCopy(51, 'COACH', token, draft), { ok: true, sessionIds: [32] });
+  assert.equal(templateInput?.name, 'Edited imported workout');
+  assert.equal((athleteInput?.templateId ?? null), null);
+  assert.equal((athleteInput?.coachOwnerId ?? null), null);
+  assert.equal((coachInput?.sourceTemplateId ?? null), null);
+  assert.equal((coachInput?.athleteId ?? null), null);
 });

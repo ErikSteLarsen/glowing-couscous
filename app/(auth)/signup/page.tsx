@@ -13,6 +13,7 @@ import {
   Surface,
   TopBar,
 } from '@/components/ui';
+import { getSafeShareCallbackPath } from '@/lib/share-link';
 
 export default function SignupPage() {
   const [name, setName] = useState('');
@@ -25,6 +26,7 @@ export default function SignupPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const callbackUrl = readCallbackUrl();
     setLoading(true);
     setError('');
     const res = await fetch('/api/auth/signup', {
@@ -42,9 +44,9 @@ export default function SignupPage() {
     setLoading(false);
     if (result?.error) {
       setError('Account created — please sign in.');
-      router.push('/login');
+      router.push(callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : '/login');
     } else {
-      router.push('/');
+      router.push(callbackUrl ?? '/');
     }
   }
 
@@ -114,18 +116,32 @@ export default function SignupPage() {
           <div className="h-px flex-1 bg-[var(--border)]" />
         </div>
         <button
-          onClick={() => signIn('google', { callbackUrl: '/' })}
+          onClick={() => signIn('google', { callbackUrl: readCallbackUrl() ?? '/' })}
           className={`${secondaryButtonClassName} w-full`}
         >
           Continue with Google
         </button>
         <p className="mt-5 text-center text-sm text-[var(--text-secondary)]">
           Already have an account?{' '}
-          <a href="/login" className="font-medium text-[var(--brand)] hover:text-[var(--text)]">
+           <a
+             href="/login"
+             onClick={(event) => {
+               const callbackUrl = readCallbackUrl();
+               if (!callbackUrl) return;
+               event.preventDefault();
+               router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+             }}
+             className="font-medium text-[var(--brand)] hover:text-[var(--text)]"
+           >
             Sign in
           </a>
         </p>
       </Surface>
     </PageShell>
   );
+}
+
+function readCallbackUrl() {
+  if (typeof window === 'undefined') return null;
+  return getSafeShareCallbackPath(new URLSearchParams(window.location.search).get('callbackUrl'));
 }

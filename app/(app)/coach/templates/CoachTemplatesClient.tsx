@@ -16,6 +16,7 @@ import {
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionComposer } from '@/components/SessionComposer';
+import { ShareLinkButton } from '@/components/ShareLinkButton';
 import { deriveSessionEditorMetrics, type SessionEditorDraft } from '@/lib/session-editor';
 import {
   createEmptyTemplateEditorDraft,
@@ -178,7 +179,7 @@ export function CoachTemplatesClient({
             onChange={setEditorDraft}
             summaryPlaceholder="Summary"
           />
-          <div className="flex flex-wrap gap-3">
+                 <div className="flex flex-wrap gap-3">
             <button type="button" className={compactPrimaryButtonClassName} disabled={isPending} onClick={saveEditor}>{isPending ? 'Saving…' : 'Save template'}</button>
           </div>
         </Surface>
@@ -217,7 +218,7 @@ export function CoachTemplatesClient({
                    <button type="button" onClick={() => openEditor(template)} disabled={isPending} className={compactSecondaryButtonClassName}>
                      Edit
                    </button>
-                  <button
+                   <button
                     type="button"
                     onClick={() => duplicateTemplate(template.id)}
                     disabled={isPending}
@@ -231,10 +232,11 @@ export function CoachTemplatesClient({
                     disabled={isPending}
                     className={compactDangerButtonClassName}
                   >
-                    Delete
-                  </button>
-                </div>
-              </Surface>
+                     Delete
+                   </button>
+                 </div>
+                 <ShareLinkButton sourceKind="template" sourceId={template.id} />
+               </Surface>
             );
           })}
         </div>

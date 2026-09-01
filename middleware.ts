@@ -17,6 +17,7 @@ export default auth((req) => {
   }
 
   if (!hasValidRole && pathname !== '/setup') {
+    if (pathname.startsWith('/share/')) return NextResponse.next();
     return NextResponse.redirect(new URL('/setup', req.url));
   }
 

@@ -8,6 +8,7 @@ import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
 import { SessionDetailClient } from './SessionDetailClient';
+import { ShareLinkButton } from '@/components/ShareLinkButton';
 
 export default async function AthleteSessionPage({
   params,
@@ -44,6 +45,7 @@ export default async function AthleteSessionPage({
               Back to calendar
             </ActionLink>
             <ActionLink href={`/athlete/live/${detail.session.id}`}>Start live</ActionLink>
+            <ShareLinkButton sourceKind="session" sourceId={detail.session.id} />
           </>
         }
       />

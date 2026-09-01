@@ -10,6 +10,7 @@ import {
   Surface,
   TopBar,
 } from '@/components/ui';
+import { getSafeShareCallbackPath } from '@/lib/share-link';
 
 export default function SetupPage() {
   const [role, setRole] = useState<'COACH' | 'ATHLETE'>('ATHLETE');
@@ -20,6 +21,7 @@ export default function SetupPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const callbackUrl = readCallbackUrl();
     setLoading(true);
     setError('');
     const res = await fetch('/api/auth/setup', {
@@ -33,7 +35,7 @@ export default function SetupPage() {
       return;
     }
     await update({ role });
-    router.push(role === 'COACH' ? '/coach' : '/athlete');
+    router.push(callbackUrl ?? (role === 'COACH' ? '/coach' : '/athlete'));
   }
 
   return (
@@ -70,4 +72,9 @@ export default function SetupPage() {
       </Surface>
     </PageShell>
   );
+}
+
+function readCallbackUrl() {
+  if (typeof window === 'undefined') return null;
+  return getSafeShareCallbackPath(new URLSearchParams(window.location.search).get('callbackUrl'));
 }
