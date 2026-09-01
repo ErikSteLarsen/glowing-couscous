@@ -405,7 +405,8 @@ test('planner API routes and navigation use the coach planner service', async ()
   assert.match(navigation, /label: 'Planner'/);
   assert.match(navigation, /href: '\/coach\/planner'/);
   assert.match(oldBuilderPage, /redirect\('\/coach\/planner/);
-  assert.match(templatesClient, /\/coach\/planner\?templateId=/);
+  assert.match(templatesClient, /plannerHref = '\/coach\/planner'/);
+  assert.match(templatesClient, /\$\{plannerHref\}\?templateId=/);
 });
 
 test('planner page exposes calendar-first visual workout creation', async () => {
@@ -415,7 +416,7 @@ test('planner page exposes calendar-first visual workout creation', async () => 
 
   assert.match(pageSource, /coachPlannerService\.loadWorkspace/);
   assert.match(pageSource, /PlannerClient/);
-  assert.match(clientSource, /Click a day to plan/);
+  assert.doesNotMatch(clientSource, /Click a day to plan/);
   assert.match(clientSource, /Session canvas/);
   assert.match(clientSource, /SessionComposer/);
   assert.match(composerSource, /draggable/);

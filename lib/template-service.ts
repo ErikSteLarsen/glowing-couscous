@@ -100,10 +100,10 @@ function normalizeTemplateDraft(input: unknown) {
 }
 
 export function createTemplateService({ db = prisma }: TemplateServiceDeps = {}) {
-  return {
-    async listForCoach(coachId: number) {
+  const service = {
+    async listForOwner(ownerId: number) {
       return db.template.findMany({
-        where: { ownerId: coachId },
+        where: { ownerId },
         include: {
           blocks: {
             orderBy: { sortOrder: 'asc' },
@@ -113,14 +113,14 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
       });
     },
 
-    async saveForCoach(coachId: number, draftInput: unknown, templateId?: number) {
+    async saveForOwner(ownerId: number, draftInput: unknown, templateId?: number) {
       const normalized = normalizeTemplateDraft(draftInput);
       if (normalized.error) {
         return { error: normalized.error };
       }
 
       const templateData = {
-        ownerId: coachId,
+        ownerId,
         name: normalized.draft.name,
         sport: normalized.draft.sport,
         summary: normalized.draft.summary,
@@ -147,7 +147,7 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
       }
 
       const existing = await db.template.findUnique({ where: { id: templateId } });
-      if (!existing || existing.ownerId !== coachId) {
+      if (!existing || existing.ownerId !== ownerId) {
         return { error: 'Template not found.' };
       }
 
@@ -172,9 +172,9 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
       return { error: null };
     },
 
-    async deleteForCoach(coachId: number, templateId: number) {
+    async deleteForOwner(ownerId: number, templateId: number) {
       const template = await db.template.findUnique({ where: { id: templateId } });
-      if (!template || template.ownerId !== coachId) {
+      if (!template || template.ownerId !== ownerId) {
         return { error: 'Template not found.' };
       }
 
@@ -182,7 +182,7 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
       return { error: null };
     },
 
-    async duplicateForCoach(coachId: number, templateId: number) {
+    async duplicateForOwner(ownerId: number, templateId: number) {
       const template = await db.template.findUnique({
         where: { id: templateId },
         include: {
@@ -191,13 +191,13 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
           },
         },
       });
-      if (!template || template.ownerId !== coachId) {
+      if (!template || template.ownerId !== ownerId) {
         return { error: 'Template not found.' };
       }
 
       await db.template.create({
         data: {
-          ownerId: coachId,
+          ownerId,
           name: `${template.name} (Copy)`,
           sport: template.sport,
           summary: template.summary,
@@ -219,6 +219,14 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
 
       return { error: null };
     },
+  };
+
+  return {
+    ...service,
+    listForCoach: service.listForOwner,
+    saveForCoach: service.saveForOwner,
+    deleteForCoach: service.deleteForOwner,
+    duplicateForCoach: service.duplicateForOwner,
   };
 }
 

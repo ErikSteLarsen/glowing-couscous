@@ -98,6 +98,7 @@ export function createPlannerEditorDraftFromTemplate(
     sport: template.sport,
     title: template.name,
     summary: template.summary,
+    templateId: template.id,
     athleteId: input.athleteId ?? null,
     scheduledDate: input.scheduledDate,
     planWeekday: input.planWeekday ?? null,

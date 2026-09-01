@@ -26,6 +26,8 @@ export function getPrimaryNavigation(
     { label: 'Home', href: '/athlete', matchPrefix: '/athlete' },
     { label: 'Calendar', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
     { label: 'Activity', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
+    { label: 'Planner', href: '/athlete/planner', matchPrefix: '/athlete/planner' },
+    { label: 'Templates', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
     ...(hasActiveCoach ? [] : [{ label: 'Coach', href: '/athlete/find-coach', matchPrefix: '/athlete/find-coach' }]),
     { label: 'Settings', href: '/settings', matchPrefix: '/settings' },
   ];

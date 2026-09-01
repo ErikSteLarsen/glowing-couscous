@@ -23,6 +23,8 @@ test('root route and app navigation define signed-in entry points and role-aware
   assert.match(navSource, /hasActiveCoach/);
   assert.match(navSource, /label: 'Coach'/);
   assert.match(navSource, /label: 'Planner'/);
+  assert.match(navSource, /href: '\/athlete\/planner'/);
+  assert.match(navSource, /href: '\/athlete\/templates'/);
   assert.match(navSource, /href: '\/profile'/);
   assert.match(navSource, /href: '\/settings'/);
 });
@@ -34,6 +36,29 @@ test('navigation matching prefers the most specific active destination', async (
   assert.match(navSource, /export function isNavigationItemActive/);
   assert.match(navSource, /candidate\.matchPrefix\.length > item\.matchPrefix\.length/);
   assert.match(sidebarSource, /isNavigationItemActive\(props\.pathname, item, navItems\)/);
+});
+
+test('athlete planner exposes the shared editor and multi-day session creation', async () => {
+  const plannerPageSource = await read('app/(app)/athlete/planner/page.tsx');
+  const plannerClientSource = await read('app/(app)/athlete/planner/AthletePlannerClient.tsx');
+  const templatesPageSource = await read('app/(app)/athlete/templates/page.tsx');
+
+  assert.match(plannerPageSource, /athletePlannerService\.loadWorkspace/);
+  assert.match(plannerPageSource, /AthletePlannerClient/);
+  assert.match(plannerClientSource, /SessionComposer/);
+  assert.match(plannerClientSource, /selectedDates/);
+  assert.match(plannerClientSource, /\/api\/athlete\/planner\/sessions/);
+  assert.match(templatesPageSource, /apiBasePath="\/api\/athlete\/templates"/);
+});
+
+test('desktop sidebar stays within the viewport and owns its overflow', async () => {
+  const sidebarSource = await read('components/AppSidebar.tsx');
+
+  assert.match(
+    sidebarSource,
+    /overflow-y-auto.*md:sticky md:top-0 md:h-screen md:max-h-screen md:self-start/,
+  );
+  assert.match(sidebarSource, /flex min-h-full flex-col/);
 });
 
 test('coach pages rely on shared shell and keep only contextual local actions', async () => {

@@ -3,12 +3,13 @@
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  compactDangerButtonClassName,
+  compactPrimaryButtonClassName,
+  compactSecondaryButtonClassName,
   EmptyState,
   dangerTextClassName,
-  dangerButtonClassName,
   formFieldClassName,
   primaryButtonClassName,
-  secondaryButtonClassName,
   successTextClassName,
   Surface,
 } from '@/components/ui';
@@ -48,7 +49,15 @@ function formatDuration(durationSec: number) {
   return hours > 0 ? `${hours}h ${String(minutes).padStart(2, '0')}m` : `${minutes}m`;
 }
 
-export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[] }) {
+export function CoachTemplatesClient({
+  templates,
+  apiBasePath = '/api/coach/templates',
+  plannerHref = '/coach/planner',
+}: {
+  templates: TemplateRecord[];
+  apiBasePath?: string;
+  plannerHref?: string;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [filterText, setFilterText] = useState('');
@@ -73,7 +82,7 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
     setMessage('');
     setMessageTone('success');
     startTransition(async () => {
-      const response = await fetch(`/api/coach/templates/${templateId}/duplicate`, { method: 'POST' });
+      const response = await fetch(`${apiBasePath}/${templateId}/duplicate`, { method: 'POST' });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({ error: 'Failed to duplicate template' }));
         setMessageTone('danger');
@@ -91,7 +100,7 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
     setMessage('');
     setMessageTone('success');
     startTransition(async () => {
-      const response = await fetch(`/api/coach/templates/${templateId}`, { method: 'DELETE' });
+      const response = await fetch(`${apiBasePath}/${templateId}`, { method: 'DELETE' });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({ error: 'Failed to delete template' }));
         setMessageTone('danger');
@@ -115,7 +124,7 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
   function saveEditor() {
     startTransition(async () => {
       const response = await fetch(
-        editingTemplateId ? `/api/coach/templates/${editingTemplateId}` : '/api/coach/templates',
+        editingTemplateId ? `${apiBasePath}/${editingTemplateId}` : apiBasePath,
         {
           method: editingTemplateId ? 'PATCH' : 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -162,7 +171,7 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Tempo editor</p>
               <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">{editingTemplateId ? 'Edit template' : 'Create template'}</h2>
             </div>
-            <button type="button" className={secondaryButtonClassName} onClick={() => setEditorOpen(false)}>Cancel</button>
+            <button type="button" className={compactSecondaryButtonClassName} onClick={() => setEditorOpen(false)}>Cancel</button>
           </div>
           <SessionComposer
             draft={editorDraft}
@@ -170,13 +179,13 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
             summaryPlaceholder="Summary"
           />
           <div className="flex flex-wrap gap-3">
-            <button type="button" className={primaryButtonClassName} disabled={isPending} onClick={saveEditor}>{isPending ? 'Saving…' : 'Save template'}</button>
+            <button type="button" className={compactPrimaryButtonClassName} disabled={isPending} onClick={saveEditor}>{isPending ? 'Saving…' : 'Save template'}</button>
           </div>
         </Surface>
       ) : null}
 
       {visibleTemplates.length === 0 ? (
-        <EmptyState title="No templates found" description="Try another filter or create a new builder template." />
+        <EmptyState title="No templates found" description="Try another filter or create a template." />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {visibleTemplates.map((template) => {
@@ -185,8 +194,8 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
             return (
               <Surface key={template.id} className="space-y-4">
                 <div className="space-y-2">
-                  <p className="text-[13px] font-semibold text-[var(--text)]">{template.name}</p>
-                  <p className="text-[12px] text-[var(--text-secondary)]">
+                  <p className="text-sm font-semibold text-[var(--text)]">{template.name}</p>
+                  <p className="text-[13px] text-[var(--text-secondary)]">
                     {getSportLabel(template.sport)}
                   </p>
                   <p className="text-sm text-[var(--text-secondary)]">
@@ -199,20 +208,20 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
                   <MetricText>{metrics.tss} TSS</MetricText>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                   <a
-                    href={`/coach/planner?templateId=${template.id}`}
-                    className={primaryButtonClassName}
-                   >
-                     Load into builder
-                   </a>
-                   <button type="button" onClick={() => openEditor(template)} disabled={isPending} className={secondaryButtonClassName}>
+                  <a
+                    href={`${plannerHref}?templateId=${template.id}`}
+                    className={compactPrimaryButtonClassName}
+                  >
+                    Load into builder
+                  </a>
+                   <button type="button" onClick={() => openEditor(template)} disabled={isPending} className={compactSecondaryButtonClassName}>
                      Edit
                    </button>
                   <button
                     type="button"
                     onClick={() => duplicateTemplate(template.id)}
                     disabled={isPending}
-                    className={secondaryButtonClassName}
+                    className={compactSecondaryButtonClassName}
                   >
                     Duplicate
                   </button>
@@ -220,7 +229,7 @@ export function CoachTemplatesClient({ templates }: { templates: TemplateRecord[
                     type="button"
                     onClick={() => deleteTemplate(template.id)}
                     disabled={isPending}
-                    className={dangerButtonClassName}
+                    className={compactDangerButtonClassName}
                   >
                     Delete
                   </button>
