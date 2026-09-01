@@ -212,6 +212,103 @@ test('share link session access allows the athlete or roster coach but not unrel
   assert.equal(createArgs.length, 2);
 });
 
+test('standalone coach sessions are owner-scoped and training-plan children are deferred', async () => {
+  const standalone = {
+    id: 23,
+    athleteId: null,
+    coachOwnerId: 4,
+    trainingPlanId: null,
+    coachBaselineJson: null,
+    sport: 'STRENGTH',
+    title: 'Coach library session',
+    summary: null,
+    blocks: [{ kind: 'work', zone: 3, durationSec: 600, sortOrder: 0 }],
+    athlete: null,
+  };
+  const trainingPlanChild = { ...standalone, id: 24, trainingPlanId: 8 };
+  const created: number[] = [];
+  const service = createShareLinkService({
+    createToken: () => 'f'.repeat(43),
+    db: {
+      session: {
+        async findUnique(args: { where: { id: number } }) {
+          return args.where.id === 23 ? standalone : trainingPlanChild;
+        },
+      },
+      shareLink: {
+        async create() {
+          created.push(1);
+          return { id: created.length };
+        },
+      },
+    } as never,
+  });
+
+  assert.equal((await service.createForUser(4, 'session', 23)).ok, true);
+  assert.deepEqual(await service.createForUser(5, 'session', 23), {
+    ok: false,
+    error: 'Share link not found.',
+    status: 404,
+  });
+  assert.deepEqual(await service.createForUser(4, 'session', 24), {
+    ok: false,
+    error: 'Share link not found.',
+    status: 404,
+  });
+  assert.equal(created.length, 1);
+});
+
+test('completed sessions use the stored planned baseline and never expose actual or private fields', async () => {
+  const baseline = JSON.stringify({
+    sport: 'BIKING',
+    title: 'Baseline title',
+    summary: 'Baseline summary',
+    scheduledDate: '2026-09-01',
+    status: 'planned',
+    coachNotes: 'Private coach note',
+    athleteNotes: 'Private athlete note',
+    rpe: 9,
+    blocks: [{ kind: 'work', zone: 4, durationSec: 900, note: 'Public cue', sortOrder: 0 }],
+  });
+  let snapshotJson = '';
+  const service = createShareLinkService({
+    createToken: () => 'g'.repeat(43),
+    db: {
+      session: {
+        async findUnique() {
+          return {
+            id: 25,
+            athleteId: 7,
+            coachOwnerId: null,
+            trainingPlanId: null,
+            coachBaselineJson: baseline,
+            sport: 'RUNNING',
+            title: 'Mutable current title',
+            summary: 'Current summary',
+            blocks: [{ kind: 'work', zone: 1, durationSec: 60, note: 'Current data', sortOrder: 0 }],
+            athlete: { coachId: 3 },
+          };
+        },
+      },
+      shareLink: {
+        async create(args: { data: { snapshotJson: string } }) {
+          snapshotJson = args.data.snapshotJson;
+          return { id: 1 };
+        },
+      },
+    } as never,
+  });
+
+  assert.equal((await service.createForUser(7, 'session', 25)).ok, true);
+  const projection = JSON.parse(snapshotJson) as Record<string, unknown>;
+  assert.equal(projection.title, 'Baseline title');
+  assert.equal('coachNotes' in projection, false);
+  assert.equal('athleteNotes' in projection, false);
+  assert.equal('rpe' in projection, false);
+  assert.equal('actualSnapshotJson' in projection, false);
+  assert.equal('activity' in projection, false);
+});
+
 test('public preview uses the stored snapshot and rejects malformed or mixed links', async () => {
   const token = 'c'.repeat(43);
   const snapshot = JSON.stringify(createSharedWorkoutProjection({

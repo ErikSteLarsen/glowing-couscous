@@ -24,6 +24,17 @@ test('share link routes stay thin, authenticated, and service-backed', async () 
   assert.doesNotMatch(service, /assignmentService/);
 });
 
+test('share schema encodes named ownership relations and source deletion cascades', async () => {
+  const schema = await read('prisma/schema.prisma');
+  assert.match(schema, /model ShareLink/);
+  assert.match(schema, /tokenHash\s+String\s+@unique/);
+  assert.match(schema, /session\s+Session\?\s+@relation\("SessionShareLinks"[^\n]*onDelete: Cascade/);
+  assert.match(schema, /template\s+Template\?\s+@relation\("TemplateShareLinks"[^\n]*onDelete: Cascade/);
+  assert.match(schema, /createdBy\s+User\s+@relation\("ShareLinkCreator"/);
+  assert.match(schema, /shareLinks\s+ShareLink\[\] @relation\("SessionShareLinks"\)/);
+  assert.match(schema, /shareLinks\s+ShareLink\[\] @relation\("TemplateShareLinks"\)/);
+});
+
 test('public share route is outside the signed-in shell and hardens metadata', async () => {
   const page = await read('app/share/[token]/page.tsx');
   const client = await read('app/share/[token]/ShareLandingClient.tsx');

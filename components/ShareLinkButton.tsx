@@ -24,20 +24,25 @@ export function ShareLinkButton({
   function createLink() {
     setMessage('');
     startTransition(async () => {
-      const response = await fetch('/api/share-links', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourceKind, sourceId }),
-      });
-      const payload = await response.json().catch(() => ({})) as { error?: string; url?: string };
-      if (!response.ok || !payload.url) {
-        setMessageTone('danger');
-        setMessage(payload.error ?? 'Failed to create share link.');
-        return;
-      }
+      try {
+        const response = await fetch('/api/share-links', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sourceKind, sourceId }),
+        });
+        const payload = await response.json().catch(() => ({})) as { error?: string; url?: string };
+        if (!response.ok || !payload.url) {
+          setMessageTone('danger');
+          setMessage(payload.error ?? 'Failed to create share link.');
+          return;
+        }
 
-      setShareUrl(payload.url);
-      await copyLink(payload.url);
+        setShareUrl(payload.url);
+        await copyLink(payload.url);
+      } catch {
+        setMessageTone('danger');
+        setMessage('Failed to create share link.');
+      }
     });
   }
 
