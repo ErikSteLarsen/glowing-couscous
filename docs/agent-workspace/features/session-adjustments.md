@@ -4,7 +4,7 @@
 - **Status:** `in-progress`
 - **Last verified:** `2026-08-25` (canonical editor, snapshots, planned adjustments, actual outcome editing, and comparison implemented and verified)
 - **Owners:** `lib/session-editor.ts`, `lib/session-snapshot-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/athlete-completion-service.ts`, `lib/session-comparison-service.ts`, `lib/coach-planner-service.ts`, and comparison surfaces
-- **Related work:** [canonical editor task](../tasks/2026-08-25-canonical-session-editor.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [planned adjustment task](../tasks/2026-08-25-planned-session-adjustments.md), [actual outcome task](../tasks/2026-08-25-actual-outcome-editing.md), [comparison task](../tasks/2026-08-25-baseline-actual-comparison.md), [decision 0010](../decisions/0010-session-adjustments-and-actual-outcomes.md), [planner](planner.md), [templates](templates.md), [athlete](athlete.md), [workout domain](workout-domain.md)
+- **Related work:** [canonical editor task](../tasks/2026-08-25-canonical-session-editor.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [planned adjustment task](../tasks/2026-08-25-planned-session-adjustments.md), [actual outcome task](../tasks/2026-08-25-actual-outcome-editing.md), [comparison task](../tasks/2026-08-25-baseline-actual-comparison.md), [shared session creator](../tasks/2026-08-28-shared-session-creator.md), [decision 0010](../decisions/0010-session-adjustments-and-actual-outcomes.md), [planner](planner.md), [templates](templates.md), [athlete](athlete.md), [workout domain](workout-domain.md)
 
 ## Contract
 
@@ -62,6 +62,8 @@ corrections save immediately and recompute derived metrics.
 - `SESSION-PLAN-ADJUST-001` lets athletes edit one planned assignment and mark it
   adjusted, while coach planned edits overwrite the baseline and clear adjusted;
   schedule moves update the existing Plan and Assignment instead of copying.
+- The shared athlete Planner uses the same canonical editor for private planned
+  session creation; multi-date creation stores independent Session rows.
 - `SESSION-ACTUAL-001` lets an owning athlete or roster coach replace actual
   blocks, Activity metrics, notes, and RPE directly while retaining completed
   status and the coach baseline.
@@ -72,7 +74,7 @@ corrections save immediately and recompute derived metrics.
 
 - `tests/session-editor.test.ts`, `tests/session-snapshot.test.ts`, and the
   assignment/completion service tests cover the editor and snapshot boundaries.
-- `pnpm test` — 146 passing tests on 2026-08-25.
+- `pnpm test` — 150 passing tests on 2026-08-28.
 - `pnpm db:push --force-reset && pnpm db:seed`, `pnpm lint`, and `pnpm build`
   pass on 2026-08-25; build retains the existing middleware deprecation warning.
 - Browser narrow/wide viewport, loading, empty, error, keyboard/focus, contrast,

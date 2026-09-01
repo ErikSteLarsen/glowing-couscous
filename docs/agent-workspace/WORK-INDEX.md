@@ -6,14 +6,14 @@ by agents as work changes. Use the linked feature record before editing.
 | ID | Capability | Status | Owner / entry point | Tests / evidence | Record |
 |---|---|---|---|---|---|
 | `AUTH-001` | Auth, signup, setup, role access | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | Shell/source tests; `pnpm build` | [auth](features/auth.md) |
-| `SHELL-001` | Tempo shell and navigation | `shipped` | `components/AppShell.tsx`, `AppSidebar.tsx`, `lib/app-navigation.ts` | UI contrast audit, 115 tests, lint, build; [history](history/2026-08-22-interactive-color-contrast.md) | [shell](features/shell.md) |
+| `SHELL-001` | Tempo shell and navigation | `shipped` | `components/AppShell.tsx`, `AppSidebar.tsx`, `lib/app-navigation.ts` | Viewport-bounded sidebar, 147 tests, lint, build, and diff check; [history](history/2026-08-28-sidebar-viewport-height.md) | [shell](features/shell.md) |
 | `COACH-001` | Coach roster and athlete detail | `shipped` | `lib/coach-service.ts`, `/coach/**` | UI contrast audit, 115 tests, lint, build; [history](history/2026-08-22-interactive-color-contrast.md) | [coach](features/coach.md) |
-| `ONBOARD-001` | Coach discovery and request lifecycle | `shipped` | `lib/coach-request-service.ts`, athlete discovery/profile | Request and onboarding tests; UX polish remains | [onboarding](features/onboarding.md) |
-| `PLAN-001` | Athlete-week coach planner | `shipped` | `lib/coach-planner-service.ts`, `lib/planner-draft.ts`, `/coach/planner` | Planner/draft/API tests | [planner](features/planner.md) |
+| `ONBOARD-001` | Coach discovery and request lifecycle | `shipped` | `lib/coach-request-service.ts`, athlete discovery/profile | Concise request status copy, 147 tests, lint, build; [history](history/2026-08-28-concise-ui-copy.md) | [onboarding](features/onboarding.md) |
+| `PLAN-001` | Athlete-week coach planner | `shipped` | `lib/coach-planner-service.ts`, `lib/planner-draft.ts`, `/coach/planner`, athlete planner | Shared session creator, 150 tests, lint, build; [history](history/2026-08-28-shared-session-creator.md) | [planner](features/planner.md) |
 | `LIB-001` | Coach-owned session library | `shipped` | `lib/coach-session-library-service.ts`, planner modes | Dedicated library tests | [planner](features/planner.md) |
 | `TPLAN-001` | Reusable coach training plans | `shipped` | `lib/coach-training-plan-service.ts`, planner modes | Dedicated training-plan tests | [planner](features/planner.md) |
-| `TEMPLATE-001` | Private template library and assignment services | `shipped` | `lib/template-service.ts`, `lib/assignment-service.ts`, templates/planner UI | Template, assignment, and workflow tests; browser E2E remains | [templates](features/templates.md) |
-| `ATHLETE-001` | Home, calendar, session, live, activity | `shipped` | `lib/athlete-service.ts`, `/athlete/**` | UI contrast audit, calendar month/week layout polish, 115 tests, lint, build; [history](history/2026-08-22-calendar-week-overview.md) | [athlete](features/athlete.md) |
+| `TEMPLATE-001` | Private template library and assignment services | `shipped` | `lib/template-service.ts`, `lib/assignment-service.ts`, templates/planner UI | Coach and athlete owner-scoped templates, 150 tests, lint, build; [history](history/2026-08-28-shared-session-creator.md) | [templates](features/templates.md) |
+| `ATHLETE-001` | Home, calendar, session, live, activity | `shipped` | `lib/athlete-service.ts`, `/athlete/**`, athlete planner/templates | Private multi-date session creator, 150 tests, lint, build; [history](history/2026-08-28-shared-session-creator.md) | [athlete](features/athlete.md) |
 | `LIVE-001` | Interactive athlete live execution | `shipped` | `lib/athlete-execution.ts`, live client, `Stepper` | [task](tasks/2026-08-21-athlete-live-execution-progress.md); 113 tests, lint, build | [athlete](features/athlete.md) |
 | `COMPLETE-001` | Completion, activity, notes | `shipped` | completion API, `Activity`, session detail client | Indirect route coverage; add focused service tests | [athlete](features/athlete.md) |
 | `COMPLETION-002` | Completion metric/history integrity | `shipped` | `lib/athlete-completion-service.ts`, `Activity`, session lifecycle | [task](tasks/2026-08-21-completion-integrity-progress.md); 103 tests, schema reset/seed, lint, build | [athlete](features/athlete.md) |
@@ -26,7 +26,7 @@ by agents as work changes. Use the linked feature record before editing.
 | `API-001` | API principal and route input validation | `shipped` | `lib/api-auth.ts`, `lib/route-params.ts`, protected API handlers | [task](tasks/2026-08-21-api-auth-validation-progress.md); 92 tests, lint, build | [coverage](features/coverage.md) |
 | `COMPAT-002` | Compatibility hardening and docs alignment | `shipped` | old planner adapter, builder redirect, architecture docs | [task](tasks/2026-08-21-compatibility-docs-progress.md); 113 tests, lint, build | [compatibility](features/compatibility.md) |
 | `COVERAGE-001` | Deepen service/API regression coverage | `planned` | Auth, request, completion, compatibility seams | See current gaps in snapshot | [coverage](features/coverage.md) |
-| `SESSION-ADJUST-001` | Per-session coach/athlete adjustments and actual outcomes | `in-progress` | canonical editor, snapshot/adjustment/outcome services, comparison dialog | `SESSION-COMPARE-001` shipped 2026-08-25; [snapshot task](tasks/2026-08-25-session-snapshots.md), [planned adjustment task](tasks/2026-08-25-planned-session-adjustments.md), [actual outcome task](tasks/2026-08-25-actual-outcome-editing.md), [history](history/2026-08-25-baseline-actual-comparison.md) | [session adjustments](features/session-adjustments.md) |
+| `SESSION-ADJUST-001` | Per-session coach/athlete adjustments and actual outcomes | `in-progress` | canonical editor, snapshot/adjustment/outcome services, comparison dialog | Shared creator extends canonical editor ownership; 150 tests, lint, build; [history](history/2026-08-28-shared-session-creator.md) | [session adjustments](features/session-adjustments.md) |
 | `CLEANUP-001` | Audit stale pre-Tempo helpers/components | `shipped` | `components/AthleteWeekView.tsx` chain removed; remaining helpers stay transitional | Reference analysis, cleanup decision, 114 tests, lint, build; [history](history/2026-08-22-interactive-color-contrast.md) | [compatibility](features/compatibility.md) |
 | `OPS-001` | Agent coordination workspace | `shipped` | `docs/agent-workspace/`, root `AGENTS.md` | Documentation review and repo gates | [workspace](features/workspace.md) |
 
@@ -43,7 +43,8 @@ registered a multi-step task in this workspace.
 
 | Task | Status | Agent | Feature IDs | Last update |
 |---|---|---|---|---|
-| No active task currently recorded | — | — | — | 2026-08-25; `SESSION-COMPARE-001` completed |
+| [sidebar viewport height](tasks/2026-08-28-sidebar-viewport-height.md) | `completed` | `OpenCode` | `SHELL-001` | 2026-08-28; viewport-bounded desktop sidebar verified |
+| [shared session creator](tasks/2026-08-28-shared-session-creator.md) | `completed` | `OpenCode` | `ATHLETE-001`, `PLAN-001`, `TEMPLATE-001`, `SESSION-ADJUST-001` | 2026-08-28; shared athlete creator and owner-scoped templates verified |
 
 ## Planned Task Files
 

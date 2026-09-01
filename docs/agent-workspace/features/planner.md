@@ -2,9 +2,9 @@
 
 - **IDs:** `PLAN-001`, `LIB-001`, `TPLAN-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-25`
+- **Last verified:** `2026-08-28`
 - **Owners:** `lib/coach-planner-service.ts`, `lib/coach-session-library-service.ts`, `lib/coach-training-plan-service.ts`, `lib/session-editor-adapters.ts`, `components/SessionComposer.tsx`
-- **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md), [planner history](../../../docs/superpowers/plans/2026-06-23-coach-planner.md), [source assignment task](../tasks/2026-08-21-source-copy-assignment.md), [workflow task](../tasks/2026-08-21-planner-template-workflows.md), [editor migration](../tasks/2026-08-25-editor-migration.md)
+- **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md), [planner history](../../../docs/superpowers/plans/2026-06-23-coach-planner.md), [source assignment task](../tasks/2026-08-21-source-copy-assignment.md), [workflow task](../tasks/2026-08-21-planner-template-workflows.md), [editor migration](../tasks/2026-08-25-editor-migration.md), [concise UI copy](../history/2026-08-28-concise-ui-copy.md), [shared session creator](../history/2026-08-28-shared-session-creator.md)
 
 ## Contract
 
@@ -48,11 +48,18 @@ and have no athlete.
 - The active planner now uses `SessionComposer` with the canonical session draft;
   ownership modes and source-template context are retained by
   `session-editor-adapters`.
+- Planner modes, source/session lists, training-plan actions, and delete/editor
+  utilities use compact shared controls so the desktop workspace stays dense
+  without changing the standard save/form sizing.
 - Assigned athlete sessions persist a complete latest coach baseline payload;
   source copies remain independent from reusable source records.
 - Coach edits to planned athlete sessions clear adjusted status, replace the
   baseline, preserve source ownership, and move the existing Assignment target
   date rather than creating another Session.
+- Athletes have a private Planner path using the same canonical editor; selecting
+  multiple dates creates independent scheduled sessions.
+- Planner helper copy is concise; visible day and mode controls are not restated
+  in explanatory text.
 
 ## Verification
 
@@ -62,6 +69,12 @@ and have no athlete.
 - `pnpm test` — 134 passing tests on 2026-08-25, including workflow source and
   snapshot assertions.
 - Planned adjustment/coach overwrite tests pass on 2026-08-25.
+- `pnpm test`, `pnpm lint`, and `pnpm build` pass after the desktop-first sizing
+  polish on 2026-08-28.
+- `pnpm test`, `pnpm lint`, `pnpm build`, and `git diff --check` pass after the
+  concise UI copy audit on 2026-08-28.
+- `pnpm test` — 150 passing tests after the shared session creator on 2026-08-28.
+- `pnpm lint`, `pnpm build`, and `git diff --check` — pass on 2026-08-28.
 - `pnpm db:push --force-reset && pnpm db:seed` — pass on the disposable local
   SQLite database on 2026-08-21.
 

@@ -2,9 +2,9 @@
 
 - **ID:** `TEMPLATE-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-25`
+- **Last verified:** `2026-08-28`
 - **Owners:** `lib/template-service.ts`, `lib/assignment-service.ts`, `lib/session-editor-adapters.ts`, `components/SessionComposer.tsx`
-- **Related work:** [baseline](../history/2026-08-21-baseline.md), [product scope](../../../SPEC.md), [workflow task](../tasks/2026-08-21-planner-template-workflows.md), [assignment task](../tasks/2026-08-21-source-copy-assignment.md), [editor migration](../tasks/2026-08-25-editor-migration.md)
+- **Related work:** [baseline](../history/2026-08-21-baseline.md), [product scope](../../../SPEC.md), [workflow task](../tasks/2026-08-21-planner-template-workflows.md), [assignment task](../tasks/2026-08-21-source-copy-assignment.md), [editor migration](../tasks/2026-08-25-editor-migration.md), [concise UI copy](../history/2026-08-28-concise-ui-copy.md), [shared session creator](../history/2026-08-28-shared-session-creator.md)
 
 ## Contract
 
@@ -29,10 +29,17 @@ a date without creating duplicate matching sessions.
 - The live editor creates and updates canonical Tempo block fields.
 - The live editor uses `SessionComposer` and initializes/serializes through the
   canonical session editor contract.
+- Template card actions and editor utilities use compact shared controls so the
+  primary load action does not visually compete with edit, duplicate, and delete.
 - Assignment validates athlete roster ownership, template ownership, date, and
   week plan; repeated matching assignment reuses the existing session.
 - Template assignments persist a coach baseline payload on the copied Session;
   later template edits do not synchronize into that payload.
+- Templates are owner-scoped for both coaches and athletes. Athlete templates can
+  prefill private sessions; coach templates retain the existing roster assignment
+  workflow.
+- Template and assignment empty states keep only concise next-step guidance;
+  reusable-copy independence remains explicitly labeled.
 
 ## Verification
 
@@ -40,6 +47,12 @@ a date without creating duplicate matching sessions.
 - `pnpm test` — 134 passing tests on 2026-08-25, including planner/template
   workflow, migration, and snapshot assertions.
 - `pnpm lint && pnpm build` — pass on 2026-08-21.
+- `pnpm test`, `pnpm lint`, and `pnpm build` pass after the desktop-first sizing
+  polish on 2026-08-28.
+- `pnpm test` — 150 passing tests after owner-scoped templates on 2026-08-28.
+- `pnpm lint`, `pnpm build`, and `git diff --check` — pass on 2026-08-28.
+- `pnpm test`, `pnpm lint`, `pnpm build`, and `git diff --check` pass after the
+  concise UI copy audit on 2026-08-28.
 
 ## Known Gaps
 

@@ -2,9 +2,9 @@
 
 - **IDs:** `ATHLETE-001`, `COMPLETE-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-25`
+- **Last verified:** `2026-08-28`
 - **Owner:** `lib/athlete-service.ts` for reads, `lib/athlete-session-adjustment-service.ts` for planned writes, and `lib/athlete-completion-service.ts` for Activity writes
-- **Related work:** [baseline](../history/2026-08-21-baseline.md), [architecture](../../../ARCHITECTURE.md), [Live task](../tasks/2026-08-21-athlete-live-execution.md), [completion task](../tasks/2026-08-21-completion-integrity.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [planned adjustment task](../tasks/2026-08-25-planned-session-adjustments.md), [calendar month polish](../history/2026-08-22-calendar-month-polish.md), [calendar week overview](../history/2026-08-22-calendar-week-overview.md)
+- **Related work:** [baseline](../history/2026-08-21-baseline.md), [architecture](../../../ARCHITECTURE.md), [Live task](../tasks/2026-08-21-athlete-live-execution.md), [completion task](../tasks/2026-08-21-completion-integrity.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [planned adjustment task](../tasks/2026-08-25-planned-session-adjustments.md), [calendar month polish](../history/2026-08-22-calendar-month-polish.md), [calendar week overview](../history/2026-08-22-calendar-week-overview.md), [calendar copy polish](../history/2026-08-28-calendar-copy-polish.md), [concise UI copy](../history/2026-08-28-concise-ui-copy.md), [month navigation](../history/2026-08-28-calendar-month-navigation.md), [navigation alignment correction](../history/2026-08-28-calendar-navigation-alignment-correction.md), [month empty state](../history/2026-08-28-calendar-month-empty-state.md), [shared session creator](../history/2026-08-28-shared-session-creator.md)
 
 ## Contract
 
@@ -32,6 +32,20 @@ They can mark a session complete or move it back to planned while saving notes.
   shown when today is outside the visible week.
 - Each session summary card links to session detail as a whole, without a
   separate nested `Open session` action.
+- Calendar navigation and dense session metadata use compact desktop controls
+  with a slightly more readable content text floor; discovery/request actions
+  stack safely on narrow screens.
+- The week scroller only shows loading status while requesting an adjacent week;
+  idle explanatory copy is omitted.
+- Athlete page headers and empty states use concise labels and action guidance
+  instead of repeating visible layout behavior.
+- Month navigation is right-anchored independently of the variable-length month
+  label.
+- Month view relies on its day grid for empty days and does not repeat an empty
+  state below the calendar.
+- Athletes can open Planner from the side menu, create a private session for one
+  or more dates, edit/delete their own planned sessions, and prefill from their
+  private templates.
 - Month navigation sits beside the displayed month in the overview card, with
   labeled directional controls and readable grid overflow on narrow screens.
 - Session detail derives status, duration, TSS, targets, zone segments, and block metadata.
@@ -66,6 +80,17 @@ They can mark a session complete or move it back to planned while saving notes.
   layout, and build checks pass on 2026-08-22.
 - `pnpm test` — 146 passing tests, including focused completion, snapshot,
   assignment, and immutable planner behavior coverage.
+- `pnpm test`, `pnpm lint`, and `pnpm build` pass after the desktop-first sizing
+  polish on 2026-08-28.
+- `pnpm test` — 147 passing tests after removing idle calendar loading guidance
+  on 2026-08-28.
+- `pnpm lint` and `git diff --check` — pass on 2026-08-28.
+- `pnpm test`, `pnpm lint`, `pnpm build`, and `git diff --check` pass after the
+  concise UI copy audit on 2026-08-28.
+- `pnpm test`, `pnpm lint`, `pnpm build`, and `git diff --check` pass after the
+  month navigation adjustment on 2026-08-28.
+- `pnpm test` — 150 passing tests after the shared session creator on 2026-08-28.
+- `pnpm lint`, `pnpm build`, and `git diff --check` — pass on 2026-08-28.
 - `pnpm db:push --force-reset && pnpm db:seed`, `pnpm lint`, and `pnpm build` —
   pass on 2026-08-25.
 - `pnpm db:push --force-reset && pnpm db:seed` — pass on the disposable local
@@ -77,6 +102,8 @@ They can mark a session complete or move it back to planned while saving notes.
   not a performed-metrics import or sensor integration.
 - The live surface is guidance only and does not track current step state back to the server.
 - Athlete onboarding and navigation polish remain planned.
+- Athlete templates are private to their owner; coach-owned templates are still
+  assigned through the coach workflow rather than automatically shared.
 - Browser verification of planned-edit loading, empty/error states, keyboard
   focus, contrast, and narrow/wide responsive layouts remains outstanding.
 

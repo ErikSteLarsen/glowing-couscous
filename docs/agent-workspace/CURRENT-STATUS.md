@@ -1,14 +1,15 @@
 # Current Status
 
-This is the verified project snapshot recorded on **2026-08-25**. It was
+This is the verified project snapshot recorded on **2026-09-01**. It was
 inspected on branch `main` after the session editor migration, durable snapshots,
-planned session adjustment, actual outcome editing, and comparison implementation.
+planned session adjustment, actual outcome editing, comparison implementation,
+shared athlete session creation, and desktop UI polish.
 
 ## Verification
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass: 146 tests | `pnpm test` |
+| Tests | Pass: 150 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build` |
 | Build warning | Present | Next.js reports the `middleware` convention is deprecated in favor of `proxy`; this is not currently a build failure. |
@@ -26,14 +27,14 @@ sessions complete with notes. Weeks are Monday-based.
 | Capability | Status | Primary implementation | Verification / gap |
 |---|---|---|---|
 | Auth, signup, setup, role redirects | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-principal.ts`, `lib/auth-role-service.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | Focused role/principal tests and adapter smoke test pass; external OAuth integration remains a gap. |
-| Responsive Tempo app shell and navigation | `shipped` | `components/AppShell.tsx`, `AppSidebar.tsx`, `lib/app-navigation.ts`, `app/globals.css` | Shell, accessibility, centering, navigation, and interactive contrast tests pass (134 tests). |
+| Responsive Tempo app shell and navigation | `shipped` | `components/AppShell.tsx`, `AppSidebar.tsx`, `lib/app-navigation.ts`, `app/globals.css` | Viewport-bounded desktop sidebar, role-aware Planner/Template navigation, shell/accessibility/navigation tests, lint, and build pass (150 tests); manual browser viewport inspection remains a gap. |
 | Coach roster and athlete detail | `shipped` | `lib/coach-service.ts`, `/coach`, `/coach/athletes/[athleteId]` | `tests/coach-service.test.ts` and route tests pass. |
 | Athlete coach discovery and request lifecycle | `shipped` | `lib/coach-request-service.ts`, `prisma/schema.prisma`, `lib/athlete-service.ts`, discovery/profile routes | Request invariants, UI errors/in-flight state, 99 tests, schema reset/seed, lint, and build pass; UX polish remains planned. |
-| Coach planner for athlete schedules | `shipped` | `lib/coach-planner-service.ts`, `lib/planner-draft.ts`, `/coach/planner` | Planner, draft, API, baseline-overwrite, schedule-move, and compatibility tests pass. |
+| Coach planner for athlete schedules | `shipped` | `lib/coach-planner-service.ts`, `lib/planner-draft.ts`, `/coach/planner`, `/athlete/planner` | Coach roster planning and private athlete multi-date session creation pass 150 tests, lint, and build. |
 | Coach-owned session library | `shipped` | `lib/coach-session-library-service.ts`, planner library API/UI | Dedicated service tests pass. |
 | Reusable coach training plans | `shipped` | `lib/coach-training-plan-service.ts`, training-plan APIs/UI | Dedicated service and planner tests pass. |
-| Coach template library and assignment | `shipped` | `lib/template-service.ts`, `lib/assignment-service.ts`, template APIs/UI | Live create/edit, source assignment, independent baseline snapshots, duplicate prevention, 134 tests, lint, and build pass; browser E2E coverage remains a gap. |
-| Athlete Home, Calendar, Session, Live, Activity | `shipped` | `lib/athlete-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/athlete-completion-service.ts`, `lib/session-comparison-service.ts`, athlete route tree, Tempo components | Calendar, planned adjustment, direct actual correction, baseline/actual comparison, completion, actual snapshot persistence, shell, source, interactive contrast, and build coverage pass (146 tests); live execution is a UI stepper, not device telemetry. |
+| Coach template library and assignment | `shipped` | `lib/template-service.ts`, `lib/assignment-service.ts`, template APIs/UI | Owner-scoped coach/athlete create/edit, source assignment, independent baseline snapshots, duplicate prevention, 150 tests, lint, and build pass; browser E2E coverage remains a gap. |
+| Athlete Home, Calendar, Session, Live, Activity | `shipped` | `lib/athlete-service.ts`, `lib/athlete-planner-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/athlete-completion-service.ts`, `lib/session-comparison-service.ts`, athlete route tree, Tempo components | Calendar, private multi-date session creator, planned adjustment, direct actual correction, baseline/actual comparison, completion, actual snapshot persistence, shell, source, interactive contrast, and build coverage pass (150 tests); live execution is a UI stepper, not device telemetry. |
 | Interactive athlete Live execution | `shipped` | `lib/athlete-execution.ts`, `LiveSessionClient`, `Stepper` | `LIVE-001`; local next/previous/restart/completion controls, 114 tests, lint, and build pass. Refresh intentionally restarts local state; no telemetry. |
 | Session completion and activity persistence | `shipped` | `lib/athlete-completion-service.ts`, completion and actual APIs, `Activity` model | 146 tests, schema reset/seed, lint, and build pass; latest actual payloads are replaceable and manual outcomes are explicitly labeled. |
 | Completion metric/history integrity | `shipped` | `lib/athlete-completion-service.ts`, Activity fields, planner mutation guards | `COMPLETION-002`; immutable completed sessions, note retention, stored outcome segments, and nullable compliance are verified. |
@@ -58,8 +59,10 @@ See `WORK-INDEX.md` for stable IDs and `features/` for detailed records.
 - Next.js 16 App Router renders route pages under `app/`.
 - `app/(app)/layout.tsx` gets the authenticated user, redirects users without
   a valid role to setup, and computes whether an athlete has an active coach.
-- `components/AppShell.tsx` and `AppSidebar.tsx` provide desktop sidebar and
-  mobile bottom navigation.
+- `components/AppShell.tsx` and `AppSidebar.tsx` provide a viewport-bounded
+  desktop sidebar with local overflow and mobile bottom navigation. Role-aware
+  Planner/Templates entries lead coaches and athletes to their owner-scoped
+  creator flows.
 - Server pages read through `lib/*-service.ts` modules. Client components own
   local draft state and call API routes for mutations.
 - Route handlers use `lib/api-auth.ts` for role guards. The signup route is the

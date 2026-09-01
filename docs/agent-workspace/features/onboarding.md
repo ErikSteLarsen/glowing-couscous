@@ -2,9 +2,9 @@
 
 - **ID:** `ONBOARD-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-21`
+- **Last verified:** `2026-08-28`
 - **Owner:** `lib/coach-request-service.ts`, `prisma/schema.prisma`, and athlete request-state reads in `lib/athlete-service.ts`
-- **Related work:** [baseline](../history/2026-08-21-baseline.md), [product scope](../../../SPEC.md), [request task](../tasks/2026-08-21-coach-request-invariants.md)
+- **Related work:** [baseline](../history/2026-08-21-baseline.md), [product scope](../../../SPEC.md), [request task](../tasks/2026-08-21-coach-request-invariants.md), [concise UI copy](../history/2026-08-28-concise-ui-copy.md)
 
 ## Contract
 
@@ -37,12 +37,16 @@ A coach can list pending requests and accept or reject them.
   rejects competing pending requests.
 - Coach and athlete request UIs display load/action failures and block duplicate
   in-flight actions.
+- Pending requests and messaging status use concise copy without repeating the
+  adjacent profile action.
 
 ## Verification
 
 - Coach-request service, route, onboarding, and UI source tests pass in `pnpm test`
   on 2026-08-21 (99 tests).
 - `pnpm lint && pnpm build` — pass on 2026-08-21.
+- `pnpm test`, `pnpm lint`, `pnpm build`, and `git diff --check` pass after the
+  concise UI copy audit on 2026-08-28.
 - `pnpm db:push --accept-data-loss && pnpm db:seed` — pass on the disposable
   local SQLite database on 2026-08-21; the seeded pending row has its pending key.
 
