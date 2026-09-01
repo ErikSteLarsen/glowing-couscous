@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireSignedInUser } from '@/lib/api-auth';
-import { createShareLinkService, type ShareLinkAction } from '@/lib/share-link-service';
+import { shareLinkService } from '@/lib/share-link-service';
+import type { ShareLinkAction } from '@/lib/share-link';
 import { isJsonObject, readJsonObject } from '@/lib/route-params';
 
 const actions: readonly ShareLinkAction[] = ['planner', 'template'];
@@ -19,10 +20,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Share action and draft are required.' }, { status: 400 });
   }
 
-  const service = createShareLinkService();
   const result = action === 'template'
-    ? await service.saveTemplateCopy(user.id, token, body.value.draft)
-    : await service.savePlannerCopy(user.id, user.role, token, body.value.draft);
+    ? await shareLinkService.saveTemplateCopy(user.id, token, body.value.draft)
+    : await shareLinkService.savePlannerCopy(user.id, user.role, token, body.value.draft);
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json({ ok: true, sessionIds: 'sessionIds' in result ? result.sessionIds : undefined }, { status: 201 });
 }

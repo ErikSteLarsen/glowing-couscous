@@ -16,9 +16,9 @@ test('share link routes stay thin, authenticated, and service-backed', async () 
 
   assert.match(createRoute, /requireSignedInUser/);
   assert.match(createRoute, /parsePositiveInteger/);
-  assert.match(createRoute, /createShareLinkService/);
+  assert.match(createRoute, /shareLinkService/);
   assert.match(intakeRoute, /requireSignedInUser/);
-  assert.match(intakeRoute, /createShareLinkService/);
+  assert.match(intakeRoute, /shareLinkService/);
   assert.doesNotMatch(createRoute, /prisma\./);
   assert.doesNotMatch(intakeRoute, /prisma\./);
   assert.doesNotMatch(service, /assignmentService/);

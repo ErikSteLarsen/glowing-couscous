@@ -133,6 +133,29 @@ test('shared import creates independent canonical drafts with no source identity
 test('shared projection parser rejects malformed snapshots', () => {
   assert.equal(parseSharedWorkoutProjection(undefined), null);
   assert.equal(parseSharedWorkoutProjection('{"snapshotVersion":1}'), null);
+
+  const valid = createSharedWorkoutProjection({
+    sourceKind: 'template',
+    title: 'Valid snapshot',
+    sport: 'RUNNING',
+    blocks: [{ kind: 'work', zone: 3, durationSec: 600, sortOrder: 0 }],
+  });
+  assert.equal(
+    parseSharedWorkoutProjection(JSON.stringify({
+      ...valid,
+      blocks: [{ ...valid.blocks[0], durationSec: 'not-a-duration' }],
+    })),
+    null,
+  );
+  assert.equal(
+    parseSharedWorkoutProjection(JSON.stringify({
+      ...valid,
+      metrics: { ...valid.metrics, tss: valid.metrics.tss + 1 },
+    })),
+    null,
+  );
+  const parsed = parseSharedWorkoutProjection(JSON.stringify({ ...valid, coachNotes: 'must not escape' }));
+  assert.equal(parsed && 'coachNotes' in parsed, false);
 });
 
 test('share link creation hashes an opaque token and stores exactly one sanitized source', async () => {
@@ -282,6 +305,7 @@ test('completed sessions use the stored planned baseline and never expose actual
             coachOwnerId: null,
             trainingPlanId: null,
             coachBaselineJson: baseline,
+            status: 'completed',
             sport: 'RUNNING',
             title: 'Mutable current title',
             summary: 'Current summary',
@@ -307,6 +331,46 @@ test('completed sessions use the stored planned baseline and never expose actual
   assert.equal('rpe' in projection, false);
   assert.equal('actualSnapshotJson' in projection, false);
   assert.equal('activity' in projection, false);
+});
+
+test('planned sessions share current planned fields instead of a stale coach baseline', async () => {
+  let snapshotJson = '';
+  const service = createShareLinkService({
+    createToken: () => 'h'.repeat(43),
+    db: {
+      session: {
+        async findUnique() {
+          return {
+            id: 26,
+            athleteId: 7,
+            coachOwnerId: null,
+            trainingPlanId: null,
+            coachBaselineJson: JSON.stringify({
+              sport: 'RUNNING',
+              title: 'Old coach version',
+              summary: 'Old summary',
+              blocks: [{ kind: 'work', zone: 2, durationSec: 300, sortOrder: 0 }],
+            }),
+            status: 'planned',
+            sport: 'RUNNING',
+            title: 'Current adjusted version',
+            summary: 'Current summary',
+            blocks: [{ kind: 'work', zone: 4, durationSec: 900, sortOrder: 0 }],
+            athlete: { coachId: 3 },
+          };
+        },
+      },
+      shareLink: {
+        async create(args: { data: { snapshotJson: string } }) {
+          snapshotJson = args.data.snapshotJson;
+          return { id: 1 };
+        },
+      },
+    } as never,
+  });
+
+  assert.equal((await service.createForUser(7, 'session', 26)).ok, true);
+  assert.equal(JSON.parse(snapshotJson).title, 'Current adjusted version');
 });
 
 test('public preview uses the stored snapshot and rejects malformed or mixed links', async () => {

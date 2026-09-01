@@ -138,7 +138,26 @@ export function parseSharedWorkoutProjection(input: string | null | undefined): 
   if (!input) return null;
   try {
     const parsed: unknown = JSON.parse(input);
-    return isSharedWorkoutProjection(parsed) ? parsed : null;
+    if (!isSharedWorkoutProjection(parsed) || !isValidSharedWorkoutBlocks(parsed.blocks)) return null;
+    const metrics = parsed.metrics as Record<string, unknown>;
+    if (
+      !Number.isSafeInteger(metrics.durationSec) ||
+      Number(metrics.durationSec) < 0 ||
+      !Number.isSafeInteger(metrics.tss) ||
+      Number(metrics.tss) < 0 ||
+      !Array.isArray(metrics.segments)
+    ) {
+      return null;
+    }
+
+    const sanitized = createSharedWorkoutProjection({
+      sourceKind: parsed.sourceKind,
+      sport: parsed.sport,
+      title: parsed.title,
+      summary: parsed.summary,
+      blocks: parsed.blocks,
+    });
+    return JSON.stringify(sanitized.metrics) === JSON.stringify(parsed.metrics) ? sanitized : null;
   } catch {
     return null;
   }
@@ -155,5 +174,36 @@ export function createSharedProjectionSourceFromSession(
     title: source.title,
     summary: source.summary,
     blocks: source.blocks,
+  });
+}
+
+function isValidSharedWorkoutBlocks(input: unknown): input is SharedWorkoutBlock[] {
+  return Array.isArray(input) && input.length > 0 && input.every((block) => {
+    if (!block || typeof block !== 'object') return false;
+    const value = block as Record<string, unknown>;
+    if (
+      !['warmup', 'work', 'recovery', 'cooldown'].includes(String(value.kind)) ||
+      !Number.isSafeInteger(value.zone) ||
+      Number(value.zone) < 1 ||
+      Number(value.zone) > 5 ||
+      !Number.isSafeInteger(value.durationSec) ||
+      Number(value.durationSec) <= 0 ||
+      (value.reps !== null && (!Number.isSafeInteger(value.reps) || Number(value.reps) <= 0)) ||
+      typeof value.note !== 'string' ||
+      typeof value.skipped !== 'boolean'
+    ) {
+      return false;
+    }
+
+    if (value.target === null) return true;
+    if (!value.target || typeof value.target !== 'object') return false;
+    const target = value.target as Record<string, unknown>;
+    return (
+      ['power', 'pace', 'hr'].includes(String(target.type)) &&
+      Number.isSafeInteger(target.low) &&
+      Number.isSafeInteger(target.high) &&
+      Number(target.low) >= 0 &&
+      Number(target.high) >= Number(target.low)
+    );
   });
 }

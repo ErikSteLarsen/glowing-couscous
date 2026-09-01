@@ -7,6 +7,7 @@ import {
   createSharedWorkoutProjection,
   parseSharedWorkoutProjection,
   isShareToken as isOpaqueShareToken,
+  type ShareLinkAction,
   type SharedWorkoutProjection,
 } from './share-link.ts';
 import {
@@ -21,7 +22,6 @@ import { coachSessionLibraryService } from './coach-session-library-service.ts';
 import { templateService } from './template-service.ts';
 
 export type ShareLinkSourceKind = 'session' | 'template';
-export type ShareLinkAction = 'planner' | 'template';
 export type ShareLinkRole = 'COACH' | 'ATHLETE';
 
 type ShareLinkDatabase = typeof prisma;
@@ -40,6 +40,7 @@ type SessionShareSource = {
   coachOwnerId: number | null;
   trainingPlanId: number | null;
   coachBaselineJson: string | null;
+  status: string;
   sport: string;
   title: string;
   summary: string | null;
@@ -126,12 +127,7 @@ export function createShareLinkService({
         name: serialized.title,
         sport: serialized.sport,
         summary: serialized.summary ?? '',
-        blocks: serialized.blocks.map((block, index) => ({
-          ...block,
-          id: block.id ?? undefined,
-          clientId: `share-block-${index}`,
-          note: block.note ?? '',
-        })),
+        blocks: serialized.blocks,
       });
       if (result.error) return { ok: false as const, error: result.error, status: 400 };
       return { ok: true as const };
@@ -224,7 +220,9 @@ function createImportedDraft(
 }
 
 function projectSessionSource(source: SessionShareSource) {
-  const baseline = deserializeSessionSnapshot('planned', source.coachBaselineJson);
+  const baseline = source.status === 'completed'
+    ? deserializeSessionSnapshot('planned', source.coachBaselineJson)
+    : null;
   return createSharedProjectionSourceFromSession(
     {
       sport: source.sport,
