@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react';
 import {
   ActionLink,
+  compactPrimaryButtonClassName,
   dangerTextClassName,
   formFieldClassName,
   primaryButtonClassName,
@@ -91,7 +92,7 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
 
       if (res.ok) {
         await loadRequestState();
-        setFeedbackMessage('Request pending. Back to profile while you wait for coach approval.');
+        setFeedbackMessage('Request pending.');
         return;
       }
 
@@ -114,13 +115,11 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
       <TopBar
         eyebrow="Coach discovery"
         title="Search coaches"
-        description="Search by name or email, then send a join request."
       />
       <Surface>
         {requestState.latestRequest?.status === 'PENDING' ? (
           <div className="mb-4 rounded-[12px] border border-[#DCE0D2] bg-[var(--brand-tint)] px-4 py-3 text-sm text-[#57654E]">
-            Request pending with {requestState.latestRequest.coach.name}.{' '}
-            <span className="text-[#6A655C]">Back to profile while you wait for approval.</span>
+            Request pending with {requestState.latestRequest.coach.name}.
           </div>
         ) : null}
 
@@ -128,21 +127,21 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
         {errorMessage ? <p className={`mb-4 ${dangerTextClassName}`}>{errorMessage}</p> : null}
 
         <div className="mb-4 rounded-[12px] border border-dashed border-[var(--field-border)] bg-[var(--field-surface)] px-4 py-3 text-sm text-[var(--text-secondary)]">
-          Messaging coming soon. For now, review coach details and send a join request.
+          Messaging coming soon.
         </div>
 
-        <form onSubmit={handleSearch} className="flex gap-3">
+        <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or email"
-            className={`${formFieldClassName} flex-1`}
+            className={`${formFieldClassName} min-w-0 flex-1`}
           />
           <button
             type="submit"
             disabled={loading}
-            className={primaryButtonClassName}
+            className={`${primaryButtonClassName} w-full sm:w-auto`}
           >
             {loading ? 'Searching…' : 'Search'}
           </button>
@@ -165,8 +164,8 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
                     Your last request to this coach was declined. Send request again if you want to retry.
                   </p>
                 ) : null}
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
                     <p className="text-sm font-semibold text-[var(--text)]">{coach.name}</p>
                     <p className="text-xs text-[var(--text-secondary)]">{coach.email}</p>
                   </div>
@@ -178,7 +177,7 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
                       requestsByCoachId[coach.id] === 'PENDING' ||
                       (hasPendingRequest && requestsByCoachId[coach.id] !== 'REJECTED')
                     }
-                    className={primaryButtonClassName}
+                    className={`${compactPrimaryButtonClassName} w-full sm:w-auto`}
                   >
                     {requestsByCoachId[coach.id] === 'PENDING'
                       ? 'Request pending'

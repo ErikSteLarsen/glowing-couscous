@@ -21,7 +21,6 @@ export default async function AthleteActivityPage() {
       <TopBar
         eyebrow="Activity"
         title="Completed work"
-        description="Recent completed sessions with duration, load, and coach notes."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -33,7 +32,7 @@ export default async function AthleteActivityPage() {
       {activityFeed.activities.length === 0 ? (
         <EmptyState
           title="No completed sessions yet"
-          description="Finish a workout from the Session screen and your activity feed will appear here."
+          description="Complete a session to see it here."
         />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
@@ -66,7 +65,7 @@ export default async function AthleteActivityPage() {
                 </MetricText>
               </div>
               {activity.metricsSource === 'manual-planned' || activity.metricsSource === 'manual-actual' ? (
-                <p className="text-[12px] text-[var(--text-secondary)]">Manual outcome; no performed sensor metrics recorded.</p>
+                <p className="text-[13px] text-[var(--text-secondary)]">Manual outcome; no performed sensor metrics recorded.</p>
               ) : null}
               {activity.notes ? (
                 <div className="rounded-[10px] bg-[var(--brand-tint)] px-4 py-3 text-[13px] text-[var(--text)]">

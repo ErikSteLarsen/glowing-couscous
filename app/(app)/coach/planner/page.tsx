@@ -25,7 +25,6 @@ export default async function CoachPlannerPage({
       <TopBar
         eyebrow="Planner"
         title="Build your training library"
-        description="Create templates, standalone coach sessions, and reusable training plans before athlete assignment."
         actions={
           <>
             <ActionLink href="/coach/templates" tone="secondary">

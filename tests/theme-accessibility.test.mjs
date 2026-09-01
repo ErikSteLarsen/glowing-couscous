@@ -35,11 +35,15 @@ test('shared action tokens keep interactive colors explicit and reusable', async
   const requestsSource = await read('components/CoachRequestsPanel.tsx');
 
   assert.match(uiSource, /export const dangerButtonClassName/);
+  assert.match(uiSource, /export const compactPrimaryButtonClassName/);
+  assert.match(uiSource, /export const compactSecondaryButtonClassName/);
+  assert.match(uiSource, /export const compactDangerButtonClassName/);
+  assert.match(uiSource, /export const compactListButtonClassName/);
   assert.match(uiSource, /focus-visible:ring-2/);
   assert.doesNotMatch(uiSource, /brand-strong/);
   assert.match(signOutSource, /primaryButtonClassName/);
   assert.match(signOutSource, /secondaryButtonClassName/);
-  assert.match(requestsSource, /dangerButtonClassName/);
+  assert.match(requestsSource, /compactDangerButtonClassName/);
 });
 
 test('anchor color inheritance stays in the base layer so link utilities can win', async () => {

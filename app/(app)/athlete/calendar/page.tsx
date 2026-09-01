@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import {
   EmptyState,
   PageShell,
-  secondaryButtonClassName,
+  compactSecondaryButtonClassName,
   Surface,
   TopBar,
   getSegmentedChoiceClassName,
@@ -44,18 +44,13 @@ export default async function AthleteCalendarPage({
       <TopBar
         eyebrow="Calendar"
         title={selectedView === 'month' ? 'Your training month' : 'Your training week'}
-        description={
-          selectedView === 'month'
-            ? 'A lighter month overview so you can scan the full block at once, then drop back into week detail when needed.'
-            : 'A full Monday-to-Sunday overview that keeps the whole training week in view while you move through the plan.'
-        }
         actions={
           <>
             <div className="inline-flex gap-1 rounded-[12px] border border-[var(--field-border)] bg-[var(--field-surface)] p-1">
-              <Link href={buildCalendarHref('week', resolvedReferenceDate)} className={getSegmentedChoiceClassName(selectedView === 'week')}>
+              <Link href={buildCalendarHref('week', resolvedReferenceDate)} className={getSegmentedChoiceClassName(selectedView === 'week', 'compact')}>
                 Week
               </Link>
-              <Link href={buildCalendarHref('month', resolvedReferenceDate)} className={getSegmentedChoiceClassName(selectedView === 'month')}>
+              <Link href={buildCalendarHref('month', resolvedReferenceDate)} className={getSegmentedChoiceClassName(selectedView === 'month', 'compact')}>
                 Month
               </Link>
             </div>
@@ -86,36 +81,31 @@ export default async function AthleteCalendarPage({
         />
       ) : (
         <Surface className="space-y-5 p-4 sm:p-5">
-          <div className="flex flex-col gap-4 border-b border-[var(--border)] pb-5 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col gap-4 border-b border-[var(--border)] pb-5 md:flex-row md:items-center md:justify-between">
             <div className="space-y-1">
               <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">
                 Month overview
               </p>
-              <div className="flex flex-wrap items-center gap-3">
-                <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)]">{calendar.period.label}</h2>
-                <nav aria-label="Month navigation" className="flex flex-wrap items-center gap-2">
-                  <Link
-                    href={buildCalendarHref('month', addMonths(resolvedReferenceDate, -1))}
-                    aria-label="Go to previous month"
-                    className={`${secondaryButtonClassName} gap-1.5 px-3 text-[13px]`}
-                  >
-                    <ChevronLeft aria-hidden="true" className="h-4 w-4" />
-                    Previous
-                  </Link>
-                  <Link
-                    href={buildCalendarHref('month', addMonths(resolvedReferenceDate, 1))}
-                    aria-label="Go to next month"
-                    className={`${secondaryButtonClassName} gap-1.5 px-3 text-[13px]`}
-                  >
-                    Next
-                    <ChevronRight aria-hidden="true" className="h-4 w-4" />
-                  </Link>
-                </nav>
-              </div>
+              <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)]">{calendar.period.label}</h2>
             </div>
-            <p className="max-w-sm text-[13px] leading-5 text-[var(--text-secondary)] md:text-right">
-              Compact daily summaries keep the full month readable.
-            </p>
+            <nav aria-label="Month navigation" className="flex flex-wrap items-center gap-2 md:ml-auto">
+              <Link
+                href={buildCalendarHref('month', addMonths(resolvedReferenceDate, -1))}
+                aria-label="Go to previous month"
+                className={`${compactSecondaryButtonClassName} gap-1.5`}
+              >
+                <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+                Previous
+              </Link>
+              <Link
+                href={buildCalendarHref('month', addMonths(resolvedReferenceDate, 1))}
+                aria-label="Go to next month"
+                className={`${compactSecondaryButtonClassName} gap-1.5`}
+              >
+                Next
+                <ChevronRight aria-hidden="true" className="h-4 w-4" />
+              </Link>
+            </nav>
           </div>
 
           <div className="overflow-x-auto pb-1">
@@ -166,8 +156,8 @@ export default async function AthleteCalendarPage({
                             <>
                               {day.sessions.slice(0, 2).map((session) => (
                                 <div key={session.id} className="rounded-[10px] bg-[#FBFAF7] px-2.5 py-2">
-                                  <p className="truncate text-[12px] font-semibold text-[var(--text)]">{session.title}</p>
-                                  <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
+                                  <p className="truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</p>
+                                  <p className="mt-0.5 text-[12px] text-[var(--text-secondary)]">
                                     {session.timeLabel} · {getSportLabel(session.sport)}
                                   </p>
                                 </div>
@@ -179,7 +169,7 @@ export default async function AthleteCalendarPage({
                               ) : null}
                             </>
                           ) : (
-                            <p className="text-[12px] text-[var(--text-muted)]">No session</p>
+                            <p className="text-[13px] text-[var(--text-muted)]">No session</p>
                           )}
                         </div>
                       </Link>
@@ -192,16 +182,10 @@ export default async function AthleteCalendarPage({
         </Surface>
       )}
 
-      {(selectedView === 'week'
-        ? calendar.days.every((day) => day.sessions.length === 0)
-        : calendar.weeks.flat().every((day) => day.sessions.length === 0)) ? (
+      {selectedView === 'week' && calendar.days.every((day) => day.sessions.length === 0) ? (
         <EmptyState
-          title={selectedView === 'month' ? 'No sessions this month' : 'No sessions this week'}
-          description={
-            selectedView === 'month'
-              ? 'When sessions are assigned, they will appear here as compact day summaries across the full month.'
-              : 'When sessions are assigned, they will appear here with their Tempo block bars.'
-          }
+          title="No sessions this week"
+          description="Assigned sessions will appear here."
         />
       ) : null}
     </PageShell>

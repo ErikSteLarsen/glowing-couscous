@@ -21,7 +21,7 @@ import {
   formFieldClassName,
   formSelectClassName,
   formTextareaClassName,
-  secondaryButtonClassName,
+  compactSecondaryButtonClassName,
 } from '@/components/ui';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
@@ -211,7 +211,7 @@ export function SessionComposer({
           <button
             key={kind}
             type="button"
-            className={secondaryButtonClassName}
+            className={compactSecondaryButtonClassName}
             onClick={() => {
               const next = addSessionEditorBlock(draft, { kind, zone: kind === 'recovery' ? 1 : 3 });
               onChange(next);
@@ -344,8 +344,8 @@ export function SessionComposer({
           </label>
 
           <div className="grid grid-cols-2 gap-3">
-            <button type="button" className={secondaryButtonClassName} onClick={duplicateSelectedBlock}>Copy block</button>
-            <button type="button" className={secondaryButtonClassName} onClick={removeSelectedBlock}>Remove</button>
+            <button type="button" className={compactSecondaryButtonClassName} onClick={duplicateSelectedBlock}>Copy block</button>
+            <button type="button" className={compactSecondaryButtonClassName} onClick={removeSelectedBlock}>Remove</button>
           </div>
         </div>
       ) : null}

@@ -74,11 +74,11 @@ export function SettingsClient({
               return (
                 <div
                   key={cardId}
-                  className="flex min-h-11 items-center justify-between gap-4 rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] px-4 py-3"
+                  className="flex min-h-11 items-center justify-between gap-4 rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] px-4 py-2.5"
                 >
                   <div>
                     <p className="text-[13.5px] font-semibold text-[var(--text)]">{meta.title}</p>
-                    <p className="mt-1 text-[12px] leading-[1.5] text-[var(--text-secondary)]">
+                    <p className="mt-1 text-[13px] leading-[1.5] text-[var(--text-secondary)]">
                       {meta.description}
                     </p>
                   </div>

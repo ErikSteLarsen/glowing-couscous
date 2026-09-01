@@ -2,13 +2,19 @@
 
 import { useState } from 'react';
 import { signOut } from 'next-auth/react';
-import { primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import {
+  compactPrimaryButtonClassName,
+  compactSecondaryButtonClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from '@/components/ui';
 
 type SignOutButtonProps = {
   tone?: 'primary' | 'secondary';
+  size?: 'default' | 'compact';
 };
 
-export function SignOutButton({ tone = 'secondary' }: SignOutButtonProps) {
+export function SignOutButton({ tone = 'secondary', size = 'default' }: SignOutButtonProps) {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -30,7 +36,15 @@ export function SignOutButton({ tone = 'secondary' }: SignOutButtonProps) {
         type="button"
         onClick={handleSignOut}
         disabled={isSigningOut}
-        className={tone === 'primary' ? primaryButtonClassName : secondaryButtonClassName}
+        className={
+          size === 'compact'
+            ? tone === 'primary'
+              ? compactPrimaryButtonClassName
+              : compactSecondaryButtonClassName
+            : tone === 'primary'
+              ? primaryButtonClassName
+              : secondaryButtonClassName
+        }
       >
         {isSigningOut ? 'Signing out…' : 'Sign out'}
       </button>

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { addDays, endOfWeek, format, getISOWeek, startOfWeek } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { ActionLink, Surface, secondaryButtonClassName } from '@/components/ui';
+import { ActionLink, compactSecondaryButtonClassName, Surface } from '@/components/ui';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
@@ -174,22 +174,19 @@ export function AthleteCalendarWeekScroller({
             Week overview
           </p>
           <p className="mt-1 text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)]">{weekLabel}</p>
-          <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
-            The full Monday-to-Sunday week stays visible while you move through the plan.
-          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {showBackToToday ? (
-            <ActionLink href={`/athlete/calendar?view=week&date=${todayIso}`} tone="secondary">
+            <ActionLink href={`/athlete/calendar?view=week&date=${todayIso}`} tone="secondary" size="compact">
               Back to today
             </ActionLink>
           ) : null}
-          <button type="button" className={secondaryButtonClassName} onClick={() => void moveFocus(-1)}>
+          <button type="button" className={compactSecondaryButtonClassName} onClick={() => void moveFocus(-1)}>
             <ChevronLeft className="mr-1 h-4 w-4" />
             Earlier
           </button>
-          <button type="button" className={secondaryButtonClassName} onClick={() => void moveFocus(1)}>
+          <button type="button" className={compactSecondaryButtonClassName} onClick={() => void moveFocus(1)}>
             Later
             <ChevronRight className="ml-1 h-4 w-4" />
           </button>
@@ -246,18 +243,18 @@ export function AthleteCalendarWeekScroller({
                           <StatusBadge status={session.status} />
                         </div>
                       </div>
-                      <p className="text-[12px] text-[var(--text-secondary)]">
+                      <p className="text-[13px] text-[var(--text-secondary)]">
                         {session.timeLabel} · {getSportLabel(session.sport)}
                       </p>
                       <SessionBlockBar segments={session.segments} compact />
-                      <div className="flex flex-wrap gap-3 text-[12px] text-[var(--text-secondary)]">
+                      <div className="flex flex-wrap gap-3 text-[13px] text-[var(--text-secondary)]">
                         <MetricText>{formatDuration(session.durationSec)}</MetricText>
                         <MetricText>{session.tss} TSS</MetricText>
                       </div>
                     </Link>
                   ))
                 ) : (
-                  <p className="text-[13px] text-[var(--text-muted)]">No session planned.</p>
+                  <p className="text-[14px] text-[var(--text-muted)]">No session planned.</p>
                 )}
               </Surface>
             );
@@ -266,10 +263,12 @@ export function AthleteCalendarWeekScroller({
 
         {requestError ? <p className="text-sm text-[var(--status-danger)]">{requestError}</p> : null}
 
-        <div className="flex items-center justify-between text-[12px] text-[var(--text-muted)]">
-          <span>{loadingBefore ? 'Loading earlier days…' : 'Earlier weeks load as you move back.'}</span>
-          <span>{loadingAfter ? 'Loading more days…' : 'Later weeks load as you move forward.'}</span>
-        </div>
+        {loadingBefore || loadingAfter ? (
+          <div className="flex items-center justify-between text-[13px] text-[var(--text-muted)]">
+            {loadingBefore ? <span>Loading earlier days…</span> : null}
+            {loadingAfter ? <span>Loading more days…</span> : null}
+          </div>
+        ) : null}
       </div>
     </Surface>
   );

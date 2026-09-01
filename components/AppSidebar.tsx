@@ -22,11 +22,11 @@ export function AppSidebar(props: {
         />
       ) : null}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-[244px] border-r border-[var(--border)] bg-[var(--surface)] transition-transform duration-200 md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-[244px] overflow-y-auto border-r border-[var(--border)] bg-[var(--surface)] transition-transform duration-200 md:sticky md:top-0 md:h-screen md:max-h-screen md:self-start md:translate-x-0 ${
           props.mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-full flex-col gap-6 p-4">
+        <div className="flex min-h-full flex-col gap-6 p-4">
           <div className="flex items-start justify-between gap-3 px-2 pt-2">
             <div className="flex items-center gap-3">
               <div className="flex h-[26px] w-[26px] items-center justify-center rounded-[8px] bg-[var(--text)]">
@@ -62,7 +62,7 @@ export function AppSidebar(props: {
                     key={item.href}
                     href={item.href}
                     onClick={props.onClose}
-                    className={`relative flex min-h-11 items-center rounded-[10px] px-4 text-[13.5px] font-semibold transition ${
+                    className={`relative flex min-h-11 items-center rounded-[10px] px-4 text-[13.5px] font-semibold transition md:min-h-10 ${
                       isActive
                         ? 'bg-[var(--brand-tint)] text-[#2F3A28]'
                         : 'text-[var(--text-secondary)] hover:bg-[#FBFAF7]'

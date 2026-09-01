@@ -24,7 +24,7 @@ export function AppProfileMenu({
             {action.label}
           </Link>
         ))}
-        <SignOutButton />
+        <SignOutButton size="compact" />
       </div>
     </div>
   );

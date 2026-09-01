@@ -19,7 +19,7 @@ export default async function SettingsPage() {
       <TopBar
         eyebrow="Settings"
         title="Preferences"
-        description="Choose how much overview information appears on the athlete home screen."
+        description="Customize Home overview."
       />
       <SettingsClient role={account.role} initialOverviewCards={initialOverviewCards} />
     </PageShell>

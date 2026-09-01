@@ -32,7 +32,7 @@ export function Stepper({ items }: { items: StepperItem[] }) {
           }`}
           >
             <p className="text-sm font-semibold text-[var(--text)]">{item.title}</p>
-            <p className="mt-1 text-[12px] leading-[1.5] text-[var(--text-secondary)]">{item.detail}</p>
+            <p className="mt-1 text-[13px] leading-[1.5] text-[var(--text-secondary)]">{item.detail}</p>
           </div>
         </li>
       ))}

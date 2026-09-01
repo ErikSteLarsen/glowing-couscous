@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { SessionComposer } from '@/components/SessionComposer';
 import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
 import {
+  compactPrimaryButtonClassName,
+  compactSecondaryButtonClassName,
   dangerTextClassName,
   formFieldClassName,
   formTextareaClassName,
@@ -95,13 +97,13 @@ export function SessionDetailClient({
           Completion
         </p>
         <p className="mt-2 text-[13px] text-[var(--text-secondary)]">
-          Add a short note, then mark the session complete when you finish it.
+          Add a note, then complete the session.
         </p>
       </div>
 
       {!isEditing ? (
         <div className="flex flex-wrap gap-3">
-          <button type="button" className={secondaryButtonClassName} onClick={() => setIsEditing(true)}>
+          <button type="button" className={compactSecondaryButtonClassName} onClick={() => setIsEditing(true)}>
             {isDone ? 'Correct completed outcome' : 'Adjust planned session'}
           </button>
           <SessionComparisonDialog
@@ -149,10 +151,10 @@ export function SessionDetailClient({
             />
           </label>
           <div className="flex flex-wrap gap-3">
-            <button type="button" className={secondaryButtonClassName} onClick={() => { setDraft(initialDraft); setIsEditing(false); }} disabled={isPending}>
+            <button type="button" className={compactSecondaryButtonClassName} onClick={() => { setDraft(initialDraft); setIsEditing(false); }} disabled={isPending}>
               Cancel
             </button>
-            <button type="button" className={primaryButtonClassName} onClick={saveEditor} disabled={isPending}>
+            <button type="button" className={compactPrimaryButtonClassName} onClick={saveEditor} disabled={isPending}>
               {isPending ? 'Saving...' : isDone ? 'Save actual correction' : 'Save adjustment'}
             </button>
           </div>

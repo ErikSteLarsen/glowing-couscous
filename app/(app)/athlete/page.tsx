@@ -29,7 +29,6 @@ export default async function AthletePage() {
     <PageShell size="wide">
       <TopBar
         title={`Good morning, ${dashboard.athlete.name}`}
-        description="Today’s sessions first, with optional overview cards controlled from Settings → Overview."
         actions={
           <ActionLink href="/athlete/calendar" tone="secondary">
             Open calendar
@@ -55,7 +54,7 @@ export default async function AthletePage() {
                 dashboard.todaySessions.map((session) => (
                   <Surface key={session.id} className="space-y-3">
                     <div className="flex flex-wrap items-center gap-3">
-                      <span className="text-[12px] font-semibold text-[var(--text-muted)]">
+                      <span className="text-[13px] font-semibold text-[var(--text-muted)]">
                         {session.timeLabel}
                       </span>
                       <h2 className="text-[15px] font-semibold text-[var(--text)]">
@@ -79,7 +78,7 @@ export default async function AthletePage() {
               ) : (
                 <EmptyState
                   title="No sessions today"
-                  description="This day is clear. Your next planned work appears in the calendar."
+                  description="View the calendar for upcoming work."
                 />
               )}
             </div>

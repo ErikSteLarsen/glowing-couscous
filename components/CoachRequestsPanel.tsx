@@ -1,6 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { dangerButtonClassName, primaryButtonClassName, Surface } from '@/components/ui';
+import {
+  compactDangerButtonClassName,
+  compactPrimaryButtonClassName,
+  Surface,
+} from '@/components/ui';
 
 type PendingRequest = {
   id: number;
@@ -60,24 +64,24 @@ export function CoachRequestsPanel() {
         {requests.map((req) => (
           <div
             key={req.id}
-            className="flex items-center justify-between rounded-[12px] border border-[var(--border)] bg-[#FBFAF7] px-4 py-3"
+            className="flex flex-col items-start gap-3 rounded-[12px] border border-[var(--border)] bg-[#FBFAF7] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
               <p className="text-sm font-semibold text-[var(--text)]">{req.athlete.name}</p>
               <p className="text-xs text-[var(--text-secondary)]">{req.athlete.email}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex w-full flex-wrap justify-end gap-2 sm:w-auto">
               <button
                 onClick={() => handleAction(req.id, 'accept')}
                 disabled={actingRequestId !== null}
-                className={primaryButtonClassName}
+                className={compactPrimaryButtonClassName}
               >
                 Accept
               </button>
               <button
                 onClick={() => handleAction(req.id, 'reject')}
                 disabled={actingRequestId !== null}
-                className={dangerButtonClassName}
+                className={compactDangerButtonClassName}
               >
                 Reject
               </button>

@@ -135,7 +135,7 @@ export default async function CoachAthleteDetailPage({
           ) : (
             <EmptyState
               title="No sessions planned this week"
-              description="Use the planner to assign a template or create the athlete's next block."
+              description="Assign a session in Planner."
             />
           )}
         </Surface>
@@ -195,7 +195,7 @@ export default async function CoachAthleteDetailPage({
           ) : (
             <EmptyState
               title="No recent sessions"
-              description="Once sessions are assigned or completed, this comparison list will appear here."
+              description="No comparison data yet."
             />
           )}
         </Surface>

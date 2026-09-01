@@ -5,13 +5,16 @@ import { useRouter } from 'next/navigation';
 
 import {
   Badge,
+  compactDangerButtonClassName,
+  compactListButtonClassName,
+  compactPrimaryButtonClassName,
+  compactSecondaryButtonClassName,
   EmptyState,
   Surface,
   dangerTextClassName,
   formFieldClassName,
   formSelectClassName,
   primaryButtonClassName,
-  secondaryButtonClassName,
   successTextClassName,
 } from '@/components/ui';
 import { SessionComposer } from '@/components/SessionComposer';
@@ -331,14 +334,14 @@ export function PlannerClient({
           <div className="mt-2 flex flex-wrap gap-2">
             <button
               type="button"
-              className={selectedWorkspaceMode === 'library' ? primaryButtonClassName : secondaryButtonClassName}
+              className={selectedWorkspaceMode === 'library' ? compactPrimaryButtonClassName : compactSecondaryButtonClassName}
               onClick={() => switchMode('library')}
             >
               Session library
             </button>
             <button
               type="button"
-              className={selectedWorkspaceMode === 'training-plan' ? primaryButtonClassName : secondaryButtonClassName}
+              className={selectedWorkspaceMode === 'training-plan' ? compactPrimaryButtonClassName : compactSecondaryButtonClassName}
               onClick={() => switchMode('training-plan')}
             >
               Training plans
@@ -346,7 +349,7 @@ export function PlannerClient({
             {athletes.length > 0 ? (
               <button
                 type="button"
-                className={selectedWorkspaceMode === 'athlete' ? primaryButtonClassName : secondaryButtonClassName}
+                className={selectedWorkspaceMode === 'athlete' ? compactPrimaryButtonClassName : compactSecondaryButtonClassName}
                 onClick={() => switchMode('athlete')}
               >
                 Athlete week
@@ -360,9 +363,6 @@ export function PlannerClient({
             {selectedWorkspaceMode === 'athlete' ? 'Planner week' : 'Period'}
           </p>
           <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">{periodLabel}</h2>
-          {selectedWorkspaceMode !== 'training-plan' ? (
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">Click a day to plan or open an existing session.</p>
-          ) : null}
         </div>
 
         {/* Athlete selector — athlete mode only */}
@@ -412,7 +412,7 @@ export function PlannerClient({
             <button
               type="button"
               onClick={startNewPlanSession}
-              className="w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-left text-xs font-semibold text-[var(--text)] transition hover:bg-[var(--field-surface)]"
+              className={`${compactSecondaryButtonClassName} w-full justify-start text-left`}
             >
               + New plan session
             </button>
@@ -422,9 +422,9 @@ export function PlannerClient({
                   key={session.id}
                   type="button"
                   onClick={() => loadPlanSession(session)}
-                  className="block w-full rounded-[10px] bg-[var(--surface)] px-3 py-2 text-left transition hover:bg-[var(--field-surface)]"
+                  className={compactListButtonClassName}
                 >
-                  <span className="block truncate text-xs font-semibold text-[var(--text)]">
+                  <span className="block truncate text-[13px] font-semibold text-[var(--text)]">
                     {session.planWeekday ? weekdayLabels[session.planWeekday - 1] : '?'}: {session.title}
                   </span>
                 </button>
@@ -433,7 +433,7 @@ export function PlannerClient({
             {trainingPlans.length === 0 ? (
               <EmptyState
                 title="No training plans yet"
-                description="Create a training plan below, then add weekday sessions here."
+                description="Create a plan, then add weekday sessions."
               />
             ) : null}
             {showCreatePlan ? (
@@ -459,7 +459,7 @@ export function PlannerClient({
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    className={primaryButtonClassName}
+                    className={compactPrimaryButtonClassName}
                     onClick={() => startTransition(() => { void createTrainingPlan(); })}
                     disabled={isPending}
                   >
@@ -467,7 +467,7 @@ export function PlannerClient({
                   </button>
                   <button
                     type="button"
-                    className={secondaryButtonClassName}
+                    className={compactSecondaryButtonClassName}
                     onClick={() => { setShowCreatePlan(false); setNewPlanName(''); }}
                   >
                     Cancel
@@ -478,7 +478,7 @@ export function PlannerClient({
               <button
                 type="button"
                 onClick={() => setShowCreatePlan(true)}
-                className="w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-left text-xs font-semibold text-[var(--text)] transition hover:bg-[var(--field-surface)]"
+                className={`${compactSecondaryButtonClassName} w-full justify-start text-left`}
               >
                 + New training plan
               </button>
@@ -513,7 +513,7 @@ export function PlannerClient({
                   <button
                     type="button"
                     onClick={() => startNewSession(day.isoDate)}
-                    className="mt-3 w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-left text-xs font-semibold text-[var(--text)] transition hover:bg-[var(--field-surface)]"
+                    className={`${compactSecondaryButtonClassName} mt-3 w-full justify-start text-left`}
                   >
                     Plan here
                   </button>
@@ -524,10 +524,10 @@ export function PlannerClient({
                           key={session.id}
                           type="button"
                           onClick={() => loadSession(session)}
-                          className="block w-full rounded-[10px] bg-[var(--surface)] px-3 py-2 text-left transition hover:bg-[var(--field-surface)]"
+                          className={compactListButtonClassName}
                         >
-                          <span className="block truncate text-xs font-semibold text-[var(--text)]">{session.title}</span>
-                          <span className="mt-1 block text-[11px] text-[var(--text-secondary)]">
+                          <span className="block truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</span>
+                          <span className="mt-1 block text-[12px] text-[var(--text-secondary)]">
                             {formatDuration(session.durationSec)} · {session.tss} TSS
                           </span>
                         </button>
@@ -551,10 +551,10 @@ export function PlannerClient({
                 key={session.id}
                 type="button"
                 onClick={() => loadLibrarySession(session)}
-                className="block w-full rounded-[10px] bg-[var(--surface)] px-3 py-2 text-left transition hover:bg-[var(--field-surface)]"
+                className={compactListButtonClassName}
               >
-                <span className="block truncate text-xs font-semibold text-[var(--text)]">{session.title}</span>
-                <span className="mt-1 block text-[11px] text-[var(--text-secondary)]">{getSportLabel(session.sport)}</span>
+                <span className="block truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</span>
+                <span className="mt-1 block text-[12px] text-[var(--text-secondary)]">{getSportLabel(session.sport)}</span>
               </button>
             ))}
           </div>
@@ -640,7 +640,7 @@ export function PlannerClient({
         ) : (
           <EmptyState
             title="No templates yet"
-            description="Create detailed sessions from scratch now; template creation can reuse this editor later."
+            description="Create a session to get started."
           />
         )}
 
@@ -649,7 +649,7 @@ export function PlannerClient({
             Save session
           </button>
           {draft.id ? (
-            <button type="button" disabled={isPending} className={secondaryButtonClassName} onClick={deleteSession}>
+            <button type="button" disabled={isPending} className={compactDangerButtonClassName} onClick={deleteSession}>
               Delete session
             </button>
           ) : null}

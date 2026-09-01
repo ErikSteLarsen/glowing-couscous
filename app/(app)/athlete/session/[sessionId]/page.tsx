@@ -37,7 +37,7 @@ export default async function AthleteSessionPage({
       <TopBar
         eyebrow={getSportLabel(detail.session.sport)}
         title={detail.session.title}
-        description={detail.session.summary ?? 'Session detail with block targets and completion tracking.'}
+        description={detail.session.summary ?? 'Session details.'}
         actions={
           <>
             <ActionLink href="/athlete/calendar" tone="secondary">

@@ -7,7 +7,10 @@ import { getSportLabel } from '@/lib/sport';
 import { formatDuration } from '@/lib/format-duration';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
-import { getSegmentedChoiceClassName, secondaryButtonClassName } from '@/components/ui';
+import {
+  compactSecondaryButtonClassName,
+  getSegmentedChoiceClassName,
+} from '@/components/ui';
 
 type ComparisonData = {
   baseline: SessionEditorDraft | null;
@@ -70,7 +73,7 @@ export function SessionComparisonDialog({
     <>
       <button
         type="button"
-        className={secondaryButtonClassName}
+        className={compactSecondaryButtonClassName}
         onClick={() => {
           setError('');
           setIsLoading(true);
@@ -104,7 +107,7 @@ export function SessionComparisonDialog({
               <button
                 ref={closeButtonRef}
                 type="button"
-                className={`${secondaryButtonClassName} shrink-0`}
+                className={`${compactSecondaryButtonClassName} shrink-0`}
                 onClick={() => setIsOpen(false)}
                 aria-label="Close comparison"
               >
@@ -126,7 +129,7 @@ export function SessionComparisonDialog({
                       type="button"
                       role="tab"
                       aria-selected={selectedVersion === 'baseline'}
-                      className={getSegmentedChoiceClassName(selectedVersion === 'baseline')}
+                      className={getSegmentedChoiceClassName(selectedVersion === 'baseline', 'compact')}
                       onClick={() => setSelectedVersion('baseline')}
                     >
                       Coach baseline
@@ -135,7 +138,7 @@ export function SessionComparisonDialog({
                       type="button"
                       role="tab"
                       aria-selected={selectedVersion === 'actual'}
-                      className={getSegmentedChoiceClassName(selectedVersion === 'actual')}
+                      className={getSegmentedChoiceClassName(selectedVersion === 'actual', 'compact')}
                       onClick={() => setSelectedVersion('actual')}
                     >
                       Athlete actual

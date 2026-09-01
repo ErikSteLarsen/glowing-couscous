@@ -95,7 +95,7 @@ export function SourceAssignmentPanel({
         </div>
         <Badge tone="brand">Snapshot</Badge>
       </div>
-      <p className="text-sm text-[var(--text-secondary)]">Copies stay independent from later source edits.</p>
+      <p className="text-sm text-[var(--text-secondary)]">Copies are independent.</p>
       <label className="block space-y-2">
         <span className="text-sm font-medium text-[var(--text-secondary)]">Athlete</span>
         <select className={formSelectClassName} value={athleteId} onChange={(event) => setAthleteId(Number(event.target.value))}>

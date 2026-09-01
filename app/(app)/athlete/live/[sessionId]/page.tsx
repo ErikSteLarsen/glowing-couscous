@@ -34,7 +34,6 @@ export default async function AthleteLivePage({
       <TopBar
         eyebrow="Live"
         title={`Execute ${detail.session.title}`}
-        description="A mobile-friendly stepper that walks through each block in order."
         actions={<ActionLink href={`/athlete/session/${detail.session.id}`} tone="secondary">Back to session</ActionLink>}
       />
 
@@ -53,7 +52,7 @@ export default async function AthleteLivePage({
           <Surface>
             <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Coach cue</p>
             <p className="mt-3 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
-              Keep the effort aligned with the target labels and move through each step in order.
+              Follow targets and steps.
             </p>
           </Surface>
         </div>
