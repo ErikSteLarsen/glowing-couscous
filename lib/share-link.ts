@@ -1,5 +1,5 @@
 import {
-  createEmptySessionEditorDraft,
+  createSessionEditorDraftFromPersisted,
   deriveSessionEditorMetrics,
   type PersistedSessionBlock,
   type PersistedSessionRecord,
@@ -43,8 +43,7 @@ export type SharedWorkoutSource = {
 };
 
 export function createSharedWorkoutProjection(source: SharedWorkoutSource): SharedWorkoutProjection {
-  const draft = createEmptySessionEditorDraft({
-    mode: 'create',
+  const draft = createSessionEditorDraftFromPersisted('create', {
     sport: source.sport ?? 'RUNNING',
     title: source.title ?? source.name ?? '',
     summary: source.summary ?? '',
@@ -78,8 +77,7 @@ export function createSharedWorkoutProjection(source: SharedWorkoutSource): Shar
 export function createSessionEditorDraftFromSharedProjection(
   projection: SharedWorkoutProjection,
 ): SessionEditorDraft {
-  return createEmptySessionEditorDraft({
-    mode: 'create',
+  return createSessionEditorDraftFromPersisted('create', {
     sport: projection.sport,
     title: projection.title,
     summary: projection.summary,

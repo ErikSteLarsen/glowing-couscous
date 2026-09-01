@@ -51,6 +51,7 @@ export function createCoachSessionLibraryService({ db = prisma }: { db?: typeof 
             targetLow: block.targetLow,
             targetHigh: block.targetHigh,
             note: block.note,
+            skipped: block.skipped === true,
             sortOrder: block.sortOrder,
           })),
         },

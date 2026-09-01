@@ -9,6 +9,7 @@ import {
   createSharedWorkoutProjection,
   parseSharedWorkoutProjection,
 } from '../lib/share-link.ts';
+import { createShareLinkService, hashShareToken } from '../lib/share-link-service.ts';
 
 test('shared projection keeps workout definition content and drops private session fields', () => {
   const projection = createSharedWorkoutProjection({
@@ -130,4 +131,108 @@ test('shared import creates independent canonical drafts with no source identity
 test('shared projection parser rejects malformed snapshots', () => {
   assert.equal(parseSharedWorkoutProjection(undefined), null);
   assert.equal(parseSharedWorkoutProjection('{"snapshotVersion":1}'), null);
+});
+
+test('share link creation hashes an opaque token and stores exactly one sanitized source', async () => {
+  let createArgs: { data: Record<string, unknown> } | undefined;
+  const token = 'a'.repeat(43);
+  const service = createShareLinkService({
+    createToken: () => token,
+    db: {
+      template: {
+        async findUnique() {
+          return {
+            id: 17,
+            ownerId: 2,
+            name: 'Private template',
+            sport: 'RUNNING',
+            summary: 'Public summary',
+            blocks: [{ kind: 'work', zone: 3, durationSec: 600, note: 'Cue', sortOrder: 0 }],
+          };
+        },
+      },
+      shareLink: {
+        async create(args: { data: Record<string, unknown> }) {
+          createArgs = args;
+          return { id: 1 };
+        },
+      },
+    } as never,
+  });
+
+  const result = await service.createForUser(2, 'template', 17);
+
+  assert.deepEqual(result, {
+    ok: true,
+    url: `/share/${token}`,
+    sourceKind: 'template',
+    sourceId: 17,
+  });
+  assert.equal(createArgs?.data.tokenHash, hashShareToken(token));
+  assert.notEqual(createArgs?.data.tokenHash, token);
+  assert.equal(createArgs?.data.sessionId, null);
+  assert.equal(createArgs?.data.templateId, 17);
+  const snapshot = JSON.parse(String(createArgs?.data.snapshotJson)) as Record<string, unknown>;
+  assert.equal(snapshot.title, 'Private template');
+  assert.equal('ownerId' in snapshot, false);
+  assert.equal('createdById' in snapshot, false);
+});
+
+test('share link session access allows the athlete or roster coach but not unrelated users', async () => {
+  const session = {
+    id: 22,
+    athleteId: 7,
+    coachOwnerId: null,
+    trainingPlanId: null,
+    coachBaselineJson: null,
+    sport: 'BIKING',
+    title: 'Assigned ride',
+    summary: 'Planned only',
+    blocks: [{ kind: 'work', zone: 2, durationSec: 1200, sortOrder: 0 }],
+    athlete: { coachId: 3 },
+  };
+  const createArgs: Array<{ data: Record<string, unknown> }> = [];
+  const service = createShareLinkService({
+    createToken: () => 'b'.repeat(43),
+    db: {
+      session: { async findUnique() { return session; } },
+      shareLink: { async create(args: { data: Record<string, unknown> }) { createArgs.push(args); return { id: 1 }; } },
+    } as never,
+  });
+
+  assert.equal((await service.createForUser(7, 'session', 22)).ok, true);
+  assert.equal((await service.createForUser(3, 'session', 22)).ok, true);
+  assert.deepEqual(await service.createForUser(99, 'session', 22), {
+    ok: false,
+    error: 'Share link not found.',
+    status: 404,
+  });
+  assert.equal(createArgs.length, 2);
+});
+
+test('public preview uses the stored snapshot and rejects malformed or mixed links', async () => {
+  const token = 'c'.repeat(43);
+  const snapshot = JSON.stringify(createSharedWorkoutProjection({
+    sourceKind: 'session',
+    title: 'Snapshot workout',
+    sport: 'RUNNING',
+    blocks: [{ kind: 'work', zone: 3, durationSec: 600, sortOrder: 0 }],
+  }));
+  let lookups = 0;
+  const service = createShareLinkService({
+    db: {
+      shareLink: {
+        async findUnique(args: { where: { tokenHash: string } }) {
+          lookups += 1;
+          assert.equal(args.where.tokenHash, hashShareToken(token));
+          return { sessionId: 22, templateId: null, snapshotJson: snapshot };
+        },
+      },
+    } as never,
+  });
+
+  const preview = await service.loadPreview(token);
+  assert.equal(preview?.title, 'Snapshot workout');
+  assert.equal(await service.loadPreview('bad-token'), null);
+  assert.equal(lookups, 1);
 });

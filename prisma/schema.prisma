@@ -36,6 +36,7 @@ model User {
   athleteRequests  CoachRequest[] @relation("AthleteRequests")
   trainingPlanAssignmentsReceived TrainingPlanAssignment[] @relation("TrainingPlanAssignmentAthlete")
   trainingPlanAssignmentsSent     TrainingPlanAssignment[] @relation("TrainingPlanAssignmentAssigner")
+  shareLinksCreated ShareLink[] @relation("ShareLinkCreator")
 }
 
 model Account {
@@ -134,6 +135,7 @@ model Session {
   activity         Activity?
   assignments      Assignment[]
   sourceAssignments Assignment[] @relation("SourceSessionAssignments")
+  shareLinks       ShareLink[] @relation("SessionShareLinks")
 
   @@index([athleteId, date])
   @@index([planId, date])
@@ -173,6 +175,24 @@ model Template {
   owner     User      @relation("TemplateOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   sessions  Session[]
   blocks    Block[]
+  shareLinks ShareLink[] @relation("TemplateShareLinks")
+}
+
+model ShareLink {
+  id           Int      @id @default(autoincrement())
+  tokenHash    String   @unique
+  sessionId    Int?
+  templateId   Int?
+  createdById  Int
+  snapshotJson String
+  createdAt    DateTime @default(now())
+  session      Session? @relation("SessionShareLinks", fields: [sessionId], references: [id], onDelete: Cascade)
+  template     Template? @relation("TemplateShareLinks", fields: [templateId], references: [id], onDelete: Cascade)
+  createdBy    User     @relation("ShareLinkCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([templateId])
+  @@index([createdById])
 }
 
 model Activity {

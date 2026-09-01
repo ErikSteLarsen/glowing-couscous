@@ -14,6 +14,7 @@ type NormalizedBlock = {
   targetLow: number | null;
   targetHigh: number | null;
   note: string | null;
+  skipped: boolean;
 };
 
 function mapLegacyBlockType(input: string) {
@@ -62,9 +63,10 @@ function normalizeBlocks(input: unknown): NormalizedBlock[] {
           ? item.note.trim() || null
           : typeof item.instructions === 'string'
             ? item.instructions.trim() || null
-            : typeof item.title === 'string'
-              ? item.title.trim() || null
-              : null,
+              : typeof item.title === 'string'
+                ? item.title.trim() || null
+                : null,
+      skipped: item.skipped === true,
     };
   });
 }
@@ -211,6 +213,7 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
               targetLow: block.targetLow,
               targetHigh: block.targetHigh,
               note: block.note,
+              skipped: block.skipped,
               sortOrder: block.sortOrder,
             })),
           },
