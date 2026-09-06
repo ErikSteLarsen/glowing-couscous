@@ -1,4 +1,5 @@
-import { formatISO } from 'date-fns';
+import { addWeeks, format, formatISO, isValid, parseISO } from 'date-fns';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
 import { ActionLink, PageShell, TopBar } from '@/components/ui';
@@ -18,16 +19,37 @@ export default async function AthletePlannerPage({
   const { date, templateId } = await searchParams;
   const workspace = await athletePlannerService.loadWorkspace(user.id, date);
   const parsedTemplateId = Number(templateId);
+  const requestedDate = date ? parseISO(date) : new Date();
+  const resolvedDate = isValid(requestedDate) ? requestedDate : new Date();
+  const initialDate = formatISO(resolvedDate, { representation: 'date' });
+  const previousWeekHref = `/athlete/planner?date=${format(addWeeks(workspace.period.start, -1), 'yyyy-MM-dd')}`;
+  const nextWeekHref = `/athlete/planner?date=${format(addWeeks(workspace.period.start, 1), 'yyyy-MM-dd')}`;
 
   return (
     <PageShell size="wide" className="max-w-[1400px]">
       <TopBar
         eyebrow="Planner"
-        title="Create sessions"
+        title="Plan your training week"
+        description="Create personal sessions for one or more days, or refine what is already on your schedule."
         actions={
-          <ActionLink href="/athlete/templates" tone="secondary">
-            Templates
-          </ActionLink>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <nav aria-label="Planner week navigation" className="flex flex-wrap items-center gap-2">
+              <ActionLink href={previousWeekHref} tone="secondary" size="compact">
+                <ChevronLeft aria-hidden="true" className="mr-1 h-4 w-4" />
+                Previous
+              </ActionLink>
+              <ActionLink href="/athlete/planner" tone="secondary" size="compact">
+                This week
+              </ActionLink>
+              <ActionLink href={nextWeekHref} tone="secondary" size="compact">
+                Next
+                <ChevronRight aria-hidden="true" className="ml-1 h-4 w-4" />
+              </ActionLink>
+            </nav>
+            <ActionLink href="/athlete/templates" tone="secondary">
+              Templates
+            </ActionLink>
+          </div>
         }
       />
       <AthletePlannerClient
@@ -35,7 +57,7 @@ export default async function AthletePlannerPage({
         templates={workspace.templates}
         days={workspace.days}
         periodLabel={workspace.period.label}
-        initialDate={date ?? formatISO(new Date(), { representation: 'date' })}
+        initialDate={initialDate}
         initialTemplateId={Number.isInteger(parsedTemplateId) ? parsedTemplateId : null}
       />
     </PageShell>

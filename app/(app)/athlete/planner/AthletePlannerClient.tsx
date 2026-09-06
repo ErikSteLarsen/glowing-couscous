@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import {
   Badge,
+  ActionLink,
   compactDangerButtonClassName,
   compactListButtonClassName,
   compactPrimaryButtonClassName,
@@ -17,6 +18,8 @@ import {
   Surface,
 } from '@/components/ui';
 import { SessionComposer } from '@/components/SessionComposer';
+import { formatDuration } from '@/lib/format-duration';
+import { getSportLabel } from '@/lib/sport';
 import {
   createEmptyPlannerEditorDraft,
   createPlannerEditorDraftFromTemplate,
@@ -115,11 +118,9 @@ export function AthletePlannerClient({
 
   function loadTemplate(templateId: string) {
     if (!templateId) {
-      setDraft((current) => ({
-        ...current,
-        templateId: null,
-        scheduledDate: selectedDates[0] ?? initialDate,
-      }));
+      setEditingSessionId(null);
+      setMessage('');
+      setDraft(createEmptyPlannerEditorDraft({ athleteId, scheduledDate: selectedDates[0] ?? initialDate }));
       return;
     }
 
@@ -195,39 +196,41 @@ export function AthletePlannerClient({
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[0.9fr_1.4fr_0.8fr]">
-      <Surface className="space-y-5">
+    <div className="grid min-w-0 gap-6 xl:grid-cols-[0.9fr_1.4fr_0.8fr]">
+      <Surface className="min-w-0 space-y-5">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Week</p>
           <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">{periodLabel}</h2>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+          <p className="mt-1 max-w-[32ch] text-sm leading-6 text-[var(--text-secondary)]">
             {editingSessionId ? 'Select one day to edit.' : 'Select one or more days.'}
           </p>
         </div>
 
-        <div className="space-y-2">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
           {days.map((day) => (
             <div
               key={day.isoDate}
-              className={`block rounded-[12px] border p-3 transition ${
+              className={`rounded-[12px] border p-2.5 transition sm:p-3 ${
                 selectedDates.includes(day.isoDate)
-                  ? 'border-[#DCE0D2] bg-[var(--brand-tint)]'
+                  ? 'border-[var(--field-focus)] bg-[var(--brand-tint)] ring-1 ring-[var(--field-focus)]'
                   : 'border-[var(--border)] bg-[#FBFAF7]'
               }`}
             >
-              <span className="flex items-center gap-3">
+              <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-[9px] px-1">
                 <input
                   type="checkbox"
+                  className="h-4 w-4 accent-[var(--brand)]"
                   checked={selectedDates.includes(day.isoDate)}
                   disabled={editingSessionId !== null}
+                  aria-label={`Select ${day.label} ${day.dateLabel}`}
                   onChange={() => toggleDate(day.isoDate)}
                 />
-                <span>
+                <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold text-[var(--text)]">{day.label}</span>
                   <span className="block text-xs text-[var(--text-secondary)]">{day.dateLabel}</span>
                 </span>
                 <Badge>{day.sessions.length}</Badge>
-              </span>
+              </label>
               {day.sessions.length > 0 ? (
                 <span className="mt-2 block space-y-1 pl-7">
                   {day.sessions.map((session) => (
@@ -235,9 +238,12 @@ export function AthletePlannerClient({
                       key={session.id}
                       type="button"
                       onClick={() => loadSession(session)}
-                      className={`${compactListButtonClassName} min-h-8 px-2 py-1 text-xs`}
+                      className={`${compactListButtonClassName} min-h-10 flex-col items-start gap-0.5 px-2 py-1.5 text-xs`}
                     >
-                      {session.title}
+                      <span className="w-full break-words font-semibold">{session.title}</span>
+                      <span className="w-full text-[11px] text-[var(--text-secondary)]">
+                        {getSportLabel(session.sport)} · {formatDuration(session.durationSec)} · {session.tss} TSS
+                      </span>
                     </button>
                   ))}
                 </span>
@@ -251,7 +257,7 @@ export function AthletePlannerClient({
         </button>
       </Surface>
 
-      <Surface className="space-y-5">
+      <Surface className="min-w-0 space-y-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Session editor</p>
@@ -281,24 +287,40 @@ export function AthletePlannerClient({
         />
       </Surface>
 
-      <Surface className="space-y-4">
+      <Surface className="space-y-4 xl:sticky xl:top-6 xl:self-start">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Save</p>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+          <p className="mt-2 text-sm font-medium text-[var(--text)]">
             {selectedDates.length} day{selectedDates.length === 1 ? '' : 's'} selected.
           </p>
+          <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">
+            {editingSessionId ? 'Changes update the selected planned session.' : 'A separate session is created for each selected day.'}
+          </p>
         </div>
-        <button type="button" disabled={isPending} className={primaryButtonClassName} onClick={saveSession}>
-          {isPending ? 'Saving...' : editingSessionId ? 'Save changes' : 'Save session'}
+        <button type="button" disabled={isPending} className={`${primaryButtonClassName} w-full`} onClick={saveSession}>
+          {isPending ? 'Saving…' : editingSessionId ? 'Save changes' : 'Save session'}
         </button>
         {editingSessionId ? (
-          <button type="button" disabled={isPending} className={compactDangerButtonClassName} onClick={deleteSession}>
+          <button type="button" disabled={isPending} className={`${compactDangerButtonClassName} w-full`} onClick={deleteSession}>
             Delete session
           </button>
         ) : null}
-        {message ? <p className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
+        {message ? (
+          <p
+            role={messageTone === 'danger' ? 'alert' : 'status'}
+            aria-live="polite"
+            className={messageTone === 'success' ? successTextClassName : dangerTextClassName}
+          >
+            {message}
+          </p>
+        ) : null}
         {templates.length === 0 ? (
-          <EmptyState title="No templates yet" description="Create templates from the Templates menu." />
+          <div className="space-y-3">
+            <EmptyState title="No templates yet" description="Save a reusable starting point from the Templates menu." />
+            <ActionLink href="/athlete/templates" tone="secondary" size="compact">
+              Open templates
+            </ActionLink>
+          </div>
         ) : null}
       </Surface>
     </div>
