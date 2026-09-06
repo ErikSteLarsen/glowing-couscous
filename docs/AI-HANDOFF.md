@@ -8,7 +8,7 @@ append-only history. Update that workspace when work changes the repository.
 
 ## What this app is
 
-Workout Planner is now a Tempo-aligned coach-athlete planning app. Coaches manage rosters, templates, and builder assignments; athletes use Home, Calendar, Session, Live, Activity, and Settings surfaces to follow the plan.
+Workout Planner is now a Tempo-aligned coach-athlete planning app. Coaches manage rosters, templates, and builder assignments; athletes use Home, Calendar, Session, Live, Activity, and Settings surfaces to follow the plan. Universal workout sharing is implemented behind an in-progress public-link path; automated coverage is complete, but browser acceptance evidence is still outstanding.
 
 ## Current shipped state
 
@@ -27,7 +27,7 @@ Workout Planner is now a Tempo-aligned coach-athlete planning app. Coaches manag
 - **Coach builder:** assign a template onto an athlete schedule.
 - **Coach templates:** create, edit, duplicate, delete, and load private session templates into the builder.
 - **Athlete onboarding:** find coach, send request, wait for approval, handle rejection.
-- **Athlete Tempo surfaces:** Home, Calendar, Session detail, Live execution, Activity history, and Settings preferences.
+- **Athlete Tempo surfaces:** Home, Calendar, Workouts, Session detail, Live execution, Activity history, Profile, and Settings preferences.
 
 ### Route map
 
@@ -35,7 +35,8 @@ Workout Planner is now a Tempo-aligned coach-athlete planning app. Coaches manag
 |---|---|
 | Auth | `/`, `/login`, `/signup`, `/setup` |
 | Coach | `/coach`, `/coach/athletes/[athleteId]`, `/coach/builder`, `/coach/templates` |
-| Athlete | `/athlete`, `/athlete/calendar`, `/athlete/session/[sessionId]`, `/athlete/live/[sessionId]`, `/athlete/activity`, `/settings`, `/athlete/profile`, `/athlete/find-coach` |
+| Athlete | `/athlete`, `/athlete/calendar`, `/athlete/workouts`, `/athlete/session/[sessionId]`, `/athlete/live/[sessionId]`, `/athlete/activity`, `/settings`, `/athlete/profile`, `/athlete/find-coach` |
+| Sharing | `/share/[token]`, `/api/share-links`, `/api/share-links/intake` |
 | API | `/api/auth/*`, `/api/coach/*`, `/api/athlete/*`, `/api/coaches` |
 
 ## Data model
@@ -84,7 +85,7 @@ request is pending.
 - `lib/assignment-service.ts` also owns the source-copy union for templates,
   library sessions, and training plans; copies are snapshots with explicit
   lineage.
-- `lib/athlete-service.ts` owns athlete Home/Calendar/Session/Live/Activity/discovery/profile reads.
+- `lib/athlete-service.ts` owns athlete Home/Calendar/Workouts/Session/Live/Activity/discovery/profile reads.
 - `lib/athlete-completion-service.ts` owns completion/reopen transactions and
   Activity outcome writes.
 - `lib/session-snapshot-service.ts` owns canonical latest baseline/actual
@@ -98,6 +99,10 @@ request is pending.
 - `lib/sport.ts` owns shared sport constants and UI labels.
 - `lib/session-math.ts` owns duration/TSS/zone derivation from structured blocks.
 - `lib/workout-editor.ts` owns shared draft shaping used by planners and templates.
+- `lib/share-link.ts` owns the sanitized workout projection, canonical import
+  draft, opaque token shape, and local continuation-path validation.
+- `lib/share-link-service.ts` owns source access, hashed bearer-link persistence,
+  share-time snapshots, public lookup, and explicit recipient copy orchestration.
 
 ### Shared UI
 
@@ -138,10 +143,17 @@ These are the first places to be careful when extending the app:
   snapshot payloads rather than deriving historical views from current blocks.
 - Do not use the setup endpoint for role changes; extend `auth-role-service` if
   an explicit future account-management flow is introduced.
+- Share previews must stay outside the signed-in shell and consume only the
+  stored sanitized snapshot. Never load Activity, actual/baseline JSON, private
+  notes, RPE, assignment, owner, or coach-athlete relationship data into the
+  public projection.
+- Share intake must keep the editor unsaved until confirmation and delegate
+  private copies to `template-service`, `athlete-planner-service`, or
+  `coach-session-library-service`; never use `assignment-service` for receipt.
 
 ## Best next step
 
-The clearest next step is to **deepen service-level coverage around auth, planner, assignment, template, and coach-detail flows**.
+The clearest next step is to **complete manual browser verification for SHARE-001 at narrow and wide viewports, then mark it shipped only after recording that evidence**.
 
 Why this is the highest-value move:
 
@@ -151,8 +163,8 @@ Why this is the highest-value move:
 
 ## Recommended next work after that
 
-1. Add focused tests around `lib/api-auth.ts`, `lib/planner-service.ts`, `lib/template-service.ts`, `lib/assignment-service.ts`, and `lib/coach-service.ts`.
-2. Continue polishing athlete onboarding and cross-role navigation now that the Tempo shell is stable.
+1. Run browser checks for anonymous previews, authentication continuation, both roles, explicit saves, no-auto-scheduling, source independence, and responsive layouts.
+2. Add optional browser E2E coverage for share links after manual acceptance.
 
 ## Fast file map for common tasks
 
@@ -161,9 +173,10 @@ Why this is the highest-value move:
 | Change auth flow | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` |
 | Change coach scheduling behavior | `lib/planner-service.ts`, `lib/assignment-service.ts`, `app/coach/builder/page.tsx`, `app/api/coach/assignments/route.ts`, `app/api/coach/sessions/[sessionId]/route.ts` |
 | Change coach roster / athlete detail | `lib/coach-service.ts`, `app/coach/page.tsx`, `app/coach/athletes/[athleteId]/page.tsx` |
-| Change athlete Tempo surfaces | `lib/athlete-service.ts`, `app/athlete/page.tsx`, `app/athlete/calendar/page.tsx`, `app/athlete/session/[sessionId]/page.tsx`, `app/athlete/activity/page.tsx`, `app/api/athlete/sessions/[sessionId]/completion/route.ts` |
+| Change athlete Tempo surfaces | `lib/athlete-service.ts`, `app/athlete/page.tsx`, `app/athlete/calendar/page.tsx`, `app/athlete/workouts/page.tsx`, `app/athlete/session/[sessionId]/page.tsx`, `app/athlete/activity/page.tsx`, `app/api/athlete/sessions/[sessionId]/completion/route.ts` |
 | Change template behavior | `lib/template-service.ts`, `lib/sport.ts`, `app/coach/templates/page.tsx`, `app/api/coach/templates/*` |
 | Change onboarding / coach requests | `app/athlete/find-coach/page.tsx`, `app/athlete/profile/page.tsx`, `app/api/athlete/coach-requests/route.ts`, `app/api/coach/requests/*` |
+| Change workout sharing | `lib/share-link.ts`, `lib/share-link-service.ts`, `app/share/[token]/`, `app/api/share-links/*`, `components/ShareLinkButton.tsx` |
 
 ## Read next
 

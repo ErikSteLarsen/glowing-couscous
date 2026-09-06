@@ -1,15 +1,16 @@
 # Current Status
 
-This is the verified project snapshot recorded on **2026-09-01**. It was
+This is the verified project snapshot recorded on **2026-09-06**. It was
 inspected on branch `main` after the session editor migration, durable snapshots,
 planned session adjustment, actual outcome editing, comparison implementation,
-shared athlete session creation, and desktop UI polish.
+shared athlete session creation, desktop UI polish, and athlete Planner wayfinding
+and responsive-control polish.
 
 ## Verification
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass: 150 tests | `pnpm test` |
+| Tests | Pass: 170 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build` |
 | Build warning | Present | Next.js reports the `middleware` convention is deprecated in favor of `proxy`; this is not currently a build failure. |
@@ -19,22 +20,25 @@ shared athlete session creation, and desktop UI polish.
 Workout Planner is a Tempo-aligned coach-athlete training planner. Coaches
 manage rosters, reusable templates, standalone library sessions, reusable
 weekday training plans, and athlete assignments. Athletes discover or connect
-to a coach, view Home/Calendar/Session/Live/Activity surfaces, and mark
-sessions complete with notes. Weeks are Monday-based.
+to a coach, view Home/Calendar/Workouts/Session/Live/Activity surfaces, and mark
+sessions complete with notes. Universal workout/template sharing now has an
+automated public preview and explicit role-aware intake path; browser acceptance
+remains outstanding. Weeks are Monday-based.
 
 ## Capability Status
 
 | Capability | Status | Primary implementation | Verification / gap |
 |---|---|---|---|
 | Auth, signup, setup, role redirects | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-principal.ts`, `lib/auth-role-service.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | Focused role/principal tests and adapter smoke test pass; external OAuth integration remains a gap. |
-| Responsive Tempo app shell and navigation | `shipped` | `components/AppShell.tsx`, `AppSidebar.tsx`, `lib/app-navigation.ts`, `app/globals.css` | Viewport-bounded desktop sidebar, role-aware Planner/Template navigation, shell/accessibility/navigation tests, lint, and build pass (150 tests); manual browser viewport inspection remains a gap. |
+| Responsive Tempo app shell and navigation | `shipped` | `components/AppShell.tsx`, `AppSidebar.tsx`, `lib/app-navigation.ts`, `app/globals.css` | Viewport-bounded desktop sidebar, contextual Workouts state for session/live routes, profile-owned highlighted Settings, shell/accessibility/navigation tests, lint, and build pass (170 tests); manual browser viewport inspection remains a gap. |
 | Coach roster and athlete detail | `shipped` | `lib/coach-service.ts`, `/coach`, `/coach/athletes/[athleteId]` | `tests/coach-service.test.ts` and route tests pass. |
 | Athlete coach discovery and request lifecycle | `shipped` | `lib/coach-request-service.ts`, `prisma/schema.prisma`, `lib/athlete-service.ts`, discovery/profile routes | Request invariants, UI errors/in-flight state, 99 tests, schema reset/seed, lint, and build pass; UX polish remains planned. |
-| Coach planner for athlete schedules | `shipped` | `lib/coach-planner-service.ts`, `lib/planner-draft.ts`, `/coach/planner`, `/athlete/planner` | Coach roster planning and private athlete multi-date session creation pass 150 tests, lint, and build. |
+| Coach planner for athlete schedules | `shipped` | `lib/coach-planner-service.ts`, `lib/planner-draft.ts`, `/coach/planner`, `/athlete/planner` | Coach roster planning and private athlete multi-date session creation plus Planner week navigation/responsive controls pass 170 tests, lint, build, diff check, and detector; manual browser inspection remains a gap. |
 | Coach-owned session library | `shipped` | `lib/coach-session-library-service.ts`, planner library API/UI | Dedicated service tests pass. |
 | Reusable coach training plans | `shipped` | `lib/coach-training-plan-service.ts`, training-plan APIs/UI | Dedicated service and planner tests pass. |
 | Coach template library and assignment | `shipped` | `lib/template-service.ts`, `lib/assignment-service.ts`, template APIs/UI | Owner-scoped coach/athlete create/edit, source assignment, independent baseline snapshots, duplicate prevention, 150 tests, lint, and build pass; browser E2E coverage remains a gap. |
-| Athlete Home, Calendar, Session, Live, Activity | `shipped` | `lib/athlete-service.ts`, `lib/athlete-planner-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/athlete-completion-service.ts`, `lib/session-comparison-service.ts`, athlete route tree, Tempo components | Calendar, private multi-date session creator, planned adjustment, direct actual correction, baseline/actual comparison, completion, actual snapshot persistence, shell, source, interactive contrast, and build coverage pass (150 tests); live execution is a UI stepper, not device telemetry. |
+| Universal workout and template sharing | `in-progress` | `lib/share-link.ts`, `lib/share-link-service.ts`, `/share/[token]`, `/api/share-links/*`, `ShareLinkButton` | 167 tests, disposable schema reset/seed, lint, build, token/access/privacy/source-independence coverage pass; required browser checks not run. |
+| Athlete Home, Calendar, Workouts, Session, Live, Activity | `shipped` | `lib/athlete-service.ts`, `lib/athlete-planner-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/athlete-completion-service.ts`, `lib/session-comparison-service.ts`, athlete route tree, Tempo components | Workouts lists scheduled sessions; Home, Calendar, Activity, and Workouts preserve their origin through session detail/live navigation; month sessions are independently linked; calendar, private multi-date session creator, planned adjustment, direct actual correction, baseline/actual comparison, completion, actual snapshot persistence, shell, source, interactive contrast, and build coverage pass (170 tests); live execution is a UI stepper, not device telemetry. |
 | Interactive athlete Live execution | `shipped` | `lib/athlete-execution.ts`, `LiveSessionClient`, `Stepper` | `LIVE-001`; local next/previous/restart/completion controls, 114 tests, lint, and build pass. Refresh intentionally restarts local state; no telemetry. |
 | Session completion and activity persistence | `shipped` | `lib/athlete-completion-service.ts`, completion and actual APIs, `Activity` model | 146 tests, schema reset/seed, lint, and build pass; latest actual payloads are replaceable and manual outcomes are explicitly labeled. |
 | Completion metric/history integrity | `shipped` | `lib/athlete-completion-service.ts`, Activity fields, planner mutation guards | `COMPLETION-002`; immutable completed sessions, note retention, stored outcome segments, and nullable compliance are verified. |
@@ -62,7 +66,8 @@ See `WORK-INDEX.md` for stable IDs and `features/` for detailed records.
 - `components/AppShell.tsx` and `AppSidebar.tsx` provide a viewport-bounded
   desktop sidebar with local overflow and mobile bottom navigation. Role-aware
   Planner/Templates entries lead coaches and athletes to their owner-scoped
-  creator flows.
+  creator flows; athlete Workouts owns session/live context and Profile owns
+  Settings.
 - Server pages read through `lib/*-service.ts` modules. Client components own
   local draft state and call API routes for mutations.
 - Route handlers use `lib/api-auth.ts` for role guards. The signup route is the
@@ -72,6 +77,13 @@ See `WORK-INDEX.md` for stable IDs and `features/` for detailed records.
 - `lib/athlete-completion-service.ts` owns completion/reopen transactions,
   manual metric provenance, notes retention, actual snapshot writes, and
   direct actual correction, and completion errors.
+- `lib/share-link.ts` owns the pure sanitized workout projection, canonical
+  import draft, token shape, and safe local auth continuation.
+- `lib/share-link-service.ts` owns ShareLink source access, hashed persistence,
+  share-time snapshots, public lookup, and explicit Template/Planner copy
+  orchestration.
+- `/share/[token]` remains outside `(app)`; `/api/share-links` and
+  `/api/share-links/intake` are thin authenticated adapters.
 
 ### Active coach planning flow
 
@@ -112,6 +124,9 @@ point for new planner behavior.
 - `Assignment` can retain explicit source Session/target-date lineage, and
   `TrainingPlanAssignment` groups one reusable-plan copy operation per athlete/week.
 - `TrainingPlan` owns reusable coach sessions placed on weekdays 1 through 7.
+- `ShareLink` stores a cryptographic token hash, exactly one optional Session or
+  Template source, creator, and sanitized share-time snapshot; source deletion
+  cascades to invalidate the link.
 
 SQLite stores domain enums as constrained strings. Current values include
 `COACH`/`ATHLETE`, `RUNNING`/`BIKING`/`SWIMMING`/`STRENGTH`/`STRETCHING`/`REST`,
@@ -134,11 +149,16 @@ and target types `power`/`pace`/`hr`.
 - Next.js warns that `middleware.ts` is deprecated in favor of `proxy.ts`.
 - Browser verification of session adjustment, actual-edit, and comparison flows
   at narrow and wide viewports has not been performed in this environment.
+- Browser verification of anonymous share previews, auth continuation, both
+  roles, explicit saves, no-auto-scheduling, source independence, clipboard
+  fallback, and mobile/desktop layouts has not been performed because no
+  browser-capable tool is available.
 - `pnpm db:push` resets local SQLite data according to repository guidance;
   use it deliberately and reseed afterward when schema work is involved.
 
 ## Current Priorities
 
-1. Complete manual browser verification for session adjustment, actual-edit, and comparison flows.
-2. Deepen full session-backed API route coverage.
-3. Add optional browser E2E coverage for role-scoped comparison and actual correction.
+1. Begin `RELIABILITY-001`: make Planner, Template, Session, completion, and auth saves recoverable and safe to retry.
+2. Complete manual browser verification for SHARE-001 at narrow and wide viewports, then record the acceptance evidence.
+3. Complete manual browser verification for session adjustment, actual-edit, and comparison flows.
+4. Add optional browser E2E coverage for sharing and role-scoped comparison/actual correction.

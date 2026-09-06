@@ -2,19 +2,20 @@
 
 - **IDs:** `ATHLETE-001`, `COMPLETE-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-28`
+- **Last verified:** `2026-09-06`
 - **Owner:** `lib/athlete-service.ts` for reads, `lib/athlete-session-adjustment-service.ts` for planned writes, and `lib/athlete-completion-service.ts` for Activity writes
-- **Related work:** [baseline](../history/2026-08-21-baseline.md), [architecture](../../../ARCHITECTURE.md), [Live task](../tasks/2026-08-21-athlete-live-execution.md), [completion task](../tasks/2026-08-21-completion-integrity.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [planned adjustment task](../tasks/2026-08-25-planned-session-adjustments.md), [calendar month polish](../history/2026-08-22-calendar-month-polish.md), [calendar week overview](../history/2026-08-22-calendar-week-overview.md), [calendar copy polish](../history/2026-08-28-calendar-copy-polish.md), [concise UI copy](../history/2026-08-28-concise-ui-copy.md), [month navigation](../history/2026-08-28-calendar-month-navigation.md), [navigation alignment correction](../history/2026-08-28-calendar-navigation-alignment-correction.md), [month empty state](../history/2026-08-28-calendar-month-empty-state.md), [shared session creator](../history/2026-08-28-shared-session-creator.md)
+- **Related work:** [baseline](../history/2026-08-21-baseline.md), [architecture](../../../ARCHITECTURE.md), [Live task](../tasks/2026-08-21-athlete-live-execution.md), [completion task](../tasks/2026-08-21-completion-integrity.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [planned adjustment task](../tasks/2026-08-25-planned-session-adjustments.md), [calendar month polish](../history/2026-08-22-calendar-month-polish.md), [calendar week overview](../history/2026-08-22-calendar-week-overview.md), [calendar copy polish](../history/2026-08-28-calendar-copy-polish.md), [concise UI copy](../history/2026-08-28-concise-ui-copy.md), [month navigation](../history/2026-08-28-calendar-month-navigation.md), [navigation alignment correction](../history/2026-08-28-calendar-navigation-alignment-correction.md), [month empty state](../history/2026-08-28-calendar-month-empty-state.md), [shared session creator](../history/2026-08-28-shared-session-creator.md), [navigation context and workouts](../history/2026-09-03-navigation-context-and-workouts.md), [navigation decision](../decisions/0014-contextual-athlete-navigation.md)
 
 ## Contract
 
 An athlete with a coach or self-coached mode can view Home, Calendar week/month,
-session detail, a live block stepper, Activity history, Profile, and Settings.
+Workouts, session detail, a live block stepper, Activity history, Profile, and
+Settings.
 They can mark a session complete or move it back to planned while saving notes.
 
 ## Live Path
 
-- **Routes/UI:** `/athlete`, `/athlete/calendar`, `/athlete/session/[sessionId]`,
+- **Routes/UI:** `/athlete`, `/athlete/calendar`, `/athlete/workouts`, `/athlete/session/[sessionId]`,
   `/athlete/live/[sessionId]`, `/athlete/activity`, `/profile`, `/settings`.
 - **Services:** `athleteService` methods for dashboard, calendar, activity,
   session detail, profile, and request state; `accountService` for profile/preferences.
@@ -26,6 +27,14 @@ They can mark a session complete or move it back to planned while saving notes.
 
 - Home summarizes today, next four days, recent activity, trend, week totals,
   and configurable overview cards.
+- Home today and upcoming-day session tiles link individually to session detail,
+  including every session when a day has multiple sessions.
+- Home session tiles omit the planned/status badge so workout titles and metadata
+  have more room; titles wrap instead of being truncated.
+- Workouts lists all scheduled sessions and links each card to its session detail.
+- Session links preserve whether they were opened from Home, Calendar, Activity,
+  or Workouts; session detail and Live return through that same context, with
+  Calendar as the direct-link fallback.
 - Calendar supports a full Monday-first week overview and a full Monday-first month grid.
 - The week overview always shows all seven Monday-to-Sunday days in a
   responsive one, two, or three-column layout. Its today shortcut is only
@@ -73,6 +82,9 @@ They can mark a session complete or move it back to planned while saving notes.
 - The active athlete route tree uses the light Tempo surface; unreferenced
   pre-convergence athlete week/session components were removed after reference
   analysis so their dark-theme controls cannot be reused accidentally.
+- Athlete Planner provides visible week navigation, safe date normalization,
+  labeled multi-day controls, session metadata, sticky wide-screen save actions,
+  and accessible live save feedback.
 
 ## Verification
 
@@ -91,10 +103,19 @@ They can mark a session complete or move it back to planned while saving notes.
   month navigation adjustment on 2026-08-28.
 - `pnpm test` — 150 passing tests after the shared session creator on 2026-08-28.
 - `pnpm lint`, `pnpm build`, and `git diff --check` — pass on 2026-08-28.
+- `pnpm test` — 168 passing tests after Home per-session navigation on 2026-09-02.
+- `pnpm lint`, `pnpm build`, and `git diff --check` — pass on 2026-09-02.
+- `pnpm test` — 168 passing tests after Home session density polish on 2026-09-02.
+- `pnpm lint`, `pnpm build`, and `git diff --check` — pass on 2026-09-02.
+- `pnpm test` — 170 passing tests after navigation context and Workouts on 2026-09-03.
+- `pnpm lint`, `pnpm build`, and `git diff --check` — pass on 2026-09-03.
 - `pnpm db:push --force-reset && pnpm db:seed`, `pnpm lint`, and `pnpm build` —
   pass on 2026-08-25.
 - `pnpm db:push --force-reset && pnpm db:seed` — pass on the disposable local
   SQLite database on 2026-08-21.
+- `pnpm test` — 170 passing tests on 2026-09-06.
+- `pnpm lint`, `pnpm build`, `git diff --check`, and the Impeccable detector —
+  pass on 2026-09-06.
 
 ## Known Gaps
 

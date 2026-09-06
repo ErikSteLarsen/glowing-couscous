@@ -41,7 +41,7 @@ All feature logic belongs behind these `lib/` modules. Do not reintroduce Prisma
 |---|---|
 | `lib/planner-service.ts` | Compatibility coach-session mutations used by the remaining week-based API |
 | `lib/coach-service.ts` | Coach roster and athlete-detail read models |
-| `lib/athlete-service.ts` | Athlete Home, Calendar, Session, Activity, discovery, and profile reads |
+| `lib/athlete-service.ts` | Athlete Home, Calendar, Workouts, Session, Activity, discovery, and profile reads |
 | `lib/assignment-service.ts` | Coach builder assignment creation and template-to-session scheduling |
 | `lib/workout-spec.ts` | Block draft normalization, validation, and persistence transforms |
 | `lib/workout-editor.ts` | Shared workout content draft shaping used by both session editing and template editing |
@@ -69,6 +69,7 @@ All feature logic belongs behind these `lib/` modules. Do not reintroduce Prisma
 /coach/templates               Coach template library
 /athlete                       Athlete Home
 /athlete/calendar              Athlete Calendar
+/athlete/workouts              Athlete workout list
 /athlete/session/[sessionId]   Athlete session detail
 /athlete/live/[sessionId]      Athlete live execution
 /athlete/activity              Athlete activity history

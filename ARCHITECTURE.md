@@ -22,12 +22,14 @@ This document describes the **implemented** architecture, not old plans.
 
 - `/athlete`
 - `/athlete/calendar`
+- `/athlete/workouts`
 - `/athlete/session/[sessionId]`
 - `/athlete/live/[sessionId]`
 - `/athlete/activity`
 - `/settings`
 - `/athlete/profile`
 - `/athlete/find-coach`
+- `/share/[token]` (public sanitized workout snapshot)
 
 ### API areas
 
@@ -35,6 +37,8 @@ This document describes the **implemented** architecture, not old plans.
 - `app/api/coach/*`
 - `app/api/athlete/*`
 - `app/api/coaches/route.ts`
+- `app/api/share-links`
+- `app/api/share-links/intake`
 
 ## Main runtime boundaries
 
@@ -51,6 +55,27 @@ This document describes the **implemented** architecture, not old plans.
   parsing for API adapters.
 
 Use `auth-session` in pages and server components. Use `api-auth` in route handlers.
+
+### Share-link boundary
+
+- `lib/share-link.ts` owns the pure sanitized workout projection, canonical
+  import draft, opaque-token shape, and local auth-continuation validation.
+- `lib/share-link-service.ts` owns source access, token hashing, one-source
+  ShareLink persistence, share-time snapshots, public lookup, and explicit
+  recipient copy orchestration.
+- `/share/[token]` is outside `(app)` and renders only the stored sanitized
+  projection. Its route metadata disables indexing and sends no referrer.
+- `/api/share-links` is the authenticated link-creation adapter;
+  `/api/share-links/intake` is the authenticated explicit-save adapter. Both
+  delegate business behavior to `shareLinkService` and never query Prisma
+  directly.
+- Shared links may target an accessible Template, an athlete Session visible to
+  its owner or roster coach, or a standalone coach-library Session owned by the
+  creator. Training-plan child Sessions are deferred.
+- Recipient planner saves delegate to `athlete-planner-service` or
+  `coach-session-library-service`; Template saves delegate to `template-service`.
+  Sharing never uses `assignment-service`, creates an Assignment, or retains a
+  source relation on the recipient copy.
 
 ### Planner boundary
 
@@ -71,7 +96,7 @@ If a feature changes planner behavior, add it here first instead of scattering P
 
 ### Athlete boundary
 
-- `lib/athlete-service.ts` owns athlete Home, Calendar, Session detail, Live, Activity, discovery, and profile reads.
+- `lib/athlete-service.ts` owns athlete Home, Calendar, Workouts, Session detail, Live, Activity, discovery, and profile reads.
 - `lib/athlete-completion-service.ts` owns completion/reopen transactions,
   manual metric provenance, notes retention, and Activity lifecycle writes.
 - `lib/session-snapshot-service.ts` owns canonical latest baseline/actual
@@ -139,6 +164,10 @@ Important ownership relationships:
 - `TrainingPlanAssignment` records a reusable-plan copy operation for one athlete
   and Monday target week; child `Assignment` rows point to copied source sessions.
 - `Template` is coach-owned and private.
+- `ShareLink` stores one cryptographic token hash, one nullable Session or
+  Template source relation, the creator, and a sanitized share-time snapshot.
+  Source deletion cascades to invalidate the link. The service enforces the
+  exactly-one-source invariant and never stores the raw bearer token.
 
 ## Transitional areas
 
@@ -169,7 +198,13 @@ The main read/write boundaries are clearer, but they still need protection:
     do not extend the compatibility planner route for this behavior.
 13. Keep baseline/actual comparison behind `session-comparison-service` and
     reuse the stored snapshot identity for equal-version projection.
+14. Keep workout sharing behind `share-link-service`; project only workout
+    definition fields and never expose Activity, actual/baseline JSON, private
+    notes, RPE, assignments, owner identity, or relationship data.
+15. Treat share links as immutable snapshots. Recipient actions must remain
+    unsaved until an explicit save delegates to the private owner-scoped
+    persistence service.
 
 ## Highest-value architectural next step
 
-Add deeper service-level coverage around planner, template, assignment, coach-detail, and auth behavior so the current Tempo boundaries stay stable as features are added.
+Add deeper service-level coverage around planner, template, assignment, coach-detail, auth, and share-link behavior so the current Tempo boundaries stay stable as features are added. Browser verification remains required for the current share-link implementation before it can be marked shipped.

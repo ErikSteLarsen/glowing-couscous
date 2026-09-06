@@ -2,9 +2,9 @@
 
 - **ID:** `SHELL-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-28`
+- **Last verified:** `2026-09-03`
 - **Owner:** `components/AppShell.tsx`, `components/AppSidebar.tsx`, `lib/app-navigation.ts`, `app/globals.css`
-- **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md), [desktop UI sizing](../history/2026-08-28-desktop-ui-sizing.md), [sidebar viewport height](../history/2026-08-28-sidebar-viewport-height.md), [sizing decision](../decisions/0011-desktop-first-ui-sizing.md)
+- **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md), [desktop UI sizing](../history/2026-08-28-desktop-ui-sizing.md), [sidebar viewport height](../history/2026-08-28-sidebar-viewport-height.md), [navigation context and workouts](../history/2026-09-03-navigation-context-and-workouts.md), [sizing decision](../decisions/0011-desktop-first-ui-sizing.md), [navigation decision](../decisions/0014-contextual-athlete-navigation.md)
 
 ## Contract
 
@@ -22,9 +22,13 @@ Navigation is role-aware and marks the most specific route active.
 ## Behavior Already Implemented
 
 - Coach navigation exposes Athletes, Planner, and Templates.
-- Athlete navigation exposes Home, Calendar, Activity, optional Coach discovery,
-  and Settings.
+- Athlete navigation exposes Home, Calendar, Workouts, Activity, optional Coach
+  discovery, Planner, and Templates.
 - Nested routes prefer the most specific matching navigation item.
+- Workouts is the active sidebar context for the Workouts list, session detail,
+  and live execution routes.
+- Profile and Settings remain in the sidebar profile section, and the currently
+  viewed profile action is highlighted with `aria-current="page"`.
 - The desktop sidebar stays viewport-bounded when main-page content grows. Its
   footer remains at the bottom when the navigation fits and scrolls with the
   sidebar content when it does not.
@@ -45,6 +49,10 @@ Navigation is role-aware and marks the most specific route active.
 - `pnpm build` — pass on 2026-08-28; the existing middleware-to-proxy deprecation
   warning remains.
 - `git diff --check` — pass on 2026-08-28.
+- `pnpm test` — 170 passing tests on 2026-09-03, including origin-aware session
+  navigation, Workouts route, and profile active-state assertions.
+- `pnpm lint`, `pnpm build`, and `git diff --check` — pass on 2026-09-03; the
+  existing middleware-to-proxy deprecation warning remains.
 
 ## Known Gaps
 

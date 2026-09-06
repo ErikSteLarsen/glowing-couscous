@@ -4,7 +4,7 @@
 - **Status:** `planned`
 - **Last verified:** `2026-08-21`
 - **Owner:** `tests/` plus the service modules they exercise
-- **Related work:** [current status](../CURRENT-STATUS.md), [product roadmap](../../../SPEC.md), [audit](../tasks/2026-08-21-incompleteness-audit.md)
+- **Related work:** [current status](../CURRENT-STATUS.md), [product roadmap](../../../SPEC.md), [audit](../tasks/2026-08-21-incompleteness-audit.md), [workflow reliability](../tasks/2026-09-01-workflow-reliability.md)
 
 ## Contract
 

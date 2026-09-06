@@ -2,7 +2,7 @@
 
 - **IDs:** `PLAN-001`, `LIB-001`, `TPLAN-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-28`
+- **Last verified:** `2026-09-06`
 - **Owners:** `lib/coach-planner-service.ts`, `lib/coach-session-library-service.ts`, `lib/coach-training-plan-service.ts`, `lib/session-editor-adapters.ts`, `components/SessionComposer.tsx`
 - **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md), [planner history](../../../docs/superpowers/plans/2026-06-23-coach-planner.md), [source assignment task](../tasks/2026-08-21-source-copy-assignment.md), [workflow task](../tasks/2026-08-21-planner-template-workflows.md), [editor migration](../tasks/2026-08-25-editor-migration.md), [concise UI copy](../history/2026-08-28-concise-ui-copy.md), [shared session creator](../history/2026-08-28-shared-session-creator.md)
 
@@ -60,6 +60,10 @@ and have no athlete.
   multiple dates creates independent scheduled sessions.
 - Planner helper copy is concise; visible day and mode controls are not restated
   in explanatory text.
+- Athlete Planner exposes previous/this/next week navigation, normalizes invalid
+  route dates, and keeps the save panel visible on wide screens.
+- Athlete day selection uses labeled touch-sized controls, includes session
+  metadata for scanning, and provides a direct Templates action when empty.
 
 ## Verification
 
@@ -77,6 +81,9 @@ and have no athlete.
 - `pnpm lint`, `pnpm build`, and `git diff --check` — pass on 2026-08-28.
 - `pnpm db:push --force-reset && pnpm db:seed` — pass on the disposable local
   SQLite database on 2026-08-21.
+- `pnpm test` — 170 passing tests on 2026-09-06.
+- `pnpm lint`, `pnpm build`, `git diff --check`, and the Impeccable detector —
+  pass on 2026-09-06.
 
 ## Known Gaps
 
