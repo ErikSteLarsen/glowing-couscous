@@ -79,7 +79,7 @@ export function AppSidebar(props: {
           </div>
 
           <div className="mt-auto">
-            <AppProfileMenu user={props.user} onNavigate={props.onClose} />
+            <AppProfileMenu user={props.user} pathname={props.pathname} onNavigate={props.onClose} />
           </div>
         </div>
       </aside>

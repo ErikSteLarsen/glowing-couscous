@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { ActionLink, EmptyState, PageShell, Surface, TopBar } from '@/components/ui';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
-import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { MetricText } from '@/components/tempo/MetricText';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
@@ -52,28 +52,29 @@ export default async function AthletePage() {
             <div className="space-y-3">
               {dashboard.todaySessions.length > 0 ? (
                 dashboard.todaySessions.map((session) => (
-                  <Surface key={session.id} className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="text-[13px] font-semibold text-[var(--text-muted)]">
-                        {session.timeLabel}
-                      </span>
-                      <h2 className="text-[15px] font-semibold text-[var(--text)]">
-                        {session.title} · {getSportLabel(session.sport)}
-                      </h2>
-                      <div className="ml-auto">
-                        <StatusBadge status={session.status} />
+                  <Link
+                    key={session.id}
+                    href={`/athlete/session/${session.id}?from=home`}
+                    aria-label={`Open ${session.title}`}
+                    className="group block rounded-[12px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+                  >
+                    <Surface className="space-y-3 transition group-hover:border-[var(--field-focus)] group-hover:bg-[var(--field-surface)]">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="text-[13px] font-semibold text-[var(--text-muted)]">
+                          {session.timeLabel}
+                        </span>
+                        <h2 className="min-w-0 flex-1 break-words text-[15px] font-semibold text-[var(--text)]">
+                          {session.title} · {getSportLabel(session.sport)}
+                        </h2>
                       </div>
-                    </div>
-                    <SessionBlockBar segments={session.segments} />
-                    <div className="flex flex-wrap items-center gap-4 text-[13px] text-[var(--text-secondary)]">
-                      <MetricText>{formatDuration(session.durationSec)}</MetricText>
-                      <MetricText>{session.tss} TSS</MetricText>
-                      {session.targetLabel ? <span>{session.targetLabel}</span> : null}
-                      <ActionLink href={`/athlete/session/${session.id}`} tone="ghost">
-                        Open
-                      </ActionLink>
-                    </div>
-                  </Surface>
+                      <SessionBlockBar segments={session.segments} />
+                      <div className="flex flex-wrap items-center gap-4 text-[13px] text-[var(--text-secondary)]">
+                        <MetricText>{formatDuration(session.durationSec)}</MetricText>
+                        <MetricText>{session.tss} TSS</MetricText>
+                        {session.targetLabel ? <span>{session.targetLabel}</span> : null}
+                      </div>
+                    </Surface>
+                  </Link>
                 ))
               ) : (
                 <EmptyState
@@ -102,11 +103,23 @@ export default async function AthletePage() {
                       {day.dateLabel}
                     </p>
                   </div>
-                  {day.session ? (
-                    <>
-                      <p className="text-[13px] font-semibold text-[var(--text)]">{day.session.title}</p>
-                      <SessionBlockBar segments={day.session.segments} compact />
-                    </>
+                  {day.sessions.length > 0 ? (
+                    <div className="space-y-2">
+                      {day.sessions.map((session) => (
+                        <Link
+                          key={session.id}
+                          href={`/athlete/session/${session.id}?from=home`}
+                          aria-label={`Open ${session.title}`}
+                          className="group block space-y-2 rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] p-3 transition hover:border-[var(--field-focus)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+                        >
+                          <p className="break-words text-[13px] font-semibold text-[var(--text)]">{session.title}</p>
+                          <p className="text-[12px] text-[var(--text-secondary)]">
+                            {session.timeLabel} · {getSportLabel(session.sport)}
+                          </p>
+                          <SessionBlockBar segments={session.segments} compact />
+                        </Link>
+                      ))}
+                    </div>
                   ) : (
                     <p className="text-[13px] text-[var(--text-muted)]">Rest</p>
                   )}

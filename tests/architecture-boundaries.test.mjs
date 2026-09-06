@@ -11,8 +11,9 @@ async function read(relativePath) {
 
 test('athlete pages and coach-request routes do not access prisma directly', async () => {
   const directPrismaPaths = [
-    'app/(app)/athlete/page.tsx',
-    'app/(app)/athlete/find-coach/page.tsx',
+      'app/(app)/athlete/page.tsx',
+      'app/(app)/athlete/workouts/page.tsx',
+      'app/(app)/athlete/find-coach/page.tsx',
     'app/(app)/athlete/profile/page.tsx',
     'app/(app)/coach/page.tsx',
     'app/(app)/coach/templates/page.tsx',
@@ -110,6 +111,9 @@ test('athlete home page uses Tempo dashboard sections and session entry points',
   assert.match(athletePageSource, /Open calendar/);
   assert.match(athletePageSource, /Customise overview in Settings/);
   assert.match(athletePageSource, /athlete\/session/);
+  assert.doesNotMatch(athletePageSource, /StatusBadge/);
+  assert.doesNotMatch(athletePageSource, /truncate text-\[13px\] font-semibold/);
+  assert.match(athletePageSource, /break-words text-\[13px\] font-semibold/);
 });
 
 test('template workflow supports duplication and library filtering', async () => {

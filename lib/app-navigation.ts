@@ -4,10 +4,19 @@ export type NavItem = {
   label: string;
   href: string;
   matchPrefix: string;
+  activeMatchPrefixes?: readonly string[];
 };
 
+function getMatchPrefixes(item: NavItem) {
+  return [item.matchPrefix, ...(item.activeMatchPrefixes ?? [])];
+}
+
 function matchesPath(pathname: string, item: NavItem) {
-  return pathname === item.href || pathname.startsWith(item.matchPrefix + '/');
+  return pathname === item.href || getMatchPrefixes(item).some((prefix) => pathname.startsWith(prefix + '/'));
+}
+
+function getMatchSpecificity(item: NavItem) {
+  return Math.max(...getMatchPrefixes(item).map((prefix) => prefix.length));
 }
 
 export function getPrimaryNavigation(
@@ -25,17 +34,22 @@ export function getPrimaryNavigation(
   return [
     { label: 'Home', href: '/athlete', matchPrefix: '/athlete' },
     { label: 'Calendar', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
+    {
+      label: 'Workouts',
+      href: '/athlete/workouts',
+      matchPrefix: '/athlete/workouts',
+      activeMatchPrefixes: ['/athlete/session', '/athlete/live'],
+    },
     { label: 'Activity', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
     { label: 'Planner', href: '/athlete/planner', matchPrefix: '/athlete/planner' },
     { label: 'Templates', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
     ...(hasActiveCoach ? [] : [{ label: 'Coach', href: '/athlete/find-coach', matchPrefix: '/athlete/find-coach' }]),
-    { label: 'Settings', href: '/settings', matchPrefix: '/settings' },
   ];
 }
 
 export const profileActions = [
-  { label: 'Profile', href: '/profile' },
-  { label: 'Settings', href: '/settings' },
+  { label: 'Profile', href: '/profile', matchPrefix: '/profile' },
+  { label: 'Settings', href: '/settings', matchPrefix: '/settings' },
 ] as const;
 
 export function isNavigationItemActive(pathname: string, item: NavItem, items: NavItem[]) {
@@ -46,7 +60,35 @@ export function isNavigationItemActive(pathname: string, item: NavItem, items: N
   return !items.some(
     (candidate) =>
       candidate.href !== item.href &&
-      candidate.matchPrefix.length > item.matchPrefix.length &&
+      getMatchSpecificity(candidate) > getMatchSpecificity(item) &&
       matchesPath(pathname, candidate),
   );
+}
+
+export function isProfileActionActive(
+  pathname: string,
+  action: (typeof profileActions)[number],
+) {
+  return pathname === action.href || pathname.startsWith(action.matchPrefix + '/');
+}
+
+const sessionReturnTargets = {
+  home: { href: '/athlete', label: 'Back to Home' },
+  calendar: { href: '/athlete/calendar', label: 'Back to calendar' },
+  activity: { href: '/athlete/activity', label: 'Back to Activity' },
+  workouts: { href: '/athlete/workouts', label: 'Back to Workouts' },
+} as const;
+
+export type SessionOrigin = keyof typeof sessionReturnTargets;
+
+export function getSessionOrigin(origin?: string): SessionOrigin {
+  if (origin && Object.prototype.hasOwnProperty.call(sessionReturnTargets, origin)) {
+    return origin as SessionOrigin;
+  }
+
+  return 'calendar';
+}
+
+export function getSessionReturnTarget(origin?: string) {
+  return sessionReturnTargets[getSessionOrigin(origin)];
 }

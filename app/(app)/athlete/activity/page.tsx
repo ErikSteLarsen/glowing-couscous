@@ -46,7 +46,7 @@ export default async function AthleteActivityPage() {
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <ActionLink href={`/athlete/session/${activity.sessionId}`} tone="ghost">
+                  <ActionLink href={`/athlete/session/${activity.sessionId}?from=activity`} tone="ghost">
                     Open
                   </ActionLink>
                   <SessionComparisonDialog

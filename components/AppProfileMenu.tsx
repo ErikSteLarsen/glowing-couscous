@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { SignOutButton } from '@/components/SignOutButton';
-import { profileActions } from '@/lib/app-navigation';
+import { isProfileActionActive, profileActions } from '@/lib/app-navigation';
 
 export function AppProfileMenu({
   user,
+  pathname,
   onNavigate,
 }: {
   user: { name: string; email: string };
+  pathname: string;
   onNavigate?: () => void;
 }) {
   return (
@@ -14,16 +16,24 @@ export function AppProfileMenu({
       <p className="text-sm font-semibold text-[var(--text)]">{user.name}</p>
       <p className="mt-1 text-xs text-[var(--text-muted)]">{user.email}</p>
       <div className="mt-4 space-y-2">
-        {profileActions.map((action) => (
-          <Link
-            key={action.href}
-            href={action.href}
-            onClick={onNavigate}
-            className="block rounded-[10px] px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--surface)]"
-          >
-            {action.label}
-          </Link>
-        ))}
+        {profileActions.map((action) => {
+          const isActive = isProfileActionActive(pathname, action);
+
+          return (
+            <Link
+              key={action.href}
+              href={action.href}
+              onClick={onNavigate}
+              aria-current={isActive ? 'page' : undefined}
+              className={`relative block rounded-[10px] px-3 py-2 text-sm transition hover:bg-[var(--surface)] ${
+                isActive ? 'bg-[var(--brand-tint)] font-semibold text-[#2F3A28]' : 'text-[var(--text-secondary)]'
+              }`}
+            >
+              {isActive ? <span className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-[var(--brand)]" /> : null}
+              {action.label}
+            </Link>
+          );
+        })}
         <SignOutButton size="compact" />
       </div>
     </div>

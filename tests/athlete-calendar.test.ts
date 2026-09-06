@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { format } from 'date-fns';
+import { addDays, format } from 'date-fns';
 
 import { createAthleteService } from '../lib/athlete-service.ts';
 import * as calendarScroller from '../lib/calendar-scroller.ts';
@@ -13,7 +13,7 @@ type SessionWhere = {
   };
 };
 
-function createSession(id: number, title: string, date: string) {
+function createSession(id: number, title: string, date: string | Date) {
   return {
     id,
     title,
@@ -74,6 +74,61 @@ test('athlete calendar week view shapes the selected week and keeps session days
   assert.equal(calendar.days.length, 7);
   assert.equal(calendar.days.find((day) => day.isoDate === '2026-06-24')?.sessions[0]?.id, 12);
   assert.equal(format(calendar.period.start, 'yyyy-MM-dd'), '2026-06-22');
+});
+
+test('athlete Home keeps every session assigned to an upcoming day', async () => {
+  const today = new Date();
+  const nextDay = addDays(today, 1);
+  const athleteService = createAthleteService({
+    db: {
+      user: {
+        async findUnique() {
+          return {
+            id: 7,
+            role: 'ATHLETE',
+            name: 'Mara Holt',
+            prefsJson: null,
+            coach: { id: 2, name: 'Erik Krogh', email: 'erik@example.com' },
+            sessions: [
+              createSession(31, 'Morning intervals', nextDay),
+              createSession(32, 'Evening strength', nextDay),
+            ],
+            activities: [],
+          };
+        },
+      },
+    } as never,
+  });
+
+  const dashboard = await athleteService.loadHomeDashboard(7);
+
+  assert.ok(dashboard);
+  assert.deepEqual(dashboard.nextDays[0].sessions.map((session) => session.id), [31, 32]);
+});
+
+test('athlete Workouts lists every scheduled session in date order', async () => {
+  const athleteService = createAthleteService({
+    db: {
+      user: {
+        async findUnique() {
+          return {
+            id: 7,
+            role: 'ATHLETE',
+            name: 'Mara Holt',
+            sessions: [
+              createSession(41, 'Earlier workout', '2026-06-22T07:00:00.000Z'),
+              createSession(42, 'Later workout', '2026-06-25T07:00:00.000Z'),
+            ],
+          };
+        },
+      },
+    } as never,
+  });
+
+  const workoutList = await athleteService.loadWorkoutList(7);
+
+  assert.ok(workoutList);
+  assert.deepEqual(workoutList.workouts.map((workout) => workout.id), [41, 42]);
 });
 
 test('athlete calendar month view returns a full Monday-first month grid with session counts', async () => {

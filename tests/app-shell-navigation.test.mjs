@@ -23,10 +23,16 @@ test('root route and app navigation define signed-in entry points and role-aware
   assert.match(navSource, /hasActiveCoach/);
   assert.match(navSource, /label: 'Coach'/);
   assert.match(navSource, /label: 'Planner'/);
+  assert.match(navSource, /label: 'Workouts'/);
+  assert.match(navSource, /href: '\/athlete\/workouts'/);
   assert.match(navSource, /href: '\/athlete\/planner'/);
   assert.match(navSource, /href: '\/athlete\/templates'/);
   assert.match(navSource, /href: '\/profile'/);
   assert.match(navSource, /href: '\/settings'/);
+  assert.match(navSource, /activeMatchPrefixes: \['\/athlete\/session', '\/athlete\/live'\]/);
+
+  const primaryNavigationSource = navSource.split('export const profileActions')[0];
+  assert.doesNotMatch(primaryNavigationSource, /Settings/);
 });
 
 test('navigation matching prefers the most specific active destination', async () => {
@@ -34,8 +40,23 @@ test('navigation matching prefers the most specific active destination', async (
   const sidebarSource = await read('components/AppSidebar.tsx');
 
   assert.match(navSource, /export function isNavigationItemActive/);
-  assert.match(navSource, /candidate\.matchPrefix\.length > item\.matchPrefix\.length/);
+  assert.match(navSource, /getMatchSpecificity\(candidate\) > getMatchSpecificity\(item\)/);
   assert.match(sidebarSource, /isNavigationItemActive\(props\.pathname, item, navItems\)/);
+});
+
+test('workout detail keeps its entry context and Workouts is a real destination', async () => {
+  const workoutsPageSource = await read('app/(app)/athlete/workouts/page.tsx');
+  const sessionPageSource = await read('app/(app)/athlete/session/[sessionId]/page.tsx');
+  const calendarPageSource = await read('app/(app)/athlete/calendar/page.tsx');
+  const profileMenuSource = await read('components/AppProfileMenu.tsx');
+
+  assert.match(workoutsPageSource, /athleteService\.loadWorkoutList/);
+  assert.match(workoutsPageSource, /from=workouts/);
+  assert.match(sessionPageSource, /getSessionReturnTarget/);
+  assert.match(sessionPageSource, /searchParams/);
+  assert.match(calendarPageSource, /from=calendar/);
+  assert.match(profileMenuSource, /isProfileActionActive/);
+  assert.match(profileMenuSource, /aria-current=\{isActive \? 'page' : undefined\}/);
 });
 
 test('athlete planner exposes the shared editor and multi-day session creation', async () => {

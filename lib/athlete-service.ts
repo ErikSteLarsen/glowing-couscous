@@ -207,7 +207,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         return {
           label: format(day, 'EEE').toUpperCase(),
           dateLabel: format(day, 'd'),
-          session: daySessions[0] ?? null,
+          sessions: daySessions,
         };
       });
 
@@ -367,6 +367,38 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         },
         days,
         weeks,
+      };
+    },
+
+    async loadWorkoutList(userId: number) {
+      const athlete = await db.user.findUnique({
+        where: { id: userId },
+        include: {
+          sessions: {
+            where: { date: { not: null } },
+            include: {
+              blocks: {
+                orderBy: { sortOrder: 'asc' },
+              },
+              activity: true,
+            },
+            orderBy: [{ date: 'asc' }, { id: 'asc' }],
+          },
+        },
+      });
+
+      if (!athlete || athlete.role !== 'ATHLETE') {
+        return null;
+      }
+
+      return {
+        athlete: {
+          id: athlete.id,
+          name: athlete.name ?? '',
+        },
+        workouts: athlete.sessions
+          .filter((session): session is typeof session & { date: Date } => session.date !== null)
+          .map(mapSessionSummary),
       };
     },
 

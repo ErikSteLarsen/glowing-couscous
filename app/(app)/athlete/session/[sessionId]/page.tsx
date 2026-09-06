@@ -7,18 +7,22 @@ import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
+import { getSessionOrigin, getSessionReturnTarget } from '@/lib/app-navigation';
 import { SessionDetailClient } from './SessionDetailClient';
 import { ShareLinkButton } from '@/components/ShareLinkButton';
 
 export default async function AthleteSessionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ sessionId: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user || user.role !== 'ATHLETE') redirect('/login');
 
   const { sessionId } = await params;
+  const { from } = await searchParams;
   const parsedSessionId = Number(sessionId);
   if (!Number.isInteger(parsedSessionId) || parsedSessionId <= 0) {
     notFound();
@@ -33,6 +37,9 @@ export default async function AthleteSessionPage({
     );
   }
 
+  const sessionOrigin = getSessionOrigin(from);
+  const returnTarget = getSessionReturnTarget(sessionOrigin);
+
   return (
     <PageShell size="wide">
       <TopBar
@@ -41,10 +48,10 @@ export default async function AthleteSessionPage({
         description={detail.session.summary ?? 'Session details.'}
         actions={
           <>
-            <ActionLink href="/athlete/calendar" tone="secondary">
-              Back to calendar
+            <ActionLink href={returnTarget.href} tone="secondary">
+              {returnTarget.label}
             </ActionLink>
-            <ActionLink href={`/athlete/live/${detail.session.id}`}>Start live</ActionLink>
+            <ActionLink href={`/athlete/live/${detail.session.id}?from=${sessionOrigin}`}>Start live</ActionLink>
             <ShareLinkButton sourceKind="session" sourceId={detail.session.id} />
           </>
         }

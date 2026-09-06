@@ -122,60 +122,58 @@ export default async function AthleteCalendarPage({
               </div>
 
               <div className="grid gap-2">
-                {calendar.weeks.map((week, weekIndex) => (
-                  <div key={`week-${weekIndex}`} className="grid grid-cols-7 gap-2">
-                    {week.map((day) => (
-                      <Link
-                        key={day.isoDate}
-                        href={
-                          day.sessions[0]
-                            ? `/athlete/session/${day.sessions[0].id}`
-                            : buildCalendarHref('week', new Date(`${day.isoDate}T12:00:00`))
-                        }
-                        className={`min-h-[112px] rounded-[12px] border p-2.5 transition hover:border-[var(--field-focus)] hover:bg-[var(--field-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)] sm:min-h-[128px] sm:p-3 ${
-                          day.isCurrentMonth
-                            ? 'border-[var(--border)] bg-[var(--surface)]'
-                            : 'border-[var(--field-border)] bg-[var(--field-surface)] opacity-65'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <p className="text-[15px] font-semibold text-[var(--text)]">{day.dateLabel}</p>
-                            {day.isToday ? (
-                              <span className="rounded-full bg-[var(--brand-tint)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--field-selected-text)]">
-                                Today
-                              </span>
-                            ) : null}
+                  {calendar.weeks.map((week, weekIndex) => (
+                    <div key={`week-${weekIndex}`} className="grid grid-cols-7 gap-2">
+                      {week.map((day) => (
+                        <div
+                          key={day.isoDate}
+                          className={`min-h-[112px] rounded-[12px] border p-2.5 sm:min-h-[128px] sm:p-3 ${
+                            day.isCurrentMonth
+                              ? 'border-[var(--border)] bg-[var(--surface)]'
+                              : 'border-[var(--field-border)] bg-[var(--field-surface)] opacity-65'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <p className="text-[15px] font-semibold text-[var(--text)]">{day.dateLabel}</p>
+                              {day.isToday ? (
+                                <span className="rounded-full bg-[var(--brand-tint)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--field-selected-text)]">
+                                  Today
+                                </span>
+                              ) : null}
+                            </div>
+                            <span className="rounded-full border border-[var(--field-border)] bg-[#FBFAF7] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                              {day.sessions.length}
+                            </span>
                           </div>
-                          <span className="rounded-full border border-[var(--field-border)] bg-[#FBFAF7] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
-                            {day.sessions.length}
-                          </span>
-                        </div>
-                        <div className="mt-3 space-y-2">
-                          {day.sessions.length > 0 ? (
-                            <>
-                              {day.sessions.slice(0, 2).map((session) => (
-                                <div key={session.id} className="rounded-[10px] bg-[#FBFAF7] px-2.5 py-2">
+                          <div className="mt-3 space-y-2">
+                            {day.sessions.length > 0 ? (
+                              day.sessions.map((session) => (
+                                <Link
+                                  key={session.id}
+                                  href={`/athlete/session/${session.id}?from=calendar`}
+                                  aria-label={`Open ${session.title}`}
+                                  className="block rounded-[10px] bg-[#FBFAF7] px-2.5 py-2 transition hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+                                >
                                   <p className="truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</p>
                                   <p className="mt-0.5 text-[12px] text-[var(--text-secondary)]">
                                     {session.timeLabel} · {getSportLabel(session.sport)}
                                   </p>
-                                </div>
-                              ))}
-                              {day.sessions.length > 2 ? (
-                                <p className="text-[11px] font-medium text-[var(--brand)]">
-                                  +{day.sessions.length - 2} more
-                                </p>
-                              ) : null}
-                            </>
-                          ) : (
-                            <p className="text-[13px] text-[var(--text-muted)]">No session</p>
-                          )}
+                                </Link>
+                              ))
+                            ) : (
+                              <Link
+                                href={buildCalendarHref('week', new Date(`${day.isoDate}T12:00:00`))}
+                                className="block rounded-[10px] px-2.5 py-2 text-[13px] text-[var(--text-muted)] transition hover:bg-[var(--field-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+                              >
+                                No session
+                              </Link>
+                            )}
+                          </div>
                         </div>
-                      </Link>
-                    ))}
-                  </div>
-                ))}
+                      ))}
+                    </div>
+                  ))}
               </div>
             </div>
           </div>

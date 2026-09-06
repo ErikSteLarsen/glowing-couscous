@@ -233,7 +233,7 @@ export function AthleteCalendarWeekScroller({
                   day.sessions.map((session) => (
                     <Link
                       key={session.id}
-                      href={`/athlete/session/${session.id}`}
+                      href={`/athlete/session/${session.id}?from=calendar`}
                       aria-label={`Open ${session.title}`}
                       className="group block space-y-2 rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] p-3 transition hover:border-[var(--field-focus)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
                     >

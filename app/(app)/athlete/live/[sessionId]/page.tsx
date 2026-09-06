@@ -4,17 +4,21 @@ import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
+import { getSessionOrigin } from '@/lib/app-navigation';
 import { LiveSessionClient } from './LiveSessionClient';
 
 export default async function AthleteLivePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ sessionId: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user || user.role !== 'ATHLETE') redirect('/login');
 
   const { sessionId } = await params;
+  const { from } = await searchParams;
   const parsedSessionId = Number(sessionId);
   if (!Number.isInteger(parsedSessionId) || parsedSessionId <= 0) {
     notFound();
@@ -29,12 +33,14 @@ export default async function AthleteLivePage({
     );
   }
 
+  const sessionOrigin = getSessionOrigin(from);
+
   return (
     <PageShell size="wide">
       <TopBar
         eyebrow="Live"
         title={`Execute ${detail.session.title}`}
-        actions={<ActionLink href={`/athlete/session/${detail.session.id}`} tone="secondary">Back to session</ActionLink>}
+        actions={<ActionLink href={`/athlete/session/${detail.session.id}?from=${sessionOrigin}`} tone="secondary">Back to session</ActionLink>}
       />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
