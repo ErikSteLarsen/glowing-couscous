@@ -2,6 +2,7 @@ import { formatISO } from 'date-fns';
 import { redirect } from 'next/navigation';
 
 import { ActionLink, PageShell, TopBar } from '@/components/ui';
+import { WorkspaceNav } from '@/components/WorkspaceNav';
 import { getCurrentUser } from '@/lib/auth-session';
 import { coachPlannerService } from '@/lib/coach-planner-service';
 
@@ -23,17 +24,17 @@ export default async function CoachPlannerPage({
   return (
     <PageShell size="wide" className="max-w-[1600px]">
       <TopBar
-        eyebrow="Planner"
-        title="Build your training library"
+        title="Planner"
+        description="Place a workout, template, or training plan on an athlete's calendar. This is the only workspace where dates are chosen."
         actions={
           <>
-            <ActionLink href="/coach/templates" tone="secondary">
-              Templates
-            </ActionLink>
-            <ActionLink href="/coach">Roster</ActionLink>
+            <ActionLink href="/coach/workouts" tone="secondary">Workouts</ActionLink>
+            <ActionLink href="/coach/templates" tone="secondary">Templates</ActionLink>
+            <ActionLink href="/coach">Athletes</ActionLink>
           </>
         }
       />
+      <WorkspaceNav role="COACH" active="planner" />
 
       <PlannerClient
         athletes={workspace.athletes}
@@ -53,6 +54,7 @@ export default async function CoachPlannerPage({
             : null
         }
         initialDate={date ?? formatISO(new Date(), { representation: 'date' })}
+        surface="planner"
       />
     </PageShell>
   );

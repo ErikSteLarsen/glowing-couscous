@@ -3,8 +3,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
 import { ActionLink, PageShell, TopBar } from '@/components/ui';
+import { WorkspaceNav } from '@/components/WorkspaceNav';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athletePlannerService } from '@/lib/athlete-planner-service';
+import { workoutLibraryService } from '@/lib/workout-library-service';
 
 import { AthletePlannerClient } from './AthletePlannerClient';
 
@@ -17,7 +19,10 @@ export default async function AthletePlannerPage({
   if (!user || user.role !== 'ATHLETE') redirect('/login');
 
   const { date, templateId } = await searchParams;
-  const workspace = await athletePlannerService.loadWorkspace(user.id, date);
+  const [workspace, workouts] = await Promise.all([
+    athletePlannerService.loadWorkspace(user.id, date),
+    workoutLibraryService.listForOwner('athlete', user.id),
+  ]);
   const parsedTemplateId = Number(templateId);
   const requestedDate = date ? parseISO(date) : new Date();
   const resolvedDate = isValid(requestedDate) ? requestedDate : new Date();
@@ -28,9 +33,8 @@ export default async function AthletePlannerPage({
   return (
     <PageShell size="wide" className="max-w-[1400px]">
       <TopBar
-        eyebrow="Planner"
-        title="Plan your training week"
-        description="Create personal sessions for one or more days, or refine what is already on your schedule."
+        title="Planner"
+        description="Place workouts and templates on one or more days. This is where your schedule changes."
         actions={
           <div className="flex flex-wrap items-center justify-end gap-2">
             <nav aria-label="Planner week navigation" className="flex flex-wrap items-center gap-2">
@@ -52,9 +56,11 @@ export default async function AthletePlannerPage({
           </div>
         }
       />
+      <WorkspaceNav role="ATHLETE" active="planner" />
       <AthletePlannerClient
         athleteId={user.id}
         templates={workspace.templates}
+        workouts={workouts}
         days={workspace.days}
         periodLabel={workspace.period.label}
         initialDate={initialDate}

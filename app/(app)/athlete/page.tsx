@@ -30,9 +30,14 @@ export default async function AthletePage() {
       <TopBar
         title={`Good morning, ${dashboard.athlete.name}`}
         actions={
-          <ActionLink href="/athlete/calendar" tone="secondary">
-            Open calendar
-          </ActionLink>
+          <div className="flex flex-wrap gap-3">
+            <ActionLink href="/athlete/calendar" tone="secondary">
+              Open calendar
+            </ActionLink>
+            <ActionLink href="/athlete/workouts" tone="ghost">
+              Workouts
+            </ActionLink>
+          </div>
         }
       />
 

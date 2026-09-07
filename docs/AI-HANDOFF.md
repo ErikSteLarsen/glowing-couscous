@@ -24,17 +24,18 @@ Workout Planner is now a Tempo-aligned coach-athlete planning app. Coaches manag
 
 - **Coach roster:** athlete overview plus pending coach requests.
 - **Coach athlete detail:** weekly status, recent planned-vs-done history, and builder handoff.
-- **Coach builder:** assign a template onto an athlete schedule.
+- **Coach Workouts:** create and manage standalone workouts without a date.
+- **Coach Planner:** assign workouts, templates, and training plans onto an athlete schedule.
 - **Coach templates:** create, edit, duplicate, delete, and load private session templates into the builder.
 - **Athlete onboarding:** find coach, send request, wait for approval, handle rejection.
-- **Athlete Tempo surfaces:** Home, Calendar, Workouts, Session detail, Live execution, Activity history, Profile, and Settings preferences.
+- **Athlete Tempo surfaces:** Home, Calendar, Workouts library plus scheduled-workout context, Planner, Templates, Session detail, Live execution, Activity history, Profile, and Settings preferences.
 
 ### Route map
 
 | Area | Routes |
 |---|---|
 | Auth | `/`, `/login`, `/signup`, `/setup` |
-| Coach | `/coach`, `/coach/athletes/[athleteId]`, `/coach/builder`, `/coach/templates` |
+| Coach | `/coach`, `/coach/athletes/[athleteId]`, `/coach/workouts`, `/coach/planner`, `/coach/builder`, `/coach/templates` |
 | Athlete | `/athlete`, `/athlete/calendar`, `/athlete/workouts`, `/athlete/session/[sessionId]`, `/athlete/live/[sessionId]`, `/athlete/activity`, `/settings`, `/athlete/profile`, `/athlete/find-coach` |
 | Sharing | `/share/[token]`, `/api/share-links`, `/api/share-links/intake` |
 | API | `/api/auth/*`, `/api/coach/*`, `/api/athlete/*`, `/api/coaches` |
@@ -85,6 +86,8 @@ request is pending.
 - `lib/assignment-service.ts` also owns the source-copy union for templates,
   library sessions, and training plans; copies are snapshots with explicit
   lineage.
+- `lib/workout-library-service.ts` owns owner-scoped standalone workout reads and
+  writes; it rejects scheduled records and cross-owner template references.
 - `lib/athlete-service.ts` owns athlete Home/Calendar/Workouts/Session/Live/Activity/discovery/profile reads.
 - `lib/athlete-completion-service.ts` owns completion/reopen transactions and
   Activity outcome writes.

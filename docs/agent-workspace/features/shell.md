@@ -2,7 +2,7 @@
 
 - **ID:** `SHELL-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-09-03`
+- **Last verified:** `2026-09-07`
 - **Owner:** `components/AppShell.tsx`, `components/AppSidebar.tsx`, `lib/app-navigation.ts`, `app/globals.css`
 - **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md), [desktop UI sizing](../history/2026-08-28-desktop-ui-sizing.md), [sidebar viewport height](../history/2026-08-28-sidebar-viewport-height.md), [navigation context and workouts](../history/2026-09-03-navigation-context-and-workouts.md), [sizing decision](../decisions/0011-desktop-first-ui-sizing.md), [navigation decision](../decisions/0014-contextual-athlete-navigation.md)
 
@@ -21,9 +21,11 @@ Navigation is role-aware and marks the most specific route active.
 
 ## Behavior Already Implemented
 
-- Coach navigation exposes Athletes, Planner, and Templates.
-- Athlete navigation exposes Home, Calendar, Workouts, Activity, optional Coach
-  discovery, Planner, and Templates.
+- Coach navigation exposes Athletes, Workouts, Planner, and Templates.
+- Athlete navigation exposes Home, Workouts, Planner, Templates, Calendar,
+  Activity, and optional Coach discovery.
+- Sidebar and in-page workspace navigation label the purpose of Workouts
+  (author), Planner (place), and Templates (reuse).
 - Nested routes prefer the most specific matching navigation item.
 - Workouts is the active sidebar context for the Workouts list, session detail,
   and live execution routes.
@@ -40,6 +42,8 @@ Navigation is role-aware and marks the most specific route active.
 - Shared action primitives now include explicit compact variants for dense
   desktop lists, editors, navigation, and segmented controls; standard controls
   remain the touch-friendly default.
+- Workspace navigation cards retain a minimum touch-sized target and expose
+  `aria-current` for the active job.
 
 ## Verification
 
@@ -53,6 +57,8 @@ Navigation is role-aware and marks the most specific route active.
   navigation, Workouts route, and profile active-state assertions.
 - `pnpm lint`, `pnpm build`, and `git diff --check` — pass on 2026-09-03; the
   existing middleware-to-proxy deprecation warning remains.
+- `pnpm test` — 175 passing tests on 2026-09-07 after the workspace IA audit;
+  `pnpm lint`, `pnpm build`, `git diff --check`, and the Impeccable detector pass.
 
 ## Known Gaps
 

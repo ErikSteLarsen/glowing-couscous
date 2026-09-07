@@ -15,6 +15,8 @@ This document describes the **implemented** architecture, not old plans.
 
 - `/coach`
 - `/coach/athletes/[athleteId]`
+- `/coach/workouts`
+- `/coach/planner`
 - `/coach/builder`
 - `/coach/templates`
 
@@ -23,6 +25,8 @@ This document describes the **implemented** architecture, not old plans.
 - `/athlete`
 - `/athlete/calendar`
 - `/athlete/workouts`
+- `/athlete/planner`
+- `/athlete/templates`
 - `/athlete/session/[sessionId]`
 - `/athlete/live/[sessionId]`
 - `/athlete/activity`
@@ -39,6 +43,11 @@ This document describes the **implemented** architecture, not old plans.
 - `app/api/coaches/route.ts`
 - `app/api/share-links`
 - `app/api/share-links/intake`
+
+Standalone workout authoring uses `/coach/workouts` and `/athlete/workouts` with
+owner-scoped `/api/coach/workouts/*` and `/api/athlete/workouts/*` adapters.
+Planner routes own date/week assignment; the workout library must not create
+calendar assignments.
 
 ## Main runtime boundaries
 
@@ -88,6 +97,17 @@ If a feature changes planner behavior, add it here first instead of scattering P
 
 - `lib/template-service.ts` owns coach template listing and persistence.
 - `app/api/coach/templates/*` should keep delegating to this service.
+- `Template.cadence` records whether the reusable structure is intended for a
+  day, week, or month. Month-level assignment remains guided until its source
+  model is introduced.
+
+### Workout library boundary
+
+- `lib/workout-library-service.ts` owns standalone workout reads and writes for
+  coach and athlete owners.
+- Library sessions have no `date`, `Plan`, or `TrainingPlan`; scheduling belongs
+  to Planner and `assignment-service`. The service validates referenced template
+  ownership before persisting a source relation.
 
 ### Coach boundary
 

@@ -43,6 +43,7 @@ All feature logic belongs behind these `lib/` modules. Do not reintroduce Prisma
 | `lib/coach-service.ts` | Coach roster and athlete-detail read models |
 | `lib/athlete-service.ts` | Athlete Home, Calendar, Workouts, Session, Activity, discovery, and profile reads |
 | `lib/assignment-service.ts` | Coach builder assignment creation and template-to-session scheduling |
+| `lib/workout-library-service.ts` | Owner-scoped standalone workout reads and writes; library records remain unscheduled |
 | `lib/workout-spec.ts` | Block draft normalization, validation, and persistence transforms |
 | `lib/workout-editor.ts` | Shared workout content draft shaping used by both session editing and template editing |
 | `lib/template-service.ts` | Coach template list/create/update/delete |
@@ -65,6 +66,8 @@ All feature logic belongs behind these `lib/` modules. Do not reintroduce Prisma
 /                              Landing / demo role entry
 /coach                         Coach roster
 /coach/athletes/[athleteId]    Athlete detail
+/coach/workouts                Coach standalone workout library
+/coach/planner                 Coach date/week assignment workspace
 /coach/builder                 Coach builder + assignment
 /coach/templates               Coach template library
 /athlete                       Athlete Home
@@ -75,6 +78,11 @@ All feature logic belongs behind these `lib/` modules. Do not reintroduce Prisma
 /athlete/activity              Athlete activity history
 /settings                      Shared settings / overview preferences
 ```
+
+Workspace ownership is intentionally divided: Workouts authors unassigned
+workout content, Planner assigns content to dates or weeks, and Templates stores
+reusable day/week/month cadence. Do not add date assignment to the workout
+library path.
 
 Route handlers live under `app/api/` and call into the service layer. Client components are colocated with their route (`BuilderClient.tsx`, `CoachTemplatesClient.tsx`, `SessionDetailClient.tsx`).
 

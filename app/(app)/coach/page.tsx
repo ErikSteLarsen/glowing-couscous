@@ -25,9 +25,14 @@ export default async function CoachPage() {
         title="Your athletes"
         description={`${coach.athletes.length} active athletes${coach.pendingRequests.length ? ` · ${coach.pendingRequests.length} pending requests` : ''}.`}
         actions={
-          <ActionLink href="/coach/templates" tone="secondary">
-            Open templates
-          </ActionLink>
+          <div className="flex flex-wrap gap-3">
+            <ActionLink href="/coach/templates" tone="secondary">
+              Open templates
+            </ActionLink>
+            <ActionLink href="/coach/planner" tone="ghost">
+              Open planner
+            </ActionLink>
+          </div>
         }
       />
 

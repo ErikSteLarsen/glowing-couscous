@@ -19,8 +19,9 @@ export default async function AthleteActivityPage() {
   return (
     <PageShell size="wide">
       <TopBar
-        eyebrow="Activity"
         title="Completed work"
+        description="Review what you finished and compare it with the planned session."
+        actions={<ActionLink href="/athlete/calendar" tone="secondary">Open calendar</ActionLink>}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

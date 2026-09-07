@@ -169,6 +169,7 @@ model Template {
   ownerId   Int
   name      String
   sport     String
+  cadence   String    @default("day")
   summary   String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

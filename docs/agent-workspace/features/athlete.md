@@ -2,15 +2,16 @@
 
 - **IDs:** `ATHLETE-001`, `COMPLETE-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-09-06`
+- **Last verified:** `2026-09-07`
 - **Owner:** `lib/athlete-service.ts` for reads, `lib/athlete-session-adjustment-service.ts` for planned writes, and `lib/athlete-completion-service.ts` for Activity writes
 - **Related work:** [baseline](../history/2026-08-21-baseline.md), [architecture](../../../ARCHITECTURE.md), [Live task](../tasks/2026-08-21-athlete-live-execution.md), [completion task](../tasks/2026-08-21-completion-integrity.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [planned adjustment task](../tasks/2026-08-25-planned-session-adjustments.md), [calendar month polish](../history/2026-08-22-calendar-month-polish.md), [calendar week overview](../history/2026-08-22-calendar-week-overview.md), [calendar copy polish](../history/2026-08-28-calendar-copy-polish.md), [concise UI copy](../history/2026-08-28-concise-ui-copy.md), [month navigation](../history/2026-08-28-calendar-month-navigation.md), [navigation alignment correction](../history/2026-08-28-calendar-navigation-alignment-correction.md), [month empty state](../history/2026-08-28-calendar-month-empty-state.md), [shared session creator](../history/2026-08-28-shared-session-creator.md), [navigation context and workouts](../history/2026-09-03-navigation-context-and-workouts.md), [navigation decision](../decisions/0014-contextual-athlete-navigation.md)
 
 ## Contract
 
 An athlete with a coach or self-coached mode can view Home, Calendar week/month,
-Workouts, session detail, a live block stepper, Activity history, Profile, and
-Settings.
+an unassigned Workouts library plus scheduled-workout context, Planner,
+day/week/month Templates, session detail, a live block stepper, Activity
+history, Profile, and Settings.
 They can mark a session complete or move it back to planned while saving notes.
 
 ## Live Path
@@ -32,6 +33,10 @@ They can mark a session complete or move it back to planned while saving notes.
 - Home session tiles omit the planned/status badge so workout titles and metadata
   have more room; titles wrap instead of being truncated.
 - Workouts lists all scheduled sessions and links each card to its session detail.
+- Workouts also owns private standalone workout creation/editing. These records
+  have no date or Plan until the athlete places them through Planner.
+- Athlete Planner can load a saved private workout as source content and create
+  independent dated copies for the selected days.
 - Session links preserve whether they were opened from Home, Calendar, Activity,
   or Workouts; session detail and Live return through that same context, with
   Calendar as the direct-link fallback.
@@ -85,6 +90,9 @@ They can mark a session complete or move it back to planned while saving notes.
 - Athlete Planner provides visible week navigation, safe date normalization,
   labeled multi-day controls, session metadata, sticky wide-screen save actions,
   and accessible live save feedback.
+- Private workout-to-Planner prefilling preserves the selected date set when a
+  user switches back to a blank draft; standalone workout cards use the shared
+  field-surface token rather than a new hard-coded color.
 
 ## Verification
 
@@ -116,6 +124,8 @@ They can mark a session complete or move it back to planned while saving notes.
 - `pnpm test` — 170 passing tests on 2026-09-06.
 - `pnpm lint`, `pnpm build`, `git diff --check`, and the Impeccable detector —
   pass on 2026-09-06.
+- `pnpm test` — 175 passing tests on 2026-09-07; `pnpm lint`, `pnpm build`,
+  `git diff --check`, and the Impeccable detector pass after audit hardening.
 
 ## Known Gaps
 

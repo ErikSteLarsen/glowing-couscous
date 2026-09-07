@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  Badge,
   compactDangerButtonClassName,
   compactPrimaryButtonClassName,
   compactSecondaryButtonClassName,
@@ -24,12 +25,14 @@ import {
   serializeTemplateEditorDraftForSave,
 } from '@/lib/session-editor-adapters';
 import { getSportLabel } from '@/lib/sport';
+import { getTemplateCadence, TEMPLATE_CADENCES, templateCadenceMeta, type TemplateCadence } from '@/lib/template-cadence';
 
 type TemplateRecord = {
   id: number;
   sport: string;
   name: string;
   summary: string | null;
+  cadence?: string | null;
   blocks: Array<{
     id: number;
     kind: string;
@@ -66,7 +69,9 @@ export function CoachTemplatesClient({
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingTemplateId, setEditingTemplateId] = useState<number | null>(null);
+  const [editorCadence, setEditorCadence] = useState<TemplateCadence>('day');
   const [editorDraft, setEditorDraft] = useState<SessionEditorDraft>(() => createEmptyTemplateEditorDraft());
+  const workoutsHref = plannerHref.startsWith('/athlete') ? '/athlete/workouts' : '/coach/workouts';
 
   const visibleTemplates = useMemo(() => {
     const query = filterText.trim().toLowerCase();
@@ -83,40 +88,52 @@ export function CoachTemplatesClient({
     setMessage('');
     setMessageTone('success');
     startTransition(async () => {
-      const response = await fetch(`${apiBasePath}/${templateId}/duplicate`, { method: 'POST' });
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({ error: 'Failed to duplicate template' }));
-        setMessageTone('danger');
-        setMessage(payload.error ?? 'Failed to duplicate template');
-        return;
-      }
+      try {
+        const response = await fetch(`${apiBasePath}/${templateId}/duplicate`, { method: 'POST' });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({ error: 'Failed to duplicate template' }));
+          setMessageTone('danger');
+          setMessage(payload.error ?? 'Failed to duplicate template');
+          return;
+        }
 
-      setMessageTone('success');
-      setMessage('Template duplicated.');
-      router.refresh();
+        setMessageTone('success');
+        setMessage('Template duplicated.');
+        router.refresh();
+      } catch {
+        setMessageTone('danger');
+        setMessage('Could not reach the server. Check your connection and try again.');
+      }
     });
   }
 
   function deleteTemplate(templateId: number) {
     setMessage('');
     setMessageTone('success');
+    if (!window.confirm('Delete this template? This cannot be undone.')) return;
     startTransition(async () => {
-      const response = await fetch(`${apiBasePath}/${templateId}`, { method: 'DELETE' });
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({ error: 'Failed to delete template' }));
-        setMessageTone('danger');
-        setMessage(payload.error ?? 'Failed to delete template');
-        return;
-      }
+      try {
+        const response = await fetch(`${apiBasePath}/${templateId}`, { method: 'DELETE' });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({ error: 'Failed to delete template' }));
+          setMessageTone('danger');
+          setMessage(payload.error ?? 'Failed to delete template');
+          return;
+        }
 
-      setMessageTone('success');
-      setMessage('Template deleted.');
-      router.refresh();
+        setMessageTone('success');
+        setMessage('Template deleted.');
+        router.refresh();
+      } catch {
+        setMessageTone('danger');
+        setMessage('Could not reach the server. Check your connection and try again.');
+      }
     });
   }
 
   function openEditor(template?: TemplateRecord) {
     setEditingTemplateId(template?.id ?? null);
+    setEditorCadence(getTemplateCadence(template?.cadence));
     setEditorDraft(template ? createTemplateEditorDraftFromRecord(template) : createEmptyTemplateEditorDraft());
     setEditorOpen(true);
     setMessage('');
@@ -124,35 +141,60 @@ export function CoachTemplatesClient({
 
   function saveEditor() {
     startTransition(async () => {
-      const response = await fetch(
-        editingTemplateId ? `${apiBasePath}/${editingTemplateId}` : apiBasePath,
-        {
-          method: editingTemplateId ? 'PATCH' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(serializeTemplateEditorDraftForSave(editorDraft)),
-        },
-      );
-      const payload = await response.json().catch(() => ({})) as { error?: string };
-      if (!response.ok) {
+      try {
+        const response = await fetch(
+          editingTemplateId ? `${apiBasePath}/${editingTemplateId}` : apiBasePath,
+          {
+            method: editingTemplateId ? 'PATCH' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...serializeTemplateEditorDraftForSave(editorDraft), cadence: editorCadence }),
+          },
+        );
+        const payload = await response.json().catch(() => ({})) as { error?: string };
+        if (!response.ok) {
+          setMessageTone('danger');
+          setMessage(payload.error ?? 'Failed to save template.');
+          return;
+        }
+        setEditorOpen(false);
+        setMessageTone('success');
+        setMessage(editingTemplateId ? 'Template updated.' : 'Template created.');
+        router.refresh();
+      } catch {
         setMessageTone('danger');
-        setMessage(payload.error ?? 'Failed to save template.');
-        return;
+        setMessage('Could not reach the server. Check your connection and try again.');
       }
-      setEditorOpen(false);
-      setMessageTone('success');
-      setMessage(editingTemplateId ? 'Template updated.' : 'Template created.');
-      router.refresh();
     });
   }
 
   return (
     <div className="space-y-5">
+      <div className="rounded-[12px] border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-5">
+        <div className="max-w-2xl">
+          <h2 className="text-lg font-semibold text-[var(--text)]">Build reusable training structure</h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+            Create reusable structure here, choose how often it should repeat, then use Planner to place the finished template on a date, week, or month.
+          </p>
+          <a href={workoutsHref} className={`${compactSecondaryButtonClassName} mt-4`}>
+            Open Workouts
+          </a>
+        </div>
+        <div className="mt-4 grid gap-2 md:grid-cols-3">
+          {TEMPLATE_CADENCES.map((cadence) => (
+            <div key={cadence} className="rounded-[10px] border border-[var(--field-selected-border)] bg-[var(--surface)] px-3 py-3">
+              <p className="text-[13px] font-semibold text-[var(--text)]">{templateCadenceMeta[cadence].label}</p>
+              <p className="mt-1 text-[12px] leading-5 text-[var(--text-secondary)]">{templateCadenceMeta[cadence].description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <input
           value={filterText}
           onChange={(event) => setFilterText(event.target.value)}
           className={formFieldClassName}
           placeholder="Filter templates"
+          aria-label="Filter templates"
         />
         <button
           type="button"
@@ -163,7 +205,7 @@ export function CoachTemplatesClient({
         </button>
       </div>
 
-      {message ? <p className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
+      {message ? <p role={messageTone === 'danger' ? 'alert' : 'status'} aria-live="polite" className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
 
       {editorOpen ? (
         <Surface className="space-y-4">
@@ -179,7 +221,14 @@ export function CoachTemplatesClient({
             onChange={setEditorDraft}
             summaryPlaceholder="Summary"
           />
-                 <div className="flex flex-wrap gap-3">
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-[var(--text-secondary)]">Template cadence</span>
+            <select className={formFieldClassName} value={editorCadence} onChange={(event) => setEditorCadence(getTemplateCadence(event.target.value))}>
+              {TEMPLATE_CADENCES.map((cadence) => <option key={cadence} value={cadence}>{templateCadenceMeta[cadence].label}</option>)}
+            </select>
+            <span className="block text-[12px] text-[var(--text-secondary)]">{templateCadenceMeta[editorCadence].assignment}</span>
+          </label>
+          <div className="flex flex-wrap gap-3">
             <button type="button" className={compactPrimaryButtonClassName} disabled={isPending} onClick={saveEditor}>{isPending ? 'Saving…' : 'Save template'}</button>
           </div>
         </Surface>
@@ -199,6 +248,7 @@ export function CoachTemplatesClient({
                   <p className="text-[13px] text-[var(--text-secondary)]">
                     {getSportLabel(template.sport)}
                   </p>
+                  <Badge tone="brand">{templateCadenceMeta[getTemplateCadence(template.cadence)].shortLabel}</Badge>
                   <p className="text-sm text-[var(--text-secondary)]">
                     {template.summary || 'No summary yet.'}
                   </p>
@@ -213,12 +263,12 @@ export function CoachTemplatesClient({
                     href={`${plannerHref}?templateId=${template.id}`}
                     className={compactPrimaryButtonClassName}
                   >
-                    Load into builder
+                    Use in Planner
                   </a>
-                   <button type="button" onClick={() => openEditor(template)} disabled={isPending} className={compactSecondaryButtonClassName}>
-                     Edit
-                   </button>
-                   <button
+                  <button type="button" onClick={() => openEditor(template)} disabled={isPending} className={compactSecondaryButtonClassName}>
+                    Edit
+                  </button>
+                  <button
                     type="button"
                     onClick={() => duplicateTemplate(template.id)}
                     disabled={isPending}
@@ -232,11 +282,11 @@ export function CoachTemplatesClient({
                     disabled={isPending}
                     className={compactDangerButtonClassName}
                   >
-                     Delete
-                   </button>
-                 </div>
-                 <ShareLinkButton sourceKind="template" sourceId={template.id} />
-               </Surface>
+                    Delete
+                  </button>
+                </div>
+                <ShareLinkButton sourceKind="template" sourceId={template.id} />
+              </Surface>
             );
           })}
         </div>

@@ -51,10 +51,8 @@ export function AppSidebar(props: {
           </div>
 
           <div>
-            <p className="px-3 text-[10.5px] font-semibold uppercase tracking-[0.1em] text-[#B6B0A4]">
-              {props.user.role === 'COACH' ? 'Coaching' : 'Training'}
-            </p>
-            <nav className="mt-2 space-y-1">
+             <p className="px-3 text-[10.5px] font-semibold uppercase tracking-[0.1em] text-[#B6B0A4]">Workspace</p>
+             <nav className="mt-2 space-y-1">
               {navItems.map((item) => {
                 const isActive = isNavigationItemActive(props.pathname, item, navItems);
                 return (
@@ -62,7 +60,7 @@ export function AppSidebar(props: {
                     key={item.href}
                     href={item.href}
                     onClick={props.onClose}
-                    className={`relative flex min-h-11 items-center rounded-[10px] px-4 text-[13.5px] font-semibold transition md:min-h-10 ${
+                     className={`relative flex min-h-11 items-center rounded-[10px] px-4 py-2.5 text-[13.5px] font-semibold transition md:min-h-10 ${
                       isActive
                         ? 'bg-[var(--brand-tint)] text-[#2F3A28]'
                         : 'text-[var(--text-secondary)] hover:bg-[#FBFAF7]'
@@ -71,7 +69,10 @@ export function AppSidebar(props: {
                     {isActive ? (
                       <span className="absolute inset-y-[9px] left-0 w-[3px] rounded-full bg-[var(--brand)]" />
                     ) : null}
-                    {item.label}
+                    <span className="min-w-0">
+                      <span className="block">{item.label}</span>
+                      {item.description ? <span className="mt-0.5 block text-[11px] font-normal text-[var(--text-muted)]">{item.description}</span> : null}
+                    </span>
                   </Link>
                 );
               })}

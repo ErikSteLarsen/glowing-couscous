@@ -85,6 +85,27 @@ test('template service rejects unsupported sport values', async () => {
   assert.deepEqual(result, { error: 'Sport is required.' });
 });
 
+test('template service rejects unsupported cadence values', async () => {
+  const templateService = createTemplateService({
+    db: {
+      template: {
+        async create() {
+          throw new Error('template.create should not run for invalid cadence');
+        },
+      },
+    } as never,
+  });
+
+  const result = await templateService.saveForCoach(2, {
+    name: 'Invalid cadence draft',
+    sport: 'RUNNING',
+    cadence: 'quarter' as never,
+    blocks: [{ kind: 'work', zone: 3, durationSec: 900 }],
+  });
+
+  assert.deepEqual(result, { error: 'Template cadence is invalid.' });
+});
+
 test('template service rejects invalid template ids instead of creating a new template', async () => {
   let created = false;
 

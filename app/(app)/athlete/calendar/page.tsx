@@ -11,6 +11,7 @@ import {
   getSegmentedChoiceClassName,
 } from '@/components/ui';
 import { AthleteCalendarWeekScroller } from './AthleteCalendarWeekScroller';
+import { WorkspaceNav } from '@/components/WorkspaceNav';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { getSportLabel } from '@/lib/sport';
@@ -42,8 +43,8 @@ export default async function AthleteCalendarPage({
   return (
     <PageShell size="wide" className="max-w-[1600px]">
       <TopBar
-        eyebrow="Calendar"
         title={selectedView === 'month' ? 'Your training month' : 'Your training week'}
+        description="Review scheduled work without changing the workout itself. Use Planner when you need to place or move a session."
         actions={
           <>
             <div className="inline-flex gap-1 rounded-[12px] border border-[var(--field-border)] bg-[var(--field-surface)] p-1">
@@ -57,6 +58,7 @@ export default async function AthleteCalendarPage({
           </>
         }
       />
+      <WorkspaceNav role="ATHLETE" active="calendar" />
 
       {selectedView === 'week' ? (
         <AthleteCalendarWeekScroller

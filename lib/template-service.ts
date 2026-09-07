@@ -1,5 +1,6 @@
 import { prisma } from './prisma.ts';
 import { SPORT_OPTIONS } from './sport.ts';
+import { getTemplateCadence, isTemplateCadence } from './template-cadence.ts';
 
 type TemplateServiceDeps = {
   db?: typeof prisma;
@@ -75,6 +76,11 @@ function normalizeTemplateDraft(input: unknown) {
   const draft = (input ?? {}) as Record<string, unknown>;
   const sport = typeof draft.sport === 'string' ? draft.sport : typeof draft.sportType === 'string' ? draft.sportType : '';
   const name = typeof draft.name === 'string' ? draft.name.trim() : '';
+  const rawCadence = draft.cadence;
+  if (rawCadence !== undefined && rawCadence !== null && rawCadence !== '' && !isTemplateCadence(rawCadence)) {
+    return { error: 'Template cadence is invalid.' as const };
+  }
+  const cadence = getTemplateCadence(draft.cadence);
   const summary = typeof draft.summary === 'string' ? draft.summary.trim() : '';
   const blocks = normalizeBlocks(draft.blocks);
 
@@ -95,6 +101,7 @@ function normalizeTemplateDraft(input: unknown) {
     draft: {
       name,
       sport,
+      cadence,
       summary: summary || null,
       blocks,
     },
@@ -125,6 +132,7 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
         ownerId,
         name: normalized.draft.name,
         sport: normalized.draft.sport,
+        cadence: normalized.draft.cadence,
         summary: normalized.draft.summary,
       };
 
@@ -160,6 +168,7 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
           data: {
             name: normalized.draft.name,
             sport: normalized.draft.sport,
+            cadence: normalized.draft.cadence,
             summary: normalized.draft.summary,
             blocks: {
               create: normalized.draft.blocks.map((block, index) => ({
@@ -202,6 +211,7 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
           ownerId,
           name: `${template.name} (Copy)`,
           sport: template.sport,
+          cadence: template.cadence,
           summary: template.summary,
           blocks: {
             create: template.blocks.map((block) => ({

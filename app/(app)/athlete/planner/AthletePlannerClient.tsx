@@ -57,9 +57,20 @@ type AthletePlannerDay = {
   sessions: AthletePlannerSession[];
 };
 
+type AthletePlannerWorkout = {
+  id: number;
+  templateId: number | null;
+  sport: string;
+  title: string;
+  summary: string | null;
+  sportMetricsJson: string | null;
+  blocks: PlannerEditorTemplateRecord['blocks'];
+};
+
 export function AthletePlannerClient({
   athleteId,
   templates,
+  workouts,
   days,
   periodLabel,
   initialDate,
@@ -67,6 +78,7 @@ export function AthletePlannerClient({
 }: {
   athleteId: number;
   templates: PlannerEditorTemplateRecord[];
+  workouts: AthletePlannerWorkout[];
   days: AthletePlannerDay[];
   periodLabel: string;
   initialDate: string;
@@ -76,6 +88,7 @@ export function AthletePlannerClient({
   const [isPending, startTransition] = useTransition();
   const [selectedDates, setSelectedDates] = useState([initialDate]);
   const [editingSessionId, setEditingSessionId] = useState<number | null>(null);
+  const [selectedWorkoutId, setSelectedWorkoutId] = useState<number | null>(null);
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
   const [draft, setDraft] = useState<SessionEditorDraft>(() => {
@@ -90,6 +103,7 @@ export function AthletePlannerClient({
 
   function startNewSession(date = selectedDates[0] ?? initialDate) {
     setEditingSessionId(null);
+    setSelectedWorkoutId(null);
     setSelectedDates([date]);
     setMessage('');
     setDraft(createEmptyPlannerEditorDraft({ athleteId, scheduledDate: date }));
@@ -105,6 +119,7 @@ export function AthletePlannerClient({
 
   function loadSession(session: AthletePlannerSession) {
     setEditingSessionId(session.id);
+    setSelectedWorkoutId(null);
     setSelectedDates([session.scheduledDate]);
     setMessage('');
     setDraft(
@@ -118,6 +133,7 @@ export function AthletePlannerClient({
 
   function loadTemplate(templateId: string) {
     if (!templateId) {
+      setSelectedWorkoutId(null);
       setEditingSessionId(null);
       setMessage('');
       setDraft(createEmptyPlannerEditorDraft({ athleteId, scheduledDate: selectedDates[0] ?? initialDate }));
@@ -127,11 +143,36 @@ export function AthletePlannerClient({
     const template = templates.find((item) => item.id === Number(templateId));
     if (!template) return;
     setEditingSessionId(null);
+    setSelectedWorkoutId(null);
     setMessage('');
     setDraft(
       createPlannerEditorDraftFromTemplate(template, {
         athleteId,
         scheduledDate: selectedDates[0] ?? initialDate,
+      }),
+    );
+  }
+
+  function loadWorkout(workoutId: string) {
+    if (!workoutId) {
+      setEditingSessionId(null);
+      setSelectedWorkoutId(null);
+      setMessage('');
+      setDraft(createEmptyPlannerEditorDraft({ athleteId, scheduledDate: selectedDates[0] ?? initialDate }));
+      return;
+    }
+
+    const workout = workouts.find((item) => item.id === Number(workoutId));
+    if (!workout) return;
+    setEditingSessionId(null);
+    setSelectedWorkoutId(workout.id);
+    setMessage('');
+    setDraft(
+      createSessionEditorDraftFromPersisted('create', {
+        ...workout,
+        date: null,
+        scheduledDate: selectedDates[0] ?? initialDate,
+        athleteId,
       }),
     );
   }
@@ -275,6 +316,17 @@ export function AthletePlannerClient({
               <option value="">Start from scratch</option>
               {templates.map((template) => <option key={template.id} value={template.id}>{template.name}</option>)}
             </select>
+          </label>
+        ) : null}
+
+        {workouts.length > 0 ? (
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-[var(--text-secondary)]">Use saved workout</span>
+            <select className={formSelectClassName} value={selectedWorkoutId ?? ''} onChange={(event) => loadWorkout(event.target.value)}>
+              <option value="">Start from scratch</option>
+              {workouts.map((workout) => <option key={workout.id} value={workout.id}>{workout.title}</option>)}
+            </select>
+            <span className="block text-[12px] text-[var(--text-secondary)]">Saved workouts stay in your library; Planner creates the dated copy.</span>
           </label>
         ) : null}
 

@@ -2,21 +2,20 @@
 
 - **IDs:** `PLAN-001`, `LIB-001`, `TPLAN-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-09-06`
+- **Last verified:** `2026-09-07`
 - **Owners:** `lib/coach-planner-service.ts`, `lib/coach-session-library-service.ts`, `lib/coach-training-plan-service.ts`, `lib/session-editor-adapters.ts`, `components/SessionComposer.tsx`
 - **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md), [planner history](../../../docs/superpowers/plans/2026-06-23-coach-planner.md), [source assignment task](../tasks/2026-08-21-source-copy-assignment.md), [workflow task](../tasks/2026-08-21-planner-template-workflows.md), [editor migration](../tasks/2026-08-25-editor-migration.md), [concise UI copy](../history/2026-08-28-concise-ui-copy.md), [shared session creator](../history/2026-08-28-shared-session-creator.md)
 
 ## Contract
 
-Coaches use one planner workspace to create or edit athlete sessions, create
-standalone coach-owned sessions, create reusable weekday training plans, and
-load shared templates into drafts. Athlete sessions are date-based; training
-plan sessions are weekday-based; standalone library sessions are date-based
-and have no athlete.
+Planner owns date and week assignment. Coaches use it to create or edit athlete
+sessions, assign standalone workouts/templates to roster athletes, and place
+reusable weekday plans. Standalone workout authoring now lives in Workouts;
+training-plan sessions are weekday-based while athlete sessions are date-based.
 
 ## Live Path
 
-- **Routes/UI:** `/coach/planner`, compatibility redirect `/coach/builder`,
+- **Routes/UI:** `/coach/workouts`, `/coach/planner`, compatibility redirect `/coach/builder`,
   `/api/coach/planner/sessions/*`, `/api/coach/planner/library-sessions/*`,
   `/api/coach/planner/training-plans/*`.
 - **Services:** `coachPlannerService`, `coachSessionLibraryService`,
@@ -29,6 +28,8 @@ and have no athlete.
 
 - Workspace loads athletes, templates, library sessions, training plans, and a
   Monday-first visible athlete week in parallel.
+- The primary Planner surface is assignment-focused; standalone workout creation
+  is exposed at `/coach/workouts` instead of being a mode inside Planner.
 - Planner supports library, training-plan, and athlete modes.
 - Draft validation handles ownership mode, dates/weekdays, sport, title, blocks,
   durations, and target ranges.
@@ -64,6 +65,11 @@ and have no athlete.
   route dates, and keeps the save panel visible on wide screens.
 - Athlete day selection uses labeled touch-sized controls, includes session
   metadata for scanning, and provides a direct Templates action when empty.
+- Athlete Planner can prefill a private saved workout without changing the
+  selected multi-day set; clearing that source returns to a fresh draft without
+  silently dropping dates.
+- Focused coach Planner explains the no-roster state instead of presenting an
+  editor that cannot be saved.
 
 ## Verification
 
@@ -84,6 +90,8 @@ and have no athlete.
 - `pnpm test` — 170 passing tests on 2026-09-06.
 - `pnpm lint`, `pnpm build`, `git diff --check`, and the Impeccable detector —
   pass on 2026-09-06.
+- `pnpm test` — 175 passing tests on 2026-09-07; `pnpm lint`, `pnpm build`,
+  `git diff --check`, and the Impeccable detector pass after audit hardening.
 
 ## Known Gaps
 

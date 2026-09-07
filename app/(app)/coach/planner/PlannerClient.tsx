@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
+  ActionLink,
   Badge,
   compactDangerButtonClassName,
   compactListButtonClassName,
@@ -92,6 +93,7 @@ export function PlannerClient({
   initialAthleteId,
   initialTemplateId,
   initialDate,
+  surface = 'all',
 }: {
   athletes: PlannerAthlete[];
   templates: PlannerEditorTemplateRecord[];
@@ -102,11 +104,12 @@ export function PlannerClient({
   initialAthleteId: number | null;
   initialTemplateId: number | null;
   initialDate: string;
+  surface?: 'all' | 'planner';
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedWorkspaceMode, setSelectedWorkspaceMode] = useState<WorkspaceMode>(
-    athletes.length === 0 ? 'library' : 'athlete',
+    surface === 'planner' ? 'athlete' : athletes.length === 0 ? 'library' : 'athlete',
   );
   const [selectedAthleteId, setSelectedAthleteId] = useState<number | null>(initialAthleteId);
   const [selectedTrainingPlanId, setSelectedTrainingPlanId] = useState<number | null>(
@@ -135,6 +138,20 @@ export function PlannerClient({
   );
   const metrics = deriveSessionEditorMetrics(draft);
   const selectedPlan = trainingPlans.find((p) => p.id === selectedTrainingPlanId);
+
+  if (surface === 'planner' && athletes.length === 0) {
+    return (
+      <Surface className="space-y-4">
+        <EmptyState
+          title="Add an athlete before planning"
+          description="Planner places workouts on an athlete's calendar. Add someone to your roster, then return here to schedule their work."
+        />
+        <ActionLink href="/coach" tone="secondary" size="compact">
+          Open athletes
+        </ActionLink>
+      </Surface>
+    );
+  }
 
   function switchMode(mode: WorkspaceMode) {
     if (draft.id && !window.confirm('Switching workspace will reset the loaded draft. Continue?')) return;
@@ -329,35 +346,37 @@ export function PlannerClient({
   return (
     <div className="grid gap-6 xl:grid-cols-[0.85fr_1.35fr_0.9fr]">
       <Surface className="space-y-5">
-        {/* Workspace mode switcher */}
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Workspace</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <button
-              type="button"
-              className={selectedWorkspaceMode === 'library' ? compactPrimaryButtonClassName : compactSecondaryButtonClassName}
-              onClick={() => switchMode('library')}
-            >
-              Session library
-            </button>
-            <button
-              type="button"
-              className={selectedWorkspaceMode === 'training-plan' ? compactPrimaryButtonClassName : compactSecondaryButtonClassName}
-              onClick={() => switchMode('training-plan')}
-            >
-              Training plans
-            </button>
-            {athletes.length > 0 ? (
+        {/* Workspace mode switcher — retained for the compatibility workspace, not the focused Planner surface. */}
+        {surface === 'all' ? (
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Workspace</p>
+            <div className="mt-2 flex flex-wrap gap-2">
               <button
                 type="button"
-                className={selectedWorkspaceMode === 'athlete' ? compactPrimaryButtonClassName : compactSecondaryButtonClassName}
-                onClick={() => switchMode('athlete')}
+                className={selectedWorkspaceMode === 'library' ? compactPrimaryButtonClassName : compactSecondaryButtonClassName}
+                onClick={() => switchMode('library')}
               >
-                Athlete week
+                Session library
               </button>
-            ) : null}
+              <button
+                type="button"
+                className={selectedWorkspaceMode === 'training-plan' ? compactPrimaryButtonClassName : compactSecondaryButtonClassName}
+                onClick={() => switchMode('training-plan')}
+              >
+                Training plans
+              </button>
+              {athletes.length > 0 ? (
+                <button
+                  type="button"
+                  className={selectedWorkspaceMode === 'athlete' ? compactPrimaryButtonClassName : compactSecondaryButtonClassName}
+                  onClick={() => switchMode('athlete')}
+                >
+                  Athlete week
+                </button>
+              ) : null}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">

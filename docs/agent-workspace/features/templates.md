@@ -2,7 +2,7 @@
 
 - **ID:** `TEMPLATE-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-08-28`
+- **Last verified:** `2026-09-07`
 - **Owners:** `lib/template-service.ts`, `lib/assignment-service.ts`, `lib/session-editor-adapters.ts`, `components/SessionComposer.tsx`
 - **Related work:** [baseline](../history/2026-08-21-baseline.md), [product scope](../../../SPEC.md), [workflow task](../tasks/2026-08-21-planner-template-workflows.md), [assignment task](../tasks/2026-08-21-source-copy-assignment.md), [editor migration](../tasks/2026-08-25-editor-migration.md), [concise UI copy](../history/2026-08-28-concise-ui-copy.md), [shared session creator](../history/2026-08-28-shared-session-creator.md)
 
@@ -24,6 +24,8 @@ a date without creating duplicate matching sessions.
 ## Behavior Already Implemented
 
 - Template reads and writes are owner-scoped.
+- Templates persist an explicit `day`, `week`, or `month` cadence so the reuse
+  intent is visible before assignment.
 - Blocks are normalized and persisted in sort order with Tempo fields.
 - Duplicate creates a private copy with copied blocks.
 - The live editor creates and updates canonical Tempo block fields.
@@ -40,6 +42,11 @@ a date without creating duplicate matching sessions.
   workflow.
 - Template and assignment empty states keep only concise next-step guidance;
   reusable-copy independence remains explicitly labeled.
+- Template pages explain reusable authoring and use Planner for placement.
+  Day/week assignment follows the existing planner seams; month setup is
+  explicitly guided until a month source model exists.
+- Cadence transport rejects unsupported values, and template actions confirm
+  destructive deletes while exposing network failures through live status text.
 
 ## Verification
 
@@ -53,6 +60,9 @@ a date without creating duplicate matching sessions.
 - `pnpm lint`, `pnpm build`, and `git diff --check` — pass on 2026-08-28.
 - `pnpm test`, `pnpm lint`, `pnpm build`, and `git diff --check` pass after the
   concise UI copy audit on 2026-08-28.
+- `pnpm test` — 175 passing tests on 2026-09-07; `pnpm lint`, `pnpm build`,
+  `git diff --check`, and the Impeccable detector pass after cadence and
+  workspace audit hardening.
 
 ## Known Gaps
 

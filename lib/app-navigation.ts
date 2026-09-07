@@ -2,6 +2,7 @@ export type AppRole = 'COACH' | 'ATHLETE';
 
 export type NavItem = {
   label: string;
+  description?: string;
   href: string;
   matchPrefix: string;
   activeMatchPrefixes?: readonly string[];
@@ -25,25 +26,27 @@ export function getPrimaryNavigation(
 ): NavItem[] {
   if (role === 'COACH') {
     return [
-      { label: 'Athletes', href: '/coach', matchPrefix: '/coach' },
-      { label: 'Planner', href: '/coach/planner', matchPrefix: '/coach/planner' },
-      { label: 'Templates', href: '/coach/templates', matchPrefix: '/coach/templates' },
+      { label: 'Athletes', description: 'Support your roster', href: '/coach', matchPrefix: '/coach' },
+      { label: 'Workouts', description: 'Create & manage', href: '/coach/workouts', matchPrefix: '/coach/workouts' },
+      { label: 'Planner', description: 'Place on dates', href: '/coach/planner', matchPrefix: '/coach/planner' },
+      { label: 'Templates', description: 'Reuse & assign', href: '/coach/templates', matchPrefix: '/coach/templates' },
     ];
   }
 
   return [
-    { label: 'Home', href: '/athlete', matchPrefix: '/athlete' },
-    { label: 'Calendar', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
+    { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete' },
     {
       label: 'Workouts',
+      description: 'Create & manage',
       href: '/athlete/workouts',
       matchPrefix: '/athlete/workouts',
       activeMatchPrefixes: ['/athlete/session', '/athlete/live'],
     },
-    { label: 'Activity', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
-    { label: 'Planner', href: '/athlete/planner', matchPrefix: '/athlete/planner' },
-    { label: 'Templates', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
-    ...(hasActiveCoach ? [] : [{ label: 'Coach', href: '/athlete/find-coach', matchPrefix: '/athlete/find-coach' }]),
+    { label: 'Planner', description: 'Place on dates', href: '/athlete/planner', matchPrefix: '/athlete/planner' },
+    { label: 'Templates', description: 'Reuse & assign', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
+    { label: 'Calendar', description: 'See scheduled work', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
+    { label: 'Activity', description: 'Review completed', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
+    ...(hasActiveCoach ? [] : [{ label: 'Coach', description: 'Find or manage', href: '/athlete/find-coach', matchPrefix: '/athlete/find-coach' }]),
   ];
 }
 

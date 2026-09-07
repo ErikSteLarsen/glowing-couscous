@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { ActionLink, PageShell, TopBar } from '@/components/ui';
+import { WorkspaceNav } from '@/components/WorkspaceNav';
 import { getCurrentUser } from '@/lib/auth-session';
 import { templateService } from '@/lib/template-service';
 import { CoachTemplatesClient } from './CoachTemplatesClient';
@@ -13,14 +14,13 @@ export default async function CoachTemplatesPage() {
   return (
     <PageShell size="wide">
       <TopBar
-        eyebrow="Templates"
-        title="Session templates"
+        title="Templates"
+        description="Create reusable day, week, or month structures. Build the content here; place it on a calendar from Planner."
         actions={
-          <ActionLink href="/coach/planner" tone="secondary">
-            Open planner
-          </ActionLink>
+          <ActionLink href="/coach/planner" tone="secondary">Open Planner</ActionLink>
         }
       />
+      <WorkspaceNav role="COACH" active="templates" />
 
       <CoachTemplatesClient templates={templates} />
     </PageShell>
