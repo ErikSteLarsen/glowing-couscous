@@ -118,7 +118,7 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
       />
       <Surface>
         {requestState.latestRequest?.status === 'PENDING' ? (
-          <div className="mb-4 rounded-[12px] border border-[#DCE0D2] bg-[var(--brand-tint)] px-4 py-3 text-sm text-[#57654E]">
+          <div className="mb-4 rounded-[12px] border border-[var(--field-selected-border)] bg-[var(--brand-tint)] px-4 py-3 text-sm text-[var(--field-selected-text)]">
             Request pending with {requestState.latestRequest.coach.name}.
           </div>
         ) : null}

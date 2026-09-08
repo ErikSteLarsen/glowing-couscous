@@ -103,7 +103,6 @@ export function ShareLandingClient({
   return (
     <PageShell size="wide" className="max-w-[1180px]">
       <TopBar
-        eyebrow="Shared workout"
         title={projection.title || 'Shared workout'}
         description="A read-only snapshot. Anyone with this URL can view the workout definition."
       />
@@ -123,7 +122,7 @@ export function ShareLandingClient({
               <div className="space-y-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Workout blocks</p>
                 {projection.blocks.map((block, index) => (
-                  <div key={`${block.kind}-${index}`} className="rounded-[12px] border border-[var(--border)] bg-[#FBFAF7] p-4">
+                  <div key={`${block.kind}-${index}`} className="rounded-[12px] border border-[var(--border)] bg-[var(--field-surface)] p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold capitalize text-[var(--text)]">

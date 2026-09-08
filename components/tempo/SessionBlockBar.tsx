@@ -15,7 +15,7 @@ export function SessionBlockBar({
 }) {
   return (
     <div
-      className={`flex overflow-hidden rounded-[9px] bg-[var(--sunken)] ${compact ? 'h-[10px]' : 'h-[26px]'}`}
+      className={`flex overflow-hidden rounded-[9px] bg-[var(--sunken)] saturate-[.72] ${compact ? 'h-[10px]' : 'h-[26px]'}`}
       style={{ gap: '2px' }}
     >
       {segments.map((segment) => (

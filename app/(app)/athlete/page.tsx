@@ -48,7 +48,7 @@ export default async function AthletePage() {
               <span className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">
                 Today
               </span>
-              <span className="text-[12px] text-[#B6B0A4]">
+                <span className="text-[12px] text-[var(--text-muted)]">
                 {dashboard.todaySessions.length} sessions
               </span>
               <div className="h-px flex-1 bg-[var(--border)]" />
@@ -115,7 +115,7 @@ export default async function AthletePage() {
                           key={session.id}
                           href={`/athlete/session/${session.id}?from=home`}
                           aria-label={`Open ${session.title}`}
-                          className="group block space-y-2 rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] p-3 transition hover:border-[var(--field-focus)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+                           className="group block space-y-2 rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] p-3 transition hover:border-[var(--field-focus)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
                         >
                           <p className="break-words text-[13px] font-semibold text-[var(--text)]">{session.title}</p>
                           <p className="text-[12px] text-[var(--text-secondary)]">
@@ -139,7 +139,7 @@ export default async function AthletePage() {
             <Surface>
               <div className="mb-3 flex items-center gap-2">
                 <div className="h-7 w-7 rounded-full bg-[var(--brand-tint)]" />
-                <span className="text-[12.5px] font-semibold text-[#57654E]">
+                <span className="text-[12.5px] font-semibold text-[var(--field-selected-text)]">
                   Coach {dashboard.coach.name}
                 </span>
               </div>
@@ -186,7 +186,7 @@ export default async function AthletePage() {
                   dashboard.trend.map((point) => (
                     <div key={point.label} className="flex flex-1 flex-col items-center gap-2">
                       <div
-                        className="w-full rounded-[4px] bg-[#9DB0C2]"
+                        className="w-full rounded-[4px] bg-[var(--text-muted)]"
                         style={{ height: `${Math.max(12, Math.min(52, point.tss / 3))}px` }}
                       />
                       <span className="text-[10px] text-[var(--text-muted)]">{point.label}</span>

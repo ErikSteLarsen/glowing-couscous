@@ -184,7 +184,7 @@ function SnapshotView({ draft }: { draft: SessionEditorDraft }) {
       ) : null}
       <div className="space-y-2">
         {draft.blocks.map((block, index) => (
-          <div key={block.clientId} className={`rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] p-3 ${block.skipped ? 'opacity-60' : ''}`}>
+          <div key={block.clientId} className={`rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] p-3 ${block.skipped ? 'opacity-60' : ''}`}>
             <div className="flex items-center justify-between gap-3 text-sm text-[var(--text)]">
               <span className="font-semibold">{index + 1}. {block.kind}{block.skipped ? ' · skipped' : ''}</span>
               <span>{formatDuration(block.durationSec)}</span>

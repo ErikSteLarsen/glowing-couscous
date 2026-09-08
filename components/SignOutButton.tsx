@@ -48,7 +48,7 @@ export function SignOutButton({ tone = 'secondary', size = 'default' }: SignOutB
       >
         {isSigningOut ? 'Signing out…' : 'Sign out'}
       </button>
-      {errorMessage ? <p className="text-xs text-[#B45516]">{errorMessage}</p> : null}
+      {errorMessage ? <p className="text-xs text-[var(--status-danger)]">{errorMessage}</p> : null}
     </div>
   );
 }

@@ -204,7 +204,7 @@ export function AthleteCalendarWeekScroller({
                 key={day.isoDate}
                 className={`space-y-3 transition ${
                   isFocused
-                    ? 'border-[var(--field-focus)] shadow-[0_12px_30px_rgba(32,44,23,0.12)]'
+                    ? 'border-[var(--field-focus)] shadow-[var(--shadow-raised)]'
                     : isPast
                       ? 'opacity-70'
                       : ''
@@ -224,7 +224,7 @@ export function AthleteCalendarWeekScroller({
                       ) : null}
                     </div>
                   </div>
-                  <span className="rounded-full border border-[var(--field-border)] bg-[#FBFAF7] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                  <span className="rounded-full border border-[var(--field-border)] bg-[var(--field-surface)] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
                     {day.sessions.length}
                   </span>
                 </div>
@@ -235,7 +235,7 @@ export function AthleteCalendarWeekScroller({
                       key={session.id}
                       href={`/athlete/session/${session.id}?from=calendar`}
                       aria-label={`Open ${session.title}`}
-                      className="group block space-y-2 rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] p-3 transition hover:border-[var(--field-focus)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+                      className="group block space-y-2 rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] p-3 transition hover:border-[var(--field-focus)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
                     >
                       <div className="flex items-center gap-2">
                         <p className="text-[13px] font-semibold text-[var(--text)]">{session.title}</p>

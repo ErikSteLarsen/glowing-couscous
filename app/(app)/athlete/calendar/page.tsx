@@ -141,7 +141,7 @@ export default async function AthleteCalendarPage({
                                 </span>
                               ) : null}
                             </div>
-                            <span className="rounded-full border border-[var(--field-border)] bg-[#FBFAF7] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                                   <span className="rounded-full border border-[var(--field-border)] bg-[var(--field-surface)] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
                               {day.sessions.length}
                             </span>
                           </div>
@@ -152,7 +152,7 @@ export default async function AthleteCalendarPage({
                                   key={session.id}
                                   href={`/athlete/session/${session.id}?from=calendar`}
                                   aria-label={`Open ${session.title}`}
-                                  className="block rounded-[10px] bg-[#FBFAF7] px-2.5 py-2 transition hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+                                   className="block rounded-[10px] bg-[var(--field-surface)] px-2.5 py-2 transition hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
                                 >
                                   <p className="truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</p>
                                   <p className="mt-0.5 text-[12px] text-[var(--text-secondary)]">

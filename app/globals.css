@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #F3F2EE;
+  --color-paper: #F3F6F9;
   --color-surface: #FFFFFF;
-  --color-sunken: #ECEAE4;
-  --color-border: #E6E2DB;
-  --color-ink-3: #9C968B;
-  --color-ink-2: #6A655C;
-  --color-ink: #232220;
-  --color-sage: #6E7E63;
-  --color-sage-tint: #E9ECE3;
-  --color-zone-1: #3B82F6;
-  --color-zone-1-tint: #E8F0FE;
-  --color-zone-2: #22C55E;
-  --color-zone-2-tint: #E3F7EC;
-  --color-zone-3: #EAB308;
-  --color-zone-3-tint: #FBF1D5;
-  --color-zone-4: #F97316;
-  --color-zone-4-tint: #FEEDE0;
-  --color-zone-5: #EF4444;
-  --color-zone-5-tint: #FCE8E7;
+  --color-sunken: #E9EFF4;
+  --color-border: #D9E2EA;
+  --color-ink-3: #8291A0;
+  --color-ink-2: #56697C;
+  --color-ink: #10263D;
+  --color-sage: #244B6B;
+  --color-sage-tint: #E8F0F6;
+  --color-zone-1: #5D83A6;
+  --color-zone-1-tint: #EAF1F6;
+  --color-zone-2: #5C9078;
+  --color-zone-2-tint: #E8F1ED;
+  --color-zone-3: #B08D4A;
+  --color-zone-3-tint: #F4F0E6;
+  --color-zone-4: #B27355;
+  --color-zone-4-tint: #F5ECE8;
+  --color-zone-5: #B66167;
+  --color-zone-5-tint: #F6EAEB;
 }
 
 :root {
@@ -27,20 +27,26 @@
   --surface: var(--color-surface);
   --sunken: var(--color-sunken);
   --border: var(--color-border);
-  --field-surface: #FBFAF7;
-  --field-border: #D8D3C8;
-  --field-focus: #C8D0BB;
-  --field-selected-border: #DCE0D2;
-  --field-selected-text: #57654E;
+  --field-surface: #F8FAFC;
+  --field-border: #C8D5E0;
+  --field-focus: #8EA9BE;
+  --field-selected-border: #B9CEDD;
+  --field-selected-text: #2F5A7C;
   --text: var(--color-ink);
   --text-secondary: var(--color-ink-2);
   --text-muted: var(--color-ink-3);
   --brand: var(--color-sage);
   --brand-tint: var(--color-sage-tint);
-  --status-success: #57654E;
-  --status-danger: #B45516;
-  --shadow-raised: 0 6px 20px -8px rgba(35, 34, 32, 0.14);
-  --shadow-overlay: 0 24px 50px -18px rgba(35, 34, 32, 0.22);
+  --status-success: #416A5A;
+  --status-danger: #A85B4D;
+  --nav-surface: #0F2338;
+  --nav-text: #F3F6F9;
+  --nav-muted: #A6B5C3;
+  --nav-border: rgba(243, 246, 249, 0.12);
+  --nav-active: rgba(243, 246, 249, 0.11);
+  --nav-signal: #A9C1D3;
+  --shadow-raised: 0 6px 20px -10px rgba(15, 35, 56, 0.18);
+  --shadow-overlay: 0 24px 50px -18px rgba(15, 35, 56, 0.26);
 }
 
 * {
@@ -86,7 +92,7 @@ select {
 }
 
 ::selection {
-  background: #DCE2D3;
+  background: #D8E5EE;
 }
 
 ::-webkit-scrollbar {
@@ -99,10 +105,250 @@ select {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #C9C3B8;
+  background: #B8C6D2;
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #B6B0A4;
+  background: #9EAFBE;
+}
+
+/* Tempo visual direction previews. These are intentionally scoped so the
+   authenticated product stays unchanged until a direction is selected. */
+.tempo-demo {
+  --demo-bg: #f1f5f8;
+  --demo-surface: #ffffff;
+  --demo-surface-soft: #f7f9fb;
+  --demo-ink: #10263d;
+  --demo-muted: #687b8d;
+  --demo-rule: #d7e1e9;
+  --demo-signal: #9bb6ca;
+  --demo-signal-ink: #10263d;
+  --demo-sidebar: #10263d;
+  --demo-sidebar-ink: #f1f5f8;
+  --demo-sidebar-muted: #a6b5c3;
+  --demo-radius: 18px;
+  min-height: 100vh;
+  background: var(--demo-bg);
+  color: var(--demo-ink);
+  font-family: var(--font-schibsted), system-ui, sans-serif;
+}
+
+.tempo-demo__announcement {
+  align-items: center;
+  background: var(--demo-sidebar);
+  color: var(--demo-sidebar-muted);
+  display: flex;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 12px;
+  letter-spacing: .08em;
+  min-height: 34px;
+  padding: 7px 28px;
+  text-transform: uppercase;
+}
+
+.tempo-demo__announcement a {
+  align-items: center;
+  color: var(--demo-signal);
+  display: inline-flex;
+  gap: 5px;
+  margin-left: auto;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.tempo-demo__announcement a:hover { color: var(--demo-sidebar-ink); }
+.tempo-demo__announcement-separator { opacity: .35; }
+.tempo-demo a:focus-visible, .tempo-demo button:focus-visible {
+  outline: 2px solid var(--demo-signal);
+  outline-offset: 3px;
+}
+
+.tempo-demo__layout {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  min-height: calc(100vh - 34px);
+}
+
+.tempo-demo__sidebar {
+  background: var(--demo-sidebar);
+  color: var(--demo-sidebar-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 46px;
+  min-height: 100%;
+  padding: 28px 18px 22px;
+}
+
+.tempo-demo__brand-row { align-items: center; display: flex; justify-content: space-between; }
+.tempo-demo__brand { align-items: center; display: inline-flex; font-size: 20px; font-weight: 700; gap: 10px; letter-spacing: -.04em; }
+.tempo-demo__brand-mark { align-items: center; background: var(--demo-signal); border-radius: 7px; display: inline-flex; height: 27px; justify-content: center; width: 27px; }
+.tempo-demo__brand-mark span { background: var(--demo-sidebar); border-radius: 2px; height: 10px; transform: rotate(-45deg); width: 10px; }
+.tempo-demo__close-menu, .tempo-demo__menu-button { display: none; }
+.tempo-demo__nav { display: grid; gap: 6px; }
+.tempo-demo__nav-label { color: var(--demo-sidebar-muted); font-size: 10px; font-weight: 700; letter-spacing: .1em; margin: 0 11px 7px; text-transform: uppercase; }
+.tempo-demo__nav-item { align-items: center; border-radius: 11px; color: var(--demo-sidebar-muted); display: flex; font-size: 13px; font-weight: 600; gap: 11px; min-height: 42px; padding: 9px 11px; transition: background .2s ease, color .2s ease; }
+.tempo-demo__nav-item:hover { background: rgba(255,255,255,.07); color: var(--demo-sidebar-ink); }
+.tempo-demo__nav-item.is-active { background: rgba(155,182,202,.16); color: var(--demo-signal); }
+.tempo-demo__nav-icon { align-items: center; display: inline-flex; justify-content: center; width: 18px; }
+.tempo-demo__sidebar-bottom { display: grid; gap: 18px; margin-top: auto; }
+.tempo-demo__profile { align-items: center; border-top: 1px solid rgba(255,255,255,.12); display: flex; gap: 10px; padding: 18px 8px 0; }
+.tempo-demo__profile > span:nth-child(2) { display: grid; gap: 2px; min-width: 0; }
+.tempo-demo__profile strong { color: var(--demo-sidebar-ink); font-size: 12px; }
+.tempo-demo__profile small { color: var(--demo-sidebar-muted); font-size: 11px; }
+.tempo-demo__profile > svg { color: var(--demo-sidebar-muted); margin-left: auto; }
+.tempo-demo__avatar, .tempo-demo__top-avatar { align-items: center; background: #d8e3eb; border-radius: 50%; color: var(--demo-ink); display: inline-flex; font-size: 10px; font-weight: 800; height: 32px; justify-content: center; letter-spacing: -.04em; width: 32px; }
+
+.tempo-demo__content { min-width: 0; padding: 42px clamp(24px, 4vw, 68px) 28px; }
+.tempo-demo__topbar { align-items: flex-start; display: flex; justify-content: space-between; margin: 0 auto; max-width: 1220px; }
+.tempo-demo__date { color: var(--demo-muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; margin: 0 0 16px; text-transform: uppercase; }
+.tempo-demo h1 { font-size: clamp(30px, 3.2vw, 48px); font-weight: 650; letter-spacing: -.055em; line-height: 1.03; margin: 0; }
+.tempo-demo__punctuation { color: var(--demo-signal); }
+.tempo-demo__lede { color: var(--demo-muted); font-size: 15px; line-height: 1.5; margin: 12px 0 0; }
+.tempo-demo__topbar-actions { align-items: center; display: flex; gap: 12px; }
+.tempo-demo__icon-button { align-items: center; background: transparent; border: 1px solid var(--demo-rule); border-radius: 10px; color: var(--demo-muted); display: inline-flex; height: 38px; justify-content: center; width: 38px; }
+.tempo-demo__icon-button:hover { color: var(--demo-ink); background: var(--demo-surface); }
+.tempo-demo__top-avatar { background: var(--demo-signal); height: 38px; width: 38px; }
+
+.tempo-demo__content-grid { display: grid; gap: 22px; grid-template-columns: minmax(0, 1.5fr) minmax(300px, .85fr); margin: 42px auto 0; max-width: 1220px; }
+.tempo-demo__today-panel, .tempo-demo__side-column { min-width: 0; }
+.tempo-demo__side-column { display: grid; gap: 22px; align-content: start; }
+.tempo-demo__section-heading { align-items: flex-start; display: flex; justify-content: space-between; margin-bottom: 15px; }
+.tempo-demo__section-kicker { color: var(--demo-muted); font-size: 11px; font-weight: 750; letter-spacing: .1em; margin: 0 0 4px; text-transform: uppercase; }
+.tempo-demo h2 { font-size: 19px; font-weight: 650; letter-spacing: -.04em; line-height: 1.1; margin: 0; }
+.tempo-demo__status-chip { align-items: center; color: var(--demo-muted); display: inline-flex; font-size: 11px; font-weight: 650; gap: 6px; padding-top: 3px; }
+.tempo-demo__status-chip span { background: #628C78; border-radius: 50%; box-shadow: 0 0 0 4px rgba(98,140,120,.13); height: 7px; width: 7px; }
+
+.tempo-demo__next-card, .tempo-demo__week-card, .tempo-demo__activity-card { background: var(--demo-surface); border: 1px solid var(--demo-rule); border-radius: var(--demo-radius); }
+.tempo-demo__next-card { padding: clamp(22px, 3vw, 34px); }
+.tempo-demo__next-card-head { align-items: center; display: flex; justify-content: space-between; }
+.tempo-demo__sport-mark, .tempo-demo__duration { align-items: center; color: var(--demo-muted); display: inline-flex; font-size: 12px; font-weight: 700; gap: 8px; }
+.tempo-demo__sport-glyph { align-items: center; background: var(--demo-signal); border-radius: 8px; color: var(--demo-signal-ink); display: inline-flex; font-size: 17px; font-weight: 800; height: 28px; justify-content: center; width: 28px; }
+.tempo-demo__next-card h3 { font-size: clamp(30px, 4vw, 55px); font-weight: 650; letter-spacing: -.065em; line-height: .98; margin: 29px 0 12px; }
+.tempo-demo__next-description { color: var(--demo-muted); font-size: 14px; line-height: 1.55; margin: 0; max-width: 52ch; }
+.tempo-demo__metric-row { border-bottom: 1px solid var(--demo-rule); border-top: 1px solid var(--demo-rule); display: grid; gap: 15px; grid-template-columns: repeat(3, 1fr); margin: 29px 0 18px; padding: 16px 0; }
+.tempo-demo__metric-row div { display: grid; gap: 6px; }
+.tempo-demo__metric-row span, .tempo-demo__metric-row small { color: var(--demo-muted); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.tempo-demo__metric-row strong { font-size: 18px; font-weight: 650; letter-spacing: -.035em; }
+.tempo-demo__metric-row small { font-size: 10px; letter-spacing: 0; text-transform: none; }
+.tempo-demo__block-list { display: grid; }
+.tempo-demo__block { align-items: center; border-bottom: 1px solid var(--demo-rule); display: grid; gap: 10px; grid-template-columns: 8px 1fr auto; padding: 12px 0; position: relative; }
+.tempo-demo__block:last-child { border-bottom: 0; }
+.tempo-demo__block-line { background: #c2ced8; border-radius: 4px; height: 100%; min-height: 24px; width: 4px; }
+.tempo-demo__block--signal .tempo-demo__block-line { background: var(--demo-signal); }
+.tempo-demo__block--cool .tempo-demo__block-line { background: #8EA9BE; }
+.tempo-demo__block-kind { font-size: 13px; font-weight: 650; }
+.tempo-demo__block strong { font-size: 13px; font-weight: 700; }
+.tempo-demo__block small { color: var(--demo-muted); font-size: 11px; grid-column: 2 / -1; margin-top: -7px; }
+.tempo-demo__next-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; margin-top: 25px; }
+.tempo-demo__primary-button, .tempo-demo__secondary-button { align-items: center; border: 0; border-radius: 10px; display: inline-flex; font-size: 13px; font-weight: 750; gap: 8px; justify-content: center; min-height: 44px; padding: 10px 16px; transition: transform .2s ease, background .2s ease; }
+.tempo-demo__primary-button { background: var(--demo-signal); color: var(--demo-signal-ink); }
+.tempo-demo__primary-button:hover { background: #b4cad9; transform: translateY(-1px); }
+.tempo-demo__secondary-button { background: transparent; color: var(--demo-muted); padding-left: 4px; padding-right: 4px; }
+.tempo-demo__secondary-button:hover { color: var(--demo-ink); }
+.tempo-demo__detail-note { border-left: 2px solid var(--demo-signal); color: var(--demo-muted); font-size: 13px; line-height: 1.5; margin-top: 18px; padding: 5px 0 5px 14px; }
+
+.tempo-demo__week-card, .tempo-demo__activity-card { padding: 22px; }
+.tempo-demo__more-button { background: transparent; border: 0; color: var(--demo-muted); font-size: 16px; letter-spacing: 2px; padding: 0; }
+.tempo-demo__week-stats { align-items: baseline; display: flex; gap: 10px; margin: 25px 0 20px; }
+.tempo-demo__week-stats strong { font-size: 25px; letter-spacing: -.06em; }
+.tempo-demo__week-stats small, .tempo-demo__week-stats span { color: var(--demo-muted); font-size: 11px; font-weight: 600; letter-spacing: 0; }
+.tempo-demo__days { display: grid; gap: 5px; grid-template-columns: repeat(7, 1fr); }
+.tempo-demo__day { align-items: center; color: var(--demo-muted); display: grid; font-size: 10px; gap: 8px; justify-items: center; }
+.tempo-demo__day strong { color: var(--demo-ink); font-size: 12px; font-weight: 700; }
+.tempo-demo__day--active { color: var(--demo-ink); }
+.tempo-demo__day--active strong { align-items: center; background: var(--demo-signal); border-radius: 50%; display: inline-flex; height: 28px; justify-content: center; width: 28px; }
+.tempo-demo__day i { background: var(--demo-rule); border-radius: 50%; height: 5px; width: 5px; }
+.tempo-demo__day--done i { background: #719687; }
+.tempo-demo__day--active i { background: var(--demo-signal); }
+.tempo-demo__week-progress { background: var(--demo-rule); border-radius: 99px; height: 5px; margin: 23px 0 17px; overflow: hidden; }
+.tempo-demo__week-progress span { background: var(--demo-signal); border-radius: inherit; display: block; height: 100%; }
+.tempo-demo__text-link { align-items: center; color: var(--demo-ink); display: inline-flex; font-size: 12px; font-weight: 700; gap: 5px; }
+.tempo-demo__text-link:hover { color: var(--demo-muted); }
+.tempo-demo__activity-card .tempo-demo__section-heading { align-items: center; }
+.tempo-demo__activity-list { display: grid; }
+.tempo-demo__activity { align-items: center; border-top: 1px solid var(--demo-rule); display: flex; gap: 11px; min-height: 63px; }
+.tempo-demo__activity-dot { background: #9A8068; border-radius: 50%; height: 8px; width: 8px; }
+.tempo-demo__activity-dot--blue { background: #7895AB; }
+.tempo-demo__activity-dot--purple { background: #928DA5; }
+.tempo-demo__activity-copy { display: grid; gap: 3px; min-width: 0; }
+.tempo-demo__activity-copy strong { font-size: 12px; font-weight: 700; }
+.tempo-demo__activity-copy small { color: var(--demo-muted); font-size: 10px; }
+.tempo-demo__activity-value { font-size: 11px; margin-left: auto; white-space: nowrap; }
+.tempo-demo__footer { color: var(--demo-muted); display: flex; font-size: 10px; justify-content: space-between; letter-spacing: .02em; margin: 34px auto 0; max-width: 1220px; }
+
+/* Field notes is the warmer, more tactile alternate: same topology, different
+   material, rhythm, and emphasis. */
+.tempo-demo--field {
+  --demo-bg: #e4ece7;
+  --demo-surface: #f7f8f3;
+  --demo-surface-soft: #eff3ed;
+  --demo-ink: #172d40;
+  --demo-muted: #657a83;
+  --demo-rule: #cbd9d4;
+  --demo-signal: #f2b449;
+  --demo-signal-ink: #172d40;
+  --demo-sidebar: #172d40;
+  --demo-sidebar-ink: #f2f5ef;
+  --demo-sidebar-muted: #9babb0;
+  --demo-radius: 24px;
+}
+.tempo-demo--field .tempo-demo__announcement { background: #f2b449; color: #172d40; }
+.tempo-demo--field .tempo-demo__announcement a { color: #172d40; }
+.tempo-demo--field .tempo-demo__announcement a:hover { color: #fff; }
+.tempo-demo--field .tempo-demo__brand-mark { border-radius: 50%; }
+.tempo-demo--field .tempo-demo__brand-mark span { border-radius: 50%; height: 9px; transform: none; width: 9px; }
+.tempo-demo--field .tempo-demo__nav-item { border-radius: 14px; font-weight: 550; }
+.tempo-demo--field .tempo-demo__nav-item.is-active { background: #eaf0e3; color: #172d40; }
+.tempo-demo--field .tempo-demo__nav-item.is-active .tempo-demo__nav-icon { color: #e69d23; }
+.tempo-demo--field .tempo-demo__avatar, .tempo-demo--field .tempo-demo__top-avatar { background: #d9a1a0; }
+.tempo-demo--field .tempo-demo__content { padding-top: 48px; }
+.tempo-demo--field h1 { font-weight: 600; letter-spacing: -.065em; }
+.tempo-demo--field .tempo-demo__punctuation { color: #e69d23; }
+.tempo-demo--field .tempo-demo__next-card { background: #f7f8f3; box-shadow: 0 16px 28px -22px rgba(23,45,64,.35); }
+.tempo-demo--field .tempo-demo__sport-glyph { border-radius: 50%; }
+.tempo-demo--field .tempo-demo__section-kicker { color: #d38e1e; }
+.tempo-demo--field .tempo-demo__block { padding: 13px 0; }
+.tempo-demo--field .tempo-demo__block-line { border-radius: 99px; }
+.tempo-demo--field .tempo-demo__block--signal .tempo-demo__block-line { background: #e69d23; }
+.tempo-demo--field .tempo-demo__primary-button { border-radius: 99px; }
+.tempo-demo--field .tempo-demo__secondary-button { border-radius: 99px; border: 1px solid var(--demo-rule); padding-left: 15px; padding-right: 15px; }
+.tempo-demo--field .tempo-demo__day--active strong { background: #e69d23; color: white; }
+.tempo-demo--field .tempo-demo__day--active i { background: #e69d23; }
+.tempo-demo--field .tempo-demo__week-progress span { background: #e69d23; }
+.tempo-demo--field .tempo-demo__detail-note { border-left-color: #e69d23; }
+
+@media (max-width: 980px) {
+  .tempo-demo__content-grid { grid-template-columns: minmax(0, 1fr); }
+  .tempo-demo__side-column { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .tempo-demo__announcement { gap: 7px; padding-left: 16px; padding-right: 16px; }
+  .tempo-demo__announcement > span:first-child, .tempo-demo__announcement-separator { display: none; }
+  .tempo-demo__announcement a { margin-left: auto; }
+  .tempo-demo__layout { display: block; }
+  .tempo-demo__sidebar { bottom: 0; box-shadow: 12px 0 30px rgba(10,20,17,.2); left: 0; max-width: 280px; min-height: auto; position: fixed; top: 34px; transform: translateX(-105%); transition: transform .25s ease-out; width: 82vw; z-index: 20; }
+  .tempo-demo__sidebar.is-open { transform: translateX(0); }
+  .tempo-demo__close-menu { align-items: center; background: transparent; border: 0; color: var(--demo-sidebar-muted); display: inline-flex; height: 36px; justify-content: center; width: 36px; }
+  .tempo-demo__content { padding: 28px 16px 22px; }
+  .tempo-demo__topbar { gap: 14px; }
+  .tempo-demo__menu-button { align-items: center; background: var(--demo-surface); border: 1px solid var(--demo-rule); border-radius: 10px; color: var(--demo-ink); display: inline-flex; height: 38px; justify-content: center; margin-bottom: 18px; width: 38px; }
+  .tempo-demo__topbar-actions { display: none; }
+  .tempo-demo__content-grid { gap: 30px; margin-top: 32px; }
+  .tempo-demo__next-card { padding: 21px 18px; }
+  .tempo-demo__next-card h3 { font-size: 39px; margin-top: 24px; }
+  .tempo-demo__metric-row { gap: 8px; }
+  .tempo-demo__metric-row strong { font-size: 15px; }
+  .tempo-demo__metric-row span { font-size: 9px; }
+  .tempo-demo__block { gap: 8px; grid-template-columns: 7px 1fr auto; }
+  .tempo-demo__block small { font-size: 10px; }
+  .tempo-demo__side-column { display: grid; gap: 18px; grid-template-columns: 1fr; }
+  .tempo-demo__week-card, .tempo-demo__activity-card { padding: 19px 18px; }
+  .tempo-demo__footer { display: grid; gap: 6px; line-height: 1.4; margin-top: 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tempo-demo *, .tempo-demo *::before, .tempo-demo *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }

@@ -52,10 +52,11 @@ export default function SignupPage() {
 
   return (
     <PageShell size="narrow" className="min-h-[calc(100vh-3rem)] justify-center">
-      <TopBar eyebrow="Workout Planner" title="Create account" align="center" />
+      <TopBar title="Create account" align="center" />
       <Surface className="mx-auto w-full max-w-md">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex gap-3">
+          <fieldset className="flex gap-3">
+            <legend className={`${formLabelClassName} w-full`}>Account type</legend>
             {(['COACH', 'ATHLETE'] as const).map((r) => (
               <button
                 key={r}
@@ -66,10 +67,11 @@ export default function SignupPage() {
                 {r === 'COACH' ? 'I am a coach' : 'I am an athlete'}
               </button>
             ))}
-          </div>
+          </fieldset>
           <div>
-            <label className={formLabelClassName}>Name</label>
+            <label htmlFor="signup-name" className={formLabelClassName}>Name</label>
             <input
+              id="signup-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -79,8 +81,9 @@ export default function SignupPage() {
             />
           </div>
           <div>
-            <label className={formLabelClassName}>Email</label>
+            <label htmlFor="signup-email" className={formLabelClassName}>Email</label>
             <input
+              id="signup-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -90,8 +93,9 @@ export default function SignupPage() {
             />
           </div>
           <div>
-            <label className={formLabelClassName}>Password</label>
+            <label htmlFor="signup-password" className={formLabelClassName}>Password</label>
             <input
+              id="signup-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -101,7 +105,7 @@ export default function SignupPage() {
               className={formFieldClassName}
             />
           </div>
-          {error && <p className={dangerTextClassName}>{error}</p>}
+          {error && <p className={dangerTextClassName} role="alert">{error}</p>}
           <button
             type="submit"
             disabled={loading}

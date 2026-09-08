@@ -6,7 +6,7 @@ by agents as work changes. Use the linked feature record before editing.
 | ID | Capability | Status | Owner / entry point | Tests / evidence | Record |
 |---|---|---|---|---|---|
 | `AUTH-001` | Auth, signup, setup, role access | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | Shell/source tests; `pnpm build` | [auth](features/auth.md) |
-| `SHELL-001` | Tempo shell and navigation | `shipped` | `components/AppShell.tsx`, `AppSidebar.tsx`, `lib/app-navigation.ts` | Workspace job split and touch-target audit verified with 175 tests, lint, build, diff check, detector; [history](history/2026-09-07-workspace-information-architecture-audit.md) | [shell](features/shell.md) |
+| `SHELL-001` | Tempo shell and navigation | `shipped` | `components/AppShell.tsx`, `AppSidebar.tsx`, `lib/app-navigation.ts` | Navy split-board system applied; 175 tests, lint, build, diff check, detector; browser viewport acceptance remains; [task](tasks/2026-09-08-tempo-design-directions.md) | [shell](features/shell.md) |
 | `COACH-001` | Coach roster and athlete detail | `shipped` | `lib/coach-service.ts`, `/coach/**` | UI contrast audit, 115 tests, lint, build; [history](history/2026-08-22-interactive-color-contrast.md) | [coach](features/coach.md) |
 | `ONBOARD-001` | Coach discovery and request lifecycle | `shipped` | `lib/coach-request-service.ts`, athlete discovery/profile | Concise request status copy, 147 tests, lint, build; [history](history/2026-08-28-concise-ui-copy.md) | [onboarding](features/onboarding.md) |
 | `PLAN-001` | Athlete-week coach planner | `shipped` | `lib/coach-planner-service.ts`, `lib/planner-draft.ts`, `/coach/planner`, athlete planner | IA split and no-roster/source-selection audit verified with 175 tests, lint, build, diff check, detector; [history](history/2026-09-07-workspace-information-architecture-audit.md) | [planner](features/planner.md) |
@@ -52,6 +52,8 @@ registered a multi-step task in this workspace.
 | [universal workout and template sharing](tasks/2026-09-01-universal-workout-sharing.md) | `in-progress` | `OpenCode` | `SHARE-001` | 2026-09-01; automated implementation complete, browser acceptance outstanding |
 | [athlete planner polish](tasks/2026-09-06-athlete-planner-polish.md) | `completed` | `OpenCode subagent` | `PLAN-001`, `ATHLETE-001` | 2026-09-06; navigation, responsive controls, and save-state polish verified |
 | [workspace information architecture audit](tasks/2026-09-07-workspace-information-architecture.md) | `completed` | `OpenCode subagent` | `SHELL-001`, `PLAN-001`, `LIB-001`, `TEMPLATE-001`, `ATHLETE-001` | 2026-09-07; standalone boundaries, source ownership, empty/error states, and touch targets audited; 175 tests, lint, build, diff check, detector pass |
+| [Tempo visual direction demos](tasks/2026-09-08-tempo-design-directions.md) | `completed` | `OpenCode / current session` | `SHELL-001`, `ATHLETE-001` | 2026-09-08; split-board selected and applied as restrained navy/cool-white production system; 175 tests, lint, build, diff check, detector pass; browser screenshot blocked by unavailable desktop browser |
+| [Tempo surface review and polish](tasks/2026-09-08-tempo-surface-review.md) | `completed` | `OpenCode subagent` | `SHELL-001`, `ATHLETE-001`, `ONBOARD-001` | 2026-09-08; token drift, mobile navigation semantics, settings feedback, stepper icon, and auth form labeling refined; 175 tests, lint, build, diff check, detector pass; browser viewport acceptance remains |
 
 ## Planned Task Files
 

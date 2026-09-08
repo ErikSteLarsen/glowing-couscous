@@ -37,7 +37,7 @@ export default function LoginPage() {
 
   return (
     <PageShell size="narrow" className="min-h-[calc(100vh-3rem)] justify-center">
-      <TopBar eyebrow="Workout Planner" title="Sign in" align="center" />
+      <TopBar title="Sign in" align="center" />
       <Surface className="mx-auto w-full max-w-md">
         <div className="mb-5 rounded-[12px] border border-[var(--field-selected-border)] bg-[var(--brand-tint)] px-4 py-3 text-sm text-[var(--field-selected-text)]">
           <p className="font-semibold text-[var(--text)]">Demo athlete</p>
@@ -45,8 +45,9 @@ export default function LoginPage() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className={formLabelClassName}>Email</label>
+            <label htmlFor="login-email" className={formLabelClassName}>Email</label>
             <input
+              id="login-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -56,8 +57,9 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className={formLabelClassName}>Password</label>
+            <label htmlFor="login-password" className={formLabelClassName}>Password</label>
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -65,7 +67,7 @@ export default function LoginPage() {
               className={formFieldClassName}
             />
           </div>
-          {error && <p className={dangerTextClassName}>{error}</p>}
+          {error && <p className={dangerTextClassName} role="alert">{error}</p>}
           <button
             type="submit"
             disabled={loading}

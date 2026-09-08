@@ -121,7 +121,7 @@ export function SourceAssignmentPanel({
         </label>
       )}
       {selected ? (
-        <div className="rounded-[10px] bg-[#FBFAF7] p-3 text-sm text-[var(--text-secondary)]">
+        <div className="rounded-[10px] bg-[var(--field-surface)] p-3 text-sm text-[var(--text-secondary)]">
           <p className="font-semibold text-[var(--text)]">Preview · {selected.preview}</p>
           {selectedPlan ? (
             <ul className="mt-2 space-y-1">

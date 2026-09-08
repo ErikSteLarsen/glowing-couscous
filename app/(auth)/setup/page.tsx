@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import {
   dangerTextClassName,
+  formLabelClassName,
   getSegmentedChoiceClassName,
   primaryButtonClassName,
   PageShell,
@@ -41,14 +42,14 @@ export default function SetupPage() {
   return (
     <PageShell size="narrow" className="min-h-[calc(100vh-3rem)] justify-center">
       <TopBar
-        eyebrow="Almost there"
         title="Choose your role"
         description="This sets how you use the app."
         align="center"
       />
       <Surface className="mx-auto w-full max-w-md">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex gap-3">
+          <fieldset className="flex gap-3">
+            <legend className={`${formLabelClassName} w-full`}>Account type</legend>
             {(['COACH', 'ATHLETE'] as const).map((r) => (
               <button
                 key={r}
@@ -59,8 +60,8 @@ export default function SetupPage() {
                 {r === 'COACH' ? 'I am a coach' : 'I am an athlete'}
               </button>
             ))}
-          </div>
-          {error && <p className={dangerTextClassName}>{error}</p>}
+          </fieldset>
+          {error && <p className={dangerTextClassName} role="alert">{error}</p>}
           <button
             type="submit"
             disabled={loading}

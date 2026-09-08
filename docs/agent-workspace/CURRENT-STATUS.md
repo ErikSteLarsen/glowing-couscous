@@ -1,6 +1,6 @@
 # Current Status
 
-This is the verified project snapshot recorded on **2026-09-07**. It was
+This is the verified project snapshot recorded on **2026-09-08**. It was
 inspected on branch `main` after the workspace information-architecture split,
 standalone workout libraries, template cadence guidance, navigation polish, and
 the follow-up technical audit hardening.
@@ -29,7 +29,7 @@ remains outstanding. Weeks are Monday-based.
 | Capability | Status | Primary implementation | Verification / gap |
 |---|---|---|---|
 | Auth, signup, setup, role redirects | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-principal.ts`, `lib/auth-role-service.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | Focused role/principal tests and adapter smoke test pass; external OAuth integration remains a gap. |
-| Responsive Tempo app shell and navigation | `shipped` | `components/AppShell.tsx`, `AppSidebar.tsx`, `lib/app-navigation.ts`, `app/globals.css` | Role-aware Workouts/Planner/Templates jobs, viewport-bounded desktop sidebar, contextual Workouts state for session/live routes, shell/accessibility/navigation tests, lint, and build pass (175 tests); manual browser viewport inspection remains a gap. |
+| Responsive Tempo app shell and navigation | `shipped` | `components/AppShell.tsx`, `AppSidebar.tsx`, `lib/app-navigation.ts`, `app/globals.css` | Navy split-board visual system, role-aware Workouts/Planner/Templates jobs, viewport-bounded desktop sidebar, contextual Workouts state for session/live routes, shell/accessibility/navigation tests, lint, and build pass (175 tests); manual browser viewport inspection remains a gap. |
 | Coach roster and athlete detail | `shipped` | `lib/coach-service.ts`, `/coach`, `/coach/athletes/[athleteId]` | `tests/coach-service.test.ts` and route tests pass. |
 | Athlete coach discovery and request lifecycle | `shipped` | `lib/coach-request-service.ts`, `prisma/schema.prisma`, `lib/athlete-service.ts`, discovery/profile routes | Request invariants, UI errors/in-flight state, 99 tests, schema reset/seed, lint, and build pass; UX polish remains planned. |
 | Coach planner for athlete schedules | `shipped` | `lib/coach-planner-service.ts`, `lib/planner-draft.ts`, `/coach/planner`, `/athlete/planner` | Date/week assignment is isolated from standalone authoring; coach roster planning and private athlete multi-date session creation pass 175 tests, lint, build, diff check, and detector; manual browser inspection remains a gap. |

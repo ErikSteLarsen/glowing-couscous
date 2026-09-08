@@ -254,7 +254,7 @@ export function AthletePlannerClient({
               className={`rounded-[12px] border p-2.5 transition sm:p-3 ${
                 selectedDates.includes(day.isoDate)
                   ? 'border-[var(--field-focus)] bg-[var(--brand-tint)] ring-1 ring-[var(--field-focus)]'
-                  : 'border-[var(--border)] bg-[#FBFAF7]'
+                   : 'border-[var(--border)] bg-[var(--field-surface)]'
               }`}
             >
               <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-[9px] px-1">

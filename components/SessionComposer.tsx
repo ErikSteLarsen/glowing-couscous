@@ -178,8 +178,8 @@ export function SessionComposer({
               onClick={() => setSelectedBlockIndex(index)}
               className={`w-full rounded-[12px] border p-4 text-left transition ${
                 selectedIndex === index
-                  ? 'border-[#DCE0D2] bg-[var(--brand-tint)]'
-                  : 'border-[var(--border)] bg-[#FBFAF7]'
+                  ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)]'
+                  : 'border-[var(--border)] bg-[var(--field-surface)]'
               } ${block.skipped ? 'opacity-60' : ''}`}
             >
               <div className="flex items-center justify-between gap-3">

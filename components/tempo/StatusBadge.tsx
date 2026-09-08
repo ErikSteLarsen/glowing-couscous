@@ -1,8 +1,8 @@
 const statusClasses = {
-  planned: 'bg-[var(--brand-tint)] text-[#57654E]',
-  completed: 'bg-[#E3F7EC] text-[#1B7A3D]',
-  adjusted: 'bg-[#FEEDE0] text-[#B45516]',
-  missed: 'bg-[#E8F0FE] text-[#2B6CB0]',
+  planned: 'bg-[var(--brand-tint)] text-[var(--field-selected-text)]',
+  completed: 'bg-[#E8F1ED] text-[var(--status-success)]',
+  adjusted: 'bg-[#F5ECE8] text-[var(--status-danger)]',
+  missed: 'bg-[#EAF1F6] text-[#416A88]',
 } as const;
 
 export function StatusBadge({

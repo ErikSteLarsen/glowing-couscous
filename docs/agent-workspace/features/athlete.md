@@ -126,6 +126,9 @@ They can mark a session complete or move it back to planned while saving notes.
   pass on 2026-09-06.
 - `pnpm test` — 175 passing tests on 2026-09-07; `pnpm lint`, `pnpm build`,
   `git diff --check`, and the Impeccable detector pass after audit hardening.
+- `pnpm test` — 175 passing tests on 2026-09-08 after the bounded surface review;
+  `pnpm lint`, `pnpm build`, `git diff --check`, and the Impeccable detector
+  remain clean. Browser viewport inspection is still outstanding.
 
 ## Known Gaps
 

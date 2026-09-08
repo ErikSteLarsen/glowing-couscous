@@ -32,6 +32,7 @@ export function SettingsClient({
 }) {
   const [overviewCards, setOverviewCards] = useState(initialOverviewCards);
   const [message, setMessage] = useState('');
+  const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
   const [isPending, startTransition] = useTransition();
 
   function updateCard(cardId: OverviewCardId, enabled: boolean) {
@@ -51,10 +52,13 @@ export function SettingsClient({
       });
 
       if (!response.ok) {
+        setOverviewCards(overviewCards);
+        setMessageTone('danger');
         setMessage('Could not save overview settings.');
         return;
       }
 
+      setMessageTone('success');
       setMessage('Overview settings updated.');
     });
   }
@@ -74,7 +78,7 @@ export function SettingsClient({
               return (
                 <div
                   key={cardId}
-                  className="flex min-h-11 items-center justify-between gap-4 rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] px-4 py-2.5"
+                  className="flex min-h-11 items-center justify-between gap-4 rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] px-4 py-2.5"
                 >
                   <div>
                     <p className="text-[13.5px] font-semibold text-[var(--text)]">{meta.title}</p>
@@ -82,7 +86,12 @@ export function SettingsClient({
                       {meta.description}
                     </p>
                   </div>
-                  <Toggle checked={checked} onChange={(enabled) => updateCard(cardId, enabled)} disabled={isPending} />
+                  <Toggle
+                    checked={checked}
+                    label={`${meta.title} on Home`}
+                    onChange={(enabled) => updateCard(cardId, enabled)}
+                    disabled={isPending}
+                  />
                 </div>
               );
             })}
@@ -103,7 +112,11 @@ export function SettingsClient({
             Notification delivery preferences stay intentionally minimal until the athlete and coach mobile flows are fully migrated.
           </p>
         </section>
-        {message ? <p className="text-sm text-[#B45516]">{message}</p> : null}
+        {message ? (
+          <p className={`text-sm ${messageTone === 'success' ? 'text-[var(--status-success)]' : 'text-[var(--status-danger)]'}`} role="status">
+            {message}
+          </p>
+        ) : null}
       </div>
     </div>
   );

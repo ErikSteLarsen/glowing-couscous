@@ -76,7 +76,7 @@ export default async function CoachAthleteDetailPage({
               </h2>
             </div>
             {detail.athlete.activePlan?.name ? (
-              <span className="rounded-full border border-[var(--border)] bg-[#FBFAF7] px-3 py-1.5 text-[12.5px] font-medium text-[var(--text-secondary)]">
+              <span className="rounded-full border border-[var(--border)] bg-[var(--field-surface)] px-3 py-1.5 text-[12.5px] font-medium text-[var(--text-secondary)]">
                 {detail.athlete.activePlan.name}
               </span>
             ) : null}
@@ -85,7 +85,7 @@ export default async function CoachAthleteDetailPage({
           {detail.week.days.some((day) => day.sessions.length > 0) ? (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-1">
               {detail.week.days.map((day) => (
-                <div key={day.fullLabel} className="rounded-[12px] border border-[var(--border)] bg-[#FBFAF7] p-4">
+                <div key={day.fullLabel} className="rounded-[12px] border border-[var(--border)] bg-[var(--field-surface)] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day.shortLabel}</p>
@@ -151,7 +151,7 @@ export default async function CoachAthleteDetailPage({
           {detail.recentSessions.length > 0 ? (
             <div className="space-y-3">
               {detail.recentSessions.map((session) => (
-                <article key={session.id} className="rounded-[12px] border border-[var(--border)] bg-[#FBFAF7] p-4">
+                <article key={session.id} className="rounded-[12px] border border-[var(--border)] bg-[var(--field-surface)] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="text-sm font-semibold text-[var(--text)]">{session.title}</h3>

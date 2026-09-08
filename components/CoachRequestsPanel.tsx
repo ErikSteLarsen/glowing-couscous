@@ -58,13 +58,13 @@ export function CoachRequestsPanel() {
     <Surface>
       <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Athlete requests</p>
       <h2 className="mt-2 text-xl font-semibold text-[var(--text)]">Pending join requests</h2>
-      {message ? <p className="mt-2 text-sm text-[#57654E]">{message}</p> : null}
-      {error ? <p className="mt-2 text-sm text-[#B45516]">{error}</p> : null}
+      {message ? <p className="mt-2 text-sm text-[var(--status-success)]">{message}</p> : null}
+      {error ? <p className="mt-2 text-sm text-[var(--status-danger)]">{error}</p> : null}
       <div className="mt-4 space-y-3">
         {requests.map((req) => (
           <div
             key={req.id}
-            className="flex flex-col items-start gap-3 rounded-[12px] border border-[var(--border)] bg-[#FBFAF7] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col items-start gap-3 rounded-[12px] border border-[var(--border)] bg-[var(--field-surface)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
               <p className="text-sm font-semibold text-[var(--text)]">{req.athlete.name}</p>

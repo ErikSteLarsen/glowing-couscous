@@ -519,8 +519,8 @@ export function PlannerClient({
                   key={day.isoDate}
                   className={`rounded-[12px] border p-4 transition ${
                     draft.scheduledDate === day.isoDate
-                      ? 'border-[#DCE0D2] bg-[var(--brand-tint)]'
-                      : 'border-[var(--border)] bg-[#FBFAF7]'
+                       ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)]'
+                       : 'border-[var(--border)] bg-[var(--field-surface)]'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -680,7 +680,7 @@ export function PlannerClient({
           ) : null}
         </div>
 
-        <div className="rounded-[12px] bg-[#FBFAF7] p-4">
+        <div className="rounded-[12px] bg-[var(--field-surface)] p-4">
           <p className="text-sm font-semibold text-[var(--text)]">Week context</p>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">
             {selectedWorkspaceMode === 'athlete'

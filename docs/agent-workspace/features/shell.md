@@ -2,13 +2,13 @@
 
 - **ID:** `SHELL-001`
 - **Status:** `shipped`
-- **Last verified:** `2026-09-07`
+- **Last verified:** `2026-09-08`
 - **Owner:** `components/AppShell.tsx`, `components/AppSidebar.tsx`, `lib/app-navigation.ts`, `app/globals.css`
 - **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md), [desktop UI sizing](../history/2026-08-28-desktop-ui-sizing.md), [sidebar viewport height](../history/2026-08-28-sidebar-viewport-height.md), [navigation context and workouts](../history/2026-09-03-navigation-context-and-workouts.md), [sizing decision](../decisions/0011-desktop-first-ui-sizing.md), [navigation decision](../decisions/0014-contextual-athlete-navigation.md)
 
 ## Contract
 
-Signed-in users get a responsive light Tempo shell. Desktop uses a viewport-high
+Signed-in users get a responsive navy-and-cool-white Tempo shell. Desktop uses a viewport-high
 sidebar with its own overflow; mobile uses a drawer plus bottom navigation.
 Navigation is role-aware and marks the most specific route active.
 
@@ -35,7 +35,8 @@ Navigation is role-aware and marks the most specific route active.
   footer remains at the bottom when the navigation fits and scrolls with the
   sidebar content when it does not.
 - Page shells provide narrow/default/wide width tiers; planner and calendar use wide layouts.
-- Global tokens define paper, surface, border, sage brand, zones, status colors,
+- Global tokens define cool paper, white surfaces, blue-gray borders, navy brand,
+  muted zone presentation, status colors,
   focus styles, tabular metrics, and pointer behavior. Shared primary,
   secondary, and danger actions also define consistent focus and disabled
   states.
@@ -66,6 +67,27 @@ Navigation is role-aware and marks the most specific route active.
 - The shell has no notification or messaging surface; discovery labels messaging as coming soon.
 - Manual browser viewport inspection of the revised desktop/narrow density and
   sidebar overflow remains a follow-up item.
+- A public visual direction comparison is available at `/design/tempo-split` and
+  `/design/tempo-field`; the selected split-board direction now drives the
+  production shell.
+
+## Visual Direction Work
+
+- 2026-09-08: Added two isolated, responsive athlete dashboard previews to
+  compare a high-signal split-board system with a warmer field-notes system.
+  Both use the same Tempo content and interaction states. See
+  [task](../tasks/2026-09-08-tempo-design-directions.md) and
+  [history](../history/2026-09-08-tempo-design-directions.md).
+
+- 2026-09-08: The split-board direction was selected and refined into a
+  restrained navy/cool-white system. The production shell, shared primitives,
+  forms, planner, calendar, session, activity, and sharing surfaces now use the
+  selected tokens. See [decision](../decisions/0016-tempo-navy-split-board.md)
+  and [history](../history/2026-09-08-tempo-navy-split-board.md).
+
+- 2026-09-08: A bounded surface review removed remaining old-theme color drift,
+  aligned mobile navigation state semantics, and tightened auth/settings/live
+  feedback. See [history](../history/2026-09-08-tempo-surface-review.md).
 
 ## Extension Rules
 

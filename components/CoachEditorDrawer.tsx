@@ -35,7 +35,7 @@ export function CoachEditorDrawer({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-11 rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] px-4 text-sm font-semibold text-[var(--text)]"
+            className="min-h-11 rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] px-4 text-sm font-semibold text-[var(--text)]"
           >
             Close
           </button>

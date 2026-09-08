@@ -58,7 +58,7 @@ export default async function CoachPage() {
             <a
               key={athlete.id}
               href={`/coach/athletes/${athlete.id}`}
-              className="grid gap-4 rounded-[12px] border border-[var(--border)] bg-[#FBFAF7] p-4 lg:grid-cols-[1.6fr_1fr_1fr]"
+              className="grid gap-4 rounded-[12px] border border-[var(--border)] bg-[var(--field-surface)] p-4 lg:grid-cols-[1.6fr_1fr_1fr]"
             >
               <div>
                 <div className="flex items-center gap-2">

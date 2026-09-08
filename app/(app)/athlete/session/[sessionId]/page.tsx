@@ -77,7 +77,7 @@ export default async function AthleteSessionPage({
               Blocks
             </p>
             {detail.session.blocks.map((block) => (
-              <div key={block.id} className="rounded-[10px] border border-[var(--border)] bg-[#FBFAF7] p-4">
+              <div key={block.id} className="rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] p-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <span
                     className="inline-flex min-h-7 items-center rounded-full px-3 text-[12px] font-semibold"
