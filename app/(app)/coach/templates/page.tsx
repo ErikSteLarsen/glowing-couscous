@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 import { ActionLink, PageShell, TopBar } from '@/components/ui';
-import { WorkspaceNav } from '@/components/WorkspaceNav';
 import { getCurrentUser } from '@/lib/auth-session';
 import { templateService } from '@/lib/template-service';
 import { CoachTemplatesClient } from './CoachTemplatesClient';
@@ -20,8 +19,6 @@ export default async function CoachTemplatesPage() {
           <ActionLink href="/coach/planner" tone="secondary">Open Planner</ActionLink>
         }
       />
-      <WorkspaceNav role="COACH" active="templates" />
-
       <CoachTemplatesClient templates={templates} />
     </PageShell>
   );

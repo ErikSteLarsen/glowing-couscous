@@ -50,15 +50,15 @@ mental model while coaches retain roster-aware assignment controls.
 - What changed: Shipped the shared standalone Workout Library, focused Planner entry points, explicit Template cadence UI, role-aware workspace navigation, and clearer Calendar/Activity copy.
 - What changed: Connected the athlete flow end-to-end as well: a saved private workout can now be selected in Planner and copied onto one or more dates without changing the library source.
 - Decision or discovery: Month cadence is stored and explained but remains a guided assignment path until a first-class month source model exists.
-- Files touched: `components/WorkoutLibraryClient.tsx`, `components/WorkspaceNav.tsx`, `lib/workout-library-service.ts`, `lib/template-cadence.ts`, new workout routes, workspace pages, schema/service/docs records.
+- Files touched: `components/WorkoutLibraryClient.tsx`, `components/AppSidebar.tsx`, `lib/workout-library-service.ts`, `lib/template-cadence.ts`, new workout routes, workspace pages, schema/service/docs records.
 - Verification: `pnpm test` — 170 pass; `pnpm lint` — pass; `pnpm build` — pass; `git diff --check` — pass; Impeccable detector — no findings.
 - Blocker or next step: Browser acceptance of the new create/edit/delete and responsive flows remains follow-up work because no browser-capable tool is available.
 
 ### 2026-09-07 — audit hardening
 
-- What changed: Audited the new workout library, template cadence, focused planner, and workspace navigation surfaces. Standalone library reads and mutations now require a null date/plan, template sources are owner-validated, invalid cadence values are rejected, destructive actions confirm, network failures surface recovery copy, and the focused coach Planner explains the no-roster state.
+- What changed: Audited the new workout library, template cadence, focused planner, and sidebar navigation surfaces. Standalone library reads and mutations now require a null date/plan, template sources are owner-validated, invalid cadence values are rejected, destructive actions confirm, network failures surface recovery copy, and the focused coach Planner explains the no-roster state.
 - Decision or discovery: The new library contract is stricter than the transitional planner library path; scheduled or training-plan sessions must not appear as standalone Workouts.
-- Files touched: `lib/workout-library-service.ts`, `lib/template-service.ts`, `components/WorkoutLibraryClient.tsx`, `components/WorkspaceNav.tsx`, focused planner/template/athlete UI, and regression tests.
+- Files touched: `lib/workout-library-service.ts`, `lib/template-service.ts`, `components/WorkoutLibraryClient.tsx`, `components/AppSidebar.tsx`, focused planner/template/athlete UI, and regression tests.
 - Verification: `pnpm test` — 175 pass; `pnpm lint` — pass; `pnpm build` — pass; `git diff --check` — pass; Impeccable detector — no findings.
 - Blocker or next step: Browser acceptance of the new create/edit/delete and responsive flows remains follow-up work because no browser-capable tool is available.
 

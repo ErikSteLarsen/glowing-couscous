@@ -2,7 +2,6 @@ import { formatISO } from 'date-fns';
 import { redirect } from 'next/navigation';
 
 import { ActionLink, PageShell, TopBar } from '@/components/ui';
-import { WorkspaceNav } from '@/components/WorkspaceNav';
 import { getCurrentUser } from '@/lib/auth-session';
 import { coachPlannerService } from '@/lib/coach-planner-service';
 
@@ -34,8 +33,6 @@ export default async function CoachPlannerPage({
           </>
         }
       />
-      <WorkspaceNav role="COACH" active="planner" />
-
       <PlannerClient
         athletes={workspace.athletes}
         templates={workspace.templates}

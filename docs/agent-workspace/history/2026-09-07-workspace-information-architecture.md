@@ -15,8 +15,9 @@
   creates dated copies while leaving the unassigned source intact.
 - Reordered and clarified the role-aware sidebar around Workouts, Planner, and
   Templates. Mobile navigation now prioritizes those core jobs.
-- Added `WorkspaceNav` to make the three authoring/scheduling destinations and
-  athlete Calendar relationship visible inside the page content.
+- Added purpose labels to the sidebar so the three authoring/scheduling
+  destinations and athlete Calendar relationship are visible without duplicating
+  navigation inside each page.
 - Refocused coach Planner copy and mode presentation on athlete/date assignment;
   the compatibility multi-mode workspace remains available in the component but
   is no longer the primary entry point.
@@ -28,8 +29,7 @@
 
 ## Files
 
-- `lib/app-navigation.ts`, `components/AppSidebar.tsx`,
-  `components/WorkspaceNav.tsx`
+- `lib/app-navigation.ts`, `components/AppSidebar.tsx`
 - `components/WorkoutLibraryClient.tsx`, `lib/workout-library-service.ts`,
   `lib/template-cadence.ts`
 - `app/(app)/coach/workouts/page.tsx`, athlete/coach workspace pages, and new

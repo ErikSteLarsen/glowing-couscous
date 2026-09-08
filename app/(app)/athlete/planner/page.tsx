@@ -3,7 +3,6 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
 import { ActionLink, PageShell, TopBar } from '@/components/ui';
-import { WorkspaceNav } from '@/components/WorkspaceNav';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athletePlannerService } from '@/lib/athlete-planner-service';
 import { workoutLibraryService } from '@/lib/workout-library-service';
@@ -56,7 +55,6 @@ export default async function AthletePlannerPage({
           </div>
         }
       />
-      <WorkspaceNav role="ATHLETE" active="planner" />
       <AthletePlannerClient
         athleteId={user.id}
         templates={workspace.templates}

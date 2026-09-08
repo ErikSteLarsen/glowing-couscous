@@ -11,7 +11,6 @@ import {
   getSegmentedChoiceClassName,
 } from '@/components/ui';
 import { AthleteCalendarWeekScroller } from './AthleteCalendarWeekScroller';
-import { WorkspaceNav } from '@/components/WorkspaceNav';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { getSportLabel } from '@/lib/sport';
@@ -58,8 +57,6 @@ export default async function AthleteCalendarPage({
           </>
         }
       />
-      <WorkspaceNav role="ATHLETE" active="calendar" />
-
       {selectedView === 'week' ? (
         <AthleteCalendarWeekScroller
           initialDays={calendar.days.map((day) => ({

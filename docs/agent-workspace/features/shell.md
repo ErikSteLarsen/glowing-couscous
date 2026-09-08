@@ -24,8 +24,8 @@ Navigation is role-aware and marks the most specific route active.
 - Coach navigation exposes Athletes, Workouts, Planner, and Templates.
 - Athlete navigation exposes Home, Workouts, Planner, Templates, Calendar,
   Activity, and optional Coach discovery.
-- Sidebar and in-page workspace navigation label the purpose of Workouts
-  (author), Planner (place), and Templates (reuse).
+- The sidebar labels the purpose of Workouts (author), Planner (place), and
+  Templates (reuse); pages do not duplicate the workspace menu.
 - Nested routes prefer the most specific matching navigation item.
 - Workouts is the active sidebar context for the Workouts list, session detail,
   and live execution routes.

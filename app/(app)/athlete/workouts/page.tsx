@@ -5,7 +5,6 @@ import { ActionLink, EmptyState, PageShell, Surface, TopBar } from '@/components
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
-import { WorkspaceNav } from '@/components/WorkspaceNav';
 import { WorkoutLibraryClient } from '@/components/WorkoutLibraryClient';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
@@ -32,8 +31,6 @@ export default async function AthleteWorkoutsPage() {
         description="Create and keep workouts here. Use Planner when you are ready to place one on a day."
         actions={<ActionLink href="/athlete/planner" tone="secondary">Open Planner</ActionLink>}
       />
-      <WorkspaceNav role="ATHLETE" active="workouts" />
-
       <WorkoutLibraryClient
         role="ATHLETE"
         workouts={libraryWorkouts}

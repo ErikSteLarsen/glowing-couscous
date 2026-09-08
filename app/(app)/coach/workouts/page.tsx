@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 
 import { ActionLink, PageShell, TopBar } from '@/components/ui';
-import { WorkspaceNav } from '@/components/WorkspaceNav';
 import { WorkoutLibraryClient } from '@/components/WorkoutLibraryClient';
 import { getCurrentUser } from '@/lib/auth-session';
 import { templateService } from '@/lib/template-service';
@@ -23,7 +22,6 @@ export default async function CoachWorkoutsPage() {
         description="Create and manage standalone workouts. Nothing here is assigned to a day until you use Planner."
         actions={<ActionLink href="/coach/planner" tone="secondary">Open Planner</ActionLink>}
       />
-      <WorkspaceNav role="COACH" active="workouts" />
       <WorkoutLibraryClient
         role="COACH"
         workouts={workouts}

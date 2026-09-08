@@ -6,7 +6,7 @@
 
 ## What changed
 
-Audited the recent Workouts, Planner, Templates, and workspace navigation changes
+Audited the recent Workouts, Planner, Templates, and sidebar navigation changes
 and fixed the verified technical and UX gaps:
 
 - Standalone workout queries and update/delete ownership checks now require a
@@ -29,7 +29,7 @@ and fixed the verified technical and UX gaps:
 - `lib/workout-library-service.ts`
 - `lib/template-service.ts`
 - `components/WorkoutLibraryClient.tsx`
-- `components/WorkspaceNav.tsx`
+- `components/AppSidebar.tsx`
 - `app/(app)/athlete/planner/AthletePlannerClient.tsx`
 - `app/(app)/athlete/workouts/page.tsx`
 - `app/(app)/coach/planner/PlannerClient.tsx`

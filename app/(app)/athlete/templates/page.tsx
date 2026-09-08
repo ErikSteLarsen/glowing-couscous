@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 
 import { ActionLink, PageShell, TopBar } from '@/components/ui';
-import { WorkspaceNav } from '@/components/WorkspaceNav';
 import { getCurrentUser } from '@/lib/auth-session';
 import { templateService } from '@/lib/template-service';
 
@@ -22,7 +21,6 @@ export default async function AthleteTemplatesPage() {
           <ActionLink href="/athlete/planner" tone="secondary">Open Planner</ActionLink>
         }
       />
-      <WorkspaceNav role="ATHLETE" active="templates" />
       <CoachTemplatesClient
         templates={templates}
         apiBasePath="/api/athlete/templates"
