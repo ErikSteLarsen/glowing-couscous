@@ -17,6 +17,7 @@ test('shared layout primitives define centered width tiers', async () => {
   assert.match(uiSource, /narrow:\s*'max-w-3xl'/);
   assert.match(uiSource, /default:\s*'max-w-5xl'/);
   assert.match(uiSource, /wide:\s*'max-w-\[1140px\]'/);
+  assert.match(uiSource, /wall:\s*'max-w-\[1440px\]'/);
   assert.match(uiSource, /align\s*=\s*'left'/);
   assert.match(uiSource, /text-center/);
   assert.doesNotMatch(layoutSource, /max-w-screen-2xl/);
@@ -37,10 +38,10 @@ test('page shells opt into narrow auth layouts and wider planner layouts', async
   assert.match(signupSource, /align="center"/);
   assert.match(setupSource, /<PageShell size="narrow"/);
   assert.match(setupSource, /align="center"/);
-  assert.match(athletePageSource, /<PageShell size="wide"/);
+  assert.match(athletePageSource, /<PageShell size="wall"/);
   assert.match(coachPageSource, /<PageShell size="wide"/);
   assert.match(coachTemplatesPageSource, /<PageShell size="wide"/);
-  assert.match(coachPlannerPageSource, /<PageShell size="wide"/);
+  assert.match(coachPlannerPageSource, /<PageShell size="wall"/);
 });
 
 test('signed-in routes use grouped app shell while auth pages stay centered', async () => {

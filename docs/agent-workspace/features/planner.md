@@ -1,8 +1,8 @@
 # Feature: Coach Planner, Session Library, And Training Plans
 
 - **IDs:** `PLAN-001`, `LIB-001`, `TPLAN-001`
-- **Status:** `shipped`
-- **Last verified:** `2026-09-07`
+- **Status:** `in-progress`
+- **Last verified:** `2026-09-08`
 - **Owners:** `lib/coach-planner-service.ts`, `lib/coach-session-library-service.ts`, `lib/coach-training-plan-service.ts`, `lib/session-editor-adapters.ts`, `components/SessionComposer.tsx`
 - **Related work:** [architecture](../../../ARCHITECTURE.md), [baseline](../history/2026-08-21-baseline.md), [planner history](../../../docs/superpowers/plans/2026-06-23-coach-planner.md), [source assignment task](../tasks/2026-08-21-source-copy-assignment.md), [workflow task](../tasks/2026-08-21-planner-template-workflows.md), [editor migration](../tasks/2026-08-25-editor-migration.md), [concise UI copy](../history/2026-08-28-concise-ui-copy.md), [shared session creator](../history/2026-08-28-shared-session-creator.md)
 
@@ -68,6 +68,9 @@ training-plan sessions are weekday-based while athlete sessions are date-based.
 - Athlete Planner can prefill a private saved workout without changing the
   selected multi-day set; clearing that source returns to a fresh draft without
   silently dropping dates.
+- Athlete Planner now marks Today, summarizes selected days in the save panel,
+  uses scope-aware save copy, catches network failures, and confirms planned
+  session deletion.
 - Focused coach Planner explains the no-roster state instead of presenting an
   editor that cannot be saved.
 
@@ -92,11 +95,26 @@ training-plan sessions are weekday-based while athlete sessions are date-based.
   pass on 2026-09-06.
 - `pnpm test` — 175 passing tests on 2026-09-07; `pnpm lint`, `pnpm build`,
   `git diff --check`, and the Impeccable detector pass after audit hardening.
+- `pnpm test`, `pnpm lint`, `pnpm build`, `git diff --check`, and the Impeccable
+  detector (`[]`) pass after the athlete planning batch on 2026-09-08; browser
+  viewport inspection remains outstanding.
+- 2026-09-08 headed Chrome acceptance — athlete and coach Planner plus coach
+  Workouts loaded at 390×844, 1280×900, 1440×1000, and 1920×1080 without
+  horizontal overflow, runtime exceptions, or console errors; calendar-first
+  hierarchy, stacked mobile editor states, assignment context, and touch-sized
+  controls were reviewed.
+- 2026-09-09 continuation — the connected desktop-browser bridge remains
+  unavailable, so no new Planner or assignment viewport evidence is claimed.
+  `pnpm test` (175), `pnpm lint`, `pnpm build`, `git diff --check`, and the
+  focused Impeccable detector (`[]`) pass.
 
 ## Known Gaps
 
 - Several planner API handlers parse numeric IDs with `Number()` without a
   shared positive-integer helper; preserve the existing behavior unless fixing it deliberately.
+- Browser acceptance confirms that Coach Planner still exposes two visible
+  planning paths and lacks explicit week navigation; both remain deferred rather
+  than being changed in the finish pass.
 - Runtime validation accepts any non-null `planWeekday` value from untrusted
   JSON; a future hardening change should enforce the 1-7 range at the service boundary.
 - Do not assume a checked item in an old plan means the current implementation

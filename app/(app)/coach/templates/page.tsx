@@ -19,7 +19,7 @@ export default async function CoachTemplatesPage() {
           <ActionLink href="/coach/planner" tone="secondary">Open Planner</ActionLink>
         }
       />
-      <CoachTemplatesClient templates={templates} />
+       <CoachTemplatesClient templates={templates} role="COACH" />
     </PageShell>
   );
 }

@@ -2,8 +2,24 @@
 
 This is the verified project snapshot recorded on **2026-09-08**. It was
 inspected on branch `main` after the workspace information-architecture split,
-standalone workout libraries, template cadence guidance, navigation polish, and
-the follow-up technical audit hardening.
+standalone workout libraries, template cadence guidance, navigation polish, the
+follow-up technical audit hardening, and the headed-Chrome finish review.
+
+Continuation note — **2026-09-13**: Home, Calendar week/month, and scheduled
+Workouts now share one `SessionRow` workout-card primitive with `default`,
+`compact`, and `month` variants. Source-level gates and the production build
+pass; a new browser visual pass remains unavailable in the current session.
+
+Continuation note — **2026-09-13**: Completed sessions no longer render a
+visible status badge. `SessionRow` has no status-rendering branch or
+`showStatus` prop; the shared `StatusBadge` policy suppresses completed while
+retaining planned, adjusted, and missed states where useful.
+
+Continuation note — **2026-09-09**: the connected desktop-browser bridge was
+rechecked after a server restart and remains unavailable. The continuation ran
+source-level gates only and makes no new visual-acceptance claim. The redesign
+task remains `in-progress` until a browser-backed pass is authorized and
+recorded.
 
 ## Verification
 
@@ -13,6 +29,7 @@ the follow-up technical audit hardening.
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build` |
 | Build warning | Present | Next.js reports the `middleware` convention is deprecated in favor of `proxy`; this is not currently a build failure. |
+| Browser finish review | Pass | Local headed Chrome via CDP on `DISPLAY=:0` at 390×844, 1280×900, 1440×1000, and 1920×1080; athlete/coach route matrix, empty and dense weeks, responsive overflow, focus, drawer, role redirects, and touch-target checks recorded in the redesign task. The OpenCode bridge remained unavailable. |
 
 ## Product Snapshot
 
@@ -29,15 +46,15 @@ remains outstanding. Weeks are Monday-based.
 | Capability | Status | Primary implementation | Verification / gap |
 |---|---|---|---|
 | Auth, signup, setup, role redirects | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-principal.ts`, `lib/auth-role-service.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | Focused role/principal tests and adapter smoke test pass; external OAuth integration remains a gap. |
-| Responsive Tempo app shell and navigation | `shipped` | `components/AppShell.tsx`, `AppSidebar.tsx`, `lib/app-navigation.ts`, `app/globals.css` | Navy split-board visual system, role-aware Workouts/Planner/Templates jobs, viewport-bounded desktop sidebar, contextual Workouts state for session/live routes, shell/accessibility/navigation tests, lint, and build pass (175 tests); manual browser viewport inspection remains a gap. |
-| Coach roster and athlete detail | `shipped` | `lib/coach-service.ts`, `/coach`, `/coach/athletes/[athleteId]` | `tests/coach-service.test.ts` and route tests pass. |
-| Athlete coach discovery and request lifecycle | `shipped` | `lib/coach-request-service.ts`, `prisma/schema.prisma`, `lib/athlete-service.ts`, discovery/profile routes | Request invariants, UI errors/in-flight state, 99 tests, schema reset/seed, lint, and build pass; UX polish remains planned. |
-| Coach planner for athlete schedules | `shipped` | `lib/coach-planner-service.ts`, `lib/planner-draft.ts`, `/coach/planner`, `/athlete/planner` | Date/week assignment is isolated from standalone authoring; coach roster planning and private athlete multi-date session creation pass 175 tests, lint, build, diff check, and detector; manual browser inspection remains a gap. |
-| Coach-owned session library | `shipped` | `lib/workout-library-service.ts`, `/coach/workouts`, `/api/coach/workouts/*` | Standalone workout authoring persists without a date/Plan; owner-scoped template sources, 175 tests, lint, build, diff check, and detector pass; browser acceptance remains a gap. |
-| Reusable coach training plans | `shipped` | `lib/coach-training-plan-service.ts`, training-plan APIs/UI | Dedicated service and planner tests pass. |
-| Coach template library and assignment | `shipped` | `lib/template-service.ts`, `lib/assignment-service.ts`, template APIs/UI | Owner-scoped coach/athlete create/edit, validated day/week/month cadence labels, source assignment, independent baseline snapshots, duplicate prevention, 175 tests, lint, build, diff check, and detector pass; browser E2E coverage remains a gap. |
+| Responsive Tempo app shell and navigation | `in-progress` | `components/AppShell.tsx`, `AppSidebar.tsx`, `lib/app-navigation.ts`, `app/globals.css` | Week-at-a-glance light visual system, role-aware Workouts/Planner/Templates jobs, viewport-bounded desktop sidebar, contextual Workouts state for session/live routes, shell/accessibility/navigation tests, lint, build, and headed Chrome acceptance at four widths pass (175 tests); bridge-backed automation remains unavailable. |
+| Coach roster and athlete detail | `in-progress` | `lib/coach-service.ts`, `/coach`, `/coach/athletes/[athleteId]` | Week-at-a-glance oversight migration active; service/route tests and headed Chrome roster/detail acceptance at four widths pass; comparison interaction coverage remains a gap. |
+| Athlete coach discovery and request lifecycle | `in-progress` | `lib/coach-request-service.ts`, `prisma/schema.prisma`, `lib/athlete-service.ts`, discovery/profile routes | Request invariants, UI errors/in-flight state, 175 tests, lint, build, and detector pass; browser acceptance remains a gap. |
+| Coach planner for athlete schedules | `in-progress` | `lib/coach-planner-service.ts`, `lib/planner-draft.ts`, `/coach/planner`, `/athlete/planner` | Date/week assignment is isolated from standalone authoring; week-at-a-glance reliability migration passes 175 tests, lint, build, diff check, detector, and headed Chrome acceptance at four widths; competing Coach Planner paths/week navigation and deeper mutation-flow coverage remain deferred. |
+| Coach-owned session library | `in-progress` | `lib/workout-library-service.ts`, `/coach/workouts`, `/api/coach/workouts/*` | Standalone authoring remains unscheduled and owner-scoped; week-first presentation migration passes 175 tests, lint, build, diff check, detector, and headed Chrome review at three widths. |
+| Reusable coach training plans | `in-progress` | `lib/coach-training-plan-service.ts`, training-plan APIs/UI | Dedicated service/planner tests pass; coach Planner training-plan workspace is included in the headed Chrome review; end-to-end assignment remains separate. |
+| Coach template library and assignment | `in-progress` | `lib/template-service.ts`, `lib/assignment-service.ts`, template APIs/UI | Owner-scoped coach/athlete create/edit, validated cadence labels, source assignment, independent snapshots, 175 tests, lint, build, diff check, detector, and headed Chrome route review pass; browser E2E assignment coverage remains a gap. |
 | Universal workout and template sharing | `in-progress` | `lib/share-link.ts`, `lib/share-link-service.ts`, `/share/[token]`, `/api/share-links/*`, `ShareLinkButton` | 167 tests, disposable schema reset/seed, lint, build, token/access/privacy/source-independence coverage pass; required browser checks not run. |
-| Athlete Home, Calendar, Workouts, Session, Live, Activity | `shipped` | `lib/athlete-service.ts`, `lib/workout-library-service.ts`, `lib/athlete-planner-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/athlete-completion-service.ts`, `lib/session-comparison-service.ts`, athlete route tree, Tempo components | Workouts separates private unassigned authoring from scheduled sessions; Home, Calendar, Activity, and scheduled Workouts preserve origin through session detail/live navigation; calendar, private multi-date session creator, planned adjustment, direct actual correction, baseline/actual comparison, completion, actual snapshot persistence, shell, source, interactive contrast, and build coverage pass (175 tests); live execution is a UI stepper, not device telemetry. |
+| Athlete Home, Calendar, Workouts, Session, Live, Activity | `shipped` | `lib/athlete-service.ts`, `lib/workout-library-service.ts`, `lib/athlete-planner-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/athlete-completion-service.ts`, `lib/session-comparison-service.ts`, athlete route tree, Tempo components | Workouts separates private unassigned authoring from scheduled sessions; Home, Calendar, Activity, and scheduled Workouts preserve origin through session detail/live navigation; calendar, private multi-date session creator, planned adjustment, direct actual correction, baseline/actual comparison, completion, actual snapshot persistence, shell, source, interactive contrast, and build coverage pass (175 tests); four-width headed Chrome acceptance passes for empty/dense/read states; live execution is a UI stepper, not device telemetry. |
 | Interactive athlete Live execution | `shipped` | `lib/athlete-execution.ts`, `LiveSessionClient`, `Stepper` | `LIVE-001`; local next/previous/restart/completion controls, 114 tests, lint, and build pass. Refresh intentionally restarts local state; no telemetry. |
 | Session completion and activity persistence | `shipped` | `lib/athlete-completion-service.ts`, completion and actual APIs, `Activity` model | 146 tests, schema reset/seed, lint, and build pass; latest actual payloads are replaceable and manual outcomes are explicitly labeled. |
 | Completion metric/history integrity | `shipped` | `lib/athlete-completion-service.ts`, Activity fields, planner mutation guards | `COMPLETION-002`; immutable completed sessions, note retention, stored outcome segments, and nullable compliance are verified. |
@@ -146,18 +163,18 @@ and target types `power`/`pace`/`hr`.
   alongside the active Tempo draft path. Remove or migrate them only after
   reference analysis and a decision record.
 - Next.js warns that `middleware.ts` is deprecated in favor of `proxy.ts`.
-- Browser verification of session adjustment, actual-edit, and comparison flows
-  at narrow and wide viewports has not been performed in this environment.
-- Browser verification of anonymous share previews, auth continuation, both
-  roles, explicit saves, no-auto-scheduling, source independence, clipboard
-  fallback, and mobile/desktop layouts has not been performed because no
-  browser-capable tool is available.
+- Browser verification of the primary session adjustment, actual-edit, and
+  comparison mutation flows at narrow and wide viewports has not been performed
+  in full; their read/detail routes were included in the finish review.
+- Browser verification of anonymous share previews, auth continuation, explicit
+  saves, no-auto-scheduling, source independence, clipboard fallback, and
+  share-link mobile/desktop layouts remains outstanding; the local browser
+  fallback was used only for the week-at-a-glance route finish review.
 - `pnpm db:push` resets local SQLite data according to repository guidance;
   use it deliberately and reseed afterward when schema work is involved.
 
 ## Current Priorities
 
-1. Begin `RELIABILITY-001`: make Planner, Template, Session, completion, and auth saves recoverable and safe to retry.
-2. Complete manual browser verification for SHARE-001 at narrow and wide viewports, then record the acceptance evidence.
-3. Complete manual browser verification for session adjustment, actual-edit, and comparison flows.
-4. Add optional browser E2E coverage for sharing and role-scoped comparison/actual correction.
+1. Complete manual browser verification for SHARE-001, session adjustment, actual-edit, and comparison flows.
+2. Begin `RELIABILITY-001`: make Planner, Template, Session, completion, and auth saves recoverable and safe to retry.
+3. Decide whether to fund Coach Planner consolidation, comparison focus/deltas, and route-level loading/error boundaries.

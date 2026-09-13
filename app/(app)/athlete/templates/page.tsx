@@ -25,6 +25,7 @@ export default async function AthleteTemplatesPage() {
         templates={templates}
         apiBasePath="/api/athlete/templates"
         plannerHref="/athlete/planner"
+        role="ATHLETE"
       />
     </PageShell>
   );

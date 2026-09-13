@@ -58,8 +58,8 @@ export function CoachRequestsPanel() {
     <Surface>
       <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Athlete requests</p>
       <h2 className="mt-2 text-xl font-semibold text-[var(--text)]">Pending join requests</h2>
-      {message ? <p className="mt-2 text-sm text-[var(--status-success)]">{message}</p> : null}
-      {error ? <p className="mt-2 text-sm text-[var(--status-danger)]">{error}</p> : null}
+       {message ? <p role="status" aria-live="polite" className="mt-2 text-sm text-[var(--status-success)]">{message}</p> : null}
+       {error ? <p role="alert" aria-live="assertive" className="mt-2 text-sm text-[var(--status-danger)]">{error}</p> : null}
       <div className="mt-4 space-y-3">
         {requests.map((req) => (
           <div

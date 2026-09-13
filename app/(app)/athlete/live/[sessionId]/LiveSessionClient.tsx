@@ -34,24 +34,30 @@ export function LiveSessionClient({ sessionId, blocks }: { sessionId: number; bl
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const complete = isExecutionComplete(state);
+  const hasBlocks = blocks.length > 0;
+  const complete = hasBlocks && isExecutionComplete(state);
 
   async function completeSession() {
     setPending(true);
     setError('');
-    const response = await fetch(`/api/athlete/sessions/${sessionId}/completion`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isDone: true, notes: '' }),
-    });
-    const payload = await response.json().catch(() => ({})) as { error?: string };
-    setPending(false);
-    if (!response.ok) {
-      setError(payload.error ?? 'Failed to complete session.');
-      return;
+    try {
+      const response = await fetch(`/api/athlete/sessions/${sessionId}/completion`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isDone: true, notes: '' }),
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) {
+        setError(payload.error ?? 'Failed to complete session.');
+        return;
+      }
+      setMessage('Session marked complete.');
+      router.refresh();
+    } catch {
+      setError('Could not reach the server. Check your connection and try again.');
+    } finally {
+      setPending(false);
     }
-    setMessage('Session marked complete.');
-    router.refresh();
   }
 
   return (
@@ -65,43 +71,51 @@ export function LiveSessionClient({ sessionId, blocks }: { sessionId: number; bl
           done: state.completed[index],
         }))}
       />
-      <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          aria-label="Previous block"
-          className={secondaryButtonClassName}
-          disabled={pending || state.currentIndex === 0}
-          onClick={() => setState(previousExecution)}
-        >
-          Previous
-        </button>
-        <button
-          type="button"
-          aria-label={complete ? 'Workout complete' : 'Next block'}
-          className={primaryButtonClassName}
-          disabled={pending || complete}
-          onClick={() => setState(advanceExecution)}
-        >
-          {complete ? 'Workout complete' : 'Next block'}
-        </button>
-        <button
-          type="button"
-          aria-label="Restart workout"
-          className={secondaryButtonClassName}
-          disabled={pending || state.completed.every((value) => !value) && state.currentIndex === 0}
-          onClick={() => setState(restartExecution)}
-        >
-          Restart
-        </button>
-      </div>
+      {blocks.length === 0 ? <p role="alert" className={dangerTextClassName}>No workout blocks are available for this session.</p> : null}
+      {hasBlocks ? (
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            aria-label="Previous block"
+            className={secondaryButtonClassName}
+            disabled={pending || state.currentIndex === 0}
+            onClick={() => setState(previousExecution)}
+          >
+            Previous
+          </button>
+          {!complete ? (
+            <button
+              type="button"
+              aria-label="Next block"
+              className={primaryButtonClassName}
+              disabled={pending}
+              onClick={() => setState(advanceExecution)}
+            >
+              Next block
+            </button>
+          ) : null}
+          <button
+            type="button"
+            aria-label="Restart workout"
+            className={secondaryButtonClassName}
+            disabled={pending || state.completed.every((value) => !value) && state.currentIndex === 0}
+            onClick={() => setState(restartExecution)}
+          >
+            Restart
+          </button>
+        </div>
+      ) : null}
+      {complete ? (
+        <p role="status" className="text-sm font-semibold text-[var(--text)]">All blocks complete. Save the outcome to finish.</p>
+      ) : null}
       {complete ? (
         <button type="button" className={primaryButtonClassName} disabled={pending} onClick={() => void completeSession()}>
           {pending ? 'Saving…' : 'Mark session complete'}
         </button>
       ) : null}
       <p className="text-[12px] text-[var(--text-secondary)]">Progress is local to this device and restarts if you refresh.</p>
-      {message ? <p className={successTextClassName}>{message}</p> : null}
-      {error ? <p className={dangerTextClassName}>{error}</p> : null}
+      {message ? <p role="status" aria-live="polite" className={successTextClassName}>{message}</p> : null}
+      {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
     </div>
   );
 }

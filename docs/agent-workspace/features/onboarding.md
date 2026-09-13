@@ -1,8 +1,8 @@
 # Feature: Athlete Coach Discovery And Requests
 
 - **ID:** `ONBOARD-001`
-- **Status:** `shipped`
-- **Last verified:** `2026-08-28`
+- **Status:** `in-progress`
+- **Last verified:** `2026-09-08`
 - **Owner:** `lib/coach-request-service.ts`, `prisma/schema.prisma`, and athlete request-state reads in `lib/athlete-service.ts`
 - **Related work:** [baseline](../history/2026-08-21-baseline.md), [product scope](../../../SPEC.md), [request task](../tasks/2026-08-21-coach-request-invariants.md), [concise UI copy](../history/2026-08-28-concise-ui-copy.md)
 
@@ -40,6 +40,10 @@ A coach can list pending requests and accept or reject them.
 - Pending requests and messaging status use concise copy without repeating the
   adjacent profile action.
 
+- The discovery route was included in the authenticated browser matrix; its
+  search, pending, and recovery copy remain role-scoped and outside the coach
+  planner redesign.
+
 ## Verification
 
 - Coach-request service, route, onboarding, and UI source tests pass in `pnpm test`
@@ -49,6 +53,10 @@ A coach can list pending requests and accept or reject them.
   concise UI copy audit on 2026-08-28.
 - `pnpm db:push --accept-data-loss && pnpm db:seed` — pass on the disposable
   local SQLite database on 2026-08-21; the seeded pending row has its pending key.
+- 2026-09-08 headed Chrome acceptance — athlete discovery loaded at all four
+  target widths without horizontal overflow or console errors; role-boundary
+  redirects and mobile navigation were also verified. Search mutation error
+  branches remain covered by source/tests rather than this read-only pass.
 
 ## Known Gaps
 

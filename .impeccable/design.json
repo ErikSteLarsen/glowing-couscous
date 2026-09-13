@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-08T00:00:00.000Z",
+  "title": "Design System: Tempo",
+  "extensions": {
+    "colorMeta": {
+      "active-signal": { "role": "primary", "displayName": "Active Signal", "canonical": "#155EEF", "tonalRamp": ["#082B70", "#0B4BC1", "#155EEF", "#4C83F1", "#8FB0E8", "#C9D9F6", "#EAF1FF", "#F7FAFF"] },
+      "paper": { "role": "neutral", "displayName": "Paper", "canonical": "#F4F6F7", "tonalRamp": ["#17232B", "#435560", "#5D6D75", "#AAB8BE", "#C8D3D9", "#E8EDF0", "#F4F6F7", "#FFFFFF"] },
+      "success": { "role": "secondary", "displayName": "Completed Green", "canonical": "#2D6A4F", "tonalRamp": ["#123524", "#1C4D37", "#2D6A4F", "#5E997C", "#A9C9B6", "#D2E5D9", "#E7F1EB", "#F8FCF9"] },
+      "warning": { "role": "tertiary", "displayName": "Adjusted Amber", "canonical": "#8A5A13", "tonalRamp": ["#422A08", "#65400D", "#8A5A13", "#B88632", "#D8B976", "#EDE0BD", "#F6F0DF", "#FCFAF2"] },
+      "danger": { "role": "tertiary", "displayName": "Danger Red", "canonical": "#9C3D35", "tonalRamp": ["#4D1E1A", "#722D27", "#9C3D35", "#C36D65", "#E0AAA4", "#F0D2CE", "#F8EAE5", "#FDF9F8"] }
+    },
+    "motion": [
+      { "name": "reduced-motion", "value": "preserve color/status changes while removing transform movement", "purpose": "Respect reduced-motion preferences without hiding state feedback." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "768px" },
+      { "name": "2xl", "value": "1536px" }
+    ]
+  },
+  "components": [
+    { "name": "Primary Button", "kind": "button", "refersTo": "button-primary", "description": "The single forward action for the current task.", "html": "<button class=\"ds-primary\">Open session</button>", "css": ".ds-primary { background: #155EEF; color: #fff; border: 0; border-radius: 7px; min-height: 44px; padding: 10px 16px; font: 600 14px/1.35 Schibsted Grotesk, system-ui, sans-serif; } .ds-primary:hover { opacity: .9; } .ds-primary:focus-visible { outline: 2px solid #155EEF; outline-offset: 2px; }" },
+    { "name": "Session Row", "kind": "custom", "refersTo": "session-row", "description": "Dense week-aware session navigation with explicit status and metrics.", "html": "<a class=\"ds-session-row\" href=\"#\"><strong>Threshold build</strong><span>Tue 07:00 · Run</span><span>Planned · 52m · 64 TSS</span></a>", "css": ".ds-session-row { display: grid; gap: 6px; background: #fff; color: #17232B; border: 1px solid #C8D3D9; border-radius: 7px; padding: 10px 12px; text-decoration: none; } .ds-session-row:hover { background: #FBFCFC; border-color: #155EEF; } .ds-session-row:focus-visible { outline: 2px solid #155EEF; outline-offset: 2px; } .ds-session-row span { color: #435560; font-size: 12px; }" },
+    { "name": "Status Chip", "kind": "chip", "refersTo": "status-planned", "description": "Visible text state for planned, completed, adjusted, or missed work.", "html": "<span class=\"ds-status\">Planned</span>", "css": ".ds-status { display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px; border: 1px solid #BFD0F0; border-radius: 999px; background: #EAF1FF; color: #1543A5; font: 600 12px/1.35 Schibsted Grotesk, system-ui, sans-serif; }" }
+  ],
+  "narrative": {
+    "northStar": "The Training Calendar Wall",
+    "overview": "Tempo is an operating surface organized around the Monday-to-Sunday training week. The week is the shared object connecting coach planning, athlete execution, completion, and history. It should feel familiar at first glance, fast under repeated use, and calm when the schedule is dense.",
+    "keyCharacteristics": ["Monday-first hierarchy with a visible current week", "One clear next action before secondary metrics", "Text-visible planned, completed, adjusted, missed, loading, and error states", "Shared session-row, status, metric, and block-structure grammar", "Light work surface with restrained depth and strong keyboard focus"],
+    "rules": [
+      { "name": "The One Signal Rule", "body": "The active signal owns attention. Status colors explain what happened; they do not compete with the current day or next action.", "section": "colors" },
+      { "name": "The Measurement Rule", "body": "Duration, TSS, RPE, dates, and counts use tabular numerals and align as data, not prose.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "A surface does not earn a shadow merely because it is a container; elevation communicates a state or overlay.", "section": "elevation" }
+    ],
+    "dos": ["Do show the week, current day, session status, and next action in one context when the task requires them together.", "Do reuse SessionRow, StatusBadge, MetricText, and SessionBlockBar before inventing a route-local session grammar.", "Do darken supporting text enough for normal-text contrast and preserve visible keyboard focus."],
+    "donts": ["Don't return to the navy split-board or generic card-grid dashboard as the default composition.", "Don't make every bordered region a floating card or every secondary action equally prominent.", "Don't use color alone to communicate planned, completed, adjusted, missed, loading, error, or permission states."]
+  }
+}

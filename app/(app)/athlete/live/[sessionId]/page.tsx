@@ -1,6 +1,8 @@
 import { notFound, redirect } from 'next/navigation';
+import { format, startOfWeek } from 'date-fns';
 import { ActionLink, EmptyState, PageShell, Surface, TopBar } from '@/components/ui';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
@@ -38,10 +40,16 @@ export default async function AthleteLivePage({
   return (
     <PageShell size="wide">
       <TopBar
-        eyebrow="Live"
         title={`Execute ${detail.session.title}`}
         actions={<ActionLink href={`/athlete/session/${detail.session.id}?from=${sessionOrigin}`} tone="secondary">Back to session</ActionLink>}
       />
+
+      <div className="flex flex-wrap items-center gap-3 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">
+        <span>Week of {format(startOfWeek(detail.session.date, { weekStartsOn: 1 }), 'd MMM')}</span>
+        <span aria-hidden="true">·</span>
+        <span>{format(detail.session.date, 'EEE d MMM · HH:mm')}</span>
+        <StatusBadge status={detail.session.status} />
+      </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <Surface className="space-y-4">

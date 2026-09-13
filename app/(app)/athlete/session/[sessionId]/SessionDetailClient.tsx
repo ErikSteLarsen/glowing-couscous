@@ -22,11 +22,13 @@ export function SessionDetailClient({
   initialDone,
   initialNotes,
   initialDraft,
+  id,
 }: {
   sessionId: number;
   initialDone: boolean;
   initialNotes: string;
   initialDraft: SessionEditorDraft;
+  id?: string;
 }) {
   const router = useRouter();
   const [notes, setNotes] = useState(initialNotes);
@@ -41,28 +43,33 @@ export function SessionDetailClient({
     setMessage('');
     setMessageTone('success');
     startTransition(async () => {
-      const response = await fetch(`/api/athlete/sessions/${sessionId}/completion`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          isDone: nextDone,
-          notes,
-        }),
-      });
+      try {
+        const response = await fetch(`/api/athlete/sessions/${sessionId}/completion`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            isDone: nextDone,
+            notes,
+          }),
+        });
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({ error: 'Failed to update completion' }));
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({ error: 'Failed to update completion' }));
+          setMessageTone('danger');
+          setMessage(payload.error ?? 'Failed to update completion');
+          return;
+        }
+
+        setIsDone(nextDone);
+        setMessageTone('success');
+        setMessage(nextDone ? 'Session marked complete.' : 'Session moved back to planned.');
+        router.refresh();
+      } catch {
         setMessageTone('danger');
-        setMessage(payload.error ?? 'Failed to update completion');
-        return;
+        setMessage('Could not reach the server. Check your connection and try again.');
       }
-
-      setIsDone(nextDone);
-      setMessageTone('success');
-      setMessage(nextDone ? 'Session marked complete.' : 'Session moved back to planned.');
-      router.refresh();
     });
   }
 
@@ -70,34 +77,39 @@ export function SessionDetailClient({
     setMessage('');
     setMessageTone('success');
     startTransition(async () => {
-      const response = await fetch(`/api/athlete/sessions/${sessionId}${isDone ? '/actual' : ''}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(draft),
-      });
+      try {
+        const response = await fetch(`/api/athlete/sessions/${sessionId}${isDone ? '/actual' : ''}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(draft),
+        });
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({ error: `Failed to save ${isDone ? 'actual correction' : 'session adjustment'}` }));
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({ error: `Failed to save ${isDone ? 'actual correction' : 'session adjustment'}` }));
+          setMessageTone('danger');
+          setMessage(payload.error ?? 'Failed to save session adjustment');
+          return;
+        }
+
+        setIsEditing(false);
+        setMessageTone('success');
+        setMessage(isDone ? 'Actual correction saved.' : 'Planned session adjustment saved.');
+        router.refresh();
+      } catch {
         setMessageTone('danger');
-        setMessage(payload.error ?? 'Failed to save session adjustment');
-        return;
+        setMessage('Could not reach the server. Check your connection and try again.');
       }
-
-      setIsEditing(false);
-      setMessageTone('success');
-      setMessage(isDone ? 'Actual correction saved.' : 'Planned session adjustment saved.');
-      router.refresh();
     });
   }
 
   return (
-    <Surface className="space-y-4">
+    <Surface id={id} className="space-y-4">
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
           Completion
         </p>
         <p className="mt-2 text-[13px] text-[var(--text-secondary)]">
-          Add a note, then complete the session.
+          {isDone ? 'Review the outcome or correct what was recorded.' : 'Add a note, then complete the session.'}
         </p>
       </div>
 
@@ -163,12 +175,16 @@ export function SessionDetailClient({
 
       {!isEditing ? (
         <>
-          <textarea
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
-            className={`${formTextareaClassName} min-h-28`}
-            placeholder="How did the session feel?"
-          />
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-[var(--text-secondary)]">Session note</span>
+            <textarea
+              id="session-notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              className={`${formTextareaClassName} min-h-28`}
+              placeholder="How did the session feel?"
+            />
+          </label>
 
           <div className="flex flex-wrap gap-3">
             <button
@@ -193,7 +209,7 @@ export function SessionDetailClient({
         </>
       ) : null}
 
-      {message ? <p className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
+      {message ? <p role={messageTone === 'success' ? 'status' : 'alert'} aria-live="polite" className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
     </Surface>
   );
 }

@@ -20,14 +20,14 @@ export default async function AthleteActivityPage() {
     <PageShell size="wide">
       <TopBar
         title="Completed work"
-        description="Review what you finished and compare it with the planned session."
+        description="Review your latest 12 completed sessions and compare each with the planned work."
         actions={<ActionLink href="/athlete/calendar" tone="secondary">Open calendar</ActionLink>}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <StatTile label="Completed sessions" value={String(activityFeed.activities.length)} detail="Recent history" />
-        <StatTile label="Duration" value={formatDuration(activityFeed.totals.durationSec)} detail="Across recent activities" />
-        <StatTile label="Load" value={`${activityFeed.totals.tss}`} detail="Accumulated TSS" />
+        <StatTile label="Completed sessions" value={String(activityFeed.activities.length)} detail="Latest 12" />
+        <StatTile label="Duration" value={formatDuration(activityFeed.totals.durationSec)} detail="Latest 12 sessions" />
+        <StatTile label="Load" value={`${activityFeed.totals.tss}`} detail="Latest 12 sessions" />
       </div>
 
       {activityFeed.activities.length === 0 ? (
@@ -39,16 +39,16 @@ export default async function AthleteActivityPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           {activityFeed.activities.map((activity) => (
             <Surface key={activity.id} className="space-y-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[15px] font-semibold text-[var(--text)]">{activity.title}</p>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[15px] font-semibold text-[var(--text)]">{activity.title}</p>
                   <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
                     {format(activity.completedAt, 'EEE d MMM')} · {getSportLabel(activity.sport)}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <ActionLink href={`/athlete/session/${activity.sessionId}?from=activity`} tone="ghost">
-                    Open
+                   </p>
+                  </div>
+                   <div className="flex flex-wrap items-center gap-3">
+                    <ActionLink href={`/athlete/session/${activity.sessionId}?from=activity`} tone="ghost">
+                     Review outcome
                   </ActionLink>
                   <SessionComparisonDialog
                     sessionId={activity.sessionId}

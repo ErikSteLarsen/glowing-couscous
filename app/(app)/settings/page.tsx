@@ -17,7 +17,6 @@ export default async function SettingsPage() {
   return (
     <PageShell size="wide">
       <TopBar
-        eyebrow="Settings"
         title="Preferences"
         description="Customize Home overview."
       />

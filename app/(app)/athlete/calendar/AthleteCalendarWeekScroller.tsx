@@ -3,14 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { addDays, endOfWeek, format, getISOWeek, startOfWeek } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
-import { ActionLink, compactSecondaryButtonClassName, Surface } from '@/components/ui';
-import { MetricText } from '@/components/tempo/MetricText';
-import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
-import { StatusBadge } from '@/components/tempo/StatusBadge';
+import { ActionLink, compactSecondaryButtonClassName } from '@/components/ui';
+import { SessionRow } from '@/components/tempo/SessionRow';
 import { getWeekScrollerSearchHref } from '@/lib/calendar-scroller';
-import { formatDuration } from '@/lib/format-duration';
-import { getSportLabel } from '@/lib/sport';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 type CalendarScrollerSession = {
@@ -67,6 +62,7 @@ export function AthleteCalendarWeekScroller({
   const [loadingBefore, setLoadingBefore] = useState(false);
   const [loadingAfter, setLoadingAfter] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const [retryDirection, setRetryDirection] = useState<'before' | 'after' | null>(null);
   const daysRef = useRef(initialDays);
   const requestedWeekStarts = useRef(new Set<string>());
   const pathname = usePathname();
@@ -114,6 +110,7 @@ export function AthleteCalendarWeekScroller({
     }
 
     requestedWeekStarts.current.add(requestedWeekStart);
+    setRetryDirection(null);
     if (direction === 'before') setLoadingBefore(true);
     if (direction === 'after') setLoadingAfter(true);
     setRequestError(null);
@@ -134,6 +131,7 @@ export function AthleteCalendarWeekScroller({
     } catch (error) {
       requestedWeekStarts.current.delete(requestedWeekStart);
       setRequestError(error instanceof Error ? error.message : 'Failed to load more days.');
+      setRetryDirection(direction);
       return currentDays;
     } finally {
       if (direction === 'before') setLoadingBefore(false);
@@ -167,109 +165,93 @@ export function AthleteCalendarWeekScroller({
   );
 
   return (
-    <Surface className="space-y-4">
+    <section aria-labelledby="calendar-week-heading" className="space-y-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">
-            Week overview
-          </p>
-          <p className="mt-1 text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)]">{weekLabel}</p>
+          <h2 id="calendar-week-heading" className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)]">{weekLabel}</h2>
+          <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Monday-first · {weekDays.reduce((count, day) => count + day.sessions.length, 0)} sessions</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {showBackToToday ? (
-            <ActionLink href={`/athlete/calendar?view=week&date=${todayIso}`} tone="secondary" size="compact">
-              Back to today
-            </ActionLink>
-          ) : null}
-          <button type="button" className={compactSecondaryButtonClassName} onClick={() => void moveFocus(-1)}>
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Earlier
+          <ActionLink href={`/athlete/calendar?view=week&date=${todayIso}`} tone={showBackToToday ? 'secondary' : 'ghost'} size="compact">
+            Today
+          </ActionLink>
+          <button type="button" aria-label="Previous day" disabled={loadingBefore} className={compactSecondaryButtonClassName} onClick={() => void moveFocus(-1)}>
+            <ChevronLeft aria-hidden="true" className="mr-1 h-4 w-4" />
+            Previous
           </button>
-          <button type="button" className={compactSecondaryButtonClassName} onClick={() => void moveFocus(1)}>
-            Later
-            <ChevronRight className="ml-1 h-4 w-4" />
+          <button type="button" aria-label="Next day" disabled={loadingAfter} className={compactSecondaryButtonClassName} onClick={() => void moveFocus(1)}>
+            Next
+            <ChevronRight aria-hidden="true" className="ml-1 h-4 w-4" />
           </button>
         </div>
       </div>
 
       <div className="space-y-3">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-x-3 gap-y-6 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-7">
           {weekDays.map((day) => {
             const isFocused = day.isoDate === activeDateIso;
-            const isPast = day.isoDate < todayIso;
 
             return (
-              <Surface
+              <section
                 key={day.isoDate}
-                className={`space-y-3 transition ${
+                aria-labelledby={`calendar-day-${day.isoDate}`}
+                className={`min-w-0 border-t pt-3 transition 2xl:border-t-0 2xl:border-l 2xl:pl-3 ${
                   isFocused
-                    ? 'border-[var(--field-focus)] shadow-[var(--shadow-raised)]'
-                    : isPast
-                      ? 'opacity-70'
-                      : ''
+                    ? 'border-[var(--brand)] bg-[var(--brand-tint)] px-3 2xl:rounded-[8px]'
+                    : 'border-[var(--border)]'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">
-                      {day.label}
-                    </p>
+                  <button
+                    type="button"
+                    aria-current={isFocused ? 'date' : undefined}
+                    aria-label={`Focus ${day.label} ${day.dateLabel}`}
+                    className="inline-flex min-h-11 min-w-11 flex-col justify-center rounded-[8px] px-2 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+                    onClick={() => setActiveDateIso(day.isoDate)}
+                  >
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">{day.label}</p>
                     <div className="mt-1 flex items-center gap-2">
-                      <p className="metric-text text-[20px] font-semibold text-[var(--text)]">{day.dateLabel}</p>
-                      {day.isToday ? (
-                        <span className="rounded-full bg-[var(--brand-tint)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--field-selected-text)]">
-                          Today
-                        </span>
-                      ) : null}
+                      <span id={`calendar-day-${day.isoDate}`} className="metric-text text-[20px] font-semibold text-[var(--text)]">{day.dateLabel}</span>
+                      {day.isToday ? <span className="rounded-full bg-[var(--brand)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white">Today</span> : null}
                     </div>
-                  </div>
-                  <span className="rounded-full border border-[var(--field-border)] bg-[var(--field-surface)] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
-                    {day.sessions.length}
-                  </span>
+                  </button>
+                  <span className="rounded-full border border-[var(--field-border)] bg-[var(--field-surface)] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">{day.sessions.length}</span>
                 </div>
 
                 {day.sessions.length > 0 ? (
                   day.sessions.map((session) => (
-                    <Link
+                    <SessionRow
                       key={session.id}
+                      session={session}
                       href={`/athlete/session/${session.id}?from=calendar`}
-                      aria-label={`Open ${session.title}`}
-                      className="group block space-y-2 rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] p-3 transition hover:border-[var(--field-focus)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
-                    >
-                      <div className="flex items-center gap-2">
-                        <p className="text-[13px] font-semibold text-[var(--text)]">{session.title}</p>
-                        <div className="ml-auto">
-                          <StatusBadge status={session.status} />
-                        </div>
-                      </div>
-                      <p className="text-[13px] text-[var(--text-secondary)]">
-                        {session.timeLabel} · {getSportLabel(session.sport)}
-                      </p>
-                      <SessionBlockBar segments={session.segments} compact />
-                      <div className="flex flex-wrap gap-3 text-[13px] text-[var(--text-secondary)]">
-                        <MetricText>{formatDuration(session.durationSec)}</MetricText>
-                        <MetricText>{session.tss} TSS</MetricText>
-                      </div>
-                    </Link>
+                      variant="compact"
+                      muted={session.status === 'completed'}
+                      showTime={false}
+                    />
                   ))
                 ) : (
-                  <p className="text-[14px] text-[var(--text-muted)]">No session planned.</p>
+                  <p className="py-2 text-[13px] text-[var(--text-muted)]">Rest</p>
                 )}
-              </Surface>
+              </section>
             );
           })}
         </div>
 
-        {requestError ? <p className="text-sm text-[var(--status-danger)]">{requestError}</p> : null}
+        {requestError ? (
+          <div role="alert" className="flex flex-wrap items-center gap-3 rounded-[8px] border border-[var(--danger-border)] bg-[var(--danger-tint)] px-3 py-2 text-sm text-[var(--status-danger)]">
+            <span>{requestError}</span>
+            {retryDirection ? <button type="button" className="font-semibold underline underline-offset-2" onClick={() => void loadAdjacentWeek(retryDirection)}>Try again</button> : null}
+          </div>
+        ) : null}
 
         {loadingBefore || loadingAfter ? (
-          <div className="flex items-center justify-between text-[13px] text-[var(--text-muted)]">
+          <div role="status" aria-live="polite" className="flex items-center justify-between text-[13px] text-[var(--text-muted)]">
             {loadingBefore ? <span>Loading earlier days…</span> : null}
             {loadingAfter ? <span>Loading more days…</span> : null}
           </div>
         ) : null}
       </div>
-    </Surface>
+    </section>
   );
 }

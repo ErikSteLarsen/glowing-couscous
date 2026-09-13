@@ -3,17 +3,16 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
-  EmptyState,
   PageShell,
   compactSecondaryButtonClassName,
   Surface,
   TopBar,
   getSegmentedChoiceClassName,
 } from '@/components/ui';
+import { SessionRow } from '@/components/tempo/SessionRow';
 import { AthleteCalendarWeekScroller } from './AthleteCalendarWeekScroller';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
-import { getSportLabel } from '@/lib/sport';
 
 export default async function AthleteCalendarPage({
   searchParams,
@@ -47,10 +46,10 @@ export default async function AthleteCalendarPage({
         actions={
           <>
             <div className="inline-flex gap-1 rounded-[12px] border border-[var(--field-border)] bg-[var(--field-surface)] p-1">
-              <Link href={buildCalendarHref('week', resolvedReferenceDate)} className={getSegmentedChoiceClassName(selectedView === 'week', 'compact')}>
+               <Link href={buildCalendarHref('week', resolvedReferenceDate)} aria-current={selectedView === 'week' ? 'page' : undefined} className={getSegmentedChoiceClassName(selectedView === 'week', 'compact')}>
                 Week
               </Link>
-              <Link href={buildCalendarHref('month', resolvedReferenceDate)} className={getSegmentedChoiceClassName(selectedView === 'month', 'compact')}>
+               <Link href={buildCalendarHref('month', resolvedReferenceDate)} aria-current={selectedView === 'month' ? 'page' : undefined} className={getSegmentedChoiceClassName(selectedView === 'month', 'compact')}>
                 Month
               </Link>
             </div>
@@ -126,13 +125,15 @@ export default async function AthleteCalendarPage({
                       {week.map((day) => (
                         <div
                           key={day.isoDate}
-                          className={`min-h-[112px] rounded-[12px] border p-2.5 sm:min-h-[128px] sm:p-3 ${
+                          aria-label={`${day.dateLabel}, ${day.sessions.length} ${day.sessions.length === 1 ? 'session' : 'sessions'}`}
+                          role="group"
+                          className={`min-h-[112px] rounded-[10px] border p-2.5 sm:min-h-[128px] sm:p-3 ${
                             day.isCurrentMonth
                               ? 'border-[var(--border)] bg-[var(--surface)]'
-                              : 'border-[var(--field-border)] bg-[var(--field-surface)] opacity-65'
+                              : 'border-[var(--field-border)] bg-[var(--field-surface)] text-[var(--text-muted)]'
                           }`}
                         >
-                          <div className="flex items-start justify-between gap-2">
+                           <div className="flex items-start justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <p className="text-[15px] font-semibold text-[var(--text)]">{day.dateLabel}</p>
                               {day.isToday ? (
@@ -141,25 +142,22 @@ export default async function AthleteCalendarPage({
                                 </span>
                               ) : null}
                             </div>
-                                   <span className="rounded-full border border-[var(--field-border)] bg-[var(--field-surface)] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
-                              {day.sessions.length}
-                            </span>
+                             <span className="rounded-full border border-[var(--field-border)] bg-[var(--field-surface)] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                               {day.sessions.length}
+                             </span>
                           </div>
-                          <div className="mt-3 space-y-2">
-                            {day.sessions.length > 0 ? (
-                              day.sessions.map((session) => (
-                                <Link
-                                  key={session.id}
-                                  href={`/athlete/session/${session.id}?from=calendar`}
-                                  aria-label={`Open ${session.title}`}
-                                   className="block rounded-[10px] bg-[var(--field-surface)] px-2.5 py-2 transition hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
-                                >
-                                  <p className="truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</p>
-                                  <p className="mt-0.5 text-[12px] text-[var(--text-secondary)]">
-                                    {session.timeLabel} · {getSportLabel(session.sport)}
-                                  </p>
-                                </Link>
-                              ))
+                           <div className="mt-3 space-y-2">
+                             {day.sessions.length > 0 ? (
+                               day.sessions.map((session) => (
+                                 <SessionRow
+                                   key={session.id}
+                                    session={session}
+                                    href={`/athlete/session/${session.id}?from=calendar`}
+                                    variant="month"
+                                    showTime={false}
+                                   muted={session.status === 'completed'}
+                                 />
+                               ))
                             ) : (
                               <Link
                                 href={buildCalendarHref('week', new Date(`${day.isoDate}T12:00:00`))}
@@ -178,13 +176,6 @@ export default async function AthleteCalendarPage({
           </div>
         </Surface>
       )}
-
-      {selectedView === 'week' && calendar.days.every((day) => day.sessions.length === 0) ? (
-        <EmptyState
-          title="No sessions this week"
-          description="Assigned sessions will appear here."
-        />
-      ) : null}
     </PageShell>
   );
 }

@@ -46,17 +46,23 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
   const hasPendingRequest = requestState.latestRequest?.status === 'PENDING';
 
   async function loadRequestState() {
-    const res = await fetch('/api/athlete/coach-requests');
-    if (!res.ok) {
-      setErrorMessage('Failed to load your request state.');
-      return;
+    try {
+      const res = await fetch('/api/athlete/coach-requests');
+      if (!res.ok) {
+        setErrorMessage('Failed to load your request state.');
+        return false;
+      }
+      const data = (await res.json()) as { requests?: CoachRequestRecord[] };
+      const requests = data.requests ?? [];
+      setRequestState({
+        latestRequest: requests[0] ?? null,
+        requests,
+      });
+      return true;
+    } catch {
+      setErrorMessage('Could not reach the server. Check your connection and try again.');
+      return false;
     }
-    const data = (await res.json()) as { requests?: CoachRequestRecord[] };
-    const requests = data.requests ?? [];
-    setRequestState({
-      latestRequest: requests[0] ?? null,
-      requests,
-    });
   }
 
   async function handleSearch(e: React.FormEvent) {
@@ -64,17 +70,22 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
     if (!query.trim()) return;
     setLoading(true);
     setErrorMessage('');
-    const res = await fetch(`/api/coaches?q=${encodeURIComponent(query)}`);
-    if (!res.ok) {
+    try {
+      const res = await fetch(`/api/coaches?q=${encodeURIComponent(query)}`);
+      if (!res.ok) {
+        setResults([]);
+        setErrorMessage('Search failed. Please try again.');
+        return;
+      }
+      const data = await res.json();
+      setResults(data.coaches ?? []);
+      setLastSubmittedQuery(query);
+    } catch {
       setResults([]);
+      setErrorMessage('Could not reach the server. Check your connection and try again.');
+    } finally {
       setLoading(false);
-      setErrorMessage('Search failed. Please try again.');
-      return;
     }
-    const data = await res.json();
-    setResults(data.coaches ?? []);
-    setLastSubmittedQuery(query);
-    setLoading(false);
   }
 
   async function handleRequest(coachId: number) {
@@ -91,8 +102,8 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
       const payload = (await res.json().catch(() => ({ error: 'Failed to send request.' }))) as { error?: string };
 
       if (res.ok) {
-        await loadRequestState();
-        setFeedbackMessage('Request pending.');
+        const refreshed = await loadRequestState();
+        if (refreshed) setFeedbackMessage('Request pending.');
         return;
       }
 
@@ -113,31 +124,36 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
   return (
     <PageShell>
       <TopBar
-        eyebrow="Coach discovery"
         title="Search coaches"
       />
       <Surface>
-        {requestState.latestRequest?.status === 'PENDING' ? (
-          <div className="mb-4 rounded-[12px] border border-[var(--field-selected-border)] bg-[var(--brand-tint)] px-4 py-3 text-sm text-[var(--field-selected-text)]">
-            Request pending with {requestState.latestRequest.coach.name}.
-          </div>
-        ) : null}
+         {requestState.latestRequest?.status === 'PENDING' ? (
+           <div className="mb-4 rounded-[12px] border border-[var(--field-selected-border)] bg-[var(--brand-tint)] px-4 py-3 text-sm text-[var(--field-selected-text)]">
+             <p>Request pending with {requestState.latestRequest.coach.name}.</p>
+             <p className="mt-1 text-[13px]">You can keep shaping a private week while you wait.</p>
+             <ActionLink href="/athlete/planner" tone="ghost" size="compact">Continue private planning</ActionLink>
+           </div>
+         ) : null}
 
-        {feedbackMessage ? <p className={`mb-4 ${successTextClassName}`}>{feedbackMessage}</p> : null}
-        {errorMessage ? <p className={`mb-4 ${dangerTextClassName}`}>{errorMessage}</p> : null}
+         {feedbackMessage ? <p role="status" aria-live="polite" className={`mb-4 ${successTextClassName}`}>{feedbackMessage}</p> : null}
+         {errorMessage ? <p role="alert" aria-live="assertive" className={`mb-4 ${dangerTextClassName}`}>{errorMessage}</p> : null}
 
         <div className="mb-4 rounded-[12px] border border-dashed border-[var(--field-border)] bg-[var(--field-surface)] px-4 py-3 text-sm text-[var(--text-secondary)]">
           Messaging coming soon.
         </div>
 
         <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name or email"
-            className={`${formFieldClassName} min-w-0 flex-1`}
-          />
+           <label className="min-w-0 flex-1">
+             <span className="sr-only">Search coaches by name or email</span>
+             <input
+             type="text"
+             value={query}
+             onChange={(e) => setQuery(e.target.value)}
+             placeholder="Search by name or email"
+             aria-label="Search coaches by name or email"
+             className={`${formFieldClassName} min-w-0 flex-1`}
+             />
+           </label>
           <button
             type="submit"
             disabled={loading}

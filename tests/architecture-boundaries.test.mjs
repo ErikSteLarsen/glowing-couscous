@@ -102,18 +102,27 @@ test('coach request UI surfaces failures and blocks duplicate actions', async ()
   assert.match(discoverySource, /Failed to send request/);
 });
 
-test('athlete home page uses Tempo dashboard sections and session entry points', async () => {
+test('athlete home page uses the week wall and explicit session actions', async () => {
   const athletePageSource = await read('app/(app)/athlete/page.tsx');
+  const sessionRowSource = await read('components/tempo/SessionRow.tsx');
+  const statusBadgeSource = await read('components/tempo/StatusBadge.tsx');
 
   assert.match(athletePageSource, /Good morning/);
   assert.match(athletePageSource, /Today/);
-  assert.match(athletePageSource, /Next days/);
+  assert.match(athletePageSource, /Week at a glance/);
+  assert.match(athletePageSource, /Next action/);
   assert.match(athletePageSource, /Open calendar/);
-  assert.match(athletePageSource, /Customise overview in Settings/);
+  assert.equal((athletePageSource.match(/Open calendar/g) ?? []).length, 1);
+  assert.doesNotMatch(athletePageSource, /Open full calendar/);
+  assert.match(athletePageSource, /Plan a session/);
+  assert.doesNotMatch(athletePageSource, /Customise overview in Settings/);
   assert.match(athletePageSource, /athlete\/session/);
-  assert.doesNotMatch(athletePageSource, /StatusBadge/);
+  assert.match(athletePageSource, /SessionRow/);
+  assert.doesNotMatch(athletePageSource, /showStatus/);
+  assert.doesNotMatch(sessionRowSource, /StatusBadge|showStatus/);
+  assert.match(statusBadgeSource, /status === 'completed'/);
   assert.doesNotMatch(athletePageSource, /truncate text-\[13px\] font-semibold/);
-  assert.match(athletePageSource, /break-words text-\[13px\] font-semibold/);
+  assert.match(sessionRowSource, /break-words text-\[13px\] font-semibold/);
 });
 
 test('template workflow supports duplication and library filtering', async () => {

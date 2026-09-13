@@ -165,7 +165,11 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
         const completedCount = sessions.filter((session) => session.status === 'completed').length;
         const compliancePct =
           sessions.length > 0 ? Math.round((completedCount / sessions.length) * 100) : 0;
-        const nextSession = sessions.find((session) => session.status !== 'completed') ?? sessions[0] ?? null;
+        const nextSession =
+          sessions.find((session) => session.status === 'planned' || session.status === 'adjusted')
+          ?? sessions.find((session) => session.status === 'missed')
+          ?? sessions[0]
+          ?? null;
 
         return {
           id: athlete.id,

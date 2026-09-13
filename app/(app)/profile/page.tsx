@@ -18,7 +18,6 @@ export default async function ProfilePage() {
   return (
     <PageShell size="wide">
       <TopBar
-        eyebrow="Profile"
         title={account.name ?? 'Your profile'}
       />
       <ProfileClient account={account} athleteState={athleteState} />

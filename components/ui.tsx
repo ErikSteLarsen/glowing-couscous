@@ -5,6 +5,7 @@ const pageShellWidthClasses = {
   narrow: 'max-w-3xl',
   default: 'max-w-5xl',
   wide: 'max-w-[1140px]',
+  wall: 'max-w-[1440px]',
 } as const;
 
 export const formLabelClassName = 'mb-1.5 block text-sm font-medium text-[var(--text-secondary)]';
@@ -17,19 +18,19 @@ const buttonFocusClassName =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
 const buttonDisabledClassName = 'disabled:cursor-not-allowed disabled:opacity-50';
 export const primaryButtonClassName =
-  `inline-flex min-h-11 items-center justify-center rounded-[10px] bg-[var(--text)] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `inline-flex min-h-11 items-center justify-center rounded-[8px] bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 ${buttonFocusClassName} ${buttonDisabledClassName}`;
 export const secondaryButtonClassName =
-  `inline-flex min-h-11 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--field-surface)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `inline-flex min-h-11 items-center justify-center rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-semibold text-[var(--text)] transition hover:border-[var(--field-focus)] hover:bg-[var(--field-surface)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
 export const dangerButtonClassName =
-  `inline-flex min-h-11 items-center justify-center rounded-[10px] border border-[#E9D2CC] bg-[#F5ECE8] px-4 py-2.5 text-sm font-semibold text-[var(--status-danger)] transition hover:bg-[#F2E3DE] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--status-danger)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] ${buttonDisabledClassName}`;
+  `inline-flex min-h-11 items-center justify-center rounded-[8px] border border-[var(--danger-border)] bg-[var(--danger-tint)] px-4 py-2.5 text-sm font-semibold text-[var(--status-danger)] transition hover:bg-[var(--danger-tint-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--status-danger)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] ${buttonDisabledClassName}`;
 export const compactPrimaryButtonClassName =
-  `inline-flex min-h-9 items-center justify-center rounded-[9px] bg-[var(--text)] px-3 py-2 text-[13px] font-semibold text-white transition hover:opacity-90 ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `inline-flex min-h-9 items-center justify-center rounded-[7px] bg-[var(--brand)] px-3 py-2 text-[13px] font-semibold text-white transition hover:opacity-90 ${buttonFocusClassName} ${buttonDisabledClassName}`;
 export const compactSecondaryButtonClassName =
-  `inline-flex min-h-9 items-center justify-center rounded-[9px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[13px] font-medium text-[var(--text)] transition hover:bg-[var(--field-surface)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `inline-flex min-h-9 items-center justify-center rounded-[7px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[13px] font-medium text-[var(--text)] transition hover:border-[var(--field-focus)] hover:bg-[var(--field-surface)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
 export const compactDangerButtonClassName =
-  `inline-flex min-h-9 items-center justify-center rounded-[9px] border border-[#E9D2CC] bg-[#F5ECE8] px-3 py-2 text-[13px] font-medium text-[var(--status-danger)] transition hover:bg-[#F2E3DE] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--status-danger)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] ${buttonDisabledClassName}`;
+  `inline-flex min-h-9 items-center justify-center rounded-[7px] border border-[var(--danger-border)] bg-[var(--danger-tint)] px-3 py-2 text-[13px] font-medium text-[var(--status-danger)] transition hover:bg-[var(--danger-tint-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--status-danger)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] ${buttonDisabledClassName}`;
 export const compactListButtonClassName =
-  `flex min-h-9 w-full items-center justify-start rounded-[9px] bg-[var(--surface)] px-3 py-2 text-left text-[13px] text-[var(--text)] transition hover:bg-[var(--field-surface)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `flex min-h-9 w-full items-center justify-start rounded-[7px] bg-[var(--surface)] px-3 py-2 text-left text-[13px] text-[var(--text)] transition hover:bg-[var(--field-surface)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
 export const dangerTextClassName = 'text-sm text-[var(--status-danger)]';
 export const successTextClassName = 'text-sm text-[var(--status-success)]';
 
@@ -63,13 +64,11 @@ export function PageShell({
 }
 
 export function TopBar({
-  eyebrow,
   title,
   description,
   actions,
   align = 'left',
 }: {
-  eyebrow?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
@@ -80,11 +79,6 @@ export function TopBar({
   return (
     <div className={isCentered ? 'text-center' : 'flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'}>
       <div className="space-y-2">
-        {eyebrow ? (
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
-            {eyebrow}
-          </p>
-        ) : null}
         <div className={isCentered ? 'space-y-2 text-center' : 'space-y-2'}>
           <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-[var(--text)]">{title}</h1>
           {description ? (
@@ -128,10 +122,11 @@ export function ActionLink({
   );
 }
 
-export function Surface({ children, className = '' }: { children: ReactNode; className?: string }) {
+export function Surface({ children, className = '', id }: { children: ReactNode; className?: string; id?: string }) {
   return (
     <section
-      className={`rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)] ${className}`}
+      id={id}
+      className={`rounded-[10px] border border-[var(--border)] bg-[var(--surface)] p-5 ${className}`}
     >
       {children}
     </section>
@@ -160,8 +155,8 @@ export function Badge({
   const toneClasses = {
     neutral: 'border-[var(--border)] bg-[var(--field-surface)] text-[var(--text-secondary)]',
     brand: 'border-[var(--field-selected-border)] bg-[var(--brand-tint)] text-[var(--field-selected-text)]',
-    success: 'border-[#CFE3D9] bg-[#E8F1ED] text-[var(--status-success)]',
-    warning: 'border-[#E9D2CC] bg-[#F5ECE8] text-[var(--status-danger)]',
+    success: 'border-[var(--status-success-border)] bg-[var(--status-success-tint)] text-[var(--status-success)]',
+    warning: 'border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] text-[var(--status-warning)]',
   } as const;
 
   return (
@@ -173,11 +168,12 @@ export function Badge({
   );
 }
 
-export function EmptyState({ title, description }: { title: string; description: string }) {
+export function EmptyState({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
   return (
     <div className="rounded-[12px] border border-dashed border-[var(--border)] bg-[var(--field-surface)] px-5 py-10 text-center">
       <p className="text-base font-semibold text-[var(--text)]">{title}</p>
       <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--text-secondary)]">{description}</p>
+      {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
     </div>
   );
 }

@@ -57,10 +57,12 @@ export function CoachTemplatesClient({
   templates,
   apiBasePath = '/api/coach/templates',
   plannerHref = '/coach/planner',
+  role = 'COACH',
 }: {
   templates: TemplateRecord[];
   apiBasePath?: string;
   plannerHref?: string;
+  role?: 'COACH' | 'ATHLETE';
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -72,6 +74,7 @@ export function CoachTemplatesClient({
   const [editorCadence, setEditorCadence] = useState<TemplateCadence>('day');
   const [editorDraft, setEditorDraft] = useState<SessionEditorDraft>(() => createEmptyTemplateEditorDraft());
   const workoutsHref = plannerHref.startsWith('/athlete') ? '/athlete/workouts' : '/coach/workouts';
+  const isAthlete = role === 'ATHLETE';
 
   const visibleTemplates = useMemo(() => {
     const query = filterText.trim().toLowerCase();
@@ -171,9 +174,9 @@ export function CoachTemplatesClient({
     <div className="space-y-5">
       <div className="rounded-[12px] border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-5">
         <div className="max-w-2xl">
-          <h2 className="text-lg font-semibold text-[var(--text)]">Build reusable training structure</h2>
+           <h2 className="text-lg font-semibold text-[var(--text)]">{isAthlete ? 'Build a private template' : 'Build reusable training structure'}</h2>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-            Create reusable structure here, choose how often it should repeat, then use Planner to place the finished template on a date, week, or month.
+             {isAthlete ? 'Save a private starting point, then reuse it when you shape your training week.' : 'Create reusable structure here, choose how often it should repeat, then use Planner to place the finished template on a date, week, or month.'}
           </p>
           <a href={workoutsHref} className={`${compactSecondaryButtonClassName} mt-4`}>
             Open Workouts
@@ -234,8 +237,8 @@ export function CoachTemplatesClient({
         </Surface>
       ) : null}
 
-      {visibleTemplates.length === 0 ? (
-        <EmptyState title="No templates found" description="Try another filter or create a template." />
+       {visibleTemplates.length === 0 ? (
+        <EmptyState title={templates.length === 0 ? 'No templates yet' : 'No templates found'} description={templates.length === 0 ? (isAthlete ? 'Create a private template to reuse in your week.' : 'Create a template to reuse structured training.') : 'Try another filter or create a template.'} />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {visibleTemplates.map((template) => {
@@ -263,29 +266,18 @@ export function CoachTemplatesClient({
                     href={`${plannerHref}?templateId=${template.id}`}
                     className={compactPrimaryButtonClassName}
                   >
-                    Use in Planner
+                     {isAthlete ? 'Reuse in Planner' : 'Use in Planner'}
                   </a>
-                  <button type="button" onClick={() => openEditor(template)} disabled={isPending} className={compactSecondaryButtonClassName}>
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => duplicateTemplate(template.id)}
-                    disabled={isPending}
-                    className={compactSecondaryButtonClassName}
-                  >
-                    Duplicate
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => deleteTemplate(template.id)}
-                    disabled={isPending}
-                    className={compactDangerButtonClassName}
-                  >
-                    Delete
-                  </button>
+                  <details className="relative">
+                    <summary className={`${compactSecondaryButtonClassName} list-none`}>More actions</summary>
+                    <div className="absolute right-0 top-full z-10 mt-2 grid min-w-40 gap-1 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] p-2 shadow-[var(--shadow-overlay)]">
+                      <button type="button" onClick={() => openEditor(template)} disabled={isPending} className={compactSecondaryButtonClassName}>Edit</button>
+                      <button type="button" onClick={() => duplicateTemplate(template.id)} disabled={isPending} className={compactSecondaryButtonClassName}>Duplicate</button>
+                      <button type="button" onClick={() => deleteTemplate(template.id)} disabled={isPending} className={compactDangerButtonClassName}>Delete</button>
+                    </div>
+                  </details>
                 </div>
-                <ShareLinkButton sourceKind="template" sourceId={template.id} />
+                <ShareLinkButton sourceKind="template" sourceId={template.id} ariaLabel={`Share ${template.name}`} />
               </Surface>
             );
           })}

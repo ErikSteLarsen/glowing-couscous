@@ -201,6 +201,17 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         .map(mapSessionSummary);
       const today = new Date();
       const todaySessions = sessions.filter((session) => isSameDay(session.date, today));
+      const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
+      const weekDays = Array.from({ length: 7 }, (_, index) => {
+        const day = addDays(currentWeekStart, index);
+        return {
+          label: format(day, 'EEE').toUpperCase(),
+          dateLabel: format(day, 'd'),
+          isoDate: format(day, 'yyyy-MM-dd'),
+          isToday: isSameDay(day, today),
+          sessions: sessions.filter((session) => isSameDay(session.date, day)),
+        };
+      });
       const nextDays = Array.from({ length: 4 }, (_, index) => {
         const day = addDays(today, index + 1);
         const daySessions = sessions.filter((session) => isSameDay(session.date, day));
@@ -230,6 +241,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
           : null,
         overviewCards,
         todaySessions,
+        weekDays,
         nextDays,
         lastActivity: athlete.activities[0]
           ? {

@@ -50,6 +50,18 @@ export function getPrimaryNavigation(
   ];
 }
 
+export function getMobileNavigation(
+  role: AppRole,
+  options: { hasActiveCoach?: boolean } = {},
+): NavItem[] {
+  const items = getPrimaryNavigation(role, options);
+  const priorityLabels = role === 'ATHLETE' ? ['Home', 'Calendar', 'Workouts', 'Activity'] : ['Athletes', 'Planner', 'Workouts', 'Templates'];
+
+  return priorityLabels
+    .map((label) => items.find((item) => item.label === label))
+    .filter((item): item is NavItem => Boolean(item));
+}
+
 export const profileActions = [
   { label: 'Profile', href: '/profile', matchPrefix: '/profile' },
   { label: 'Settings', href: '/settings', matchPrefix: '/settings' },

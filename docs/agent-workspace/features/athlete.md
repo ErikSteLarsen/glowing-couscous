@@ -1,8 +1,8 @@
 # Feature: Athlete Tempo Surfaces And Completion
 
 - **IDs:** `ATHLETE-001`, `COMPLETE-001`
-- **Status:** `shipped`
-- **Last verified:** `2026-09-07`
+- **Status:** `in-progress`
+- **Last verified:** `2026-09-13`
 - **Owner:** `lib/athlete-service.ts` for reads, `lib/athlete-session-adjustment-service.ts` for planned writes, and `lib/athlete-completion-service.ts` for Activity writes
 - **Related work:** [baseline](../history/2026-08-21-baseline.md), [architecture](../../../ARCHITECTURE.md), [Live task](../tasks/2026-08-21-athlete-live-execution.md), [completion task](../tasks/2026-08-21-completion-integrity.md), [snapshot task](../tasks/2026-08-25-session-snapshots.md), [planned adjustment task](../tasks/2026-08-25-planned-session-adjustments.md), [calendar month polish](../history/2026-08-22-calendar-month-polish.md), [calendar week overview](../history/2026-08-22-calendar-week-overview.md), [calendar copy polish](../history/2026-08-28-calendar-copy-polish.md), [concise UI copy](../history/2026-08-28-concise-ui-copy.md), [month navigation](../history/2026-08-28-calendar-month-navigation.md), [navigation alignment correction](../history/2026-08-28-calendar-navigation-alignment-correction.md), [month empty state](../history/2026-08-28-calendar-month-empty-state.md), [shared session creator](../history/2026-08-28-shared-session-creator.md), [navigation context and workouts](../history/2026-09-03-navigation-context-and-workouts.md), [navigation decision](../decisions/0014-contextual-athlete-navigation.md)
 
@@ -28,11 +28,21 @@ They can mark a session complete or move it back to planned while saving notes.
 
 - Home summarizes today, next four days, recent activity, trend, week totals,
   and configurable overview cards.
+- Home also exposes an additive Monday-first `weekDays` read model, an explicit
+  next-action treatment, and aligned session-row/status semantics shared with
+  the migrated execution and history surfaces.
 - Home today and upcoming-day session tiles link individually to session detail,
   including every session when a day has multiple sessions.
 - Home session tiles omit the planned/status badge so workout titles and metadata
   have more room; titles wrap instead of being truncated.
+- Home keeps Calendar as one top-level action, sends an empty week toward Planner,
+  and uses a four-column large-desktop week tier with wider spacing before the
+  seven-column wall tier.
+- Home keeps overview customization in Settings without repeating a Settings
+  shortcut beneath the overview cards.
 - Workouts lists all scheduled sessions and links each card to its session detail.
+- Workouts now leads with current-week scheduled work using the shared session-row
+  grammar, while the unassigned library remains a separate authoring surface.
 - Workouts also owns private standalone workout creation/editing. These records
   have no date or Plan until the athlete places them through Planner.
 - Athlete Planner can load a saved private workout as source content and create
@@ -46,6 +56,10 @@ They can mark a session complete or move it back to planned while saving notes.
   shown when today is outside the visible week.
 - Each session summary card links to session detail as a whole, without a
   separate nested `Open session` action.
+- Calendar workout rows omit visible planned/completed status badges; completed
+  rows are subtly muted while their state remains available to assistive labels.
+- Calendar workout rows omit assignment time; the session detail surface remains
+  the place to inspect time when it exists.
 - Calendar navigation and dense session metadata use compact desktop controls
   with a slightly more readable content text floor; discovery/request actions
   stack safely on narrow screens.
@@ -55,14 +69,17 @@ They can mark a session complete or move it back to planned while saving notes.
   instead of repeating visible layout behavior.
 - Month navigation is right-anchored independently of the variable-length month
   label.
-- Month view relies on its day grid for empty days and does not repeat an empty
-  state below the calendar.
+- Calendar relies on its day grid for empty days and does not render a separate
+  workout summary below the calendar.
 - Athletes can open Planner from the side menu, create a private session for one
   or more dates, edit/delete their own planned sessions, and prefill from their
   private templates.
 - Month navigation sits beside the displayed month in the overview card, with
   labeled directional controls and readable grid overflow on narrow screens.
 - Session detail derives status, duration, TSS, targets, zone segments, and block metadata.
+- Session and Live surfaces now retain a compact week/date/status context and
+  derive their primary action from the session state; completion and network
+  feedback uses announced success/error semantics.
 - Live execution presents ordered blocks and a stepper-style execution view.
 - Live execution advances, goes back, restarts, and marks blocks complete through
   local client state; refresh intentionally restarts the guidance state.
@@ -84,6 +101,8 @@ They can mark a session complete or move it back to planned while saving notes.
 - Completed sessions cannot be edited or deleted through coach planner mutation
   paths while their Activity outcome exists.
 - Activity feed returns the latest twelve activities with totals and block segments.
+- Activity explicitly labels its latest-twelve scope, marks completed state, and
+  leads with a Review outcome action.
 - The active athlete route tree uses the light Tempo surface; unreferenced
   pre-convergence athlete week/session components were removed after reference
   analysis so their dark-theme controls cannot be reused accidentally.
@@ -93,6 +112,11 @@ They can mark a session complete or move it back to planned while saving notes.
 - Private workout-to-Planner prefilling preserves the selected date set when a
   user switches back to a blank draft; standalone workout cards use the shared
   field-surface token rather than a new hard-coded color.
+- `SessionRow` is the shared workout-card primitive across Home, Calendar
+  week/month, and Workouts. Its `default`, `compact`, and `month` variants adapt
+  content to available space without route-local workout markup and never render
+  a status badge. Completed Calendar cards remain muted; the domain status stays
+  available for action logic and accessible context.
 
 ## Verification
 
@@ -129,6 +153,48 @@ They can mark a session complete or move it back to planned while saving notes.
 - `pnpm test` — 175 passing tests on 2026-09-08 after the bounded surface review;
   `pnpm lint`, `pnpm build`, `git diff --check`, and the Impeccable detector
   remain clean. Browser viewport inspection is still outstanding.
+- `pnpm test`, `pnpm lint`, `pnpm build`, `git diff --check`, and the Impeccable
+  detector (`[]`) pass after the week-at-a-glance Home/Calendar batch on
+  2026-09-08; browser viewport inspection remains outstanding.
+- `pnpm test`, `pnpm lint`, `pnpm build`, `git diff --check`, and the Impeccable
+  detector (`[]`) pass after the athlete execution/history batch on 2026-09-08;
+  browser viewport inspection remains outstanding.
+- 2026-09-08 headed Chrome finish review — athlete Home, Calendar (empty and
+  scheduled weeks), Workouts, Planner, Templates, Activity, Session, and Live
+  loaded at 390×844, 1280×900, 1440×1000, and 1920×1080 without horizontal
+  overflow, runtime exceptions, or console errors. Mobile shell focus recovery,
+  session/live context, role redirects, and 44px checkbox label hit areas were
+  verified; full mutation-flow acceptance remains separate.
+- 2026-09-09 continuation — the connected desktop-browser bridge remains
+  unavailable, so no new athlete viewport or interaction evidence is claimed.
+  `pnpm test` (175), `pnpm lint`, `pnpm build`, `git diff --check`, and the
+  focused Impeccable detector (`[]`) pass.
+- 2026-09-11 Home overview polish — `pnpm test` (175), `pnpm lint`, `pnpm build`,
+  `git diff --check`, and the focused Impeccable detector (`[]`) pass after
+  removing duplicate Calendar actions, separating overview settings, and adding
+  large-desktop spacing. Browser viewport inspection remains unavailable.
+- 2026-09-13 Calendar empty-week summary removal — the direct athlete calendar
+  suite (8 tests), `pnpm lint`, `git diff --check`, and the focused Impeccable
+  detector (`[]`) pass. `pnpm test` and `pnpm build` exceeded the available
+  timeout while unrelated long-running work remained; the build had compiled
+  and completed TypeScript before timing out during page-data collection.
+- 2026-09-13 Calendar status density — the direct athlete calendar suite (8
+  tests), `pnpm lint`, `git diff --check`, and the focused Impeccable detector
+  (`[]`) pass after hiding calendar status badges and muting completed rows.
+- 2026-09-13 Calendar time density — the direct athlete calendar suite (8 tests),
+  `pnpm lint`, `git diff --check`, and the focused Impeccable detector (`[]`)
+  pass after removing assignment times from Calendar workout rows.
+ - 2026-09-13 Workout card standardization — the focused athlete/calendar and
+   architecture suite (175 tests), `pnpm lint`, `pnpm build`, `git diff --check`,
+   and the focused Impeccable detector (`[]`) pass after routing Home, Calendar
+   week, Calendar month, and Workouts through `SessionRow` variants. Build keeps
+   the existing middleware-to-proxy deprecation warning. Browser inspection
+   remains unavailable because the desktop browser bridge is disconnected.
+ - 2026-09-13 Completed-status UI cleanup — the focused architecture suite (17
+   passing), `pnpm lint`, `pnpm build`, and `git diff --check` pass after removing
+   `SessionRow` status rendering and `showStatus` overrides. `StatusBadge` now
+   renders planned, adjusted, and missed states only; completed state remains
+   domain data and is never rendered as a badge.
 
 ## Known Gaps
 
@@ -138,8 +204,10 @@ They can mark a session complete or move it back to planned while saving notes.
 - Athlete onboarding and navigation polish remain planned.
 - Athlete templates are private to their owner; coach-owned templates are still
   assigned through the coach workflow rather than automatically shared.
-- Browser verification of planned-edit loading, empty/error states, keyboard
-  focus, contrast, and narrow/wide responsive layouts remains outstanding.
+- Browser verification of planned-edit mutation recovery, comparison dialog
+  interaction, and all API error branches remains outstanding; the primary
+  responsive read/detail surfaces, empty/rest states, and shell interaction
+  states were reviewed.
 
 ## Extension Rules
 

@@ -19,9 +19,8 @@ export default async function CoachPage() {
   }
 
   return (
-    <PageShell size="wide">
+    <PageShell size="wall">
       <TopBar
-        eyebrow="Athletes"
         title="Your athletes"
         description={`${coach.athletes.length} active athletes${coach.pendingRequests.length ? ` · ${coach.pendingRequests.length} pending requests` : ''}.`}
         actions={
@@ -52,40 +51,41 @@ export default async function CoachPage() {
 
       {coach.pendingRequests.length > 0 ? <CoachRequestsPanel /> : null}
 
-      <Surface>
-        <div className="grid gap-3">
-          {coach.athletes.map((athlete) => (
-            <a
-              key={athlete.id}
-              href={`/coach/athletes/${athlete.id}`}
-              className="grid gap-4 rounded-[12px] border border-[var(--border)] bg-[var(--field-surface)] p-4 lg:grid-cols-[1.6fr_1fr_1fr]"
-            >
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-[15px] font-semibold text-[var(--text)]">{athlete.name}</h2>
-                  <Badge tone={athlete.flag.tone}>{athlete.flag.label}</Badge>
+      {coach.athletes.length === 0 ? (
+        <EmptyState
+          title="No athletes in your roster"
+          description={coach.pendingRequests.length > 0 ? 'Review pending requests above to build your roster.' : 'Accepted athletes will appear here with their current training week.'}
+        />
+      ) : (
+        <Surface>
+          <div className="space-y-2">
+            {coach.athletes.map((athlete) => (
+              <article key={athlete.id} className="grid gap-4 border-b border-[var(--border)] py-4 last:border-b-0 lg:grid-cols-[1.4fr_0.8fr_1fr_auto] lg:items-center">
+                <a
+                  href={`/coach/athletes/${athlete.id}`}
+                  className="min-w-0 rounded-[8px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <h2 className="break-words text-[15px] font-semibold text-[var(--text)]">{athlete.name}</h2>
+                    <Badge tone={athlete.flag.tone}>{athlete.flag.label}</Badge>
+                  </div>
+                  <p className="mt-1 break-words text-sm text-[var(--text-secondary)]">{athlete.email}</p>
+                </a>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">This week</p>
+                  <p className="metric-text mt-2 text-[18px] font-semibold text-[var(--text)]">{athlete.completedCount} / {athlete.plannedCount}</p>
+                  <p className="mt-1 text-sm text-[var(--text-secondary)]">{athlete.compliancePct}% complete</p>
                 </div>
-                <p className="mt-1 text-sm text-[var(--text-secondary)]">{athlete.email}</p>
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                  This week
-                </p>
-                <p className="metric-text mt-2 text-[18px] font-semibold text-[var(--text)]">
-                  {athlete.completedCount} / {athlete.plannedCount}
-                </p>
-                <p className="mt-1 text-sm text-[var(--text-secondary)]">{athlete.compliancePct}% complete</p>
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                  Next session
-                </p>
-                <p className="mt-2 text-sm text-[var(--text-secondary)]">{athlete.nextSession}</p>
-              </div>
-            </a>
-          ))}
-        </div>
-      </Surface>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Next session</p>
+                  <p className="mt-2 break-words text-sm text-[var(--text-secondary)]">{athlete.nextSession}</p>
+                </div>
+                <ActionLink href={`/coach/planner?athleteId=${athlete.id}`} tone="secondary" size="compact">Plan next session</ActionLink>
+              </article>
+            ))}
+          </div>
+        </Surface>
+      )}
     </PageShell>
   );
 }

@@ -2,6 +2,7 @@
 
 import { addDays, format, parseISO, startOfWeek } from 'date-fns';
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import {
   Badge,
@@ -26,14 +27,19 @@ export function SourceAssignmentPanel({
   librarySessions,
   trainingPlans,
   initialDate,
+  selectedAthleteId,
+  onAthleteChange,
 }: {
   athletes: Array<{ id: number; name: string }>;
   templates: Array<{ id: number; name: string }>;
   librarySessions: Array<{ id: number; title: string }>;
   trainingPlans: Array<{ id: number; name: string; sessions: Array<{ title: string; planWeekday: number | null }> }>;
   initialDate: string;
+  selectedAthleteId: number | null;
+  onAthleteChange: (athleteId: number) => void;
 }) {
-  const [athleteId, setAthleteId] = useState(athletes[0]?.id ?? 0);
+  const router = useRouter();
+  const athleteId = selectedAthleteId ?? athletes[0]?.id ?? 0;
   const [date, setDate] = useState(initialDate);
   const [weekStart, setWeekStart] = useState(format(startOfWeek(parseISO(initialDate), { weekStartsOn: 1 }), 'yyyy-MM-dd'));
   const [sourceKey, setSourceKey] = useState('');
@@ -66,24 +72,31 @@ export function SourceAssignmentPanel({
     setSaving(true);
     setMessage('');
     setError('');
-    const response = await fetch('/api/coach/assignments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        athleteId,
-        source: selected.source,
-        scheduledDate: date,
-        weekStart,
-      }),
-    });
-    const payload = (await response.json().catch(() => ({}))) as { error?: string; sessionId?: number; sessionIds?: number[] };
-    setSaving(false);
-    if (!response.ok) {
-      setError(payload.error ?? 'Assignment failed.');
-      return;
+    try {
+      const response = await fetch('/api/coach/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          athleteId,
+          source: selected.source,
+          scheduledDate: date,
+          weekStart,
+        }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string; sessionId?: number; sessionIds?: number[] };
+      if (!response.ok) {
+        setError(payload.error ?? 'Assignment failed.');
+        return;
+      }
+      const count = payload.sessionIds?.length ?? 1;
+      const athleteName = athletes.find((athlete) => athlete.id === athleteId)?.name ?? 'the athlete';
+      setMessage(count > 1 ? `${selected.preview} assigned to ${athleteName}: ${count} sessions created or reused.` : `${selected.preview} assigned to ${athleteName}.`);
+      router.refresh();
+    } catch {
+      setError('Could not reach the server. Check your connection and try again.');
+    } finally {
+      setSaving(false);
     }
-    const count = payload.sessionIds?.length ?? 1;
-    setMessage(count > 1 ? `${count} sessions assigned or reused.` : 'Source assigned or reused.');
   }
 
   return (
@@ -98,7 +111,7 @@ export function SourceAssignmentPanel({
       <p className="text-sm text-[var(--text-secondary)]">Copies are independent.</p>
       <label className="block space-y-2">
         <span className="text-sm font-medium text-[var(--text-secondary)]">Athlete</span>
-        <select className={formSelectClassName} value={athleteId} onChange={(event) => setAthleteId(Number(event.target.value))}>
+        <select className={formSelectClassName} value={athleteId} onChange={(event) => onAthleteChange(Number(event.target.value))}>
           {athletes.map((athlete) => <option key={athlete.id} value={athlete.id}>{athlete.name}</option>)}
         </select>
       </label>
@@ -109,15 +122,15 @@ export function SourceAssignmentPanel({
           {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </label>
-      {selected?.source.kind === 'training-plan' ? (
+       {selected?.source.kind === 'training-plan' ? (
         <label className="block space-y-2">
           <span className="text-sm font-medium text-[var(--text-secondary)]">Target Monday week</span>
-          <input type="date" className={formFieldClassName} value={weekStart} onChange={(event) => setWeekStart(event.target.value)} />
+           <input type="date" className={formFieldClassName} value={weekStart} onChange={(event) => setWeekStart(event.target.value ? format(startOfWeek(parseISO(event.target.value), { weekStartsOn: 1 }), 'yyyy-MM-dd') : weekStart)} />
         </label>
       ) : (
         <label className="block space-y-2">
           <span className="text-sm font-medium text-[var(--text-secondary)]">Target date</span>
-          <input type="date" className={formFieldClassName} value={date} onChange={(event) => setDate(event.target.value)} />
+           <input type="date" className={formFieldClassName} value={date} onChange={(event) => setDate(event.target.value || initialDate)} />
         </label>
       )}
       {selected ? (
@@ -137,8 +150,8 @@ export function SourceAssignmentPanel({
       <button type="button" className={primaryButtonClassName} disabled={saving || options.length === 0} onClick={() => void assign()}>
         {saving ? 'Assigning…' : 'Assign source'}
       </button>
-      {message ? <p className={successTextClassName}>{message}</p> : null}
-      {error ? <p className={dangerTextClassName}>{error}</p> : null}
+       {message ? <p role="status" aria-live="polite" className={successTextClassName}>{message}</p> : null}
+       {error ? <p role="alert" aria-live="assertive" className={dangerTextClassName}>{error}</p> : null}
     </Surface>
   );
 }

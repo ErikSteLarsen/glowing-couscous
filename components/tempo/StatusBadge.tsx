@@ -1,18 +1,21 @@
 const statusClasses = {
-  planned: 'bg-[var(--brand-tint)] text-[var(--field-selected-text)]',
-  completed: 'bg-[#E8F1ED] text-[var(--status-success)]',
-  adjusted: 'bg-[#F5ECE8] text-[var(--status-danger)]',
-  missed: 'bg-[#EAF1F6] text-[#416A88]',
+  planned: 'border-[var(--status-planned-border)] bg-[var(--status-planned-tint)] text-[var(--status-planned)]',
+  adjusted: 'border-[var(--status-adjusted-border)] bg-[var(--status-adjusted-tint)] text-[var(--status-adjusted)]',
+  missed: 'border-[var(--status-missed-border)] bg-[var(--status-missed-tint)] text-[var(--status-missed)]',
 } as const;
+
+type Status = keyof typeof statusClasses | 'completed';
 
 export function StatusBadge({
   status,
 }: {
-  status: keyof typeof statusClasses;
+  status: Status;
 }) {
+  if (status === 'completed') return null;
+
   return (
     <span
-      className={`inline-flex min-h-7 items-center rounded-full px-3 text-[12.5px] font-semibold ${statusClasses[status]}`}
+      className={`inline-flex min-h-7 items-center rounded-full border px-3 text-[12.5px] font-semibold ${statusClasses[status]}`}
     >
       {status[0].toUpperCase() + status.slice(1)}
     </span>

@@ -1,11 +1,11 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import { ActionLink, EmptyState, PageShell, Surface, TopBar } from '@/components/ui';
-import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { endOfWeek, format, startOfWeek } from 'date-fns';
+import { ActionLink, PageShell, Surface, TopBar } from '@/components/ui';
 import { MetricText } from '@/components/tempo/MetricText';
+import { SessionRow } from '@/components/tempo/SessionRow';
+import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
-import { getSportLabel } from '@/lib/sport';
 
 function formatDuration(durationSec: number) {
   const hours = Math.floor(durationSec / 3600);
@@ -25,8 +25,14 @@ export default async function AthletePage() {
   const dashboard = await athleteService.loadHomeDashboard(user.id);
   if (!dashboard) redirect('/athlete/find-coach');
 
+  const orderedSessions = dashboard.weekDays.flatMap((day) => day.sessions);
+  const nextAction = orderedSessions.find((session) => session.status !== 'completed') ?? orderedSessions[0] ?? null;
+  const nextActionLabel = nextAction?.status === 'completed' ? 'Review outcome' : nextAction?.status === 'missed' ? 'Review session' : 'Open session';
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
+
   return (
-    <PageShell size="wide">
+    <PageShell size="wall">
       <TopBar
         title={`Good morning, ${dashboard.athlete.name}`}
         actions={
@@ -41,100 +47,62 @@ export default async function AthletePage() {
         }
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_312px]">
-        <div className="space-y-6">
-          <section>
-            <div className="mb-3 flex items-center gap-3">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">
-                Today
-              </span>
-                <span className="text-[12px] text-[var(--text-muted)]">
-                {dashboard.todaySessions.length} sessions
-              </span>
-              <div className="h-px flex-1 bg-[var(--border)]" />
+      <div className="space-y-6 xl:space-y-8">
+        <section aria-labelledby="next-action-heading" className="border-y border-[var(--border)] py-5 xl:py-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 id="next-action-heading" className="text-[18px] font-semibold text-[var(--text)]">Next action</h2>
+              <p className="mt-1 text-[13px] text-[var(--text-secondary)]">The first useful step in your current training week.</p>
             </div>
+            {nextAction ? (
+              <div className="flex min-w-0 flex-1 items-center gap-3 lg:max-w-3xl">
+                <div className="min-w-0 flex-1">
+                  <p className="break-words text-[15px] font-semibold text-[var(--text)]">{nextAction.title}</p>
+                  <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{nextAction.timeLabel} · {formatDuration(nextAction.durationSec)} · <MetricText>{nextAction.tss} TSS</MetricText></p>
+                </div>
+                <StatusBadge status={nextAction.status} />
+                <ActionLink href={`/athlete/session/${nextAction.id}?from=home`} size="compact">
+                  {nextActionLabel}
+                </ActionLink>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="text-[13px] text-[var(--text-secondary)]">No sessions planned for this week.</p>
+                <ActionLink href="/athlete/planner" tone="secondary" size="compact">Plan a session</ActionLink>
+              </div>
+            )}
+          </div>
+        </section>
 
-            <div className="space-y-3">
-              {dashboard.todaySessions.length > 0 ? (
-                dashboard.todaySessions.map((session) => (
-                  <Link
-                    key={session.id}
-                    href={`/athlete/session/${session.id}?from=home`}
-                    aria-label={`Open ${session.title}`}
-                    className="group block rounded-[12px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
-                  >
-                    <Surface className="space-y-3 transition group-hover:border-[var(--field-focus)] group-hover:bg-[var(--field-surface)]">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span className="text-[13px] font-semibold text-[var(--text-muted)]">
-                          {session.timeLabel}
-                        </span>
-                        <h2 className="min-w-0 flex-1 break-words text-[15px] font-semibold text-[var(--text)]">
-                          {session.title} · {getSportLabel(session.sport)}
-                        </h2>
-                      </div>
-                      <SessionBlockBar segments={session.segments} />
-                      <div className="flex flex-wrap items-center gap-4 text-[13px] text-[var(--text-secondary)]">
-                        <MetricText>{formatDuration(session.durationSec)}</MetricText>
-                        <MetricText>{session.tss} TSS</MetricText>
-                        {session.targetLabel ? <span>{session.targetLabel}</span> : null}
-                      </div>
-                    </Surface>
-                  </Link>
-                ))
-              ) : (
-                <EmptyState
-                  title="No sessions today"
-                  description="View the calendar for upcoming work."
-                />
-              )}
+        <section aria-labelledby="week-glance-heading" className="space-y-4 xl:space-y-5">
+          <div className="flex flex-col gap-3 border-b border-[var(--border)] pb-4 xl:pb-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 id="week-glance-heading" className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Week at a glance</h2>
+              <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{format(weekStart, 'd MMM')} – {format(weekEnd, 'd MMM')} · Monday-first</p>
             </div>
-          </section>
+          </div>
 
-          <section>
-            <div className="mb-3 flex items-center gap-3">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">
-                Next days
-              </span>
-              <div className="h-px flex-1 bg-[var(--border)]" />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {dashboard.nextDays.map((day) => (
-                <Surface key={`${day.label}-${day.dateLabel}`} className="space-y-3">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 xl:gap-4">
+            {dashboard.weekDays.map((day) => (
+              <section key={day.isoDate} aria-labelledby={`home-day-${day.isoDate}`} className={`min-w-0 border-t pt-3 2xl:border-t-0 2xl:border-l 2xl:pl-3 ${day.isToday ? 'border-[var(--brand)] bg-[var(--brand-tint)] px-3 2xl:rounded-[8px]' : 'border-[var(--border)]'}`}>
+                <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">
-                      {day.label}
-                    </p>
-                    <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">
-                      {day.dateLabel}
-                    </p>
+                    <h3 id={`home-day-${day.isoDate}`} className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day.label}</h3>
+                    <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{day.dateLabel}</p>
                   </div>
-                  {day.sessions.length > 0 ? (
-                    <div className="space-y-2">
-                      {day.sessions.map((session) => (
-                        <Link
-                          key={session.id}
-                          href={`/athlete/session/${session.id}?from=home`}
-                          aria-label={`Open ${session.title}`}
-                           className="group block space-y-2 rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] p-3 transition hover:border-[var(--field-focus)] hover:bg-[var(--surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
-                        >
-                          <p className="break-words text-[13px] font-semibold text-[var(--text)]">{session.title}</p>
-                          <p className="text-[12px] text-[var(--text-secondary)]">
-                            {session.timeLabel} · {getSportLabel(session.sport)}
-                          </p>
-                          <SessionBlockBar segments={session.segments} compact />
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-[13px] text-[var(--text-muted)]">Rest</p>
-                  )}
-                </Surface>
-              ))}
-            </div>
-          </section>
-        </div>
+                  {day.isToday ? <span className="rounded-full bg-[var(--brand)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white">Today</span> : null}
+                </div>
+                <div className="mt-3 space-y-2">
+                  {day.sessions.length > 0 ? day.sessions.map((session) => (
+                    <SessionRow key={session.id} session={session} href={`/athlete/session/${session.id}?from=home`} variant="compact" />
+                  )) : <p className="py-2 text-[13px] text-[var(--text-muted)]">Rest</p>}
+                </div>
+              </section>
+            ))}
+          </div>
+        </section>
 
-        <aside className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 xl:gap-5">
           {dashboard.overviewCards.includes('coachNote') && dashboard.coachNote && dashboard.coach ? (
             <Surface>
               <div className="mb-3 flex items-center gap-2">
@@ -199,10 +167,7 @@ export default async function AthletePage() {
             </Surface>
           ) : null}
 
-          <ActionLink href="/settings" tone="ghost">
-            Customise overview in Settings
-          </ActionLink>
-        </aside>
+        </div>
       </div>
     </PageShell>
   );

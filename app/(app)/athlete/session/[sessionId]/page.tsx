@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
+import { format, startOfWeek } from 'date-fns';
 import { ActionLink, EmptyState, PageShell, Surface, TopBar } from '@/components/ui';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
@@ -6,7 +7,6 @@ import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
-import { getSportLabel } from '@/lib/sport';
 import { getSessionOrigin, getSessionReturnTarget } from '@/lib/app-navigation';
 import { SessionDetailClient } from './SessionDetailClient';
 import { ShareLinkButton } from '@/components/ShareLinkButton';
@@ -39,11 +39,14 @@ export default async function AthleteSessionPage({
 
   const sessionOrigin = getSessionOrigin(from);
   const returnTarget = getSessionReturnTarget(sessionOrigin);
+  const sessionAction = detail.session.status === 'completed' ? 'Review outcome' : detail.session.status === 'missed' ? 'Review session' : 'Start live';
+  const sessionActionHref = detail.session.status === 'completed' || detail.session.status === 'missed'
+    ? '#session-outcome'
+    : `/athlete/live/${detail.session.id}?from=${sessionOrigin}`;
 
   return (
     <PageShell size="wide">
       <TopBar
-        eyebrow={getSportLabel(detail.session.sport)}
         title={detail.session.title}
         description={detail.session.summary ?? 'Session details.'}
         actions={
@@ -51,11 +54,18 @@ export default async function AthleteSessionPage({
             <ActionLink href={returnTarget.href} tone="secondary">
               {returnTarget.label}
             </ActionLink>
-            <ActionLink href={`/athlete/live/${detail.session.id}?from=${sessionOrigin}`}>Start live</ActionLink>
+            <ActionLink href={sessionActionHref}>{sessionAction}</ActionLink>
             <ShareLinkButton sourceKind="session" sourceId={detail.session.id} />
           </>
         }
       />
+
+      <div className="flex flex-wrap items-center gap-3 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">
+        <span>Week of {format(startOfWeek(detail.session.date, { weekStartsOn: 1 }), 'd MMM')}</span>
+        <span aria-hidden="true">·</span>
+        <span>{format(detail.session.date, 'EEE d MMM · HH:mm')}</span>
+        <StatusBadge status={detail.session.status} />
+      </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
@@ -105,7 +115,8 @@ export default async function AthleteSessionPage({
             </p>
           </Surface>
 
-          <SessionDetailClient
+            <SessionDetailClient
+              id="session-outcome"
             sessionId={detail.session.id}
             initialDone={detail.session.status === 'completed'}
             initialNotes={detail.session.notes}

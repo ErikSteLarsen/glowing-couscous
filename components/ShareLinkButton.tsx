@@ -12,9 +12,11 @@ import {
 export function ShareLinkButton({
   sourceKind,
   sourceId,
+  ariaLabel,
 }: {
   sourceKind: 'session' | 'template';
   sourceId: number;
+  ariaLabel?: string;
 }) {
   const [shareUrl, setShareUrl] = useState('');
   const [message, setMessage] = useState('');
@@ -60,7 +62,7 @@ export function ShareLinkButton({
 
   return (
     <div className="space-y-2">
-      <button type="button" className={compactSecondaryButtonClassName} onClick={createLink} disabled={isPending}>
+      <button type="button" aria-label={ariaLabel} className={compactSecondaryButtonClassName} onClick={createLink} disabled={isPending}>
         {isPending ? 'Creating link…' : 'Share'}
       </button>
       <p className="text-[11px] leading-[1.4] text-[var(--text-muted)]">Anyone with the URL can view this workout.</p>
@@ -72,7 +74,7 @@ export function ShareLinkButton({
           </button>
         </div>
       ) : null}
-      {message ? <p className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
+      {message ? <p role={messageTone === 'success' ? 'status' : 'alert'} aria-live="polite" className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
     </div>
   );
 }

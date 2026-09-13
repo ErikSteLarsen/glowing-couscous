@@ -12,7 +12,7 @@ export function Stepper({ items }: { items: StepperItem[] }) {
   return (
     <ol className="space-y-3">
       {items.map((item, index) => (
-        <li key={item.id} className="flex gap-3">
+        <li key={item.id} aria-current={item.active ? 'step' : undefined} className="flex gap-3">
           <div className="flex flex-col items-center">
             <div
               className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${
@@ -28,8 +28,7 @@ export function Stepper({ items }: { items: StepperItem[] }) {
             {index < items.length - 1 ? <div className="mt-1 h-8 w-px bg-[var(--border)]" /> : null}
           </div>
           <div
-            aria-current={item.active ? 'step' : undefined}
-            className={`flex-1 rounded-[12px] border px-4 py-3 ${
+            className={`flex-1 rounded-[10px] border px-4 py-3 ${
             item.active ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--surface)]'
           }`}
           >

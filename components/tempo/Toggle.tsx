@@ -9,7 +9,7 @@ export function Toggle({
   checked: boolean;
   onChange: (checked: boolean) => void;
   disabled?: boolean;
-  label?: string;
+  label: string;
 }) {
   return (
     <button

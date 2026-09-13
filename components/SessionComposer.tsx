@@ -160,45 +160,69 @@ export function SessionComposer({
         {draft.blocks.map((block, index) => {
           const zoneMeta = TEMPO_ZONE_META[block.zone];
           return (
-            <button
-              key={block.clientId}
-              type="button"
-              draggable
-              onDragStart={(event) => {
-                setDraggedBlockIndex(index);
-                event.dataTransfer.setData('text/plain', String(index));
-              }}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => {
-                const fromIndex = Number(event.dataTransfer.getData('text/plain'));
-                moveBlock(fromIndex, index);
-                setDraggedBlockIndex(null);
-              }}
-              onDragEnd={() => setDraggedBlockIndex(null)}
-              onClick={() => setSelectedBlockIndex(index)}
-              className={`w-full rounded-[12px] border p-4 text-left transition ${
-                selectedIndex === index
-                  ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)]'
-                  : 'border-[var(--border)] bg-[var(--field-surface)]'
-              } ${block.skipped ? 'opacity-60' : ''}`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold capitalize text-[var(--text)]">
-                    {block.kind}{block.skipped ? ' · skipped' : ''}
-                  </p>
-                  <p className="mt-1 text-xs text-[var(--text-secondary)]">{block.note || zoneMeta.name}</p>
-                </div>
-                <MetricText>{formatDuration(block.durationSec)}</MetricText>
-              </div>
-              <div
-                className="mt-3 h-2 rounded-full"
-                style={{
-                  background: zoneMeta.solid,
-                  width: `${Math.max(18, Math.min(100, (block.durationSec / Math.max(metrics.durationSec, 1)) * 100))}%`,
+            <div key={block.clientId} className="space-y-2">
+              <button
+                type="button"
+                draggable
+                aria-pressed={selectedIndex === index}
+                onDragStart={(event) => {
+                  setDraggedBlockIndex(index);
+                  event.dataTransfer.setData('text/plain', String(index));
                 }}
-              />
-            </button>
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => {
+                  const fromIndex = Number(event.dataTransfer.getData('text/plain'));
+                  moveBlock(fromIndex, index);
+                  setDraggedBlockIndex(null);
+                }}
+                onDragEnd={() => setDraggedBlockIndex(null)}
+                onClick={() => setSelectedBlockIndex(index)}
+                className={`w-full rounded-[12px] border p-4 text-left transition ${
+                  selectedIndex === index
+                    ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)]'
+                    : 'border-[var(--border)] bg-[var(--field-surface)]'
+                } ${block.skipped ? 'opacity-60' : ''}`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold capitalize text-[var(--text)]">
+                      {block.kind}{block.skipped ? ' · skipped' : ''}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--text-secondary)]">{block.note || zoneMeta.name}</p>
+                  </div>
+                  <MetricText>{formatDuration(block.durationSec)}</MetricText>
+                </div>
+                <div
+                  className="mt-3 h-2 rounded-full"
+                  style={{
+                    background: zoneMeta.solid,
+                    width: `${Math.max(18, Math.min(100, (block.durationSec / Math.max(metrics.durationSec, 1)) * 100))}%`,
+                  }}
+                />
+              </button>
+              {selectedIndex === index ? (
+                <div className="flex flex-wrap gap-2 pl-1">
+                  <button
+                    type="button"
+                    className={compactSecondaryButtonClassName}
+                    disabled={index === 0}
+                    aria-label={`Move ${block.kind} block earlier`}
+                    onClick={() => moveBlock(index, index - 1)}
+                  >
+                    Move earlier
+                  </button>
+                  <button
+                    type="button"
+                    className={compactSecondaryButtonClassName}
+                    disabled={index === draft.blocks.length - 1}
+                    aria-label={`Move ${block.kind} block later`}
+                    onClick={() => moveBlock(index, index + 1)}
+                  >
+                    Move later
+                  </button>
+                </div>
+              ) : null}
+            </div>
           );
         })}
         {draggedBlockIndex !== null ? (
@@ -334,7 +358,7 @@ export function SessionComposer({
             />
           </label>
 
-          <label className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
+          <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-[var(--text-secondary)]">
             <input
               type="checkbox"
               checked={selectedBlock.skipped}

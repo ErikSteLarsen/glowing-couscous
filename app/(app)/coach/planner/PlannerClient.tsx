@@ -108,6 +108,7 @@ export function PlannerClient({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isSaving, setIsSaving] = useState(false);
   const [selectedWorkspaceMode, setSelectedWorkspaceMode] = useState<WorkspaceMode>(
     surface === 'planner' ? 'athlete' : athletes.length === 0 ? 'library' : 'athlete',
   );
@@ -228,6 +229,7 @@ export function PlannerClient({
   }
 
   function saveSession() {
+    if (isSaving) return;
     if (draft.ownershipMode === 'training-plan' && !selectedTrainingPlanId) {
       setMessageTone('danger');
       setMessage('No training plan selected. Choose or create a training plan first.');
@@ -240,9 +242,8 @@ export function PlannerClient({
       return;
     }
 
-    startTransition(() => {
-      void saveDraft();
-    });
+    setIsSaving(true);
+    startTransition(() => { void saveDraft(); });
   }
 
   async function saveDraft() {
@@ -261,20 +262,27 @@ export function PlannerClient({
               : '/api/coach/planner/sessions'
             : '/api/coach/planner/sessions';
 
-    const response = await fetch(endpoint, {
-      method: draft.id ? 'PATCH' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(serializePlannerEditorDraftForSave(draft)),
-    });
-    const payload = await readApiPayload(response);
-    if (!response.ok) {
+    try {
+      const response = await fetch(endpoint, {
+        method: draft.id ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(serializePlannerEditorDraftForSave(draft)),
+      });
+      const payload = await readApiPayload(response);
+      if (!response.ok) {
+        setMessageTone('danger');
+        setMessage(payload.error ?? 'Failed to save session');
+        return;
+      }
+      setMessageTone('success');
+      setMessage('Session saved.');
+      router.refresh();
+    } catch {
       setMessageTone('danger');
-      setMessage(payload.error ?? 'Failed to save session');
-      return;
+      setMessage('Could not reach the server. Check your connection and try again.');
+    } finally {
+      setIsSaving(false);
     }
-    setMessageTone('success');
-    setMessage('Session saved.');
-    router.refresh();
   }
 
   function deleteSession() {
@@ -285,6 +293,7 @@ export function PlannerClient({
       setMessage('No training plan selected. Choose a training plan first.');
       return;
     }
+    if (!window.confirm('Delete this session? This cannot be undone.')) return;
     startTransition(() => {
       void deleteDraft(sessionId);
     });
@@ -298,23 +307,28 @@ export function PlannerClient({
           ? `/api/coach/planner/training-plans/${selectedTrainingPlanId}/sessions/${sessionId}`
           : `/api/coach/planner/sessions/${sessionId}`;
 
-    const response = await fetch(deleteUrl, { method: 'DELETE' });
-    const payload = await readApiPayload(response);
-    if (!response.ok) {
+    try {
+      const response = await fetch(deleteUrl, { method: 'DELETE' });
+      const payload = await readApiPayload(response);
+      if (!response.ok) {
+        setMessageTone('danger');
+        setMessage(payload.error ?? 'Failed to delete session');
+        return;
+      }
+      setMessageTone('success');
+      setMessage('Session deleted.');
+      setDraft(
+        createEmptyPlannerEditorDraft({
+          ownershipMode: draft.ownershipMode,
+          athleteId: draft.ownershipMode === 'athlete' ? selectedAthleteId : null,
+          scheduledDate: draft.ownershipMode === 'training-plan' ? null : draft.scheduledDate,
+        }),
+      );
+      router.refresh();
+    } catch {
       setMessageTone('danger');
-      setMessage(payload.error ?? 'Failed to delete session');
-      return;
+      setMessage('Could not reach the server. Check your connection and try again.');
     }
-    setMessageTone('success');
-    setMessage('Session deleted.');
-    setDraft(
-      createEmptyPlannerEditorDraft({
-        ownershipMode: draft.ownershipMode,
-        athleteId: draft.ownershipMode === 'athlete' ? selectedAthleteId : null,
-        scheduledDate: draft.ownershipMode === 'training-plan' ? null : draft.scheduledDate,
-      }),
-    );
-    router.refresh();
   }
 
   async function createTrainingPlan() {
@@ -324,23 +338,28 @@ export function PlannerClient({
       setMessage('Training plan name is required.');
       return;
     }
-    const response = await fetch('/api/coach/planner/training-plans', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, sport: newPlanSport }),
-    });
-    const payload = (await response.json().catch(() => ({}))) as { planId?: number; error?: string };
-    if (!response.ok) {
+    try {
+      const response = await fetch('/api/coach/planner/training-plans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, sport: newPlanSport }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { planId?: number; error?: string };
+      if (!response.ok) {
+        setMessageTone('danger');
+        setMessage(payload.error ?? 'Failed to create training plan.');
+        return;
+      }
+      setNewPlanName('');
+      setShowCreatePlan(false);
+      if (payload.planId) setSelectedTrainingPlanId(payload.planId);
+      setMessageTone('success');
+      setMessage('Training plan created.');
+      router.refresh();
+    } catch {
       setMessageTone('danger');
-      setMessage(payload.error ?? 'Failed to create training plan.');
-      return;
+      setMessage('Could not reach the server. Check your connection and try again.');
     }
-    setNewPlanName('');
-    setShowCreatePlan(false);
-    if (payload.planId) setSelectedTrainingPlanId(payload.planId);
-    setMessageTone('success');
-    setMessage('Training plan created.');
-    router.refresh();
   }
 
   return (
@@ -539,7 +558,7 @@ export function PlannerClient({
                   </button>
                   {selectedWorkspaceMode === 'athlete' ? (
                     <div className="mt-3 space-y-2">
-                      {daySessions.slice(0, 2).map((session) => (
+                       {daySessions.map((session) => (
                         <button
                           key={session.id}
                           type="button"
@@ -586,8 +605,10 @@ export function PlannerClient({
           templates={templates}
           librarySessions={librarySessions}
           trainingPlans={trainingPlans}
-          initialDate={initialDate}
-        />
+           initialDate={initialDate}
+           selectedAthleteId={selectedAthleteId}
+           onAthleteChange={setSelectedAthleteId}
+         />
       </Surface>
 
       <Surface className="space-y-5">
@@ -667,8 +688,8 @@ export function PlannerClient({
         )}
 
         <div className="flex flex-col gap-3">
-          <button type="button" disabled={isPending} className={primaryButtonClassName} onClick={saveSession}>
-            Save session
+           <button type="button" disabled={isPending || isSaving} className={primaryButtonClassName} onClick={saveSession}>
+             {isPending || isSaving ? 'Saving…' : 'Save session'}
           </button>
           {draft.id ? (
             <button type="button" disabled={isPending} className={compactDangerButtonClassName} onClick={deleteSession}>
@@ -676,7 +697,7 @@ export function PlannerClient({
             </button>
           ) : null}
           {message ? (
-            <p className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p>
+             <p role={messageTone === 'success' ? 'status' : 'alert'} aria-live="polite" className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p>
           ) : null}
         </div>
 

@@ -1,8 +1,8 @@
 # Feature: Coach Templates And Assignment
 
 - **ID:** `TEMPLATE-001`
-- **Status:** `shipped`
-- **Last verified:** `2026-09-07`
+- **Status:** `in-progress`
+- **Last verified:** `2026-09-08`
 - **Owners:** `lib/template-service.ts`, `lib/assignment-service.ts`, `lib/session-editor-adapters.ts`, `components/SessionComposer.tsx`
 - **Related work:** [baseline](../history/2026-08-21-baseline.md), [product scope](../../../SPEC.md), [workflow task](../tasks/2026-08-21-planner-template-workflows.md), [assignment task](../tasks/2026-08-21-source-copy-assignment.md), [editor migration](../tasks/2026-08-25-editor-migration.md), [concise UI copy](../history/2026-08-28-concise-ui-copy.md), [shared session creator](../history/2026-08-28-shared-session-creator.md)
 
@@ -45,6 +45,8 @@ a date without creating duplicate matching sessions.
 - Template pages explain reusable authoring and use Planner for placement.
   Day/week assignment follows the existing planner seams; month setup is
   explicitly guided until a month source model exists.
+- Athlete template presentation now uses private/athlete-specific vocabulary
+  and promotes reuse while grouping secondary edit/duplicate/delete actions.
 - Cadence transport rejects unsupported values, and template actions confirm
   destructive deletes while exposing network failures through live status text.
 
@@ -63,6 +65,18 @@ a date without creating duplicate matching sessions.
 - `pnpm test` — 175 passing tests on 2026-09-07; `pnpm lint`, `pnpm build`,
   `git diff --check`, and the Impeccable detector pass after cadence and
   workspace audit hardening.
+- `pnpm test`, `pnpm lint`, `pnpm build`, `git diff --check`, and the Impeccable
+  detector (`[]`) pass after the shared template action batch on 2026-09-08;
+  browser viewport inspection remains outstanding.
+- 2026-09-08 headed Chrome acceptance — athlete and coach Templates routes
+  loaded at 390×844, 1280×900, 1440×1000, and 1920×1080 without horizontal
+  overflow, runtime exceptions, or console errors; role-specific actions,
+  mobile stacking, and touch-sized editor controls were reviewed. Browser E2E
+  assignment remains separate.
+- 2026-09-09 continuation — the connected desktop-browser bridge remains
+  unavailable, so no new template viewport evidence is claimed. `pnpm test`
+  (175), `pnpm lint`, `pnpm build`, `git diff --check`, and the focused
+  Impeccable detector (`[]`) pass.
 
 ## Known Gaps
 
