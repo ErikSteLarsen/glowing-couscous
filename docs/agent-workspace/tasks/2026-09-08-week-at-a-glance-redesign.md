@@ -3,7 +3,7 @@
 - **Status:** `in-progress`
 - **Agent:** `OpenCode / current session`
 - **Started:** `2026-09-08`
-- **Updated:** `2026-09-13`
+- **Updated:** `2026-09-14`
 - **Feature IDs:** `SHELL-001`, `ATHLETE-001`, `COACH-001`, `PLAN-001`, `TEMPLATE-001`
 - **Related records:** [shell](../features/shell.md), [athlete](../features/athlete.md), [coach](../features/coach.md), [planner](../features/planner.md), [templates](../features/templates.md), [decision](../decisions/0017-week-at-a-glance-redesign.md)
 
@@ -453,6 +453,56 @@ operational states remain intact.
   proxy deprecation warning.
 - Blocker or next step: Browser visual inspection remains unavailable because
   the desktop browser bridge is disconnected; no source-level blocker remains.
+
+### 2026-09-14 (shared workout-card intensity timeline)
+
+- What changed: Reworked `SessionBlockBar` at `card` and `compact` sizes into a
+  low-profile intensity timeline shared by Home, Calendar week, and scheduled
+  Workouts cards. Segment widths still reflect duration and existing colors are
+  retained, while Zone 1 through Zone 5 now rise in height. Full-detail bars and
+  the month tile remain unchanged for their tighter layout constraints.
+- Decision or discovery: Height carries effort, not duration; duration remains
+  horizontal, so the combined chart is quick to scan without consuming a full
+  card row. The accessible summary now includes each zone as text.
+- Files touched: `components/tempo/SessionBlockBar.tsx`, `DESIGN.md`, athlete
+  feature/work records, a decision record, and the dated history record.
+- Verification: `pnpm test` (175 passing), `pnpm lint`, `pnpm build`,
+  `git diff --check`, and Impeccable detector (`[]`) pass. Build retains the
+  existing middleware-to-proxy deprecation warning. No local Chromium binary is
+  available for a new visual browser pass.
+- Blocker or next step: Review the compact timeline at narrow, intermediate, and
+  wall widths when browser access is available.
+
+### 2026-09-14 (intensity timeline proportion refinement)
+
+- What changed: Removed the card-bar background, capped the graphic at `18rem`,
+  raised the card/compact heights to `32px`/`24px`, and increased the zone rise
+  to a direct 20% step per zone.
+- Decision or discovery: The first treatment read too much like a wide, flat
+  progress strip. A transparent, bounded skyline uses the available card space
+  more deliberately while making the high-intensity blocks immediately visible.
+- Files touched: `components/tempo/SessionBlockBar.tsx`, `DESIGN.md`, athlete
+  feature/work records, this task, and the append-only refinement history.
+- Verification: `pnpm test` (175 passing), `pnpm lint`, `pnpm build`,
+  `git diff --check`, and Impeccable detector (`[]`) pass. Build retains the
+  existing middleware-to-proxy deprecation warning.
+- Blocker or next step: Review the revised proportions at narrow, intermediate,
+  and wall widths when browser access is available.
+
+### 2026-09-14 (intensity timeline edge refinement)
+
+- What changed: Removed border radius from the card/compact intensity timeline
+  container and its individual zone segments. The full-detail structure bar
+  preserves its established rounded treatment.
+- Decision or discovery: Short blue zone segments looked visually clipped by the
+  rounded corners. Square edges make every bar read as a deliberate intensity
+  column rather than a truncated pill.
+- Files touched: `components/tempo/SessionBlockBar.tsx`, `DESIGN.md`, athlete
+  feature/work records, this task, and the append-only edge-refinement history.
+- Verification: `pnpm test` (175 passing), `pnpm lint`, `git diff --check`, and
+  Impeccable detector (`[]`) pass. A production build is rerun after this record.
+- Blocker or next step: Review the square-edge treatment at narrow, intermediate,
+  and wall widths when browser access is available.
 
 ## Verification
 

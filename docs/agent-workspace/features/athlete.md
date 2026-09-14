@@ -117,6 +117,12 @@ They can mark a session complete or move it back to planned while saving notes.
   content to available space without route-local workout markup and never render
   a status badge. Completed Calendar cards remain muted; the domain status stays
   available for action logic and accessible context.
+- `SessionRow` card variants use the shared `SessionBlockBar` intensity timeline:
+  segment width represents duration, color identifies the existing zone, and a
+  compact rising height encodes Zone 1 through Zone 5. The month tile stays
+  title-only and full-detail bars retain the structure timeline. Card timelines
+  are transparent, width-capped, and square-edged so their taller zone silhouette
+  stays compact without clipping shorter bars.
 
 ## Verification
 
@@ -190,11 +196,23 @@ They can mark a session complete or move it back to planned while saving notes.
    week, Calendar month, and Workouts through `SessionRow` variants. Build keeps
    the existing middleware-to-proxy deprecation warning. Browser inspection
    remains unavailable because the desktop browser bridge is disconnected.
- - 2026-09-13 Completed-status UI cleanup — the focused architecture suite (17
-   passing), `pnpm lint`, `pnpm build`, and `git diff --check` pass after removing
-   `SessionRow` status rendering and `showStatus` overrides. `StatusBadge` now
-   renders planned, adjusted, and missed states only; completed state remains
-   domain data and is never rendered as a badge.
+  - 2026-09-13 Completed-status UI cleanup — the focused architecture suite (17
+  passing), `pnpm lint`, `pnpm build`, and `git diff --check` pass after removing
+  `SessionRow` status rendering and `showStatus` overrides. `StatusBadge` now
+  renders planned, adjusted, and missed states only; completed state remains
+  domain data and is never rendered as a badge.
+  - 2026-09-14 Shared workout-card intensity timeline — `pnpm test` (175
+  passing), `pnpm lint`, `pnpm build`, `git diff --check`, and the focused
+  Impeccable detector (`[]`) pass. The build retains the existing
+  middleware-to-proxy deprecation warning; a browser visual pass was not
+  available because no local Chromium binary is installed.
+  - 2026-09-14 Intensity timeline proportion refinement — `pnpm test` (175
+  passing), `pnpm lint`, `pnpm build`, `git diff --check`, and the focused
+  Impeccable detector (`[]`) pass after removing the bar backdrop, capping its
+  width, and strengthening its vertical zone differences.
+  - 2026-09-14 Intensity timeline edge refinement — `pnpm test` (175 passing),
+  `pnpm lint`, `git diff --check`, and the focused Impeccable detector (`[]`)
+  pass after removing chart and segment border radii for the card treatments.
 
 ## Known Gaps
 

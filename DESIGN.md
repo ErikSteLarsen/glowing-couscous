@@ -262,7 +262,8 @@ route-local workout tile:
   the caller, and the whole card is the link so it does not repeat an `Open
   session` action.
 - **`compact`** — the week-wall card for Home and Calendar; keeps the title,
-  context, structure bar, and metrics while omitting the repeated action.
+  context, compact intensity timeline, and metrics while omitting the repeated
+  action.
 - **`month`** — the calendar-cell card; keeps only the title and sport so the
   month grid stays scannable, while the accessible name retains full workout
   context.
@@ -270,6 +271,14 @@ route-local workout tile:
 All variants remain one whole keyboard-focusable link with the same hover/focus
 grammar. Completed work is muted by the caller where density requires it, never
 communicated by color alone.
+
+`SessionBlockBar` keeps the full-detail structure timeline at its original
+height. Its card and compact sizes use a short, duration-proportional intensity
+timeline: color remains the zone signal and each segment rises from Zone 1 to
+Zone 5, making session effort scannable without turning a calendar card into a
+chart panel. The card bars are transparent, cap at a compact reading width, and
+use 32px/24px card/compact heights so the zone silhouette remains legible. The
+intensity segments have square edges to avoid clipped-looking short bars.
 
 Coach oversight cards and editor-library entries remain specialized when they
 need comparison/share controls or an in-place editing affordance; they should

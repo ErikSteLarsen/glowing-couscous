@@ -21,6 +21,13 @@ source-level gates only and makes no new visual-acceptance claim. The redesign
 task remains `in-progress` until a browser-backed pass is authorized and
 recorded.
 
+Continuation note — **2026-09-14**: shared workout cards now render their
+card-sized structure bar as a compact intensity timeline. Segment width remains
+duration-proportional, color remains the zone cue, and segment height encodes
+Zone 1 through Zone 5 without adding a chart to the month grid or full detail
+views. The card treatment is transparent, width-capped, and taller than the
+initial pass for a clearer silhouette.
+
 ## Verification
 
 | Gate | Result | Evidence |
