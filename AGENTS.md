@@ -1,26 +1,29 @@
 # Agent Operating Guide
 
-Before changing code, read `docs/agent-workspace/README.md`, then read
-`docs/agent-workspace/CURRENT-STATUS.md`, `docs/agent-workspace/WORK-INDEX.md`,
-and the feature records related to the task. Read `CLAUDE.md`,
-`ARCHITECTURE.md`, and `docs/AI-HANDOFF.md` when the task touches project
-architecture, routes, services, Prisma, or authentication.
+Read `README.md`, `docs/agent-workspace/CURRENT-STATUS.md`, and
+`docs/agent-workspace/WORK-INDEX.md` before non-trivial work. Read
+`ARCHITECTURE.md` when changing routes, services, Prisma, or authentication.
+Read `PRODUCT.md` and `DESIGN.md` for product or interface work.
 
-## Work Tracking
+## Operating Rules
 
-- Treat `docs/agent-workspace/` as the operational coordination area for agents.
-- Before non-trivial work, create a dated file in `docs/agent-workspace/tasks/`
-  from `TEMPLATE.md` and mark the related work-index item `in-progress`.
-- Research existing feature records and task files before creating a new
-  service, route, data model, or parallel implementation.
-- After meaningful progress, update the task record while the work is active.
-- Before finishing, update the relevant feature record, `WORK-INDEX.md`, and
-  add an entry to `history/` with the date, files, behavior, verification, and
-  follow-up work.
-- Record architectural or product choices in `decisions/` with an ISO date.
-- Never mark work `shipped` without recording verification evidence. Keep
-  incomplete, blocked, and transitional work visible.
+- Source code and tests override documentation when they disagree.
+- Inspect the existing service owner before adding business logic to a route or component.
+- Keep route handlers thin and keep Prisma-backed behavior in `lib/` services.
+- Use `pnpm`; do not introduce another package manager.
+- Preserve unrelated worktree changes. Never reset or checkout files to discard them.
+- Do not claim browser or production verification unless it was actually run.
 
-The workspace is a coordination record, not a replacement for source code.
-When documentation and code disagree, inspect the code and tests, then record
-the correction in the workspace.
+## Coordination
+
+- Update `CURRENT-STATUS.md` when verified behavior, risks, or gates change.
+- Update `WORK-INDEX.md` when a capability or its owner changes.
+- For active multi-step work, create a dated task from `docs/agent-workspace/tasks/TEMPLATE.md` and list it in the index.
+- Remove a completed task brief after its result is reflected in current status and the index. Task files are not an archive.
+- Put durable product, architecture, or visual rules in `PRODUCT.md`, `ARCHITECTURE.md`, or `DESIGN.md`. Do not recreate a history or decisions archive.
+
+## Verification
+
+Run the smallest relevant checks while iterating. Before finishing a behavior
+change, run `pnpm test`, `pnpm lint`, and `pnpm build` when the environment
+allows it, then record the actual result in the current status document.

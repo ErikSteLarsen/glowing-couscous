@@ -1,10 +1,5 @@
 import nextConfig from 'eslint-config-next'
 
-const config = [
-  ...nextConfig,
-  {
-    ignores: ['fitness-coaching-platform-design/**'],
-  },
-]
+const config = [...nextConfig]
 
 export default config

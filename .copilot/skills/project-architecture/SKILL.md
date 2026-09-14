@@ -1,47 +1,41 @@
 ---
 name: project-architecture
-description: Guides contributors through this repo's service-boundary architecture and safe extension workflow. Use when changing routes, pages, Prisma-backed behavior, or introducing new domain logic in the workout planner.
+description: Guides contributors through this repo's service ownership and safe extension workflow.
 ---
 
 # Project Architecture
 
-## Quick start
+## Quick Start
 
-1. Read `docs/agent-workspace/README.md`, `CURRENT-STATUS.md`, and `WORK-INDEX.md`.
-2. Read the related feature record and `docs/AI-HANDOFF.md`.
-3. Read `ARCHITECTURE.md`.
-4. Identify the owning `lib/` service before editing pages or route handlers.
-5. Keep Prisma-backed business logic out of `app/` unless no service owner exists yet.
-6. Update the agent workspace if boundaries, behavior, status, or verification changes.
+1. Read `README.md`, `docs/agent-workspace/CURRENT-STATUS.md`, and `docs/agent-workspace/WORK-INDEX.md`.
+2. Read `ARCHITECTURE.md` before changing routes, services, Prisma, or authentication.
+3. Identify the owning `lib/` service before editing a page, route, or client mutation.
+4. Keep Prisma-backed business behavior out of `app/` unless the architecture document names an explicit exception.
+5. Update current status and the work index when behavior, ownership, or verification changes.
 
 ## Workflows
 
-### Extending planner behavior
+### Planner and library behavior
 
-- Start in `lib/planner-service.ts`.
-- Keep API handlers under `app/api/coach/athletes/[athleteId]/planner/` thin.
-- Reuse `lib/workout-editor.ts` and `lib/workout-spec.ts` before adding draft logic elsewhere.
+- Start in `lib/coach-planner-service.ts`, `lib/athlete-planner-service.ts`, or `lib/workout-library-service.ts` based on ownership.
+- Keep standalone Workouts records unscheduled. Use Planner and `lib/assignment-service.ts` for dates and source copies.
+- Reuse `lib/session-editor.ts`, `lib/session-editor-adapters.ts`, and `components/WorkoutBuilder.tsx` for structured editing.
 
-### Extending templates or dashboard reads
+### Templates and coach reads
 
-- Start in `lib/template-service.ts` or `lib/coach-service.ts`.
-- Keep `app/coach/templates/page.tsx` and `app/coach/page.tsx` as consumers, not owners.
+- Start in `lib/template-service.ts` for templates.
+- Start in `lib/coach-service.ts` for roster and athlete-detail reads.
+- Keep the corresponding pages as consumers and adapters.
 
-### Extending athlete onboarding or coach requests
+### Athlete and account behavior
 
-- Start in `lib/coach-request-service.ts`.
-- Keep `/api/coaches`, `/api/athlete/coach-requests`, and `/api/coach/requests/*` as adapters.
+- Start in `lib/athlete-service.ts` for athlete reads and `lib/account-service.ts` for profile/preferences.
+- Start in `lib/coach-request-service.ts` for discovery and request lifecycle.
+- Use `lib/athlete-completion-service.ts` for completion and `lib/athlete-session-adjustment-service.ts` for planned edits.
 
-### Extending athlete-facing week/profile reads
+## Smell Checks
 
-- Start in `lib/athlete-service.ts`.
-- Keep `app/athlete/page.tsx` and `app/athlete/profile/page.tsx` free of Prisma business reads.
-
-## Smell checks
-
-- Does a page or route call `prisma.*` directly for business behavior?
-- Is new domain logic being added to a component instead of a `lib/` owner?
-- Is a new service being created even though an existing owner already fits?
-- Did a boundary change without matching doc updates?
-
-See [REFERENCE.md](REFERENCE.md) for the current owner map and extension rules.
+- Is a page or route calling `prisma.*` for behavior already owned by a service?
+- Is a new service being created even though an owner already fits?
+- Is a source copy being synchronized instead of persisted as an independent snapshot?
+- Did a boundary change without updating `ARCHITECTURE.md` and the current workspace?

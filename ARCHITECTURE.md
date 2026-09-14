@@ -1,230 +1,116 @@
-# Architecture Notes
+# Architecture
 
-This document describes the **implemented** architecture, not old plans.
+This document describes the current implementation. The source code, tests, and
+`prisma/schema.prisma` remain authoritative.
 
-## Route surface
+## Runtime Shape
 
-### Auth routes
+Next.js 16 App Router renders pages under `app/`. Authenticated pages use the
+grouped `(app)` layout, which loads the current user, redirects users without a
+role to `/setup`, and mounts `components/AppShell.tsx`. Server pages read
+through `lib/` services. Client components own drafts and call API adapters for
+mutations.
 
-- `/` redirects to `/login`
-- `/login`
-- `/signup`
-- `/setup`
+Most API routes guard the session with `lib/api-auth.ts`, parse transport input
+with `lib/route-params.ts`, and delegate business behavior to a domain service.
+The signup route is the intentional authentication exception and owns its
+one-time account creation flow directly.
 
-### Coach routes
+## Routes
 
-- `/coach`
-- `/coach/athletes/[athleteId]`
-- `/coach/workouts`
-- `/coach/planner`
-- `/coach/builder`
-- `/coach/templates`
+### Public and authentication
 
-### Athlete routes
+- `/` - entry redirect
+- `/login`, `/signup`, `/setup` - authentication and first-login role setup
+- `/share/[token]` - public sanitized workout snapshot
 
-- `/athlete`
-- `/athlete/calendar`
-- `/athlete/workouts`
-- `/athlete/planner`
-- `/athlete/templates`
-- `/athlete/session/[sessionId]`
-- `/athlete/live/[sessionId]`
-- `/athlete/activity`
-- `/settings`
-- `/athlete/profile`
-- `/athlete/find-coach`
-- `/share/[token]` (public sanitized workout snapshot)
+### Coach
+
+- `/coach` - roster
+- `/coach/athletes/[athleteId]` - athlete detail
+- `/coach/workouts` - owner-scoped unscheduled workout library
+- `/coach/planner` - dated session, library, and training-plan workspace
+- `/coach/builder` - compatibility redirect to the active planner
+- `/coach/templates` - private template library
+
+### Athlete
+
+- `/athlete` - Home week overview
+- `/athlete/calendar` - week and month calendar
+- `/athlete/workouts` - owner-scoped unscheduled workout library
+- `/athlete/planner` - private multi-date planning
+- `/athlete/templates` - athlete reusable content surface
+- `/athlete/session/[sessionId]` - session detail and planned/actual editing
+- `/athlete/live/[sessionId]` - local block execution stepper
+- `/athlete/activity` - completion history
+- `/athlete/find-coach` - coach discovery and requests
+- `/athlete/profile`, `/profile` - profile surfaces and compatibility alias
+- `/settings` - account and overview preferences
+
+Internal visual demos live under `/design/*` and are not part of the primary
+navigation.
 
 ### API areas
 
-- `app/api/auth/*`
-- `app/api/coach/*`
-- `app/api/athlete/*`
-- `app/api/coaches/route.ts`
-- `app/api/share-links`
-- `app/api/share-links/intake`
+- `/api/auth/*` - Auth.js, signup, and role setup
+- `/api/account/*` - account profile and preferences
+- `/api/coaches` and `/api/athlete/coach-requests` - athlete discovery
+- `/api/coach/requests/*` - coach request decisions
+- `/api/coach/planner/*`, `/api/coach/assignments`, `/api/coach/sessions/*` - coach planning
+- `/api/coach/workouts/*`, `/api/athlete/workouts/*` - standalone libraries
+- `/api/coach/templates/*`, `/api/athlete/templates/*` - reusable templates
+- `/api/athlete/planner/*`, `/api/athlete/sessions/*` - athlete planning and outcomes
+- `/api/share-links/*` - authenticated share creation and intake
 
-Standalone workout authoring uses `/coach/workouts` and `/athlete/workouts` with
-owner-scoped `/api/coach/workouts/*` and `/api/athlete/workouts/*` adapters.
-Planner routes own date/week assignment; the workout library must not create
-calendar assignments.
+## Service Ownership
 
-## Main runtime boundaries
+| Area | Owner | Responsibility |
+|---|---|---|
+| Authentication | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | Session shaping, redirects, current-user access, and API role guards |
+| Account | `lib/account-service.ts` | Profile, performance profile, and overview preference reads/writes |
+| Coach reads | `lib/coach-service.ts` | Roster and athlete-detail read models |
+| Coach requests | `lib/coach-request-service.ts` | Search, request creation, approval, rejection, and pending uniqueness |
+| Athlete reads | `lib/athlete-service.ts` | Home, Calendar, Activity, profile, discovery, and session reads |
+| Athlete planning | `lib/athlete-planner-service.ts` | Private dated copies and athlete planner mutations |
+| Coach planning | `lib/coach-planner-service.ts` | Coach workspace, dated sessions, and roster-scoped planner writes |
+| Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |
+| Training plans | `lib/coach-training-plan-service.ts` | Reusable weekday-based coach plans |
+| Templates | `lib/template-service.ts` | Coach-owned reusable templates and cadence |
+| Assignment | `lib/assignment-service.ts` | Snapshot copies, lineage, deduplication, and training-plan assignment |
+| Session compatibility | `lib/planner-service.ts` | Older coach session mutation adapter; transitional only |
+| Workout content | `lib/session-editor.ts`, `lib/session-editor-adapters.ts`, `lib/workout-editor.ts`, `lib/workout-blocks.ts` | Canonical drafts, editor modes, block normalization, and persistence shaping |
+| Targets and metrics | `lib/workout-targets.ts`, `lib/workout-target-resolution.ts`, `lib/performance-profile.ts`, `lib/session-math.ts`, `lib/tempo-blocks.ts` | Relative target catalogs, profile resolution, derived metrics, and timeline segments |
+| Session outcomes | `lib/athlete-completion-service.ts`, `lib/session-snapshot-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/session-comparison-service.ts` | Completion, baseline/actual snapshots, planned edits, and comparison reads |
+| Sharing | `lib/share-link.ts`, `lib/share-link-service.ts` | Sanitized snapshots, opaque tokens, public lookup, and explicit recipient copies |
 
-### Auth boundary
+## Data Ownership
 
-- `auth.ts` defines Auth.js providers, callbacks, and session shaping.
-- `middleware.ts` enforces login, role redirects, and setup redirects.
-- `lib/auth-session.ts` is the current-user lookup for server-rendered UI.
-- `lib/api-auth.ts` is the route-handler guard layer.
-- `lib/auth-principal.ts` validates numeric application IDs and role claims
-  without framework imports.
-- `lib/auth-role-service.ts` owns the atomic one-time role assignment command.
-- `lib/route-params.ts` owns strict positive-integer and JSON-object transport
-  parsing for API adapters.
+`prisma/schema.prisma` defines `User`, Auth.js `Account`, `CoachRequest`,
+`Plan`, `TrainingPlan`, `Session`, `Block`, `Template`, `Activity`,
+`Assignment`, `TrainingPlanAssignment`, and `ShareLink`.
 
-Use `auth-session` in pages and server components. Use `api-auth` in route handlers.
-
-### Share-link boundary
-
-- `lib/share-link.ts` owns the pure sanitized workout projection, canonical
-  import draft, opaque-token shape, and local auth-continuation validation.
-- `lib/share-link-service.ts` owns source access, token hashing, one-source
-  ShareLink persistence, share-time snapshots, public lookup, and explicit
-  recipient copy orchestration.
-- `/share/[token]` is outside `(app)` and renders only the stored sanitized
-  projection. Its route metadata disables indexing and sends no referrer.
-- `/api/share-links` is the authenticated link-creation adapter;
-  `/api/share-links/intake` is the authenticated explicit-save adapter. Both
-  delegate business behavior to `shareLinkService` and never query Prisma
-  directly.
-- Shared links may target an accessible Template, an athlete Session visible to
-  its owner or roster coach, or a standalone coach-library Session owned by the
-  creator. Training-plan child Sessions are deferred.
-- Recipient planner saves delegate to `athlete-planner-service` or
-  `coach-session-library-service`; Template saves delegate to `template-service`.
-  Sharing never uses `assignment-service`, creates an Assignment, or retains a
-  source relation on the recipient copy.
-
-### Planner boundary
-
-- `lib/planner-service.ts` owns coach-side week scheduling mutations for session save/delete flows.
-- Active API entry points are the coach session routes under `app/api/coach/sessions/*`.
-
-If a feature changes planner behavior, add it here first instead of scattering Prisma calls through pages and routes.
-
-### Template boundary
-
-- `lib/template-service.ts` owns coach template listing and persistence.
-- `app/api/coach/templates/*` should keep delegating to this service.
-- `Template.cadence` records whether the reusable structure is intended for a
-  day, week, or month. Month-level assignment remains guided until its source
-  model is introduced.
-
-### Workout library boundary
-
-- `lib/workout-library-service.ts` owns standalone workout reads and writes for
-  coach and athlete owners.
-- Library sessions have no `date`, `Plan`, or `TrainingPlan`; scheduling belongs
-  to Planner and `assignment-service`. The service validates referenced template
-  ownership before persisting a source relation.
-
-### Coach boundary
-
-- `lib/coach-service.ts` owns the coach roster and athlete-detail read models.
-- `app/coach/page.tsx` and `app/coach/athletes/[athleteId]/page.tsx` should keep using this service instead of embedding Prisma reads.
-
-### Athlete boundary
-
-- `lib/athlete-service.ts` owns athlete Home, Calendar, Workouts, Session detail, Live, Activity, discovery, and profile reads.
-- `lib/athlete-completion-service.ts` owns completion/reopen transactions,
-  manual metric provenance, notes retention, and Activity lifecycle writes.
-- `lib/session-snapshot-service.ts` owns canonical latest baseline/actual
-  payload serialization, bounded metadata validation, replacement, and loading.
-- `lib/athlete-session-adjustment-service.ts` owns athlete authorization and
-  planned edits to one assigned Session, including Plan/Assignment date movement.
-- `lib/session-comparison-service.ts` owns role-scoped baseline/actual reads;
-  comparison UI must consume this service rather than querying Prisma directly.
-- Athlete pages under `app/(app)/athlete/**` plus `app/(app)/settings/page.tsx` should stay thin and delegate to this service where appropriate.
-
-### Assignment boundary
-
-- `lib/assignment-service.ts` owns coach builder assignment creation and duplicate-prevention rules.
-- `app/api/coach/assignments/route.ts` should stay thin and delegate to this service.
-- `assignment-service` owns the source union for template, library-session, and
-  training-plan snapshots; `Assignment` and `TrainingPlanAssignment` retain
-  explicit lineage and idempotency keys.
-
-### Coach-request boundary
-
-- `lib/coach-request-service.ts` owns coach search plus request list/create/decision flows.
-- `/api/coaches`, `/api/athlete/coach-requests`, and `/api/coach/requests/*` should stay thin and delegate to this service.
-- `CoachRequest.pendingAthleteId` is the nullable unique concurrency key for
-  pending requests; the service clears it when requests resolve.
-
-### Calendar and sport-domain helpers
-
-- `lib/week.ts` owns Monday-based week shaping and grouping helpers.
-- `lib/sport.ts` owns shared sport constants and human-readable sport labels.
-- `lib/session-math.ts` owns derived duration, TSS, zone totals, and block-bar segments from Tempo blocks.
-
-### Workout-content boundary
-
-- `lib/workout-spec.ts` owns block normalization, validation helpers, and persistence shaping.
-- `lib/workout-editor.ts` owns shared workout draft shaping used by session and template editing.
-- `components/WorkoutBlocksEditor.tsx` is the shared block-editing UI.
-- `components/CoachEditorDrawer.tsx` is the shared coach-side editor shell.
-
-## Data ownership
-
-The source of truth for models is `prisma/schema.prisma`.
-
-Important ownership relationships:
-
-- `User.role` drives access and redirects.
-- `User.role` is nullable only during first-login setup; role assignment is
-  conditional and cannot be changed through the setup endpoint.
-- `User.name`, `User.emailVerified`, and `User.image` use Auth.js-compatible
-  nullability; application read services normalize nullable names to `''`.
-- `CoachRequest` tracks athlete-to-coach connection requests.
-- `CoachRequest.pendingAthleteId` is populated only for pending rows, so request
-  history can retain the unique athlete/coach pair without allowing competing
-  pending requests.
+- `User.role` controls access. It is nullable only before first-login setup.
 - `User.coachId` represents the accepted coach-athlete relationship.
-- `Plan` owns goal/race windows for an athlete.
-- `Session` belongs to an athlete and may also belong to a `Plan` or `Template`.
-- `Block` is the structured source of truth for session duration, TSS, and zone distribution.
-- `Activity` stores performed session outcomes.
-- `Activity` stores outcome metrics, persisted segments, metric provenance, and
-  nullable compliance when no performed data exists, plus the latest actual
-  canonical snapshot and RPE.
-- `Session` stores the latest coach baseline canonical snapshot, coach notes, and
-  planned RPE. Snapshot payloads are latest-value records, not version history.
-- `Assignment` records coach scheduling actions onto athlete calendars.
-- `TrainingPlanAssignment` records a reusable-plan copy operation for one athlete
-  and Monday target week; child `Assignment` rows point to copied source sessions.
-- `Template` is coach-owned and private.
-- `ShareLink` stores one cryptographic token hash, one nullable Session or
-  Template source relation, the creator, and a sanitized share-time snapshot.
-  Source deletion cascades to invalidate the link. The service enforces the
-  exactly-one-source invariant and never stores the raw bearer token.
+- `Session` can be an athlete assignment, a coach library source, or a training-plan child. A standalone library session has no date, `Plan`, or `TrainingPlan`.
+- `Block` is the structured source for workout content and derived metrics.
+- `Assignment` and `TrainingPlanAssignment` record source-copy lineage and prevent duplicates.
+- `Activity` stores completion outcomes and the latest actual snapshot. Planned session data stores the latest coach baseline snapshot.
+- `ShareLink` stores a token hash and one sanitized snapshot tied to either a `Session` or `Template`; the raw token is never persisted.
 
-## Transitional areas
+## Safe Extension Rules
 
-The main read/write boundaries are clearer, but they still need protection:
+1. Keep all week calculations Monday-based.
+2. Find and extend the existing owning service before adding Prisma logic to a route or page.
+3. Keep Workouts unscheduled. Date and week assignment belongs to Planner or `assignment-service`.
+4. Use the canonical session editor and shared block components for new workout authoring.
+5. Keep completed sessions immutable through planner paths. Completion/reopen behavior belongs to `athlete-completion-service`.
+6. Keep source-copy behavior in `assignment-service`; copied sessions are independent snapshots.
+7. Keep baseline and actual payloads behind `session-snapshot-service`; do not derive history from mutable current blocks.
+8. Keep public sharing sanitized and explicit. Never include Activity, actual/baseline JSON, private notes, RPE, ownership, or relationship data.
+9. Treat `lib/planner-service.ts` and `/api/coach/sessions/[sessionId]` as compatibility code, not a new extension point.
 
-- The current automated coverage is strongest around architecture, shell, and utility seams; service-level regression coverage is still thinner than the UI surface area.
-- Pages still compose several service outputs directly, so future work should avoid slipping business logic back into route components.
+## Known Gaps
 
-## Safe extension rules
-
-1. Keep week logic Monday-based everywhere.
-2. Add planner behavior to `planner-service` before touching API handlers.
-3. Add template behavior to `template-service` before touching API handlers.
-4. Reuse shared workout-editor and block-editor primitives instead of duplicating draft logic.
-5. Prefer focused domain modules like `coach-service`, `week`, and `sport` over reviving mixed helper files.
-6. Keep future agents aligned with `.copilot/skills/project-architecture/` when boundary work is involved.
-7. Keep role setup behind `auth-role-service` and validate session principals
-   through `auth-principal` rather than casting Auth.js values.
-8. Keep route transport parsing in `route-params`; do not move ownership or
-   business validation out of the domain service boundary.
-9. Treat sessions with Activity outcomes as immutable through planner mutation
-   paths; use `athlete-completion-service` for the explicit reopen transition.
-10. Keep source-copy behavior in `assignment-service`; source authoring modules
-    must not introduce separate copy or synchronization paths.
-11. Keep baseline/actual snapshot serialization behind `session-snapshot-service`
-    and do not derive historical Activity outcomes from mutable Session blocks.
-12. Keep athlete planned mutations behind `athlete-session-adjustment-service`;
-    do not extend the compatibility planner route for this behavior.
-13. Keep baseline/actual comparison behind `session-comparison-service` and
-    reuse the stored snapshot identity for equal-version projection.
-14. Keep workout sharing behind `share-link-service`; project only workout
-    definition fields and never expose Activity, actual/baseline JSON, private
-    notes, RPE, assignments, owner identity, or relationship data.
-15. Treat share links as immutable snapshots. Recipient actions must remain
-    unsaved until an explicit save delegates to the private owner-scoped
-    persistence service.
-
-## Highest-value architectural next step
-
-Add deeper service-level coverage around planner, template, assignment, coach-detail, auth, and share-link behavior so the current Tempo boundaries stay stable as features are added. Browser verification remains required for the current share-link implementation before it can be marked shipped.
+- Browser acceptance for public sharing and some session mutation flows still needs a fresh pass.
+- Auth.js external OAuth integration is optional and not covered by local credentials tests.
+- The middleware convention emits a Next.js deprecation warning; it is not currently a build failure.

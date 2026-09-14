@@ -1,37 +1,40 @@
 # Workout Planner
 
-Workout Planner is a weekly training planning app for coaches and athletes. Coaches build and reuse structured training weeks, and athletes read their plan, request a coach connection, and mark sessions complete.
+Workout Planner is a Tempo-aligned web app for coaches and athletes. Coaches
+create structured workouts, templates, and training plans. Athletes discover a
+coach, follow a Monday-based plan, execute sessions, and record outcomes.
 
-## Current Product State
+## Documentation
 
-- Auth is live through Auth.js v5 with credentials login plus optional Google sign-in.
-- Coaches have a dashboard, a per-athlete week planner, and a private template library.
-- Athletes can search for a coach, wait for approval, view their week, and mark sessions done with notes.
-- Planning is week-scoped and starts on Monday everywhere in the app.
+Use these documents as the current source of project guidance:
 
-## Documentation Map
+- `AGENTS.md` - shared operating rules for coding agents.
+- `CLAUDE.md` - short repository guidance for Claude-compatible tools.
+- `ARCHITECTURE.md` - live routes, service ownership, data boundaries, and safe extension rules.
+- `PRODUCT.md` - current product purpose, scope, and non-goals.
+- `DESIGN.md` - current visual system used by the application and Impeccable.
+- `docs/agent-workspace/CURRENT-STATUS.md` - verified implementation snapshot.
+- `docs/agent-workspace/WORK-INDEX.md` - compact capability and ownership index.
 
-- `docs/agent-workspace/README.md` — **required starting point for agent work**; current status, related work, task tracking, decisions, and history.
-- `docs/AI-HANDOFF.md` — **best starting point for a new AI contributor**; explains current state, extension points, and recommended next work.
-- `ARCHITECTURE.md` — current implementation boundaries, route map, and safe places to add behavior.
-- `SPEC.md` — product scope, shipped feature summary, and near-term roadmap.
-- `CLAUDE.md` — repository-specific operating guidance for coding agents in environments that read it.
+Source code and tests are authoritative. The workspace contains current
+coordination only; it is not an archive of old plans or decisions.
 
-## Running Locally
+## Local Setup
 
-Use `pnpm` for this project.
+Use `pnpm`.
 
-1. Copy `.env.example` to `.env.local`
-2. Set `DATABASE_URL`
-3. Set `AUTH_SECRET`
-4. Optionally set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
-5. Run `pnpm db:push`
-6. Run `pnpm db:seed`
-7. Run `pnpm dev`
+1. Copy `.env.example` to `.env`.
+2. Set a real `AUTH_SECRET`, for example with `openssl rand -base64 32`.
+3. Optionally set `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` for Google OAuth.
+4. Run `pnpm db:setup` to create and seed the local SQLite database.
+5. Run `pnpm dev`.
 
-## Seeded Demo Accounts
+Prisma CLI reads `.env`, so a database-only `.env.local` is not sufficient for
+`pnpm db:push` or `pnpm db:setup`.
 
-After `pnpm db:seed`, these credentials are available:
+## Demo Accounts
+
+The seed command creates these local accounts:
 
 | Role | Email | Password |
 |---|---|---|
@@ -43,8 +46,13 @@ After `pnpm db:seed`, these credentials are available:
 
 ```bash
 pnpm dev
-pnpm build
+pnpm test
 pnpm lint
+pnpm build
+pnpm db:setup
 pnpm db:push
 pnpm db:seed
 ```
+
+`pnpm db:push` may reset local SQLite data. Run `pnpm db:seed` afterward when
+you need demo data again.

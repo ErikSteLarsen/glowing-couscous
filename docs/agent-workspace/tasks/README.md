@@ -1,12 +1,8 @@
-# Agent Tasks
+# Active Tasks
 
-Use this folder for active multi-step work, cross-cutting changes, and handoffs.
-Create `YYYY-MM-DD-short-description.md` from `TEMPLATE.md` before editing.
+This folder holds active multi-step work only. A task brief is a working aid,
+not a historical record. Create it from `TEMPLATE.md`, link it from
+`WORK-INDEX.md`, and remove it when its result is recorded in current status and
+the index.
 
-The task file is a working brief, not the historical record. While active,
-link it from `WORK-INDEX.md`. Before finishing, update the feature record and
-append a dated history record, then mark the task `completed`, `blocked`, or
-`deferred`.
-
-Small isolated edits may skip a task file, but behavior changes still require a
-feature/status update and history entry.
+Small isolated changes do not need a task file.

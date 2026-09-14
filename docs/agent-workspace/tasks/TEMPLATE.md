@@ -4,42 +4,29 @@
 - **Agent:** `<name or session id>`
 - **Started:** `YYYY-MM-DD`
 - **Updated:** `YYYY-MM-DD`
-- **Feature IDs:** `<WORK-INDEX IDs>`
-- **Related records:** `<feature, decision, history, or plan links>`
+- **Capability IDs:** `<WORK-INDEX IDs>`
 
 ## Goal
 
 What will be different when this task is complete?
 
-## Starting Context
-
-- Current behavior:
-- Existing owner/service:
-- Related active or transitional work:
-
 ## Plan
 
-- [ ] Step with a concrete completion condition
-- [ ] Step with a concrete completion condition
+- [ ] Concrete step and completion condition
+- [ ] Concrete step and completion condition
 
-## Progress Log
+## Progress
 
 ### YYYY-MM-DD
 
-- What changed:
+- Change:
 - Decision or discovery:
-- Files touched:
+- Files:
 - Verification:
-- Blocker or next step:
+- Next step:
 
-## Verification
-
-- `command` — result/date
-- `command` — result/date
-
-## Handoff / Completion
+## Completion
 
 - **Final status:** `completed` | `blocked` | `deferred`
-- **History record:** `<link>`
-- **Feature records updated:** `<links>`
+- **Current docs updated:**
 - **Remaining work:**
