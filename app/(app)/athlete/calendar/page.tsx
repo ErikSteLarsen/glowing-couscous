@@ -39,7 +39,7 @@ export default async function AthleteCalendarPage({
   };
 
   return (
-    <PageShell size="wide" className="max-w-[1600px]">
+    <PageShell size="wall">
       <TopBar
         title={selectedView === 'month' ? 'Your training month' : 'Your training week'}
         description="Review scheduled work without changing the workout itself. Use Planner when you need to place or move a session."

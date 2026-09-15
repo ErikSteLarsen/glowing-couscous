@@ -32,7 +32,7 @@ export default async function AthletePlannerPage({
   const nextWeekHref = `/athlete/planner?date=${format(addWeeks(workspace.period.start, 1), 'yyyy-MM-dd')}`;
 
   return (
-    <PageShell size="wide" className="max-w-[1400px]">
+    <PageShell size="wall">
       <TopBar
         title="Planner"
         description="Place workouts and templates on one or more days. This is where your schedule changes."

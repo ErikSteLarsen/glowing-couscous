@@ -17,7 +17,7 @@ export default async function AthleteWorkoutsPage() {
   ]);
 
   return (
-    <PageShell size="wide" className="max-w-[1400px]">
+    <PageShell size="wall">
       <TopBar
         title="Workouts"
         description="Create workouts once, then add copies to specific days in Planner. Your library versions stay unscheduled."

@@ -31,7 +31,7 @@ export function SessionBlockBar({
     <div
       role="img"
       aria-label={`${isIntensityTimeline ? 'Workout intensity timeline' : 'Workout structure'}: ${summary}`}
-      className={`flex w-full max-w-[18rem] items-end overflow-hidden border-b border-[var(--border)] ${isIntensityTimeline ? 'rounded-none' : 'rounded-[7px]'} bg-[var(--sunken)] ${height}`}
+      className={`flex w-full max-w-[18rem] items-end overflow-hidden border-b border-[var(--border)] ${isIntensityTimeline ? 'rounded-none' : 'rounded-[7px]'} bg-transparent ${height}`}
       style={{ gap: '2px' }}
     >
       {segments.map((segment) => (

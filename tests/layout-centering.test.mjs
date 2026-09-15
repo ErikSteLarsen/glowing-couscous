@@ -18,6 +18,10 @@ test('shared layout primitives define centered width tiers', async () => {
   assert.match(uiSource, /default:\s*'max-w-5xl'/);
   assert.match(uiSource, /wide:\s*'max-w-\[1140px\]'/);
   assert.match(uiSource, /wall:\s*'max-w-\[1440px\]'/);
+  assert.match(uiSource, /mx-auto w-full max-w-\[1440px\] px-5 sm:px-7 lg:px-10/);
+  assert.match(uiSource, /pageHeadingClassName = 'text-\[40px\] font-normal leading-none tracking-\[-0\.045em\] text-\[var\(--text\)\] max-md:text-\[34px\]'/);
+  assert.match(uiSource, /sectionHeadingClassName = 'text-\[20px\] font-semibold tracking-\[-0\.02em\] text-\[var\(--text\)\]'/);
+  assert.match(uiSource, /ink-topbar min-h-\[72px\]/);
   assert.match(uiSource, /align\s*=\s*'left'/);
   assert.match(uiSource, /text-center/);
   assert.doesNotMatch(layoutSource, /max-w-screen-2xl/);
@@ -31,6 +35,13 @@ test('page shells opt into narrow auth layouts and wider planner layouts', async
   const coachPageSource = await read('app/(app)/coach/page.tsx');
   const coachTemplatesPageSource = await read('app/(app)/coach/templates/page.tsx');
   const coachPlannerPageSource = await read('app/(app)/coach/athletes/[athleteId]/page.tsx');
+  const wallPageSources = await Promise.all([
+    'app/(app)/athlete/calendar/page.tsx',
+    'app/(app)/athlete/planner/page.tsx',
+    'app/(app)/athlete/workouts/page.tsx',
+    'app/(app)/coach/planner/page.tsx',
+    'app/(app)/coach/workouts/page.tsx',
+  ].map(read));
 
   assert.match(loginSource, /<PageShell size="narrow"/);
   assert.match(loginSource, /align="center"/);
@@ -42,6 +53,28 @@ test('page shells opt into narrow auth layouts and wider planner layouts', async
   assert.match(coachPageSource, /<PageShell size="wide"/);
   assert.match(coachTemplatesPageSource, /<PageShell size="wide"/);
   assert.match(coachPlannerPageSource, /<PageShell size="wall"/);
+  for (const pageSource of wallPageSources) {
+    assert.match(pageSource, /<PageShell size="wall">/);
+  }
+});
+
+test('athlete Home uses the shared header scale and section heading scale', async () => {
+  const uiSource = await read('components/ui.tsx');
+  const athletePageSource = await read('app/(app)/athlete/page.tsx');
+
+  assert.match(uiSource, /<h1 className=\{pageHeadingClassName\}>\{title\}<\/h1>/);
+  assert.match(athletePageSource, /className=\{sectionHeadingClassName\}>Today/);
+  assert.match(athletePageSource, /className=\{sectionHeadingClassName\}>Week at a glance/);
+  assert.doesNotMatch(uiSource, /ink-topbar__title/);
+  assert.doesNotMatch(athletePageSource, /className="text-\[20px\] font-semibold tracking-\[-0\.02em\]/);
+  assert.doesNotMatch(athletePageSource, /week-glance-heading" className="[^"]*border-b/);
+});
+
+test('session block bars show colored zones without a gray track', async () => {
+  const barSource = await read('components/tempo/SessionBlockBar.tsx');
+
+  assert.match(barSource, /bg-transparent/);
+  assert.doesNotMatch(barSource, /bg-\[var\(--sunken\)\]/);
 });
 
 test('signed-in routes use grouped app shell while auth pages stay centered', async () => {

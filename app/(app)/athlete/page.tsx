@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { endOfWeek, format, startOfWeek } from 'date-fns';
-import { ActionLink, PageShell, Surface, TopBar } from '@/components/ui';
+import { ActionLink, PageShell, sectionHeadingClassName, Surface, TopBar } from '@/components/ui';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionRow } from '@/components/tempo/SessionRow';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
@@ -40,7 +40,7 @@ export default async function AthletePage() {
         <section aria-labelledby="next-action-heading" className="ink-next-action ink-next-action--quiet-tone ink-next-action--summary rounded-[14px] border border-[var(--border)] px-4 py-5 xl:px-6 xl:py-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 id="next-action-heading" className="text-[18px] font-semibold text-[var(--text)]">Today</h2>
+              <h2 id="next-action-heading" className={sectionHeadingClassName}>Today</h2>
               <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Next session</p>
             </div>
             {nextAction ? (
@@ -61,9 +61,9 @@ export default async function AthletePage() {
         </section>
 
         <section aria-labelledby="week-glance-heading" className="space-y-4 xl:space-y-5">
-          <div className="flex flex-col gap-3 border-b border-[var(--border)] pb-4 xl:pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 id="week-glance-heading" className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Week at a glance</h2>
+              <h2 id="week-glance-heading" className={sectionHeadingClassName}>Week at a glance</h2>
               <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{format(weekStart, 'd MMM')} – {format(weekEnd, 'd MMM')} · Monday-first</p>
             </div>
           </div>

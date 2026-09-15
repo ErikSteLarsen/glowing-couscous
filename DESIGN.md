@@ -140,7 +140,7 @@ components:
     padding: "10px 16px"
     height: "40px"
   session-block-bar:
-    backgroundColor: "{colors.surface}"
+    backgroundColor: "transparent"
     rounded: "{rounded.field}"
     height: "32px"
 ---
@@ -243,10 +243,12 @@ copy without compromising scan speed.
 ### Hierarchy
 
 - **Display:** use the `display` token for route headings and primary page
-  titles. On Home, the title can open into a large, thin statement that leaves
-  room for the ink field and the current work.
+  titles. Home uses the same shared page-heading scale and placement as the
+  rest of the authenticated workspace.
 - **Title:** use the `title` token for section headings and prominent session
-  titles.
+  titles. Shared page headings use `pageHeadingClassName` at 40px desktop and
+  34px mobile; comparable Home section headings use `sectionHeadingClassName`
+  at 20px.
 - **Body:** use the `body` token for explanations, notes, and task copy. Keep
   supporting text readable and do not use muted text for essential instructions.
 - **Label:** use the `label` token for compact metadata, dates, section labels,
@@ -262,10 +264,14 @@ route's metrics as a new visual object.
 ## Layout
 
 The product is a week-first workspace, not a marketing canvas. `PageShell` is
-the shared width and padding primitive: narrow content uses `max-w-3xl`, default
-content uses `max-w-5xl`, wide content uses `1140px`, and week walls can reach
-`1440px`. The normal rhythm is `24px` between page groups, with `20px` inline
-padding on small screens and larger `28px`/`40px` gutters as space allows.
+the shared frame: it centers one `1440px` wall with `20px` inline padding on
+small screens and larger `28px`/`40px` gutters as space allows. Content widths
+are left-aligned inside that frame, so every authenticated page title and body
+begin at the same location: narrow content uses `max-w-3xl`, default content
+uses `max-w-5xl`, wide content uses `1140px`, and week walls can use the full
+available width. `TopBar` reserves a shared standard header band; descriptions
+and actions may extend it only when their real content must wrap. The normal
+rhythm is `24px` between page groups.
 
 Desktop reserves a `216px` viewport-bounded sidebar from the `md` breakpoint
 (`768px`) upward. The sidebar owns primary navigation and local overflow; the

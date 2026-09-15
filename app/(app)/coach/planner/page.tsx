@@ -21,7 +21,7 @@ export default async function CoachPlannerPage({
   const parsedTemplateId = Number(templateId);
 
   return (
-    <PageShell size="wide" className="max-w-[1600px]">
+    <PageShell size="wall">
       <TopBar
         title="Planner"
         description="Place a workout, template, or training plan on an athlete's calendar. This is the only workspace where dates are chosen."

@@ -274,26 +274,6 @@ select {
   box-shadow: var(--shadow-inset);
 }
 
-.ink-topbar__title {
-  font-weight: 400 !important;
-  letter-spacing: -0.045em !important;
-}
-
-.ink-home {
-  padding-top: clamp(72px, 10vh, 138px) !important;
-}
-
-.ink-studio-app .ink-topbar__title {
-  font-size: 40px !important;
-  line-height: 1 !important;
-}
-
-.ink-home .ink-topbar__title {
-  max-width: 820px;
-  font-size: clamp(42px, 5.2vw, 74px) !important;
-  line-height: 0.98 !important;
-}
-
 .ink-home .ink-next-action {
   position: relative;
   min-height: 210px;
@@ -326,22 +306,10 @@ select {
   gap: 8px;
 }
 
-.ink-home .ink-next-action--summary h2 {
-  font-size: 20px;
-}
-
 .ink-home .ink-next-action--summary span.rounded-full {
   background: transparent;
   border-color: var(--border);
   color: var(--text-secondary);
-}
-
-.ink-home .ink-next-action h2 {
-  max-width: 560px;
-  font-size: clamp(28px, 3.6vw, 52px);
-  font-weight: 350;
-  letter-spacing: -0.05em;
-  line-height: 1;
 }
 
 .ink-week-ribbon {
@@ -425,18 +393,6 @@ select {
     width: 125vw;
     height: 430px;
     opacity: 0.2;
-  }
-
-  .ink-studio-app .ink-topbar__title {
-    font-size: 34px !important;
-  }
-
-  .ink-home .ink-topbar__title {
-    font-size: 48px !important;
-  }
-
-  .ink-home {
-    padding-top: 48px !important;
   }
 
   .ink-week-track {

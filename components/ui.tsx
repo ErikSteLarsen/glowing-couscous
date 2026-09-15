@@ -8,6 +8,8 @@ const pageShellWidthClasses = {
   wall: 'max-w-[1440px]',
 } as const;
 
+export const pageHeadingClassName = 'text-[40px] font-normal leading-none tracking-[-0.045em] text-[var(--text)] max-md:text-[34px]';
+export const sectionHeadingClassName = 'text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]';
 export const formLabelClassName = 'mb-1.5 block text-sm font-medium text-[var(--text-secondary)]';
 export const formFieldClassName =
   'min-h-11 w-full rounded-[3px] border border-[var(--field-border)] bg-[var(--field-surface)] px-4 py-2.5 text-sm text-[var(--text)] outline-none shadow-[var(--shadow-inset)] transition placeholder:text-[var(--text-muted)] focus:border-[var(--field-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--field-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
@@ -57,8 +59,10 @@ export function PageShell({
   className?: string;
 }) {
   return (
-    <div className={`mx-auto flex w-full flex-col gap-6 px-5 py-7 sm:px-7 lg:px-10 ${pageShellWidthClasses[size]} ${className}`}>
-      {children}
+    <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-7 lg:px-10">
+      <div className={`flex w-full flex-col gap-6 py-7 ${pageShellWidthClasses[size]} ${className}`}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -77,10 +81,10 @@ export function TopBar({
   const isCentered = align === 'center';
 
   return (
-    <div className={`ink-topbar ${isCentered ? 'text-center' : 'flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'}`}>
+    <div className={`ink-topbar min-h-[72px] ${isCentered ? 'text-center' : 'flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'}`}>
       <div className="space-y-2">
         <div className={isCentered ? 'space-y-2 text-center' : 'space-y-2'}>
-          <h1 className="ink-topbar__title text-[26px] font-semibold tracking-[-0.02em] text-[var(--text)]">{title}</h1>
+          <h1 className={pageHeadingClassName}>{title}</h1>
           {description ? (
             <p className={`text-[15px] leading-[1.55] text-[var(--text-secondary)] ${isCentered ? 'mx-auto max-w-2xl' : 'max-w-3xl'}`}>
               {description}

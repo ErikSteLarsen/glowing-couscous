@@ -35,7 +35,7 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 
 | Gate | Result | Command or evidence |
 |---|---|---|
-| Tests | Pass, 184 tests | `pnpm test` on 2026-09-15 |
+| Tests | Pass, 186 tests | `pnpm test` on 2026-09-15 |
 | Lint | Pass | `pnpm lint` on 2026-09-15 |
 | Production build | Pass | `pnpm build` on 2026-09-15; Next.js reports the middleware-to-proxy deprecation warning |
 | Database setup | Pass in current development work | `pnpm db:setup` with local SQLite |
@@ -53,6 +53,7 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 - Sharing is implemented with sanitized immutable snapshots and explicit recipient saves. Browser acceptance remains a gap.
 - `lib/planner-service.ts` and the older coach session mutation route remain transitional compatibility code. Do not extend them for new behavior.
 - The signed-in shell, shared UI primitives, session rows, authored ink-flow linework, and athlete Home now use the Ink Is Movement visual world without changing route or data behavior. Workspace navigation is owned by the sidebar and mobile bar; page headers keep only page-local or contextual actions instead of repeating sibling destinations.
+- Authenticated `PageShell` routes now share one centered 1440px frame and a common left content anchor across narrow, default, wide, and wall page widths. `TopBar` reserves a shared 72px header band on all signed-in pages, including athlete Home, and owns one page-heading scale of 40px desktop and 34px mobile; Home's comparable section headings use the same shared 20px class. Planners, calendars, and workout libraries use the documented wall width instead of route-local maximums.
 
 ## Known Gaps
 
@@ -62,5 +63,5 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 - Next.js reports a middleware-to-proxy deprecation warning; this is not currently a build failure.
 - The design detector reports advisory literal colors, radii, and sizes in the
   scoped `/design/*` direction previews, workout/editor and preset/chart label
-  sizes, and responsive editorial type values; no blocking findings were
-  reported.
+  sizes, responsive editorial type values, shared compact controls, and Calendar
+  labels; no blocking findings were reported.
