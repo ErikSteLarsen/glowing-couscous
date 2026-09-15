@@ -1,6 +1,6 @@
 # Current Status
 
-Verified on **2026-09-14** against the current source tree. Source and tests are
+Verified on **2026-09-15** against the current source tree. Source and tests are
 the authority; this file is a short operational snapshot, not a changelog.
 
 ## Product
@@ -35,28 +35,32 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 
 | Gate | Result | Command or evidence |
 |---|---|---|
-| Tests | Pass, 181 tests | `pnpm test` on 2026-09-14 |
-| Lint | Pass | `pnpm lint` on 2026-09-14 |
-| Production build | Pass | `pnpm build` on 2026-09-14; Next.js reports the middleware-to-proxy deprecation warning |
+| Tests | Pass, 182 tests | `pnpm test` on 2026-09-15 |
+| Lint | Pass | `pnpm lint` on 2026-09-15 |
+| Production build | Pass | `pnpm build` on 2026-09-15; Next.js reports the middleware-to-proxy deprecation warning |
 | Database setup | Pass in current development work | `pnpm db:setup` with local SQLite |
-| Design context | Pass | `DESIGN.md`, `.impeccable/design.json`, and the signed-in surface brief synchronized with Ink Is Movement tokens and shared components; sidecar JSON parsed successfully; detector completed with advisory-only findings |
+| Design context | Pass | `DESIGN.md`, `.impeccable/design.json`, and the signed-in surface brief synchronized with Ink Is Movement tokens and shared components; focused workout builder presets, progressive basics, and zone chart verified; detector completed with advisory-only findings |
+| Visual smoke | Login capture passes; a complete authenticated editor smoke remains pending after the shell overflow fix | `pnpm visual:cdp` on 2026-09-15; pre-fix authenticated capture exposed the overflow |
 
 ## Capability State
 
 - Authentication and role setup are active and covered by source-level tests.
 - Coach roster, athlete detail, requests, planner, libraries, templates, and training plans are active implementation paths.
 - Athlete Home, Calendar, Workouts, Planner, Templates, Session, Live, Activity, Profile, and Settings are active implementation paths.
-- The canonical visual workout builder supports structured blocks, skipped blocks, repetitions, relative targets, and profile-aware previews without persisting profile values into generic prescriptions.
+- The canonical visual workout builder supports structured blocks, skipped blocks, repetitions, relative targets, and profile-aware previews without persisting profile values into generic prescriptions. Workout authoring now uses a focused library/editor mode, opens new workouts directly in the builder without a duplicate setup step, puts sport and name first, and collapses those basics into a compact editable header once complete. Five draggable presets per intensity zone, click insertion, and duration-by-zone bar charts remain available while preserving the inspector and keyboard reorder controls. Palette drags dropped outside the sequence are ignored, follow-up clicks from completed drags are suppressed, same-position sequence drops do not create a draft change, block removal is visible in the inspector, and saves preflight the canonical draft validator.
+- The workouts library and editor now distinguish unscheduled library versions from Planner copies and explain empty, search, save, delete, share, and editing states in direct task language; the shared builder uses context-specific labels for workout and template editing. The library is hidden while a workout is being authored so the builder has the full surface.
 - Sharing is implemented with sanitized immutable snapshots and explicit recipient saves. Browser acceptance remains a gap.
 - `lib/planner-service.ts` and the older coach session mutation route remain transitional compatibility code. Do not extend them for new behavior.
-- The signed-in shell, shared UI primitives, session rows, authored ink-flow linework, and athlete Home now use the Ink Is Movement visual world without changing route or data behavior.
+- The signed-in shell, shared UI primitives, session rows, authored ink-flow linework, and athlete Home now use the Ink Is Movement visual world without changing route or data behavior. Workspace navigation is owned by the sidebar and mobile bar; page headers keep only page-local or contextual actions instead of repeating sibling destinations.
 
 ## Known Gaps
 
-- Browser verification is still needed for public share previews and some session mutation flows; this session smoke-checked the local login route and root redirect because no browser executable is installed.
+- Browser verification is still needed for public share previews, some session mutation flows, physical pointer/touch acceptance of the workout builder, and a complete post-fix authenticated visual smoke. In WSL2, visual smoke checks can run through the Windows Chrome executable over a local CDP port; the committed Playwright setup covers the login smoke route and screenshot capture.
+- Playwright-managed Chromium is downloaded, but this WSL2 image still lacks Linux runtime libraries (`libnspr4`, `libnss3`, and `libasound2`) and non-interactive sudo; use `pnpm exec playwright install --with-deps chromium` interactively or use the CDP workflow.
 - Credentials flows are locally covered; external OAuth integration is not.
 - Live execution is a local guidance stepper and does not collect device or sensor telemetry.
 - Next.js reports a middleware-to-proxy deprecation warning; this is not currently a build failure.
 - The design detector reports advisory literal colors, radii, and sizes in the
-  scoped `/design/*` direction previews plus responsive editorial type values;
-  no blocking findings were reported.
+  scoped `/design/*` direction previews, workout/editor and preset/chart label
+  sizes, and responsive editorial type values; no blocking findings were
+  reported.

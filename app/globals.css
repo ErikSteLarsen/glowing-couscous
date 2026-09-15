@@ -163,6 +163,7 @@ select {
 .ink-studio-app {
   background-color: var(--background);
   background-image: none;
+  overflow-x: clip;
 }
 
 .ink-flow-backdrop {

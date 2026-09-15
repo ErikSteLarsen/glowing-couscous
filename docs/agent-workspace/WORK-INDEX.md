@@ -44,5 +44,4 @@ styles:
 
 ## Active Tasks
 
-No long-running task is registered. Create one from `tasks/TEMPLATE.md` only for
-work that needs coordination across multiple files or sessions.
+None.
