@@ -40,7 +40,6 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 | Production build | Pass | `pnpm build` on 2026-09-15; Next.js reports the middleware-to-proxy deprecation warning |
 | Database setup | Pass in current development work | `pnpm db:setup` with local SQLite |
 | Design context | Pass | `DESIGN.md`, `.impeccable/design.json`, and the signed-in surface brief synchronized with Ink Is Movement tokens and shared components; focused workout builder presets, progressive basics, and zone chart verified; detector completed with advisory-only findings |
-| Visual smoke | Login capture passes; a complete authenticated editor smoke remains pending after the shell overflow fix | `pnpm visual:cdp` on 2026-09-15; pre-fix authenticated capture exposed the overflow |
 
 ## Capability State
 
@@ -55,8 +54,7 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 
 ## Known Gaps
 
-- Browser verification is still needed for public share previews, some session mutation flows, physical pointer/touch acceptance of the workout builder, and a complete post-fix authenticated visual smoke. In WSL2, visual smoke checks can run through the Windows Chrome executable over a local CDP port; the committed Playwright setup covers the login smoke route and screenshot capture.
-- Playwright-managed Chromium is downloaded, but this WSL2 image still lacks Linux runtime libraries (`libnspr4`, `libnss3`, and `libasound2`) and non-interactive sudo; use `pnpm exec playwright install --with-deps chromium` interactively or use the CDP workflow.
+- Browser verification is still needed for public share previews, some session mutation flows, and physical pointer/touch acceptance of the workout builder.
 - Credentials flows are locally covered; external OAuth integration is not.
 - Live execution is a local guidance stepper and does not collect device or sensor telemetry.
 - Next.js reports a middleware-to-proxy deprecation warning; this is not currently a build failure.
