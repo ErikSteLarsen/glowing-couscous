@@ -123,7 +123,7 @@ test('session editor initializes all session fields from persisted data', () => 
         zone: 4,
         durationSec: 480,
         reps: 3,
-        target: { type: 'power', low: 250, high: 270 },
+        target: { metric: 'power', mode: 'absolute', reference: null, low: 250, high: 270 },
         note: 'Three rounds',
         skipped: true,
       },
@@ -266,7 +266,7 @@ test('session editor validates duration, repetitions, targets, schedule, and RPE
       ...draft,
       blocks: [{ ...draft.blocks[0], target: { type: 'power', low: -1, high: 260 } }],
     }),
-    'Target values must be non-negative integers.',
+    'Target values must be non-negative numbers.',
   );
   assert.equal(validateSessionEditorDraft({ ...draft, rpe: 0 }), 'RPE must be an integer from 1 through 10.');
   assert.equal(validateSessionEditorDraft({ ...draft, rpe: 11 }), 'RPE must be an integer from 1 through 10.');
@@ -335,8 +335,12 @@ test('session editor serializes canonical fields into the persistence block shap
         durationSec: 900,
         reps: 2,
         targetType: 'hr',
+        targetMode: 'absolute',
+        targetReference: null,
         targetLow: 150,
         targetHigh: 165,
+        targetLowDecimal: '150',
+        targetHighDecimal: '165',
         note: 'Hold steady',
         skipped: true,
         sortOrder: 0,

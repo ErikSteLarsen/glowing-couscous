@@ -17,6 +17,7 @@ model User {
   selfCoached      Boolean      @default(false)
   coachId          Int?
   prefsJson        String?
+  performanceProfileJson String?
   passwordHash     String?
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
@@ -154,6 +155,10 @@ model Block {
   targetType String?
   targetLow  Int?
   targetHigh Int?
+  targetMode String @default("absolute")
+  targetReference String?
+  targetLowDecimal String?
+  targetHighDecimal String?
   note       String?
   skipped    Boolean    @default(false)
   sortOrder  Int

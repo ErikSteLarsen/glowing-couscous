@@ -5,6 +5,7 @@ import { isShareAction, isShareToken } from '@/lib/share-link';
 import { shareLinkService } from '@/lib/share-link-service';
 import { EmptyState } from '@/components/ui';
 import { ShareLandingClient } from './ShareLandingClient';
+import { accountService } from '@/lib/account-service';
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -26,6 +27,7 @@ export default async function SharePage({
   }
 
   const user = await getCurrentUser();
+  const account = user?.role === 'ATHLETE' ? await accountService.getAccount(user.id) : null;
   return (
     <ShareLandingClient
       token={token}
@@ -33,6 +35,7 @@ export default async function SharePage({
       isSignedIn={Boolean(user)}
       userRole={user?.role ?? null}
       initialAction={isShareAction(action) ? action : null}
+      performanceProfile={account?.performanceProfile}
     />
   );
 }

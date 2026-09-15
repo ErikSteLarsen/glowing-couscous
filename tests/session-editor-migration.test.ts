@@ -21,7 +21,7 @@ test('planner editor adapter preserves ownership modes while using canonical blo
     planWeekday: 3,
   });
   const updated = updatePlannerEditorBlock(draft, 1, {
-    target: { type: 'power', low: 250, high: 270 },
+    target: { metric: 'power', mode: 'absolute', reference: null, low: 250, high: 270 },
     skipped: true,
   });
   const payload = serializePlannerEditorDraftForSave(updated);
@@ -36,8 +36,12 @@ test('planner editor adapter preserves ownership modes while using canonical blo
     durationSec: 1800,
     reps: null,
     targetType: 'power',
+    targetMode: 'absolute',
+    targetReference: null,
     targetLow: 250,
     targetHigh: 270,
+    targetLowDecimal: '250',
+    targetHighDecimal: '270',
     note: 'Main work',
     skipped: true,
     sortOrder: 1,
@@ -68,7 +72,7 @@ test('template editor adapter initializes and serializes the canonical session d
 
   assert.equal(draft.mode, 'create');
   assert.equal(draft.title, 'Over-unders');
-  assert.equal(draft.blocks[0].target?.type, 'power');
+  assert.equal(draft.blocks[0].target?.metric, 'power');
   assert.deepEqual(serializeTemplateEditorDraftForSave(draft), {
     name: 'Over-unders',
     sport: 'BIKING',
@@ -81,8 +85,12 @@ test('template editor adapter initializes and serializes the canonical session d
         durationSec: 720,
         reps: 3,
         targetType: 'power',
+        targetMode: 'absolute',
+        targetReference: null,
         targetLow: 250,
         targetHigh: 270,
+        targetLowDecimal: '250',
+        targetHighDecimal: '270',
         note: 'Three rounds',
         skipped: false,
         sortOrder: 0,
@@ -91,16 +99,16 @@ test('template editor adapter initializes and serializes the canonical session d
   });
 });
 
-test('active planner and template clients use SessionComposer instead of planner draft helpers', async () => {
+test('active editor contexts use the shared visual builder instead of planner draft helpers', async () => {
   const [plannerSource, templatesSource, composerSource] = await Promise.all([
     read('app/(app)/coach/planner/PlannerClient.tsx'),
     read('app/(app)/coach/templates/CoachTemplatesClient.tsx'),
-    read('components/SessionComposer.tsx'),
+    read('components/WorkoutBuilder.tsx'),
   ]);
 
-  assert.match(plannerSource, /SessionComposer/);
-  assert.match(templatesSource, /SessionComposer/);
-  assert.match(composerSource, /lib\/session-editor/);
+  assert.match(plannerSource, /WorkoutBuilder/);
+  assert.match(templatesSource, /WorkoutBuilder/);
+  assert.match(composerSource, /@dnd-kit/);
   assert.doesNotMatch(plannerSource, /from ['"]@\/lib\/planner-draft['"]/);
   assert.doesNotMatch(templatesSource, /type TemplateDraftBlock/);
   assert.doesNotMatch(plannerSource, /duplicatePlannerBlock/);

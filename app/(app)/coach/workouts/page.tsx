@@ -19,7 +19,7 @@ export default async function CoachWorkoutsPage() {
     <PageShell size="wide" className="max-w-[1400px]">
       <TopBar
         title="Workouts"
-        description="Create and manage standalone workouts. Nothing here is assigned to a day until you use Planner."
+        description="Create reusable workout definitions here. Use Planner to place an independent copy on a day."
         actions={<ActionLink href="/coach/planner" tone="secondary">Open Planner</ActionLink>}
       />
       <WorkoutLibraryClient

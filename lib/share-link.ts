@@ -6,6 +6,7 @@ import {
   type SessionEditorDraft,
   type SessionEditorTarget,
 } from './session-editor.ts';
+import { normalizeWorkoutTarget } from './workout-targets.ts';
 
 export const SHARED_WORKOUT_SNAPSHOT_VERSION = 1 as const;
 export const SHARE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43,128}$/;
@@ -198,12 +199,6 @@ function isValidSharedWorkoutBlocks(input: unknown): input is SharedWorkoutBlock
     if (value.target === null) return true;
     if (!value.target || typeof value.target !== 'object') return false;
     const target = value.target as Record<string, unknown>;
-    return (
-      ['power', 'pace', 'hr'].includes(String(target.type)) &&
-      Number.isSafeInteger(target.low) &&
-      Number.isSafeInteger(target.high) &&
-      Number(target.low) >= 0 &&
-      Number(target.high) >= Number(target.low)
-    );
+    return normalizeWorkoutTarget(target) !== null;
   });
 }

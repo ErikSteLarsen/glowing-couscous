@@ -16,7 +16,7 @@ import {
 } from '@/components/ui';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { MetricText } from '@/components/tempo/MetricText';
-import { SessionComposer } from '@/components/SessionComposer';
+import { WorkoutBuilder } from '@/components/WorkoutBuilder';
 import { ShareLinkButton } from '@/components/ShareLinkButton';
 import { deriveSessionEditorMetrics, type SessionEditorDraft } from '@/lib/session-editor';
 import {
@@ -219,7 +219,7 @@ export function CoachTemplatesClient({
             </div>
             <button type="button" className={compactSecondaryButtonClassName} onClick={() => setEditorOpen(false)}>Cancel</button>
           </div>
-          <SessionComposer
+          <WorkoutBuilder
             draft={editorDraft}
             onChange={setEditorDraft}
             summaryPlaceholder="Summary"

@@ -2,8 +2,32 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import {
+  Activity,
+  CalendarDays,
+  Circle,
+  ClipboardList,
+  Dumbbell,
+  House,
+  LayoutTemplate,
+  Search,
+  UsersRound,
+} from 'lucide-react';
 import { getPrimaryNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import { AppProfileMenu } from '@/components/AppProfileMenu';
+import { InkFlow } from '@/components/InkFlow';
+import type { LucideIcon } from 'lucide-react';
+
+const navIcons: Record<string, LucideIcon> = {
+  Athletes: UsersRound,
+  Activity,
+  Calendar: CalendarDays,
+  Coach: Search,
+  Home: House,
+  Planner: ClipboardList,
+  Templates: LayoutTemplate,
+  Workouts: Dumbbell,
+};
 
 export function AppSidebar(props: {
   user: { name: string; email: string; role: 'COACH' | 'ATHLETE' };
@@ -63,37 +87,38 @@ export function AppSidebar(props: {
            aria-modal={props.isMobileViewport && props.mobileOpen ? true : undefined}
            inert={props.isMobileViewport && !props.mobileOpen ? true : undefined}
            ref={sidebarRef}
-          className={`fixed inset-y-0 left-0 z-40 w-[244px] overflow-y-auto border-r border-[var(--nav-border)] bg-[var(--nav-surface)] text-[var(--nav-text)] transition-transform duration-200 md:sticky md:top-0 md:h-screen md:max-h-screen md:self-start md:translate-x-0 ${
+            className={`fixed inset-y-0 left-0 z-40 w-[216px] overflow-y-auto border-r border-[var(--nav-border)] bg-[var(--nav-surface)] text-[var(--nav-text)] transition-transform duration-200 md:sticky md:top-0 md:h-screen md:max-h-screen md:self-start md:translate-x-0 ${
           props.mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex min-h-full flex-col gap-6 p-4">
-          <div className="flex items-start justify-between gap-3 px-2 pt-2">
-            <div className="flex items-center gap-3">
-              <div className="flex h-[26px] w-[26px] items-center justify-center rounded-[8px] bg-[var(--text)]">
-                <div className="h-[10px] w-[10px] rounded-[3px] bg-[var(--nav-signal)]" />
-              </div>
-              <div>
-                <p className="text-base font-bold tracking-[-0.02em] text-[var(--nav-text)]">Tempo</p>
-                {props.user.role === 'COACH' ? (
-                  <span className="mt-1 inline-flex rounded-[5px] bg-[var(--nav-active)] px-2 py-1 text-[10px] font-semibold text-[var(--nav-signal)]">
-                    COACH
-                  </span>
+         <div className="flex min-h-full flex-col gap-7 p-4">
+           <div className="flex items-start justify-between gap-3 border-b border-[var(--nav-border)] px-2 pb-7 pt-2">
+             <div className="flex items-center gap-3">
+                <div className="ink-brand-mark" aria-hidden="true">
+                  <span />
+                  <i />
+               </div>
+               <div>
+                  <p className="text-[15px] font-semibold uppercase tracking-[0.28em] text-[var(--nav-text)]">Tempo</p>
+                 {props.user.role === 'COACH' ? (
+                   <span className="mt-2 inline-flex text-[9px] font-semibold uppercase tracking-[0.18em] text-[var(--nav-muted)]">
+                     COACH
+                   </span>
                 ) : null}
               </div>
             </div>
             <button
               type="button"
               ref={closeButtonRef}
-              className="rounded-[10px] border border-[var(--nav-border)] bg-transparent px-3 py-2 text-xs font-medium text-[var(--nav-muted)] md:hidden"
+               className="rounded-[3px] border border-[var(--nav-border)] bg-transparent px-3 py-2 text-xs font-medium uppercase tracking-[0.08em] text-[var(--nav-muted)] md:hidden"
               onClick={props.onClose}
             >
               Close
             </button>
           </div>
 
-          <div>
-             <p className="px-3 text-[10.5px] font-semibold uppercase tracking-[0.1em] text-[var(--nav-muted)]">Workspace</p>
+           <div>
+              <p className="px-3 text-[10.5px] font-semibold uppercase tracking-[0.1em] text-[var(--nav-muted)]">Workspace</p>
              <nav className="mt-2 space-y-1">
               {navItems.map((item) => {
                 const isActive = isNavigationItemActive(props.pathname, item, navItems);
@@ -103,7 +128,7 @@ export function AppSidebar(props: {
                      href={item.href}
                      onClick={props.onClose}
                      aria-current={isActive ? 'page' : undefined}
-                      className={`relative flex min-h-11 items-center rounded-[10px] px-4 py-2.5 text-[13.5px] font-semibold transition md:min-h-10 ${
+                       className={`relative flex min-h-11 items-center rounded-[3px] px-3 py-2.5 text-[12px] font-semibold uppercase tracking-[0.08em] transition md:min-h-10 ${
                       isActive
                          ? 'bg-[var(--nav-active)] text-[var(--nav-text)]'
                          : 'text-[var(--nav-muted)] hover:bg-[var(--nav-active)] hover:text-[var(--nav-text)]'
@@ -112,17 +137,28 @@ export function AppSidebar(props: {
                     {isActive ? (
                       <span className="absolute inset-y-[9px] left-0 w-[3px] rounded-full bg-[var(--nav-signal)]" />
                     ) : null}
-                    <span className="min-w-0">
-                      <span className="block">{item.label}</span>
-                      {item.description ? <span className="mt-0.5 block text-[11px] font-normal text-[var(--nav-muted)]">{item.description}</span> : null}
-                    </span>
+                     <span className="flex min-w-0 items-center gap-3">
+                       {(() => {
+                         const Icon = navIcons[item.label] ?? Circle;
+                         return <Icon aria-hidden="true" size={15} strokeWidth={1.5} />;
+                       })()}
+                       <span className="block">{item.label}</span>
+                     </span>
                   </Link>
                 );
               })}
-            </nav>
-          </div>
+             </nav>
+           </div>
 
-          <div className="mt-auto">
+           <div className="ink-sidebar-specimen hidden md:block">
+             <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--nav-muted)]">Current flow</p>
+             <div className="ink-sidebar-flow mt-3" aria-hidden="true">
+               <InkFlow />
+             </div>
+             <p className="mt-3 text-[10px] uppercase tracking-[0.12em] text-[var(--nav-muted)]">Indigo / paper</p>
+           </div>
+
+           <div className="mt-auto">
             <AppProfileMenu user={props.user} pathname={props.pathname} onNavigate={props.onClose} />
           </div>
         </div>

@@ -22,7 +22,9 @@ type SessionRecord = {
     zone: number;
     durationSec: number;
     reps: number | null;
-    targetType: string | null;
+      targetType: string | null;
+      targetMode?: string | null;
+      targetReference?: string | null;
     targetLow: number | null;
     targetHigh: number | null;
   }>;
@@ -45,7 +47,9 @@ function mapSessionSummary(session: SessionRecord) {
       target:
         block.targetType && block.targetLow !== null && block.targetHigh !== null
           ? {
-              type: block.targetType as 'power' | 'pace' | 'hr',
+              metric: block.targetType as 'power' | 'pace' | 'hr' | 'rpe',
+              mode: block.targetMode === 'relative' ? 'relative' : 'absolute',
+              reference: block.targetReference as 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null,
               low: block.targetLow,
               high: block.targetHigh,
             }

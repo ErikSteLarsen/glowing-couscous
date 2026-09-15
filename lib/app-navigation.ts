@@ -40,7 +40,6 @@ export function getPrimaryNavigation(
       description: 'Create & manage',
       href: '/athlete/workouts',
       matchPrefix: '/athlete/workouts',
-      activeMatchPrefixes: ['/athlete/session', '/athlete/live'],
     },
     { label: 'Planner', description: 'Place on dates', href: '/athlete/planner', matchPrefix: '/athlete/planner' },
     { label: 'Templates', description: 'Reuse & assign', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
@@ -91,7 +90,6 @@ const sessionReturnTargets = {
   home: { href: '/athlete', label: 'Back to Home' },
   calendar: { href: '/athlete/calendar', label: 'Back to calendar' },
   activity: { href: '/athlete/activity', label: 'Back to Activity' },
-  workouts: { href: '/athlete/workouts', label: 'Back to Workouts' },
 } as const;
 
 export type SessionOrigin = keyof typeof sessionReturnTargets;

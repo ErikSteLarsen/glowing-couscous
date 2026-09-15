@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { useEffect, useState } from 'react';
+import { getProviders, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import {
   dangerTextClassName,
@@ -19,7 +19,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    let active = true;
+    getProviders()
+      .then((providers) => {
+        if (active) setGoogleEnabled(Boolean(providers?.google));
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -76,17 +90,21 @@ export default function LoginPage() {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
-        <div className="my-5 flex items-center gap-3">
-          <div className="h-px flex-1 bg-[var(--border)]" />
-          <span className="text-xs text-[var(--text-muted)]">or</span>
-          <div className="h-px flex-1 bg-[var(--border)]" />
-        </div>
-        <button
-          onClick={() => signIn('google', { callbackUrl: readCallbackUrl() ?? '/' })}
-          className={`${secondaryButtonClassName} w-full`}
-        >
-          Continue with Google
-        </button>
+        {googleEnabled && (
+          <>
+            <div className="my-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-[var(--border)]" />
+              <span className="text-xs text-[var(--text-muted)]">or</span>
+              <div className="h-px flex-1 bg-[var(--border)]" />
+            </div>
+            <button
+              onClick={() => signIn('google', { callbackUrl: readCallbackUrl() ?? '/' })}
+              className={`${secondaryButtonClassName} w-full`}
+            >
+              Continue with Google
+            </button>
+          </>
+        )}
         <p className="mt-5 text-center text-sm text-[var(--text-secondary)]">
           No account?{' '}
            <a

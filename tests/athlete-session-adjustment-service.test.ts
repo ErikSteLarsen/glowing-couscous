@@ -203,7 +203,7 @@ test('athlete session detail exposes the shared editor and schedule adjustment c
     'utf8',
   );
 
-  assert.match(client, /SessionComposer/);
+  assert.match(client, /WorkoutBuilder/);
   assert.match(client, /Adjust planned session/);
   assert.match(client, /showSchedule/);
   assert.match(client, /\/api\/athlete\/sessions\/\$\{sessionId\}/);

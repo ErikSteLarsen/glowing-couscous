@@ -3,7 +3,8 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { SessionComposer } from '@/components/SessionComposer';
+import { WorkoutBuilder } from '@/components/WorkoutBuilder';
+import { formatWorkoutTarget } from '@/lib/workout-target-resolution';
 import {
   Badge,
   compactSecondaryButtonClassName,
@@ -32,6 +33,7 @@ import {
 } from '@/lib/share-link';
 import type { AppRole } from '@/lib/app-navigation';
 import { getSportLabel } from '@/lib/sport';
+import type { PerformanceProfile } from '@/lib/performance-profile';
 
 export function ShareLandingClient({
   token,
@@ -39,12 +41,14 @@ export function ShareLandingClient({
   isSignedIn,
   userRole,
   initialAction,
+  performanceProfile = null,
 }: {
   token: string;
   projection: SharedWorkoutProjection;
   isSignedIn: boolean;
   userRole: AppRole | null;
   initialAction: ShareLinkAction | null;
+  performanceProfile?: PerformanceProfile | null;
 }) {
   const router = useRouter();
   const availableInitialAction = initialAction && isSignedIn && userRole ? initialAction : null;
@@ -136,7 +140,7 @@ export function ShareLandingClient({
                     </div>
                     {block.target ? (
                       <p className="mt-3 text-[12px] text-[var(--text-secondary)]">
-                        Target: {block.target.type} {block.target.low}-{block.target.high}
+                        Target: {formatWorkoutTarget(block.target)}
                       </p>
                     ) : null}
                   </div>
@@ -177,12 +181,13 @@ export function ShareLandingClient({
               Back to preview
             </button>
           </div>
-          <SessionComposer
+          <WorkoutBuilder
             draft={draft}
             onChange={setDraft}
             showSchedule={action === 'planner'}
             summaryPlaceholder="Workout summary"
             durationUnit="minutes"
+            performanceProfile={performanceProfile}
           />
           {action === 'planner' ? (
             <p className="text-sm text-[var(--text-secondary)]">

@@ -31,6 +31,8 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       durationSec: number;
       reps: number | null;
       targetType: string | null;
+      targetMode?: string | null;
+      targetReference?: string | null;
       targetLow: number | null;
       targetHigh: number | null;
       note: string | null;
@@ -53,7 +55,9 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         target:
           block.targetType && block.targetLow !== null && block.targetHigh !== null
             ? {
-                type: block.targetType as 'power' | 'pace' | 'hr',
+                metric: block.targetType as 'power' | 'pace' | 'hr' | 'rpe',
+                mode: block.targetMode === 'relative' ? 'relative' : 'absolute',
+                reference: block.targetReference as 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null,
                 low: block.targetLow,
                 high: block.targetHigh,
               }
@@ -379,38 +383,6 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         },
         days,
         weeks,
-      };
-    },
-
-    async loadWorkoutList(userId: number) {
-      const athlete = await db.user.findUnique({
-        where: { id: userId },
-        include: {
-          sessions: {
-            where: { date: { not: null } },
-            include: {
-              blocks: {
-                orderBy: { sortOrder: 'asc' },
-              },
-              activity: true,
-            },
-            orderBy: [{ date: 'asc' }, { id: 'asc' }],
-          },
-        },
-      });
-
-      if (!athlete || athlete.role !== 'ATHLETE') {
-        return null;
-      }
-
-      return {
-        athlete: {
-          id: athlete.id,
-          name: athlete.name ?? '',
-        },
-        workouts: athlete.sessions
-          .filter((session): session is typeof session & { date: Date } => session.date !== null)
-          .map(mapSessionSummary),
       };
     },
 

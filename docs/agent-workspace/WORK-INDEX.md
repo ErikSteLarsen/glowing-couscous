@@ -27,6 +27,21 @@ Current verification and gaps are in `CURRENT-STATUS.md`. When a capability
 changes owner or state, update this row and the current status in the same
 change.
 
+## Design Context
+
+`DESIGN.md` is the durable visual contract. Verify implementation details in
+`app/globals.css`, then reuse the shared primitives before adding route-local
+styles:
+
+| Concern | Source of truth | Reusable owners |
+|---|---|---|
+| Tokens, type, layout, depth, and guardrails | `DESIGN.md`, `app/globals.css` | CSS custom properties and Tailwind theme tokens |
+| Shell and responsive navigation | `components/AppShell.tsx`, `components/AppSidebar.tsx` | `lib/app-navigation.ts` |
+| Page-level controls and surfaces | `components/ui.tsx` | `PageShell`, `TopBar`, button, field, `Surface`, `Badge`, and `EmptyState` classes |
+| Workout/session language | `components/tempo/*` | `SessionRow`, `SessionBlockBar`, `StatusBadge`, `MetricText`, `Stepper`, and `Toggle` |
+| Authoring surface | `components/WorkoutBuilder.tsx` | `WorkoutBuilder` and editor services |
+| Visual experiments | `app/design/*`, `components/design/*` | Preview only; never copy their tokens into product screens without an explicit system decision |
+
 ## Active Tasks
 
 No long-running task is registered. Create one from `tasks/TEMPLATE.md` only for

@@ -251,5 +251,5 @@ test('actual outcome route adapters keep role guards and use the shared save com
   assert.match(coachRoute, /saveActualOutcome/);
   assert.match(detailClient, /Correct completed outcome/);
   assert.match(detailClient, /\/actual/);
-  assert.match(detailClient, /SessionComposer/);
+  assert.match(detailClient, /WorkoutBuilder/);
 });

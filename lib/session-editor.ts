@@ -1,9 +1,10 @@
 import { deriveSessionMetrics } from './session-math.ts';
 import { SPORT_OPTIONS, type SportType } from './sport.ts';
 import type { TempoBlock, TempoBlockKind, TempoZone } from './tempo-blocks.ts';
+import { normalizeWorkoutTarget, serializeDecimal, validateWorkoutTarget, type WorkoutTarget } from './workout-targets.ts';
 
 export type SessionEditorMode = 'create' | 'planned' | 'actual';
-export type SessionEditorTarget = NonNullable<TempoBlock['target']>;
+export type SessionEditorTarget = WorkoutTarget;
 export type SessionEditorSportMetrics = {
   ftp: number | null;
   thresholdPaceSecPerKm: number | null;
@@ -56,8 +57,12 @@ export type PersistedSessionBlock = {
   reps?: number | string | null;
   target?: Partial<SessionEditorTarget> | null;
   targetType?: string | null;
+  targetMode?: string | null;
+  targetReference?: string | null;
   targetLow?: number | string | null;
   targetHigh?: number | string | null;
+  targetLowDecimal?: string | null;
+  targetHighDecimal?: string | null;
   note?: string | null;
   skipped?: boolean | null;
   sortOrder?: number | null;
@@ -353,16 +358,8 @@ export function validateSessionEditorDraft(draft: SessionEditorDraft): string | 
       return 'Repetitions must be a positive integer when provided.';
     }
     if (block.target !== null) {
-      if (!isTargetType(block.target.type)) return 'Target type is invalid.';
-      if (
-        !Number.isInteger(block.target.low) ||
-        !Number.isInteger(block.target.high) ||
-        block.target.low < 0 ||
-        block.target.high < 0
-      ) {
-        return 'Target values must be non-negative integers.';
-      }
-      if (block.target.low > block.target.high) return 'Target low must be less than or equal to target high.';
+      const targetError = validateWorkoutTarget(block.target, draft.sport);
+      if (targetError) return targetError;
     }
   }
 
@@ -400,10 +397,14 @@ export function serializeSessionEditorDraft(draft: SessionEditorDraft) {
       kind: block.kind,
       zone: block.zone,
       durationSec: block.durationSec,
-      reps: block.reps,
-      targetType: block.target?.type ?? null,
-      targetLow: block.target?.low ?? null,
-      targetHigh: block.target?.high ?? null,
+       reps: block.reps,
+       targetType: block.target?.metric ?? null,
+       targetMode: block.target?.mode ?? 'absolute',
+       targetReference: block.target?.reference ?? null,
+       targetLow: block.target?.low ?? null,
+       targetHigh: block.target?.high ?? null,
+       targetLowDecimal: block.target ? serializeDecimal(block.target.low) : null,
+       targetHighDecimal: block.target ? serializeDecimal(block.target.high) : null,
       note: block.note.trim() || null,
       skipped: block.skipped,
       sortOrder,
@@ -460,15 +461,13 @@ function normalizeSessionEditorBlock(input: unknown, index: number, fallbackClie
 
 function normalizeTarget(value: Record<string, unknown>): SessionEditorTarget | null {
   const raw = asRecord(value.target);
-  const type = raw.type ?? value.targetType;
-  const low = raw.low ?? value.targetLow;
-  const high = raw.high ?? value.targetHigh;
-  if (!isTargetType(type)) return null;
-
-  const parsedLow = toNullableInteger(low);
-  const parsedHigh = toNullableInteger(high);
-  if (parsedLow === null || parsedHigh === null) return null;
-  return { type, low: parsedLow, high: parsedHigh };
+  return normalizeWorkoutTarget({
+    metric: raw.metric ?? raw.type ?? value.targetType,
+    mode: raw.mode ?? value.targetMode ?? 'absolute',
+    reference: raw.reference ?? value.targetReference ?? null,
+    low: raw.low ?? value.targetLowDecimal ?? value.targetLow,
+    high: raw.high ?? value.targetHighDecimal ?? value.targetHigh,
+  });
 }
 
 function parseSportMetricsJson(json: string | null | undefined): SessionEditorSportMetrics {
@@ -568,10 +567,6 @@ function asRecord(input: unknown): Record<string, unknown> {
 function createClientId() {
   nextClientId += 1;
   return `session-block-${nextClientId}`;
-}
-
-function isTargetType(input: unknown): input is SessionEditorTarget['type'] {
-  return input === 'power' || input === 'pace' || input === 'hr';
 }
 
 function isCalendarDate(input: string) {

@@ -19,8 +19,12 @@ type TempoBlockRecord = {
   durationSec: number;
   reps: number | null;
   targetType: string | null;
+  targetMode: string;
+  targetReference: string | null;
   targetLow: number | null;
   targetHigh: number | null;
+  targetLowDecimal: string | null;
+  targetHighDecimal: string | null;
   note: string | null;
   sortOrder: number;
 };
@@ -37,7 +41,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
         db.user.findMany({
           where: { coachId, role: 'ATHLETE' },
           orderBy: { name: 'asc' },
-          select: { id: true, name: true, email: true },
+          select: { id: true, name: true, email: true, performanceProfileJson: true },
         }),
         db.template.findMany({
           where: { ownerId: coachId },
@@ -88,7 +92,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
                   reps: block.reps,
                   target:
                     block.targetType && block.targetLow !== null && block.targetHigh !== null
-                      ? { type: toTargetType(block.targetType), low: block.targetLow, high: block.targetHigh }
+                       ? { metric: toTargetType(block.targetType), mode: block.targetMode === 'relative' ? 'relative' : 'absolute', reference: block.targetReference as 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null, low: Number(block.targetLowDecimal ?? block.targetLow), high: Number(block.targetHighDecimal ?? block.targetHigh) }
                       : null,
                 })),
               );
@@ -121,7 +125,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
           end: weekEnd,
           label: `${format(weekStart, 'd MMM')} - ${format(weekEnd, 'd MMM yyyy')}`,
         },
-        athletes: athletes.map((athlete) => ({ ...athlete, name: athlete.name ?? '' })),
+         athletes: athletes.map((athlete) => ({ ...athlete, name: athlete.name ?? '' })),
         templates,
         librarySessions: librarySessions.map((session) => ({
           ...session,
@@ -197,8 +201,12 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
         durationSec: block.durationSec,
         reps: block.reps,
         targetType: block.targetType,
+        targetMode: block.targetMode,
+        targetReference: block.targetReference,
         targetLow: block.targetLow,
         targetHigh: block.targetHigh,
+        targetLowDecimal: block.targetLowDecimal,
+        targetHighDecimal: block.targetHighDecimal,
         note: block.note,
         skipped: block.skipped,
         sortOrder: block.sortOrder,
@@ -327,7 +335,7 @@ function toTempoZone(input: number) {
 }
 
 function toTargetType(input: string) {
-  return input === 'power' || input === 'pace' || input === 'hr' ? input : 'power';
+  return input === 'power' || input === 'pace' || input === 'hr' || input === 'rpe' ? input : 'power';
 }
 
 export const coachPlannerService = createCoachPlannerService();

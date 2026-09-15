@@ -12,12 +12,14 @@ import {
   successTextClassName,
   Surface,
 } from '@/components/ui';
+import type { PerformanceProfile } from '@/lib/performance-profile';
 
 type Account = {
   id: number;
   name: string | null;
   email: string | null;
   role: string | null;
+  performanceProfile: PerformanceProfile;
 };
 
 type AthleteState = {
@@ -36,6 +38,7 @@ export function ProfileClient({
   athleteState: AthleteState;
 }) {
   const [name, setName] = useState(account.name ?? '');
+  const [performanceProfile, setPerformanceProfile] = useState(account.performanceProfile);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -51,7 +54,7 @@ export function ProfileClient({
     const res = await fetch('/api/account/profile', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, performanceProfile }),
     });
 
     if (!res.ok) {
@@ -79,10 +82,11 @@ export function ProfileClient({
               className={formFieldClassName}
             />
           </div>
-          <div className="rounded-[12px] border border-[var(--field-border)] bg-[var(--field-surface)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+           <div className="rounded-[12px] border border-[var(--field-border)] bg-[var(--field-surface)] px-4 py-3 text-sm text-[var(--text-secondary)]">
             <p>Email: {account.email}</p>
             <p>Role: {account.role}</p>
-          </div>
+           </div>
+           {account.role === 'ATHLETE' ? <fieldset className="space-y-4 border-t border-[var(--border)] pt-5"><legend className="text-base font-semibold text-[var(--text)]">Training metrics</legend><p className="text-sm text-[var(--text-secondary)]">These current values resolve relative workout previews. They are never copied into workouts or shared links.</p><div className="grid gap-3 sm:grid-cols-2"><MetricInput label="Cycling FTP (W)" value={performanceProfile.cycling.ftpWatts} onChange={(ftpWatts) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, ftpWatts } }))} /><MetricInput label="Cycling threshold HR (bpm)" value={performanceProfile.cycling.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, thresholdHrBpm } }))} /><MetricInput label="Running threshold pace (sec/km)" value={performanceProfile.running.thresholdPaceSecPerKm} onChange={(thresholdPaceSecPerKm) => setPerformanceProfile((current) => ({ ...current, running: { ...current.running, thresholdPaceSecPerKm } }))} /><MetricInput label="Running threshold HR (bpm)" value={performanceProfile.running.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, running: { ...current.running, thresholdHrBpm } }))} /><MetricInput label="Swimming CSS (sec/100 m)" value={performanceProfile.swimming.cssSecPer100m} onChange={(cssSecPer100m) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, cssSecPer100m } }))} /><MetricInput label="Swimming threshold HR (bpm)" value={performanceProfile.swimming.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, thresholdHrBpm } }))} /></div></fieldset> : null}
           {error && <p className={dangerTextClassName}>{error}</p>}
           {message && <p className={successTextClassName}>{message}</p>}
           <button
@@ -128,4 +132,8 @@ export function ProfileClient({
       </Surface>
     </div>
   );
+}
+
+function MetricInput({ label, value, onChange }: { label: string; value: number | null; onChange: (value: number | null) => void }) {
+  return <label className="block space-y-2"><span className={formLabelClassName}>{label}</span><input className={formFieldClassName} type="number" min="1" step="0.01" value={value ?? ''} onChange={(event) => onChange(event.target.value === '' ? null : Number(event.target.value))} /></label>;
 }

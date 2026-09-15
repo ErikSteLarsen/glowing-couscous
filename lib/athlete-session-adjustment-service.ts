@@ -40,8 +40,12 @@ type AdjustmentSession = {
     durationSec: number;
     reps: number | null;
     targetType: string | null;
+    targetMode?: string | null;
+    targetReference?: string | null;
     targetLow: number | null;
     targetHigh: number | null;
+    targetLowDecimal?: string | null;
+    targetHighDecimal?: string | null;
     note: string | null;
     skipped: boolean;
     sortOrder: number;
@@ -140,8 +144,12 @@ export function createAthleteSessionAdjustmentService({
         durationSec: block.durationSec,
         reps: block.reps,
         targetType: block.targetType,
+        targetMode: block.targetMode,
+        targetReference: block.targetReference,
         targetLow: block.targetLow,
         targetHigh: block.targetHigh,
+        targetLowDecimal: block.targetLowDecimal,
+        targetHighDecimal: block.targetHighDecimal,
         note: block.note,
         skipped: block.skipped,
         sortOrder: block.sortOrder,

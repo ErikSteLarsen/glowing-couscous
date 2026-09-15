@@ -12,10 +12,10 @@ export function AppProfileMenu({
   onNavigate?: () => void;
 }) {
   return (
-    <div className="rounded-[12px] border border-[var(--nav-border)] bg-[var(--nav-active)] p-4">
+    <div className="border-t border-[var(--nav-border)] px-2 pt-5">
       <p className="text-sm font-semibold text-[var(--nav-text)]">{user.name}</p>
-      <p className="mt-1 text-xs text-[var(--nav-muted)]">{user.email}</p>
-      <div className="mt-4 space-y-2">
+      <p className="mt-1 truncate text-[11px] text-[var(--nav-muted)]">{user.email}</p>
+      <div className="mt-4 space-y-1">
         {profileActions.map((action) => {
           const isActive = isProfileActionActive(pathname, action);
 
@@ -25,7 +25,7 @@ export function AppProfileMenu({
               href={action.href}
               onClick={onNavigate}
               aria-current={isActive ? 'page' : undefined}
-              className={`relative block rounded-[10px] px-3 py-2 text-sm transition hover:bg-[var(--nav-active)] ${
+              className={`relative block rounded-[3px] px-3 py-2 text-[12px] transition hover:bg-[var(--nav-active)] ${
                 isActive ? 'bg-[var(--nav-active)] font-semibold text-[var(--nav-text)]' : 'text-[var(--nav-muted)]'
               }`}
             >

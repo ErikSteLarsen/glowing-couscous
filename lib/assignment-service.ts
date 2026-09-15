@@ -67,8 +67,12 @@ type AssignmentTemplateBlock = {
   durationSec: number;
   reps: number | null;
   targetType: string | null;
+  targetMode?: string;
+  targetReference?: string | null;
   targetLow: number | null;
   targetHigh: number | null;
+  targetLowDecimal?: string | null;
+  targetHighDecimal?: string | null;
   note: string | null;
   skipped?: boolean;
   sortOrder: number;
@@ -308,8 +312,12 @@ export function createAssignmentService({ db = createDefaultDb(), now = () => ne
               durationSec: block.durationSec,
               reps: block.reps,
               targetType: block.targetType,
+              targetMode: block.targetMode ?? 'absolute',
+              targetReference: block.targetReference ?? null,
               targetLow: block.targetLow,
               targetHigh: block.targetHigh,
+              targetLowDecimal: block.targetLowDecimal ?? (block.targetLow === null ? null : String(block.targetLow)),
+              targetHighDecimal: block.targetHighDecimal ?? (block.targetHigh === null ? null : String(block.targetHigh)),
               note: block.note,
               skipped: block.skipped ?? false,
               sortOrder: block.sortOrder,

@@ -28,6 +28,13 @@ pnpm db:seed      # Seed demo data
 
 See `ARCHITECTURE.md` for the full owner map and route boundaries.
 
+## Design Shortcuts
+
+- `DESIGN.md` is the durable visual contract; `app/globals.css` is its token implementation.
+- Reuse `components/ui.tsx`, `components/tempo/*`, `AppShell`, `AppSidebar`, and `WorkoutBuilder` before adding new visual primitives.
+- `/design/*` routes are alternate previews, not production references.
+- Preserve visible focus, reduced-motion behavior, explicit labels, semantic state text, and 44px ordinary controls.
+
 ## Documentation Updates
 
 Keep `CURRENT-STATUS.md` and `WORK-INDEX.md` concise and current. Do not add

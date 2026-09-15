@@ -15,7 +15,7 @@ export function StatusBadge({
 
   return (
     <span
-      className={`inline-flex min-h-7 items-center rounded-full border px-3 text-[12.5px] font-semibold ${statusClasses[status]}`}
+      className={`inline-flex min-h-7 items-center rounded-full border px-3 text-[12.5px] font-semibold shadow-[var(--shadow-inset)] ${statusClasses[status]}`}
     >
       {status[0].toUpperCase() + status.slice(1)}
     </span>

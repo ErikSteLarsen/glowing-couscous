@@ -92,7 +92,7 @@ export function SessionComparisonDialog({
           }}
         >
           <div
-            className="mx-auto my-4 max-w-3xl rounded-[14px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-floating)] sm:my-10 sm:p-7"
+            className="mx-auto my-4 max-w-3xl rounded-[14px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-overlay)] sm:my-10 sm:p-7"
             role="dialog"
             aria-modal="true"
             aria-labelledby={`comparison-title-${sessionId}`}

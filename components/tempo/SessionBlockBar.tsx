@@ -31,17 +31,16 @@ export function SessionBlockBar({
     <div
       role="img"
       aria-label={`${isIntensityTimeline ? 'Workout intensity timeline' : 'Workout structure'}: ${summary}`}
-      className={`flex w-full max-w-[18rem] items-end overflow-hidden ${isIntensityTimeline ? 'rounded-none' : 'rounded-[9px]'} bg-transparent saturate-[.72] ${height}`}
+      className={`flex w-full max-w-[18rem] items-end overflow-hidden border-b border-[var(--border)] ${isIntensityTimeline ? 'rounded-none' : 'rounded-[7px]'} bg-[var(--sunken)] ${height}`}
       style={{ gap: '2px' }}
     >
       {segments.map((segment) => (
         <div
           key={segment.key}
           aria-hidden="true"
-          className={isIntensityTimeline ? 'transition-[height] duration-150 ease-out' : undefined}
+          className={`ink-zone-${Math.min(Math.max(segment.zone, 1), 5)} ${isIntensityTimeline ? 'transition-[height] duration-150 ease-out' : ''}`}
           style={{
             flexGrow: Math.max(segment.durationSec, 1),
-            background: segment.color,
             height: isIntensityTimeline ? `${Math.min(Math.max(segment.zone, 1), 5) * 20}%` : '100%',
           }}
         />

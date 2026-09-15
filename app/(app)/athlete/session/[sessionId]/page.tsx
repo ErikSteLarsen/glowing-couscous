@@ -10,6 +10,7 @@ import { formatDuration } from '@/lib/format-duration';
 import { getSessionOrigin, getSessionReturnTarget } from '@/lib/app-navigation';
 import { SessionDetailClient } from './SessionDetailClient';
 import { ShareLinkButton } from '@/components/ShareLinkButton';
+import { accountService } from '@/lib/account-service';
 
 export default async function AthleteSessionPage({
   params,
@@ -28,7 +29,7 @@ export default async function AthleteSessionPage({
     notFound();
   }
 
-  const detail = await athleteService.loadSessionDetail(user.id, parsedSessionId);
+  const [detail, account] = await Promise.all([athleteService.loadSessionDetail(user.id, parsedSessionId), accountService.getAccount(user.id)]);
   if (!detail) {
     return (
       <PageShell size="wide">
@@ -121,6 +122,7 @@ export default async function AthleteSessionPage({
             initialDone={detail.session.status === 'completed'}
             initialNotes={detail.session.notes}
             initialDraft={detail.session.editor}
+            performanceProfile={account?.performanceProfile}
           />
         </div>
       </div>

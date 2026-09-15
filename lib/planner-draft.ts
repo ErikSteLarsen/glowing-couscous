@@ -1,7 +1,7 @@
 import { SPORT_OPTIONS } from './sport.ts';
 import type { TempoBlock, TempoBlockKind, TempoZone } from './tempo-blocks.ts';
 
-export type PlannerTargetType = 'power' | 'pace' | 'hr';
+export type PlannerTargetType = 'power' | 'pace' | 'hr' | 'rpe';
 
 export type SessionOwnershipMode = 'coach-library' | 'training-plan' | 'athlete';
 
@@ -19,8 +19,12 @@ export type PlannerBlockDraft = {
   durationSec: number;
   reps: number | null;
   targetType: PlannerTargetType | null;
+  targetMode: 'absolute' | 'relative';
+  targetReference: 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null;
   targetLow: number | null;
   targetHigh: number | null;
+  targetLowDecimal: string | null;
+  targetHighDecimal: string | null;
   note: string;
   skipped?: boolean;
 };
@@ -51,8 +55,12 @@ export type PlannerTemplateRecord = {
     durationSec: number;
     reps: number | null;
     targetType: string | null;
+    targetMode?: string | null;
+    targetReference?: string | null;
     targetLow: number | null;
     targetHigh: number | null;
+    targetLowDecimal?: string | null;
+    targetHighDecimal?: string | null;
     note: string | null;
     sortOrder: number;
   }>;
@@ -90,8 +98,12 @@ export function createPlannerBlockDraft(input: Partial<PlannerBlockDraft> = {}):
     durationSec: normalizePositiveInt(input.durationSec, 600),
     reps: normalizeNullablePositiveInt(input.reps),
     targetType: normalizeTargetType(input.targetType),
+    targetMode: input.targetMode === 'relative' ? 'relative' : 'absolute',
+    targetReference: normalizeTargetReference(input.targetReference),
     targetLow: normalizeNullablePositiveInt(input.targetLow),
     targetHigh: normalizeNullablePositiveInt(input.targetHigh),
+    targetLowDecimal: typeof input.targetLowDecimal === 'string' ? input.targetLowDecimal : null,
+    targetHighDecimal: typeof input.targetHighDecimal === 'string' ? input.targetHighDecimal : null,
     note: typeof input.note === 'string' ? input.note : '',
     skipped: input.skipped === true,
   };
@@ -154,8 +166,12 @@ export function templateToPlannerDraft(
           durationSec: block.durationSec,
           reps: block.reps,
           targetType: normalizeTargetType(block.targetType),
+          targetMode: block.targetMode === 'relative' ? 'relative' : 'absolute',
+          targetReference: normalizeTargetReference(block.targetReference),
           targetLow: block.targetLow,
           targetHigh: block.targetHigh,
+          targetLowDecimal: block.targetLowDecimal ?? null,
+          targetHighDecimal: block.targetHighDecimal ?? null,
           note: block.note ?? '',
         }),
       ),
@@ -224,7 +240,7 @@ export function plannerDraftToTempoBlocks(blocks: PlannerBlockDraft[]): TempoBlo
     reps: block.reps,
     target:
       block.targetType && block.targetLow !== null && block.targetHigh !== null
-        ? { type: block.targetType, low: block.targetLow, high: block.targetHigh }
+        ? { metric: block.targetType, mode: block.targetMode, reference: block.targetReference, low: Number(block.targetLowDecimal ?? block.targetLow), high: Number(block.targetHighDecimal ?? block.targetHigh) }
         : null,
   }));
 }
@@ -246,9 +262,13 @@ export function serializePlannerDraftForSave(draft: PlannerSessionDraft) {
       zone: block.zone,
       durationSec: block.durationSec,
       reps: block.reps,
-      targetType: block.targetType,
-      targetLow: block.targetLow,
-      targetHigh: block.targetHigh,
+        targetType: block.targetType,
+        targetMode: block.targetMode,
+        targetReference: block.targetReference,
+        targetLow: block.targetLow,
+        targetHigh: block.targetHigh,
+        targetLowDecimal: block.targetLowDecimal ?? (block.targetLow === null ? null : String(block.targetLow)),
+        targetHighDecimal: block.targetHighDecimal ?? (block.targetHigh === null ? null : String(block.targetHigh)),
       note: block.note.trim() || null,
       skipped: block.skipped === true,
       sortOrder: index,
@@ -311,7 +331,11 @@ function normalizeZone(input: unknown): TempoZone {
 }
 
 function normalizeTargetType(input: unknown): PlannerTargetType | null {
-  return input === 'power' || input === 'pace' || input === 'hr' ? input : null;
+  return input === 'power' || input === 'pace' || input === 'hr' || input === 'rpe' ? input : null;
+}
+
+function normalizeTargetReference(input: unknown): PlannerBlockDraft['targetReference'] {
+  return input === 'ftp' || input === 'threshold-pace' || input === 'css' || input === 'threshold-hr' ? input : null;
 }
 
 function normalizePositiveInt(input: unknown, fallback: number) {

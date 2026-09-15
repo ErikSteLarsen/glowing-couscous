@@ -9,16 +9,14 @@ export const TEMPO_ZONE_META = {
 export type TempoZone = keyof typeof TEMPO_ZONE_META;
 export type TempoBlockKind = 'warmup' | 'work' | 'recovery' | 'cooldown';
 
+import type { WorkoutTarget } from './workout-targets.ts';
+
 export type TempoBlock = {
   kind: TempoBlockKind;
   zone: TempoZone;
   durationSec: number;
   reps?: number | null;
-  target?: {
-    type: 'power' | 'pace' | 'hr';
-    low: number;
-    high: number;
-  } | null;
+  target?: WorkoutTarget | null;
 };
 
 export function getTempoZoneMeta(zone: number) {

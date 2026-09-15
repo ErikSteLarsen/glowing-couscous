@@ -1,6 +1,7 @@
 import { prisma } from './prisma.ts';
 import { SPORT_OPTIONS } from './sport.ts';
 import { getTemplateCadence, isTemplateCadence } from './template-cadence.ts';
+import { normalizeWorkoutTarget, serializeDecimal } from './workout-targets.ts';
 
 type TemplateServiceDeps = {
   db?: typeof prisma;
@@ -11,9 +12,13 @@ type NormalizedBlock = {
   zone: 1 | 2 | 3 | 4 | 5;
   durationSec: number;
   reps: number | null;
-  targetType: 'power' | 'pace' | 'hr' | null;
+  targetType: 'power' | 'pace' | 'hr' | 'rpe' | null;
+  targetMode: 'absolute' | 'relative';
+  targetReference: 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null;
   targetLow: number | null;
   targetHigh: number | null;
+  targetLowDecimal: string | null;
+  targetHighDecimal: string | null;
   note: string | null;
   skipped: boolean;
 };
@@ -48,17 +53,25 @@ function normalizeBlocks(input: unknown): NormalizedBlock[] {
       item.durationSec ?? (item.durationMinutes != null ? Number(item.durationMinutes) * 60 : 0);
     const durationSec = Number(rawDurationSec);
 
+    const target = normalizeWorkoutTarget(item.target ?? {
+      metric: item.targetType,
+      mode: item.targetMode,
+      reference: item.targetReference,
+      low: item.targetLowDecimal ?? item.targetLow,
+      high: item.targetHighDecimal ?? item.targetHigh,
+    });
     return {
       kind: normalizedKind,
       zone: zone >= 1 && zone <= 5 ? (zone as 1 | 2 | 3 | 4 | 5) : 2,
       durationSec: Number.isFinite(durationSec) && durationSec > 0 ? Math.round(durationSec) : 600,
       reps: typeof item.reps === 'number' ? Math.round(item.reps) : null,
-      targetType:
-        item.targetType === 'power' || item.targetType === 'pace' || item.targetType === 'hr'
-          ? item.targetType
-          : null,
-      targetLow: typeof item.targetLow === 'number' ? Math.round(item.targetLow) : null,
-      targetHigh: typeof item.targetHigh === 'number' ? Math.round(item.targetHigh) : null,
+      targetType: target?.metric ?? null,
+      targetMode: target?.mode ?? 'absolute',
+      targetReference: target?.reference ?? null,
+      targetLow: target?.low ?? null,
+      targetHigh: target?.high ?? null,
+      targetLowDecimal: target ? serializeDecimal(target.low) : null,
+      targetHighDecimal: target ? serializeDecimal(target.high) : null,
       note:
         typeof item.note === 'string'
           ? item.note.trim() || null
@@ -220,8 +233,12 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
               durationSec: block.durationSec,
               reps: block.reps,
               targetType: block.targetType,
+              targetMode: block.targetMode,
+              targetReference: block.targetReference,
               targetLow: block.targetLow,
               targetHigh: block.targetHigh,
+              targetLowDecimal: block.targetLowDecimal,
+              targetHighDecimal: block.targetHighDecimal,
               note: block.note,
               skipped: block.skipped,
               sortOrder: block.sortOrder,

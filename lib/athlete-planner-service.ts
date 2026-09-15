@@ -51,7 +51,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
                   reps: block.reps,
                   target:
                     block.targetType && block.targetLow !== null && block.targetHigh !== null
-                      ? { type: toTargetType(block.targetType), low: block.targetLow, high: block.targetHigh }
+                       ? { metric: toTargetType(block.targetType), mode: block.targetMode === 'relative' ? 'relative' : 'absolute', reference: block.targetReference as 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null, low: Number(block.targetLowDecimal ?? block.targetLow), high: Number(block.targetHighDecimal ?? block.targetHigh) }
                       : null,
                 })),
               );
@@ -135,8 +135,12 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
         durationSec: block.durationSec,
         reps: block.reps,
         targetType: block.targetType,
+        targetMode: block.targetMode,
+        targetReference: block.targetReference,
         targetLow: block.targetLow,
         targetHigh: block.targetHigh,
+        targetLowDecimal: block.targetLowDecimal,
+        targetHighDecimal: block.targetHighDecimal,
         note: block.note,
         skipped: block.skipped,
         sortOrder: block.sortOrder,
@@ -222,8 +226,12 @@ function createSessionData(
     durationSec: number;
     reps: number | null;
     targetType: string | null;
+    targetMode: string;
+    targetReference: string | null;
     targetLow: number | null;
     targetHigh: number | null;
+    targetLowDecimal: string | null;
+    targetHighDecimal: string | null;
     note: string | null;
     skipped: boolean;
     sortOrder: number;
@@ -286,7 +294,7 @@ function toTempoZone(input: number) {
 }
 
 function toTargetType(input: string) {
-  return input === 'power' || input === 'pace' || input === 'hr' ? input : 'power';
+  return input === 'power' || input === 'pace' || input === 'hr' || input === 'rpe' ? input : 'power';
 }
 
 export const athletePlannerService = createAthletePlannerService();

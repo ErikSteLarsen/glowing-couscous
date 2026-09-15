@@ -106,31 +106,6 @@ test('athlete Home keeps every session assigned to an upcoming day', async () =>
   assert.deepEqual(dashboard.nextDays[0].sessions.map((session) => session.id), [31, 32]);
 });
 
-test('athlete Workouts lists every scheduled session in date order', async () => {
-  const athleteService = createAthleteService({
-    db: {
-      user: {
-        async findUnique() {
-          return {
-            id: 7,
-            role: 'ATHLETE',
-            name: 'Mara Holt',
-            sessions: [
-              createSession(41, 'Earlier workout', '2026-06-22T07:00:00.000Z'),
-              createSession(42, 'Later workout', '2026-06-25T07:00:00.000Z'),
-            ],
-          };
-        },
-      },
-    } as never,
-  });
-
-  const workoutList = await athleteService.loadWorkoutList(7);
-
-  assert.ok(workoutList);
-  assert.deepEqual(workoutList.workouts.map((workout) => workout.id), [41, 42]);
-});
-
 test('athlete calendar month view returns a full Monday-first month grid with session counts', async () => {
   const sessionQueries: SessionWhere[] = [];
 

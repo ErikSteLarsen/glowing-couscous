@@ -18,7 +18,7 @@ import {
   primaryButtonClassName,
   successTextClassName,
 } from '@/components/ui';
-import { SessionComposer } from '@/components/SessionComposer';
+import { WorkoutBuilder } from '@/components/WorkoutBuilder';
 import { ShareLinkButton } from '@/components/ShareLinkButton';
 import { formatDuration } from '@/lib/format-duration';
 import { deriveSessionEditorMetrics } from '@/lib/session-editor';
@@ -33,8 +33,9 @@ import {
   type PlannerEditorTemplateRecord,
 } from '@/lib/session-editor-adapters';
 import { SourceAssignmentPanel } from './SourceAssignmentPanel';
+import { parsePerformanceProfileJson } from '@/lib/performance-profile';
 
-type PlannerAthlete = { id: number; name: string; email: string };
+type PlannerAthlete = { id: number; name: string; email: string; performanceProfileJson?: string | null };
 type PlannerSession = {
   id: number;
   athleteId: number | null;
@@ -138,6 +139,9 @@ export function PlannerClient({
     [days, selectedAthleteId],
   );
   const metrics = deriveSessionEditorMetrics(draft);
+  const previewProfile = selectedWorkspaceMode === 'athlete'
+    ? parsePerformanceProfileJson(athletes.find((athlete) => athlete.id === (draft.athleteId ?? selectedAthleteId))?.performanceProfileJson)
+    : null;
   const selectedPlan = trainingPlans.find((p) => p.id === selectedTrainingPlanId);
 
   if (surface === 'planner' && athletes.length === 0) {
@@ -652,7 +656,7 @@ export function PlannerClient({
           </label>
         ) : null}
 
-        <SessionComposer
+        <WorkoutBuilder
           draft={draft}
           onChange={(next) =>
             setDraft((current) => ({
@@ -664,6 +668,8 @@ export function PlannerClient({
           showSportMetrics
           summaryPlaceholder="Coach notes or session intent"
           durationUnit="minutes"
+          performanceProfile={previewProfile}
+          profileLabel="selected athlete's current profile"
         />
       </Surface>
 

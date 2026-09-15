@@ -18,7 +18,7 @@ import {
   successTextClassName,
   Surface,
 } from '@/components/ui';
-import { SessionComposer } from '@/components/SessionComposer';
+import { WorkoutBuilder } from '@/components/WorkoutBuilder';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
 import {
@@ -32,6 +32,7 @@ import {
   validateSessionEditorDraft,
   type SessionEditorDraft,
 } from '@/lib/session-editor';
+import type { PerformanceProfile } from '@/lib/performance-profile';
 
 type AthletePlannerSession = {
   id: number;
@@ -76,6 +77,7 @@ export function AthletePlannerClient({
   periodLabel,
   initialDate,
   initialTemplateId,
+  performanceProfile = null,
 }: {
   athleteId: number;
   templates: PlannerEditorTemplateRecord[];
@@ -84,6 +86,7 @@ export function AthletePlannerClient({
   periodLabel: string;
   initialDate: string;
   initialTemplateId: number | null;
+  performanceProfile?: PerformanceProfile | null;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -290,7 +293,7 @@ export function AthletePlannerClient({
                    <span className="block text-sm font-semibold text-[var(--text)]">{day.label}</span>
                    <span className="block text-xs text-[var(--text-secondary)]">{day.dateLabel}</span>
                  </span>
-                 {day.isoDate === todayIso ? <span className="rounded-full bg-[var(--brand)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white">Today</span> : null}
+                 {day.isoDate === todayIso ? <span className="rounded-full bg-[var(--brand)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--signal-ink)]">Today</span> : null}
                  <Badge>{day.sessions.length}</Badge>
               </label>
               {day.sessions.length > 0 ? (
@@ -351,12 +354,13 @@ export function AthletePlannerClient({
           </label>
         ) : null}
 
-        <SessionComposer
+        <WorkoutBuilder
           draft={draft}
           onChange={(next) => setDraft((current) => ({ ...next, athleteId, templateId: current.templateId }))}
           showSportMetrics
           summaryPlaceholder="Session intent"
           durationUnit="minutes"
+          performanceProfile={performanceProfile}
         />
       </Surface>
 

@@ -39,8 +39,12 @@ export type PlannerEditorTemplateRecord = {
     durationSec: number;
     reps: number | null;
     targetType: string | null;
+    targetMode?: string | null;
+    targetReference?: string | null;
     targetLow: number | null;
     targetHigh: number | null;
+    targetLowDecimal?: string | null;
+    targetHighDecimal?: string | null;
     note: string | null;
     sortOrder: number;
   }>;

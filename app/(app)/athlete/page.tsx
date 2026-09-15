@@ -32,7 +32,7 @@ export default async function AthletePage() {
   const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
 
   return (
-    <PageShell size="wall">
+    <PageShell size="wall" className="ink-home">
       <TopBar
         title={`Good morning, ${dashboard.athlete.name}`}
         actions={
@@ -48,7 +48,7 @@ export default async function AthletePage() {
       />
 
       <div className="space-y-6 xl:space-y-8">
-        <section aria-labelledby="next-action-heading" className="border-y border-[var(--border)] py-5 xl:py-6">
+        <section aria-labelledby="next-action-heading" className="ink-next-action rounded-[14px] border border-[var(--border)] px-4 py-5 xl:px-6 xl:py-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 id="next-action-heading" className="text-[18px] font-semibold text-[var(--text)]">Next action</h2>
@@ -82,29 +82,31 @@ export default async function AthletePage() {
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 xl:gap-4">
-            {dashboard.weekDays.map((day) => (
-              <section key={day.isoDate} aria-labelledby={`home-day-${day.isoDate}`} className={`min-w-0 border-t pt-3 2xl:border-t-0 2xl:border-l 2xl:pl-3 ${day.isToday ? 'border-[var(--brand)] bg-[var(--brand-tint)] px-3 2xl:rounded-[8px]' : 'border-[var(--border)]'}`}>
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 id={`home-day-${day.isoDate}`} className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day.label}</h3>
-                    <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{day.dateLabel}</p>
+          <div className="ink-week-ribbon">
+            <div className="ink-week-track grid gap-3 p-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 xl:gap-4 xl:p-4">
+              {dashboard.weekDays.map((day) => (
+                <section key={day.isoDate} aria-labelledby={`home-day-${day.isoDate}`} className={`ink-day-channel min-w-0 border-t pt-3 2xl:border-t-0 2xl:border-l 2xl:pl-3 ${day.isToday ? 'ink-day-channel--today border-[var(--brand)] bg-[var(--brand-tint)] px-3 2xl:rounded-[8px]' : 'border-[var(--border)]'}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 id={`home-day-${day.isoDate}`} className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day.label}</h3>
+                      <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{day.dateLabel}</p>
+                    </div>
+                    {day.isToday ? <span className="rounded-full bg-[var(--brand)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--signal-ink)]">Today</span> : null}
                   </div>
-                  {day.isToday ? <span className="rounded-full bg-[var(--brand)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white">Today</span> : null}
-                </div>
-                <div className="mt-3 space-y-2">
-                  {day.sessions.length > 0 ? day.sessions.map((session) => (
-                    <SessionRow key={session.id} session={session} href={`/athlete/session/${session.id}?from=home`} variant="compact" />
-                  )) : <p className="py-2 text-[13px] text-[var(--text-muted)]">Rest</p>}
-                </div>
-              </section>
-            ))}
+                  <div className="mt-3 space-y-2">
+                    {day.sessions.length > 0 ? day.sessions.map((session) => (
+                      <SessionRow key={session.id} session={session} href={`/athlete/session/${session.id}?from=home`} variant="compact" />
+                    )) : <p className="py-2 text-[13px] text-[var(--text-muted)]">Rest</p>}
+                  </div>
+                </section>
+              ))}
+            </div>
           </div>
         </section>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 xl:gap-5">
+        <div className="ink-study-grid grid gap-4 md:grid-cols-2 xl:grid-cols-4 xl:gap-5">
           {dashboard.overviewCards.includes('coachNote') && dashboard.coachNote && dashboard.coach ? (
-            <Surface>
+            <Surface className="ink-readout ink-study-tile ink-study-tile--feature">
               <div className="mb-3 flex items-center gap-2">
                 <div className="h-7 w-7 rounded-full bg-[var(--brand-tint)]" />
                 <span className="text-[12.5px] font-semibold text-[var(--field-selected-text)]">
@@ -116,7 +118,7 @@ export default async function AthletePage() {
           ) : null}
 
           {dashboard.overviewCards.includes('lastActivity') && dashboard.lastActivity ? (
-            <Surface>
+            <Surface className="ink-readout ink-study-tile">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
                 Last activity
               </p>
@@ -131,7 +133,7 @@ export default async function AthletePage() {
           ) : null}
 
           {dashboard.overviewCards.includes('weekLoad') ? (
-            <Surface>
+            <Surface className="ink-readout ink-study-tile">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
                 This week
               </p>
@@ -145,7 +147,7 @@ export default async function AthletePage() {
           ) : null}
 
           {dashboard.overviewCards.includes('trend') ? (
-            <Surface>
+            <Surface className="ink-readout ink-study-tile ink-study-tile--flow">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
                 Fitness trend
               </p>
@@ -154,7 +156,7 @@ export default async function AthletePage() {
                   dashboard.trend.map((point) => (
                     <div key={point.label} className="flex flex-1 flex-col items-center gap-2">
                       <div
-                        className="w-full rounded-[4px] bg-[var(--text-muted)]"
+                        className="w-full rounded-[4px] bg-[var(--color-liquid)] opacity-80"
                         style={{ height: `${Math.max(12, Math.min(52, point.tss / 3))}px` }}
                       />
                       <span className="text-[10px] text-[var(--text-muted)]">{point.label}</span>

@@ -213,7 +213,7 @@ export function AthleteCalendarWeekScroller({
                     <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">{day.label}</p>
                     <div className="mt-1 flex items-center gap-2">
                       <span id={`calendar-day-${day.isoDate}`} className="metric-text text-[20px] font-semibold text-[var(--text)]">{day.dateLabel}</span>
-                      {day.isToday ? <span className="rounded-full bg-[var(--brand)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white">Today</span> : null}
+                      {day.isToday ? <span className="rounded-full bg-[var(--brand)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--signal-ink)]">Today</span> : null}
                     </div>
                   </button>
                   <span className="rounded-full border border-[var(--field-border)] bg-[var(--field-surface)] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">{day.sessions.length}</span>

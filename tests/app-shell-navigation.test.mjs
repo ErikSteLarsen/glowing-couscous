@@ -29,7 +29,7 @@ test('root route and app navigation define signed-in entry points and role-aware
   assert.match(navSource, /href: '\/athlete\/templates'/);
   assert.match(navSource, /href: '\/profile'/);
   assert.match(navSource, /href: '\/settings'/);
-  assert.match(navSource, /activeMatchPrefixes: \['\/athlete\/session', '\/athlete\/live'\]/);
+  assert.doesNotMatch(navSource, /activeMatchPrefixes: \['\/athlete\/session', '\/athlete\/live'\]/);
 
   const primaryNavigationSource = navSource.split('export const profileActions')[0];
   assert.doesNotMatch(primaryNavigationSource, /Settings/);
@@ -44,19 +44,29 @@ test('navigation matching prefers the most specific active destination', async (
   assert.match(sidebarSource, /isNavigationItemActive\(props\.pathname, item, navItems\)/);
 });
 
-test('workout detail keeps its entry context and Workouts is a real destination', async () => {
+test('Workouts is a standalone library destination and session detail keeps its entry context', async () => {
   const workoutsPageSource = await read('app/(app)/athlete/workouts/page.tsx');
+  const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
   const sessionPageSource = await read('app/(app)/athlete/session/[sessionId]/page.tsx');
   const calendarPageSource = await read('app/(app)/athlete/calendar/page.tsx');
   const profileMenuSource = await read('components/AppProfileMenu.tsx');
 
-  assert.match(workoutsPageSource, /athleteService\.loadWorkoutList/);
-  assert.match(workoutsPageSource, /from=workouts/);
+  const navigationSource = await read('lib/app-navigation.ts');
+
+  assert.match(workoutsPageSource, /workoutLibraryService\.listForOwner\('athlete', user\.id\)/);
+  assert.doesNotMatch(workoutsPageSource, /athleteService\.loadWorkoutList|Scheduled work|SessionRow|from=workouts/);
+  assert.doesNotMatch(navigationSource, /activeMatchPrefixes: \['\/athlete\/session', '\/athlete\/live'\]/);
   assert.match(sessionPageSource, /getSessionReturnTarget/);
   assert.match(sessionPageSource, /searchParams/);
   assert.match(calendarPageSource, /from=calendar/);
   assert.match(profileMenuSource, /isProfileActionActive/);
   assert.match(profileMenuSource, /aria-current=\{isActive \? 'page' : undefined\}/);
+  assert.match(workoutsClientSource, /const \[editorOpen, setEditorOpen\] = useState\(false\)/);
+  assert.match(workoutsClientSource, /if \(editorOpen && isDirty\)/);
+  assert.match(workoutsClientSource, /Discard unsaved changes\?/);
+  assert.match(workoutsClientSource, /Keep editing/);
+  assert.match(workoutsClientSource, /Discard changes/);
+  assert.match(workoutsClientSource, /sticky bottom-0/);
 });
 
 test('athlete planner exposes the shared editor and multi-day session creation', async () => {
@@ -66,7 +76,7 @@ test('athlete planner exposes the shared editor and multi-day session creation',
 
   assert.match(plannerPageSource, /athletePlannerService\.loadWorkspace/);
   assert.match(plannerPageSource, /AthletePlannerClient/);
-  assert.match(plannerClientSource, /SessionComposer/);
+  assert.match(plannerClientSource, /WorkoutBuilder/);
   assert.match(plannerClientSource, /selectedDates/);
   assert.match(plannerClientSource, /\/api\/athlete\/planner\/sessions/);
   assert.match(templatesPageSource, /apiBasePath="\/api\/athlete\/templates"/);

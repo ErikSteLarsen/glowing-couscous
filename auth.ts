@@ -6,6 +6,13 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { isAppRole, parseApplicationUserId } from '@/lib/auth-principal';
 
+const googleClientId = process.env.AUTH_GOOGLE_ID ?? process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.AUTH_GOOGLE_SECRET ?? process.env.GOOGLE_CLIENT_SECRET;
+const googleProvider =
+  googleClientId && googleClientSecret
+    ? Google({ clientId: googleClientId, clientSecret: googleClientSecret })
+    : null;
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
@@ -13,8 +20,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: '/login',
   },
   providers: [
-    Google({
-    }),
+    ...(googleProvider ? [googleProvider] : []),
     Credentials({
       credentials: {
         email: { label: 'Email', type: 'email' },

@@ -13,6 +13,9 @@ Read `PRODUCT.md` and `DESIGN.md` for product or interface work.
 - Use `pnpm`; do not introduce another package manager.
 - Preserve unrelated worktree changes. Never reset or checkout files to discard them.
 - Do not claim browser or production verification unless it was actually run.
+- For interface work, treat `DESIGN.md` as the durable visual contract, verify
+  tokens in `app/globals.css`, and inspect shared component owners before adding
+  route-local styles.
 
 ## Coordination
 

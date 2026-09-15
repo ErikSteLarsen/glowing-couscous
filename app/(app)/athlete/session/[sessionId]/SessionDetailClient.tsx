@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { SessionComposer } from '@/components/SessionComposer';
+import { WorkoutBuilder } from '@/components/WorkoutBuilder';
 import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
 import {
   compactPrimaryButtonClassName,
@@ -16,6 +16,7 @@ import {
   Surface,
 } from '@/components/ui';
 import { updateSessionEditorFields, type SessionEditorDraft } from '@/lib/session-editor';
+import type { PerformanceProfile } from '@/lib/performance-profile';
 
 export function SessionDetailClient({
   sessionId,
@@ -23,12 +24,14 @@ export function SessionDetailClient({
   initialNotes,
   initialDraft,
   id,
+  performanceProfile = null,
 }: {
   sessionId: number;
   initialDone: boolean;
   initialNotes: string;
   initialDraft: SessionEditorDraft;
   id?: string;
+  performanceProfile?: PerformanceProfile | null;
 }) {
   const router = useRouter();
   const [notes, setNotes] = useState(initialNotes);
@@ -135,11 +138,12 @@ export function SessionDetailClient({
                 : 'Only this scheduled session changes. The coach baseline and reusable source stay intact.'}
             </p>
           </div>
-          <SessionComposer
+          <WorkoutBuilder
             draft={draft}
             onChange={setDraft}
             showSchedule
             summaryPlaceholder="Session intent or adjustment context"
+            performanceProfile={performanceProfile}
           />
           <label className="block space-y-2">
             <span className="text-sm font-medium text-[var(--text-secondary)]">Athlete note</span>

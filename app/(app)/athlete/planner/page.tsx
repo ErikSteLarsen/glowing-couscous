@@ -6,6 +6,7 @@ import { ActionLink, PageShell, TopBar } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athletePlannerService } from '@/lib/athlete-planner-service';
 import { workoutLibraryService } from '@/lib/workout-library-service';
+import { accountService } from '@/lib/account-service';
 
 import { AthletePlannerClient } from './AthletePlannerClient';
 
@@ -18,9 +19,10 @@ export default async function AthletePlannerPage({
   if (!user || user.role !== 'ATHLETE') redirect('/login');
 
   const { date, templateId } = await searchParams;
-  const [workspace, workouts] = await Promise.all([
+  const [workspace, workouts, account] = await Promise.all([
     athletePlannerService.loadWorkspace(user.id, date),
     workoutLibraryService.listForOwner('athlete', user.id),
+    accountService.getAccount(user.id),
   ]);
   const parsedTemplateId = Number(templateId);
   const requestedDate = date ? parseISO(date) : new Date();
@@ -63,6 +65,7 @@ export default async function AthletePlannerPage({
         periodLabel={workspace.period.label}
         initialDate={initialDate}
         initialTemplateId={Number.isInteger(parsedTemplateId) ? parsedTemplateId : null}
+        performanceProfile={account?.performanceProfile}
       />
     </PageShell>
   );

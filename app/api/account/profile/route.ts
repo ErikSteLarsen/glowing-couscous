@@ -16,7 +16,7 @@ export async function PATCH(req: NextRequest) {
   if (!isJsonObject(body)) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
-  const { name, overviewCards } = body;
+  const { name, overviewCards, performanceProfile } = body;
 
   if (name !== undefined) {
     const trimmedName = String(name ?? '').trim();
@@ -29,6 +29,13 @@ export async function PATCH(req: NextRequest) {
 
   if (overviewCards !== undefined) {
     await accountService.updateOverviewCards(user.id, overviewCards);
+  }
+
+  if (performanceProfile !== undefined) {
+    if (user.role !== 'ATHLETE') {
+      return NextResponse.json({ error: 'Training metrics are available to athlete profiles only.' }, { status: 403 });
+    }
+    await accountService.updatePerformanceProfile(user.id, performanceProfile);
   }
 
   return NextResponse.json({ ok: true });
