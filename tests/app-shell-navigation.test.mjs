@@ -98,10 +98,28 @@ test('coach pages rely on shared shell and keep only contextual local actions', 
   const plannerPageSource = await read('app/(app)/coach/athletes/[athleteId]/page.tsx');
 
   assert.doesNotMatch(coachPageSource, /SignOutButton/);
-  assert.match(coachPageSource, /ActionLink href="\/coach\/templates"/);
+  assert.doesNotMatch(coachPageSource, /ActionLink href="\/coach\/(templates|planner)"/);
   assert.doesNotMatch(templatesPageSource, /SignOutButton/);
-  assert.match(plannerPageSource, /Back to dashboard/);
+  assert.doesNotMatch(plannerPageSource, /Back to dashboard|Open planner/);
   assert.doesNotMatch(plannerPageSource, /SignOutButton/);
+});
+
+test('workspace pages do not repeat sibling destinations in their headers', async () => {
+  const pageSources = await Promise.all([
+    'app/(app)/athlete/page.tsx',
+    'app/(app)/athlete/activity/page.tsx',
+    'app/(app)/athlete/templates/page.tsx',
+    'app/(app)/athlete/workouts/page.tsx',
+    'app/(app)/coach/page.tsx',
+    'app/(app)/coach/athletes/[athleteId]/page.tsx',
+    'app/(app)/coach/planner/page.tsx',
+    'app/(app)/coach/templates/page.tsx',
+    'app/(app)/coach/workouts/page.tsx',
+  ].map(read));
+
+  for (const source of pageSources) {
+    assert.doesNotMatch(source, /actions=\{/);
+  }
 });
 
 test('coach athlete detail route uses coach-service detail loading instead of the legacy planner flow', async () => {

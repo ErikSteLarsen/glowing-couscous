@@ -222,7 +222,9 @@ export function CoachTemplatesClient({
           <WorkoutBuilder
             draft={editorDraft}
             onChange={setEditorDraft}
-            summaryPlaceholder="Summary"
+            titleLabel="Template name"
+            summaryLabel="Template summary"
+            summaryPlaceholder="What is this template for?"
           />
           <label className="block space-y-2">
             <span className="text-sm font-medium text-[var(--text-secondary)]">Template cadence</span>
@@ -277,7 +279,7 @@ export function CoachTemplatesClient({
                     </div>
                   </details>
                 </div>
-                <ShareLinkButton sourceKind="template" sourceId={template.id} ariaLabel={`Share ${template.name}`} />
+                <ShareLinkButton sourceKind="template" sourceId={template.id} ariaLabel={`Create a share link for ${template.name}`} />
               </Surface>
             );
           })}

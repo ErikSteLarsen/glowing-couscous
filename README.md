@@ -53,8 +53,9 @@ The seed command creates these local accounts:
 | Role | Email | Password |
 |---|---|---|
 | Coach | `coach@demo.local` | `demo1234` |
-| Athlete | `maria@demo.local` | `demo1234` |
-| Athlete | `anders@demo.local` | `demo1234` |
+| Athlete | `mara@demo.local` | `demo1234` |
+| Athlete | `jonas@demo.local` | `demo1234` |
+| Athlete | `sofie@demo.local` | `demo1234` |
 
 ## Commands
 

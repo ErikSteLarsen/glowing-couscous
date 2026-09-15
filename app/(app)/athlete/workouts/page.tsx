@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { ActionLink, PageShell, TopBar } from '@/components/ui';
+import { PageShell, TopBar } from '@/components/ui';
 import { WorkoutLibraryClient } from '@/components/WorkoutLibraryClient';
 import { getCurrentUser } from '@/lib/auth-session';
 import { templateService } from '@/lib/template-service';
@@ -20,8 +20,7 @@ export default async function AthleteWorkoutsPage() {
     <PageShell size="wide" className="max-w-[1400px]">
       <TopBar
         title="Workouts"
-        description="Create reusable workout definitions here. Use Planner to place an independent copy on a day."
-        actions={<ActionLink href="/athlete/planner" tone="secondary">Open Planner</ActionLink>}
+        description="Create workouts once, then add copies to specific days in Planner. Your library versions stay unscheduled."
       />
       <WorkoutLibraryClient
         role="ATHLETE"

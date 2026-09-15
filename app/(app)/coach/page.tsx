@@ -23,16 +23,6 @@ export default async function CoachPage() {
       <TopBar
         title="Your athletes"
         description={`${coach.athletes.length} active athletes${coach.pendingRequests.length ? ` · ${coach.pendingRequests.length} pending requests` : ''}.`}
-        actions={
-          <div className="flex flex-wrap gap-3">
-            <ActionLink href="/coach/templates" tone="secondary">
-              Open templates
-            </ActionLink>
-            <ActionLink href="/coach/planner" tone="ghost">
-              Open planner
-            </ActionLink>
-          </div>
-        }
       />
 
       <div className="grid gap-4 sm:grid-cols-3">

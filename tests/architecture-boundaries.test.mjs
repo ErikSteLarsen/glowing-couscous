@@ -54,6 +54,48 @@ test('project architecture skill files exist', async () => {
   assert.match(referenceSource, /# Project Architecture Reference/);
 });
 
+test('workout flow previews share one public interactive surface', async () => {
+  const [componentSource, flowlineSource, workbenchSource, trailSource] = await Promise.all([
+    read('components/design/WorkoutFlowPreviews.tsx'),
+    read('app/design/workout-flow/flowline/page.tsx'),
+    read('app/design/workout-flow/workbench/page.tsx'),
+    read('app/design/workout-flow/trail/page.tsx'),
+  ]);
+
+  for (const routeSource of [flowlineSource, workbenchSource, trailSource]) {
+    assert.match(routeSource, /WorkoutFlowPreviews/);
+    assert.match(routeSource, /direction=/);
+  }
+  assert.match(componentSource, /DndContext/);
+  assert.match(componentSource, /suppressPresetClick/);
+  assert.match(componentSource, /onPaletteAdd/);
+  assert.match(componentSource, /aria-pressed/);
+  assert.match(componentSource, /trailIntention/);
+});
+
+test('workbench previews preserve the library and inspector while varying the center surface', async () => {
+  const [componentSource, terrainSource, ribbonSource, stagingSource] = await Promise.all([
+    read('components/design/WorkoutFlowPreviews.tsx'),
+    read('app/design/workout-flow/workbench/terrain/page.tsx'),
+    read('app/design/workout-flow/workbench/ribbon/page.tsx'),
+    read('app/design/workout-flow/workbench/staging/page.tsx'),
+  ]);
+
+  assert.match(terrainSource, /workbenchVariant="terrain"/);
+  assert.match(ribbonSource, /workbenchVariant="ribbon"/);
+  assert.match(stagingSource, /workbenchVariant="staging"/);
+  assert.match(componentSource, /function WorkbenchPalette/);
+  assert.match(componentSource, /function Inspector/);
+  assert.match(componentSource, /function TerrainWorkbench/);
+  assert.match(componentSource, /function RibbonWorkbench/);
+  assert.match(componentSource, /function StagingWorkbench/);
+  assert.match(componentSource, /function SelectionTray/);
+  assert.match(componentSource, /function StagingShelf/);
+  assert.match(componentSource, /--terrain-height/);
+  assert.match(componentSource, /onToggleSelect/);
+  assert.match(componentSource, /onCommitStaged/);
+});
+
 test('coach request decision flow guards resolved requests and invalid route params', async () => {
   const serviceSource = await read('lib/coach-request-service.ts');
   const routeSource = await read('app/api/coach/requests/[requestId]/route.ts');
@@ -110,11 +152,10 @@ test('athlete home page uses the week wall and explicit session actions', async 
   assert.match(athletePageSource, /Good morning/);
   assert.match(athletePageSource, /Today/);
   assert.match(athletePageSource, /Week at a glance/);
-  assert.match(athletePageSource, /Next action/);
-  assert.match(athletePageSource, /Open calendar/);
-  assert.equal((athletePageSource.match(/Open calendar/g) ?? []).length, 1);
+  assert.match(athletePageSource, /Next session/);
+  assert.doesNotMatch(athletePageSource, /actions=\{/);
   assert.doesNotMatch(athletePageSource, /Open full calendar/);
-  assert.match(athletePageSource, /Plan a session/);
+  assert.match(athletePageSource, /No session scheduled today/);
   assert.doesNotMatch(athletePageSource, /Customise overview in Settings/);
   assert.match(athletePageSource, /athlete\/session/);
   assert.match(athletePageSource, /SessionRow/);

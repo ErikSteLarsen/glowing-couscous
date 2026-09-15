@@ -11,13 +11,20 @@ Live editing requires a local checkout; injection into deployed production sites
 Execute in order. No step skipped, no step reordered. Every tool output in live mode may carry an `_instructions` field: it is the authoritative next step for that exact situation, with real ids and paths substituted; when it conflicts with your recollection of this document, `_instructions` wins.
 
 1. `impeccable live`: boot. If the request names or implies a file, route, or app inside a monorepo, infer the concrete path and run `.opencode/skills/impeccable/scripts/impeccable live --target <path>` instead; then run the rest of this live session from the returned `projectRoot`. The boot resolves the app root from dev-server config files and persists it in `.impeccable/live/roots.json`; every helper re-anchors to that manifest at startup (a wrong cwd cannot fork session state), PRODUCT.md / DESIGN.md are discovered upward to the git root, and relative helper args like `--file` resolve against the app root.
-2. Open the app URL that serves `pageFile` (infer from `package.json`, docs, terminal output, or an open tab). Never use `serverPort`; it's the helper, not the app. **Cursor:** `browser_navigate` to that URL before polling; do not skip. **Other harnesses:** use the available browser tool; if the URL is uncertain, ask the user once.
-3. Poll loop with the default long timeout (600000 ms). Run `impeccable live-poll` again immediately after every event or `--reply`; Codex runs this one-shot poll in the foreground. Never pass a short `--timeout=`. The global bar's **Impeccable mark** dims with a pulsing amber dot when nothing is polling `/poll`; restart `impeccable live-poll` to reconnect.
-4. On `generate`: reuse `event.scaffold` when present; read the screenshot if present; load the action's reference; deliver variants; `--reply done`; poll again. Generate in this thread: you already hold the project's tokens and layout. The overlay preview IS the verification channel; do not screenshot, re-render, or QA variants between generate and accept. Apply craft-floor's contrast, spacing, and type floors by construction as you write; full verification runs once at accept on the chosen variant.
-5. On `steer`: read the message and `pageUrl`; do the work; `--reply steer_done`; poll again. No pickup ack.
-6. On `accept` / `discard`: the poll script runs `impeccable live-accept`, acknowledges delivery, and prints `_completionAck`. Plain accepts/discards are terminal immediately; carbonize accepts stay recoverable until `impeccable live-complete --id EVENT_ID` runs. Finish that cleanup before polling again.
-7. If interrupted, run `impeccable live-status` or `impeccable live-resume` before guessing. The journal under `.impeccable/live/sessions/` is canonical and replays unacknowledged work after a helper restart; the injected `live.js` re-attaches when the page reopens. Fall back to the direct-edit loop only when `impeccable live-resume` reports no active session, never because disconnects felt frequent.
-8. On `exit`: run the cleanup at the bottom.
+2. **Mandatory Next.js React 19 compatibility:** Before opening or refreshing the app, if a JSX or TSX injection target receives this native element inside the `impeccable-live-start` and `impeccable-live-end` markers, immediately perform this conversion:
+
+   ```html
+   <script src="http://localhost:8400/live.js?token=..."></script>
+   ```
+
+   Preserve the exact generated URL and token. Add `import Script from "next/script";` if absent, then replace the native element with `<Script src="THE_EXACT_GENERATED_URL" />`, preserving both Impeccable marker comments. Perform this conversion before opening or refreshing the app. Verify the generated script URL returns HTTP 200, then verify `impeccable live-status` reports a connected browser client. Start `impeccable live-poll` only after those checks pass, and record whether Live added the `next/script` import.
+3. Open the app URL that serves `pageFile` (infer from `package.json`, docs, terminal output, or an open tab). Never use `serverPort`; it's the helper, not the app. **Cursor:** `browser_navigate` to that URL before polling; do not skip. **Other harnesses:** use the available browser tool; if the URL is uncertain, ask the user once.
+4. Poll loop with the default long timeout (600000 ms). Run `impeccable live-poll` again immediately after every event or `--reply`; Codex runs this one-shot poll in the foreground. Never pass a short `--timeout=`. The global bar's **Impeccable mark** dims with a pulsing amber dot when nothing is polling `/poll`; restart `impeccable live-poll` to reconnect.
+5. On `generate`: reuse `event.scaffold` when present; read the screenshot if present; load the action's reference; deliver variants; `--reply done`; poll again. Generate in this thread: you already hold the project's tokens and layout. The overlay preview IS the verification channel; do not screenshot, re-render, or QA variants between generate and accept. Apply craft-floor's contrast, spacing, and type floors by construction as you write; full verification runs once at accept on the chosen variant.
+6. On `steer`: read the message and `pageUrl`; do the work; `--reply steer_done`; poll again. No pickup ack.
+7. On `accept` / `discard`: the poll script runs `impeccable live-accept`, acknowledges delivery, and prints `_completionAck`. Plain accepts/discards are terminal immediately; carbonize accepts stay recoverable until `impeccable live-complete --id EVENT_ID` runs. Finish that cleanup before polling again.
+8. If interrupted, run `impeccable live-status` or `impeccable live-resume` before guessing. The journal under `.impeccable/live/sessions/` is canonical and replays unacknowledged work after a helper restart; the injected `live.js` re-attaches when the page reopens. Fall back to the direct-edit loop only when `impeccable live-resume` reports no active session, never because disconnects felt frequent.
+9. On `exit`: run the cleanup at the bottom.
 
 Harness policy:
 - **Claude Code**: run the poll as a **background task** (no short timeout); the harness notifies you on completion. Do not block the shell.
@@ -319,6 +326,7 @@ The user stops live mode by saying so in chat, closing the tab (SSE drops; poll 
 ```
 
 Stops the helper and runs `impeccable live-inject --remove` to strip the injected script (use `stop --keep-inject` to keep it for a quick restart; `.impeccable/live/config.json` persists as project config). Then search for and remove any leftover `impeccable-variants-start` wrappers and `impeccable-carbonize-start` blocks.
+After `impeccable live-server stop` completes, confirm the Live server stopped and the marked injection block was removed. Remove `import Script from "next/script";` only if the compatibility step added it and `Script` is no longer used. Preserve imports that existed before Live or remain in use. Remove any leftover `impeccable-variants-start` and `impeccable-carbonize-start` blocks. Run formatting or fix indentation if removing the generated block changed the surrounding layout formatting.
 
 ## First-time setup
 

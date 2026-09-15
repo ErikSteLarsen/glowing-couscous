@@ -73,7 +73,7 @@ test('supported source surfaces expose share controls with copy and failure stat
   const planner = await read('app/(app)/coach/planner/PlannerClient.tsx');
 
   assert.match(button, /api\/share-links/);
-  assert.match(button, /Creating link/);
+  assert.match(button, /Creating share link/);
   assert.match(button, /Copy link/);
   assert.match(button, /Link created\. Copy it from the field/);
   assert.match(templateClient, /ShareLinkButton/);

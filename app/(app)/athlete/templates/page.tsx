@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { ActionLink, PageShell, TopBar } from '@/components/ui';
+import { PageShell, TopBar } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth-session';
 import { templateService } from '@/lib/template-service';
 
@@ -17,9 +17,6 @@ export default async function AthleteTemplatesPage() {
       <TopBar
         title="Templates"
         description="Create reusable day, week, or month structures. Build the content here; place it on your calendar from Planner."
-        actions={
-          <ActionLink href="/athlete/planner" tone="secondary">Open Planner</ActionLink>
-        }
       />
       <CoachTemplatesClient
         templates={templates}

@@ -22,6 +22,7 @@ export function ShareLinkButton({
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
   const [isPending, startTransition] = useTransition();
+  const sharedResourceLabel = sourceKind === 'template' ? 'template' : 'workout';
 
   function createLink() {
     setMessage('');
@@ -63,9 +64,9 @@ export function ShareLinkButton({
   return (
     <div className="space-y-2">
       <button type="button" aria-label={ariaLabel} className={compactSecondaryButtonClassName} onClick={createLink} disabled={isPending}>
-        {isPending ? 'Creating link…' : 'Share'}
+        {isPending ? 'Creating share link…' : 'Create share link'}
       </button>
-      <p className="text-[11px] leading-[1.4] text-[var(--text-muted)]">Anyone with the URL can view this workout.</p>
+      <p className="text-[11px] leading-[1.4] text-[var(--text-muted)]">Anyone with the URL can view this {sharedResourceLabel}.</p>
       {shareUrl ? (
         <div className="flex flex-col gap-2 sm:flex-row">
           <input className={`${formFieldClassName} min-w-0 text-xs`} value={shareUrl} readOnly aria-label="Share link" />

@@ -35,11 +35,11 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 
 | Gate | Result | Command or evidence |
 |---|---|---|
-| Tests | Pass, 182 tests | `pnpm test` on 2026-09-15 |
+| Tests | Pass, 184 tests | `pnpm test` on 2026-09-15 |
 | Lint | Pass | `pnpm lint` on 2026-09-15 |
 | Production build | Pass | `pnpm build` on 2026-09-15; Next.js reports the middleware-to-proxy deprecation warning |
 | Database setup | Pass in current development work | `pnpm db:setup` with local SQLite |
-| Design context | Pass | `DESIGN.md`, `.impeccable/design.json`, and the signed-in surface brief synchronized with Ink Is Movement tokens and shared components; focused workout builder presets, progressive basics, and zone chart verified; detector completed with advisory-only findings |
+| Design context | Pass | `DESIGN.md`, `.impeccable/design.json`, and the signed-in surface brief synchronized with Ink Is Movement tokens and shared components; focused workout builder presets, progressive basics, zone chart, and three workout-flow direction previews verified in source; detector completed with advisory-only findings |
 
 ## Capability State
 
@@ -47,6 +47,8 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 - Coach roster, athlete detail, requests, planner, libraries, templates, and training plans are active implementation paths.
 - Athlete Home, Calendar, Workouts, Planner, Templates, Session, Live, Activity, Profile, and Settings are active implementation paths.
 - The canonical visual workout builder supports structured blocks, skipped blocks, repetitions, relative targets, and profile-aware previews without persisting profile values into generic prescriptions. Workout authoring now uses a focused library/editor mode, opens new workouts directly in the builder without a duplicate setup step, puts sport and name first, and collapses those basics into a compact editable header once complete. Five draggable presets per intensity zone, click insertion, and duration-by-zone bar charts remain available while preserving the inspector and keyboard reorder controls. Palette drags dropped outside the sequence are ignored, follow-up clicks from completed drags are suppressed, same-position sequence drops do not create a draft change, block removal is visible in the inspector, and saves preflight the canonical draft validator.
+- The public `/design/workout-flow/flowline`, `/workbench`, and `/trail` routes share an interactive sample-data preview surface. They demonstrate connected sequencing, a persistent palette/workbench, and four-pass authoring with preset insertion, drag and explicit reorder controls, block inspection, undo/redo, and a Trail intention choice without changing production persistence.
+- Three additional public Workbench experiments preserve the block library and Block details inspector while varying only the middle field: Terrain maps intensity to block height, Ribbon expands the duration-weighted color session across the full field and exposes a multi-selection tray, and Staging provides a temporary repeated-block shelf before moving a set into the final sequence.
 - The workouts library and editor now distinguish unscheduled library versions from Planner copies and explain empty, search, save, delete, share, and editing states in direct task language; the shared builder uses context-specific labels for workout and template editing. The library is hidden while a workout is being authored so the builder has the full surface.
 - Sharing is implemented with sanitized immutable snapshots and explicit recipient saves. Browser acceptance remains a gap.
 - `lib/planner-service.ts` and the older coach session mutation route remain transitional compatibility code. Do not extend them for new behavior.
@@ -54,7 +56,7 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 
 ## Known Gaps
 
-- Browser verification is still needed for public share previews, some session mutation flows, and physical pointer/touch acceptance of the workout builder.
+- Browser verification is still needed for public share previews, the six workout-flow direction and Workbench experiment previews, some session mutation flows, and physical pointer/touch acceptance of the workout builder and preview presets.
 - Credentials flows are locally covered; external OAuth integration is not.
 - Live execution is a local guidance stepper and does not collect device or sensor telemetry.
 - Next.js reports a middleware-to-proxy deprecation warning; this is not currently a build failure.

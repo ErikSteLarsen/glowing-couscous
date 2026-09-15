@@ -51,9 +51,6 @@ export default async function AthletePlannerPage({
                 <ChevronRight aria-hidden="true" className="ml-1 h-4 w-4" />
               </ActionLink>
             </nav>
-            <ActionLink href="/athlete/templates" tone="secondary">
-              Templates
-            </ActionLink>
           </div>
         }
       />

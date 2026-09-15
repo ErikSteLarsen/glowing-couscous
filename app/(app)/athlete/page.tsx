@@ -25,8 +25,7 @@ export default async function AthletePage() {
   const dashboard = await athleteService.loadHomeDashboard(user.id);
   if (!dashboard) redirect('/athlete/find-coach');
 
-  const orderedSessions = dashboard.weekDays.flatMap((day) => day.sessions);
-  const nextAction = orderedSessions.find((session) => session.status !== 'completed') ?? orderedSessions[0] ?? null;
+  const nextAction = dashboard.todaySessions.find((session) => session.status !== 'completed') ?? dashboard.todaySessions[0] ?? null;
   const nextActionLabel = nextAction?.status === 'completed' ? 'Review outcome' : nextAction?.status === 'missed' ? 'Review session' : 'Open session';
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
   const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
@@ -35,24 +34,14 @@ export default async function AthletePage() {
     <PageShell size="wall" className="ink-home">
       <TopBar
         title={`Good morning, ${dashboard.athlete.name}`}
-        actions={
-          <div className="flex flex-wrap gap-3">
-            <ActionLink href="/athlete/calendar" tone="secondary">
-              Open calendar
-            </ActionLink>
-            <ActionLink href="/athlete/workouts" tone="ghost">
-              Workouts
-            </ActionLink>
-          </div>
-        }
       />
 
       <div className="space-y-6 xl:space-y-8">
-        <section aria-labelledby="next-action-heading" className="ink-next-action rounded-[14px] border border-[var(--border)] px-4 py-5 xl:px-6 xl:py-6">
+        <section aria-labelledby="next-action-heading" className="ink-next-action ink-next-action--quiet-tone ink-next-action--summary rounded-[14px] border border-[var(--border)] px-4 py-5 xl:px-6 xl:py-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 id="next-action-heading" className="text-[18px] font-semibold text-[var(--text)]">Next action</h2>
-              <p className="mt-1 text-[13px] text-[var(--text-secondary)]">The first useful step in your current training week.</p>
+              <h2 id="next-action-heading" className="text-[18px] font-semibold text-[var(--text)]">Today</h2>
+              <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Next session</p>
             </div>
             {nextAction ? (
               <div className="flex min-w-0 flex-1 items-center gap-3 lg:max-w-3xl">
@@ -66,10 +55,7 @@ export default async function AthletePage() {
                 </ActionLink>
               </div>
             ) : (
-              <div className="flex flex-wrap items-center gap-3">
-                <p className="text-[13px] text-[var(--text-secondary)]">No sessions planned for this week.</p>
-                <ActionLink href="/athlete/planner" tone="secondary" size="compact">Plan a session</ActionLink>
-              </div>
+              <p className="text-[13px] text-[var(--text-secondary)]">No session scheduled today.</p>
             )}
           </div>
         </section>

@@ -417,11 +417,15 @@ test('planner page exposes calendar-first visual workout creation', async () => 
   assert.match(pageSource, /coachPlannerService\.loadWorkspace/);
   assert.match(pageSource, /PlannerClient/);
   assert.doesNotMatch(clientSource, /Click a day to plan/);
-  assert.match(composerSource, /Workout canvas/);
+  assert.match(composerSource, /Workout sequence/);
   assert.match(clientSource, /WorkoutBuilder/);
   assert.match(composerSource, /@dnd-kit/);
   assert.match(composerSource, /repeatBlockSelection/);
   assert.match(composerSource, /deriveSessionEditorMetrics/);
+  assert.match(composerSource, /suppressPaletteClick/);
+  assert.match(composerSource, /overId === 'workout-canvas'/);
+  assert.match(composerSource, /nextBlocks\.every/);
+  assert.match(composerSource, /onClick=\{removeSelection\}/);
   assert.match(clientSource, /\/api\/coach\/planner\/sessions/);
 });
 

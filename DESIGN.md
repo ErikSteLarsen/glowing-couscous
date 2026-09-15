@@ -357,7 +357,9 @@ save and destructive actions reachable without requiring a horizontal layout.
 216px sidebar with a paper navigation surface, indigo active tint, and a thin
 indigo rail. Mobile uses a drawer with an overlay, Escape-to-close,
 focus containment, and a fixed bottom bar with four primary destinations. Do not add route-local
-primary navigation or a second shell.
+primary navigation or a second shell. Page headers should not repeat sibling
+workspace destinations; reserve their actions for the current page's task or
+for contextual return and execution controls.
 
 ### Workout / Session Language
 

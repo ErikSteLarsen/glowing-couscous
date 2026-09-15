@@ -21,7 +21,6 @@ export default async function AthleteActivityPage() {
       <TopBar
         title="Completed work"
         description="Review your latest 12 completed sessions and compare each with the planned work."
-        actions={<ActionLink href="/athlete/calendar" tone="secondary">Open calendar</ActionLink>}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

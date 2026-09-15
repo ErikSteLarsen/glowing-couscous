@@ -38,14 +38,6 @@ export default async function CoachAthleteDetailPage({
       <TopBar
         title={detail.athlete.name}
         description={`Coach: ${detail.athlete.coachName}. ${detail.athlete.activePlan?.goalRace ? `Goal race: ${detail.athlete.activePlan.goalRace}.` : 'No goal race set yet.'}`}
-        actions={
-          <>
-            <ActionLink href="/coach" tone="secondary">
-              Back to dashboard
-            </ActionLink>
-            <ActionLink href={`/coach/planner?athleteId=${detail.athlete.id}`}>Open planner</ActionLink>
-          </>
-        }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -110,7 +102,7 @@ export default async function CoachAthleteDetailPage({
                                   endpoint={`/api/coach/sessions/${session.id}/comparison`}
                                    label={`Compare ${session.title}`}
                                  />
-                                 <ShareLinkButton sourceKind="session" sourceId={session.id} ariaLabel={`Share ${session.title}`} />
+                                  <ShareLinkButton sourceKind="session" sourceId={session.id} ariaLabel={`Create a share link for ${session.title}`} />
                              </div>
                           </div>
                           <div className="mt-3">
@@ -165,7 +157,7 @@ export default async function CoachAthleteDetailPage({
                            endpoint={`/api/coach/sessions/${session.id}/comparison`}
                            label={`Compare ${session.title}`}
                          />
-                         <ShareLinkButton sourceKind="session" sourceId={session.id} ariaLabel={`Share ${session.title}`} />
+                          <ShareLinkButton sourceKind="session" sourceId={session.id} ariaLabel={`Create a share link for ${session.title}`} />
                      </div>
                   </div>
 
