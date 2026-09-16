@@ -5,13 +5,16 @@ import { useRouter } from 'next/navigation';
 
 import {
   Badge,
-  compactDangerButtonClassName,
+  buttonFocusClassName,
   compactPrimaryButtonClassName,
   compactSecondaryButtonClassName,
   EmptyState,
   formFieldClassName,
+  formLabelClassName,
   formSelectClassName,
   primaryButtonClassName,
+  secondaryButtonClassName,
+  dangerButtonClassName,
   successTextClassName,
   dangerTextClassName,
   Surface,
@@ -215,7 +218,7 @@ export function WorkoutLibraryClient({
           </div>
         </div>
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-[var(--text-secondary)]">Find a workout</span>
+          <span className={formLabelClassName}>Find a workout</span>
           <input
             type="search"
             value={filterText}
@@ -234,13 +237,13 @@ export function WorkoutLibraryClient({
           <EmptyState
             title="Your workout library is empty"
             description="Create a workout here, then add a copy to a day in Planner."
-            action={<button type="button" className={compactPrimaryButtonClassName} onClick={() => requestDraftAction({ kind: 'new' })}>Create workout</button>}
+            action={<button type="button" className={primaryButtonClassName} onClick={() => requestDraftAction({ kind: 'new' })}>Create workout</button>}
           />
         ) : (
           <EmptyState
             title="No matching workouts"
             description="Try a different name or summary, or clear your search."
-            action={<button type="button" className={compactSecondaryButtonClassName} onClick={() => setFilterText('')}>Clear search</button>}
+            action={<button type="button" className={secondaryButtonClassName} onClick={() => setFilterText('')}>Clear search</button>}
           />
         ) : (
           <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
@@ -254,11 +257,11 @@ export function WorkoutLibraryClient({
                     type="button"
                     aria-current={selected ? 'true' : undefined}
                     onClick={() => requestDraftAction({ kind: 'workout', workout })}
-                    className="w-full px-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-inset"
+                    className={`w-full rounded-[3px] px-2 text-left ${buttonFocusClassName} focus-visible:ring-inset`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="break-words text-[14px] font-semibold text-[var(--text)]">{workout.title}</p>
+                        <p className="break-words text-[13px] font-semibold text-[var(--text)]">{workout.title}</p>
                         <p className="mt-1 text-[12px] text-[var(--text-secondary)]">{getSportLabel(workout.sport)} · Saved in library</p>
                       </div>
                       <span className="shrink-0 text-[12px] text-[var(--text-secondary)]">{selected ? 'Editing' : 'Edit workout'}</span>
@@ -297,10 +300,10 @@ export function WorkoutLibraryClient({
               <p className="mt-1 text-sm text-[var(--text-secondary)]">Your changes to this workout will be lost.</p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <button type="button" className={compactSecondaryButtonClassName} onClick={() => setPendingDraftAction(null)}>
+              <button type="button" className={secondaryButtonClassName} onClick={() => setPendingDraftAction(null)}>
                 Keep editing
               </button>
-              <button type="button" className={compactDangerButtonClassName} onClick={() => applyDraftAction(pendingDraftAction)}>
+              <button type="button" className={dangerButtonClassName} onClick={() => applyDraftAction(pendingDraftAction)}>
                 Discard changes
               </button>
             </div>
@@ -328,7 +331,7 @@ export function WorkoutLibraryClient({
           />
         {templates.length > 0 ? (
           <details className="rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] px-3">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center text-sm font-medium text-[var(--text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">
+            <summary className={`flex min-h-11 cursor-pointer list-none items-center text-[13px] font-medium text-[var(--text-secondary)] ${buttonFocusClassName}`}>
               Start from a saved template (optional)
             </summary>
             <label className="block space-y-2 border-t border-[var(--border)] py-3">
@@ -344,7 +347,7 @@ export function WorkoutLibraryClient({
           <button type="button" className={primaryButtonClassName} disabled={isPending || !draft.blocks.length} onClick={saveWorkout}>
             {isPending ? 'Saving…' : selectedWorkoutId ? 'Save changes' : 'Save workout'}
           </button>
-          {selectedWorkoutId ? <button type="button" className={compactDangerButtonClassName} disabled={isPending} onClick={deleteWorkout}>Delete workout</button> : null}
+          {selectedWorkoutId ? <button type="button" className={dangerButtonClassName} disabled={isPending} onClick={deleteWorkout}>Delete workout</button> : null}
         </div>
       </Surface> : null}
     </div>

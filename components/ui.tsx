@@ -10,39 +10,49 @@ const pageShellWidthClasses = {
 
 export const pageHeadingClassName = 'text-[40px] font-normal leading-none tracking-[-0.045em] text-[var(--text)] max-md:text-[34px]';
 export const sectionHeadingClassName = 'text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]';
-export const formLabelClassName = 'mb-1.5 block text-sm font-medium text-[var(--text-secondary)]';
+export const formLabelClassName = 'mb-1.5 block text-[13px] font-medium text-[var(--text-secondary)]';
 export const formFieldClassName =
-  'min-h-11 w-full rounded-[3px] border border-[var(--field-border)] bg-[var(--field-surface)] px-4 py-2.5 text-sm text-[var(--text)] outline-none shadow-[var(--shadow-inset)] transition placeholder:text-[var(--text-muted)] focus:border-[var(--field-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--field-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
+  'min-h-10 w-full rounded-[3px] border border-[var(--field-border)] bg-[var(--field-surface)] px-3 py-2 text-[13px] text-[var(--text)] outline-none shadow-[var(--shadow-inset)] transition placeholder:text-[var(--text-muted)] focus:border-[var(--field-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--field-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
 export const formSelectClassName = `${formFieldClassName} pr-10`;
 export const formTextareaClassName =
-  'w-full rounded-[3px] border border-[var(--field-border)] bg-[var(--field-surface)] px-4 py-3 text-sm text-[var(--text)] outline-none shadow-[var(--shadow-inset)] transition placeholder:text-[var(--text-muted)] focus:border-[var(--field-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--field-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
-const buttonFocusClassName =
+  'w-full rounded-[3px] border border-[var(--field-border)] bg-[var(--field-surface)] px-3 py-2.5 text-[13px] text-[var(--text)] outline-none shadow-[var(--shadow-inset)] transition placeholder:text-[var(--text-muted)] focus:border-[var(--field-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--field-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
+export const buttonFocusClassName =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
 const buttonDisabledClassName = 'disabled:cursor-not-allowed disabled:opacity-50';
+const standardButtonBaseClassName =
+  `inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-[3px] px-4 py-2 text-[13px] font-semibold tracking-[0.01em] transition ${buttonFocusClassName} ${buttonDisabledClassName}`;
+const compactButtonBaseClassName =
+  `inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-[3px] px-2.5 py-1.5 text-xs font-medium tracking-[0.01em] transition ${buttonFocusClassName} ${buttonDisabledClassName}`;
 export const primaryButtonClassName =
-  `inline-flex min-h-11 items-center justify-center rounded-[3px] bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold uppercase tracking-[0.08em] text-[var(--signal-ink)] shadow-[var(--shadow-raised)] transition hover:bg-[var(--signal-hover)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `${standardButtonBaseClassName} bg-[var(--brand)] text-[var(--signal-ink)] shadow-[var(--shadow-raised)] hover:bg-[var(--signal-hover)]`;
 export const secondaryButtonClassName =
-  `inline-flex min-h-11 items-center justify-center rounded-[3px] border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-semibold uppercase tracking-[0.08em] text-[var(--text)] shadow-[var(--shadow-inset)] transition hover:border-[var(--field-focus)] hover:bg-[var(--field-surface)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `${standardButtonBaseClassName} border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-[var(--shadow-inset)] hover:border-[var(--field-focus)] hover:bg-[var(--field-surface)]`;
 export const dangerButtonClassName =
-  `inline-flex min-h-11 items-center justify-center rounded-[8px] border border-[var(--danger-border)] bg-[var(--danger-tint)] px-4 py-2.5 text-sm font-semibold text-[var(--status-danger)] transition hover:bg-[var(--danger-tint-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--status-danger)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] ${buttonDisabledClassName}`;
+  `${standardButtonBaseClassName} border border-[var(--danger-border)] bg-[var(--danger-tint)] text-[var(--status-danger)] hover:bg-[var(--danger-tint-strong)] focus-visible:ring-[var(--status-danger)]`;
 export const compactPrimaryButtonClassName =
-  `inline-flex min-h-9 items-center justify-center rounded-[3px] bg-[var(--brand)] px-3 py-2 text-[13px] font-semibold uppercase tracking-[0.07em] text-[var(--signal-ink)] shadow-[var(--shadow-raised)] transition hover:bg-[var(--signal-hover)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `${compactButtonBaseClassName} bg-[var(--brand)] text-[var(--signal-ink)] hover:bg-[var(--signal-hover)]`;
 export const compactSecondaryButtonClassName =
-  `inline-flex min-h-9 items-center justify-center rounded-[3px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[13px] font-medium uppercase tracking-[0.07em] text-[var(--text)] shadow-[var(--shadow-inset)] transition hover:border-[var(--field-focus)] hover:bg-[var(--field-surface)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `${compactButtonBaseClassName} border border-[var(--border)] bg-transparent text-[var(--text-secondary)] hover:border-[var(--field-focus)] hover:bg-[var(--field-surface)] hover:text-[var(--text)]`;
 export const compactDangerButtonClassName =
-  `inline-flex min-h-9 items-center justify-center rounded-[3px] border border-[var(--danger-border)] bg-[var(--danger-tint)] px-3 py-2 text-[13px] font-medium uppercase tracking-[0.07em] text-[var(--status-danger)] transition hover:bg-[var(--danger-tint-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--status-danger)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] ${buttonDisabledClassName}`;
+  `${compactButtonBaseClassName} border border-[var(--danger-border)] bg-[var(--danger-tint)] text-[var(--status-danger)] hover:bg-[var(--danger-tint-strong)] focus-visible:ring-[var(--status-danger)]`;
 export const compactListButtonClassName =
-  `flex min-h-9 w-full items-center justify-start rounded-[3px] bg-[var(--surface)] px-3 py-2 text-left text-[13px] text-[var(--text)] transition hover:bg-[var(--field-surface)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `flex min-h-8 w-full items-center justify-start rounded-[3px] bg-[var(--surface)] px-2.5 py-1.5 text-left text-xs text-[var(--text)] transition hover:bg-[var(--field-surface)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
 export const dangerTextClassName = 'text-sm text-[var(--status-danger)]';
 export const successTextClassName = 'text-sm text-[var(--status-success)]';
+
+export function ghostButtonClassName(size: 'default' | 'compact') {
+  return size === 'compact'
+    ? `inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-[3px] px-2 py-1.5 text-xs font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--text)] ${buttonFocusClassName}`
+    : `inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-[3px] px-2 py-2 text-[13px] font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--text)] ${buttonFocusClassName}`;
+}
 
 export function getSegmentedChoiceClassName(selected: boolean, size: 'default' | 'compact' = 'default') {
   const sizeClassName =
     size === 'compact'
-      ? 'rounded-[3px] px-3 py-2 text-[13px] font-medium'
-      : 'rounded-[3px] px-4 py-2.5 text-sm font-semibold';
+      ? 'min-h-8 rounded-[3px] px-2.5 py-1.5 text-xs font-medium'
+      : 'min-h-10 rounded-[3px] px-4 py-2 text-[13px] font-semibold';
 
-  return `flex-1 border transition ${sizeClassName} ${buttonFocusClassName} ${
+  return `flex min-w-0 flex-1 items-center justify-center border transition ${sizeClassName} ${buttonFocusClassName} ${
     selected
       ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)] text-[var(--field-selected-text)]'
       : 'border-[var(--field-border)] bg-[var(--field-surface)] text-[var(--text-secondary)] hover:border-[var(--field-focus)] hover:text-[var(--text)]'
@@ -117,7 +127,7 @@ export function ActionLink({
         ? size === 'compact'
           ? compactSecondaryButtonClassName
           : secondaryButtonClassName
-        : `inline-flex min-h-8 items-center px-1 py-1 text-sm font-medium text-[var(--brand)] transition hover:text-[var(--text)] ${buttonFocusClassName}`;
+        : ghostButtonClassName(size);
 
   return (
     <Link href={href} className={className}>

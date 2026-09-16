@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 
 import {
   dangerTextClassName,
+  compactPrimaryButtonClassName,
+  compactSecondaryButtonClassName,
   primaryButtonClassName,
-  secondaryButtonClassName,
   successTextClassName,
 } from '@/components/ui';
 import { Stepper } from '@/components/tempo/Stepper';
@@ -77,7 +78,7 @@ export function LiveSessionClient({ sessionId, blocks }: { sessionId: number; bl
           <button
             type="button"
             aria-label="Previous block"
-            className={secondaryButtonClassName}
+             className={compactSecondaryButtonClassName}
             disabled={pending || state.currentIndex === 0}
             onClick={() => setState(previousExecution)}
           >
@@ -87,7 +88,7 @@ export function LiveSessionClient({ sessionId, blocks }: { sessionId: number; bl
             <button
               type="button"
               aria-label="Next block"
-              className={primaryButtonClassName}
+               className={compactPrimaryButtonClassName}
               disabled={pending}
               onClick={() => setState(advanceExecution)}
             >
@@ -97,7 +98,7 @@ export function LiveSessionClient({ sessionId, blocks }: { sessionId: number; bl
           <button
             type="button"
             aria-label="Restart workout"
-            className={secondaryButtonClassName}
+             className={compactSecondaryButtonClassName}
             disabled={pending || state.completed.every((value) => !value) && state.currentIndex === 0}
             onClick={() => setState(restartExecution)}
           >

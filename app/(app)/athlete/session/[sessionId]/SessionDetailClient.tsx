@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation';
 import { WorkoutBuilder } from '@/components/WorkoutBuilder';
 import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
 import {
-  compactPrimaryButtonClassName,
   compactSecondaryButtonClassName,
   dangerTextClassName,
   formFieldClassName,
+  formLabelClassName,
   formTextareaClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
@@ -146,7 +146,7 @@ export function SessionDetailClient({
             performanceProfile={performanceProfile}
           />
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-[var(--text-secondary)]">Athlete note</span>
+            <span className={formLabelClassName}>Athlete note</span>
             <textarea
               value={draft.athleteNotes}
               onChange={(event) => setDraft(updateSessionEditorFields(draft, { athleteNotes: event.target.value }))}
@@ -155,7 +155,7 @@ export function SessionDetailClient({
             />
           </label>
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-[var(--text-secondary)]">Planned RPE (1-10)</span>
+            <span className={formLabelClassName}>Planned RPE (1-10)</span>
             <input
               type="number"
               min="1"
@@ -167,10 +167,10 @@ export function SessionDetailClient({
             />
           </label>
           <div className="flex flex-wrap gap-3">
-            <button type="button" className={compactSecondaryButtonClassName} onClick={() => { setDraft(initialDraft); setIsEditing(false); }} disabled={isPending}>
+            <button type="button" className={secondaryButtonClassName} onClick={() => { setDraft(initialDraft); setIsEditing(false); }} disabled={isPending}>
               Cancel
             </button>
-            <button type="button" className={compactPrimaryButtonClassName} onClick={saveEditor} disabled={isPending}>
+            <button type="button" className={primaryButtonClassName} onClick={saveEditor} disabled={isPending}>
               {isPending ? 'Saving...' : isDone ? 'Save actual correction' : 'Save adjustment'}
             </button>
           </div>
@@ -180,7 +180,7 @@ export function SessionDetailClient({
       {!isEditing ? (
         <>
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-[var(--text-secondary)]">Session note</span>
+            <span className={formLabelClassName}>Session note</span>
             <textarea
               id="session-notes"
               value={notes}

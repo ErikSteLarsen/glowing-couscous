@@ -6,6 +6,7 @@ import {
   compactSecondaryButtonClassName,
   dangerTextClassName,
   formFieldClassName,
+  secondaryButtonClassName,
   successTextClassName,
 } from '@/components/ui';
 
@@ -69,8 +70,8 @@ export function ShareLinkButton({
       <p className="text-[11px] leading-[1.4] text-[var(--text-muted)]">Anyone with the URL can view this {sharedResourceLabel}.</p>
       {shareUrl ? (
         <div className="flex flex-col gap-2 sm:flex-row">
-          <input className={`${formFieldClassName} min-w-0 text-xs`} value={shareUrl} readOnly aria-label="Share link" />
-          <button type="button" className={compactSecondaryButtonClassName} onClick={() => void copyLink()}>
+           <input className={`${formFieldClassName} min-w-0 text-xs`} value={shareUrl} readOnly aria-label="Share link" />
+           <button type="button" className={secondaryButtonClassName} onClick={() => void copyLink()}>
             Copy link
           </button>
         </div>

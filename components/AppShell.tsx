@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { AppSidebar } from '@/components/AppSidebar';
 import { InkFlow } from '@/components/InkFlow';
+import { buttonFocusClassName, secondaryButtonClassName } from '@/components/ui';
 import { getMobileNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import type { SessionUser } from '@/lib/auth-session';
 
@@ -78,7 +79,7 @@ export function AppShell({
             aria-controls="tempo-sidebar"
             aria-expanded={mobileOpen}
             ref={menuButtonRef}
-            className="inline-flex min-h-11 items-center rounded-[3px] border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-semibold uppercase tracking-[0.08em] text-[var(--text)] shadow-[var(--shadow-inset)]"
+            className={secondaryButtonClassName}
             onClick={() => setMobileOpen(true)}
           >
             Open menu
@@ -96,7 +97,7 @@ export function AppShell({
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
-                 className={`flex min-h-11 items-center justify-center rounded-[3px] px-3 text-[11px] font-semibold uppercase tracking-[0.06em] ${
+                  className={`flex min-h-11 items-center justify-center rounded-[3px] px-3 text-[11px] font-semibold uppercase tracking-[0.06em] ${buttonFocusClassName} ${
                   isActive ? 'bg-[var(--nav-active)] text-[var(--nav-signal)]' : 'text-[var(--nav-muted)]'
                 }`}
               >

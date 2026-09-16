@@ -29,7 +29,7 @@ colors:
   warning: "#8B681F"
   warning-tint: "#F1EBDD"
   warning-border: "#DCCBA6"
-  danger: "#A84D45"
+  danger: "#99443D"
   danger-tint: "#F2E5E0"
   danger-tint-strong: "#EBD3CC"
   danger-border: "#D7AAA0"
@@ -73,6 +73,18 @@ typography:
     fontSize: "11px"
     fontWeight: 600
     lineHeight: 1.35
+  control:
+    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
+    fontSize: "13px"
+    fontWeight: 600
+    lineHeight: 1
+    letterSpacing: "0.07em"
+  compact-control:
+    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
+    fontSize: "12px"
+    fontWeight: 600
+    lineHeight: 1
+    letterSpacing: "0.06em"
   metric:
     fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
     fontSize: "26px"
@@ -98,26 +110,26 @@ components:
     backgroundColor: "{colors.signal}"
     textColor: "{colors.white}"
     rounded: "{rounded.control}"
-    padding: "10px 16px"
-    height: "44px"
+    padding: "8px 16px"
+    height: "40px"
   button-secondary:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
     rounded: "{rounded.control}"
-    padding: "10px 16px"
-    height: "44px"
+    padding: "8px 16px"
+    height: "40px"
   button-compact:
     backgroundColor: "{colors.signal}"
     textColor: "{colors.white}"
     rounded: "{rounded.compact}"
-    padding: "8px 12px"
-    height: "36px"
+    padding: "6px 10px"
+    height: "32px"
   field:
     backgroundColor: "{colors.field-surface}"
     textColor: "{colors.ink}"
     rounded: "{rounded.field}"
-    padding: "10px 16px"
-    height: "44px"
+    padding: "8px 12px"
+    height: "40px"
   surface:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
@@ -309,9 +321,9 @@ radius. Status indicators use pill geometry. Borders are semantic one-pixel
 rules, not ornament. Use a larger radius only when the component's role
 requires a distinct container or dialog silhouette.
 
-Avoid mixing unrelated radius values within one control group. Keep the 44px
-minimum control height for ordinary actions and fields; compact actions are for
-dense toolbars where the surrounding context already provides sufficient room.
+Avoid mixing unrelated radius values within one control group. Keep the 40px
+minimum control height for ordinary actions and fields; compact actions use 32px
+in dense toolbars where the surrounding context already provides sufficient room.
 
 ## Components
 
@@ -321,14 +333,28 @@ Buttons are tactile, direct task controls. Indigo is reserved for the one forwar
 action; blue-gray is reserved for focus and navigation. Use the shared class
 names exported by `components/ui.tsx` rather than restyling buttons in a route.
 
-- **Primary:** signal background, white text, normal control radius, and a 44px
-  minimum height. Use for the one forward action in the current task.
+- **Primary:** signal background, white text, normal control radius, and a 40px
+  minimum height with a 13px label. Use for the one forward action in
+  the current task.
 - **Secondary:** surface tone, ordinary border, ink text, and the same target
-  size. Use for adjacent or reversible actions.
+  size and label scale. Use for adjacent or reversible actions.
 - **Compact:** the compact primary/secondary/danger classes are for dense lists,
-  editors, and toolbars. They keep the same hierarchy at a smaller 36px height.
+  editor command strips, menus, and navigation. They keep the same hierarchy at
+  a smaller 32px height with a 12px sentence-case label and no raised shadow.
+  Do not use them for a button that submits, cancels, clears, copies, or
+  destructively changes a form with 40px fields; those actions use the matching
+  standard 40px tone so the row reads as one instrument.
 - **Danger:** danger tint, danger border, and danger text. Confirm actions that
-  can discard or delete work.
+  can discard or delete work. It uses the same 3px control radius and sizing
+  tiers as the other tones.
+- **Ghost:** text-only actions use the shared ghost class at the standard or
+  compact height. They are for inline recovery and contextual links, not a new
+  visual button size.
+- **Segmented choices:** role, view, and comparison choices use the standard or
+  compact height matrix rather than padding-only sizing.
+- **Editor content controls:** preset cards and block selectors may be taller
+  when their labels and descriptions are the content being selected. They are
+  not general-purpose CTA variants.
 - **Focus and disabled:** every button keeps a visible signal focus ring;
   disabled controls remain legible and expose their unavailable state.
 
@@ -352,10 +378,13 @@ dashboard cards.
 ### Inputs / Fields
 
 Inputs use the shared `formFieldClassName`, `formSelectClassName`, and
-`formTextareaClassName` exports. They have a field surface, field border, 3px
-radius, readable label, and visible blue-gray focus ring. Labels remain explicit;
-placeholder text is supporting copy, never the only label. Mobile forms keep
-save and destructive actions reachable without requiring a horizontal layout.
+`formTextareaClassName` exports. Ordinary inputs and selects use a 40px control
+height, 13px text, 3px radius, field surface, semantic border, inset depth, and
+visible blue-gray focus ring. Textareas use the same type and surface language
+with extra vertical room for writing. Labels remain explicit and use the 13px
+form label scale; placeholder text is supporting copy, never the only label.
+Mobile forms keep save and destructive actions reachable without requiring a
+horizontal layout.
 
 ### Navigation
 
@@ -400,7 +429,8 @@ remain available. Do not make drag-and-drop the only way to edit block order.
   `SessionRow`, `StatusBadge`, `MetricText`, and `SessionBlockBar`.
 - **Do** pair every color state with text, structure, or an accessible label.
 - **Do** preserve keyboard focus, reduced-motion behavior, explicit labels,
-  readable contrast, and 44px touch targets.
+  readable contrast, and 40px standard action targets. Reserve 32px compact
+  controls for dense contexts with surrounding room.
 - **Do** use `app/globals.css` semantic variables when a token exists instead
   of introducing an inline color or shadow.
 

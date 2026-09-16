@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   ActionLink,
   Badge,
-  compactDangerButtonClassName,
+  dangerButtonClassName,
   compactListButtonClassName,
   compactPrimaryButtonClassName,
   compactSecondaryButtonClassName,
@@ -14,8 +14,10 @@ import {
   Surface,
   dangerTextClassName,
   formFieldClassName,
+  formLabelClassName,
   formSelectClassName,
   primaryButtonClassName,
+  secondaryButtonClassName,
   successTextClassName,
 } from '@/components/ui';
 import { WorkoutBuilder } from '@/components/WorkoutBuilder';
@@ -411,7 +413,7 @@ export function PlannerClient({
         {/* Athlete selector — athlete mode only */}
         {selectedWorkspaceMode === 'athlete' && athletes.length > 0 ? (
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-[var(--text-secondary)]">Athlete</span>
+            <span className={formLabelClassName}>Athlete</span>
             <select
               value={selectedAthleteId ?? ''}
               className={formSelectClassName}
@@ -434,7 +436,7 @@ export function PlannerClient({
         {selectedWorkspaceMode === 'training-plan' ? (
           <div className="space-y-3">
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-[var(--text-secondary)]">Training plan</span>
+              <span className={formLabelClassName}>Training plan</span>
               <select
                 className={formSelectClassName}
                 value={selectedTrainingPlanId ?? ''}
@@ -455,7 +457,7 @@ export function PlannerClient({
             <button
               type="button"
               onClick={startNewPlanSession}
-              className={`${compactSecondaryButtonClassName} w-full justify-start text-left`}
+              className={`${secondaryButtonClassName} w-full justify-start text-left`}
             >
               + New plan session
             </button>
@@ -467,7 +469,7 @@ export function PlannerClient({
                   onClick={() => loadPlanSession(session)}
                   className={compactListButtonClassName}
                 >
-                  <span className="block truncate text-[13px] font-semibold text-[var(--text)]">
+                  <span className="block truncate text-xs font-semibold text-[var(--text)]">
                     {session.planWeekday ? weekdayLabels[session.planWeekday - 1] : '?'}: {session.title}
                   </span>
                 </button>
@@ -502,7 +504,7 @@ export function PlannerClient({
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    className={compactPrimaryButtonClassName}
+                    className={primaryButtonClassName}
                     onClick={() => startTransition(() => { void createTrainingPlan(); })}
                     disabled={isPending}
                   >
@@ -510,7 +512,7 @@ export function PlannerClient({
                   </button>
                   <button
                     type="button"
-                    className={compactSecondaryButtonClassName}
+                    className={secondaryButtonClassName}
                     onClick={() => { setShowCreatePlan(false); setNewPlanName(''); }}
                   >
                     Cancel
@@ -521,7 +523,7 @@ export function PlannerClient({
               <button
                 type="button"
                 onClick={() => setShowCreatePlan(true)}
-                className={`${compactSecondaryButtonClassName} w-full justify-start text-left`}
+                className={`${secondaryButtonClassName} w-full justify-start text-left`}
               >
                 + New training plan
               </button>
@@ -569,7 +571,7 @@ export function PlannerClient({
                           onClick={() => loadSession(session)}
                           className={compactListButtonClassName}
                         >
-                          <span className="block truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</span>
+                          <span className="block truncate text-xs font-semibold text-[var(--text)]">{session.title}</span>
                           <span className="mt-1 block text-[12px] text-[var(--text-secondary)]">
                             {formatDuration(session.durationSec)} · {session.tss} TSS
                           </span>
@@ -596,7 +598,7 @@ export function PlannerClient({
                   onClick={() => loadLibrarySession(session)}
                   className={compactListButtonClassName}
                 >
-                  <span className="block truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</span>
+                  <span className="block truncate text-xs font-semibold text-[var(--text)]">{session.title}</span>
                   <span className="mt-1 block text-[12px] text-[var(--text-secondary)]">{getSportLabel(session.sport)}</span>
                 </button>
                 <ShareLinkButton sourceKind="session" sourceId={session.id} />
@@ -633,7 +635,7 @@ export function PlannerClient({
         {/* Weekday selector — training-plan mode only */}
         {draft.ownershipMode === 'training-plan' ? (
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-[var(--text-secondary)]">Weekday</span>
+            <span className={formLabelClassName}>Weekday</span>
             <select
               className={formSelectClassName}
               value={draft.planWeekday ?? ''}
@@ -676,7 +678,7 @@ export function PlannerClient({
       <Surface className="space-y-5">
         {templates.length > 0 ? (
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-[var(--text-secondary)]">Prefill from template</span>
+            <span className={formLabelClassName}>Prefill from template</span>
             <select className={formSelectClassName} value={draft.sourceTemplateId ?? ''} onChange={(event) => loadTemplate(event.target.value)}>
               <option value="">Choose template</option>
               {templates.map((template) => (
@@ -698,7 +700,7 @@ export function PlannerClient({
              {isPending || isSaving ? 'Saving…' : 'Save session'}
           </button>
           {draft.id ? (
-            <button type="button" disabled={isPending} className={compactDangerButtonClassName} onClick={deleteSession}>
+            <button type="button" disabled={isPending} className={dangerButtonClassName} onClick={deleteSession}>
               Delete session
             </button>
           ) : null}

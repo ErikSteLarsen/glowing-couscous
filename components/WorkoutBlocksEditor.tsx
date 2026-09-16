@@ -1,5 +1,6 @@
 import { BLOCK_OPTIONS } from '@/lib/planner';
 import { WorkoutBlockDraft } from '@/lib/workout-spec';
+import { compactSecondaryButtonClassName, dangerButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, formTextareaClassName } from '@/components/ui';
 
 type WorkoutBlocksEditorProps = {
   title: string;
@@ -30,7 +31,7 @@ export function WorkoutBlocksEditor({
         <button
           type="button"
           onClick={onAddBlock}
-          className="min-h-11 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--text)]"
+          className={compactSecondaryButtonClassName}
         >
           {addLabel}
         </button>
@@ -40,9 +41,9 @@ export function WorkoutBlocksEditor({
         {blocks.map((block, index) => (
           <div key={`${block.blockType}-${index}`} className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-4">
             <div className="grid gap-3 sm:grid-cols-[0.9fr_1.3fr]">
-              <label className="space-y-2 text-sm text-[var(--text-secondary)]">
-                <span>Type</span>
-                <select value={block.blockType} onChange={(event) => onUpdateBlock(index, 'blockType', event.target.value)} className="min-h-11 w-full rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] px-4 py-3 text-[var(--text)] outline-none">
+              <label className="block space-y-2">
+                <span className={formLabelClassName}>Type</span>
+                <select value={block.blockType} onChange={(event) => onUpdateBlock(index, 'blockType', event.target.value)} className={formSelectClassName}>
                   {BLOCK_OPTIONS.map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -50,16 +51,16 @@ export function WorkoutBlocksEditor({
                   ))}
                 </select>
               </label>
-              <label className="space-y-2 text-sm text-[var(--text-secondary)]">
-                <span>Title</span>
-                <input value={block.title} onChange={(event) => onUpdateBlock(index, 'title', event.target.value)} className="min-h-11 w-full rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] px-4 py-3 text-[var(--text)] outline-none" placeholder="Warmup" />
+              <label className="block space-y-2">
+                <span className={formLabelClassName}>Title</span>
+                <input value={block.title} onChange={(event) => onUpdateBlock(index, 'title', event.target.value)} className={formFieldClassName} placeholder="Warmup" />
               </label>
             </div>
-            <label className="mt-3 block space-y-2 text-sm text-[var(--text-secondary)]">
-              <span>Instructions</span>
-                <textarea value={block.instructions} onChange={(event) => onUpdateBlock(index, 'instructions', event.target.value)} className="min-h-24 w-full rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] px-4 py-3 text-[var(--text)] outline-none" placeholder="15 min easy + 4 strides" />
+            <label className="mt-3 block space-y-2">
+              <span className={formLabelClassName}>Instructions</span>
+                <textarea value={block.instructions} onChange={(event) => onUpdateBlock(index, 'instructions', event.target.value)} className={`${formTextareaClassName} min-h-24`} placeholder="15 min easy + 4 strides" />
             </label>
-            <button type="button" onClick={() => onRemoveBlock(index)} className="mt-3 min-h-11 rounded-[10px] border border-[#E9D2CC] bg-[#F5ECE8] px-4 text-sm font-semibold text-[var(--status-danger)]" disabled={blocks.length === 1}>
+            <button type="button" onClick={() => onRemoveBlock(index)} className={`mt-3 ${dangerButtonClassName}`} disabled={blocks.length === 1}>
               Remove block
             </button>
           </div>

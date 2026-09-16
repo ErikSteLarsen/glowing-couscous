@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { secondaryButtonClassName } from '@/components/ui';
 
 type CoachEditorDrawerProps = {
   isOpen: boolean;
@@ -35,7 +36,7 @@ export function CoachEditorDrawer({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-11 rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] px-4 text-sm font-semibold text-[var(--text)]"
+            className={secondaryButtonClassName}
           >
             Close
           </button>

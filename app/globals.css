@@ -49,7 +49,7 @@
   --status-success: #2E6D53;
   --status-success-tint: #E6EFEA;
   --status-success-border: #B9D1C4;
-  --status-danger: #A84D45;
+  --status-danger: #99443D;
   --danger-tint: #F2E5E0;
   --danger-tint-strong: #EBD3CC;
   --danger-border: #D7AAA0;
@@ -95,14 +95,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
-}
-
 @layer base {
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
   a {
     color: inherit;
     text-decoration: none;
@@ -257,6 +257,13 @@ select {
 .ink-session-row:hover::before,
 .ink-session-row:focus-visible::before {
   transform: scaleY(1);
+}
+
+.ink-form-inspector > div > button {
+  min-height: 2.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 
 .ink-session-row .font-semibold {

@@ -1,6 +1,6 @@
 # Current Status
 
-Verified on **2026-09-15** against the current source tree. Source and tests are
+Verified on **2026-09-16** against the current source tree. Source and tests are
 the authority; this file is a short operational snapshot, not a changelog.
 
 ## Product
@@ -35,11 +35,15 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 
 | Gate | Result | Command or evidence |
 |---|---|---|
-| Tests | Pass, 186 tests | `pnpm test` on 2026-09-15 |
-| Lint | Pass | `pnpm lint` on 2026-09-15 |
-| Production build | Pass | `pnpm build` on 2026-09-15; Next.js reports the middleware-to-proxy deprecation warning |
+| Tests | Pass, 186 tests | `pnpm test` on 2026-09-16 |
+| Lint | Pass | `pnpm lint` on 2026-09-16 |
+| Production build | Pass | `pnpm build` on 2026-09-16; Next.js reports the middleware-to-proxy deprecation warning |
 | Database setup | Pass in current development work | `pnpm db:setup` with local SQLite |
 | Design context | Pass | `DESIGN.md`, `.impeccable/design.json`, and the signed-in surface brief synchronized with Ink Is Movement tokens and shared components; focused workout builder presets, progressive basics, zone chart, and three workout-flow direction previews verified in source; detector completed with advisory-only findings |
+| Button standardization | Pass | Shared standard/compact/ghost tiers now use 40px/32px targets with 13px/12px sentence-case labels; compact controls are shadow-free, navigation uses ghost controls, and segmented controls plus production utility controls use the same sizing and focus rules; detector completed with advisory-only type-ramp findings |
+| Browser visual verification | Pass with known a11y gaps | `agent-browser` checked Home, Planner, Templates, and Calendar at desktop and 390px mobile widths; Templates and Calendar screenshots verified single-line compact actions and no horizontal overflow; no browser console errors; axe found existing muted-text contrast and missing-landmark findings |
+| Input field standardization | Pass with known a11y gaps | Shared inputs/selects now use 40px height, 13px text, 3px radius, shared inset depth, and shared focus treatment; textareas retain extra writing room; browser-checked login and template editor at desktop/mobile widths; axe found no field-specific failure |
+| Form action rhythm | Pass with known a11y gaps | Actions that submit, cancel, clear, copy, or delete alongside 40px fields now use the matching standard 40px tone; compact sizing remains for dense toolbars, menus, list rows, and navigation; template filter/editor and athlete/coach planner actions checked at desktop/mobile widths; danger token now clears the standard action contrast threshold |
 
 ## Capability State
 
@@ -53,6 +57,9 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 - Sharing is implemented with sanitized immutable snapshots and explicit recipient saves. Browser acceptance remains a gap.
 - `lib/planner-service.ts` and the older coach session mutation route remain transitional compatibility code. Do not extend them for new behavior.
 - The signed-in shell, shared UI primitives, session rows, authored ink-flow linework, and athlete Home now use the Ink Is Movement visual world without changing route or data behavior. Workspace navigation is owned by the sidebar and mobile bar; page headers keep only page-local or contextual actions instead of repeating sibling destinations.
+- Production buttons now use the shared primary, secondary, danger, compact, and ghost tiers. Standard actions use 40px targets with quieter 13px labels; dense controls use 32px targets with 12px labels, and page-header/navigation actions use the lighter compact or ghost tiers. Content-rich workout preset cards remain an explicit editor exception.
+- Production inputs and selects now use the same 40px/13px rhythm as standard actions, while textareas keep a roomier writing height. Route-specific labels and the legacy block editor now reuse the shared field treatment instead of introducing larger radii or typography.
+- Form actions now follow the same 40px rhythm when they operate on a field: filtering/creation, editor save/cancel, planner create/delete, session adjustment, recovery, and share-link copy actions are standard-sized. Dense command bars, menus, calendar navigation, and repeated list actions intentionally remain 32px.
 - Authenticated `PageShell` routes now share one centered 1440px frame and a common left content anchor across narrow, default, wide, and wall page widths. `TopBar` reserves a shared 72px header band on all signed-in pages, including athlete Home, and owns one page-heading scale of 40px desktop and 34px mobile; Home's comparable section headings use the same shared 20px class. Planners, calendars, and workout libraries use the documented wall width instead of route-local maximums.
 
 ## Known Gaps
@@ -65,3 +72,13 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
   scoped `/design/*` direction previews, workout/editor and preset/chart label
   sizes, responsive editorial type values, shared compact controls, and Calendar
   labels; no blocking findings were reported.
+- `agent-browser` axe checks on authenticated Calendar and Templates found
+  existing muted navigation/calendar text below the 4.5:1 contrast threshold
+  and missing `main`/region landmarks. These are outside the button density
+  change and should be addressed in a separate accessibility pass.
+- The template editor axe check also reports two existing ARIA-role issues on
+  non-role containers, low contrast on the drag-handle text and share-link
+  helper copy, and the same missing landmark coverage. The danger action token
+  was darkened during form-action alignment and no longer appears in that
+  contrast result. These remaining findings are separate from the field and
+  action-rhythm work.

@@ -10,7 +10,10 @@ import {
   EmptyState,
   dangerTextClassName,
   formFieldClassName,
+  formLabelClassName,
+  formSelectClassName,
   primaryButtonClassName,
+  secondaryButtonClassName,
   successTextClassName,
   Surface,
 } from '@/components/ui';
@@ -217,7 +220,7 @@ export function CoachTemplatesClient({
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Tempo editor</p>
               <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">{editingTemplateId ? 'Edit template' : 'Create template'}</h2>
             </div>
-            <button type="button" className={compactSecondaryButtonClassName} onClick={() => setEditorOpen(false)}>Cancel</button>
+            <button type="button" className={secondaryButtonClassName} onClick={() => setEditorOpen(false)}>Cancel</button>
           </div>
           <WorkoutBuilder
             draft={editorDraft}
@@ -227,14 +230,14 @@ export function CoachTemplatesClient({
             summaryPlaceholder="What is this template for?"
           />
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-[var(--text-secondary)]">Template cadence</span>
-            <select className={formFieldClassName} value={editorCadence} onChange={(event) => setEditorCadence(getTemplateCadence(event.target.value))}>
+            <span className={formLabelClassName}>Template cadence</span>
+            <select className={formSelectClassName} value={editorCadence} onChange={(event) => setEditorCadence(getTemplateCadence(event.target.value))}>
               {TEMPLATE_CADENCES.map((cadence) => <option key={cadence} value={cadence}>{templateCadenceMeta[cadence].label}</option>)}
             </select>
             <span className="block text-[12px] text-[var(--text-secondary)]">{templateCadenceMeta[editorCadence].assignment}</span>
           </label>
           <div className="flex flex-wrap gap-3">
-            <button type="button" className={compactPrimaryButtonClassName} disabled={isPending} onClick={saveEditor}>{isPending ? 'Saving…' : 'Save template'}</button>
+            <button type="button" className={primaryButtonClassName} disabled={isPending} onClick={saveEditor}>{isPending ? 'Saving…' : 'Save template'}</button>
           </div>
         </Surface>
       ) : null}

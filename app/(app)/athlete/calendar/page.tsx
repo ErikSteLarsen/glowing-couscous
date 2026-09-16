@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
   PageShell,
-  compactSecondaryButtonClassName,
+  ghostButtonClassName,
   Surface,
   TopBar,
   getSegmentedChoiceClassName,
@@ -46,7 +46,7 @@ export default async function AthleteCalendarPage({
         actions={
           <>
             <div className="inline-flex gap-1 rounded-[12px] border border-[var(--field-border)] bg-[var(--field-surface)] p-1">
-               <Link href={buildCalendarHref('week', resolvedReferenceDate)} aria-current={selectedView === 'week' ? 'page' : undefined} className={getSegmentedChoiceClassName(selectedView === 'week', 'compact')}>
+                <Link href={buildCalendarHref('week', resolvedReferenceDate)} aria-current={selectedView === 'week' ? 'page' : undefined} className={getSegmentedChoiceClassName(selectedView === 'week', 'compact')}>
                 Week
               </Link>
                <Link href={buildCalendarHref('month', resolvedReferenceDate)} aria-current={selectedView === 'month' ? 'page' : undefined} className={getSegmentedChoiceClassName(selectedView === 'month', 'compact')}>
@@ -90,7 +90,7 @@ export default async function AthleteCalendarPage({
               <Link
                 href={buildCalendarHref('month', addMonths(resolvedReferenceDate, -1))}
                 aria-label="Go to previous month"
-                className={`${compactSecondaryButtonClassName} gap-1.5`}
+                 className={`${ghostButtonClassName('compact')} gap-1.5`}
               >
                 <ChevronLeft aria-hidden="true" className="h-4 w-4" />
                 Previous
@@ -98,7 +98,7 @@ export default async function AthleteCalendarPage({
               <Link
                 href={buildCalendarHref('month', addMonths(resolvedReferenceDate, 1))}
                 aria-label="Go to next month"
-                className={`${compactSecondaryButtonClassName} gap-1.5`}
+                 className={`${ghostButtonClassName('compact')} gap-1.5`}
               >
                 Next
                 <ChevronRight aria-hidden="true" className="h-4 w-4" />
@@ -161,7 +161,7 @@ export default async function AthleteCalendarPage({
                             ) : (
                               <Link
                                 href={buildCalendarHref('week', new Date(`${day.isoDate}T12:00:00`))}
-                                className="block rounded-[10px] px-2.5 py-2 text-[13px] text-[var(--text-muted)] transition hover:bg-[var(--field-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+                                 className={ghostButtonClassName('compact')}
                               >
                                 No session
                               </Link>

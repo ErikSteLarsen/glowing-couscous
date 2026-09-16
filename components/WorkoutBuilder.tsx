@@ -23,7 +23,7 @@ import { repeatBlockSelection } from '@/lib/workout-blocks';
 import type { PerformanceProfile } from '@/lib/performance-profile';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { MetricText } from '@/components/tempo/MetricText';
-import { compactDangerButtonClassName, compactPrimaryButtonClassName, compactSecondaryButtonClassName, formFieldClassName, formSelectClassName, formTextareaClassName } from '@/components/ui';
+import { buttonFocusClassName, compactDangerButtonClassName, compactPrimaryButtonClassName, compactSecondaryButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, formTextareaClassName } from '@/components/ui';
 
 type BlockPreset = {
   id: string;
@@ -244,7 +244,7 @@ export function WorkoutBuilder({
           </div>
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1.35fr)_minmax(12rem,0.65fr)]">
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-[var(--text-secondary)]">{titleLabel}</span>
+              <span className={formLabelClassName}>{titleLabel}</span>
               <input
                 autoFocus={!draft.title.trim()}
                 className={formFieldClassName}
@@ -258,7 +258,7 @@ export function WorkoutBuilder({
               />
             </label>
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-[var(--text-secondary)]">Sport</span>
+              <span className={formLabelClassName}>Sport</span>
               <select className={formSelectClassName} value={draft.sport} onChange={(event) => commit(updateSessionEditorFields(draft, { sport: event.target.value }))}>
                 {SPORT_OPTIONS.map((sport) => <option key={sport} value={sport}>{getSportLabel(sport)}</option>)}
               </select>
@@ -283,7 +283,7 @@ export function WorkoutBuilder({
           <textarea className={formTextareaClassName} value={draft.summary} placeholder={summaryPlaceholder} onChange={(event) => commit(updateSessionEditorFields(draft, { summary: event.target.value }))} />
         </label>
       </details>
-      {showSchedule ? <div className="grid gap-3 sm:grid-cols-2"><label className="block space-y-2"><span className="text-sm font-medium text-[var(--text-secondary)]">Scheduled date</span><input className={formFieldClassName} type="date" value={draft.scheduledDate ?? ''} onChange={(event) => commit(updateSessionEditorSchedule(draft, { scheduledDate: event.target.value || null }))} /></label><label className="block space-y-2"><span className="text-sm font-medium text-[var(--text-secondary)]">Time</span><input className={formFieldClassName} type="time" value={draft.timeLabel ?? ''} onChange={(event) => commit(updateSessionEditorSchedule(draft, { timeLabel: event.target.value || null }))} /></label></div> : null}
+      {showSchedule ? <div className="grid gap-3 sm:grid-cols-2"><label className="block space-y-2"><span className={formLabelClassName}>Scheduled date</span><input className={formFieldClassName} type="date" value={draft.scheduledDate ?? ''} onChange={(event) => commit(updateSessionEditorSchedule(draft, { scheduledDate: event.target.value || null }))} /></label><label className="block space-y-2"><span className={formLabelClassName}>Time</span><input className={formFieldClassName} type="time" value={draft.timeLabel ?? ''} onChange={(event) => commit(updateSessionEditorSchedule(draft, { timeLabel: event.target.value || null }))} /></label></div> : null}
 
       <DndContext
         sensors={sensors}
@@ -364,7 +364,7 @@ export function WorkoutBuilder({
             </CanvasDropZone>
           </div>
 
-          <aside className="space-y-4 rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] p-4" aria-live="polite">
+          <aside className="ink-form-inspector space-y-4 rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] p-4" aria-live="polite">
             <div><h2 className="text-base font-semibold text-[var(--text)]">{selected.length > 1 ? `Edit ${selected.length} blocks` : 'Block details'}</h2><p className="mt-1 text-xs text-[var(--text-secondary)]">{selected.length > 1 ? 'Changes apply to the selected sequence.' : 'Edit the selected block.'}</p></div>
             {selectedBlock ? <><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Training zone</span><select className={formSelectClassName} value={selectedBlock.zone} onChange={(event) => applyBlockPatch({ zone: Number(event.target.value) as TempoZone })}>{Object.entries(TEMPO_ZONE_META).map(([zone, meta]) => <option key={zone} value={zone}>{meta.label} {meta.name}</option>)}</select></label><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Duration ({durationUnit})</span><input className={formFieldClassName} type="number" min="1" value={durationUnit === 'minutes' ? Math.round(selectedBlock.durationSec / 60) : selectedBlock.durationSec} onChange={(event) => applyBlockPatch({ durationSec: Number(event.target.value) * (durationUnit === 'minutes' ? 60 : 1) })} /></label><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Repeats</span><input className={formFieldClassName} type="number" min="1" value={selectedBlock.reps ?? ''} onChange={(event) => applyBlockPatch({ reps: event.target.value ? Number(event.target.value) : null })} /></label><TargetEditor sport={draft.sport} target={selectedBlock.target} onChange={(target) => applyBlockPatch({ target })} /><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Coaching note</span><textarea className={formTextareaClassName} value={selectedBlock.note} onChange={(event) => applyBlockPatch({ note: event.target.value })} /></label><div className="flex flex-wrap gap-2"><button type="button" className={compactSecondaryButtonClassName} onClick={() => applyBlockPatch({ target: null })}>Clear target</button><button type="button" className={compactSecondaryButtonClassName} onClick={() => applyBlockPatch({ note: '', reps: null })}>Clear note and repeats</button><button type="button" className={compactDangerButtonClassName} onClick={removeSelection}>{selected.length > 1 ? 'Remove blocks' : 'Remove block'}</button></div></> : <p className="text-sm text-[var(--text-secondary)]">Select a block in the workout sequence.</p>}
           </aside>
@@ -469,8 +469,8 @@ function SortableBlock({ block, index, selected, profile, profileLabel, onSelect
     <div className="space-y-1">
       <article ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.55 : 1 }} className={`rounded-[3px] border p-3 ${selected ? 'border-[var(--brand)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
         <div className="flex items-start gap-3">
-          <button type="button" className="mt-1 cursor-grab text-[var(--text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]" aria-label={`Drag block ${index + 1}`} {...attributes} {...listeners}>Drag</button>
-          <button type="button" className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]" aria-pressed={selected} onClick={(event) => onSelect(index, event)} onKeyDown={(event) => { if (event.code === 'Space') { event.preventDefault(); onSelect(index, event); } }}>
+          <button type="button" className={`mt-1 min-h-11 shrink-0 cursor-grab rounded-[3px] px-2 text-xs text-[var(--text-muted)] ${buttonFocusClassName}`} aria-label={`Drag block ${index + 1}`} {...attributes} {...listeners}>Drag</button>
+          <button type="button" className={`min-h-11 min-w-0 flex-1 rounded-[3px] text-left ${buttonFocusClassName}`} aria-pressed={selected} onClick={(event) => onSelect(index, event)} onKeyDown={(event) => { if (event.code === 'Space') { event.preventDefault(); onSelect(index, event); } }}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-semibold capitalize text-[var(--text)]">{index + 1}. {formatBlockKind(block.kind)}</span>
               <span className="flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)]"><span className={`h-2 w-2 ink-zone-${block.zone}`} aria-hidden="true" />{zone.label} {zone.name}</span>

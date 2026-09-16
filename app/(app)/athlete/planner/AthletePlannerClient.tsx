@@ -7,14 +7,13 @@ import { format } from 'date-fns';
 import {
   Badge,
   ActionLink,
-  compactDangerButtonClassName,
   compactListButtonClassName,
-  compactPrimaryButtonClassName,
-  compactSecondaryButtonClassName,
   EmptyState,
   dangerTextClassName,
+  dangerButtonClassName,
   formSelectClassName,
   primaryButtonClassName,
+  secondaryButtonClassName,
   successTextClassName,
   Surface,
 } from '@/components/ui';
@@ -303,7 +302,7 @@ export function AthletePlannerClient({
                       key={session.id}
                       type="button"
                       onClick={() => loadSession(session)}
-                      className={`${compactListButtonClassName} min-h-10 flex-col items-start gap-0.5 px-2 py-1.5 text-xs`}
+                      className={`${compactListButtonClassName} flex-col items-start gap-0.5 px-2 py-1.5`}
                     >
                       <span className="w-full break-words font-semibold">{session.title}</span>
                       <span className="w-full text-[11px] text-[var(--text-secondary)]">
@@ -317,7 +316,7 @@ export function AthletePlannerClient({
           ))}
         </div>
 
-        <button type="button" className={`${compactSecondaryButtonClassName} w-full`} onClick={() => startNewSession()}>
+        <button type="button" className={`${secondaryButtonClassName} w-full`} onClick={() => startNewSession()}>
           New session
         </button>
       </Surface>
@@ -378,7 +377,7 @@ export function AthletePlannerClient({
           {isPending || isSaving ? 'Saving…' : editingSessionId ? 'Save changes' : `Add to ${selectedDates.length} day${selectedDates.length === 1 ? '' : 's'}`}
         </button>
         {editingSessionId ? (
-          <button type="button" disabled={isPending} className={`${compactDangerButtonClassName} w-full`} onClick={deleteSession}>
+          <button type="button" disabled={isPending} className={`${dangerButtonClassName} w-full`} onClick={deleteSession}>
             Delete session
           </button>
         ) : null}

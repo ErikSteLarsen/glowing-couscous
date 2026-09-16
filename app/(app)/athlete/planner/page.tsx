@@ -39,14 +39,14 @@ export default async function AthletePlannerPage({
         actions={
           <div className="flex flex-wrap items-center justify-end gap-2">
             <nav aria-label="Planner week navigation" className="flex flex-wrap items-center gap-2">
-              <ActionLink href={previousWeekHref} tone="secondary" size="compact">
+              <ActionLink href={previousWeekHref} tone="ghost" size="compact">
                 <ChevronLeft aria-hidden="true" className="mr-1 h-4 w-4" />
                 Previous
               </ActionLink>
               <ActionLink href="/athlete/planner" tone="secondary" size="compact">
                 This week
               </ActionLink>
-              <ActionLink href={nextWeekHref} tone="secondary" size="compact">
+              <ActionLink href={nextWeekHref} tone="ghost" size="compact">
                 Next
                 <ChevronRight aria-hidden="true" className="ml-1 h-4 w-4" />
               </ActionLink>

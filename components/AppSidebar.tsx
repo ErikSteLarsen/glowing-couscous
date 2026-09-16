@@ -16,6 +16,7 @@ import {
 import { getPrimaryNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import { AppProfileMenu } from '@/components/AppProfileMenu';
 import { InkFlow } from '@/components/InkFlow';
+import { compactSecondaryButtonClassName } from '@/components/ui';
 import type { LucideIcon } from 'lucide-react';
 
 const navIcons: Record<string, LucideIcon> = {
@@ -110,7 +111,7 @@ export function AppSidebar(props: {
             <button
               type="button"
               ref={closeButtonRef}
-               className="rounded-[3px] border border-[var(--nav-border)] bg-transparent px-3 py-2 text-xs font-medium uppercase tracking-[0.08em] text-[var(--nav-muted)] md:hidden"
+                className={`${compactSecondaryButtonClassName} md:hidden`}
               onClick={props.onClose}
             >
               Close

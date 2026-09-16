@@ -8,6 +8,7 @@ import {
   Badge,
   dangerTextClassName,
   formFieldClassName,
+  formLabelClassName,
   formSelectClassName,
   primaryButtonClassName,
   Surface,
@@ -110,13 +111,13 @@ export function SourceAssignmentPanel({
       </div>
       <p className="text-sm text-[var(--text-secondary)]">Copies are independent.</p>
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-[var(--text-secondary)]">Athlete</span>
+        <span className={formLabelClassName}>Athlete</span>
         <select className={formSelectClassName} value={athleteId} onChange={(event) => onAthleteChange(Number(event.target.value))}>
           {athletes.map((athlete) => <option key={athlete.id} value={athlete.id}>{athlete.name}</option>)}
         </select>
       </label>
       <label className="block space-y-2">
-        <span className="text-sm font-medium text-[var(--text-secondary)]">Reusable source</span>
+        <span className={formLabelClassName}>Reusable source</span>
         <select className={formSelectClassName} value={sourceKey} onChange={(event) => setSourceKey(event.target.value)}>
           <option value="">Choose source</option>
           {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -124,12 +125,12 @@ export function SourceAssignmentPanel({
       </label>
        {selected?.source.kind === 'training-plan' ? (
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-[var(--text-secondary)]">Target Monday week</span>
+           <span className={formLabelClassName}>Target Monday week</span>
            <input type="date" className={formFieldClassName} value={weekStart} onChange={(event) => setWeekStart(event.target.value ? format(startOfWeek(parseISO(event.target.value), { weekStartsOn: 1 }), 'yyyy-MM-dd') : weekStart)} />
         </label>
       ) : (
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-[var(--text-secondary)]">Target date</span>
+           <span className={formLabelClassName}>Target date</span>
            <input type="date" className={formFieldClassName} value={date} onChange={(event) => setDate(event.target.value || initialDate)} />
         </label>
       )}

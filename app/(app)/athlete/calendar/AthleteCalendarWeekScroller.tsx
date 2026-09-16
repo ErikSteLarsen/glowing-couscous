@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { addDays, endOfWeek, format, getISOWeek, startOfWeek } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { ActionLink, compactSecondaryButtonClassName } from '@/components/ui';
+import { ActionLink, buttonFocusClassName, ghostButtonClassName } from '@/components/ui';
 import { SessionRow } from '@/components/tempo/SessionRow';
 import { getWeekScrollerSearchHref } from '@/lib/calendar-scroller';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -176,11 +176,11 @@ export function AthleteCalendarWeekScroller({
           <ActionLink href={`/athlete/calendar?view=week&date=${todayIso}`} tone={showBackToToday ? 'secondary' : 'ghost'} size="compact">
             Today
           </ActionLink>
-          <button type="button" aria-label="Previous day" disabled={loadingBefore} className={compactSecondaryButtonClassName} onClick={() => void moveFocus(-1)}>
+          <button type="button" aria-label="Previous day" disabled={loadingBefore} className={ghostButtonClassName('compact')} onClick={() => void moveFocus(-1)}>
             <ChevronLeft aria-hidden="true" className="mr-1 h-4 w-4" />
             Previous
           </button>
-          <button type="button" aria-label="Next day" disabled={loadingAfter} className={compactSecondaryButtonClassName} onClick={() => void moveFocus(1)}>
+          <button type="button" aria-label="Next day" disabled={loadingAfter} className={ghostButtonClassName('compact')} onClick={() => void moveFocus(1)}>
             Next
             <ChevronRight aria-hidden="true" className="ml-1 h-4 w-4" />
           </button>
@@ -207,7 +207,7 @@ export function AthleteCalendarWeekScroller({
                     type="button"
                     aria-current={isFocused ? 'date' : undefined}
                     aria-label={`Focus ${day.label} ${day.dateLabel}`}
-                    className="inline-flex min-h-11 min-w-11 flex-col justify-center rounded-[8px] px-2 py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+                    className={`inline-flex min-h-11 min-w-11 flex-col justify-center rounded-[3px] px-2 py-1 text-left ${buttonFocusClassName}`}
                     onClick={() => setActiveDateIso(day.isoDate)}
                   >
                     <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">{day.label}</p>
@@ -241,7 +241,7 @@ export function AthleteCalendarWeekScroller({
         {requestError ? (
           <div role="alert" className="flex flex-wrap items-center gap-3 rounded-[8px] border border-[var(--danger-border)] bg-[var(--danger-tint)] px-3 py-2 text-sm text-[var(--status-danger)]">
             <span>{requestError}</span>
-            {retryDirection ? <button type="button" className="font-semibold underline underline-offset-2" onClick={() => void loadAdjacentWeek(retryDirection)}>Try again</button> : null}
+            {retryDirection ? <button type="button" className={ghostButtonClassName('compact')} onClick={() => void loadAdjacentWeek(retryDirection)}>Try again</button> : null}
           </div>
         ) : null}
 
