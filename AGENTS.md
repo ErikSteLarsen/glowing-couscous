@@ -5,6 +5,15 @@ Read `README.md`, `docs/agent-workspace/CURRENT-STATUS.md`, and
 `ARCHITECTURE.md` when changing routes, services, Prisma, or authentication.
 Read `PRODUCT.md` and `DESIGN.md` for product or interface work.
 
+## MVP Priority
+
+Follow PRODUCT.md: complete self-directed personal training first, from a fresh
+account through workout creation, scheduling, completion, and outcome review,
+without requiring a coach. Treat the current Athlete role as the personal-use
+workspace. Prioritize core reliability and usability over coach feature
+expansion. Preserve existing coach behavior and authorization boundaries in
+shared changes; coach-only gaps are secondary unless explicitly requested.
+
 ## Operating Rules
 
 - Source code and tests override documentation when they disagree.

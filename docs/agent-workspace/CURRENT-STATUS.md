@@ -1,11 +1,13 @@
 # Current Status
 
-Verified on **2026-09-16** against the current source tree. Source and tests are
-the authority; this file is a short operational snapshot, not a changelog.
+Implementation verification last recorded on **2026-09-16**. Product priorities
+updated on **2026-09-17**; this documentation-only update does not reverify
+runtime behavior. Source and tests are the authority; this file is a short
+operational snapshot, not a changelog.
 
 ## Product
 
-Workout Planner is a Tempo-aligned coach-athlete training planner. The live app
+Workout Planner is a Tempo-aligned personal training planner with optional coach collaboration. The live app
 supports credentials authentication, optional Google OAuth, coach and athlete
 roles, Monday-based planning, structured workout blocks, reusable libraries and
 templates, independent source-copy assignment, completion history, local live
@@ -17,6 +19,20 @@ The current ownership split is important:
 - Planner creates independent dated copies from those definitions.
 - Calendar and session detail own scheduled-session context.
 - Templates and training plans remain separate reusable source types.
+
+## Current MVP Focus
+
+Complete the self-directed workflow in PRODUCT.md: a fresh user with no coach
+or seeded content can create reusable workouts/templates, schedule their own
+sessions, follow and complete them, and review saved outcomes. The existing
+Athlete role is the personal workspace.
+
+The next acceptance priority is the personal Planning Desk and its connection
+to session completion and Activity, including source/date selection, month
+navigation, persistence, error states, and mobile/keyboard use. Fresh
+authenticated browser acceptance remains open. Coach-only gaps, including
+multi-athlete calendar behavior and training-plan authoring, are secondary;
+preserve existing coach functionality while improving shared owners.
 
 ## Design Context
 
@@ -77,7 +93,7 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 
 - Browser verification is still needed for public share previews, the six workout-flow direction and Workbench experiment previews, some session mutation flows, and physical pointer/touch acceptance of the workout builder and preview presets.
 - Browser verification is still needed for the revised Atlas directions, including multi-date workout selection, template range validation, source search tabs, selected-day drill-down, and responsive layout behavior.
-- Fresh authenticated browser verification is still needed for the production Planning Desk, including coach athlete switching, source search tabs, multi-date workout assignment, exact template ranges, selected-day drill-down, removal, month navigation, and mobile layout behavior.
+- First-MVP gate: fresh authenticated browser verification of the personal Planning Desk, including source search tabs, multi-date workout assignment, exact template ranges, selected-day drill-down, removal, month navigation, and mobile layout behavior. Coach athlete switching remains a secondary acceptance gap.
 - Credentials flows are locally covered; external OAuth integration is not.
 - Live execution is a local guidance stepper and does not collect device or sensor telemetry.
 - Next.js reports a middleware-to-proxy deprecation warning; this is not currently a build failure.

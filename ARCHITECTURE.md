@@ -3,6 +3,16 @@
 This document describes the current implementation. The source code, tests, and
 `prisma/schema.prisma` remain authoritative.
 
+## Product Priority
+
+The first MVP centers on independent personal training, as defined in
+PRODUCT.md. The existing ATHLETE role and /athlete/* routes are the current
+implementation of that personal workspace. Coach routes and services remain
+supported secondary capabilities; their presence in this owner map does not
+make coach feature completion a first-MVP gate. Extend the personal or shared
+service owner for personal workflows and preserve role/ownership boundaries.
+This priority does not change the current schema, roles, or route names.
+
 ## Runtime Shape
 
 Next.js 16 App Router renders pages under `app/`. Authenticated pages use the

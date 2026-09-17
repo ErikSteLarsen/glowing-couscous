@@ -164,9 +164,11 @@ components:
 **Creative North Star: "Ink Is Movement"**
 
 Tempo is an operational training surface organized around the Monday-to-Sunday
-week and rendered as a quiet ink studio. The week is the shared object that
-connects coach planning, athlete execution, completion, and history. The
-interface should feel crafted and alive through line, texture, and considered
+week and rendered as a quiet ink studio. The week connects personal planning,
+session execution, completion, and history. The first MVP prioritizes people
+managing their own training; onboarding, empty states, and primary actions
+should make sense without a coach connection. Coach collaboration is secondary.
+The interface should feel crafted and alive through line, texture, and considered
 transitions while staying quick to use repeatedly rather than performing as a
 motivational game board.
 

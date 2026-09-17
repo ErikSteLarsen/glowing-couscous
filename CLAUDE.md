@@ -4,6 +4,13 @@ Use `pnpm` and read `README.md` first. For non-trivial changes, read
 `docs/agent-workspace/CURRENT-STATUS.md`, `docs/agent-workspace/WORK-INDEX.md`,
 and the relevant sections of `ARCHITECTURE.md`.
 
+## MVP Priority
+
+Read PRODUCT.md for scope: the first MVP is a complete personal training
+workflow without a coach. The existing Athlete role owns this experience.
+Prioritize personal workout creation, planning, completion, and review; coach
+collaboration is secondary. Preserve existing role and ownership boundaries.
+
 ## Commands
 
 ```bash
@@ -24,7 +31,7 @@ pnpm db:seed      # Seed demo data
 - `prisma/schema.prisma` is the data-model source of truth.
 - Weeks start on Monday everywhere.
 - Workouts are owner-scoped unscheduled definitions; Planner creates dated copies.
-- `lib/planner-service.ts` is compatibility code. Extend `lib/coach-planner-service.ts` or the owning service for new behavior.
+- `lib/planner-service.ts` is compatibility code. Extend `lib/athlete-planner-service.ts` for personal planning or the relevant shared/domain owner; use `lib/coach-planner-service.ts` for coach planning.
 
 See `ARCHITECTURE.md` for the full owner map and route boundaries.
 

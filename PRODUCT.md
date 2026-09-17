@@ -2,17 +2,40 @@
 
 ## Purpose
 
-Workout Planner is an athlete-led endurance training planner. It turns a
-coach-backed weekly plan into clear sessions an athlete can understand, execute,
-complete, and review later.
+Workout Planner is a self-directed endurance training planner. It helps people
+create, schedule, follow, complete, and review their own training. The first MVP
+must be useful to an individual without a coach, roster, or assigned plan.
 
 The application is branded `Tempo` in its runtime metadata while the repository
 and working product description use `Workout Planner`.
 
 ## Users
 
-- **Athletes** discover or connect with a coach, follow scheduled sessions, use the local live stepper, and record notes and actual outcomes.
-- **Coaches** manage a roster, author reusable workouts, templates, and training plans, and assign independent copies to athletes.
+- **Primary: people managing their own training.** They create workouts and reusable templates, plan their calendar, follow sessions, and record and review outcomes. The current implementation calls this role Athlete.
+- **Secondary: coaches and coached athletes.** Existing collaboration supports rosters, reusable content, and assignments. Coach discovery and connection are optional extensions to personal use.
+
+## First MVP Priorities and Acceptance
+
+The release target is a complete personal training loop, starting with a fresh
+account and no coach connection or seeded content:
+
+1. Sign up and reach a useful personal workspace.
+2. Create, edit, save, and reuse a structured workout or template.
+3. Schedule personal content on selected dates and reliably review or remove planned sessions.
+4. Open and follow a session, record completion, notes, and actual outcomes.
+5. Review saved results in Activity and session detail after refreshing or signing in again.
+
+Prioritize correctness, persistence, understandable empty/error states, and
+usable desktop, mobile, and keyboard interactions across this loop. Verify
+shared Planner source selection, date ranges, month navigation, and session
+state handling before expanding scope. These are acceptance targets, not a
+claim that all browser checks have passed.
+
+Coach-only authoring, roster management, requests, and multi-athlete planning
+are secondary work and do not define first-MVP completeness. Preserve existing
+coach behavior and access boundaries when changing shared code. Fix shared
+regressions and data/security issues regardless of role, but defer coach feature
+expansion until personal use is complete or explicitly requested.
 
 ## Product Model
 

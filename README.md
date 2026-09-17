@@ -1,8 +1,13 @@
 # Workout Planner
 
-Workout Planner is a Tempo-aligned web app for coaches and athletes. Coaches
-create structured workouts, templates, and training plans. Athletes discover a
-coach, follow a Monday-based plan, execute sessions, and record outcomes.
+Workout Planner is a Tempo-aligned app for planning and following your own
+training. The first MVP focuses on creating reusable workouts, scheduling them
+in a Monday-based calendar, following sessions, and recording and reviewing
+outcomes without needing a coach.
+
+Coach collaboration is an existing secondary capability. Current development
+prioritizes a complete, reliable personal workflow; see PRODUCT.md for MVP
+scope and acceptance criteria.
 
 ## Documentation
 
