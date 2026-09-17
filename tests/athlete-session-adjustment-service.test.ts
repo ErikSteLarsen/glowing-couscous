@@ -52,7 +52,7 @@ function createDraft() {
 function createDb({ activity = null as unknown } = {}) {
   const calls = {
     sessionUpdate: undefined as { data: Record<string, unknown> } | undefined,
-    assignmentUpdate: undefined as { data: Record<string, unknown> } | undefined,
+    assignmentUpdate: undefined as { where: Record<string, unknown>; data: Record<string, unknown> } | undefined,
     deletedBlocks: undefined as unknown,
   };
   const db = {
@@ -118,9 +118,9 @@ function createDb({ activity = null as unknown } = {}) {
       },
     },
     assignment: {
-      async update(args: { data: Record<string, unknown> }) {
+      async updateMany(args: { where: Record<string, unknown>; data: Record<string, unknown> }) {
         calls.assignmentUpdate = args;
-        return { id: 30 };
+        return { count: 1 };
       },
     },
     async $transaction(operations: Array<Promise<unknown>>) {
@@ -143,6 +143,7 @@ test('athlete planned edits move one assigned session, mark it adjusted, and pre
   assert.equal(calls.sessionUpdate?.data.source, 'template');
   assert.equal(calls.sessionUpdate?.data.coachBaselineJson, baselineJson);
   assert.equal((calls.sessionUpdate?.data.date as Date).toISOString().slice(0, 10), '2026-08-27');
+  assert.deepEqual(calls.assignmentUpdate?.where, { sessionId: 40, athleteId: 7 });
   assert.deepEqual(calls.assignmentUpdate?.data, { targetDate: new Date('2026-08-27T00:00:00.000Z') });
   assert.equal((calls.sessionUpdate?.data.blocks as { create: Array<{ skipped: boolean }> }).create[0].skipped, true);
 });

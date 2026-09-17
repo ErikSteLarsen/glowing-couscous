@@ -66,7 +66,7 @@ type AdjustmentDatabase = {
     deleteMany(args: unknown): Promise<unknown>;
   };
   assignment: {
-    update(args: unknown): Promise<unknown>;
+    updateMany(args: unknown): Promise<unknown>;
   };
   $transaction(operations: Array<Promise<unknown>>): Promise<unknown>;
 };
@@ -181,8 +181,8 @@ export function createAthleteSessionAdjustmentService({
             blocks: { create: blocks },
           },
         }),
-        db.assignment.update({
-          where: { sessionId_athleteId: { sessionId, athleteId } },
+        db.assignment.updateMany({
+          where: { sessionId, athleteId },
           data: { targetDate: scheduledDate },
         }),
       ]);
