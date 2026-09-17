@@ -1,7 +1,7 @@
 import { addDays, endOfWeek, format, isValid, parseISO, startOfWeek } from 'date-fns';
 import { prisma } from './prisma.ts';
 import { createSessionSnapshotJson } from './session-snapshot-service.ts';
-import { getTemplateCadence, validateTemplateDateRange } from './template-cadence.ts';
+import { getTemplateCadence, isAssignmentDate, validateTemplateDateRange } from './template-cadence.ts';
 
 type AssignmentCommand = {
   coachId: number;
@@ -372,12 +372,13 @@ export function createAssignmentService({ db = createDefaultDb(), now = () => ne
     },
 
     async assignSourcesToAthlete(command: AssignSourceCommand, scheduledDates: string[]): Promise<AssignmentResult | { ok: true; sessionIds: number[] }> {
+      if (scheduledDates.some((date) => !isAssignmentDate(date))) return { ok: false, error: 'Choose valid calendar dates.', status: 400 };
       const dates = Array.from(new Set(scheduledDates)).sort();
       if (dates.length === 0) return { ok: false, error: 'Choose at least one target date.', status: 400 };
       if (command.source.kind === 'training-plan') {
         return this.assignSourceToAthlete({ ...command, scheduledDate: dates[0] });
       }
-      if (dates.length > 1 && command.source.kind === 'template') {
+      if (command.source.kind === 'template') {
         const template = await db.template.findFirst({
           where: { id: command.source.templateId, ownerId: command.coachId },
           include: { blocks: { orderBy: { sortOrder: 'asc' } } },

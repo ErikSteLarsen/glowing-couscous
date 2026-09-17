@@ -127,7 +127,7 @@ test('athlete planner places a saved workout without opening an editor', async (
   assert.equal(sessions.every((session) => session.title === source.title), true);
 });
 
-test('athlete planner normalizes week templates to a Monday anchor', async () => {
+test('athlete planner rejects a single-date week template without writing', async () => {
   let createdDate: Date | null = null;
   const service = createAthletePlannerService({
     db: {
@@ -168,8 +168,8 @@ test('athlete planner normalizes week templates to a Monday anchor', async () =>
 
   const result = await service.assignSource(7, { sourceKind: 'template', sourceId: 9, dates: ['2026-08-27'] });
 
-  assert.deepEqual(result, { ok: true, sessionIds: [50] });
-  assert.deepEqual(createdDate, new Date('2026-08-24T00:00:00.000Z'));
+  assert.equal(result.ok, false);
+  assert.equal(createdDate, null);
 });
 
 test('athlete planner preserves an exact multi-day template range', async () => {

@@ -1,3 +1,4 @@
+import { getTemplateCadence, isAssignmentDate, validateTemplateDateRange } from './template-cadence.ts';
 import { addDays, differenceInCalendarDays, endOfMonth, endOfWeek, format, formatISO, isValid, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 
 import { prisma } from './prisma.ts';
@@ -127,7 +128,10 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       const sourceId = typeof record.sourceId === 'number' && Number.isInteger(record.sourceId) && record.sourceId > 0
         ? record.sourceId
         : null;
-      const requestedDates = uniqueDates(Array.isArray(record.dates) ? record.dates : []);
+      if (!Array.isArray(record.dates) || record.dates.some((date) => !isAssignmentDate(date))) {
+        return { ok: false as const, error: 'Choose valid calendar dates.', status: 400 };
+      }
+      const requestedDates = uniqueDates(record.dates);
 
       if (!sourceKind || sourceId === null) {
         return { ok: false as const, error: 'Choose a defined workout or template.', status: 400 };
@@ -143,7 +147,9 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
         });
         if (!template) return { ok: false as const, error: 'Template not found.', status: 404 };
 
-        const dates = sourceDatesForCadence(requestedDates, template.cadence);
+        const rangeError = validateTemplateDateRange(requestedDates, getTemplateCadence(template.cadence));
+        if (rangeError) return { ok: false as const, error: rangeError, status: 400 };
+        const dates = requestedDates;
         const sessionIds = [];
         for (const date of dates) {
           const plan = await findOrCreatePlan(db, athleteId, date);
@@ -443,17 +449,6 @@ function createSourceCopyData(input: {
       })),
     },
   };
-}
-
-function sourceDatesForCadence(dates: string[], cadence: string) {
-  if (dates.length > 1) return dates;
-  if (cadence === 'week') {
-    return [formatISO(startOfWeek(parseISO(`${dates[0]}T00:00:00.000Z`), { weekStartsOn: 1 }), { representation: 'date' })];
-  }
-  if (cadence === 'month') {
-    return [formatISO(startOfMonth(parseISO(`${dates[0]}T00:00:00.000Z`)), { representation: 'date' })];
-  }
-  return dates;
 }
 
 function uniqueDates(values: unknown[]) {

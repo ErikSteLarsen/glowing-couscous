@@ -1,4 +1,4 @@
-import { addDays, endOfMonth, format, getDaysInMonth, parseISO, startOfMonth } from 'date-fns';
+import { addDays, endOfMonth, format, getDaysInMonth, isValid, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 
 export const TEMPLATE_CADENCES = ['day', 'week', 'month'] as const;
 
@@ -45,7 +45,7 @@ export function getTemplateDurationDays(cadence: TemplateCadence, dateInput: str
 }
 
 export function validateTemplateDateRange(dates: string[], cadence: TemplateCadence) {
-  if (dates.length <= 1) return null;
+  if (!dates.length || dates.some((date) => !isAssignmentDate(date))) return 'Choose valid calendar dates.';
   const expectedDays = getTemplateDurationDays(cadence, dates[0]);
   if (dates.length !== expectedDays) {
     return `${templateCadenceMeta[cadence].label} templates require exactly ${expectedDays} consecutive days.`;
@@ -63,4 +63,16 @@ export function validateTemplateDateRange(dates: string[], cadence: TemplateCade
     return 'Month templates must cover the full calendar month.';
   }
   return null;
+}
+
+/** Strict transport validation: never silently drop malformed members. */
+export function isAssignmentDate(value: unknown): value is string {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && isValid(parseISO(`${value}T00:00:00`));
+}
+
+export function templateDatesForSelection(cadence: TemplateCadence, referenceDate: string): string[] {
+  if (!isAssignmentDate(referenceDate)) return [];
+  const date = parseISO(`${referenceDate}T00:00:00`);
+  const start = cadence === 'week' ? startOfWeek(date, { weekStartsOn: 1 }) : cadence === 'month' ? startOfMonth(date) : date;
+  return Array.from({ length: getTemplateDurationDays(cadence, format(start, 'yyyy-MM-dd')) }, (_, index) => format(addDays(start, index), 'yyyy-MM-dd'));
 }

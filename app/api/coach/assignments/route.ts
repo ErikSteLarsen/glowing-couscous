@@ -40,12 +40,15 @@ export async function POST(request: NextRequest) {
     const requestedDates = readAssignmentDates(body.value.dates, scheduledDate);
     if (requestedDates.length === 0) return NextResponse.json({ error: 'Choose at least one valid target date.' }, { status: 400 });
 
-    const result = await assignmentService.assignSourcesToAthlete({
+    const command = {
       coachId: user.id,
       athleteId: parsedAthleteId,
       source,
       weekStart: typeof body.value.weekStart === 'string' ? body.value.weekStart : undefined,
-    }, requestedDates);
+    };
+    const result = Array.isArray(body.value.dates)
+      ? await assignmentService.assignSourcesToAthlete(command, requestedDates)
+      : await assignmentService.assignSourceToAthlete({ ...command, scheduledDate: requestedDates[0] });
 
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
 
@@ -58,6 +61,7 @@ export async function POST(request: NextRequest) {
 
 function readAssignmentDates(value: unknown, fallback: string) {
   const candidates = Array.isArray(value) ? value : [fallback];
+  if (candidates.some((candidate) => typeof candidate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(candidate) || !isValid(parseISO(`${candidate}T00:00:00.000Z`)))) return [];
   return Array.from(new Set(candidates.filter((candidate): candidate is string => (
     typeof candidate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(candidate) && isValid(parseISO(`${candidate}T00:00:00.000Z`))
   )))).sort();

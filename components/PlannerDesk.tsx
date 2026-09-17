@@ -32,7 +32,7 @@ import {
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
-import { getTemplateCadence, getTemplateDurationDays, templateCadenceMeta, validateTemplateDateRange, type TemplateCadence } from '@/lib/template-cadence';
+import { getTemplateCadence, getTemplateDurationDays, templateDatesForSelection, templateCadenceMeta, validateTemplateDateRange, type TemplateCadence } from '@/lib/template-cadence';
 
 export type PlannerDeskRole = 'coach' | 'athlete';
 export type PlannerDeskSourceKind = 'workout' | 'template' | 'training-plan';
@@ -204,6 +204,16 @@ export function PlannerDesk({
     setMessageTone('neutral');
   }
 
+  function selectTemplateRange() {
+    if (selectedSource?.kind !== 'template') return;
+    const dates = templateDatesForSelection(selectedSource.cadence ?? 'day', selectedDate);
+    setSelectedDates(dates);
+    setRangeStart(dates[0]);
+    setRangeEnd(dates.at(-1) ?? null);
+    setMessageTone('neutral');
+    setMessage(`Selected ${formatShortDate(dates[0])} to ${formatShortDate(dates[dates.length - 1])}. Review the highlighted dates, then assign.`);
+  }
+
   function selectOnlyDate(date: string) {
     setMessageTone('neutral');
     setSelectedDates([date]);
@@ -346,6 +356,7 @@ export function PlannerDesk({
           onSelectSource={selectSource}
         />
         <MonthCalendar
+          onSelectTemplateRange={selectTemplateRange}
           label={calendarLabel}
           initialDate={initialDate}
           days={calendarDays.map((day) => ({ ...day, sessions: day.sessions.filter((session) => role === 'athlete' || session.athleteId === selectedAthleteId) }))}
@@ -460,8 +471,10 @@ function SourceResult({ source, selected, selectedDate, onSelect }: { source: Pl
   );
 }
 
-function MonthCalendar({ placement, label, initialDate, days, selectedDates, selectedSource, onNavigate, onSelectDate }: { placement: PlacementFeedback | null; label: string; initialDate: string; days: PlannerDeskCalendarDay[]; selectedDates: string[]; selectedSource: PlannerDeskSource | null; onNavigate: (offset: number) => void; onSelectDate: (date: string) => void }) {
+function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, days, selectedDates, selectedSource, onNavigate, onSelectDate }: { onSelectTemplateRange: () => void; placement: PlacementFeedback | null; label: string; initialDate: string; days: PlannerDeskCalendarDay[]; selectedDates: string[]; selectedSource: PlannerDeskSource | null; onNavigate: (offset: number) => void; onSelectDate: (date: string) => void }) {
   const todayIso = format(new Date(), 'yyyy-MM-dd');
+  const shortcutDates = selectedSource?.kind === 'template' ? templateDatesForSelection(selectedSource.cadence ?? 'day', selectedDates[0] ?? initialDate) : [];
+  const rangeError = selectedSource?.kind === 'template' ? validateTemplateDateRange(selectedDates, selectedSource.cadence ?? 'day') : null;
   return (
     <section className="min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-inset)] sm:p-5">
       <div className="flex flex-col gap-3 border-b border-[var(--border)] pb-3 sm:flex-row sm:items-end sm:justify-between">
@@ -475,6 +488,11 @@ function MonthCalendar({ placement, label, initialDate, days, selectedDates, sel
           <button type="button" aria-label="Next month" onClick={() => onNavigate(1)} className="inline-flex h-8 w-8 items-center justify-center rounded-[3px] text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ChevronRight aria-hidden="true" className="h-4 w-4" /></button>
         </div>
       </div>
+      {selectedSource?.kind === 'template' && selectedSource.cadence !== 'day' ? <div className="mt-3 flex flex-wrap items-center gap-3">
+        <button type="button" onClick={onSelectTemplateRange} className={primaryButtonClassName}>Select {selectedSource.cadence === 'week' ? `week of ${formatShortDate(shortcutDates[0])}` : format(parseISO(shortcutDates[0]), 'MMMM yyyy')}</button>
+        <p className="text-sm text-[var(--text-secondary)]">{formatShortDate(shortcutDates[0])} – {formatShortDate(shortcutDates[shortcutDates.length - 1])} · {shortcutDates.length} days</p>
+      </div> : null}
+      {rangeError ? <p className="mt-2 text-sm text-[var(--status-warning)]">{rangeError}</p> : null}
       <div className="mt-3 overflow-x-auto pb-1">
         <div className="min-w-[720px]">
           <div className="grid grid-cols-7 border-y border-[var(--border)] bg-[var(--sunken)]">
