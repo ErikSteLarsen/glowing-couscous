@@ -11,7 +11,7 @@ Complete FUNCTIONAL-REPAIR-PLAN.md, prioritizing interaction feedback. Verify, c
 
 ## Plan
 - [x] Drag placement feedback: browser pointer/click/undo/mobile checks, 188 tests, lint/build pass.
-- [ ] Planner operation feedback and stale selections.
+- [x] Planner operation feedback and stale selections: fresh-account browser checks and full gates pass.
 - [ ] Template range shortcuts and server validation.
 - [ ] Personal session editing and baseline preservation.
 - [ ] Canonical duration projection.
