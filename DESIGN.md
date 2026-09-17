@@ -293,8 +293,8 @@ destinations become a fixed four-item bottom navigation. Mobile content keeps
 bottom space for that navigation and never relies on hover.
 
 Training weeks always render Monday first. Home and Calendar compose around the
-week, Workouts and Session retain scheduled context, and Planner treats the week
-  or date as the assignment target. At `2xl`, a week can expand into a wall; at
+week, Workouts and Session retain scheduled context, and Planner uses a
+month-first assignment desk with selected dates and exact template ranges. At `2xl`, a week can expand into a wall; at
   smaller widths, the home week ribbon becomes a horizontal channel and controls
   wrap without hiding the primary save or navigation action.
 

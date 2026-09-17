@@ -1,3 +1,4 @@
+import { isValid, parseISO } from 'date-fns';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireCoach } from '@/lib/api-auth';
 import { assignmentService, type AssignmentSource } from '@/lib/assignment-service';
@@ -35,24 +36,29 @@ export async function POST(request: NextRequest) {
       source = { kind: 'template', templateId: parsedTemplateId };
     }
 
-    const result = await assignmentService.assignSourceToAthlete({
+    const scheduledDate = typeof body.value.scheduledDate === 'string' ? body.value.scheduledDate : '';
+    const requestedDates = readAssignmentDates(body.value.dates, scheduledDate);
+    if (requestedDates.length === 0) return NextResponse.json({ error: 'Choose at least one valid target date.' }, { status: 400 });
+
+    const result = await assignmentService.assignSourcesToAthlete({
       coachId: user.id,
       athleteId: parsedAthleteId,
       source,
-      scheduledDate: typeof body.value.scheduledDate === 'string' ? body.value.scheduledDate : '',
       weekStart: typeof body.value.weekStart === 'string' ? body.value.weekStart : undefined,
-    });
+    }, requestedDates);
 
-    if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
-    }
+    if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
 
-    return NextResponse.json(
-      'sessionIds' in result ? { ok: true, sessionIds: result.sessionIds } : { ok: true, sessionId: result.sessionId },
-      { status: 201 },
-    );
+    return NextResponse.json({ ok: true, sessionIds: 'sessionIds' in result ? result.sessionIds : [result.sessionId] }, { status: 201 });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to assign template' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to assign source' }, { status: 500 });
   }
+}
+
+function readAssignmentDates(value: unknown, fallback: string) {
+  const candidates = Array.isArray(value) ? value : [fallback];
+  return Array.from(new Set(candidates.filter((candidate): candidate is string => (
+    typeof candidate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(candidate) && isValid(parseISO(`${candidate}T00:00:00.000Z`))
+  )))).sort();
 }

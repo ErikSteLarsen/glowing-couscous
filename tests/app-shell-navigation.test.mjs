@@ -69,16 +69,18 @@ test('Workouts is a standalone library destination and session detail keeps its 
   assert.match(workoutsClientSource, /sticky bottom-0/);
 });
 
-test('athlete planner exposes the shared editor and multi-day session creation', async () => {
+test('athlete planner only places defined sources on selected dates', async () => {
   const plannerPageSource = await read('app/(app)/athlete/planner/page.tsx');
   const plannerClientSource = await read('app/(app)/athlete/planner/AthletePlannerClient.tsx');
   const templatesPageSource = await read('app/(app)/athlete/templates/page.tsx');
 
   assert.match(plannerPageSource, /athletePlannerService\.loadWorkspace/);
   assert.match(plannerPageSource, /AthletePlannerClient/);
-  assert.match(plannerClientSource, /WorkoutBuilder/);
-  assert.match(plannerClientSource, /selectedDates/);
-  assert.match(plannerClientSource, /\/api\/athlete\/planner\/sessions/);
+  assert.doesNotMatch(plannerClientSource, /WorkoutBuilder|Start from scratch|Create session/);
+  assert.match(plannerClientSource, /PlannerDesk/);
+  assert.match(plannerClientSource, /calendarDays/);
+  assert.match(plannerClientSource, /workout/);
+  assert.match(plannerClientSource, /template/);
   assert.match(templatesPageSource, /apiBasePath="\/api\/athlete\/templates"/);
 });
 

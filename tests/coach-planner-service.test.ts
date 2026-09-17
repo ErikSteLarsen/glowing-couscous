@@ -43,8 +43,8 @@ test('coach planner loads roster, templates, and a Monday-first visible week', a
           }
           const typedWhere = args.where as { athlete: { coachId: number }; date: { gte: Date; lte: Date } };
           assert.equal(typedWhere.athlete.coachId, 2);
-          assert.equal(format(typedWhere.date.gte, 'yyyy-MM-dd'), '2026-06-22');
-          assert.equal(format(typedWhere.date.lte, 'yyyy-MM-dd'), '2026-06-28');
+           assert.equal(['2026-06-22', '2026-06-01'].includes(format(typedWhere.date.gte, 'yyyy-MM-dd')), true);
+           assert.equal(['2026-06-28', '2026-07-05'].includes(format(typedWhere.date.lte, 'yyyy-MM-dd')), true);
           return [
             {
               id: 12,
@@ -80,6 +80,8 @@ test('coach planner loads roster, templates, and a Monday-first visible week', a
   assert.equal(view.days[0].isoDate, '2026-06-22');
   assert.equal(view.days[3].sessions[0].id, 12);
   assert.equal(view.days[3].sessions[0].durationSec, 1800);
+  assert.equal(view.calendarDays.length, 35);
+  assert.equal(view.calendarDays.find((day) => day.isoDate === '2026-06-25')?.sessions[0].id, 12);
   assert.equal(view.librarySessions.length, 0);
   assert.equal(view.trainingPlans.length, 0);
 });
@@ -164,6 +166,7 @@ test('coach planner workspace loads without requiring athletes', async () => {
   assert.equal(view.trainingPlans[0].sessions[0].date, '2026-06-25');
   assert.equal(view.trainingPlans[0].sessions[0].sportMetricsJson, '{"thresholdHr":168}');
   assert.equal(view.days.length, 7);
+  assert.equal(view.calendarDays.length, 35);
 });
 
 test('coach planner creates a direct coach session and assignment record', async () => {
@@ -406,41 +409,44 @@ test('planner API routes and navigation use the coach planner service', async ()
   assert.match(navigation, /href: '\/coach\/planner'/);
   assert.match(oldBuilderPage, /redirect\('\/coach\/planner/);
   assert.match(templatesClient, /plannerHref = '\/coach\/planner'/);
-  assert.match(templatesClient, /\$\{plannerHref\}\?templateId=/);
+  assert.doesNotMatch(templatesClient, /\$\{plannerHref\}\?templateId=/);
 });
 
-test('planner page exposes calendar-first visual workout creation', async () => {
+test('planner page places defined sources without embedding workout creation', async () => {
   const pageSource = await read('app/(app)/coach/planner/page.tsx');
   const clientSource = await read('app/(app)/coach/planner/PlannerClient.tsx');
-  const composerSource = await read('components/WorkoutBuilder.tsx');
+  const plannerDeskSource = await read('components/PlannerDesk.tsx');
 
   assert.match(pageSource, /coachPlannerService\.loadWorkspace/);
   assert.match(pageSource, /PlannerClient/);
-  assert.doesNotMatch(clientSource, /Click a day to plan/);
-  assert.match(composerSource, /Workout sequence/);
-  assert.match(clientSource, /WorkoutBuilder/);
-  assert.match(composerSource, /@dnd-kit/);
-  assert.match(composerSource, /repeatBlockSelection/);
-  assert.match(composerSource, /deriveSessionEditorMetrics/);
-  assert.match(composerSource, /suppressPaletteClick/);
-  assert.match(composerSource, /overId === 'workout-canvas'/);
-  assert.match(composerSource, /nextBlocks\.every/);
-  assert.match(composerSource, /onClick=\{removeSelection\}/);
-  assert.match(clientSource, /\/api\/coach\/planner\/sessions/);
+  assert.doesNotMatch(clientSource, /WorkoutBuilder|Create detailed session|Session canvas/);
+  assert.match(clientSource, /PlannerDesk/);
+  assert.match(plannerDeskSource, /Manage workouts/);
+  assert.match(plannerDeskSource, /Manage templates/);
+  assert.match(plannerDeskSource, /Assign .*template/);
 });
 
-test('planner page and client support coach library workspace modes', async () => {
+test('planner page loads all reusable coach source types for assignment', async () => {
   const pageSource = await read('app/(app)/coach/planner/page.tsx');
   const clientSource = await read('app/(app)/coach/planner/PlannerClient.tsx');
 
   assert.doesNotMatch(pageSource, /No athletes available/);
   assert.match(pageSource, /librarySessions=/);
   assert.match(pageSource, /trainingPlans=/);
-  assert.match(clientSource, /Session library/);
-  assert.match(clientSource, /Training plans/);
-  assert.match(clientSource, /selectedWorkspaceMode/);
-  assert.match(clientSource, /draft\.ownershipMode === 'athlete'/);
-  assert.match(clientSource, /\/api\/coach\/planner\/sessions/);
+  assert.doesNotMatch(clientSource, /selectedWorkspaceMode|draft\.ownershipMode/);
+  assert.match(clientSource, /PlannerDesk/);
+});
+
+test('coach assignment transport accepts multiple workout or template dates', async () => {
+  const routeSource = await read('app/api/coach/assignments/route.ts');
+  const serviceSource = await read('lib/assignment-service.ts');
+
+  assert.match(routeSource, /body\.value\.dates/);
+  assert.match(routeSource, /readAssignmentDates/);
+  assert.match(routeSource, /assignSourcesToAthlete/);
+  assert.match(serviceSource, /for \(const date of dates\)/);
+  assert.match(serviceSource, /validateTemplateDateRange/);
+  assert.match(routeSource, /training-plan/);
 });
 
 test('loadWorkspace serializes library session dates to ISO date strings', async () => {
@@ -470,15 +476,4 @@ test('loadWorkspace serializes library session dates to ISO date strings', async
   const session = view.librarySessions[0] as { date: unknown };
   assert.equal(typeof session.date, 'string');
   assert.equal(session.date, '2026-06-25');
-});
-
-test('planner client supports creating a new training plan', async () => {
-  const clientSource = await read('app/(app)/coach/planner/PlannerClient.tsx');
-  assert.match(clientSource, /New training plan/);
-  assert.match(clientSource, /\/api\/coach\/planner\/training-plans/);
-});
-
-test('planner client guards save and delete when training-plan mode has no selected plan', async () => {
-  const clientSource = await read('app/(app)/coach/planner/PlannerClient.tsx');
-  assert.match(clientSource, /No training plan selected/);
 });

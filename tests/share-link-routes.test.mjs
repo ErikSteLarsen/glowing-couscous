@@ -79,5 +79,6 @@ test('supported source surfaces expose share controls with copy and failure stat
   assert.match(templateClient, /ShareLinkButton/);
   assert.match(athleteSession, /ShareLinkButton/);
   assert.match(coachDetail, /ShareLinkButton/);
-  assert.match(planner, /ShareLinkButton/);
+  assert.doesNotMatch(planner, /ShareLinkButton/);
+  assert.match(planner, /PlannerDesk/);
 });

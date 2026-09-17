@@ -1,4 +1,4 @@
-import { addDays, endOfWeek, format, formatISO, isValid, parseISO, startOfWeek } from 'date-fns';
+import { addDays, differenceInCalendarDays, endOfMonth, endOfWeek, format, formatISO, isValid, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 
 import { prisma } from './prisma.ts';
 import { deriveSessionMetrics } from './session-math.ts';
@@ -18,7 +18,9 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       const referenceDate = parseReferenceDate(referenceDateInput);
       const weekStart = startOfWeek(referenceDate, { weekStartsOn: 1 });
       const weekEnd = endOfWeek(referenceDate, { weekStartsOn: 1 });
-      const [sessions, templates] = await Promise.all([
+      const calendarStart = startOfWeek(startOfMonth(referenceDate), { weekStartsOn: 1 });
+      const calendarEnd = endOfWeek(endOfMonth(referenceDate), { weekStartsOn: 1 });
+      const [sessions, templates, calendarSessions] = await Promise.all([
         db.session.findMany({
           where: { athleteId, date: { gte: weekStart, lte: weekEnd } },
           include: { blocks: { orderBy: { sortOrder: 'asc' } } },
@@ -29,7 +31,46 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
           include: { blocks: { orderBy: { sortOrder: 'asc' } } },
           orderBy: [{ sport: 'asc' }, { name: 'asc' }],
         }),
+        db.session.findMany({
+          where: { athleteId, date: { gte: calendarStart, lte: calendarEnd } },
+          include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+          orderBy: [{ date: 'asc' }, { title: 'asc' }],
+        }),
       ]);
+
+      const shapeSession = (session: typeof sessions[number]) => {
+        const metrics = deriveSessionMetrics(
+          session.blocks.map((block) => ({
+            kind: toTempoKind(block.kind),
+            zone: toTempoZone(block.zone),
+            durationSec: block.durationSec,
+            reps: block.reps,
+            target:
+              block.targetType && block.targetLow !== null && block.targetHigh !== null
+                 ? { metric: toTargetType(block.targetType), mode: block.targetMode === 'relative' ? 'relative' : 'absolute', reference: block.targetReference as 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null, low: Number(block.targetLowDecimal ?? block.targetLow), high: Number(block.targetHighDecimal ?? block.targetHigh) }
+               : null,
+          })),
+        );
+
+        return {
+          id: session.id,
+          athleteId: session.athleteId,
+          templateId: session.templateId,
+          scheduledDate: session.date ? formatISO(session.date, { representation: 'date' }) : '',
+          timeLabel: session.timeLabel,
+          sport: session.sport,
+          title: session.title,
+          summary: session.summary,
+          status: session.status,
+          source: session.source,
+          adjusted: session.adjusted,
+          sportMetricsJson: session.sportMetricsJson,
+          durationSec: metrics.durationSec,
+          tss: metrics.tss,
+          segments: metrics.segments,
+          blocks: session.blocks,
+        };
+      };
 
       const days = Array.from({ length: 7 }, (_, index) => {
         const date = addDays(weekStart, index);
@@ -42,39 +83,22 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
           sessions: sessions
             .filter((session): session is typeof session & { date: Date } => session.date !== null)
             .filter((session) => formatISO(session.date, { representation: 'date' }) === isoDate)
-            .map((session) => {
-              const metrics = deriveSessionMetrics(
-                session.blocks.map((block) => ({
-                  kind: toTempoKind(block.kind),
-                  zone: toTempoZone(block.zone),
-                  durationSec: block.durationSec,
-                  reps: block.reps,
-                  target:
-                    block.targetType && block.targetLow !== null && block.targetHigh !== null
-                       ? { metric: toTargetType(block.targetType), mode: block.targetMode === 'relative' ? 'relative' : 'absolute', reference: block.targetReference as 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null, low: Number(block.targetLowDecimal ?? block.targetLow), high: Number(block.targetHighDecimal ?? block.targetHigh) }
-                      : null,
-                })),
-              );
+            .map(shapeSession),
+        };
+      });
 
-              return {
-                id: session.id,
-                athleteId: session.athleteId,
-                templateId: session.templateId,
-                scheduledDate: isoDate,
-                timeLabel: session.timeLabel,
-                sport: session.sport,
-                title: session.title,
-                summary: session.summary,
-                status: session.status,
-                source: session.source,
-                adjusted: session.adjusted,
-                sportMetricsJson: session.sportMetricsJson,
-                durationSec: metrics.durationSec,
-                tss: metrics.tss,
-                segments: metrics.segments,
-                blocks: session.blocks,
-              };
-            }),
+      const calendarDays = Array.from({ length: differenceInCalendarDays(calendarEnd, calendarStart) + 1 }, (_, index) => {
+        const date = addDays(calendarStart, index);
+        const isoDate = formatISO(date, { representation: 'date' });
+        return {
+          isoDate,
+          label: format(date, 'EEE'),
+          dateLabel: format(date, 'd MMM'),
+          inMonth: date.getMonth() === referenceDate.getMonth() && date.getFullYear() === referenceDate.getFullYear(),
+          sessions: calendarSessions
+            .filter((session): session is typeof session & { date: Date } => session.date !== null)
+            .filter((session) => formatISO(session.date, { representation: 'date' }) === isoDate)
+            .map(shapeSession),
         };
       });
 
@@ -84,9 +108,99 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
           end: weekEnd,
           label: `${format(weekStart, 'd MMM')} - ${format(weekEnd, 'd MMM yyyy')}`,
         },
+        calendar: {
+          start: calendarStart,
+          end: calendarEnd,
+          label: format(referenceDate, 'MMMM yyyy'),
+        },
         days,
+        calendarDays,
         templates,
       };
+    },
+
+    async assignSource(athleteId: number, input: unknown) {
+      const record = asRecord(input);
+      const sourceKind = record.sourceKind === 'workout' || record.sourceKind === 'template'
+        ? record.sourceKind
+        : null;
+      const sourceId = typeof record.sourceId === 'number' && Number.isInteger(record.sourceId) && record.sourceId > 0
+        ? record.sourceId
+        : null;
+      const requestedDates = uniqueDates(Array.isArray(record.dates) ? record.dates : []);
+
+      if (!sourceKind || sourceId === null) {
+        return { ok: false as const, error: 'Choose a defined workout or template.', status: 400 };
+      }
+      if (requestedDates.length === 0) {
+        return { ok: false as const, error: 'Choose at least one target day.', status: 400 };
+      }
+
+      if (sourceKind === 'template') {
+        const template = await db.template.findFirst({
+          where: { id: sourceId, ownerId: athleteId },
+          include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+        });
+        if (!template) return { ok: false as const, error: 'Template not found.', status: 404 };
+
+        const dates = sourceDatesForCadence(requestedDates, template.cadence);
+        const sessionIds = [];
+        for (const date of dates) {
+          const plan = await findOrCreatePlan(db, athleteId, date);
+          const created = await db.session.create({
+            data: createSourceCopyData({
+              athleteId,
+              planId: plan.id,
+              date,
+              templateId: template.id,
+              source: 'athlete-template',
+              sport: template.sport,
+              title: template.name,
+              summary: template.summary,
+              sportMetricsJson: null,
+              timeLabel: null,
+              blocks: template.blocks,
+            }),
+          });
+          sessionIds.push(created.id);
+        }
+        return { ok: true as const, sessionIds };
+      }
+
+      const workout = await db.session.findFirst({
+        where: {
+          id: sourceId,
+          athleteId,
+          coachOwnerId: null,
+          trainingPlanId: null,
+          planId: null,
+          date: null,
+        },
+        include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+      });
+      if (!workout) return { ok: false as const, error: 'Workout not found in your library.', status: 404 };
+
+      const sessionIds = [];
+      for (const date of requestedDates) {
+        const plan = await findOrCreatePlan(db, athleteId, date);
+        const created = await db.session.create({
+          data: createSourceCopyData({
+            athleteId,
+            planId: plan.id,
+            date,
+            templateId: null,
+            source: 'athlete-library-copy',
+            sport: workout.sport,
+            title: workout.title,
+            summary: workout.summary,
+            sportMetricsJson: workout.sportMetricsJson,
+            timeLabel: workout.timeLabel,
+            blocks: workout.blocks,
+          }),
+        });
+        sessionIds.push(created.id);
+      }
+      return { ok: true as const, sessionIds };
     },
 
     async saveSession(athleteId: number, input: unknown, sessionId?: number) {
@@ -260,6 +374,86 @@ function createSessionData(
     adjusted: false,
     blocks: { create: blocks },
   };
+}
+
+function createSourceCopyData(input: {
+  athleteId: number;
+  planId: number;
+  date: string;
+  templateId: number | null;
+  source: string;
+  sport: string;
+  title: string;
+  summary: string | null;
+  sportMetricsJson: string | null;
+  timeLabel: string | null;
+  blocks: Array<{
+    kind: string;
+    zone: number;
+    durationSec: number;
+    reps: number | null;
+    targetType: string | null;
+    targetMode?: string | null;
+    targetReference?: string | null;
+    targetLow: number | null;
+    targetHigh: number | null;
+    targetLowDecimal?: string | null;
+    targetHighDecimal?: string | null;
+    note: string | null;
+    skipped?: boolean;
+    sortOrder: number;
+  }>,
+}) {
+  return {
+    athleteId: input.athleteId,
+    coachOwnerId: null,
+    trainingPlanId: null,
+    planId: input.planId,
+    templateId: input.templateId,
+    assignedById: null,
+    date: parseISO(`${input.date}T00:00:00.000Z`),
+    planWeekday: null,
+    timeLabel: input.timeLabel,
+    sport: input.sport,
+    title: input.title,
+    summary: input.summary,
+    coachNotes: null,
+    athleteNotes: null,
+    rpe: null,
+    sportMetricsJson: input.sportMetricsJson,
+    status: 'planned',
+    source: input.source,
+    adjusted: false,
+    blocks: {
+      create: input.blocks.map((block) => ({
+        kind: block.kind,
+        zone: block.zone,
+        durationSec: block.durationSec,
+        reps: block.reps,
+        targetType: block.targetType,
+        targetMode: block.targetMode ?? 'absolute',
+        targetReference: block.targetReference ?? null,
+        targetLow: block.targetLow,
+        targetHigh: block.targetHigh,
+        targetLowDecimal: block.targetLowDecimal ?? (block.targetLow === null ? null : String(block.targetLow)),
+        targetHighDecimal: block.targetHighDecimal ?? (block.targetHigh === null ? null : String(block.targetHigh)),
+        note: block.note,
+        skipped: block.skipped ?? false,
+        sortOrder: block.sortOrder,
+      })),
+    },
+  };
+}
+
+function sourceDatesForCadence(dates: string[], cadence: string) {
+  if (dates.length > 1) return dates;
+  if (cadence === 'week') {
+    return [formatISO(startOfWeek(parseISO(`${dates[0]}T00:00:00.000Z`), { weekStartsOn: 1 }), { representation: 'date' })];
+  }
+  if (cadence === 'month') {
+    return [formatISO(startOfMonth(parseISO(`${dates[0]}T00:00:00.000Z`)), { representation: 'date' })];
+  }
+  return dates;
 }
 
 function uniqueDates(values: unknown[]) {

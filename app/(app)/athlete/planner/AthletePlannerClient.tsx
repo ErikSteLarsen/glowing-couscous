@@ -1,404 +1,66 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
-
-import {
-  Badge,
-  ActionLink,
-  compactListButtonClassName,
-  EmptyState,
-  dangerTextClassName,
-  dangerButtonClassName,
-  formSelectClassName,
-  primaryButtonClassName,
-  secondaryButtonClassName,
-  successTextClassName,
-  Surface,
-} from '@/components/ui';
-import { WorkoutBuilder } from '@/components/WorkoutBuilder';
-import { formatDuration } from '@/lib/format-duration';
-import { getSportLabel } from '@/lib/sport';
-import {
-  createEmptyPlannerEditorDraft,
-  createPlannerEditorDraftFromTemplate,
-  type PlannerEditorTemplateRecord,
-} from '@/lib/session-editor-adapters';
-import {
-  createSessionEditorDraftFromPersisted,
-  serializeSessionEditorDraft,
-  validateSessionEditorDraft,
-  type SessionEditorDraft,
-} from '@/lib/session-editor';
-import type { PerformanceProfile } from '@/lib/performance-profile';
-
-type AthletePlannerSession = {
-  id: number;
-  athleteId: number | null;
-  templateId: number | null;
-  scheduledDate: string;
-  timeLabel: string | null;
-  sport: string;
-  title: string;
-  summary: string | null;
-  status: string;
-  source: string;
-  adjusted: boolean;
-  sportMetricsJson: string | null;
-  durationSec: number;
-  tss: number;
-  blocks: PlannerEditorTemplateRecord['blocks'];
-};
-
-type AthletePlannerDay = {
-  isoDate: string;
-  label: string;
-  dateLabel: string;
-  sessions: AthletePlannerSession[];
-};
+import { getTemplateCadence } from '@/lib/template-cadence';
+import { PlannerDesk, type PlannerDeskCalendarDay, type PlannerDeskSource } from '@/components/PlannerDesk';
 
 type AthletePlannerWorkout = {
   id: number;
-  templateId: number | null;
   sport: string;
   title: string;
   summary: string | null;
-  sportMetricsJson: string | null;
-  blocks: PlannerEditorTemplateRecord['blocks'];
+  blocks: Array<{ durationSec: number }>;
+};
+
+type AthletePlannerTemplate = {
+  id: number;
+  name: string;
+  sport: string;
+  summary: string | null;
+  cadence?: string | null;
 };
 
 export function AthletePlannerClient({
-  athleteId,
   templates,
   workouts,
-  days,
-  periodLabel,
+  calendarDays,
+  calendarLabel,
   initialDate,
-  initialTemplateId,
-  performanceProfile = null,
 }: {
-  athleteId: number;
-  templates: PlannerEditorTemplateRecord[];
+  templates: AthletePlannerTemplate[];
   workouts: AthletePlannerWorkout[];
-  days: AthletePlannerDay[];
-  periodLabel: string;
+  calendarDays: PlannerDeskCalendarDay[];
+  calendarLabel: string;
   initialDate: string;
-  initialTemplateId: number | null;
-  performanceProfile?: PerformanceProfile | null;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [isSaving, setIsSaving] = useState(false);
-  const [selectedDates, setSelectedDates] = useState([initialDate]);
-  const [editingSessionId, setEditingSessionId] = useState<number | null>(null);
-  const [selectedWorkoutId, setSelectedWorkoutId] = useState<number | null>(null);
-  const [message, setMessage] = useState('');
-  const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
-  const [draft, setDraft] = useState<SessionEditorDraft>(() => {
-    const initialTemplate = templates.find((template) => template.id === initialTemplateId);
-    return initialTemplate
-      ? createPlannerEditorDraftFromTemplate(initialTemplate, {
-          athleteId,
-          scheduledDate: initialDate,
-        })
-      : createEmptyPlannerEditorDraft({ athleteId, scheduledDate: initialDate });
-  });
-  const todayIso = format(new Date(), 'yyyy-MM-dd');
-  const selectedDayLabels = days
-    .filter((day) => selectedDates.includes(day.isoDate))
-    .map((day) => `${day.label} ${day.dateLabel}`)
-    .join(', ');
-
-  function startNewSession(date = selectedDates[0] ?? initialDate) {
-    setEditingSessionId(null);
-    setSelectedWorkoutId(null);
-    setSelectedDates([date]);
-    setMessage('');
-    setDraft(createEmptyPlannerEditorDraft({ athleteId, scheduledDate: date }));
-  }
-
-  function toggleDate(date: string) {
-    if (editingSessionId) return;
-    setSelectedDates((current) =>
-      current.includes(date) ? current.filter((value) => value !== date) : [...current, date].sort(),
-    );
-    setDraft((current) => ({ ...current, scheduledDate: date }));
-  }
-
-  function loadSession(session: AthletePlannerSession) {
-    setEditingSessionId(session.id);
-    setSelectedWorkoutId(null);
-    setSelectedDates([session.scheduledDate]);
-    setMessage('');
-    setDraft(
-      createSessionEditorDraftFromPersisted('planned', {
-        ...session,
-        date: session.scheduledDate,
-        scheduledDate: session.scheduledDate,
-      }),
-    );
-  }
-
-  function loadTemplate(templateId: string) {
-    if (!templateId) {
-      setSelectedWorkoutId(null);
-      setEditingSessionId(null);
-      setMessage('');
-      setDraft(createEmptyPlannerEditorDraft({ athleteId, scheduledDate: selectedDates[0] ?? initialDate }));
-      return;
-    }
-
-    const template = templates.find((item) => item.id === Number(templateId));
-    if (!template) return;
-    setEditingSessionId(null);
-    setSelectedWorkoutId(null);
-    setMessage('');
-    setDraft(
-      createPlannerEditorDraftFromTemplate(template, {
-        athleteId,
-        scheduledDate: selectedDates[0] ?? initialDate,
-      }),
-    );
-  }
-
-  function loadWorkout(workoutId: string) {
-    if (!workoutId) {
-      setEditingSessionId(null);
-      setSelectedWorkoutId(null);
-      setMessage('');
-      setDraft(createEmptyPlannerEditorDraft({ athleteId, scheduledDate: selectedDates[0] ?? initialDate }));
-      return;
-    }
-
-    const workout = workouts.find((item) => item.id === Number(workoutId));
-    if (!workout) return;
-    setEditingSessionId(null);
-    setSelectedWorkoutId(workout.id);
-    setMessage('');
-    setDraft(
-      createSessionEditorDraftFromPersisted('create', {
-        ...workout,
-        date: null,
-        scheduledDate: selectedDates[0] ?? initialDate,
-        athleteId,
-      }),
-    );
-  }
-
-  function saveSession() {
-    if (selectedDates.length === 0) {
-      setMessageTone('danger');
-      setMessage('Choose at least one day.');
-      return;
-    }
-
-    const draftForSave = { ...draft, athleteId, scheduledDate: selectedDates[0] };
-    const validationError = validateSessionEditorDraft(draftForSave);
-    if (validationError) {
-      setMessageTone('danger');
-      setMessage(validationError);
-      return;
-    }
-
-    if (isSaving) return;
-    setIsSaving(true);
-    startTransition(() => { void saveDraft(draftForSave); });
-  }
-
-  async function saveDraft(draftForSave: SessionEditorDraft) {
-    try {
-      const response = await fetch(
-        editingSessionId ? `/api/athlete/planner/sessions/${editingSessionId}` : '/api/athlete/planner/sessions',
-        {
-          method: editingSessionId ? 'PATCH' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...serializeSessionEditorDraft(draftForSave), dates: selectedDates }),
-        },
-      );
-      const payload = await response.json().catch(() => ({})) as { error?: string; sessionIds?: number[] };
-      if (!response.ok) {
-        setMessageTone('danger');
-        setMessage(payload.error ?? 'Failed to save session.');
-        return;
-      }
-
-      setMessageTone('success');
-      setMessage(editingSessionId ? 'Session updated.' : `Added to ${selectedDayLabels || 'the selected days'}.`);
-      router.refresh();
-    } catch {
-      setMessageTone('danger');
-      setMessage('Could not reach the server. Check your connection and try again.');
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  function deleteSession() {
-    if (!editingSessionId) return;
-    if (!window.confirm('Delete this planned session? This cannot be undone.')) return;
-    startTransition(async () => {
-      try {
-        const response = await fetch(`/api/athlete/planner/sessions/${editingSessionId}`, { method: 'DELETE' });
-        const payload = await response.json().catch(() => ({})) as { error?: string };
-        if (!response.ok) {
-          setMessageTone('danger');
-          setMessage(payload.error ?? 'Failed to delete session.');
-          return;
-        }
-
-        setMessageTone('success');
-        setMessage('Session deleted.');
-        startNewSession();
-        router.refresh();
-      } catch {
-        setMessageTone('danger');
-        setMessage('Could not reach the server. Check your connection and try again.');
-      }
-    });
-  }
+  const sources: PlannerDeskSource[] = [
+    ...workouts.map((workout) => ({
+      key: `workout:${workout.id}`,
+      id: workout.id,
+      kind: 'workout' as const,
+      title: workout.title,
+      sport: workout.sport,
+      summary: workout.summary,
+      durationSec: workout.blocks.reduce((total, block) => total + block.durationSec, 0),
+    })),
+    ...templates.map((template) => ({
+      key: `template:${template.id}`,
+      id: template.id,
+      kind: 'template' as const,
+      title: template.name,
+      sport: template.sport,
+      summary: template.summary,
+      cadence: getTemplateCadence(template.cadence),
+    })),
+  ];
 
   return (
-    <div className="grid min-w-0 gap-6 xl:grid-cols-[0.9fr_1.4fr_0.8fr]">
-      <Surface className="min-w-0 space-y-5">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Week</p>
-          <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">{periodLabel}</h2>
-          <p className="mt-1 max-w-[32ch] text-sm leading-6 text-[var(--text-secondary)]">
-            {editingSessionId ? 'Select one day to edit.' : 'Select one or more days.'}
-          </p>
-        </div>
-
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-          {days.map((day) => (
-            <div
-              key={day.isoDate}
-              className={`rounded-[12px] border p-2.5 transition sm:p-3 ${
-                selectedDates.includes(day.isoDate)
-                  ? 'border-[var(--field-focus)] bg-[var(--brand-tint)] ring-1 ring-[var(--field-focus)]'
-                   : 'border-[var(--border)] bg-[var(--field-surface)]'
-              }`}
-            >
-              <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-[9px] px-1">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 accent-[var(--brand)]"
-                  checked={selectedDates.includes(day.isoDate)}
-                  disabled={editingSessionId !== null}
-                  aria-label={`Select ${day.label} ${day.dateLabel}`}
-                  onChange={() => toggleDate(day.isoDate)}
-                />
-                 <span className="min-w-0 flex-1">
-                   <span className="block text-sm font-semibold text-[var(--text)]">{day.label}</span>
-                   <span className="block text-xs text-[var(--text-secondary)]">{day.dateLabel}</span>
-                 </span>
-                 {day.isoDate === todayIso ? <span className="rounded-full bg-[var(--brand)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--signal-ink)]">Today</span> : null}
-                 <Badge>{day.sessions.length}</Badge>
-              </label>
-              {day.sessions.length > 0 ? (
-                <span className="mt-2 block space-y-1 pl-7">
-                  {day.sessions.map((session) => (
-                    <button
-                      key={session.id}
-                      type="button"
-                      onClick={() => loadSession(session)}
-                      className={`${compactListButtonClassName} flex-col items-start gap-0.5 px-2 py-1.5`}
-                    >
-                      <span className="w-full break-words font-semibold">{session.title}</span>
-                      <span className="w-full text-[11px] text-[var(--text-secondary)]">
-                        {getSportLabel(session.sport)} · {formatDuration(session.durationSec)} · {session.tss} TSS
-                      </span>
-                    </button>
-                  ))}
-                </span>
-              ) : null}
-            </div>
-          ))}
-        </div>
-
-        <button type="button" className={`${secondaryButtonClassName} w-full`} onClick={() => startNewSession()}>
-          New session
-        </button>
-      </Surface>
-
-      <Surface className="min-w-0 space-y-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Session editor</p>
-            <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">
-              {editingSessionId ? 'Edit session' : 'Create session'}
-            </h2>
-          </div>
-          <Badge tone="brand">Private</Badge>
-        </div>
-
-        {templates.length > 0 ? (
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-[var(--text-secondary)]">Use template</span>
-            <select className={formSelectClassName} value={draft.templateId ?? ''} onChange={(event) => loadTemplate(event.target.value)}>
-              <option value="">Start from scratch</option>
-              {templates.map((template) => <option key={template.id} value={template.id}>{template.name}</option>)}
-            </select>
-          </label>
-        ) : null}
-
-        {workouts.length > 0 ? (
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-[var(--text-secondary)]">Use saved workout</span>
-            <select className={formSelectClassName} value={selectedWorkoutId ?? ''} onChange={(event) => loadWorkout(event.target.value)}>
-              <option value="">Start from scratch</option>
-              {workouts.map((workout) => <option key={workout.id} value={workout.id}>{workout.title}</option>)}
-            </select>
-            <span className="block text-[12px] text-[var(--text-secondary)]">Saved workouts stay in your library; Planner creates the dated copy.</span>
-          </label>
-        ) : null}
-
-        <WorkoutBuilder
-          draft={draft}
-          onChange={(next) => setDraft((current) => ({ ...next, athleteId, templateId: current.templateId }))}
-          showSportMetrics
-          summaryPlaceholder="Session intent"
-          durationUnit="minutes"
-          performanceProfile={performanceProfile}
-        />
-      </Surface>
-
-      <Surface className="space-y-4 xl:sticky xl:top-6 xl:self-start">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Save</p>
-          <p className="mt-2 text-sm font-medium text-[var(--text)]">
-            {selectedDates.length} day{selectedDates.length === 1 ? '' : 's'} selected: {selectedDayLabels || 'none'}.
-          </p>
-          <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">
-            {editingSessionId ? 'Changes update the selected planned session.' : 'A separate session is created for each selected day.'}
-          </p>
-        </div>
-        <button type="button" disabled={isPending} className={`${primaryButtonClassName} w-full`} onClick={saveSession}>
-          {isPending || isSaving ? 'Saving…' : editingSessionId ? 'Save changes' : `Add to ${selectedDates.length} day${selectedDates.length === 1 ? '' : 's'}`}
-        </button>
-        {editingSessionId ? (
-          <button type="button" disabled={isPending} className={`${dangerButtonClassName} w-full`} onClick={deleteSession}>
-            Delete session
-          </button>
-        ) : null}
-        {message ? (
-          <p
-            role={messageTone === 'danger' ? 'alert' : 'status'}
-            aria-live="polite"
-            className={messageTone === 'success' ? successTextClassName : dangerTextClassName}
-          >
-            {message}
-          </p>
-        ) : null}
-        {templates.length === 0 ? (
-          <div className="space-y-3">
-            <EmptyState title="No templates yet" description="Save a reusable starting point from the Templates menu." />
-            <ActionLink href="/athlete/templates" tone="secondary" size="compact">
-              Open templates
-            </ActionLink>
-          </div>
-        ) : null}
-      </Surface>
-    </div>
+    <PlannerDesk
+      key={initialDate}
+      role="athlete"
+      initialDate={initialDate}
+      calendarLabel={calendarLabel}
+      calendarDays={calendarDays}
+      sources={sources}
+    />
   );
 }

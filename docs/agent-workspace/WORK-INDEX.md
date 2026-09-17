@@ -16,7 +16,7 @@ does not preserve completed implementation history.
 | `AUTH-001` | Authentication and role setup | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | `/login`, `/signup`, `/setup`, `/api/auth/*` |
 | `SHELL-001` | App shell and navigation | `shipped` | `components/AppShell.tsx`, `components/AppSidebar.tsx`, `lib/app-navigation.ts` | Authenticated `(app)` layout |
 | `COACH-001` | Coach roster and requests | `shipped` | `lib/coach-service.ts`, `lib/coach-request-service.ts` | `/coach`, `/coach/athletes/*`, request APIs |
-| `PLAN-001` | Coach and athlete planning | `in-progress` | `lib/coach-planner-service.ts`, `lib/athlete-planner-service.ts`, `lib/assignment-service.ts` | `/coach/planner`, `/athlete/planner` |
+| `PLAN-001` | Coach and athlete planning | `in-progress` | `components/PlannerDesk.tsx`, `lib/coach-planner-service.ts`, `lib/athlete-planner-service.ts`, `lib/assignment-service.ts` | `/coach/planner`, `/athlete/planner` |
 | `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | `/coach/workouts`, `/athlete/workouts` |
 | `TEMPLATE-001` | Templates and training plans | `in-progress` | `lib/template-service.ts`, `lib/coach-training-plan-service.ts` | `/coach/templates`, `/athlete/templates` |
 | `SESSION-001` | Canonical editor and outcomes | `in-progress` | `lib/session-editor.ts`, `lib/session-snapshot-service.ts`, `lib/athlete-completion-service.ts` | Session detail, `WorkoutBuilder`, outcome APIs |

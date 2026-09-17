@@ -1,4 +1,4 @@
-import { addDays, endOfWeek, format, formatISO, isValid, parseISO, startOfWeek } from 'date-fns';
+import { addDays, differenceInCalendarDays, endOfMonth, endOfWeek, format, formatISO, isValid, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 import { prisma } from './prisma.ts';
 import { deriveSessionMetrics } from './session-math.ts';
 import {
@@ -37,7 +37,9 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
       const referenceDate = parseReferenceDate(referenceDateInput);
       const weekStart = startOfWeek(referenceDate, { weekStartsOn: 1 });
       const weekEnd = endOfWeek(referenceDate, { weekStartsOn: 1 });
-      const [athletes, templates, librarySessions, trainingPlans, sessions] = await Promise.all([
+      const calendarStart = startOfWeek(startOfMonth(referenceDate), { weekStartsOn: 1 });
+      const calendarEnd = endOfWeek(endOfMonth(referenceDate), { weekStartsOn: 1 });
+      const [athletes, templates, librarySessions, trainingPlans, sessions, calendarSessions] = await Promise.all([
         db.user.findMany({
           where: { coachId, role: 'ATHLETE' },
           orderBy: { name: 'asc' },
@@ -71,7 +73,49 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
           include: { blocks: { orderBy: { sortOrder: 'asc' } } },
           orderBy: [{ date: 'asc' }, { title: 'asc' }],
         }),
+        db.session.findMany({
+          where: {
+            athlete: { coachId },
+            date: { gte: calendarStart, lte: calendarEnd },
+          },
+          include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+          orderBy: [{ date: 'asc' }, { title: 'asc' }],
+        }),
       ]);
+
+      const shapeSession = (session: typeof sessions[number]) => {
+        const metrics = deriveSessionMetrics(
+          session.blocks.map((block) => ({
+            kind: toTempoKind(block.kind),
+            zone: toTempoZone(block.zone),
+            durationSec: block.durationSec,
+            reps: block.reps,
+            target:
+              block.targetType && block.targetLow !== null && block.targetHigh !== null
+                 ? { metric: toTargetType(block.targetType), mode: block.targetMode === 'relative' ? 'relative' : 'absolute', reference: block.targetReference as 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null, low: Number(block.targetLowDecimal ?? block.targetLow), high: Number(block.targetHighDecimal ?? block.targetHigh) }
+               : null,
+          })),
+        );
+
+        return {
+          id: session.id,
+          athleteId: session.athleteId,
+          templateId: session.templateId,
+          assignedById: session.assignedById,
+          scheduledDate: session.date ? formatISO(session.date, { representation: 'date' }) : '',
+          sport: session.sport,
+          title: session.title,
+          summary: session.summary,
+          status: session.status,
+          source: session.source,
+          adjusted: session.adjusted,
+          sportMetricsJson: session.sportMetricsJson ?? null,
+          durationSec: metrics.durationSec,
+          tss: metrics.tss,
+          segments: metrics.segments,
+          blocks: session.blocks,
+        };
+      };
 
       const days = Array.from({ length: 7 }, (_, index) => {
         const date = addDays(weekStart, index);
@@ -80,42 +124,25 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
           isoDate,
           label: format(date, 'EEE'),
           dateLabel: format(date, 'd MMM'),
-          sessions: sessions
+           sessions: sessions
+             .filter((session): session is typeof session & { date: Date } => session.date !== null)
+             .filter((session) => formatISO(session.date, { representation: 'date' }) === isoDate)
+             .map(shapeSession),
+        };
+      });
+
+      const calendarDays = Array.from({ length: differenceInCalendarDays(calendarEnd, calendarStart) + 1 }, (_, index) => {
+        const date = addDays(calendarStart, index);
+        const isoDate = formatISO(date, { representation: 'date' });
+        return {
+          isoDate,
+          label: format(date, 'EEE'),
+          dateLabel: format(date, 'd MMM'),
+          inMonth: date.getMonth() === referenceDate.getMonth() && date.getFullYear() === referenceDate.getFullYear(),
+          sessions: calendarSessions
             .filter((session): session is typeof session & { date: Date } => session.date !== null)
             .filter((session) => formatISO(session.date, { representation: 'date' }) === isoDate)
-            .map((session) => {
-              const metrics = deriveSessionMetrics(
-                session.blocks.map((block) => ({
-                  kind: toTempoKind(block.kind),
-                  zone: toTempoZone(block.zone),
-                  durationSec: block.durationSec,
-                  reps: block.reps,
-                  target:
-                    block.targetType && block.targetLow !== null && block.targetHigh !== null
-                       ? { metric: toTargetType(block.targetType), mode: block.targetMode === 'relative' ? 'relative' : 'absolute', reference: block.targetReference as 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null, low: Number(block.targetLowDecimal ?? block.targetLow), high: Number(block.targetHighDecimal ?? block.targetHigh) }
-                      : null,
-                })),
-              );
-
-              return {
-                id: session.id,
-                athleteId: session.athleteId,
-                templateId: session.templateId,
-                assignedById: session.assignedById,
-                scheduledDate: isoDate,
-                sport: session.sport,
-                title: session.title,
-                summary: session.summary,
-                status: session.status,
-                source: session.source,
-                adjusted: session.adjusted,
-                sportMetricsJson: session.sportMetricsJson ?? null,
-                durationSec: metrics.durationSec,
-                tss: metrics.tss,
-                segments: metrics.segments,
-                blocks: session.blocks,
-              };
-            }),
+            .map(shapeSession),
         };
       });
 
@@ -124,6 +151,11 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
           start: weekStart,
           end: weekEnd,
           label: `${format(weekStart, 'd MMM')} - ${format(weekEnd, 'd MMM yyyy')}`,
+        },
+        calendar: {
+          start: calendarStart,
+          end: calendarEnd,
+          label: format(referenceDate, 'MMMM yyyy'),
         },
          athletes: athletes.map((athlete) => ({ ...athlete, name: athlete.name ?? '' })),
         templates,
@@ -138,6 +170,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
             date: session.date ? formatISO(session.date, { representation: 'date' }) : null,
           })),
         })),
+        calendarDays,
         days,
       };
     },

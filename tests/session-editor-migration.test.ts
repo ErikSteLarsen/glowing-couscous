@@ -99,17 +99,19 @@ test('template editor adapter initializes and serializes the canonical session d
   });
 });
 
-test('active editor contexts use the shared visual builder instead of planner draft helpers', async () => {
-  const [plannerSource, templatesSource, composerSource] = await Promise.all([
+test('libraries and session detail own editing while planners place sources', async () => {
+  const [coachPlannerSource, athletePlannerSource, templatesSource, composerSource] = await Promise.all([
     read('app/(app)/coach/planner/PlannerClient.tsx'),
+    read('app/(app)/athlete/planner/AthletePlannerClient.tsx'),
     read('app/(app)/coach/templates/CoachTemplatesClient.tsx'),
     read('components/WorkoutBuilder.tsx'),
   ]);
 
-  assert.match(plannerSource, /WorkoutBuilder/);
+  assert.doesNotMatch(coachPlannerSource, /WorkoutBuilder/);
+  assert.doesNotMatch(athletePlannerSource, /WorkoutBuilder/);
   assert.match(templatesSource, /WorkoutBuilder/);
   assert.match(composerSource, /@dnd-kit/);
-  assert.doesNotMatch(plannerSource, /from ['"]@\/lib\/planner-draft['"]/);
+  assert.doesNotMatch(coachPlannerSource, /from ['"]@\/lib\/planner-draft['"]/);
   assert.doesNotMatch(templatesSource, /type TemplateDraftBlock/);
-  assert.doesNotMatch(plannerSource, /duplicatePlannerBlock/);
+  assert.doesNotMatch(coachPlannerSource, /duplicatePlannerBlock/);
 });

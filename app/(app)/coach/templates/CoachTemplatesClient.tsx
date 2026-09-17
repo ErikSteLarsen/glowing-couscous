@@ -268,7 +268,7 @@ export function CoachTemplatesClient({
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <a
-                    href={`${plannerHref}?templateId=${template.id}`}
+                    href={plannerHref}
                     className={compactPrimaryButtonClassName}
                   >
                      {isAthlete ? 'Reuse in Planner' : 'Use in Planner'}

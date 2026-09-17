@@ -29,7 +29,7 @@ one-time account creation flow directly.
 - `/coach` - roster
 - `/coach/athletes/[athleteId]` - athlete detail
 - `/coach/workouts` - owner-scoped unscheduled workout library
-- `/coach/planner` - dated session, library, and training-plan workspace
+- `/coach/planner` - month-first Planning Desk for dated source assignment
 - `/coach/builder` - compatibility redirect to the active planner
 - `/coach/templates` - private template library
 
@@ -38,7 +38,7 @@ one-time account creation flow directly.
 - `/athlete` - Home week overview
 - `/athlete/calendar` - week and month calendar
 - `/athlete/workouts` - owner-scoped unscheduled workout library
-- `/athlete/planner` - private multi-date planning
+- `/athlete/planner` - private month-first multi-date Planning Desk
 - `/athlete/templates` - athlete reusable content surface
 - `/athlete/session/[sessionId]` - session detail and planned/actual editing
 - `/athlete/live/[sessionId]` - local block execution stepper
@@ -71,8 +71,8 @@ navigation.
 | Coach reads | `lib/coach-service.ts` | Roster and athlete-detail read models |
 | Coach requests | `lib/coach-request-service.ts` | Search, request creation, approval, rejection, and pending uniqueness |
 | Athlete reads | `lib/athlete-service.ts` | Home, Calendar, Activity, profile, discovery, and session reads |
-| Athlete planning | `lib/athlete-planner-service.ts` | Private dated copies and athlete planner mutations |
-| Coach planning | `lib/coach-planner-service.ts` | Coach workspace, dated sessions, and roster-scoped planner writes |
+| Athlete planning | `lib/athlete-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, private dated copies, source search, and athlete planner mutations |
+| Coach planning | `lib/coach-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, dated sessions, source search, and roster-scoped planner writes |
 | Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |
 | Training plans | `lib/coach-training-plan-service.ts` | Reusable weekday-based coach plans |
 | Templates | `lib/template-service.ts` | Coach-owned reusable templates and cadence |

@@ -21,8 +21,8 @@ and working product description use `Workout Planner`.
 - Blocks provide sport, targets, duration, repetitions, notes, skipped state, and zone information.
 - Duration, training load, zones, and timelines are derived from structured blocks.
 - `Workouts` stores private reusable definitions without dates or assignments.
-- `Planner` places independent copies of reusable content onto athlete dates or training-plan weekdays.
-- `Templates` stores reusable coach-owned day, week, or month cadence structures.
+- `Planner` places independent copies of reusable content onto selected athlete dates or training-plan weekdays. Workouts can target multiple dates; day, week, and month templates use exact cadence-length date ranges.
+- `Templates` stores reusable coach-owned day, week, or month cadence structures whose assignment span is validated by Planner.
 - Completion stores performed metrics, notes, and the latest actual snapshot in `Activity`.
 
 ## Current Capabilities
@@ -39,5 +39,5 @@ and working product description use `Workout Planner`.
 
 - Live execution is a local block stepper; it does not collect device or sensor telemetry.
 - Messaging, multi-coach collaboration, shared business accounts, custom sports, and deep analytics are not implemented.
-- Full recurring-session rules and month-level plan editing are outside the current product model.
+- Flexible recurring-session rules and month-level plan editing are outside the current product model; Planner supports exact day, week, and month cadence spans.
 - Public sharing exposes only a sanitized workout definition; it never exposes ownership, relationship, private notes, or actual data.

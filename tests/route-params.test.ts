@@ -55,6 +55,7 @@ test('protected API routes declare a role guard', async () => {
     'app/api/athlete/calendar/route.ts',
     'app/api/athlete/coach-requests/route.ts',
     'app/api/athlete/planner/sessions/route.ts',
+    'app/api/athlete/planner/assignments/route.ts',
     'app/api/athlete/planner/sessions/[sessionId]/route.ts',
     'app/api/athlete/sessions/[sessionId]/completion/route.ts',
     'app/api/athlete/templates/route.ts',

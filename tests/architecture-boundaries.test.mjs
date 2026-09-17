@@ -178,16 +178,18 @@ test('template workflow supports duplication and library filtering', async () =>
   assert.match(templatesClientSource, /Duplicate/);
 });
 
-test('planner and template workflows expose source assignment and live editing', async () => {
+test('planner places sources while libraries own live editing', async () => {
   const plannerSource = await read('app/(app)/coach/planner/PlannerClient.tsx');
-  const assignmentPanelSource = await read('app/(app)/coach/planner/SourceAssignmentPanel.tsx');
+  const plannerDeskSource = await read('components/PlannerDesk.tsx');
   const templatesClientSource = await read('app/(app)/coach/templates/CoachTemplatesClient.tsx');
 
-  assert.match(plannerSource, /SourceAssignmentPanel/);
-  assert.match(plannerSource, /Switching workspace will reset/);
-  assert.match(assignmentPanelSource, /assign reusable content/i);
-  assert.match(assignmentPanelSource, /training-plan/);
-  assert.match(assignmentPanelSource, /Target Monday week/);
+  assert.match(plannerSource, /PlannerDesk/);
+  assert.match(plannerDeskSource, /selectedDates/);
+  assert.match(plannerDeskSource, /SourceDock/);
+  assert.match(plannerDeskSource, /\/api\/coach\/assignments/);
+  assert.doesNotMatch(plannerSource, /WorkoutBuilder|Switching workspace will reset/);
+  assert.match(plannerDeskSource, /training-plan/);
+  assert.match(plannerDeskSource, /Monday/);
   assert.match(templatesClientSource, /openEditor/);
   assert.match(templatesClientSource, /saveEditor/);
   assert.match(templatesClientSource, /openEditor\(template\)/);

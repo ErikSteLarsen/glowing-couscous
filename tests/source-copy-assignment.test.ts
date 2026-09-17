@@ -147,7 +147,7 @@ test('training-plan assignment maps weekdays and creates a parent lineage record
 
 test('assignment route exposes the source union through one coach-only command', async () => {
   const source = await readFile(path.join(process.cwd(), 'app/api/coach/assignments/route.ts'), 'utf8');
-  assert.match(source, /assignSourceToAthlete/);
+  assert.match(source, /assignSourcesToAthlete/);
   assert.match(source, /library-session/);
   assert.match(source, /training-plan/);
   assert.match(source, /requireCoach/);

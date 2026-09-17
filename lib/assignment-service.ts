@@ -1,6 +1,7 @@
 import { addDays, endOfWeek, format, isValid, parseISO, startOfWeek } from 'date-fns';
 import { prisma } from './prisma.ts';
 import { createSessionSnapshotJson } from './session-snapshot-service.ts';
+import { getTemplateCadence, validateTemplateDateRange } from './template-cadence.ts';
 
 type AssignmentCommand = {
   coachId: number;
@@ -91,6 +92,7 @@ type AssignmentDb = {
       ownerId: number;
       sport: string;
       name: string;
+      cadence: string;
       summary: string | null;
       blocks: AssignmentTemplateBlock[];
     } | null>;
@@ -367,6 +369,32 @@ export function createAssignmentService({ db = createDefaultDb(), now = () => ne
       }
 
       return assignTrainingPlan(sourceDb, command);
+    },
+
+    async assignSourcesToAthlete(command: AssignSourceCommand, scheduledDates: string[]): Promise<AssignmentResult | { ok: true; sessionIds: number[] }> {
+      const dates = Array.from(new Set(scheduledDates)).sort();
+      if (dates.length === 0) return { ok: false, error: 'Choose at least one target date.', status: 400 };
+      if (command.source.kind === 'training-plan') {
+        return this.assignSourceToAthlete({ ...command, scheduledDate: dates[0] });
+      }
+      if (dates.length > 1 && command.source.kind === 'template') {
+        const template = await db.template.findFirst({
+          where: { id: command.source.templateId, ownerId: command.coachId },
+          include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+        });
+        if (!template) return { ok: false, error: 'Template not found.', status: 404 };
+        const rangeError = validateTemplateDateRange(dates, getTemplateCadence(template.cadence));
+        if (rangeError) return { ok: false, error: rangeError, status: 400 };
+      }
+
+      const sessionIds: number[] = [];
+      for (const date of dates) {
+        const result = await this.assignSourceToAthlete({ ...command, scheduledDate: date });
+        if (!result.ok) return result;
+        if ('sessionIds' in result) sessionIds.push(...result.sessionIds);
+        else sessionIds.push(result.sessionId);
+      }
+      return { ok: true, sessionIds };
     },
   };
 }

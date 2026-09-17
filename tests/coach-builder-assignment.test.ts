@@ -193,10 +193,10 @@ test('builder route redirects to the active planner and assignment API path', as
   const assignmentRouteSource = await read('app/api/coach/assignments/route.ts');
 
   assert.match(builderPageSource, /redirect\('\/coach\/planner'/);
-  assert.match(builderPageSource, /params\.set\('templateId'/);
+  assert.doesNotMatch(builderPageSource, /templateId/);
   assert.match(builderPageSource, /params\.set\('athleteId'/);
   assert.doesNotMatch(builderPageSource, /still in progress|next migration slice/i);
-  assert.match(assignmentRouteSource, /assignmentService\.assignSourceToAthlete/);
+  assert.match(assignmentRouteSource, /assignmentService\.assignSourcesToAthlete/);
   assert.match(assignmentRouteSource, /parsePositiveInteger/);
 });
 
