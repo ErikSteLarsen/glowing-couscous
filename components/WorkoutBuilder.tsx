@@ -1,7 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent, type DragOverEvent, type DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -105,6 +105,8 @@ export function WorkoutBuilder({
   const [history, setHistory] = useState<SessionEditorDraft[]>([]);
   const [future, setFuture] = useState<SessionEditorDraft[]>([]);
   const [paletteZone, setPaletteZone] = useState<TempoZone>(2);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
+  const [landing, setLanding] = useState<{ id: string; left: number; top: number; message: string } | null>(null);
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
   const [basicsDismissed, setBasicsDismissed] = useState(() => Boolean(draft.title.trim()));
   const [notesOpen, setNotesOpen] = useState(() => Boolean(draft.summary));
@@ -156,11 +158,12 @@ export function WorkoutBuilder({
     setSelection([]);
   }
 
-  function insertPreset(preset: BlockPreset, index = draft.blocks.length) {
+  function insertPreset(preset: BlockPreset, index = draft.blocks.length, origin?: { left: number; top: number }) {
     const block = createSessionEditorBlock(preset.block);
     commit({ ...draft, blocks: [...draft.blocks.slice(0, index), block, ...draft.blocks.slice(index)] });
     setSelection([index]);
     setPaletteZone(block.zone);
+    setLanding({ id: block.clientId, left: origin?.left ?? NaN, top: origin?.top ?? NaN, message: `${preset.name} added at position ${index + 1}. Unsaved changes.` });
   }
 
   function moveSelection(direction: -1 | 1) {
@@ -180,6 +183,8 @@ export function WorkoutBuilder({
   function redo() { const next = future[0]; if (next) { setFuture((current) => current.slice(1)); setHistory((current) => [...current, draft]); onChange(next); } }
 
   function closeBasicsOnBlur(event: React.FocusEvent<HTMLDivElement>) {
+    // Do not move a pointer target between pointerdown and click/drag.
+    if (event.relatedTarget instanceof Element && event.relatedTarget.closest('[aria-label="Block preset palette"]')) return;
     if (basicsReady && !event.currentTarget.contains(event.relatedTarget as Node | null)) setBasicsDismissed(true);
   }
 
@@ -188,19 +193,33 @@ export function WorkoutBuilder({
     if (id.startsWith(PALETTE_DRAG_PREFIX)) setActivePresetId(id.slice(PALETTE_DRAG_PREFIX.length));
   }
 
+  function onDragOver(event: DragOverEvent) {
+    const index = event.over?.id === 'workout-canvas' ? draft.blocks.length : draft.blocks.findIndex((block) => block.clientId === event.over?.id);
+    setDropIndex(index >= 0 ? index : null);
+  }
+
+  function dragName(id: string | number) {
+    const value = String(id);
+    if (value.startsWith(PALETTE_DRAG_PREFIX)) return findPreset(value.slice(PALETTE_DRAG_PREFIX.length))?.name ?? 'Preset';
+    const index = draft.blocks.findIndex((block) => block.clientId === value);
+    return index < 0 ? 'Block' : `${formatBlockKind(draft.blocks[index].kind)} block ${index + 1}`;
+  }
+
   function onDragCancel() {
+    setDropIndex(null);
     setActivePresetId(null);
     suppressPaletteClick.current = null;
   }
 
   function onDragEnd(event: DragEndEvent) {
+    setDropIndex(null);
     const activeId = String(event.active.id);
     if (activeId.startsWith(PALETTE_DRAG_PREFIX)) {
       const preset = findPreset(activeId.slice(PALETTE_DRAG_PREFIX.length));
       const overId = event.over?.id;
       const overIndex = draft.blocks.findIndex((block) => block.clientId === overId);
       if (preset && (overId === 'workout-canvas' || overIndex >= 0)) {
-        insertPreset(preset, overIndex >= 0 ? overIndex : draft.blocks.length);
+        insertPreset(preset, overIndex >= 0 ? overIndex : draft.blocks.length, event.active.rect.current.translated ?? undefined);
       }
       setActivePresetId(null);
       suppressPaletteClick.current = { presetId: activeId.slice(PALETTE_DRAG_PREFIX.length), until: Date.now() + 500 };
@@ -227,6 +246,8 @@ export function WorkoutBuilder({
     }
     commit({ ...draft, blocks: nextBlocks });
     setSelection(selectedBlocks.map((_, index) => before + index));
+    const origin = event.active.rect.current.translated;
+    setLanding({ id: selectedBlocks[0].clientId, left: origin?.left ?? NaN, top: origin?.top ?? NaN, message: `${selectedBlocks.length === 1 ? 'Block' : `${selectedBlocks.length} blocks`} moved to position ${before + 1}. Unsaved changes.` });
     setActivePresetId(null);
   }
 
@@ -289,8 +310,14 @@ export function WorkoutBuilder({
         sensors={sensors}
         onDragStart={onDragStart}
         onDragCancel={onDragCancel}
+        onDragOver={onDragOver}
         onDragEnd={onDragEnd}
-        accessibility={{ announcements: { onDragStart: ({ active }) => `Picked up ${String(active.id)}.`, onDragOver: ({ active, over }) => `Moving ${String(active.id)} over ${over ? String(over.id) : 'the canvas'}.`, onDragEnd: ({ active, over }) => `Moved ${String(active.id)} to ${over ? String(over.id) : 'its previous position'}.`, onDragCancel: ({ active }) => `Cancelled movement for ${String(active.id)}.` } }}
+        accessibility={{ announcements: {
+          onDragStart: ({ active }) => `Picked up ${dragName(active.id)}. Choose a position in the sequence.`,
+          onDragOver: ({ over }) => over ? `Insert at position ${over.id === 'workout-canvas' ? draft.blocks.length + 1 : draft.blocks.findIndex((block) => block.clientId === over.id) + 1}.` : 'Outside the sequence. Release to cancel.',
+          onDragEnd: ({ over }) => over ? 'Sequence updated. Changes are not saved yet.' : 'Drop cancelled. Sequence unchanged.',
+          onDragCancel: () => 'Movement cancelled. Sequence unchanged.',
+        } }}
       >
         <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(13rem,0.72fr)_minmax(0,1.45fr)_minmax(15rem,0.8fr)]">
           <aside className="space-y-4 rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] p-4" aria-label="Block preset palette">
@@ -359,8 +386,10 @@ export function WorkoutBuilder({
             </div>
             <CanvasDropZone>
               <SortableContext items={draft.blocks.map((block) => block.clientId)} strategy={verticalListSortingStrategy}>
-                {draft.blocks.length ? <div className="space-y-2">{draft.blocks.map((block, index) => <SortableBlock key={block.clientId} block={block} index={index} selected={selection.includes(index)} profile={performanceProfile} profileLabel={profileLabel} onSelect={select} />)}</div> : <p className="py-6 text-center text-sm text-[var(--text-secondary)]">Choose a preset in the block library to start the sequence.</p>}
-              </SortableContext>
+                {draft.blocks.length ? <div className="space-y-2">{draft.blocks.map((block, index) => <SortableBlock key={block.clientId} landing={landing?.id === block.clientId ? landing : null} insertionBefore={dropIndex === index} block={block} index={index} selected={selection.includes(index)} profile={performanceProfile} profileLabel={profileLabel} onSelect={select} />)}</div> : <p className="py-6 text-center text-sm text-[var(--text-secondary)]">Choose a preset in the block library to start the sequence.</p>}
+                {dropIndex === draft.blocks.length ? <p className="border-t-2 border-[var(--brand)] pt-2 text-xs text-[var(--brand)]">Drop at end of sequence</p> : null}
+            </SortableContext>
+            <p role="status" className="mt-2 text-xs text-[var(--text-secondary)]">{landing && draft.blocks.some((block) => block.clientId === landing.id) ? landing.message : 'Changes stay in this draft until you save.'}</p>
             </CanvasDropZone>
           </div>
 
@@ -459,15 +488,32 @@ function findPreset(id: string) {
   return null;
 }
 
-function SortableBlock({ block, index, selected, profile, profileLabel, onSelect }: { block: SessionEditorBlock; index: number; selected: boolean; profile: PerformanceProfile | null; profileLabel: string; onSelect: (index: number, event?: React.MouseEvent | React.KeyboardEvent) => void }) {
+function SortableBlock({ block, index, selected, profile, profileLabel, onSelect, landing, insertionBefore }: { landing: { left: number; top: number; message: string } | null; insertionBefore: boolean; block: SessionEditorBlock; index: number; selected: boolean; profile: PerformanceProfile | null; profileLabel: string; onSelect: (index: number, event?: React.MouseEvent | React.KeyboardEvent) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.clientId });
+  const articleRef = useRef<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    const node = articleRef.current;
+    if (!landing || !node) return;
+    const rect = node.getBoundingClientRect();
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let animation: Animation | undefined;
+    if (!reduced && Number.isFinite(landing.left)) {
+      animation = node.animate([
+        { transform: `translate(${landing.left - rect.left}px, ${landing.top - rect.top}px)` },
+        { transform: 'translate(0, 0)' },
+      ], { duration: 220, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+    }
+    if (rect.top < 0 || rect.bottom > window.innerHeight) node.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+    return () => animation?.cancel();
+  }, [landing]);
   const target = block.target ? formatWorkoutTarget(block.target) : 'No target';
   const preview = block.target ? formatResolvedWorkoutTarget(block.target, profile) : null;
   const missing = block.target ? missingProfileAction(block.target) : null;
   const zone = TEMPO_ZONE_META[block.zone];
   return (
-    <div className="space-y-1">
-      <article ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.55 : 1 }} className={`rounded-[3px] border p-3 ${selected ? 'border-[var(--brand)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
+    <div className="relative space-y-1">
+      {insertionBefore ? <span className="pointer-events-none absolute -top-2 left-0 right-0 z-10 border-t-2 border-[var(--brand)] text-xs text-[var(--brand)]"><span className="bg-[var(--surface)] px-1">Insert here</span></span> : null}
+      <article data-block-id={block.clientId} ref={(node) => { setNodeRef(node); articleRef.current = node; }} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.55 : 1 }} className={`rounded-[3px] border p-3 ${selected ? 'border-[var(--brand)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
         <div className="flex items-start gap-3">
           <button type="button" className={`mt-1 min-h-11 shrink-0 cursor-grab rounded-[3px] px-2 text-xs text-[var(--text-muted)] ${buttonFocusClassName}`} aria-label={`Drag block ${index + 1}`} {...attributes} {...listeners}>Drag</button>
           <button type="button" className={`min-h-11 min-w-0 flex-1 rounded-[3px] text-left ${buttonFocusClassName}`} aria-pressed={selected} onClick={(event) => onSelect(index, event)} onKeyDown={(event) => { if (event.code === 'Space') { event.preventDefault(); onSelect(index, event); } }}>

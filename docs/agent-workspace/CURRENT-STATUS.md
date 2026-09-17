@@ -1,6 +1,6 @@
 # Current Status
 
-Implementation verification last recorded on **2026-09-16**. Product priorities
+Implementation verification last recorded on **2026-09-17**. Product priorities
 updated on **2026-09-17**; this documentation-only update does not reverify
 runtime behavior. Source and tests are the authority; this file is a short
 operational snapshot, not a changelog.
@@ -111,3 +111,11 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
   was darkened during form-action alignment and no longer appears in that
   contrast result. These remaining findings are separate from the field and
   action-rhythm work.
+
+## Assessment Verification — 2026-09-17
+
+Source assessment and fresh checks completed under WSL with Node 24.8.0: 188 tests pass, lint passes, and production build passes with the existing middleware deprecation warning. No fresh browser or production verification was performed. See [ASSESSMENT.md](ASSESSMENT.md) for evidence and priorities. Personal session editing assumes a missing Assignment row; personal completion lacks an initial baseline snapshot; personal template assignment lacks server cadence validation and atomic batch writes. Passing current tests does not close these MVP risks. No application behavior was changed.
+
+## Active Repair Verification — 2026-09-17
+
+Builder placement now shows the insertion position and animates the resulting block from the drop location, with reduced-motion fallback and named announcements. The first preset click after naming a workout no longer gets lost to form collapse. Verified in Chromium: pointer insertion at marked position, click insertion, undo/redo, mobile viewport without horizontal overflow, and reduced-motion click insertion; no page errors. Desktop screenshot inspected. pnpm test (188), lint, and build pass. No claim of physical-device touch acceptance. Full tsc additionally reports pre-existing test fixture typing errors; production build passes. Design detector reports advisory-only existing label sizes.

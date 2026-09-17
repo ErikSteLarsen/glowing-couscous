@@ -53,5 +53,17 @@ styles:
 
 ## Active Tasks
 
+- `2026-09-17-functional-repairs.md` - verified incremental repairs; interaction feedback first.
+
 - `2026-09-15-workout-flow-previews.md` - three interactive workout authoring direction previews; routes live under `/design/workout-flow/*`.
 - `2026-09-15-workbench-middle-experiments.md` - three Workbench middle-surface experiments; routes live under `/design/workout-flow/workbench/{terrain,ribbon,staging}`.
+
+
+## Current Assessment
+
+See [ASSESSMENT.md](ASSESSMENT.md) for the 2026-09-17 prioritized personal workflow findings and verification results.
+
+
+## Planned Functional Repairs
+
+[FUNCTIONAL-REPAIR-PLAN.md](FUNCTIONAL-REPAIR-PLAN.md) orders the six assessed functional fixes, drag/drop and operation-feedback improvements, and combined functionality/usability acceptance gates. Implementation is active in `tasks/2026-09-17-functional-repairs.md`.

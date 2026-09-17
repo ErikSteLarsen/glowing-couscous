@@ -452,3 +452,22 @@ remain available. Do not make drag-and-drop the only way to edit block order.
   glyphs as substitutes for hierarchy and the established icon system.
 - **Don't** add a new token before checking whether the semantic token in
   `app/globals.css` already expresses the state.
+
+## Interaction Feedback Contract
+
+Functional repairs must preserve or improve usability. Prefer simpler flows and
+visual feedback at the affected block, session, or calendar date. Keep the
+existing visual identity, explicit labels, keyboard controls, and touch
+alternatives; drag-and-drop must never be the sole way to perform an action.
+
+Before an action, show its target and consequence. During an action, distinguish
+selection, dragging, and pending persistence. Afterward, make the resulting
+placement or change easy to locate. A drag should indicate the insertion point
+and visibly resolve into the resulting item; reduced-motion mode must retain a
+clear static cue. Local draft changes must not be presented as saved data.
+
+Show operation-specific pending, success, and failure feedback. Preserve drafts
+and useful context on failure, provide a clear recovery action, and confirm
+server persistence before claiming a save. Pair visual cues with meaningful
+text or accessible announcements; do not rely on color, motion, or distant
+banners alone. Reuse shared semantic tokens and component owners.
