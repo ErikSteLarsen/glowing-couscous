@@ -1,5 +1,6 @@
 'use client';
 
+import { derivePlannerSourceDurationSec, type PlannerSourceMetricBlock } from '@/lib/planner-source-metrics';
 import { getTemplateCadence, type TemplateCadence } from '@/lib/template-cadence';
 import { PlannerDesk, type PlannerDeskAthlete, type PlannerDeskCalendarDay, type PlannerDeskSource } from '@/components/PlannerDesk';
 
@@ -16,7 +17,7 @@ type PlannerLibrarySession = {
   title: string;
   sport: string;
   summary: string | null;
-  blocks: Array<{ durationSec: number }>;
+  blocks: PlannerSourceMetricBlock[];
 };
 
 type PlannerTrainingPlan = {
@@ -54,7 +55,7 @@ export function PlannerClient({
       title: session.title,
       sport: session.sport,
       summary: session.summary,
-      durationSec: session.blocks.reduce((total, block) => total + block.durationSec, 0),
+      durationSec: derivePlannerSourceDurationSec(session.blocks),
     })),
     ...templates.map((template) => ({
       key: `template:${template.id}`,
