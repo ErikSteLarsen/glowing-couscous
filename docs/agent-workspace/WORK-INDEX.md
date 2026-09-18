@@ -25,10 +25,10 @@ secondary; preserve their behavior and shared ownership boundaries.
 | `AUTH-001` | Authentication and role setup | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | `/login`, `/signup`, `/setup`, `/api/auth/*` |
 | `SHELL-001` | App shell and navigation | `shipped` | `components/AppShell.tsx`, `components/AppSidebar.tsx`, `lib/app-navigation.ts` | Authenticated `(app)` layout |
 | `COACH-001` | Coach roster and requests | `shipped` | `lib/coach-service.ts`, `lib/coach-request-service.ts` | `/coach`, `/coach/athletes/*`, request APIs |
-| `PLAN-001` | Personal planning and secondary coach planning | `in-progress` | `components/PlannerDesk.tsx`, `lib/coach-planner-service.ts`, `lib/athlete-planner-service.ts`, `lib/assignment-service.ts` | `/coach/planner`, `/athlete/planner` |
+| PLAN-001 | Personal planning and secondary coach planning | shipped | components/PlannerDesk.tsx, lib/coach-planner-service.ts, lib/athlete-planner-service.ts, lib/assignment-service.ts | /coach/planner, /athlete/planner |
 | `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | `/coach/workouts`, `/athlete/workouts` |
 | `TEMPLATE-001` | Templates and training plans | `in-progress` | `lib/template-service.ts`, `lib/coach-training-plan-service.ts` | `/coach/templates`, `/athlete/templates` |
-| `SESSION-001` | Canonical editor and outcomes | `in-progress` | `lib/session-editor.ts`, `lib/session-snapshot-service.ts`, `lib/athlete-completion-service.ts` | Session detail, `WorkoutBuilder`, outcome APIs |
+| SESSION-001 | Canonical editor and outcomes | shipped | lib/session-editor.ts, lib/session-snapshot-service.ts, lib/athlete-completion-service.ts | Session detail, WorkoutBuilder, outcome APIs |
 | `SHARE-001` | Sanitized workout sharing | `in-progress` | `lib/share-link.ts`, `lib/share-link-service.ts` | `/share/[token]`, share APIs |
 | `COMPAT-001` | Older coach session adapter | `transitional` | `lib/planner-service.ts` | `/api/coach/sessions/[sessionId]` |
 
@@ -53,8 +53,6 @@ styles:
 
 ## Active Tasks
 
-- `2026-09-17-functional-repairs.md` - verified incremental repairs; interaction feedback first.
-
 - `2026-09-15-workout-flow-previews.md` - three interactive workout authoring direction previews; routes live under `/design/workout-flow/*`.
 - `2026-09-15-workbench-middle-experiments.md` - three Workbench middle-surface experiments; routes live under `/design/workout-flow/workbench/{terrain,ribbon,staging}`.
 
@@ -64,6 +62,6 @@ styles:
 See [ASSESSMENT.md](ASSESSMENT.md) for the 2026-09-17 prioritized personal workflow findings and verification results.
 
 
-## Planned Functional Repairs
+## Completed Functional Repairs
 
-[FUNCTIONAL-REPAIR-PLAN.md](FUNCTIONAL-REPAIR-PLAN.md) orders the six assessed functional fixes, drag/drop and operation-feedback improvements, and combined functionality/usability acceptance gates. Implementation is active in `tasks/2026-09-17-functional-repairs.md`.
+[FUNCTIONAL-REPAIR-PLAN.md](FUNCTIONAL-REPAIR-PLAN.md) records the completed assessed functional fixes, drag-and-drop and operation-feedback improvements, and combined usability gates. Current evidence is in CURRENT-STATUS.md.

@@ -1,6 +1,10 @@
 # Functional reliability repair plan
 
-Prepared 2026-09-17. Implementation started 2026-09-17. Per user direction, deliver interaction feedback first, with each verified fix committed and pushed separately. This is the current remediation plan for ASSESSMENT.md, not verification that fixes have shipped.
+Prepared 2026-09-17. Implementation completed 2026-09-18. Each repair was verified, committed, and pushed separately. The completion evidence is recorded in CURRENT-STATUS.md.
+
+## Completion
+
+All eight repairs shipped to main: perceptible builder placement, operation-specific Planner feedback, strict template ranges and shortcuts, editable self-planned sessions, correct personal planned baselines and actual comparisons, canonical repeated-block durations, stale-selection clearing, and atomic retry-safe placement. Final verification passed 196 tests, lint, production build, migrated-SQLite replay and concurrent-request checks, and the fresh-account Chromium journey documented in CURRENT-STATUS.md.
 
 ## Objective and order
 

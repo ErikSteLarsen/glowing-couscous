@@ -1,9 +1,6 @@
 # Current Status
 
-Implementation verification last recorded on **2026-09-17**. Product priorities
-updated on **2026-09-17**; this documentation-only update does not reverify
-runtime behavior. Source and tests are the authority; this file is a short
-operational snapshot, not a changelog.
+Implementation verification last recorded on **2026-09-18**. The functional repair plan is complete and verified locally. Source and tests are the authority; this file is a short operational snapshot, not a changelog.
 
 ## Product
 
@@ -27,12 +24,7 @@ or seeded content can create reusable workouts/templates, schedule their own
 sessions, follow and complete them, and review saved outcomes. The existing
 Athlete role is the personal workspace.
 
-The next acceptance priority is the personal Planning Desk and its connection
-to session completion and Activity, including source/date selection, month
-navigation, persistence, error states, and mobile/keyboard use. Fresh
-authenticated browser acceptance remains open. Coach-only gaps, including
-multi-athlete calendar behavior and training-plan authoring, are secondary;
-preserve existing coach functionality while improving shared owners.
+The personal Planning Desk, session completion, and Activity path now pass the fresh-account acceptance journey, including repeated-workout placement, rescheduling, live execution, completion, actual correction, comparison, persistence, and mobile layout. Coach-only gaps remain secondary; preserve existing coach functionality while improving shared owners.
 
 ## Design Context
 
@@ -51,13 +43,13 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 
 | Gate | Result | Command or evidence |
 |---|---|---|
-| Tests | Pass, 188 tests | `pnpm test` on 2026-09-16 |
-| Lint | Pass | `pnpm lint` on 2026-09-16 |
-| Production build | Pass | `pnpm build` on 2026-09-16; Next.js reports the middleware-to-proxy deprecation warning |
+| Tests | Pass, 196 tests | pnpm test on 2026-09-18 |
+| Lint | Pass | pnpm lint on 2026-09-18 |
+| Production build | Pass | pnpm build on 2026-09-18; existing middleware deprecation warning remains |
 | Database setup | Pass in current development work | `pnpm db:setup` with local SQLite |
 | Design context | Pass | `DESIGN.md`, `.impeccable/design.json`, and the signed-in surface brief synchronized with Ink Is Movement tokens and shared components; focused workout builder presets, progressive basics, zone chart, and three workout-flow direction previews verified in source; detector completed with advisory-only findings |
 | Button standardization | Pass | Shared standard/compact/ghost tiers now use 40px/32px targets with 13px/12px sentence-case labels; compact controls are shadow-free, navigation uses ghost controls, and segmented controls plus production utility controls use the same sizing and focus rules; detector completed with advisory-only type-ramp findings |
-| Browser visual verification | Pending for Planning Desk | Earlier `agent-browser` checks covered the previous Planner composition; the current environment has no browser executable for fresh authenticated Planning Desk interaction verification |
+| Browser workflow verification | Pass | Headless Chromium completed the personal plan-to-Activity journey at desktop and 390px mobile widths on 2026-09-18 |
 | Input field standardization | Pass with known a11y gaps | Shared inputs/selects now use 40px height, 13px text, 3px radius, shared inset depth, and shared focus treatment; textareas retain extra writing room; browser-checked login and template editor at desktop/mobile widths; axe found no field-specific failure |
 | Form action rhythm | Pass with known a11y gaps | Actions that submit, cancel, clear, copy, or delete alongside 40px fields now use the matching standard 40px tone; compact sizing remains for dense toolbars, menus, list rows, and navigation; template filter/editor and athlete/coach planner actions checked at desktop/mobile widths; danger token now clears the standard action contrast threshold |
 
@@ -87,13 +79,12 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 |---|---|---|
 | Planner direction previews | Pass | Playwright Chromium checked the three public preview routes at 1440px desktop and the Field route at 390px; explicit source selection, multi-day placement, and pointer drag/drop passed against the rebuilt bundle with no page or console errors; captures are in `.impeccable/review/planner/` |
 | Atlas assignment directions | Pass with browser gap | `pnpm test`, `pnpm lint`, and `pnpm build` pass; HTTP smoke checks returned 200 for the Atlas index, Select days, Template range, Planning desk, and exact-workout preview routes; no browser executable is available in the current environment for interaction capture |
-| Production Planning Desk | Pass with browser gap | 188 tests pass, lint/build pass, Impeccable detector is clean, and unauthenticated smoke checks for `/coach/planner` and `/athlete/planner` return the expected `307` login redirect; authenticated browser interaction remains open |
+| Production Planning Desk | Pass | 196 tests, lint/build, clean Impeccable detector, authenticated multi-date placement, exact template ranges, mobile width, retry replay, and concurrent same-key requests pass |
 
 ## Known Gaps
 
 - Browser verification is still needed for public share previews, the six workout-flow direction and Workbench experiment previews, some session mutation flows, and physical pointer/touch acceptance of the workout builder and preview presets.
 - Browser verification is still needed for the revised Atlas directions, including multi-date workout selection, template range validation, source search tabs, selected-day drill-down, and responsive layout behavior.
-- First-MVP gate: fresh authenticated browser verification of the personal Planning Desk, including source search tabs, multi-date workout assignment, exact template ranges, selected-day drill-down, removal, month navigation, and mobile layout behavior. Coach athlete switching remains a secondary acceptance gap.
 - Credentials flows are locally covered; external OAuth integration is not.
 - Live execution is a local guidance stepper and does not collect device or sensor telemetry.
 - Next.js reports a middleware-to-proxy deprecation warning; this is not currently a build failure.
@@ -112,12 +103,10 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
   contrast result. These remaining findings are separate from the field and
   action-rhythm work.
 
-## Assessment Verification — 2026-09-17
+## Functional Repair Verification — 2026-09-18
 
-Source assessment and fresh checks completed under WSL with Node 24.8.0: 188 tests pass, lint passes, and production build passes with the existing middleware deprecation warning. No fresh browser or production verification was performed. See [ASSESSMENT.md](ASSESSMENT.md) for evidence and priorities. Personal session editing assumes a missing Assignment row; personal completion lacks an initial baseline snapshot; personal template assignment lacks server cadence validation and atomic batch writes. Passing current tests does not close these MVP risks. No application behavior was changed.
+All prioritized repairs are on main. The final gates pass under WSL with Node 24.8.0: 196 tests, lint, and production build. Next.js still reports the existing middleware-to-proxy deprecation warning.
 
-## Active Repair Verification — 2026-09-17
+Fresh-account Chromium acceptance covered a repeated workout showing 20 minutes for a 300-second block repeated four times, multi-date Planner placement, self-planned editing and cross-date rescheduling, live execution, completion, actual correction, Planned/Actual comparison, Activity review, persisted authentication, and a 390px Planner viewport without horizontal overflow. Earlier focused checks covered exact week/month template selection, empty source tabs, placement/removal feedback, reduced motion, pointer insertion, undo/redo, and mobile builder layout. Physical-device touch remains unclaimed.
 
-Builder placement now shows the insertion position and animates the resulting block from the drop location, with reduced-motion fallback and named announcements. The first preset click after naming a workout no longer gets lost to form collapse. Verified in Chromium: pointer insertion at marked position, click insertion, undo/redo, mobile viewport without horizontal overflow, and reduced-motion click insertion; no page errors. Desktop screenshot inspected. pnpm test (188), lint, and build pass. No claim of physical-device touch acceptance. Full tsc additionally reports pre-existing test fixture typing errors; production build passes. Design detector reports advisory-only existing label sizes.
-
-Planner feedback verified with a fresh local account in Chromium: empty Templates tab clears hidden workout selection and disables placement; delayed assignment shows Placing on its date then Placed after success; delayed removal shows Removing on its session and never Assigning. Successful removal clears obsolete placement feedback. Tests (188), lint/build pass; Planner design detector reports no findings. The coach calendar now filters dates to the selected athlete consistently with the detail panel. Remaining repairs stay open.
+The additive PlacementRequest migration was applied to the existing development SQLite database without reset. Same-key replay returned the original IDs, two concurrent identical API requests both returned the same two session IDs, different payload reuse is rejected, user scopes are isolated, and a simulated mid-batch failure rolls back sessions, plans, and the request reservation. Impeccable detectors returned no findings for the changed production UI files.
