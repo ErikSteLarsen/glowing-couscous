@@ -49,7 +49,11 @@ function createDraft() {
   );
 }
 
-function createDb({ activity = null as unknown } = {}) {
+function createDb({
+  activity = null as unknown,
+  coachBaselineJson = baselineJson as string | null,
+  assignedById = 2 as number | null,
+} = {}) {
   const calls = {
     sessionUpdate: undefined as { data: Record<string, unknown> } | undefined,
     assignmentUpdate: undefined as { where: Record<string, unknown>; data: Record<string, unknown> } | undefined,
@@ -65,7 +69,7 @@ function createDb({ activity = null as unknown } = {}) {
           trainingPlanId: null,
           planId: 10,
           templateId: 12,
-          assignedById: 2,
+          assignedById,
           date: new Date('2026-08-24T00:00:00.000Z'),
           planWeekday: null,
           timeLabel: null,
@@ -79,7 +83,7 @@ function createDb({ activity = null as unknown } = {}) {
           status: 'planned',
           source: 'template',
           adjusted: false,
-          coachBaselineJson: baselineJson,
+          coachBaselineJson,
           blocks: [
             {
               id: 4,
@@ -146,6 +150,16 @@ test('athlete planned edits move one assigned session, mark it adjusted, and pre
   assert.deepEqual(calls.assignmentUpdate?.where, { sessionId: 40, athleteId: 7 });
   assert.deepEqual(calls.assignmentUpdate?.data, { targetDate: new Date('2026-08-27T00:00:00.000Z') });
   assert.equal((calls.sessionUpdate?.data.blocks as { create: Array<{ skipped: boolean }> }).create[0].skipped, true);
+});
+
+test('self-planned edits leave baseline capture until completion so comparison reflects the final plan', async () => {
+  const { db, calls } = createDb({ coachBaselineJson: null, assignedById: null });
+  const service = createAthleteSessionAdjustmentService({ db: db as never });
+
+  const result = await service.savePlannedSession(7, 40, createDraft());
+
+  assert.deepEqual(result, { ok: true, sessionId: 40 });
+  assert.equal(calls.sessionUpdate?.data.coachBaselineJson, null);
 });
 
 test('athlete planned edits enforce ownership and completed-session protection', async () => {

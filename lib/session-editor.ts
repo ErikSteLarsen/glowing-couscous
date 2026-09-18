@@ -421,6 +421,13 @@ export function hasBaselineActualDifference(
 
 function sessionDifferenceIdentity(draft: SessionEditorDraft) {
   return {
+    sport: draft.sport,
+    title: draft.title.trim(),
+    summary: normalizeNullableText(draft.summary),
+    coachNotes: normalizeNullableText(draft.coachNotes),
+    athleteNotes: normalizeNullableText(draft.athleteNotes),
+    rpe: draft.rpe,
+    sportMetrics: draft.sportMetrics,
     schedule: {
       scheduledDate: draft.scheduledDate,
       planWeekday: draft.planWeekday,

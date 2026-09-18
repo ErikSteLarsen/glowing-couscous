@@ -6,10 +6,7 @@ import {
   validateSessionEditorDraft,
   type SessionEditorDraft,
 } from './session-editor.ts';
-import {
-  createSessionSnapshotJson,
-  validateSessionSnapshotDraft,
-} from './session-snapshot-service.ts';
+import { validateSessionSnapshotDraft } from './session-snapshot-service.ts';
 
 type AdjustmentSession = {
   id: number;
@@ -131,13 +128,7 @@ export function createAthleteSessionAdjustmentService({
         }));
 
       const serialized = serializeSessionEditorDraft(draft);
-      const baselineJson =
-        session.coachBaselineJson ??
-        createSessionSnapshotJson({
-          ...session,
-          scheduledDate: session.date,
-          blocks: session.blocks,
-        });
+      const baselineJson = session.coachBaselineJson;
       const blocks = serialized.blocks.map((block) => ({
         kind: block.kind,
         zone: block.zone,

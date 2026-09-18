@@ -349,7 +349,7 @@ test('session editor serializes canonical fields into the persistence block shap
   });
 });
 
-test('session editor difference identity includes blocks and schedule only', () => {
+test('session editor difference identity includes outcome fields, blocks, and schedule', () => {
   const baseline = addSessionEditorBlock(createEmptySessionEditorDraft({ scheduledDate: '2026-08-25' }), {
     kind: 'work',
     zone: 3,
@@ -364,7 +364,7 @@ test('session editor difference identity includes blocks and schedule only', () 
     { athleteNotes: 'New athlete note' },
     { rpe: 9 },
   ]) {
-    assert.equal(hasBaselineActualDifference(baseline, updateSessionEditorFields(baseline, patch)), false);
+    assert.equal(hasBaselineActualDifference(baseline, updateSessionEditorFields(baseline, patch)), true);
   }
 
   assert.equal(
