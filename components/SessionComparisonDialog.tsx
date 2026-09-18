@@ -21,10 +21,12 @@ export function SessionComparisonDialog({
   sessionId,
   endpoint,
   label = 'Compare baseline and actual',
+  perspective = 'personal',
 }: {
   sessionId: number;
   endpoint: string;
   label?: string;
+  perspective?: 'personal' | 'coach';
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [data, setData] = useState<ComparisonData | null>(null);
@@ -101,7 +103,7 @@ export function SessionComparisonDialog({
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Session comparison</p>
                 <h2 id={`comparison-title-${sessionId}`} className="mt-2 text-xl font-semibold text-[var(--text)]">
-                  Coach baseline and athlete actual
+                  Planned and actual
                 </h2>
               </div>
               <button
@@ -118,7 +120,7 @@ export function SessionComparisonDialog({
             {isLoading ? <p className="mt-6 text-sm text-[var(--text-secondary)]">Loading comparison...</p> : null}
             {error ? <p className="mt-6 text-sm text-[var(--status-danger)]">{error}</p> : null}
             {!isLoading && !error && !selectedDraft ? (
-              <p className="mt-6 text-sm text-[var(--text-secondary)]">No baseline or actual snapshot is available.</p>
+              <p className="mt-6 text-sm text-[var(--text-secondary)]">No planned or actual snapshot is available for this session.</p>
             ) : null}
 
             {!isLoading && !error && selectedDraft ? (
@@ -132,7 +134,7 @@ export function SessionComparisonDialog({
                       className={getSegmentedChoiceClassName(selectedVersion === 'baseline', 'compact')}
                       onClick={() => setSelectedVersion('baseline')}
                     >
-                      Coach baseline
+                      {perspective === 'coach' ? 'Coach plan' : 'Planned'}
                     </button>
                     <button
                       type="button"
@@ -141,12 +143,12 @@ export function SessionComparisonDialog({
                       className={getSegmentedChoiceClassName(selectedVersion === 'actual', 'compact')}
                       onClick={() => setSelectedVersion('actual')}
                     >
-                      Athlete actual
+                      {perspective === 'coach' ? 'Athlete actual' : 'Actual'}
                     </button>
                   </div>
                 ) : (
                   <p className="text-[13px] text-[var(--text-secondary)]">
-                    {data?.actual ? 'Only the actual snapshot is available.' : 'Only the coach baseline is available.'}
+                    {data?.actual ? 'Only the actual snapshot is available.' : 'Only the planned snapshot is available.'}
                   </p>
                 )}
                 <SnapshotView draft={selectedDraft} />

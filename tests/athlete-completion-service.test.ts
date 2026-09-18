@@ -129,6 +129,10 @@ test('manual completion stores an estimate without fabricated compliance', async
   assert.equal((calls.sessionUpdate as any).where.id, 11);
   assert.equal((calls.sessionUpdate as any).data.status, 'completed');
   assert.equal((calls.sessionUpdate as any).data.athleteNotes, 'Controlled effort');
+  const baseline = JSON.parse((calls.sessionUpdate as any).data.coachBaselineJson);
+  assert.equal(baseline.title, 'Planned session');
+  assert.equal(baseline.blocks.length, 2);
+  assert.equal(baseline.blocks[1].durationSec, 900);
 });
 
 test('completion is idempotent and updates the existing outcome instead of duplicating it', async () => {
@@ -213,6 +217,24 @@ test('direct actual correction replaces Session blocks and Activity metrics whil
   assert.equal((calls.sessionUpdate as any).data.status, 'completed');
   assert.equal((calls.sessionUpdate as any).data.coachBaselineJson, baselineJson);
   assert.equal((calls.sessionUpdate as any).data.blocks.create[0].durationSec, 300);
+});
+
+test('legacy completed sessions without a baseline do not mislabel old actual data as the plan', async () => {
+  const { service, calls } = createService(
+    plannedSession(
+      {
+        id: 20,
+        completedAt: new Date('2026-08-21T08:00:00.000Z'),
+        notes: 'Legacy outcome',
+      },
+      { status: 'completed', coachBaselineJson: null, title: 'Already-recorded actual' },
+    ),
+  );
+
+  const result = await service.saveActualOutcome({ role: 'ATHLETE', userId: 7 }, 11, actualDraft());
+
+  assert.equal(result.ok, true);
+  assert.equal((calls.sessionUpdate as any).data.coachBaselineJson, null);
 });
 
 test('actual correction permits the roster coach, rejects unrelated coaches, and validates actual drafts', async () => {

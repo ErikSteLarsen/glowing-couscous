@@ -134,8 +134,8 @@ export function SessionDetailClient({
             <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{isDone ? 'Actual correction' : 'Planned adjustment'}</p>
             <p className="mt-2 text-[13px] text-[var(--text-secondary)]">
               {isDone
-                ? 'Correct what was actually completed. The coach baseline and completed status stay intact.'
-                : 'Only this scheduled session changes. The coach baseline and reusable source stay intact.'}
+                ? 'Correct what was actually completed. The original plan and completed status stay intact.'
+                : 'Only this scheduled session changes. The original plan and reusable workout stay intact.'}
             </p>
           </div>
           <WorkoutBuilder
@@ -155,7 +155,7 @@ export function SessionDetailClient({
             />
           </label>
           <label className="block space-y-2">
-            <span className={formLabelClassName}>Planned RPE (1-10)</span>
+            <span className={formLabelClassName}>{isDone ? 'Actual RPE (1-10)' : 'Planned RPE (1-10)'}</span>
             <input
               type="number"
               min="1"

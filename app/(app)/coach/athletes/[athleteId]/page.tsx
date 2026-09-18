@@ -100,6 +100,7 @@ export default async function CoachAthleteDetailPage({
                                 <SessionComparisonDialog
                                   sessionId={session.id}
                                   endpoint={`/api/coach/sessions/${session.id}/comparison`}
+                           perspective="coach"
                                    label={`Compare ${session.title}`}
                                  />
                                   <ShareLinkButton sourceKind="session" sourceId={session.id} ariaLabel={`Create a share link for ${session.title}`} />
@@ -155,6 +156,7 @@ export default async function CoachAthleteDetailPage({
                          <SessionComparisonDialog
                            sessionId={session.id}
                            endpoint={`/api/coach/sessions/${session.id}/comparison`}
+                           perspective="coach"
                            label={`Compare ${session.title}`}
                          />
                           <ShareLinkButton sourceKind="session" sourceId={session.id} ariaLabel={`Create a share link for ${session.title}`} />

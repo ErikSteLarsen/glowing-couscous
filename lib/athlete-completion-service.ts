@@ -4,6 +4,7 @@ import { prisma } from './prisma.ts';
 import { createSessionEditorDraftFromPersisted, serializeSessionEditorDraft, type SessionEditorDraft } from './session-editor.ts';
 import { deriveSessionEditorMetrics } from './session-editor.ts';
 import {
+  createSessionSnapshotJson,
   serializeSessionSnapshot,
   validateSessionSnapshotDraft,
 } from './session-snapshot-service.ts';
@@ -124,6 +125,15 @@ export function createAthleteCompletionService({
     const metrics = deriveSessionEditorMetrics(draft);
     const serialized = serializeSessionEditorDraft(draft);
     const actualSnapshotJson = serializeSessionSnapshot(draft);
+    const plannedBaselineJson =
+      session.coachBaselineJson ??
+      (session.status !== 'completed'
+        ? createSessionSnapshotJson({
+            ...session,
+            scheduledDate: session.date,
+            blocks: session.blocks,
+          })
+        : null);
     const completedAt = session.activity?.completedAt ?? new Date();
     const blocks = serialized.blocks.map((block) => ({
       kind: block.kind,
@@ -159,7 +169,7 @@ export function createAthleteCompletionService({
           rpe: serialized.rpe,
           status: 'completed',
           adjusted: session.adjusted,
-          coachBaselineJson: session.coachBaselineJson,
+          coachBaselineJson: plannedBaselineJson,
           blocks: { create: blocks },
         },
       }),

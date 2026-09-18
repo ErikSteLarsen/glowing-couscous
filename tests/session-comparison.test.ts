@@ -116,8 +116,10 @@ test('comparison routes and shared dialog declare both role adapters and complet
   assert.match(athleteRoute, /loadComparison/);
   assert.match(coachRoute, /requireCoach/);
   assert.match(coachRoute, /loadComparison/);
-  assert.match(dialog, /Coach baseline/);
+  assert.match(dialog, /Coach plan/);
   assert.match(dialog, /Athlete actual/);
+  assert.match(dialog, /perspective === 'coach'/);
+  assert.match(dialog, /'Planned'/);
   assert.match(dialog, /role="dialog"/);
   assert.match(dialog, /Loading comparison/);
   assert.match(dialog, /Close comparison/);
