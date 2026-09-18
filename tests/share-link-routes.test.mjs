@@ -31,8 +31,8 @@ test('share schema encodes named ownership relations and source deletion cascade
   assert.match(schema, /session\s+Session\?\s+@relation\("SessionShareLinks"[^\n]*onDelete: Cascade/);
   assert.match(schema, /template\s+Template\?\s+@relation\("TemplateShareLinks"[^\n]*onDelete: Cascade/);
   assert.match(schema, /createdBy\s+User\s+@relation\("ShareLinkCreator"/);
-  assert.match(schema, /shareLinks\s+ShareLink\[\] @relation\("SessionShareLinks"\)/);
-  assert.match(schema, /shareLinks\s+ShareLink\[\] @relation\("TemplateShareLinks"\)/);
+  assert.match(schema, /shareLinks\s+ShareLink\[\]\s+@relation\("SessionShareLinks"\)/);
+  assert.match(schema, /shareLinks\s+ShareLink\[\]\s+@relation\("TemplateShareLinks"\)/);
 });
 
 test('public share route is outside the signed-in shell and hardens metadata', async () => {

@@ -1,3 +1,6 @@
+import { createHash } from 'node:crypto';
+
+import { Prisma } from '@prisma/client';
 import { getTemplateCadence, isAssignmentDate, validateTemplateDateRange } from './template-cadence.ts';
 import { addDays, differenceInCalendarDays, endOfMonth, endOfWeek, format, formatISO, isValid, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 
@@ -128,6 +131,9 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       const sourceId = typeof record.sourceId === 'number' && Number.isInteger(record.sourceId) && record.sourceId > 0
         ? record.sourceId
         : null;
+      const requestKey = typeof record.requestKey === 'string' && record.requestKey.trim().length > 0 && record.requestKey.length <= 128
+        ? record.requestKey.trim()
+        : null;
       if (!Array.isArray(record.dates) || record.dates.some((date) => !isAssignmentDate(date))) {
         return { ok: false as const, error: 'Choose valid calendar dates.', status: 400 };
       }
@@ -136,79 +142,134 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       if (!sourceKind || sourceId === null) {
         return { ok: false as const, error: 'Choose a defined workout or template.', status: 400 };
       }
+      if (!requestKey) {
+        return { ok: false as const, error: 'Placement request key is required.', status: 400 };
+      }
       if (requestedDates.length === 0) {
         return { ok: false as const, error: 'Choose at least one target day.', status: 400 };
       }
 
-      if (sourceKind === 'template') {
-        const template = await db.template.findFirst({
-          where: { id: sourceId, ownerId: athleteId },
-          include: { blocks: { orderBy: { sortOrder: 'asc' } } },
-        });
-        if (!template) return { ok: false as const, error: 'Template not found.', status: 404 };
+      const payloadHash = createHash('sha256')
+        .update(JSON.stringify({ sourceKind, sourceId, dates: requestedDates }))
+        .digest('hex');
+      const replay = await db.placementRequest.findUnique({
+        where: { userId_requestKey: { userId: athleteId, requestKey } },
+      });
+      if (replay) return placementReplayResult(replay, payloadHash);
 
-        const rangeError = validateTemplateDateRange(requestedDates, getTemplateCadence(template.cadence));
-        if (rangeError) return { ok: false as const, error: rangeError, status: 400 };
-        const dates = requestedDates;
-        const sessionIds = [];
-        for (const date of dates) {
-          const plan = await findOrCreatePlan(db, athleteId, date);
-          const created = await db.session.create({
-            data: createSourceCopyData({
-              athleteId,
-              planId: plan.id,
-              date,
-              templateId: template.id,
-              source: 'athlete-template',
+      try {
+        const sessionIds = await db.$transaction(async (transaction) => {
+          const tx = transaction as typeof prisma;
+          const existing = await tx.placementRequest.findUnique({
+            where: { userId_requestKey: { userId: athleteId, requestKey } },
+          });
+          if (existing) {
+            const result = placementReplayResult(existing, payloadHash);
+            if (!result.ok) throw new PlacementError(result.error, result.status);
+            return result.sessionIds;
+          }
+
+          let source:
+            | {
+                kind: 'template' | 'workout';
+                id: number;
+                sport: string;
+                title: string;
+                summary: string | null;
+                sportMetricsJson: string | null;
+                timeLabel: string | null;
+                blocks: Parameters<typeof createSourceCopyData>[0]['blocks'];
+              };
+
+          if (sourceKind === 'template') {
+            const template = await tx.template.findFirst({
+              where: { id: sourceId, ownerId: athleteId },
+              include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+            });
+            if (!template) throw new PlacementError('Template not found.', 404);
+            const rangeError = validateTemplateDateRange(requestedDates, getTemplateCadence(template.cadence));
+            if (rangeError) throw new PlacementError(rangeError, 400);
+            source = {
+              kind: 'template',
+              id: template.id,
               sport: template.sport,
               title: template.name,
               summary: template.summary,
               sportMetricsJson: null,
               timeLabel: null,
               blocks: template.blocks,
-            }),
+            };
+          } else {
+            const workout = await tx.session.findFirst({
+              where: {
+                id: sourceId,
+                athleteId,
+                coachOwnerId: null,
+                trainingPlanId: null,
+                planId: null,
+                date: null,
+              },
+              include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+            });
+            if (!workout) throw new PlacementError('Workout not found in your library.', 404);
+            source = {
+              kind: 'workout',
+              id: workout.id,
+              sport: workout.sport,
+              title: workout.title,
+              summary: workout.summary,
+              sportMetricsJson: workout.sportMetricsJson,
+              timeLabel: workout.timeLabel,
+              blocks: workout.blocks,
+            };
+          }
+
+          await tx.placementRequest.create({
+            data: { userId: athleteId, requestKey, payloadHash, sessionIdsJson: '[]' },
           });
-          sessionIds.push(created.id);
-        }
-        return { ok: true as const, sessionIds };
-      }
 
-      const workout = await db.session.findFirst({
-        where: {
-          id: sourceId,
-          athleteId,
-          coachOwnerId: null,
-          trainingPlanId: null,
-          planId: null,
-          date: null,
-        },
-        include: { blocks: { orderBy: { sortOrder: 'asc' } } },
-      });
-      if (!workout) return { ok: false as const, error: 'Workout not found in your library.', status: 404 };
+          const createdSessionIds: number[] = [];
+          for (const date of requestedDates) {
+            const plan = await findOrCreatePlan(tx, athleteId, date);
+            const created = await tx.session.create({
+              data: createSourceCopyData({
+                athleteId,
+                planId: plan.id,
+                date,
+                templateId: source.kind === 'template' ? source.id : null,
+                source: source.kind === 'template' ? 'athlete-template' : 'athlete-library-copy',
+                sport: source.sport,
+                title: source.title,
+                summary: source.summary,
+                sportMetricsJson: source.sportMetricsJson,
+                timeLabel: source.timeLabel,
+                blocks: source.blocks,
+              }),
+            });
+            createdSessionIds.push(created.id);
+          }
 
-      const sessionIds = [];
-      for (const date of requestedDates) {
-        const plan = await findOrCreatePlan(db, athleteId, date);
-        const created = await db.session.create({
-          data: createSourceCopyData({
-            athleteId,
-            planId: plan.id,
-            date,
-            templateId: null,
-            source: 'athlete-library-copy',
-            sport: workout.sport,
-            title: workout.title,
-            summary: workout.summary,
-            sportMetricsJson: workout.sportMetricsJson,
-            timeLabel: workout.timeLabel,
-            blocks: workout.blocks,
-          }),
+          await tx.placementRequest.update({
+            where: { userId_requestKey: { userId: athleteId, requestKey } },
+            data: { sessionIdsJson: JSON.stringify(createdSessionIds) },
+          });
+          return createdSessionIds;
         });
-        sessionIds.push(created.id);
-      }
-      return { ok: true as const, sessionIds };
-    },
 
+        return { ok: true as const, sessionIds };
+      } catch (error) {
+        if (error instanceof PlacementError) {
+          return { ok: false as const, error: error.message, status: error.status };
+        }
+        if (isPlacementRaceError(error)) {
+          const winner = await db.placementRequest.findUnique({
+            where: { userId_requestKey: { userId: athleteId, requestKey } },
+          });
+          if (winner) return placementReplayResult(winner, payloadHash);
+        }
+        throw error;
+      }
+    },
     async saveSession(athleteId: number, input: unknown, sessionId?: number) {
       const inputRecord = asRecord(input);
       const rawDates = Array.isArray(inputRecord.dates) ? inputRecord.dates : [];
@@ -314,6 +375,38 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       return { ok: true as const, sessionId };
     },
   };
+}
+
+class PlacementError extends Error {
+  readonly status: 400 | 404 | 409;
+
+  constructor(message: string, status: 400 | 404 | 409) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function placementReplayResult(
+  request: { payloadHash: string; sessionIdsJson: string },
+  payloadHash: string,
+) {
+  if (request.payloadHash !== payloadHash) {
+    return { ok: false as const, error: 'This placement key was already used for different dates or source content.', status: 409 as const };
+  }
+  try {
+    const sessionIds = JSON.parse(request.sessionIdsJson);
+    if (Array.isArray(sessionIds) && sessionIds.every((id) => Number.isInteger(id) && id > 0)) {
+      return { ok: true as const, sessionIds: sessionIds as number[] };
+    }
+  } catch {
+    // A malformed row cannot safely be replayed.
+  }
+  return { ok: false as const, error: 'Could not confirm the earlier placement.', status: 409 as const };
+}
+
+function isPlacementRaceError(error: unknown) {
+  return error instanceof Prisma.PrismaClientKnownRequestError
+    && (error.code === 'P2002' || error.code === 'P1008' || error.code === 'P2028');
 }
 
 async function findOrCreatePlan(db: typeof prisma, athleteId: number, dateInput: string) {

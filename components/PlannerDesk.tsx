@@ -110,6 +110,7 @@ export function PlannerDesk({
   const [pendingAction, setPendingAction] = useState<'assign' | number | null>(null);
   const [placement, setPlacement] = useState<PlacementFeedback | null>(null);
   const mutationInFlight = useRef(false);
+  const placementRequest = useRef<{ signature: string; requestKey: string } | null>(null);
 
   const selectedSource = sources.find((source) => source.key === selectedSourceKey && source.kind === sourceTab) ?? null;
   const visibleSources = useMemo(() => {
@@ -257,8 +258,21 @@ export function PlannerDesk({
     setPlacement({ ...feedback, state: 'placing' });
     startTransition(async () => {
       try {
+        const signature = JSON.stringify({
+          sourceKind: selectedSource.kind,
+          sourceId: selectedSource.id,
+          dates: [...selectedDates].sort(),
+        });
+        if (role === 'athlete' && placementRequest.current?.signature !== signature) {
+          placementRequest.current = { signature, requestKey: crypto.randomUUID() };
+        }
         const body = role === 'athlete'
-          ? { sourceKind: selectedSource.kind, sourceId: selectedSource.id, dates: selectedDates }
+          ? {
+              sourceKind: selectedSource.kind,
+              sourceId: selectedSource.id,
+              dates: selectedDates,
+              requestKey: placementRequest.current?.requestKey,
+            }
           : { athleteId: selectedAthleteId, source: coachSource(selectedSource), dates: selectedDates };
         const response = await fetch(role === 'athlete' ? '/api/athlete/planner/assignments' : '/api/coach/assignments', {
           method: 'POST',
@@ -273,6 +287,7 @@ export function PlannerDesk({
           return;
         }
         setMessageTone('success');
+        if (role === 'athlete') placementRequest.current = null;
         setPlacement({ ...feedback, state: 'saved' });
         setMessage(`${selectedSource.title} assigned to ${payload.sessionIds?.length ?? selectedDates.length} day${(payload.sessionIds?.length ?? selectedDates.length) === 1 ? '' : 's'}.`);
         router.refresh();

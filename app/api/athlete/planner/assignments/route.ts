@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
       sourceKind,
       sourceId,
       dates: body.value.dates,
+      requestKey: body.value.requestKey,
     });
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
 

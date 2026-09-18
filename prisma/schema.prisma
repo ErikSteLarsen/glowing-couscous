@@ -8,36 +8,50 @@ datasource db {
 }
 
 model User {
-  id               Int          @id @default(autoincrement())
-  email            String       @unique
-  name             String?
-  role             String?
-  emailVerified    DateTime?
-  image            String?
-  selfCoached      Boolean      @default(false)
-  coachId          Int?
-  prefsJson        String?
-  performanceProfileJson String?
-  passwordHash     String?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  coach            User?        @relation("CoachAthletes", fields: [coachId], references: [id], onDelete: SetNull)
-  athletes         User[]       @relation("CoachAthletes")
-  plans            Plan[]       @relation("AthletePlans")
-  sessions         Session[]    @relation("AthleteSessions")
-  coachOwnedSessions Session[]  @relation("CoachOwnedSessions")
-  trainingPlans    TrainingPlan[] @relation("CoachTrainingPlans")
-  assignedSessions Session[]    @relation("AssignedBySessions")
-  templates        Template[]   @relation("TemplateOwner")
-  activities       Activity[]   @relation("AthleteActivities")
-  receivedAssignments Assignment[] @relation("AssignmentAthlete")
-  sentAssignments  Assignment[] @relation("AssignmentAssigner")
-  accounts         Account[]
-  coachRequests    CoachRequest[] @relation("CoachRequests")
-  athleteRequests  CoachRequest[] @relation("AthleteRequests")
+  id                              Int                      @id @default(autoincrement())
+  email                           String                   @unique
+  name                            String?
+  role                            String?
+  emailVerified                   DateTime?
+  image                           String?
+  selfCoached                     Boolean                  @default(false)
+  coachId                         Int?
+  prefsJson                       String?
+  performanceProfileJson          String?
+  passwordHash                    String?
+  createdAt                       DateTime                 @default(now())
+  updatedAt                       DateTime                 @updatedAt
+  coach                           User?                    @relation("CoachAthletes", fields: [coachId], references: [id], onDelete: SetNull)
+  athletes                        User[]                   @relation("CoachAthletes")
+  plans                           Plan[]                   @relation("AthletePlans")
+  sessions                        Session[]                @relation("AthleteSessions")
+  coachOwnedSessions              Session[]                @relation("CoachOwnedSessions")
+  trainingPlans                   TrainingPlan[]           @relation("CoachTrainingPlans")
+  assignedSessions                Session[]                @relation("AssignedBySessions")
+  templates                       Template[]               @relation("TemplateOwner")
+  activities                      Activity[]               @relation("AthleteActivities")
+  receivedAssignments             Assignment[]             @relation("AssignmentAthlete")
+  sentAssignments                 Assignment[]             @relation("AssignmentAssigner")
+  accounts                        Account[]
+  coachRequests                   CoachRequest[]           @relation("CoachRequests")
+  athleteRequests                 CoachRequest[]           @relation("AthleteRequests")
   trainingPlanAssignmentsReceived TrainingPlanAssignment[] @relation("TrainingPlanAssignmentAthlete")
   trainingPlanAssignmentsSent     TrainingPlanAssignment[] @relation("TrainingPlanAssignmentAssigner")
-  shareLinksCreated ShareLink[] @relation("ShareLinkCreator")
+  shareLinksCreated               ShareLink[]              @relation("ShareLinkCreator")
+  placementRequests               PlacementRequest[]
+}
+
+model PlacementRequest {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  requestKey     String
+  payloadHash    String
+  sessionIdsJson String
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, requestKey])
+  @@index([userId, createdAt])
 }
 
 model Account {
@@ -59,15 +73,15 @@ model Account {
 }
 
 model CoachRequest {
-  id                Int      @id @default(autoincrement())
-  athleteId         Int
-  coachId           Int
-  pendingAthleteId  Int?     @unique
-  status            String   @default("PENDING")
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  athlete           User     @relation("AthleteRequests", fields: [athleteId], references: [id], onDelete: Cascade)
-  coach             User     @relation("CoachRequests", fields: [coachId], references: [id], onDelete: Cascade)
+  id               Int      @id @default(autoincrement())
+  athleteId        Int
+  coachId          Int
+  pendingAthleteId Int?     @unique
+  status           String   @default("PENDING")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  athlete          User     @relation("AthleteRequests", fields: [athleteId], references: [id], onDelete: Cascade)
+  coach            User     @relation("CoachRequests", fields: [coachId], references: [id], onDelete: Cascade)
 
   @@unique([athleteId, coachId])
 }
@@ -88,55 +102,55 @@ model Plan {
 }
 
 model TrainingPlan {
-  id           Int       @id @default(autoincrement())
+  id           Int                      @id @default(autoincrement())
   coachOwnerId Int
   name         String
   summary      String?
   sport        String
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  coachOwner   User      @relation("CoachTrainingPlans", fields: [coachOwnerId], references: [id], onDelete: Cascade)
-  sessions     Session[] @relation("TrainingPlanSessions")
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  coachOwner   User                     @relation("CoachTrainingPlans", fields: [coachOwnerId], references: [id], onDelete: Cascade)
+  sessions     Session[]                @relation("TrainingPlanSessions")
   assignments  TrainingPlanAssignment[]
 
   @@index([coachOwnerId, sport])
 }
 
 model Session {
-  id               Int           @id @default(autoincrement())
-  athleteId        Int?
-  coachOwnerId     Int?
-  trainingPlanId   Int?
-  planId           Int?
-  templateId       Int?
-  assignedById     Int?
-  date             DateTime?
-  planWeekday      Int?
-  timeLabel        String?
-  sport            String
-  title            String
-   summary          String?
-   coachNotes       String?
-   athleteNotes     String?
-   coachBaselineJson String?
-   rpe              Int?
-  sportMetricsJson String?
-  status           String        @default("planned")
-  source           String
-  adjusted         Boolean       @default(false)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  athlete          User?         @relation("AthleteSessions", fields: [athleteId], references: [id], onDelete: Cascade)
-  coachOwner       User?         @relation("CoachOwnedSessions", fields: [coachOwnerId], references: [id], onDelete: Cascade)
-  trainingPlan     TrainingPlan? @relation("TrainingPlanSessions", fields: [trainingPlanId], references: [id], onDelete: Cascade)
-  plan             Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
-  template         Template?     @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  assignedBy       User?         @relation("AssignedBySessions", fields: [assignedById], references: [id], onDelete: SetNull)
-  blocks           Block[]
-  activity         Activity?
-  assignments      Assignment[]
-  sourceAssignments Assignment[] @relation("SourceSessionAssignments")
-  shareLinks       ShareLink[] @relation("SessionShareLinks")
+  id                Int           @id @default(autoincrement())
+  athleteId         Int?
+  coachOwnerId      Int?
+  trainingPlanId    Int?
+  planId            Int?
+  templateId        Int?
+  assignedById      Int?
+  date              DateTime?
+  planWeekday       Int?
+  timeLabel         String?
+  sport             String
+  title             String
+  summary           String?
+  coachNotes        String?
+  athleteNotes      String?
+  coachBaselineJson String?
+  rpe               Int?
+  sportMetricsJson  String?
+  status            String        @default("planned")
+  source            String
+  adjusted          Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  athlete           User?         @relation("AthleteSessions", fields: [athleteId], references: [id], onDelete: Cascade)
+  coachOwner        User?         @relation("CoachOwnedSessions", fields: [coachOwnerId], references: [id], onDelete: Cascade)
+  trainingPlan      TrainingPlan? @relation("TrainingPlanSessions", fields: [trainingPlanId], references: [id], onDelete: Cascade)
+  plan              Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
+  template          Template?     @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  assignedBy        User?         @relation("AssignedBySessions", fields: [assignedById], references: [id], onDelete: SetNull)
+  blocks            Block[]
+  activity          Activity?
+  assignments       Assignment[]
+  sourceAssignments Assignment[]  @relation("SourceSessionAssignments")
+  shareLinks        ShareLink[]   @relation("SessionShareLinks")
 
   @@index([athleteId, date])
   @@index([planId, date])
@@ -145,56 +159,56 @@ model Session {
 }
 
 model Block {
-  id         Int       @id @default(autoincrement())
-  sessionId  Int?
-  templateId Int?
-  kind       String
-  zone       Int
-  durationSec Int
-  reps       Int?
-  targetType String?
-  targetLow  Int?
-  targetHigh Int?
-  targetMode String @default("absolute")
-  targetReference String?
-  targetLowDecimal String?
+  id                Int       @id @default(autoincrement())
+  sessionId         Int?
+  templateId        Int?
+  kind              String
+  zone              Int
+  durationSec       Int
+  reps              Int?
+  targetType        String?
+  targetLow         Int?
+  targetHigh        Int?
+  targetMode        String    @default("absolute")
+  targetReference   String?
+  targetLowDecimal  String?
   targetHighDecimal String?
-  note       String?
-  skipped    Boolean    @default(false)
-  sortOrder  Int
-  session    Session?  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  template   Template? @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  note              String?
+  skipped           Boolean   @default(false)
+  sortOrder         Int
+  session           Session?  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  template          Template? @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@index([sessionId, sortOrder])
   @@index([templateId, sortOrder])
 }
 
 model Template {
-  id        Int       @id @default(autoincrement())
-  ownerId   Int
-  name      String
-  sport     String
-  cadence   String    @default("day")
-  summary   String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  owner     User      @relation("TemplateOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  sessions  Session[]
-  blocks    Block[]
+  id         Int         @id @default(autoincrement())
+  ownerId    Int
+  name       String
+  sport      String
+  cadence    String      @default("day")
+  summary    String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  owner      User        @relation("TemplateOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  sessions   Session[]
+  blocks     Block[]
   shareLinks ShareLink[] @relation("TemplateShareLinks")
 }
 
 model ShareLink {
-  id           Int      @id @default(autoincrement())
-  tokenHash    String   @unique
+  id           Int       @id @default(autoincrement())
+  tokenHash    String    @unique
   sessionId    Int?
   templateId   Int?
   createdById  Int
   snapshotJson String
-  createdAt    DateTime @default(now())
-  session      Session? @relation("SessionShareLinks", fields: [sessionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+  session      Session?  @relation("SessionShareLinks", fields: [sessionId], references: [id], onDelete: Cascade)
   template     Template? @relation("TemplateShareLinks", fields: [templateId], references: [id], onDelete: Cascade)
-  createdBy    User     @relation("ShareLinkCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy    User      @relation("ShareLinkCreator", fields: [createdById], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
   @@index([templateId])
@@ -224,35 +238,35 @@ model Activity {
 }
 
 model TrainingPlanAssignment {
-  id           Int       @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
   trainingPlanId Int
-  athleteId    Int
-  weekStart    DateTime
-  assignedBy   Int
-  assignedAt   DateTime  @default(now())
-  trainingPlan TrainingPlan @relation(fields: [trainingPlanId], references: [id], onDelete: Cascade)
-  athlete      User      @relation("TrainingPlanAssignmentAthlete", fields: [athleteId], references: [id], onDelete: Cascade)
-  assigner     User      @relation("TrainingPlanAssignmentAssigner", fields: [assignedBy], references: [id], onDelete: Cascade)
-  assignments  Assignment[]
+  athleteId      Int
+  weekStart      DateTime
+  assignedBy     Int
+  assignedAt     DateTime     @default(now())
+  trainingPlan   TrainingPlan @relation(fields: [trainingPlanId], references: [id], onDelete: Cascade)
+  athlete        User         @relation("TrainingPlanAssignmentAthlete", fields: [athleteId], references: [id], onDelete: Cascade)
+  assigner       User         @relation("TrainingPlanAssignmentAssigner", fields: [assignedBy], references: [id], onDelete: Cascade)
+  assignments    Assignment[]
 
   @@unique([trainingPlanId, athleteId, weekStart])
   @@index([athleteId, weekStart])
 }
 
 model Assignment {
-  id                    Int      @id @default(autoincrement())
-  sessionId             Int
-  athleteId             Int
-  assignedBy            Int
-  assignedAt            DateTime @default(now())
-  sourceSessionId       Int?
-  targetDate            DateTime?
+  id                       Int                     @id @default(autoincrement())
+  sessionId                Int
+  athleteId                Int
+  assignedBy               Int
+  assignedAt               DateTime                @default(now())
+  sourceSessionId          Int?
+  targetDate               DateTime?
   trainingPlanAssignmentId Int?
-  session               Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  athlete               User     @relation("AssignmentAthlete", fields: [athleteId], references: [id], onDelete: Cascade)
-  assigner              User     @relation("AssignmentAssigner", fields: [assignedBy], references: [id], onDelete: Cascade)
-  sourceSession         Session? @relation("SourceSessionAssignments", fields: [sourceSessionId], references: [id], onDelete: SetNull)
-  trainingPlanAssignment TrainingPlanAssignment? @relation(fields: [trainingPlanAssignmentId], references: [id], onDelete: SetNull)
+  session                  Session                 @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  athlete                  User                    @relation("AssignmentAthlete", fields: [athleteId], references: [id], onDelete: Cascade)
+  assigner                 User                    @relation("AssignmentAssigner", fields: [assignedBy], references: [id], onDelete: Cascade)
+  sourceSession            Session?                @relation("SourceSessionAssignments", fields: [sourceSessionId], references: [id], onDelete: SetNull)
+  trainingPlanAssignment   TrainingPlanAssignment? @relation(fields: [trainingPlanAssignmentId], references: [id], onDelete: SetNull)
 
   @@unique([sessionId, athleteId])
   @@unique([sourceSessionId, athleteId, targetDate])

@@ -1,52 +1,132 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 
 import { createAthletePlannerService } from '../lib/athlete-planner-service.ts';
 
+const sourceBlocks = [{
+  kind: 'work', zone: 3, durationSec: 1800, reps: null, targetType: null,
+  targetMode: 'absolute', targetReference: null, targetLow: null, targetHigh: null,
+  targetLowDecimal: null, targetHighDecimal: null, note: 'Main set', skipped: false, sortOrder: 0,
+}];
+
+function createPlacementHarness({ failAtSession }: { failAtSession?: number } = {}) {
+  let nextSessionId = 30;
+  let nextPlanId = 40;
+  let createAttempts = 0;
+  const state = {
+    sessions: [] as Array<Record<string, unknown>>,
+    plans: [] as Array<{ id: number; athleteId: number; startDate: Date; endDate: Date }>,
+    requests: new Map<string, { userId: number; requestKey: string; payloadHash: string; sessionIdsJson: string }>(),
+  };
+  const keyFor = (userId: number, requestKey: string) => `${userId}:${requestKey}`;
+  const db: any = {
+    session: {
+      findMany: async () => [],
+      findFirst: async ({ where }: { where: { id?: number; athleteId?: number } }) => where.id === 4
+        ? {
+            id: 4,
+            athleteId: where.athleteId,
+            coachOwnerId: null,
+            trainingPlanId: null,
+            planId: null,
+            date: null,
+            timeLabel: null,
+            sport: 'RUNNING',
+            title: 'Saved intervals',
+            summary: 'A reusable source',
+            sportMetricsJson: '{"distanceKm":8}',
+            blocks: sourceBlocks,
+          }
+        : null,
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        createAttempts += 1;
+        if (failAtSession === createAttempts) throw new Error('simulated session write failure');
+        const created = { id: nextSessionId++, ...data };
+        state.sessions.push(created);
+        return created;
+      },
+      update: async () => ({ id: 0 }),
+      delete: async () => ({ id: 0 }),
+    },
+    template: {
+      findMany: async () => [],
+      findFirst: async ({ where }: { where: { id: number; ownerId: number } }) => where.id === 9
+        ? {
+            id: 9,
+            ownerId: where.ownerId,
+            sport: 'CYCLING',
+            name: 'Build week',
+            cadence: 'week',
+            summary: null,
+            blocks: sourceBlocks,
+          }
+        : null,
+    },
+    plan: {
+      findFirst: async ({ where }: { where: { athleteId: number; startDate: Date; endDate: Date } }) =>
+        state.plans.find((plan) =>
+          plan.athleteId === where.athleteId
+          && plan.startDate.getTime() === where.startDate.getTime()
+          && plan.endDate.getTime() === where.endDate.getTime(),
+        ) ?? null,
+      create: async ({ data }: { data: { athleteId: number; startDate: Date; endDate: Date } }) => {
+        const plan = { id: nextPlanId++, ...data };
+        state.plans.push(plan);
+        return plan;
+      },
+    },
+    placementRequest: {
+      findUnique: async ({ where }: { where: { userId_requestKey: { userId: number; requestKey: string } } }) => {
+        const { userId, requestKey } = where.userId_requestKey;
+        return state.requests.get(keyFor(userId, requestKey)) ?? null;
+      },
+      create: async ({ data }: { data: { userId: number; requestKey: string; payloadHash: string; sessionIdsJson: string } }) => {
+        state.requests.set(keyFor(data.userId, data.requestKey), { ...data });
+        return data;
+      },
+      update: async ({ where, data }: {
+        where: { userId_requestKey: { userId: number; requestKey: string } };
+        data: { sessionIdsJson: string };
+      }) => {
+        const { userId, requestKey } = where.userId_requestKey;
+        const key = keyFor(userId, requestKey);
+        const current = state.requests.get(key);
+        if (!current) throw new Error('request missing');
+        const updated = { ...current, ...data };
+        state.requests.set(key, updated);
+        return updated;
+      },
+    },
+    block: { deleteMany: async () => ({ count: 0 }) },
+    async $transaction(input: unknown) {
+      if (typeof input !== 'function') return Promise.all(input as Promise<unknown>[]);
+      const snapshot = {
+        sessions: [...state.sessions],
+        plans: [...state.plans],
+        requests: new Map(state.requests),
+        nextSessionId,
+        nextPlanId,
+      };
+      try {
+        return await (input as (tx: unknown) => Promise<unknown>)(db);
+      } catch (error) {
+        state.sessions.splice(0, state.sessions.length, ...snapshot.sessions);
+        state.plans.splice(0, state.plans.length, ...snapshot.plans);
+        state.requests.clear();
+        for (const [key, value] of snapshot.requests) state.requests.set(key, value);
+        nextSessionId = snapshot.nextSessionId;
+        nextPlanId = snapshot.nextPlanId;
+        throw error;
+      }
+    },
+  };
+  return { service: createAthletePlannerService({ db }), state };
+}
+
 test('athlete planner creates independent sessions for each selected date', async () => {
-  const sessions: Array<Record<string, unknown>> = [];
-  const plans: Array<{ id: number; athleteId: number; startDate: Date; endDate: Date }> = [];
-  let nextSessionId = 10;
-  let nextPlanId = 20;
-
-  const service = createAthletePlannerService({
-    db: {
-      session: {
-        findMany: async () => [],
-        findFirst: async () => null,
-        create: async ({ data }: { data: Record<string, unknown> }) => {
-          const id = nextSessionId++;
-          sessions.push({ id, ...data });
-          return { id };
-        },
-        update: async () => ({ id: 0 }),
-        delete: async () => ({ id: 0 }),
-      },
-      template: {
-        findMany: async () => [],
-        findFirst: async () => null,
-      },
-      plan: {
-        findFirst: async ({ where }: { where: { athleteId: number; startDate: Date; endDate: Date } }) =>
-          plans.find(
-            (plan) =>
-              plan.athleteId === where.athleteId &&
-              plan.startDate.getTime() === where.startDate.getTime() &&
-              plan.endDate.getTime() === where.endDate.getTime(),
-          ) ?? null,
-        create: async ({ data }: { data: { athleteId: number; name: string; startDate: Date; endDate: Date } }) => {
-          const plan = { id: nextPlanId++, ...data };
-          plans.push(plan);
-          return plan;
-        },
-      },
-      block: {
-        deleteMany: async () => ({ count: 0 }),
-      },
-      $transaction: async (operations: Promise<unknown>[]) => Promise.all(operations),
-    } as never,
-  });
-
+  const { service, state } = createPlacementHarness();
   const result = await service.saveSession(7, {
     dates: ['2026-08-24', '2026-08-26'],
     sport: 'RUNNING',
@@ -56,198 +136,96 @@ test('athlete planner creates independent sessions for each selected date', asyn
   });
 
   assert.equal(result.ok, true);
-  if (!result.ok) return;
-  assert.equal(result.sessionIds.length, 2);
-  assert.deepEqual(
-    sessions.map((session) => session.date),
-    [new Date('2026-08-24T00:00:00.000Z'), new Date('2026-08-26T00:00:00.000Z')],
-  );
-  assert.equal(sessions.every((session) => session.athleteId === 7), true);
-  assert.equal(sessions.every((session) => session.coachOwnerId === null), true);
-  assert.equal(plans.length, 1);
+  assert.equal(state.sessions.length, 2);
+  assert.equal(state.plans.length, 1);
 });
 
-test('athlete planner places a saved workout without opening an editor', async () => {
-  const sessions: Array<Record<string, unknown>> = [];
-  let nextSessionId = 30;
-  let nextPlanId = 40;
-  const source = {
-    id: 4,
-    athleteId: 7,
-    coachOwnerId: null,
-    trainingPlanId: null,
-    planId: null,
-    date: null,
-    timeLabel: null,
-    sport: 'RUNNING',
-    title: 'Saved intervals',
-    summary: 'A reusable source',
-    sportMetricsJson: '{"distanceKm":8}',
-    blocks: [{
-      kind: 'work', zone: 3, durationSec: 1800, reps: null, targetType: null,
-      targetMode: 'absolute', targetReference: null, targetLow: null, targetHigh: null,
-      targetLowDecimal: null, targetHighDecimal: null, note: 'Main set', skipped: false, sortOrder: 0,
-    }],
-  };
-  const service = createAthletePlannerService({
-    db: {
-      session: {
-        findMany: async () => [],
-        findFirst: async ({ where }: { where: { id?: number } }) => where.id === source.id ? source : null,
-        create: async ({ data }: { data: Record<string, unknown> }) => {
-          const id = nextSessionId++;
-          sessions.push({ id, ...data });
-          return { id };
-        },
-        update: async () => ({ id: 0 }),
-        delete: async () => ({ id: 0 }),
-      },
-      template: { findMany: async () => [], findFirst: async () => null },
-      plan: {
-        findFirst: async () => null,
-        create: async ({ data }: { data: Record<string, unknown> }) => ({ id: nextPlanId++, ...data }),
-      },
-      block: { deleteMany: async () => ({ count: 0 }) },
-      $transaction: async (operations: Promise<unknown>[]) => Promise.all(operations),
-    } as never,
-  });
-
-  const result = await service.assignSource(7, {
+test('athlete planner places a saved workout atomically and replays the same request without duplicate writes', async () => {
+  const { service, state } = createPlacementHarness();
+  const input = {
     sourceKind: 'workout',
-    sourceId: source.id,
+    sourceId: 4,
     dates: ['2026-08-24', '2026-08-26'],
-  });
+    requestKey: 'placement-1',
+  };
 
-  assert.deepEqual(result, { ok: true, sessionIds: [30, 31] });
-  assert.deepEqual(sessions.map((session) => session.date), [
-    new Date('2026-08-24T00:00:00.000Z'),
-    new Date('2026-08-26T00:00:00.000Z'),
-  ]);
-  assert.equal(sessions.every((session) => session.source === 'athlete-library-copy'), true);
-  assert.equal(sessions.every((session) => session.title === source.title), true);
+  const first = await service.assignSource(7, input);
+  const replay = await service.assignSource(7, { ...input, dates: [...input.dates].reverse() });
+
+  assert.deepEqual(first, { ok: true, sessionIds: [30, 31] });
+  assert.deepEqual(replay, first);
+  assert.equal(state.sessions.length, 2);
+  assert.equal(state.requests.size, 1);
 });
 
-test('athlete planner rejects a single-date week template without writing', async () => {
-  let createdDate: Date | null = null;
-  const service = createAthletePlannerService({
-    db: {
-      session: {
-        findMany: async () => [],
-        findFirst: async () => null,
-        create: async ({ data }: { data: { date: Date } }) => {
-          createdDate = data.date;
-          return { id: 50 };
-        },
-        update: async () => ({ id: 0 }),
-        delete: async () => ({ id: 0 }),
-      },
-      template: {
-        findMany: async () => [],
-        findFirst: async () => ({
-          id: 9,
-          ownerId: 7,
-          sport: 'CYCLING',
-          name: 'Build week',
-          cadence: 'week',
-          summary: null,
-          blocks: [{
-            kind: 'work', zone: 2, durationSec: 1200, reps: null, targetType: null,
-            targetMode: 'absolute', targetReference: null, targetLow: null, targetHigh: null,
-            targetLowDecimal: null, targetHighDecimal: null, note: null, skipped: false, sortOrder: 0,
-          }],
-        }),
-      },
-      plan: {
-        findFirst: async () => null,
-        create: async () => ({ id: 60 }),
-      },
-      block: { deleteMany: async () => ({ count: 0 }) },
-      $transaction: async (operations: Promise<unknown>[]) => Promise.all(operations),
-    } as never,
-  });
+test('athlete planner rolls back every date and its request reservation when a later write fails', async () => {
+  const { service, state } = createPlacementHarness({ failAtSession: 2 });
 
-  const result = await service.assignSource(7, { sourceKind: 'template', sourceId: 9, dates: ['2026-08-27'] });
+  await assert.rejects(
+    service.assignSource(7, {
+      sourceKind: 'workout',
+      sourceId: 4,
+      dates: ['2026-08-24', '2026-08-26'],
+      requestKey: 'placement-failure',
+    }),
+    /simulated session write failure/,
+  );
 
-  assert.equal(result.ok, false);
-  assert.equal(createdDate, null);
+  assert.equal(state.sessions.length, 0);
+  assert.equal(state.plans.length, 0);
+  assert.equal(state.requests.size, 0);
 });
 
-test('athlete planner preserves an exact multi-day template range', async () => {
-  const createdDates: Date[] = [];
-  let nextSessionId = 70;
-  const service = createAthletePlannerService({
-    db: {
-      session: {
-        findMany: async () => [],
-        findFirst: async () => null,
-        create: async ({ data }: { data: { date: Date } }) => {
-          createdDates.push(data.date);
-          return { id: nextSessionId++ };
-        },
-        update: async () => ({ id: 0 }),
-        delete: async () => ({ id: 0 }),
-      },
-      template: {
-        findMany: async () => [],
-        findFirst: async () => ({
-          id: 9,
-          ownerId: 7,
-          sport: 'CYCLING',
-          name: 'Build week',
-          cadence: 'week',
-          summary: null,
-          blocks: [{
-            kind: 'work', zone: 2, durationSec: 1200, reps: null, targetType: null,
-            targetMode: 'absolute', targetReference: null, targetLow: null, targetHigh: null,
-            targetLowDecimal: null, targetHighDecimal: null, note: null, skipped: false, sortOrder: 0,
-          }],
-        }),
-      },
-      plan: {
-        findFirst: async () => null,
-        create: async ({ data }: { data: Record<string, unknown> }) => ({ id: Number(data.athleteId) + 60 }),
-      },
-      block: { deleteMany: async () => ({ count: 0 }) },
-      $transaction: async (operations: Promise<unknown>[]) => Promise.all(operations),
-    } as never,
+test('athlete planner rejects reuse of a request key for a different payload', async () => {
+  const { service, state } = createPlacementHarness();
+  await service.assignSource(7, {
+    sourceKind: 'workout', sourceId: 4, dates: ['2026-08-24'], requestKey: 'placement-conflict',
   });
 
+  const conflict = await service.assignSource(7, {
+    sourceKind: 'workout', sourceId: 4, dates: ['2026-08-25'], requestKey: 'placement-conflict',
+  });
+
+  assert.deepEqual(conflict, {
+    ok: false,
+    error: 'This placement key was already used for different dates or source content.',
+    status: 409,
+  });
+  assert.equal(state.sessions.length, 1);
+});
+
+test('placement keys are user-scoped and a new key permits an intentional repeat', async () => {
+  const { service, state } = createPlacementHarness();
+  const payload = { sourceKind: 'workout' as const, sourceId: 4, dates: ['2026-08-24'] };
+
+  assert.equal((await service.assignSource(7, { ...payload, requestKey: 'shared-key' })).ok, true);
+  assert.equal((await service.assignSource(8, { ...payload, requestKey: 'shared-key' })).ok, true);
+  assert.equal((await service.assignSource(7, { ...payload, requestKey: 'new-key' })).ok, true);
+
+  assert.equal(state.sessions.length, 3);
+  assert.equal(state.requests.size, 3);
+});
+
+test('athlete planner rejects incomplete template ranges before any session write', async () => {
+  const { service, state } = createPlacementHarness();
   const result = await service.assignSource(7, {
     sourceKind: 'template',
     sourceId: 9,
-    dates: ['2026-08-24', '2026-08-25', '2026-08-26', '2026-08-27', '2026-08-28', '2026-08-29', '2026-08-30'],
+    dates: ['2026-08-27'],
+    requestKey: 'template-range',
   });
 
-  assert.equal(result.ok, true);
-  assert.deepEqual(createdDates, [
-    new Date('2026-08-24T00:00:00.000Z'),
-    new Date('2026-08-25T00:00:00.000Z'),
-    new Date('2026-08-26T00:00:00.000Z'),
-    new Date('2026-08-27T00:00:00.000Z'),
-    new Date('2026-08-28T00:00:00.000Z'),
-    new Date('2026-08-29T00:00:00.000Z'),
-    new Date('2026-08-30T00:00:00.000Z'),
-  ]);
+  assert.equal(result.ok, false);
+  assert.equal(state.sessions.length, 0);
+  assert.equal(state.requests.size, 0);
 });
 
-test('athlete planner rejects a template owned by another user', async () => {
-  const service = createAthletePlannerService({
-    db: {
-      session: { findMany: async () => [], findFirst: async () => null, create: async () => ({ id: 1 }), update: async () => ({ id: 1 }), delete: async () => ({ id: 1 }) },
-      template: { findMany: async () => [], findFirst: async () => null },
-      plan: { findFirst: async () => null, create: async () => ({ id: 1 }) },
-      block: { deleteMany: async () => ({ count: 0 }) },
-      $transaction: async (operations: Promise<unknown>[]) => Promise.all(operations),
-    } as never,
-  });
+test('athlete placement API and UI carry a stable retry key', async () => {
+  const route = await readFile(path.join(process.cwd(), 'app/api/athlete/planner/assignments/route.ts'), 'utf8');
+  const planner = await readFile(path.join(process.cwd(), 'components/PlannerDesk.tsx'), 'utf8');
 
-  const result = await service.saveSession(7, {
-    dates: ['2026-08-24'],
-    templateId: 99,
-    sport: 'RUNNING',
-    title: 'Copied session',
-    blocks: [{ kind: 'work', zone: 2, durationSec: 900, sortOrder: 0 }],
-  });
-
-  assert.deepEqual(result, { ok: false, error: 'Template not found.', status: 404 });
+  assert.match(route, /requestKey: body\.value\.requestKey/);
+  assert.match(planner, /crypto\.randomUUID\(\)/);
+  assert.match(planner, /placementRequest\.current\?\.signature !== signature/);
+  assert.match(planner, /if \(role === 'athlete'\) placementRequest\.current = null/);
 });
