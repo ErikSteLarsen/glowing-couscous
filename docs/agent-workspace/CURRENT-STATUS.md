@@ -74,8 +74,10 @@ The workout creator’s session-shape preview now uses a dedicated 160px terrain
 each block remains time-proportional in width and rises from a visible Zone 1
 recovery baseline through Zone 5. Compact and card previews keep their denser
 shared timeline treatment. The focused source check and direct lint pass on
-2026-09-22; the production build remains blocked by pre-existing duplicate
-`redirect`, Prisma package-read, and Google Font network failures.
+2026-09-22; the duplicate `redirect` import that blocked compilation was
+removed and the related 35-test architecture/navigation check passes. The
+production build remains blocked locally by Prisma package-read access and
+Google Font network failures.
 
 The basics step was subsequently tightened to a centered 46rem maximum measure
 with clearer spacing and a standard-size Continue action. Template selection
@@ -89,9 +91,8 @@ Today label, and Workout Builder has a dedicated, announced trailing drop zone
 for placing a block last. Direct lint and 35 focused dependency-independent
 tests pass. The full suite is currently blocked when Prisma-importing test
 modules hit access-denied reads of the installed Prisma client. A direct
-production compilation is likewise blocked by those package reads, an
-unavailable Google Font fetch, and a pre-existing duplicate `redirect` import;
-these failures are outside the repaired files.
+production compilation is likewise blocked by those package reads and an
+unavailable Google Font fetch; these failures are outside the repaired files.
 
 ## Verified Gates
 
