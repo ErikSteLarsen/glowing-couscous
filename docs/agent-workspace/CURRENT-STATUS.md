@@ -2,6 +2,13 @@
 
 Implementation verification last recorded on **2026-09-18**. The functional repair plan is complete and verified locally. Source and tests are the authority; this file is a short operational snapshot, not a changelog.
 
+Checkout reconciliation was verified on **2026-09-22**. The Windows layout and
+product changes were rebased onto the newer Ubuntu commit history, later Ubuntu
+working-tree refinements and its live Impeccable configuration were included,
+and unique changes from both checkouts were preserved. On the reconciled Windows
+tree, `pnpm test` passes all 196 tests, `pnpm lint` passes, and `pnpm build`
+passes with the existing middleware-to-proxy deprecation warning.
+
 ## Product
 
 Workout Planner is a Tempo-aligned personal training planner with optional coach collaboration. The live app

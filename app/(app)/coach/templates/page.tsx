@@ -14,7 +14,7 @@ export default async function CoachTemplatesPage() {
     <PageShell>
       <TopBar
         title="Templates"
-        description="Create reusable day, week, or month structures. Build the content here; place it on a calendar from Planner."
+        description="Build reusable day, week, and month training templates."
       />
        <CoachTemplatesClient templates={templates} role="COACH" />
     </PageShell>

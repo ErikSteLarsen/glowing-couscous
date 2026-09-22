@@ -34,6 +34,7 @@ export default async function AthletePage() {
     <PageShell className="ink-home">
       <TopBar
         title={`Good morning, ${dashboard.athlete.name}`}
+        description="See your next session and review your training week."
       />
 
       <div className="space-y-6 xl:space-y-8">

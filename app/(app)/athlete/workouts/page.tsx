@@ -20,7 +20,7 @@ export default async function AthleteWorkoutsPage() {
     <PageShell>
       <TopBar
         title="Workouts"
-        description="Create workouts once, then add copies to specific days in Planner. Your library versions stay unscheduled."
+        description="Create and edit reusable workouts."
       />
       <WorkoutLibraryClient
         role="ATHLETE"

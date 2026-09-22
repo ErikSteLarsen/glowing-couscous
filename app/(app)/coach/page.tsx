@@ -23,7 +23,7 @@ export default async function CoachPage() {
     <PageShell>
       <TopBar
         title="Your athletes"
-        description={`${coach.athletes.length} active athletes${coach.pendingRequests.length ? ` · ${coach.pendingRequests.length} pending requests` : ''}.`}
+        description="Review your athletes and manage connection requests."
       />
 
       <div className="grid gap-4 sm:grid-cols-3">

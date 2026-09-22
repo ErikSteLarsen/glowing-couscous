@@ -18,7 +18,7 @@ export default async function SettingsPage() {
     <PageShell>
       <TopBar
         title="Preferences"
-        description="Customize Home overview."
+        description="Choose which overview cards appear on Home."
       />
       <SettingsClient role={account.role} initialOverviewCards={initialOverviewCards} />
     </PageShell>

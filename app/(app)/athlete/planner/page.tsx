@@ -27,7 +27,7 @@ export default async function AthletePlannerPage({
 
   return (
     <PageShell>
-      <TopBar title="Planner" />
+      <TopBar title="Planner" description="Schedule workouts and templates on your calendar." />
       <AthletePlannerClient
         templates={workspace.templates}
         workouts={workouts}

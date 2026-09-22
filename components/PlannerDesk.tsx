@@ -491,7 +491,7 @@ function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, d
   const shortcutDates = selectedSource?.kind === 'template' ? templateDatesForSelection(selectedSource.cadence ?? 'day', selectedDates[0] ?? initialDate) : [];
   const rangeError = selectedSource?.kind === 'template' ? validateTemplateDateRange(selectedDates, selectedSource.cadence ?? 'day') : null;
   return (
-    <section className="planner-desk__calendar min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-inset)]">
+    <section className={`planner-desk__calendar ${selectedSource?.kind === 'template' && selectedSource.cadence !== 'day' ? 'planner-desk__calendar--range' : ''} min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-inset)]`}>
       <div className="flex flex-col gap-3 border-b border-[var(--border)] pb-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold tracking-[-0.02em]">{label}</h2>

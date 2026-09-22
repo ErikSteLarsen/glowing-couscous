@@ -125,6 +125,7 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
     <PageShell>
       <TopBar
         title="Search coaches"
+        description="Find a coach and send a connection request."
       />
       <Surface>
          {requestState.latestRequest?.status === 'PENDING' ? (
