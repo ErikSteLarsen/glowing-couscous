@@ -53,7 +53,7 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 | Tests | Pass, 196 tests | pnpm test on 2026-09-18 |
 | Lint | Pass | pnpm lint on 2026-09-18 |
 | Production build | Pass | pnpm build on 2026-09-18; existing middleware deprecation warning remains |
-| Database setup | Pass in current development work | `pnpm db:setup` with local SQLite |
+| Database setup | PostgreSQL migration ready; Neon connection not run here | Prisma schema validation and PostgreSQL baseline diff verified on 2026-09-22; local `.env` still points to the legacy SQLite database |
 | Design context | Pass | `DESIGN.md`, `.impeccable/design.json`, and the signed-in surface brief synchronized with Ink Is Movement tokens and shared components; focused workout builder presets, progressive basics, zone chart, and three workout-flow direction previews verified in source; detector completed with advisory-only findings |
 | Button standardization | Pass | Shared standard/compact/ghost tiers now use 40px/32px targets with 13px/12px sentence-case labels; compact controls are shadow-free, navigation uses ghost controls, and segmented controls plus production utility controls use the same sizing and focus rules; detector completed with advisory-only type-ramp findings |
 | Browser workflow verification | Pass | Headless Chromium completed the personal plan-to-Activity journey at desktop and 390px mobile widths on 2026-09-18 |

@@ -45,11 +45,33 @@ Use `pnpm`.
 1. Copy `.env.example` to `.env`.
 2. Set a real `AUTH_SECRET`, for example with `openssl rand -base64 32`.
 3. Optionally set `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` for Google OAuth.
-4. Run `pnpm db:setup` to create and seed the local SQLite database.
-5. Run `pnpm dev`.
+4. Set `DATABASE_URL` to a Neon pooled PostgreSQL connection string and
+   `DATABASE_URL_UNPOOLED` to the matching Neon direct connection string. For local
+   development, a local PostgreSQL database can be used for both values.
+5. Run `pnpm db:setup` to apply migrations and seed demo data.
+6. Run `pnpm dev`.
 
 Prisma CLI reads `.env`, so a database-only `.env.local` is not sufficient for
-`pnpm db:push` or `pnpm db:setup`.
+`pnpm db:push`, `pnpm db:migrate`, or `pnpm db:setup`. `DATABASE_URL` is the
+pooled runtime URL; `DATABASE_URL_UNPOOLED` is used for Prisma migrations and
+should not use Neon’s `-pooler` hostname.
+
+## Neon and Vercel
+
+1. Create a Neon project and copy both connection strings from the branch
+   connection dialog.
+2. Add `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED` (direct) to the
+   Vercel project for every environment where the app will run. Keep the
+   direct URL out of client-side code.
+3. Add the Auth.js variables from `.env.example`, then deploy. The Vercel
+   build runs `prisma migrate deploy` before building the Next.js app.
+4. Run `pnpm db:seed` only against a disposable development or preview branch;
+   the seed script deletes existing application data before recreating demo
+   accounts.
+
+The PostgreSQL baseline migration creates a new Neon database from the current
+schema. It does not convert the ignored legacy `prisma/dev.db` file; migrate
+existing SQLite data separately before switching a production user base.
 
 ## Demo Accounts
 
@@ -71,8 +93,11 @@ pnpm lint
 pnpm build
 pnpm db:setup
 pnpm db:push
+pnpm db:migrate
 pnpm db:seed
 ```
 
-`pnpm db:push` may reset local SQLite data. Run `pnpm db:seed` afterward when
-you need demo data again.
+`pnpm db:migrate` applies committed migrations and is the command used during
+Vercel builds. Use `pnpm db:push` only for local schema prototyping; it does not
+create migration files. `pnpm db:seed` clears and recreates the demo data, so
+do not run it against a production database.

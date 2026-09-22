@@ -18,8 +18,9 @@ pnpm dev          # Generate Prisma Client and start Next.js
 pnpm test         # Run the source and architecture tests
 pnpm lint         # Run ESLint
 pnpm build        # Generate Prisma Client and build production output
-pnpm db:setup     # Push the SQLite schema and seed demo data
-pnpm db:push      # Push schema changes; may reset local data
+pnpm db:setup     # Apply PostgreSQL migrations and seed demo data
+pnpm db:push      # Push schema changes during local prototyping
+pnpm db:migrate   # Apply committed migrations
 pnpm db:seed      # Seed demo data
 ```
 
