@@ -1277,3 +1277,85 @@ body {
   .workout-preview__terrain-block-inner,
   .workout-preview__ribbon-segment { transition: none; }
 }
+/* Workspace geometry: change these tokens to adjust every production page. */
+:root {
+  --page-max-width: 1800px;
+  --page-gutter: 20px;
+  --page-block-padding: 24px;
+  --page-header-height: 96px;
+  --page-section-gap: 16px;
+}
+
+.page-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--page-section-gap);
+  width: 100%;
+  min-width: 0;
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  padding: var(--page-block-padding) var(--page-gutter);
+  container-type: inline-size;
+}
+.page-layout > * { min-width: 0; }
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: var(--page-header-height);
+}
+.page-header h1 { overflow-wrap: anywhere; }
+.page-header > :last-child { flex-shrink: 0; }
+.page-header > :first-child { flex-shrink: 1; }
+.page-header--center { flex-direction: column; align-items: center; text-align: center; }
+.auth-page-layout {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+  max-width: 768px;
+  min-height: calc(100dvh - 3rem);
+  margin-inline: auto;
+  padding: 28px 20px;
+}
+.planner-desk { display: grid; gap: 16px; min-width: 0; }
+.planner-desk__layout { display: grid; align-items: start; gap: 16px; min-width: 0; }
+.planner-desk__month { height: clamp(264px, calc(100dvh - 450px - var(--planner-range-space, 0px)), 528px); }
+.planner-desk__calendar--range { --planner-range-space: 80px; }
+.planner-desk__day { min-height: 0; overflow: hidden; }
+.planner-desk__count { display: none; }
+.planner-desk__feedback { max-width: 100%; }
+
+@media (min-width: 768px) {
+  :root { --page-gutter: 24px; }
+}
+@media (min-width: 1600px) {
+  :root { --page-gutter: 32px; }
+}
+@media (max-width: 639px) {
+  .page-header { flex-direction: column; }
+}
+/* Use the page's actual width, including the space taken by navigation. */
+@container (min-width: 900px) {
+  .planner-desk__layout {
+    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+  .planner-desk__sources { grid-column: 1; grid-row: 1; max-height: 300px; overflow-y: auto; }
+  .planner-desk__calendar { grid-column: 2; grid-row: 1 / 3; }
+  .planner-desk__selection { grid-column: 1; grid-row: 2; max-height: 240px; overflow-y: auto; }
+}
+@container (min-width: 1400px) {
+  .planner-desk__layout { grid-template-columns: 240px minmax(0, 1fr) 280px; grid-template-rows: auto; }
+  .planner-desk__sources { max-height: calc(100dvh - 240px); }
+  .planner-desk__calendar { grid-column: 2; grid-row: 1; }
+  .planner-desk__selection { grid-column: 3; grid-row: 1; max-height: calc(100dvh - 240px); }
+}
+@container (max-width: 600px) {
+  .planner-desk__day { padding: 6px 3px; }
+  .planner-desk__day > span:first-child { gap: 2px; }
+  .planner-desk__today { font-size: 0; padding: 0; width: 6px; height: 6px; }
+  .planner-desk__sessions { display: none; }
+  .planner-desk__count { display: block; margin-top: 4px; font-size: 10px; }
+}

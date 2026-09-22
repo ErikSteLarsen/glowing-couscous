@@ -15,7 +15,7 @@ export default async function SettingsPage() {
   const initialOverviewCards = readOverviewCardsFromPrefsJson(account.prefsJson);
 
   return (
-    <PageShell size="wide">
+    <PageShell>
       <TopBar
         title="Preferences"
         description="Customize Home overview."

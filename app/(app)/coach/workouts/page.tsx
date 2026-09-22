@@ -16,7 +16,7 @@ export default async function CoachWorkoutsPage() {
   ]);
 
   return (
-    <PageShell size="wall">
+    <PageShell>
       <TopBar
         title="Workouts"
         description="Create workouts once, then add copies to specific days in Planner. Your library versions stay unscheduled."

@@ -9,7 +9,7 @@ import {
   getSegmentedChoiceClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
-  PageShell,
+  AuthPageShell,
   Surface,
   TopBar,
 } from '@/components/ui';
@@ -65,7 +65,7 @@ export default function SignupPage() {
   }
 
   return (
-    <PageShell size="narrow" className="min-h-[calc(100vh-3rem)] justify-center">
+    <AuthPageShell>
       <TopBar title="Create account" align="center" />
       <Surface className="mx-auto w-full max-w-md">
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -159,7 +159,7 @@ export default function SignupPage() {
           </a>
         </p>
       </Surface>
-    </PageShell>
+    </AuthPageShell>
   );
 }
 

@@ -105,7 +105,7 @@ export function ShareLandingClient({
   }
 
   return (
-    <PageShell size="wide" className="max-w-[1180px]">
+    <PageShell>
       <TopBar
         title={projection.title || 'Shared workout'}
         description="A read-only snapshot. Anyone with this URL can view the workout definition."

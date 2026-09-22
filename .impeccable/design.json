@@ -1,67 +1,527 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-14T15:00:00.000Z",
-  "title": "Design System: Tempo Ink Is Movement",
+  "generatedAt": "2026-09-17T09:49:54.6716176Z",
+  "title": "Design System: Tempo",
   "extensions": {
     "colorMeta": {
-      "signal": { "role": "primary", "displayName": "Indigo Action", "canonical": "#102F51", "tonalRamp": ["#071829", "#0B2139", "#102F51", "#1D456D", "#536B83", "#8AA0B5", "#E8EDF2", "#F5F4EF"] },
-      "signal-hover": { "role": "primary", "displayName": "Indigo Hover", "canonical": "#1D456D", "tonalRamp": ["#071829", "#0B2139", "#102F51", "#1D456D", "#536B83", "#8AA0B5", "#E8EDF2", "#F5F4EF"] },
-      "signal-ink": { "role": "neutral", "displayName": "Signal White", "canonical": "#FFFFFF", "tonalRamp": ["#112842", "#304762", "#53606B", "#7F8588", "#BFC2C0", "#D4D3CD", "#F5F4EF", "#FFFFFF"] },
-      "liquid": { "role": "secondary", "displayName": "Blue Gray Linework", "canonical": "#71879A", "tonalRamp": ["#263A4B", "#455C70", "#71879A", "#8AA0B5", "#B0BDC6", "#D4DDE3", "#E7ECEF", "#F5F4EF"] },
-      "liquid-tint": { "role": "secondary", "displayName": "Current Tint", "canonical": "#E7ECEF", "tonalRamp": ["#263A4B", "#455C70", "#71879A", "#8AA0B5", "#B0BDC6", "#D4DDE3", "#E7ECEF", "#F5F4EF"] },
-      "paper": { "role": "neutral", "displayName": "Warm Paper", "canonical": "#F5F4EF", "tonalRamp": ["#112842", "#53606B", "#7F8588", "#BFC2C0", "#D4D3CD", "#ECEAE4", "#F5F4EF", "#FBFAF7"] },
-      "surface": { "role": "neutral", "displayName": "Study Surface", "canonical": "#FBFAF7", "tonalRamp": ["#112842", "#53606B", "#7F8588", "#BFC2C0", "#D4D3CD", "#ECEAE4", "#F5F4EF", "#FBFAF7"] },
-      "field-surface": { "role": "neutral", "displayName": "Field Surface", "canonical": "#F8F7F2", "tonalRamp": ["#112842", "#53606B", "#7F8588", "#BFC2C0", "#D4D3CD", "#ECEAE4", "#F8F7F2", "#FBFAF7"] },
-      "sunken": { "role": "neutral", "displayName": "Recessed Paper", "canonical": "#ECEAE4", "tonalRamp": ["#112842", "#53606B", "#7F8588", "#BFC2C0", "#D4D3CD", "#ECEAE4", "#F5F4EF", "#FBFAF7"] },
-      "border": { "role": "neutral", "displayName": "Fine Rule", "canonical": "#D4D3CD", "tonalRamp": ["#53606B", "#7F8588", "#BFC2C0", "#D4D3CD", "#ECEAE4", "#F5F4EF", "#FBFAF7", "#FFFFFF"] },
-      "ink": { "role": "neutral", "displayName": "Indigo Ink", "canonical": "#112842", "tonalRamp": ["#071829", "#112842", "#304762", "#53606B", "#71879A", "#8AA0B5", "#D4DDE3", "#F5F4EF"] },
-      "ink-secondary": { "role": "neutral", "displayName": "Supporting Ink", "canonical": "#53606B", "tonalRamp": ["#112842", "#304762", "#53606B", "#71879A", "#8AA0B5", "#BFC2C0", "#D4D3CD", "#F5F4EF"] },
-      "ink-muted": { "role": "neutral", "displayName": "Muted Ink", "canonical": "#7F8588", "tonalRamp": ["#112842", "#53606B", "#7F8588", "#BFC2C0", "#D4D3CD", "#ECEAE4", "#F5F4EF", "#FBFAF7"] },
-      "selection": { "role": "secondary", "displayName": "Paper Selection", "canonical": "#DCE4EB", "tonalRamp": ["#112842", "#53606B", "#71879A", "#8AA0B5", "#BFC2C0", "#DCE4EB", "#E8EDF2", "#F5F4EF"] },
-      "scrollbar-thumb": { "role": "neutral", "displayName": "Scroll Thumb", "canonical": "#AAB3B8", "tonalRamp": ["#53606B", "#71879A", "#7F8588", "#AAB3B8", "#BFC2C0", "#D4D3CD", "#ECEAE4", "#F5F4EF"] },
-      "scrollbar-thumb-hover": { "role": "neutral", "displayName": "Scroll Thumb Hover", "canonical": "#7C8D99", "tonalRamp": ["#304762", "#53606B", "#71879A", "#7C8D99", "#AAB3B8", "#BFC2C0", "#D4D3CD", "#ECEAE4"] },
-      "success": { "role": "secondary", "displayName": "Completed Green", "canonical": "#2E6D53", "tonalRamp": ["#163B2B", "#22533F", "#2E6D53", "#658A7A", "#A7C6B6", "#D4E5DC", "#E6EFEA", "#F5F4EF"] },
-      "warning": { "role": "tertiary", "displayName": "Adjusted Ochre", "canonical": "#8B681F", "tonalRamp": ["#4A360D", "#6A4F17", "#8B681F", "#A48658", "#CABA8E", "#E5DAC0", "#F1EBDD", "#F5F4EF"] },
-      "danger": { "role": "tertiary", "displayName": "Danger Clay", "canonical": "#A84D45", "tonalRamp": ["#56251F", "#7D3932", "#A84D45", "#B36F5B", "#D4A59B", "#EBD3CC", "#F2E5E0", "#F5F4EF"] },
-      "missed": { "role": "tertiary", "displayName": "Missed Violet", "canonical": "#725C76", "tonalRamp": ["#3E2E42", "#55445A", "#725C76", "#8B708A", "#B9A9BA", "#D8CDD9", "#EEE7EE", "#F5F4EF"] },
-      "nav-surface": { "role": "neutral", "displayName": "Studio Rail", "canonical": "#F1F0EB", "tonalRamp": ["#112842", "#53606B", "#7F8588", "#BFC2C0", "#D2D1CB", "#ECEAE4", "#F1F0EB", "#FBFAF7"] },
-      "nav-active": { "role": "secondary", "displayName": "Active Index", "canonical": "#E0E6EB", "tonalRamp": ["#112842", "#53606B", "#71879A", "#8AA0B5", "#BFC2C0", "#D4DDE3", "#E0E6EB", "#F5F4EF"] }
+      "signal": {
+        "role": "primary",
+        "displayName": "Indigo Action",
+        "canonical": "#102F51",
+        "tonalRamp": [
+          "#071829",
+          "#0B2139",
+          "#102F51",
+          "#1D456D",
+          "#536B83",
+          "#8AA0B5",
+          "#E8EDF2",
+          "#F5F4EF"
+        ]
+      },
+      "signal-hover": {
+        "role": "primary",
+        "displayName": "Indigo Hover",
+        "canonical": "#1D456D",
+        "tonalRamp": [
+          "#071829",
+          "#0B2139",
+          "#102F51",
+          "#1D456D",
+          "#536B83",
+          "#8AA0B5",
+          "#E8EDF2",
+          "#F5F4EF"
+        ]
+      },
+      "signal-ink": {
+        "role": "neutral",
+        "displayName": "Signal White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#112842",
+          "#304762",
+          "#53606B",
+          "#7F8588",
+          "#BFC2C0",
+          "#D4D3CD",
+          "#F5F4EF",
+          "#FFFFFF"
+        ]
+      },
+      "liquid": {
+        "role": "secondary",
+        "displayName": "Blue Gray Linework",
+        "canonical": "#71879A",
+        "tonalRamp": [
+          "#263A4B",
+          "#455C70",
+          "#71879A",
+          "#8AA0B5",
+          "#B0BDC6",
+          "#D4DDE3",
+          "#E7ECEF",
+          "#F5F4EF"
+        ]
+      },
+      "liquid-tint": {
+        "role": "secondary",
+        "displayName": "Current Tint",
+        "canonical": "#E7ECEF",
+        "tonalRamp": [
+          "#263A4B",
+          "#455C70",
+          "#71879A",
+          "#8AA0B5",
+          "#B0BDC6",
+          "#D4DDE3",
+          "#E7ECEF",
+          "#F5F4EF"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "canonical": "#F5F4EF",
+        "tonalRamp": [
+          "#112842",
+          "#53606B",
+          "#7F8588",
+          "#BFC2C0",
+          "#D4D3CD",
+          "#ECEAE4",
+          "#F5F4EF",
+          "#FBFAF7"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Study Surface",
+        "canonical": "#FBFAF7",
+        "tonalRamp": [
+          "#112842",
+          "#53606B",
+          "#7F8588",
+          "#BFC2C0",
+          "#D4D3CD",
+          "#ECEAE4",
+          "#F5F4EF",
+          "#FBFAF7"
+        ]
+      },
+      "field-surface": {
+        "role": "neutral",
+        "displayName": "Field Surface",
+        "canonical": "#F8F7F2",
+        "tonalRamp": [
+          "#112842",
+          "#53606B",
+          "#7F8588",
+          "#BFC2C0",
+          "#D4D3CD",
+          "#ECEAE4",
+          "#F8F7F2",
+          "#FBFAF7"
+        ]
+      },
+      "sunken": {
+        "role": "neutral",
+        "displayName": "Recessed Paper",
+        "canonical": "#ECEAE4",
+        "tonalRamp": [
+          "#112842",
+          "#53606B",
+          "#7F8588",
+          "#BFC2C0",
+          "#D4D3CD",
+          "#ECEAE4",
+          "#F5F4EF",
+          "#FBFAF7"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Fine Rule",
+        "canonical": "#D4D3CD",
+        "tonalRamp": [
+          "#53606B",
+          "#7F8588",
+          "#BFC2C0",
+          "#D4D3CD",
+          "#ECEAE4",
+          "#F5F4EF",
+          "#FBFAF7",
+          "#FFFFFF"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Indigo Ink",
+        "canonical": "#112842",
+        "tonalRamp": [
+          "#071829",
+          "#112842",
+          "#304762",
+          "#53606B",
+          "#71879A",
+          "#8AA0B5",
+          "#D4DDE3",
+          "#F5F4EF"
+        ]
+      },
+      "ink-secondary": {
+        "role": "neutral",
+        "displayName": "Supporting Ink",
+        "canonical": "#53606B",
+        "tonalRamp": [
+          "#112842",
+          "#304762",
+          "#53606B",
+          "#71879A",
+          "#8AA0B5",
+          "#BFC2C0",
+          "#D4D3CD",
+          "#F5F4EF"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "#7F8588",
+        "tonalRamp": [
+          "#112842",
+          "#53606B",
+          "#7F8588",
+          "#BFC2C0",
+          "#D4D3CD",
+          "#ECEAE4",
+          "#F5F4EF",
+          "#FBFAF7"
+        ]
+      },
+      "selection": {
+        "role": "secondary",
+        "displayName": "Paper Selection",
+        "canonical": "#DCE4EB",
+        "tonalRamp": [
+          "#112842",
+          "#53606B",
+          "#71879A",
+          "#8AA0B5",
+          "#BFC2C0",
+          "#DCE4EB",
+          "#E8EDF2",
+          "#F5F4EF"
+        ]
+      },
+      "scrollbar-thumb": {
+        "role": "neutral",
+        "displayName": "Scroll Thumb",
+        "canonical": "#AAB3B8",
+        "tonalRamp": [
+          "#53606B",
+          "#71879A",
+          "#7F8588",
+          "#AAB3B8",
+          "#BFC2C0",
+          "#D4D3CD",
+          "#ECEAE4",
+          "#F5F4EF"
+        ]
+      },
+      "scrollbar-thumb-hover": {
+        "role": "neutral",
+        "displayName": "Scroll Thumb Hover",
+        "canonical": "#7C8D99",
+        "tonalRamp": [
+          "#304762",
+          "#53606B",
+          "#71879A",
+          "#7C8D99",
+          "#AAB3B8",
+          "#BFC2C0",
+          "#D4D3CD",
+          "#ECEAE4"
+        ]
+      },
+      "success": {
+        "role": "secondary",
+        "displayName": "Completed Green",
+        "canonical": "#2E6D53",
+        "tonalRamp": [
+          "#163B2B",
+          "#22533F",
+          "#2E6D53",
+          "#658A7A",
+          "#A7C6B6",
+          "#D4E5DC",
+          "#E6EFEA",
+          "#F5F4EF"
+        ]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Adjusted Ochre",
+        "canonical": "#8B681F",
+        "tonalRamp": [
+          "#4A360D",
+          "#6A4F17",
+          "#8B681F",
+          "#A48658",
+          "#CABA8E",
+          "#E5DAC0",
+          "#F1EBDD",
+          "#F5F4EF"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Danger Clay",
+        "canonical": "#99443D",
+        "tonalRamp": [
+          "#56251F",
+          "#7D3932",
+          "#A84D45",
+          "#B36F5B",
+          "#D4A59B",
+          "#EBD3CC",
+          "#F2E5E0",
+          "#F5F4EF"
+        ]
+      },
+      "missed": {
+        "role": "tertiary",
+        "displayName": "Missed Violet",
+        "canonical": "#725C76",
+        "tonalRamp": [
+          "#3E2E42",
+          "#55445A",
+          "#725C76",
+          "#8B708A",
+          "#B9A9BA",
+          "#D8CDD9",
+          "#EEE7EE",
+          "#F5F4EF"
+        ]
+      },
+      "nav-surface": {
+        "role": "neutral",
+        "displayName": "Studio Rail",
+        "canonical": "#F1F0EB",
+        "tonalRamp": [
+          "#112842",
+          "#53606B",
+          "#7F8588",
+          "#BFC2C0",
+          "#D2D1CB",
+          "#ECEAE4",
+          "#F1F0EB",
+          "#FBFAF7"
+        ]
+      },
+      "nav-active": {
+        "role": "secondary",
+        "displayName": "Active Index",
+        "canonical": "#E0E6EB",
+        "tonalRamp": [
+          "#112842",
+          "#53606B",
+          "#71879A",
+          "#8AA0B5",
+          "#BFC2C0",
+          "#D4DDE3",
+          "#E0E6EB",
+          "#F5F4EF"
+        ]
+      }
     },
     "motion": [
-      { "name": "standard", "value": "transition 180ms ease-out", "purpose": "Quiet hover, focus, and active-index changes." },
-      { "name": "reduced-motion", "value": "remove transform movement while preserving color and state feedback", "purpose": "Respect reduced-motion preferences without hiding state feedback." }
+      {
+        "name": "standard",
+        "value": "transition 180ms ease-out",
+        "purpose": "Quiet hover, focus, and active-index changes."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "remove transform movement while preserving color and state feedback",
+        "purpose": "Respect reduced-motion preferences without hiding state feedback."
+      }
     ],
     "breakpoints": [
-      { "name": "sm", "value": "640px" },
-      { "name": "md", "value": "768px" },
-      { "name": "xl", "value": "1280px" },
-      { "name": "2xl", "value": "1536px" }
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      },
+      {
+        "name": "2xl",
+        "value": "1536px"
+      }
     ],
     "shadows": [
-      { "name": "inset", "value": "0 1px 0 rgba(255, 255, 255, 0.72) inset, 0 -1px 0 rgba(17, 40, 66, 0.04) inset", "purpose": "Quiet paper depth inside study surfaces and controls." },
-      { "name": "raised", "value": "0 8px 18px -14px rgba(17, 40, 66, 0.24), 0 1px 1px rgba(17, 40, 66, 0.06)", "purpose": "Small lift for the forward action and selected utility surfaces." },
-      { "name": "overlay", "value": "0 20px 42px -20px rgba(17, 40, 66, 0.3)", "purpose": "Menus, dialogs, drawers, and temporary layers." }
-    ]
+      {
+        "name": "inset",
+        "value": "0 1px 0 rgba(255, 255, 255, 0.72) inset, 0 -1px 0 rgba(17, 40, 66, 0.04) inset",
+        "purpose": "Quiet paper depth inside study surfaces and controls."
+      },
+      {
+        "name": "raised",
+        "value": "0 8px 18px -14px rgba(17, 40, 66, 0.24), 0 1px 1px rgba(17, 40, 66, 0.06)",
+        "purpose": "Small lift for the forward action and selected utility surfaces."
+      },
+      {
+        "name": "overlay",
+        "value": "0 20px 42px -20px rgba(17, 40, 66, 0.3)",
+        "purpose": "Menus, dialogs, drawers, and temporary layers."
+      }
+    ],
+    "typographyMeta": {
+      "display": {
+        "displayName": "Editorial Display",
+        "purpose": "Route headings and primary page titles."
+      },
+      "title": {
+        "displayName": "Section Title",
+        "purpose": "Section headings and prominent session titles."
+      },
+      "body": {
+        "displayName": "Operational Body",
+        "purpose": "Explanations, notes, and task copy."
+      },
+      "label": {
+        "displayName": "Compact Label",
+        "purpose": "Metadata, dates, and status text."
+      },
+      "control": {
+        "displayName": "Standard Control",
+        "purpose": "Standard 40px actions and fields."
+      },
+      "compact-control": {
+        "displayName": "Compact Control",
+        "purpose": "Dense 32px toolbars, menus, and list controls."
+      },
+      "metric": {
+        "displayName": "Metric",
+        "purpose": "Duration, TSS, RPE, dates, and counts with tabular numerals."
+      }
+    }
   },
   "components": [
-    { "name": "Primary Button", "kind": "button", "refersTo": "button-primary", "description": "The single indigo forward action in a square editorial control." },
-    { "name": "Secondary Button", "kind": "button", "refersTo": "button-secondary", "description": "A paper-toned reversible action with a fine rule." },
-    { "name": "Field", "kind": "input", "refersTo": "field", "description": "A labeled paper field with a blue-gray focus line." },
-    { "name": "Navigation", "kind": "nav", "refersTo": "nav-item", "description": "The studio index with small line icons and an indigo active rail." },
-    { "name": "Session Row", "kind": "custom", "refersTo": "session-row", "description": "A study tile with workout context, metrics, and ink-flow hover state." },
-    { "name": "Status Chip", "kind": "chip", "refersTo": "status-chip", "description": "A visible text state for planned, adjusted, or missed work." },
-    { "name": "Intensity Timeline", "kind": "custom", "refersTo": "session-block-bar", "description": "Duration-proportional workout structure with quiet zone color." }
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single indigo forward action in the current task.",
+      "html": "<button class=\"ds-btn-primary\">Save workout</button>",
+      "css": ".ds-btn-primary { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; border: 0; border-radius: 3px; background: var(--brand); color: var(--signal-ink); box-shadow: var(--shadow-raised); font: 600 13px/1 var(--font-schibsted), system-ui, sans-serif; letter-spacing: .01em; transition: background-color 180ms ease-out; } .ds-btn-primary:hover { background: var(--signal-hover); } .ds-btn-primary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A reversible paper-toned action with a fine rule.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface); color: var(--text); box-shadow: var(--shadow-inset); font: 600 13px/1 var(--font-schibsted), system-ui, sans-serif; letter-spacing: .01em; transition: background-color 180ms ease-out, border-color 180ms ease-out; } .ds-btn-secondary:hover { border-color: var(--field-focus); background: var(--field-surface); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "A labeled paper field with quiet inset depth and an indigo focus ring.",
+      "html": "<label class=\"ds-field-label\">Workout name<input class=\"ds-field\" value=\"Threshold intervals\" /></label>",
+      "css": ".ds-field-label { display: grid; gap: 6px; color: var(--text-secondary); font: 500 13px/1.35 var(--font-schibsted), system-ui, sans-serif; } .ds-field { min-height: 40px; width: 100%; padding: 8px 12px; border: 1px solid var(--field-border); border-radius: 3px; background: var(--field-surface); color: var(--text); box-shadow: var(--shadow-inset); font: 400 13px/1.4 var(--font-schibsted), system-ui, sans-serif; transition: border-color 180ms ease-out; } .ds-field:hover { border-color: var(--field-focus); } .ds-field:focus-visible { border-color: var(--field-focus); outline: 2px solid var(--field-focus); outline-offset: 2px; }"
+    },
+    {
+      "name": "Navigation Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "A quiet studio-index destination with an indigo active rail.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-item-active\" href=\"#\">Planner</a><a class=\"ds-nav-item\" href=\"#\">Workouts</a></nav>",
+      "css": ".ds-nav { display: grid; gap: 4px; padding: 8px; background: var(--nav-surface); } .ds-nav-item { min-height: 40px; display: flex; align-items: center; padding: 10px 16px; border-left: 2px solid transparent; border-radius: 3px; color: var(--nav-muted); font: 600 13px/1 var(--font-schibsted), system-ui, sans-serif; text-decoration: none; transition: background-color 180ms ease-out, color 180ms ease-out; } .ds-nav-item:hover { background: var(--field-surface); color: var(--nav-text); } .ds-nav-item:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; } .ds-nav-item-active { border-left-color: var(--brand); background: var(--nav-active); color: var(--nav-text); }"
+    },
+    {
+      "name": "Study Surface",
+      "kind": "card",
+      "refersTo": "surface",
+      "description": "A warm bordered work surface with restrained inset paper depth.",
+      "html": "<section class=\"ds-surface\"><h3>Training week</h3><p>Plan the work, then follow it through completion.</p></section>",
+      "css": ".ds-surface { padding: 20px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface); color: var(--text); box-shadow: var(--shadow-inset); font-family: var(--font-schibsted), system-ui, sans-serif; } .ds-surface h3 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.02em; } .ds-surface p { margin: 8px 0 0; color: var(--text-secondary); font-size: 15px; line-height: 1.55; }"
+    },
+    {
+      "name": "Session Row",
+      "kind": "custom",
+      "refersTo": "session-row",
+      "description": "A navigable study tile combining workout context, stable metrics, and ink-flow feedback.",
+      "html": "<a class=\"ds-session-row\" href=\"#\"><span class=\"ds-session-title\">Aerobic endurance</span><span class=\"ds-session-meta\">Today · 08:00 · Cycling</span><span class=\"ds-session-metrics\">60 min&nbsp;&nbsp;48 TSS</span></a>",
+      "css": ".ds-session-row { position: relative; display: grid; gap: 8px; overflow: hidden; padding: 16px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface); color: var(--text); box-shadow: var(--shadow-inset); font-family: var(--font-schibsted), system-ui, sans-serif; text-decoration: none; transition: background-color 180ms ease-out, border-color 180ms ease-out; } .ds-session-row::before { position: absolute; inset: 11px auto 11px 0; width: 2px; border-radius: 999px; background: var(--brand); content: \"\"; transform: scaleY(.2); transition: transform 180ms ease-out; } .ds-session-row:hover { border-color: var(--field-focus); background: var(--field-surface); } .ds-session-row:hover::before, .ds-session-row:focus-visible::before { transform: scaleY(1); } .ds-session-row:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; } .ds-session-title { font-size: 18px; font-weight: 500; } .ds-session-meta, .ds-session-metrics { color: var(--text-secondary); font-size: 14px; } .ds-session-metrics { font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "refersTo": "status-chip",
+      "description": "A text-visible state for planned, adjusted, or missed work.",
+      "html": "<span class=\"ds-status-chip\">Adjusted</span>",
+      "css": ".ds-status-chip { min-height: 28px; display: inline-flex; align-items: center; padding: 0 12px; border: 1px solid var(--status-adjusted-border); border-radius: 9999px; background: var(--status-adjusted-tint); color: var(--status-adjusted); box-shadow: var(--shadow-inset); font: 600 12.5px/1 var(--font-schibsted), system-ui, sans-serif; }"
+    },
+    {
+      "name": "Intensity Timeline",
+      "kind": "custom",
+      "refersTo": "session-block-bar",
+      "description": "Duration-proportional workout structure whose height and color both communicate intensity.",
+      "html": "<div class=\"ds-timeline\" role=\"img\" aria-label=\"Workout intensity timeline: Zone 1 warm-up; Zone 3 tempo; Zone 2 recovery\"><i class=\"ds-zone-1\"></i><i class=\"ds-zone-3\"></i><i class=\"ds-zone-2\"></i></div>",
+      "css": ".ds-timeline { width: 288px; height: 32px; display: flex; align-items: end; gap: 2px; overflow: hidden; border-bottom: 1px solid var(--border); background: transparent; } .ds-timeline i { display: block; transition: height 150ms ease-out; } .ds-zone-1 { height: 20%; flex: 2; background: var(--color-zone-1); } .ds-zone-2 { height: 40%; flex: 1; background: var(--color-zone-2); } .ds-zone-3 { height: 60%; flex: 3; background: var(--color-zone-3); }"
+    }
   ],
   "narrative": {
     "northStar": "Ink Is Movement",
-    "overview": "Tempo is a Monday-first endurance studio rendered on warm paper. Indigo owns actions and active context, blue-gray linework carries the flow, and structured sessions become study tiles without changing the product's operational behavior.",
-    "keyCharacteristics": ["Monday-first week hierarchy", "Oversized thin route titles", "Quiet icon-led studio rail", "Organic ink-flow linework", "Study tiles with text-visible states"],
-    "rules": [
-      { "name": "The Ink Roles Rule", "body": "Indigo owns forward action and active context. Blue-gray linework owns focus and flow. Status colors explain what happened; they do not compete with the next action.", "section": "colors" },
-      { "name": "The Measurement Rule", "body": "Duration, TSS, RPE, dates, and counts are data. Keep their numerals stable and aligned with MetricText.", "section": "typography" },
-      { "name": "The Paper Depth Rule", "body": "Inset depth belongs to the paper material. Outer elevation is reserved for overlays and stateful utility surfaces.", "section": "elevation" }
+    "overview": "Tempo is an operational training surface organized around the Monday-to-Sunday week and rendered as a quiet ink studio. The week connects personal planning, session execution, completion, and history. The first MVP prioritizes people managing their own training; onboarding, empty states, and primary actions should make sense without a coach connection. Coach collaboration is secondary. The interface should feel crafted and alive through line, texture, and considered transitions while staying quick to use repeatedly rather than performing as a motivational game board. The product world is warm paper, indigo ink, fine rules, editorial spacing, and organic flow linework. The sidebar is a studio index; the main field is a page for the current work; sessions become study tiles and connected marks. The authenticated product is the visual authority. The /design/* routes are alternate visual previews and sample content; they are not production tokens or layouts.",
+    "keyCharacteristics": [
+      "Monday-first hierarchy with the current week and current day easy to locate.",
+      "One clear next action before secondary metrics or history.",
+      "Shared session, status, metric, and block-structure language across routes.",
+      "Warm paper surfaces with semantic borders, fine linework, and restrained depth.",
+      "Text-visible states and persistent keyboard focus."
     ],
-    "dos": ["Reuse PageShell, TopBar, shared button and field classes, Surface, SessionRow, StatusBadge, MetricText, and SessionBlockBar.", "Pair every color state with text, structure, or an accessible label.", "Preserve keyboard focus, reduced-motion behavior, explicit labels, readable contrast, and 44px touch targets."],
-    "donts": ["Do not add route-local primary navigation.", "Do not make every bordered region a floating dashboard card.", "Do not use color alone for state.", "Do not add gradients or extra accent roles to ordinary authenticated product screens."]
+    "rules": [
+      {
+        "name": "The Ink Roles Rule",
+        "body": "Indigo owns forward action and active context. Blue-gray linework owns focus and flow. Status colors explain what happened; they do not compete with the next action.",
+        "section": "colors"
+      },
+      {
+        "name": "The Measurement Rule",
+        "body": "Duration, TSS, RPE, dates, and counts are data. Keep their numerals stable and aligned with MetricText instead of styling each route's metrics as a new visual object.",
+        "section": "typography"
+      },
+      {
+        "name": "The Paper Depth Rule",
+        "body": "A surface earns outer elevation only when it is raised by state or interaction, such as a menu, drawer, or dialog. Inset depth belongs to the paper material and should remain quiet.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do start from DESIGN.md, then inspect app/globals.css and the shared component owner before creating new visual tokens or primitives.",
+      "Do keep the current week, current day, session state, and next action in one context when the task requires them together.",
+      "Do reuse PageShell, TopBar, shared button and field classes, Surface, SessionRow, StatusBadge, MetricText, and SessionBlockBar.",
+      "Do pair every color state with text, structure, or an accessible label.",
+      "Do preserve keyboard focus, reduced-motion behavior, explicit labels, readable contrast, and 40px standard action targets. Reserve 32px compact controls for dense contexts with surrounding room.",
+      "Do use app/globals.css semantic variables when a token exists instead of introducing an inline color or shadow."
+    ],
+    "donts": [
+      "Don't copy the palette, rounded geometry, or dashboard composition from /design/tempo-split or /design/tempo-field; those routes are previews only.",
+      "Don't invent a route-local card grammar when a shared session or surface primitive already fits.",
+      "Don't make every bordered region a floating card, or every secondary action as prominent as the primary action.",
+      "Don't use color alone for planned, completed, adjusted, missed, loading, error, permission, or success states.",
+      "Don't add gradients, decorative shadows, oversized hero metrics, or extra accent roles to ordinary authenticated product screens.",
+      "Don't use decorative eyebrow labels, section numbers, emoji, or Unicode glyphs as substitutes for hierarchy and the established icon system.",
+      "Don't add a new token before checking whether the semantic token in app/globals.css already expresses the state."
+    ]
   }
 }

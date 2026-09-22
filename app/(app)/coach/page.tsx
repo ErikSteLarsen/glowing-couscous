@@ -12,14 +12,15 @@ export default async function CoachPage() {
 
   if (!coach) {
     return (
-      <PageShell size="wide">
+      <PageShell>
+        <TopBar title="Your athletes" />
         <EmptyState title="No coach data found" description="The coach workspace could not be loaded." />
       </PageShell>
     );
   }
 
   return (
-    <PageShell size="wall">
+    <PageShell>
       <TopBar
         title="Your athletes"
         description={`${coach.athletes.length} active athletes${coach.pendingRequests.length ? ` · ${coach.pendingRequests.length} pending requests` : ''}.`}

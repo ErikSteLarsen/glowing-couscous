@@ -8,7 +8,7 @@ import {
   formLabelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
-  PageShell,
+  AuthPageShell,
   Surface,
   TopBar,
 } from '@/components/ui';
@@ -50,7 +50,7 @@ export default function LoginPage() {
   }
 
   return (
-    <PageShell size="narrow" className="min-h-[calc(100vh-3rem)] justify-center">
+    <AuthPageShell>
       <TopBar title="Sign in" align="center" />
       <Surface className="mx-auto w-full max-w-md">
         <div className="mb-5 rounded-[12px] border border-[var(--field-selected-border)] bg-[var(--brand-tint)] px-4 py-3 text-sm text-[var(--field-selected-text)]">
@@ -121,7 +121,7 @@ export default function LoginPage() {
           </a>
         </p>
       </Surface>
-    </PageShell>
+    </AuthPageShell>
   );
 }
 

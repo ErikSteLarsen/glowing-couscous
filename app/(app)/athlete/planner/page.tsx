@@ -26,7 +26,7 @@ export default async function AthletePlannerPage({
   const initialDate = formatISO(resolvedDate, { representation: 'date' });
 
   return (
-    <PageShell size="wall">
+    <PageShell>
       <TopBar title="Planner" />
       <AthletePlannerClient
         templates={workspace.templates}

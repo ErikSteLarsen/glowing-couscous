@@ -1,13 +1,6 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
-const pageShellWidthClasses = {
-  narrow: 'max-w-3xl',
-  default: 'max-w-5xl',
-  wide: 'max-w-[1140px]',
-  wall: 'max-w-[1440px]',
-} as const;
-
 export const pageHeadingClassName = 'text-[40px] font-normal leading-none tracking-[-0.045em] text-[var(--text)] max-md:text-[34px]';
 export const sectionHeadingClassName = 'text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]';
 export const formLabelClassName = 'mb-1.5 block text-[13px] font-medium text-[var(--text-secondary)]';
@@ -59,22 +52,14 @@ export function getSegmentedChoiceClassName(selected: boolean, size: 'default' |
   }`;
 }
 
-export function PageShell({
-  children,
-  size = 'default',
-  className = '',
-}: {
-  children: ReactNode;
-  size?: keyof typeof pageShellWidthClasses;
-  className?: string;
-}) {
-  return (
-    <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-7 lg:px-10">
-      <div className={`flex w-full flex-col gap-6 py-7 ${pageShellWidthClasses[size]} ${className}`}>
-        {children}
-      </div>
-    </div>
-  );
+/** All workspace geometry is owned by the page-layout rules in globals.css. */
+export function PageShell({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <main className={`page-layout ${className}`}>{children}</main>;
+}
+
+/** Authentication has its own reading-width frame, outside the workspace. */
+export function AuthPageShell({ children }: { children: ReactNode }) {
+  return <main className="auth-page-layout">{children}</main>;
 }
 
 export function TopBar({
@@ -91,8 +76,8 @@ export function TopBar({
   const isCentered = align === 'center';
 
   return (
-    <div className={`ink-topbar min-h-[72px] ${isCentered ? 'text-center' : 'flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'}`}>
-      <div className="space-y-2">
+    <div className={`page-header ink-topbar ${isCentered ? 'page-header--center' : ''}`}>
+      <div className="min-w-0 space-y-2">
         <div className={isCentered ? 'space-y-2 text-center' : 'space-y-2'}>
           <h1 className={pageHeadingClassName}>{title}</h1>
           {description ? (

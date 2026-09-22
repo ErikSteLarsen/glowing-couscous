@@ -31,7 +31,7 @@ export default async function AthletePage() {
   const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
 
   return (
-    <PageShell size="wall" className="ink-home">
+    <PageShell className="ink-home">
       <TopBar
         title={`Good morning, ${dashboard.athlete.name}`}
       />

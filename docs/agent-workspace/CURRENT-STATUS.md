@@ -71,7 +71,7 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 - Production buttons now use the shared primary, secondary, danger, compact, and ghost tiers. Standard actions use 40px targets with quieter 13px labels; dense controls use 32px targets with 12px labels, and page-header/navigation actions use the lighter compact or ghost tiers. Content-rich workout preset cards remain an explicit editor exception.
 - Production inputs and selects now use the same 40px/13px rhythm as standard actions, while textareas keep a roomier writing height. Route-specific labels and the legacy block editor now reuse the shared field treatment instead of introducing larger radii or typography.
 - Form actions now follow the same 40px rhythm when they operate on a field: filtering/creation, editor save/cancel, planner create/delete, session adjustment, recovery, and share-link copy actions are standard-sized. Dense command bars, menus, calendar navigation, and repeated list actions intentionally remain 32px.
-- Authenticated `PageShell` routes now share one centered 1440px frame and a common left content anchor across narrow, default, wide, and wall page widths. `TopBar` reserves a shared 72px header band on all signed-in pages, including athlete Home, and owns one page-heading scale of 40px desktop and 34px mobile; Home's comparable section headings use the same shared 20px class. Planners, calendars, and workout libraries use the documented wall width instead of route-local maximums.
+- Workspace pages now use one 1800px maximum frame with no per-route width variants. Shared `--page-*` tokens in `app/globals.css` own 20/24/32px gutters, 24px top padding, a 96px header band, and a 16px section gap. `TopBar` top-aligns headings; authentication uses `AuthPageShell`. Planner gives its complete seven-column month priority and adapts source/selection rails to available width.
 
 ## Verified Preview Gates
 
@@ -81,6 +81,15 @@ sidecar is kept synchronized manually from the canonical contract and tokens.
 | Atlas assignment directions | Pass with browser gap | `pnpm test`, `pnpm lint`, and `pnpm build` pass; HTTP smoke checks returned 200 for the Atlas index, Select days, Template range, Planning desk, and exact-workout preview routes; no browser executable is available in the current environment for interaction capture |
 | Production Planning Desk | Pass | 196 tests, lint/build, clean Impeccable detector, authenticated multi-date placement, exact template ranges, mobile width, retry replay, and concurrent same-key requests pass |
 
+## Running Layout Verification — 2026-09-18
+
+The local app at `http://localhost:3000` runs from `C:/Users/Erik/koding/glowing-couscous`, not the separate WSL task checkout. Layout-only changes were applied to this Windows checkout; existing PRODUCT.md and .impeccable/design.json edits were preserved, and unrelated WSL functional changes were not imported.
+
+- `pnpm test`: 188 tests pass. `pnpm lint`: pass.
+- `pnpm build`: blocked at Prisma generation by the running Windows server holding query_engine-windows.dll.node open (EPERM). `pnpm exec next build`: pass with the existing generated client; no schema changes were made. Existing middleware deprecation warning remains.
+- Chromium against the actual `localhost:3000`: 56 athlete/coach route-viewport checks passed at 1280×720, 1366×768, 1920×1080, and 390×844. Desktop titles start at y=24, page content at y=136, with shared left/right frame boundaries. Complete six-week Planner fits desktop height, date selection works, and checked pages have no horizontal overflow.
+- Planner, Templates, and Calendar screenshots were compared directly. Mobile retains natural page scrolling; checks do not claim that all content of every page fits one viewport. Public sharing and populated session/live pages were not reverified in this pass.
+- UI detector reported 69 advisory findings and no blocking findings, primarily existing typography/radius values.
 ## Known Gaps
 
 - Browser verification is still needed for public share previews, the six workout-flow direction and Workbench experiment previews, some session mutation flows, and physical pointer/touch acceptance of the workout builder and preview presets.

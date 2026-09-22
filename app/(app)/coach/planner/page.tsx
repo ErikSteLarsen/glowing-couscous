@@ -20,7 +20,7 @@ export default async function CoachPlannerPage({
   const parsedAthleteId = Number(athleteId);
 
   return (
-    <PageShell size="wall">
+    <PageShell>
       <TopBar
         title="Planner"
       />

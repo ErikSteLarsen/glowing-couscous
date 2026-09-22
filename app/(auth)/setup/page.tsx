@@ -7,7 +7,7 @@ import {
   formLabelClassName,
   getSegmentedChoiceClassName,
   primaryButtonClassName,
-  PageShell,
+  AuthPageShell,
   Surface,
   TopBar,
 } from '@/components/ui';
@@ -40,7 +40,7 @@ export default function SetupPage() {
   }
 
   return (
-    <PageShell size="narrow" className="min-h-[calc(100vh-3rem)] justify-center">
+    <AuthPageShell>
       <TopBar
         title="Choose your role"
         description="This sets how you use the app."
@@ -71,7 +71,7 @@ export default function SetupPage() {
           </button>
         </form>
       </Surface>
-    </PageShell>
+    </AuthPageShell>
   );
 }
 

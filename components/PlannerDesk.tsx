@@ -338,7 +338,7 @@ export function PlannerDesk({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="planner-desk">
       <AssignmentSummary
         source={selectedSource}
         selectedDates={selectedDates}
@@ -354,7 +354,7 @@ export function PlannerDesk({
         onAssign={assignSource}
       />
 
-      <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[290px_minmax(0,1fr)_320px]">
+      <div className="planner-desk__layout">
         <SourceDock
           role={role}
           sources={sources}
@@ -432,7 +432,7 @@ function AssignmentSummary({ source, selectedDates, selectedTemplateDays, rangeS
 function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSources, selectedDate, athletes, selectedAthleteId, onAthleteChange, onQueryChange, onTabChange, onSelectSource }: { role: PlannerDeskRole; sources: PlannerDeskSource[]; selectedSource: PlannerDeskSource | null; sourceTab: SourceTab; query: string; visibleSources: PlannerDeskSource[]; selectedDate: string; athletes: PlannerDeskAthlete[]; selectedAthleteId: number | null; onAthleteChange: (athleteId: number) => void; onQueryChange: (query: string) => void; onTabChange: (tab: SourceTab) => void; onSelectSource: (source: PlannerDeskSource) => void }) {
   const tabs: SourceTab[] = role === 'coach' ? ['workout', 'template', 'training-plan'] : ['workout', 'template'];
   return (
-    <aside className="min-w-0 border border-[var(--border)] bg-[var(--nav-surface)] p-3 shadow-[var(--shadow-inset)] xl:sticky xl:top-4 xl:self-start">
+    <aside className="planner-desk__sources min-w-0 border border-[var(--border)] bg-[var(--nav-surface)] p-3 shadow-[var(--shadow-inset)]">
       {role === 'coach' ? (
         <label className="block border-b border-[var(--nav-border)] pb-3">
           <span className={formLabelClassName}>Athlete</span>
@@ -491,7 +491,7 @@ function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, d
   const shortcutDates = selectedSource?.kind === 'template' ? templateDatesForSelection(selectedSource.cadence ?? 'day', selectedDates[0] ?? initialDate) : [];
   const rangeError = selectedSource?.kind === 'template' ? validateTemplateDateRange(selectedDates, selectedSource.cadence ?? 'day') : null;
   return (
-    <section className="min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-inset)] sm:p-5">
+    <section className="planner-desk__calendar min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-inset)]">
       <div className="flex flex-col gap-3 border-b border-[var(--border)] pb-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold tracking-[-0.02em]">{label}</h2>
@@ -508,12 +508,12 @@ function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, d
         <p className="text-sm text-[var(--text-secondary)]">{formatShortDate(shortcutDates[0])} – {formatShortDate(shortcutDates[shortcutDates.length - 1])} · {shortcutDates.length} days</p>
       </div> : null}
       {rangeError ? <p className="mt-2 text-sm text-[var(--status-warning)]">{rangeError}</p> : null}
-      <div className="mt-3 overflow-x-auto pb-1">
-        <div className="min-w-[720px]">
+      <div className="mt-3">
+        <div className="min-w-0">
           <div className="grid grid-cols-7 border-y border-[var(--border)] bg-[var(--sunken)]">
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => <div key={day} className="px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day}</div>)}
           </div>
-          <div className="grid grid-cols-7 divide-x divide-y divide-[var(--border)] border-b border-[var(--border)]">
+          <div className="planner-desk__month grid grid-cols-7 divide-x divide-y divide-[var(--border)] border-b border-[var(--border)]" style={{ gridTemplateRows: `repeat(${Math.ceil(days.length / 7)}, minmax(0, 1fr))` }}>
             {days.map((day) => <CalendarCell key={day.isoDate} feedback={placement?.dates.includes(day.isoDate) ? placement : null} day={day} today={day.isoDate === todayIso} selected={selectedDates.includes(day.isoDate)} templateMode={selectedSource?.kind === 'template'} onSelect={() => onSelectDate(day.isoDate)} />)}
           </div>
         </div>
@@ -530,10 +530,11 @@ function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, d
 
 function CalendarCell({ feedback, day, today, selected, templateMode, onSelect }: { feedback: PlacementFeedback | null; day: PlannerDeskCalendarDay; today: boolean; selected: boolean; templateMode: boolean; onSelect: () => void }) {
   return (
-    <button type="button" aria-pressed={selected} aria-current={today ? 'date' : undefined} aria-label={`${day.label} ${day.dateLabel}, ${day.sessions.length} assigned. ${templateMode ? 'Choose for template range.' : 'Toggle date.'}`} onClick={onSelect} className={`flex min-h-[104px] min-w-0 flex-col p-2 text-left transition focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] ${day.inMonth ? 'bg-[var(--field-surface)]' : 'bg-[var(--sunken)]'} ${selected ? 'bg-[var(--brand-tint)]' : ''} ${!selected ? 'hover:bg-[var(--selection)]' : ''}`}>
-      <span className="flex items-center justify-between gap-2"><span className={`metric-text text-sm font-semibold ${day.inMonth ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>{day.dateLabel.split(' ')[0]}</span>{today ? <span className="rounded-full bg-[var(--brand)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--signal-ink)]">Today</span> : selected ? <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--signal-ink)]"><Check aria-hidden="true" className="h-3 w-3" /></span> : null}</span>
-      {feedback ? <span className={`mt-2 block text-xs ${feedback.state === 'failed' ? 'text-[var(--status-danger)]' : feedback.state === 'saved' ? 'text-[var(--status-success)]' : 'text-[var(--text-secondary)]'}`}>{feedback.state === 'placing' ? 'Placing' : feedback.state === 'saved' ? 'Placed' : 'Not confirmed'}: {feedback.title}</span> : null}
-      <span className="mt-2 min-w-0 space-y-1">{day.sessions.slice(0, 2).map((session) => <span key={session.id} className="block truncate border-l-2 border-[var(--brand)] bg-[var(--surface)] px-1.5 py-1 text-[11px] font-medium text-[var(--text)]">{session.title}</span>)}{day.sessions.length > 2 ? <span className="block px-1.5 text-[11px] text-[var(--text-muted)]">+{day.sessions.length - 2} more</span> : null}</span>
+    <button type="button" aria-pressed={selected} aria-current={today ? 'date' : undefined} aria-label={`${day.label} ${day.dateLabel}, ${day.sessions.length} assigned. ${templateMode ? 'Choose for template range.' : 'Toggle date.'}`} onClick={onSelect} className={`planner-desk__day flex min-w-0 flex-col p-2 text-left transition focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] ${day.inMonth ? 'bg-[var(--field-surface)]' : 'bg-[var(--sunken)]'} ${selected ? 'bg-[var(--brand-tint)]' : ''} ${!selected ? 'hover:bg-[var(--selection)]' : ''}`}>
+      <span className="flex items-center justify-between gap-2"><span className={`metric-text text-sm font-semibold ${day.inMonth ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>{day.dateLabel.split(' ')[0]}</span>{today ? <span className="planner-desk__today rounded-full bg-[var(--brand)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--signal-ink)]">Today</span> : selected ? <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--signal-ink)]"><Check aria-hidden="true" className="h-3 w-3" /></span> : null}</span>
+      {feedback ? <span className={`planner-desk__feedback mt-1 block truncate text-xs ${feedback.state === 'failed' ? 'text-[var(--status-danger)]' : feedback.state === 'saved' ? 'text-[var(--status-success)]' : 'text-[var(--text-secondary)]'}`}>{feedback.state === 'placing' ? 'Placing' : feedback.state === 'saved' ? 'Placed' : 'Not confirmed'}: {feedback.title}</span> : null}
+      <span className="planner-desk__sessions mt-1 w-full min-w-0">{day.sessions.slice(0, 1).map((session) => <span key={session.id} className="block truncate border-l-2 border-[var(--brand)] bg-[var(--surface)] px-1.5 py-1 text-[11px] font-medium text-[var(--text)]">{session.title}</span>)}{day.sessions.length > 1 ? <span className="block px-1.5 text-[11px] text-[var(--text-muted)]">+{day.sessions.length - 1} more</span> : null}</span>
+      <span className="planner-desk__count text-[11px] text-[var(--text-secondary)]">{day.sessions.length ? `${day.sessions.length} planned` : ''}</span>
     </button>
   );
 }
@@ -541,7 +542,7 @@ function CalendarCell({ feedback, day, today, selected, templateMode, onSelect }
 function SelectionPanel({ role, sessions, selectedDates, isPending, removingId, onSelectOnlyDate, onRemoveSession }: { role: PlannerDeskRole; sessions: PlannerDeskSession[]; selectedDates: string[]; isPending: boolean; removingId: number | null; onSelectOnlyDate: (date: string) => void; onRemoveSession: (session: PlannerDeskSession) => void }) {
   const multiple = selectedDates.length > 1;
   return (
-    <section className="min-w-0 border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-4 shadow-[var(--shadow-inset)] xl:sticky xl:top-4 xl:self-start">
+    <section className="planner-desk__selection min-w-0 border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-4 shadow-[var(--shadow-inset)]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold tracking-[-0.03em]">{multiple ? 'Selected days' : 'Selected day'}</h2>

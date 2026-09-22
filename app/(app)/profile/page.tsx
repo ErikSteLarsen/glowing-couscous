@@ -16,7 +16,7 @@ export default async function ProfilePage() {
     user.role === 'ATHLETE' ? await athleteService.loadProfileState(user.id) : null;
 
   return (
-    <PageShell size="wide">
+    <PageShell>
       <TopBar
         title={account.name ?? 'Your profile'}
       />

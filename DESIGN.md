@@ -277,15 +277,26 @@ route's metrics as a new visual object.
 
 ## Layout
 
-The product is a week-first workspace, not a marketing canvas. `PageShell` is
-the shared frame: it centers one `1440px` wall with `20px` inline padding on
-small screens and larger `28px`/`40px` gutters as space allows. Content widths
-are left-aligned inside that frame, so every authenticated page title and body
-begin at the same location: narrow content uses `max-w-3xl`, default content
-uses `max-w-5xl`, wide content uses `1140px`, and week walls can use the full
-available width. `TopBar` reserves a shared standard header band; descriptions
-and actions may extend it only when their real content must wrap. The normal
-rhythm is `24px` between page groups.
+The product is a week-first workspace, not a marketing canvas. `PageShell` in
+`components/ui.tsx` is the single workspace frame and main landmark. All signed-in
+pages use its full width; there are no route-level size variants. The `page-layout`
+rules and `--page-*` tokens in `app/globals.css` own the centered 1800px maximum,
+20px mobile / 24px desktop / 32px large-screen gutters, 24px top padding, 96px
+minimum header band, and 16px page-group gap. `TopBar` top-aligns titles and actions.
+Descriptions, long titles, zoom, and narrow screens may grow the band to preserve
+content rather than clipping it. Forms and prose can limit their inner reading
+measure without moving the page heading or outer content anchor. Authentication
+uses the separate `AuthPageShell` reading-width frame.
+
+Planner adapts to the actual page container: below 900px its source, calendar,
+and selection panels stack; from 900px the source and selection share a 240px
+rail alongside the calendar; from 1400px they flank it in three columns. The
+seven-day grid has no fixed minimum width. Month height responds to viewport
+height, including room for template-range controls, and always shows every week.
+Day cells preview one session and an additional count; the selection panel owns
+full details. Narrow calendars show counts instead of session titles. Supporting
+rails may scroll independently on desktop. Small screens and enlarged text retain
+natural page scrolling; never hide content to force the whole page into a viewport.
 
 Desktop reserves a `216px` viewport-bounded sidebar from the `md` breakpoint
 (`768px`) upward. The sidebar owns primary navigation and local overflow; the

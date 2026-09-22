@@ -9,52 +9,27 @@ async function read(relativePath) {
   return readFile(path.join(root, relativePath), 'utf8');
 }
 
-test('shared layout primitives define centered width tiers', async () => {
+test('workspace geometry has one shared owner and authentication has a separate frame', async () => {
   const uiSource = await read('components/ui.tsx');
-  const layoutSource = await read('app/layout.tsx');
-
-  assert.match(uiSource, /size\s*=\s*'default'/);
-  assert.match(uiSource, /narrow:\s*'max-w-3xl'/);
-  assert.match(uiSource, /default:\s*'max-w-5xl'/);
-  assert.match(uiSource, /wide:\s*'max-w-\[1140px\]'/);
-  assert.match(uiSource, /wall:\s*'max-w-\[1440px\]'/);
-  assert.match(uiSource, /mx-auto w-full max-w-\[1440px\] px-5 sm:px-7 lg:px-10/);
-  assert.match(uiSource, /pageHeadingClassName = 'text-\[40px\] font-normal leading-none tracking-\[-0\.045em\] text-\[var\(--text\)\] max-md:text-\[34px\]'/);
-  assert.match(uiSource, /sectionHeadingClassName = 'text-\[20px\] font-semibold tracking-\[-0\.02em\] text-\[var\(--text\)\]'/);
-  assert.match(uiSource, /ink-topbar min-h-\[72px\]/);
-  assert.match(uiSource, /align\s*=\s*'left'/);
-  assert.match(uiSource, /text-center/);
-  assert.doesNotMatch(layoutSource, /max-w-screen-2xl/);
+  const css = await read('app/globals.css');
+  assert.doesNotMatch(uiSource, /pageShellWidthClasses|size\?: keyof/);
+  assert.match(uiSource, /<main className=\{`page-layout/);
+  assert.match(css, /max-width: var\(--page-max-width\)/);
+  assert.match(css, /min-height: var\(--page-header-height\)/);
+  assert.match(uiSource, /export function AuthPageShell/);
 });
 
-test('page shells opt into narrow auth layouts and wider planner layouts', async () => {
-  const loginSource = await read('app/(auth)/login/page.tsx');
-  const signupSource = await read('app/(auth)/signup/page.tsx');
-  const setupSource = await read('app/(auth)/setup/page.tsx');
-  const athletePageSource = await read('app/(app)/athlete/page.tsx');
-  const coachPageSource = await read('app/(app)/coach/page.tsx');
-  const coachTemplatesPageSource = await read('app/(app)/coach/templates/page.tsx');
-  const coachPlannerPageSource = await read('app/(app)/coach/athletes/[athleteId]/page.tsx');
-  const wallPageSources = await Promise.all([
-    'app/(app)/athlete/calendar/page.tsx',
-    'app/(app)/athlete/planner/page.tsx',
-    'app/(app)/athlete/workouts/page.tsx',
-    'app/(app)/coach/planner/page.tsx',
-    'app/(app)/coach/workouts/page.tsx',
-  ].map(read));
-
-  assert.match(loginSource, /<PageShell size="narrow"/);
-  assert.match(loginSource, /align="center"/);
-  assert.match(signupSource, /<PageShell size="narrow"/);
-  assert.match(signupSource, /align="center"/);
-  assert.match(setupSource, /<PageShell size="narrow"/);
-  assert.match(setupSource, /align="center"/);
-  assert.match(athletePageSource, /<PageShell size="wall"/);
-  assert.match(coachPageSource, /<PageShell size="wide"/);
-  assert.match(coachTemplatesPageSource, /<PageShell size="wide"/);
-  assert.match(coachPlannerPageSource, /<PageShell size="wall"/);
-  for (const pageSource of wallPageSources) {
-    assert.match(pageSource, /<PageShell size="wall">/);
+test('production routes do not override page width and auth uses its own frame', async () => {
+  for (const route of ['login', 'signup', 'setup']) {
+    const source = await read(`app/(auth)/${route}/page.tsx`);
+    assert.match(source, /<AuthPageShell>/);
+    assert.match(source, /align="center"/);
+  }
+  const { readdir } = await import('node:fs/promises');
+  for (const file of await readdir(path.join(root, 'app/(app)'), { recursive: true })) {
+    if (!file.endsWith('.tsx')) continue;
+    const source = await read(`app/(app)/${file}`);
+    assert.doesNotMatch(source, /<PageShell[^>]*(?:size=|className="[^"]*(?:max-w|px-|py-|gap-))/);
   }
 });
 

@@ -17,7 +17,7 @@ export default async function AthleteActivityPage() {
   if (!activityFeed) redirect('/athlete/find-coach');
 
   return (
-    <PageShell size="wide">
+    <PageShell>
       <TopBar
         title="Completed work"
         description="Review your latest 12 completed sessions and compare each with the planned work."

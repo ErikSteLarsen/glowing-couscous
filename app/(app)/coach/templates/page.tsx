@@ -11,7 +11,7 @@ export default async function CoachTemplatesPage() {
   const templates = await templateService.listForCoach(user.id);
 
   return (
-    <PageShell size="wide">
+    <PageShell>
       <TopBar
         title="Templates"
         description="Create reusable day, week, or month structures. Build the content here; place it on a calendar from Planner."

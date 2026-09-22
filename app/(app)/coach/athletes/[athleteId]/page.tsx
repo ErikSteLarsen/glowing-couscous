@@ -34,7 +34,7 @@ export default async function CoachAthleteDetailPage({
   const todayIso = format(new Date(), 'yyyy-MM-dd');
 
   return (
-    <PageShell size="wall">
+    <PageShell>
       <TopBar
         title={detail.athlete.name}
         description={`Coach: ${detail.athlete.coachName}. ${detail.athlete.activePlan?.goalRace ? `Goal race: ${detail.athlete.activePlan.goalRace}.` : 'No goal race set yet.'}`}

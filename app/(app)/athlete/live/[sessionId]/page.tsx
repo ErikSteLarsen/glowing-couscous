@@ -29,7 +29,8 @@ export default async function AthleteLivePage({
   const detail = await athleteService.loadSessionDetail(user.id, parsedSessionId);
   if (!detail) {
     return (
-      <PageShell size="wide">
+      <PageShell>
+        <TopBar title="Live session" />
         <EmptyState title="Live session unavailable" description="This session could not be loaded for live execution." />
       </PageShell>
     );
@@ -38,7 +39,7 @@ export default async function AthleteLivePage({
   const sessionOrigin = getSessionOrigin(from);
 
   return (
-    <PageShell size="wide">
+    <PageShell>
       <TopBar
         title={`Execute ${detail.session.title}`}
         actions={<ActionLink href={`/athlete/session/${detail.session.id}?from=${sessionOrigin}`} tone="secondary">Back to session</ActionLink>}

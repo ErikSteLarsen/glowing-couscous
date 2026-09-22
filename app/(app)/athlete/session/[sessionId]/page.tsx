@@ -32,7 +32,8 @@ export default async function AthleteSessionPage({
   const [detail, account] = await Promise.all([athleteService.loadSessionDetail(user.id, parsedSessionId), accountService.getAccount(user.id)]);
   if (!detail) {
     return (
-      <PageShell size="wide">
+      <PageShell>
+        <TopBar title="Session" />
         <EmptyState title="Session not found" description="This session is unavailable or belongs to another athlete." />
       </PageShell>
     );
@@ -46,7 +47,7 @@ export default async function AthleteSessionPage({
     : `/athlete/live/${detail.session.id}?from=${sessionOrigin}`;
 
   return (
-    <PageShell size="wide">
+    <PageShell>
       <TopBar
         title={detail.session.title}
         description={detail.session.summary ?? 'Session details.'}

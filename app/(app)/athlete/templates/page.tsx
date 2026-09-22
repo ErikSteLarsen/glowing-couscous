@@ -13,7 +13,7 @@ export default async function AthleteTemplatesPage() {
   const templates = await templateService.listForOwner(user.id);
 
   return (
-    <PageShell size="wide">
+    <PageShell>
       <TopBar
         title="Templates"
         description="Create reusable day, week, or month structures. Build the content here; place it on your calendar from Planner."
