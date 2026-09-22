@@ -5,10 +5,6 @@ import { OVERVIEW_CARD_IDS, type OverviewCardId } from '@/lib/overview-preferenc
 import { Toggle } from '@/components/tempo/Toggle';
 
 const overviewLabels: Record<OverviewCardId, { title: string; description: string }> = {
-  coachNote: {
-    title: 'Coach note',
-    description: 'Show the right-rail coaching note on Home when a coach is connected.',
-  },
   lastActivity: {
     title: 'Last activity',
     description: 'Keep the most recent completed session visible on Home.',
@@ -24,10 +20,8 @@ const overviewLabels: Record<OverviewCardId, { title: string; description: strin
 };
 
 export function SettingsClient({
-  role,
   initialOverviewCards,
 }: {
-  role: string | null;
   initialOverviewCards: OverviewCardId[];
 }) {
   const [overviewCards, setOverviewCards] = useState(initialOverviewCards);
@@ -65,13 +59,12 @@ export function SettingsClient({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-      {role === 'ATHLETE' ? (
-        <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
+      <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
             Overview
           </p>
           <div className="mt-4 space-y-3">
-            {OVERVIEW_CARD_IDS.map((cardId) => {
+            {OVERVIEW_CARD_IDS.filter((cardId) => cardId !== 'coachNote').map((cardId) => {
               const meta = overviewLabels[cardId];
               const checked = overviewCards.includes(cardId);
 
@@ -97,7 +90,6 @@ export function SettingsClient({
             })}
           </div>
         </section>
-      ) : null}
 
       <div className="space-y-6">
         <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
@@ -109,7 +101,7 @@ export function SettingsClient({
         <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
           <p className="text-[15px] font-semibold text-[var(--text)]">Notifications</p>
           <p className="mt-2 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
-            Notification delivery preferences stay intentionally minimal until the athlete and coach mobile flows are fully migrated.
+            Notification delivery preferences stay intentionally minimal while the first personal workspace ships.
           </p>
         </section>
         {message ? (

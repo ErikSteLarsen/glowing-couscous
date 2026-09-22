@@ -11,7 +11,7 @@ import {
 } from '@/components/ui';
 import { SessionRow } from '@/components/tempo/SessionRow';
 import { AthleteCalendarWeekScroller } from './AthleteCalendarWeekScroller';
-import { getCurrentUser } from '@/lib/auth-session';
+import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 
 export default async function AthleteCalendarPage({
@@ -20,14 +20,15 @@ export default async function AthleteCalendarPage({
   searchParams: Promise<{ weekStart?: string; date?: string; view?: string }>;
 }) {
   const user = await getCurrentUser();
-  if (!user || user.role !== 'ATHLETE') redirect('/login');
+  if (!user) redirect('/login');
+  if (!hasAppRole(user)) redirect('/setup');
 
   const { weekStart, date, view } = await searchParams;
   const selectedView = view === 'month' ? 'month' : 'week';
   const referenceDate = date ?? weekStart ?? new Date().toISOString();
   const resolvedReferenceDate = new Date(referenceDate);
   const calendar = await athleteService.loadCalendarView(user.id, referenceDate, selectedView);
-  if (!calendar) redirect('/athlete/find-coach');
+  if (!calendar) redirect('/login');
 
   const buildCalendarHref = (nextView: 'week' | 'month', nextDate: Date) => {
     const params = new URLSearchParams({

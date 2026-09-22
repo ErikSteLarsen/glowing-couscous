@@ -6,7 +6,7 @@ does not preserve completed implementation history.
 ## First MVP Priority
 
 PRODUCT.md defines the release target: complete personal training without a
-coach, using the existing Athlete workspace. Prioritize authentication and
+coach, using the unified personal workspace. Prioritize authentication and
 onboarding, personal libraries/templates, planning, session completion, and
 outcome review. Capability status below describes implementation evidence,
 not release priority. Coach-only capabilities and training-plan expansion are
@@ -22,9 +22,9 @@ secondary; preserve their behavior and shared ownership boundaries.
 
 | ID | Area | Status | Primary owners | Main entry points |
 |---|---|---|---|---|
-| `AUTH-001` | Authentication and role setup | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | `/login`, `/signup`, `/setup`, `/api/auth/*` |
-| `SHELL-001` | App shell and navigation | `shipped` | `components/AppShell.tsx`, `components/AppSidebar.tsx`, `components/ui.tsx`, `app/globals.css`, `lib/app-navigation.ts` | Authenticated `(app)` layout |
-| `COACH-001` | Coach roster and requests | `shipped` | `lib/coach-service.ts`, `lib/coach-request-service.ts` | `/coach`, `/coach/athletes/*`, request APIs |
+| `AUTH-001` | Authentication and dormant role compatibility | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | `/login`, `/signup`, `/setup`, `/api/auth/*` |
+| `SHELL-001` | Unified personal shell and navigation | `shipped` | `components/AppShell.tsx`, `components/AppSidebar.tsx`, `components/ui.tsx`, `app/globals.css`, `lib/app-navigation.ts` | Authenticated `(app)` layout and `/athlete/*` |
+| `COACH-001` | Dormant coach roster and requests | `transitional` | `lib/coach-service.ts`, `lib/coach-request-service.ts` | Hidden pending a later collaboration release |
 | PLAN-001 | Personal planning and secondary coach planning | shipped | components/PlannerDesk.tsx, lib/coach-planner-service.ts, lib/athlete-planner-service.ts, lib/assignment-service.ts | /coach/planner, /athlete/planner |
 | `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | `/coach/workouts`, `/athlete/workouts` |
 | `TEMPLATE-001` | Templates and training plans | `in-progress` | `lib/template-service.ts`, `lib/coach-training-plan-service.ts` | `/coach/templates`, `/athlete/templates` |
@@ -53,7 +53,6 @@ styles:
 
 ## Active Tasks
 
-- `2026-09-22-unified-personal-workspace.md` - hide role distinctions and ship one personal training workspace for every account.
 - `2026-09-15-workout-flow-previews.md` - three interactive workout authoring direction previews; routes live under `/design/workout-flow/*`.
 - `2026-09-15-workbench-middle-experiments.md` - three Workbench middle-surface experiments; routes live under `/design/workout-flow/workbench/{terrain,ribbon,staging}`.
 

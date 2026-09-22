@@ -32,9 +32,6 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (performanceProfile !== undefined) {
-    if (user.role !== 'ATHLETE') {
-      return NextResponse.json({ error: 'Training metrics are available to athlete profiles only.' }, { status: 403 });
-    }
     await accountService.updatePerformanceProfile(user.id, performanceProfile);
   }
 

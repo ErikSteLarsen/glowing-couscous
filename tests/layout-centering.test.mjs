@@ -84,7 +84,7 @@ test('signed-in routes use grouped app shell while auth pages stay centered', as
   assert.match(signedInLayoutSource, /redirect\('\/login'\)/);
   assert.match(signedInLayoutSource, /redirect\('\/setup'\)/);
   assert.match(signedInLayoutSource, /AppShell/);
-  assert.match(signedInLayoutSource, /athleteService\.findProfileByUserId/);
+  assert.doesNotMatch(signedInLayoutSource, /athleteService\.findProfileByUserId/);
 
   assert.match(shellSource, /useState\(false\)/);
   assert.match(shellSource, /AppSidebar/);

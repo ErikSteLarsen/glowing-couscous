@@ -4,7 +4,6 @@ import { useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
-  ActionLink,
   dangerTextClassName,
   formFieldClassName,
   formLabelClassName,
@@ -18,24 +17,11 @@ type Account = {
   id: number;
   name: string | null;
   email: string | null;
-  role: string | null;
   performanceProfile: PerformanceProfile;
 };
 
-type AthleteState = {
-  profile: { id: number } | null;
-  latestRequest: {
-    status: string;
-    coach: { name: string | null };
-  } | null;
-} | null;
-
-export function ProfileClient({
-  account,
-  athleteState,
-}: {
+export function ProfileClient({ account }: {
   account: Account;
-  athleteState: AthleteState;
 }) {
   const [name, setName] = useState(account.name ?? '');
   const [performanceProfile, setPerformanceProfile] = useState(account.performanceProfile);
@@ -85,9 +71,8 @@ export function ProfileClient({
           </div>
            <div className="rounded-[12px] border border-[var(--field-border)] bg-[var(--field-surface)] px-4 py-3 text-sm text-[var(--text-secondary)]">
             <p>Email: {account.email}</p>
-            <p>Role: {account.role}</p>
            </div>
-           {account.role === 'ATHLETE' ? <fieldset className="space-y-4 border-t border-[var(--border)] pt-5"><legend className="text-base font-semibold text-[var(--text)]">Training metrics</legend><p className="text-sm text-[var(--text-secondary)]">These current values resolve relative workout previews. They are never copied into workouts or shared links.</p><div className="grid gap-3 sm:grid-cols-2"><MetricInput label="Cycling FTP (W)" value={performanceProfile.cycling.ftpWatts} onChange={(ftpWatts) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, ftpWatts } }))} /><MetricInput label="Cycling threshold HR (bpm)" value={performanceProfile.cycling.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, thresholdHrBpm } }))} /><MetricInput label="Running threshold pace (sec/km)" value={performanceProfile.running.thresholdPaceSecPerKm} onChange={(thresholdPaceSecPerKm) => setPerformanceProfile((current) => ({ ...current, running: { ...current.running, thresholdPaceSecPerKm } }))} /><MetricInput label="Running threshold HR (bpm)" value={performanceProfile.running.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, running: { ...current.running, thresholdHrBpm } }))} /><MetricInput label="Swimming CSS (sec/100 m)" value={performanceProfile.swimming.cssSecPer100m} onChange={(cssSecPer100m) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, cssSecPer100m } }))} /><MetricInput label="Swimming threshold HR (bpm)" value={performanceProfile.swimming.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, thresholdHrBpm } }))} /></div></fieldset> : null}
+           <fieldset className="space-y-4 border-t border-[var(--border)] pt-5"><legend className="text-base font-semibold text-[var(--text)]">Training metrics</legend><p className="text-sm text-[var(--text-secondary)]">These current values resolve relative workout previews. They are never copied into workouts or shared links.</p><div className="grid gap-3 sm:grid-cols-2"><MetricInput label="Cycling FTP (W)" value={performanceProfile.cycling.ftpWatts} onChange={(ftpWatts) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, ftpWatts } }))} /><MetricInput label="Cycling threshold HR (bpm)" value={performanceProfile.cycling.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, thresholdHrBpm } }))} /><MetricInput label="Running threshold pace (sec/km)" value={performanceProfile.running.thresholdPaceSecPerKm} onChange={(thresholdPaceSecPerKm) => setPerformanceProfile((current) => ({ ...current, running: { ...current.running, thresholdPaceSecPerKm } }))} /><MetricInput label="Running threshold HR (bpm)" value={performanceProfile.running.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, running: { ...current.running, thresholdHrBpm } }))} /><MetricInput label="Swimming CSS (sec/100 m)" value={performanceProfile.swimming.cssSecPer100m} onChange={(cssSecPer100m) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, cssSecPer100m } }))} /><MetricInput label="Swimming threshold HR (bpm)" value={performanceProfile.swimming.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, thresholdHrBpm } }))} /></div></fieldset>
           {error && <p role="alert" className={dangerTextClassName}>{error}</p>}
           {message && <p role="status" className={successTextClassName}>{message}</p>}
           <button
@@ -98,38 +83,6 @@ export function ProfileClient({
             {saving ? 'Saving…' : 'Save changes'}
           </button>
         </form>
-      </Surface>
-      <Surface>
-        {athleteState !== null ? (
-          athleteState.latestRequest?.status === 'PENDING' ? (
-            <div className="space-y-3">
-              <p className="text-sm text-[var(--text-secondary)]">
-                Request pending: Waiting for {athleteState.latestRequest.coach.name} to accept your request.
-              </p>
-              <ActionLink href="/athlete/find-coach" tone="secondary">Open coach discovery</ActionLink>
-            </div>
-          ) : athleteState.latestRequest?.status === 'REJECTED' ? (
-            <div className="space-y-3">
-              <p className="text-sm text-[var(--text-secondary)]">
-                {athleteState.latestRequest.coach.name} declined your last request. You can retry or find a different coach.
-              </p>
-              <ActionLink href="/athlete/find-coach" tone="secondary">Find a coach</ActionLink>
-            </div>
-          ) : athleteState.profile ? (
-            <p className="text-sm text-[var(--text-secondary)]">You have an active coach.</p>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-[var(--text-secondary)]">
-                You don&apos;t have a coach yet. Find a coach to get your weekly training plan.
-              </p>
-              <ActionLink href="/athlete/find-coach" tone="secondary">Find a coach</ActionLink>
-            </div>
-          )
-        ) : (
-          <p className="text-sm text-[var(--text-secondary)]">
-            Coach profile details will expand here later.
-          </p>
-        )}
       </Surface>
     </div>
   );

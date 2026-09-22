@@ -10,18 +10,18 @@ const exists = async (relativePath) =>
     .then(() => true)
     .catch(() => false);
 
-test('root route and app navigation define signed-in entry points and role-aware menus', async () => {
+test('root route and app navigation define one signed-in personal workspace', async () => {
   const homeSource = await read('app/page.tsx');
   const navSource = await read('lib/app-navigation.ts');
 
   assert.match(homeSource, /getCurrentUser/);
   assert.match(homeSource, /redirect\('\/login'\)/);
   assert.match(homeSource, /redirect\('\/setup'\)/);
-  assert.match(homeSource, /redirect\(user\.role === 'COACH' \? '\/coach' : '\/athlete'\)/);
+  assert.match(homeSource, /redirect\('\/athlete'\)/);
 
   assert.match(navSource, /export function getPrimaryNavigation/);
-  assert.match(navSource, /hasActiveCoach/);
-  assert.match(navSource, /label: 'Coach'/);
+  assert.doesNotMatch(navSource, /label: 'Coach'/);
+  assert.doesNotMatch(navSource, /label: 'Athletes'/);
   assert.match(navSource, /label: 'Planner'/);
   assert.match(navSource, /label: 'Workouts'/);
   assert.match(navSource, /href: '\/athlete\/workouts'/);
@@ -148,19 +148,14 @@ test('coach athlete detail route uses coach-service detail loading instead of th
   assert.doesNotMatch(athleteDetailPageSource, /Hybrid week planner|Previous week|Next week/);
 });
 
-test('athlete routes gate discovery correctly and keep onboarding state in discovery page', async () => {
+test('coach discovery is hidden while the personal workspace stays available', async () => {
   const athletePageSource = await read('app/(app)/athlete/page.tsx');
   const discoveryPageSource = await read('app/(app)/athlete/find-coach/page.tsx');
-  const discoveryClientSource = await read('app/(app)/athlete/find-coach/FindCoachClient.tsx');
-  const athleteServiceSource = await read('lib/athlete-service.ts');
+  const navigationSource = await read('lib/app-navigation.ts');
 
-  assert.match(athletePageSource, /redirect\('\/athlete\/find-coach'\)/);
-  assert.match(discoveryPageSource, /getCurrentUser/);
+  assert.doesNotMatch(athletePageSource, /find-coach/);
   assert.match(discoveryPageSource, /redirect\('\/athlete'\)/);
-  assert.match(discoveryClientSource, /Messaging coming soon/);
-  assert.match(discoveryClientSource, /href="\/profile"/);
-  assert.match(athleteServiceSource, /loadCoachSearchState/);
-  assert.match(athleteServiceSource, /findProfileByUserId/);
+  assert.doesNotMatch(navigationSource, /find-coach/);
 });
 
 test('moved athlete pages still avoid direct prisma access', async () => {

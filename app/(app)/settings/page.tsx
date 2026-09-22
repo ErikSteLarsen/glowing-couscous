@@ -20,7 +20,7 @@ export default async function SettingsPage() {
         title="Preferences"
         description="Choose which overview cards appear on Home."
       />
-      <SettingsClient role={account.role} initialOverviewCards={initialOverviewCards} />
+      <SettingsClient initialOverviewCards={initialOverviewCards} />
     </PageShell>
   );
 }

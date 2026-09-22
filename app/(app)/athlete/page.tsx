@@ -4,7 +4,7 @@ import { ActionLink, PageShell, sectionHeadingClassName, Surface, TopBar } from 
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionRow } from '@/components/tempo/SessionRow';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
-import { getCurrentUser } from '@/lib/auth-session';
+import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 
 function formatDuration(durationSec: number) {
@@ -20,10 +20,11 @@ function formatDuration(durationSec: number) {
 
 export default async function AthletePage() {
   const user = await getCurrentUser();
-  if (!user || user.role !== 'ATHLETE') redirect('/login');
+  if (!user) redirect('/login');
+  if (!hasAppRole(user)) redirect('/setup');
 
   const dashboard = await athleteService.loadHomeDashboard(user.id);
-  if (!dashboard) redirect('/athlete/find-coach');
+  if (!dashboard) redirect('/login');
 
   const nextAction = dashboard.todaySessions.find((session) => session.status !== 'completed') ?? dashboard.todaySessions[0] ?? null;
   const nextActionLabel = nextAction?.status === 'completed' ? 'Review outcome' : nextAction?.status === 'missed' ? 'Review session' : 'Open session';
@@ -98,18 +99,6 @@ export default async function AthletePage() {
         </section>
 
         <div className="ink-study-grid grid gap-4 md:grid-cols-2 xl:grid-cols-4 xl:gap-5">
-          {dashboard.overviewCards.includes('coachNote') && dashboard.coachNote && dashboard.coach ? (
-            <Surface className="ink-readout ink-study-tile ink-study-tile--feature">
-              <div className="mb-3 flex items-center gap-2">
-                <div className="h-7 w-7 rounded-full bg-[var(--brand-tint)]" />
-                <span className="text-[12.5px] font-semibold text-[var(--field-selected-text)]">
-                  Coach {dashboard.coach.name}
-                </span>
-              </div>
-              <p className="text-[13.5px] leading-[1.5] text-[var(--text)]">{dashboard.coachNote}</p>
-            </Surface>
-          ) : null}
-
           {dashboard.overviewCards.includes('lastActivity') && dashboard.lastActivity ? (
             <Surface className="ink-readout ink-study-tile">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">

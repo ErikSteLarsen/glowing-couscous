@@ -71,10 +71,10 @@ test('auth pages reuse shared accessible form styling and document demo athlete 
 
   assert.match(signupSource, /formFieldClassName/);
   assert.match(signupSource, /primaryButtonClassName/);
-  assert.match(signupSource, /getSegmentedChoiceClassName/);
+  assert.doesNotMatch(signupSource, /getSegmentedChoiceClassName|Account type|I am a coach/);
 
   assert.match(setupSource, /primaryButtonClassName/);
-  assert.match(setupSource, /getSegmentedChoiceClassName/);
+  assert.doesNotMatch(setupSource, /getSegmentedChoiceClassName|Choose your role|Account type/);
 });
 
 test('input-heavy app screens reuse shared form field helpers', async () => {

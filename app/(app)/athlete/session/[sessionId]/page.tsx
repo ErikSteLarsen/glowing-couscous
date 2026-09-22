@@ -4,7 +4,7 @@ import { ActionLink, EmptyState, PageShell, Surface, TopBar } from '@/components
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
-import { getCurrentUser } from '@/lib/auth-session';
+import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
 import { getSessionOrigin, getSessionReturnTarget } from '@/lib/app-navigation';
@@ -20,7 +20,8 @@ export default async function AthleteSessionPage({
   searchParams: Promise<{ from?: string }>;
 }) {
   const user = await getCurrentUser();
-  if (!user || user.role !== 'ATHLETE') redirect('/login');
+  if (!user) redirect('/login');
+  if (!hasAppRole(user)) redirect('/setup');
 
   const { sessionId } = await params;
   const { from } = await searchParams;
@@ -108,16 +109,7 @@ export default async function AthleteSessionPage({
         </div>
 
         <div className="space-y-4">
-          <Surface>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
-              Coach
-            </p>
-            <p className="mt-3 text-[15px] font-semibold text-[var(--text)]">
-              {detail.coachName ?? 'Self coached'}
-            </p>
-          </Surface>
-
-            <SessionDetailClient
+          <SessionDetailClient
               id="session-outcome"
             sessionId={detail.session.id}
             initialDone={detail.session.status === 'completed'}

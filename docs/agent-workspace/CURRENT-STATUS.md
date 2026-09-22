@@ -17,6 +17,12 @@ roles, Monday-based planning, structured workout blocks, reusable libraries and
 templates, independent source-copy assignment, completion history, local live
 execution, session outcome comparison, and sanitized workout sharing.
 
+The first shipment now presents one personal workspace to every signed-in
+account. Signup and setup do not expose a role choice; valid legacy roles enter
+the same personal paths. Coach discovery, requests, roster, and coach
+navigation are hidden while their stored data and implementation remain dormant
+for a later collaboration release.
+
 The current ownership split is important:
 
 - Workouts stores reusable owner-scoped definitions without dates or assignments.
@@ -28,8 +34,7 @@ The current ownership split is important:
 
 Complete the self-directed workflow in PRODUCT.md: a fresh user with no coach
 or seeded content can create reusable workouts/templates, schedule their own
-sessions, follow and complete them, and review saved outcomes. The existing
-Athlete role is the personal workspace.
+sessions, follow and complete them, and review saved outcomes.
 
 The personal Planning Desk, session completion, and Activity path now pass the fresh-account acceptance journey, including repeated-workout placement, rescheduling, live execution, completion, actual correction, comparison, persistence, and mobile layout. Coach-only gaps remain secondary; preserve existing coach functionality while improving shared owners.
 
@@ -76,9 +81,9 @@ inspector visible.
 
 | Gate | Result | Command or evidence |
 |---|---|---|
-| Tests | Pass, 199 tests | package-script equivalent on 2026-09-22 |
-| Lint | Pass | package-script equivalent on 2026-09-22 |
-| Production build | Pass | package-script equivalent on 2026-09-22; existing middleware deprecation warning remains |
+| Tests | Pass, 199 tests | `pnpm test` on 2026-09-22 after the unified-workspace release change |
+| Lint | Pass | `pnpm lint` on 2026-09-22 after the unified-workspace release change |
+| Production build | Blocked locally | Prisma could not resolve the local `DIRECT_URL` value on 2026-09-22; no application build failure was reached |
 | Interface quality pass | Pass | Independent Impeccable design and technical assessments, focused source regression coverage, and detector scan on 2026-09-22; detector findings were advisory-only |
 | Database setup | PostgreSQL migration ready; Neon connection not run here | Prisma schema validation and PostgreSQL baseline diff verified on 2026-09-22; local `.env` still points to the legacy SQLite database |
 | Design context | Pass | `DESIGN.md`, `.impeccable/design.json`, and the signed-in surface brief synchronized with Ink Is Movement tokens and shared components; focused workout builder presets, progressive basics, zone chart, and three workout-flow direction previews verified in source; detector completed with advisory-only findings |

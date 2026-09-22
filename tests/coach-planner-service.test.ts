@@ -406,7 +406,7 @@ test('planner API routes and navigation use the coach planner service', async ()
   assert.match(sessionRoute, /coachPlannerService\.saveSession/);
   assert.match(sessionRoute, /coachPlannerService\.deleteSession/);
   assert.match(navigation, /label: 'Planner'/);
-  assert.match(navigation, /href: '\/coach\/planner'/);
+  assert.doesNotMatch(navigation, /href: '\/coach\/planner'/);
   assert.match(oldBuilderPage, /redirect\('\/coach\/planner/);
   assert.match(templatesClient, /plannerHref = '\/coach\/planner'/);
   assert.doesNotMatch(templatesClient, /\$\{plannerHref\}\?templateId=/);

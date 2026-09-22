@@ -120,12 +120,14 @@ test('athlete request services support re-opened rejected requests and shared re
   assert.match(athleteServiceSource, /listForAthlete/);
 });
 
-test('athlete onboarding surfaces request state in profile and coach-search UI', async () => {
+test('coach discovery remains implemented but is not exposed from the personal workspace', async () => {
   const profileSource = await read('app/(app)/profile/ProfileClient.tsx');
+  const discoveryPageSource = await read('app/(app)/athlete/find-coach/page.tsx');
   const searchSource = await read('app/(app)/athlete/find-coach/FindCoachClient.tsx');
   const routeSource = await read('app/api/athlete/coach-requests/route.ts');
 
-  assert.match(profileSource, /Request pending|Waiting for/);
+  assert.doesNotMatch(profileSource, /Request pending|Waiting for|Find a coach/);
+  assert.match(discoveryPageSource, /redirect\('\/athlete'\)/);
   assert.match(searchSource, /Request pending|Send request again|Back to profile|Wait for current request/);
   assert.match(searchSource, /fetch\('\/api\/athlete\/coach-requests'\)/);
   assert.match(routeSource, /athleteService/);

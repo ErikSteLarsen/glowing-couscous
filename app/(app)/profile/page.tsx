@@ -3,7 +3,6 @@ import { PageShell, TopBar } from '@/components/ui';
 import { ProfileClient } from './ProfileClient';
 import { getCurrentUser } from '@/lib/auth-session';
 import { accountService } from '@/lib/account-service';
-import { athleteService } from '@/lib/athlete-service';
 
 export default async function ProfilePage() {
   const user = await getCurrentUser();
@@ -12,16 +11,13 @@ export default async function ProfilePage() {
   const account = await accountService.getAccount(user.id);
   if (!account) redirect('/login');
 
-  const athleteState =
-    user.role === 'ATHLETE' ? await athleteService.loadProfileState(user.id) : null;
-
   return (
     <PageShell>
       <TopBar
         title={account.name ?? 'Your profile'}
-        description={account.role === 'ATHLETE' ? 'Update your name and training metrics.' : 'Update your profile details.'}
+        description="Update your name and training metrics."
       />
-      <ProfileClient account={account} athleteState={athleteState} />
+      <ProfileClient account={account} />
     </PageShell>
   );
 }

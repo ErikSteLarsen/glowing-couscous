@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { ActionLink, EmptyState, PageShell, Surface, StatTile, TopBar } from '@/components/ui';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
-import { getCurrentUser } from '@/lib/auth-session';
+import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
@@ -11,10 +11,11 @@ import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
 
 export default async function AthleteActivityPage() {
   const user = await getCurrentUser();
-  if (!user || user.role !== 'ATHLETE') redirect('/login');
+  if (!user) redirect('/login');
+  if (!hasAppRole(user)) redirect('/setup');
 
   const activityFeed = await athleteService.loadActivityFeed(user.id);
-  if (!activityFeed) redirect('/athlete/find-coach');
+  if (!activityFeed) redirect('/login');
 
   return (
     <PageShell>

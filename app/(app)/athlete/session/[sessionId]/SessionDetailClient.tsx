@@ -151,7 +151,7 @@ export function SessionDetailClient({
               value={draft.athleteNotes}
               onChange={(event) => setDraft(updateSessionEditorFields(draft, { athleteNotes: event.target.value }))}
               className={`${formTextareaClassName} min-h-24`}
-              placeholder="What should your coach know?"
+              placeholder="Add notes about this session"
             />
           </label>
           <label className="block space-y-2">

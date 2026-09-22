@@ -145,7 +145,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
   return {
     async findProfileByUserId(userId: number) {
       const athlete = await loadAthleteIdentity(userId);
-      if (!athlete || athlete.role !== 'ATHLETE') {
+      if (!athlete) {
         return null;
       }
 
@@ -194,7 +194,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         },
       });
 
-      if (!athlete || athlete.role !== 'ATHLETE') {
+      if (!athlete) {
         return null;
       }
 
@@ -338,7 +338,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         },
       });
 
-      if (!athlete || athlete.role !== 'ATHLETE') {
+      if (!athlete) {
         return null;
       }
 
@@ -406,7 +406,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         },
       });
 
-      if (!athlete || athlete.role !== 'ATHLETE') {
+      if (!athlete) {
         return null;
       }
 
@@ -447,7 +447,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       }
 
       const athlete = await loadAthleteIdentity(userId);
-      if (!athlete || athlete.role !== 'ATHLETE') {
+      if (!athlete) {
         return null;
       }
 

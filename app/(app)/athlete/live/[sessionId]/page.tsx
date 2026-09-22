@@ -3,7 +3,7 @@ import { format, startOfWeek } from 'date-fns';
 import { ActionLink, EmptyState, PageShell, Surface, TopBar } from '@/components/ui';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
-import { getCurrentUser } from '@/lib/auth-session';
+import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
 import { getSessionOrigin } from '@/lib/app-navigation';
@@ -17,7 +17,8 @@ export default async function AthleteLivePage({
   searchParams: Promise<{ from?: string }>;
 }) {
   const user = await getCurrentUser();
-  if (!user || user.role !== 'ATHLETE') redirect('/login');
+  if (!user) redirect('/login');
+  if (!hasAppRole(user)) redirect('/setup');
 
   const { sessionId } = await params;
   const { from } = await searchParams;

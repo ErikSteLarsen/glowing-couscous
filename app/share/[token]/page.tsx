@@ -27,7 +27,7 @@ export default async function SharePage({
   }
 
   const user = await getCurrentUser();
-  const account = user?.role === 'ATHLETE' ? await accountService.getAccount(user.id) : null;
+  const account = user ? await accountService.getAccount(user.id) : null;
   return (
     <ShareLandingClient
       token={token}
