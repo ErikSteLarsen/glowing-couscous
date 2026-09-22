@@ -46,21 +46,21 @@ Use `pnpm`.
 2. Set a real `AUTH_SECRET`, for example with `openssl rand -base64 32`.
 3. Optionally set `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` for Google OAuth.
 4. Set `DATABASE_URL` to a Neon pooled PostgreSQL connection string and
-   `DATABASE_URL_UNPOOLED` to the matching Neon direct connection string. For local
+   `DIRECT_URL` to the matching Neon direct connection string. For local
    development, a local PostgreSQL database can be used for both values.
 5. Run `pnpm db:setup` to apply migrations and seed demo data.
 6. Run `pnpm dev`.
 
 Prisma CLI reads `.env`, so a database-only `.env.local` is not sufficient for
 `pnpm db:push`, `pnpm db:migrate`, or `pnpm db:setup`. `DATABASE_URL` is the
-pooled runtime URL; `DATABASE_URL_UNPOOLED` is used for Prisma migrations and
+pooled runtime URL; `DIRECT_URL` is used for Prisma migrations and
 should not use Neon’s `-pooler` hostname.
 
 ## Neon and Vercel
 
 1. Create a Neon project and copy both connection strings from the branch
    connection dialog.
-2. Add `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED` (direct) to the
+2. Add `DATABASE_URL` (pooled) and `DIRECT_URL` (direct) to the
    Vercel project for every environment where the app will run. Keep the
    direct URL out of client-side code.
 3. Add the Auth.js variables from `.env.example`, then deploy. The Vercel
