@@ -7,5 +7,5 @@ export default async function HomePage() {
   if (!user) redirect('/login');
   if (!hasAppRole(user)) redirect('/setup');
 
-  redirect(user.role === 'COACH' ? '/coach' : '/athlete');
+  redirect('/athlete');
 }

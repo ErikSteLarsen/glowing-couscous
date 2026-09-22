@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
@@ -75,8 +75,9 @@ export function ProfileClient({
       <Surface>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className={formLabelClassName}>Display name</label>
+            <label htmlFor="profile-display-name" className={formLabelClassName}>Display name</label>
             <input
+              id="profile-display-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className={formFieldClassName}
@@ -87,8 +88,8 @@ export function ProfileClient({
             <p>Role: {account.role}</p>
            </div>
            {account.role === 'ATHLETE' ? <fieldset className="space-y-4 border-t border-[var(--border)] pt-5"><legend className="text-base font-semibold text-[var(--text)]">Training metrics</legend><p className="text-sm text-[var(--text-secondary)]">These current values resolve relative workout previews. They are never copied into workouts or shared links.</p><div className="grid gap-3 sm:grid-cols-2"><MetricInput label="Cycling FTP (W)" value={performanceProfile.cycling.ftpWatts} onChange={(ftpWatts) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, ftpWatts } }))} /><MetricInput label="Cycling threshold HR (bpm)" value={performanceProfile.cycling.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, thresholdHrBpm } }))} /><MetricInput label="Running threshold pace (sec/km)" value={performanceProfile.running.thresholdPaceSecPerKm} onChange={(thresholdPaceSecPerKm) => setPerformanceProfile((current) => ({ ...current, running: { ...current.running, thresholdPaceSecPerKm } }))} /><MetricInput label="Running threshold HR (bpm)" value={performanceProfile.running.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, running: { ...current.running, thresholdHrBpm } }))} /><MetricInput label="Swimming CSS (sec/100 m)" value={performanceProfile.swimming.cssSecPer100m} onChange={(cssSecPer100m) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, cssSecPer100m } }))} /><MetricInput label="Swimming threshold HR (bpm)" value={performanceProfile.swimming.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, thresholdHrBpm } }))} /></div></fieldset> : null}
-          {error && <p className={dangerTextClassName}>{error}</p>}
-          {message && <p className={successTextClassName}>{message}</p>}
+          {error && <p role="alert" className={dangerTextClassName}>{error}</p>}
+          {message && <p role="status" className={successTextClassName}>{message}</p>}
           <button
             type="submit"
             disabled={saving}
@@ -135,5 +136,6 @@ export function ProfileClient({
 }
 
 function MetricInput({ label, value, onChange }: { label: string; value: number | null; onChange: (value: number | null) => void }) {
-  return <label className="block space-y-2"><span className={formLabelClassName}>{label}</span><input className={formFieldClassName} type="number" min="1" step="0.01" value={value ?? ''} onChange={(event) => onChange(event.target.value === '' ? null : Number(event.target.value))} /></label>;
+  const inputId = useId();
+  return <div className="block space-y-2"><label htmlFor={inputId} className={formLabelClassName}>{label}</label><input id={inputId} className={formFieldClassName} type="number" min="1" step="0.01" value={value ?? ''} onChange={(event) => onChange(event.target.value === '' ? null : Number(event.target.value))} /></div>;
 }

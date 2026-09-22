@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { isAppRole } from '@/lib/auth-principal';
 import { isJsonObject } from '@/lib/route-params';
 
 export async function POST(req: NextRequest) {
@@ -14,9 +13,9 @@ export async function POST(req: NextRequest) {
   if (!isJsonObject(body)) {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
   }
-  const { name, email, password, role } = body;
+  const { name, email, password } = body;
 
-  if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string' || !isAppRole(role)) {
+  if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
   }
   if (password.length < 8) {
@@ -29,7 +28,7 @@ export async function POST(req: NextRequest) {
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
-  await prisma.user.create({ data: { name, email, passwordHash, role } });
+  await prisma.user.create({ data: { name, email, passwordHash, role: 'ATHLETE', selfCoached: true } });
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

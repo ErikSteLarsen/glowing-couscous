@@ -50,6 +50,25 @@ test('session block bars show colored zones without a gray track', async () => {
 
   assert.match(barSource, /bg-transparent/);
   assert.doesNotMatch(barSource, /bg-\[var\(--sunken\)\]/);
+  assert.match(barSource, /height: `\$\{Math\.min\(Math\.max\(segment\.zone, 1\), 5\) \* 20\}%`/);
+  assert.doesNotMatch(barSource, /height: isIntensityTimeline/);
+});
+
+test('workout authoring gates details behind basics and exposes direct block controls', async () => {
+  const builderSource = await read('components/WorkoutBuilder.tsx');
+
+  assert.match(builderSource, /Continue to workout details/);
+  assert.match(builderSource, /\{basicsDismissed \? <>/);
+  assert.match(builderSource, /max-w-\[46rem\]/);
+  assert.match(builderSource, /onDetailsVisibilityChange/);
+  assert.match(builderSource, /aria-label="Edit workout basics"/);
+  assert.match(builderSource, /setBasicsEditing\(true\)/);
+  assert.doesNotMatch(builderSource, /onClick=\{\(\) => setBasicsDismissed\(false\)\}>Edit basics/);
+  assert.match(builderSource, /Click Add/);
+  assert.match(builderSource, /Drop blocks anywhere in this sequence/);
+  assert.match(builderSource, /Training intensity zone/);
+  assert.match(builderSource, /Repetitions/);
+  assert.match(builderSource, /Add recovery block/);
 });
 
 test('signed-in routes use grouped app shell while auth pages stay centered', async () => {

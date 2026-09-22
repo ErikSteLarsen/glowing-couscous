@@ -6,7 +6,6 @@ import {
   dangerTextClassName,
   formFieldClassName,
   formLabelClassName,
-  getSegmentedChoiceClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   AuthPageShell,
@@ -19,7 +18,6 @@ export default function SignupPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'COACH' | 'ATHLETE'>('ATHLETE');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleEnabled, setGoogleEnabled] = useState(false);
@@ -46,7 +44,7 @@ export default function SignupPage() {
     const res = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password, role }),
+      body: JSON.stringify({ name, email, password }),
     });
     if (!res.ok) {
       const data = await res.json();
@@ -69,19 +67,6 @@ export default function SignupPage() {
       <TopBar title="Create account" align="center" />
       <Surface className="mx-auto w-full max-w-md">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <fieldset className="flex gap-3">
-            <legend className={`${formLabelClassName} w-full`}>Account type</legend>
-            {(['COACH', 'ATHLETE'] as const).map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRole(r)}
-                className={getSegmentedChoiceClassName(role === r)}
-              >
-                {r === 'COACH' ? 'I am a coach' : 'I am an athlete'}
-              </button>
-            ))}
-          </fieldset>
           <div>
             <label htmlFor="signup-name" className={formLabelClassName}>Name</label>
             <input

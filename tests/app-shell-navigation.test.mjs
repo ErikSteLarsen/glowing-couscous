@@ -44,6 +44,16 @@ test('navigation matching prefers the most specific active destination', async (
   assert.match(sidebarSource, /isNavigationItemActive\(props\.pathname, item, navItems\)/);
 });
 
+test('athlete mobile navigation keeps the create-to-plan loop directly reachable', async () => {
+  const navSource = await read('lib/app-navigation.ts');
+  const shellSource = await read('components/AppShell.tsx');
+
+  assert.match(navSource, /\['Home', 'Calendar', 'Workouts', 'Planner'\]/);
+  assert.match(shellSource, /import Link from 'next\/link'/);
+  assert.match(shellSource, /<Link/);
+  assert.doesNotMatch(shellSource, /<a\s/);
+});
+
 test('Workouts is a standalone library destination and session detail keeps its entry context', async () => {
   const workoutsPageSource = await read('app/(app)/athlete/workouts/page.tsx');
   const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');

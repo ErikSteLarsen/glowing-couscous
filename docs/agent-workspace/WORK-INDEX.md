@@ -53,7 +53,7 @@ styles:
 
 ## Active Tasks
 
-
+- `2026-09-22-unified-personal-workspace.md` - hide role distinctions and ship one personal training workspace for every account.
 - `2026-09-15-workout-flow-previews.md` - three interactive workout authoring direction previews; routes live under `/design/workout-flow/*`.
 - `2026-09-15-workbench-middle-experiments.md` - three Workbench middle-surface experiments; routes live under `/design/workout-flow/workbench/{terrain,ribbon,staging}`.
 

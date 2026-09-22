@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent, type DragOverEvent, type DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -23,7 +23,7 @@ import { repeatBlockSelection } from '@/lib/workout-blocks';
 import type { PerformanceProfile } from '@/lib/performance-profile';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { MetricText } from '@/components/tempo/MetricText';
-import { buttonFocusClassName, compactDangerButtonClassName, compactPrimaryButtonClassName, compactSecondaryButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, formTextareaClassName } from '@/components/ui';
+import { buttonFocusClassName, compactDangerButtonClassName, compactSecondaryButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, formTextareaClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 
 type BlockPreset = {
   id: string;
@@ -88,6 +88,7 @@ export function WorkoutBuilder({
   profileLabel = 'current profile',
   titleLabel = 'Workout name',
   summaryLabel = 'Workout summary',
+  onDetailsVisibilityChange,
 }: {
   draft: SessionEditorDraft;
   onChange: (draft: SessionEditorDraft) => void;
@@ -99,6 +100,7 @@ export function WorkoutBuilder({
   profileLabel?: string;
   titleLabel?: string;
   summaryLabel?: string;
+  onDetailsVisibilityChange?: (visible: boolean) => void;
 }) {
   const [selection, setSelection] = useState<number[]>(draft.blocks.length ? [0] : []);
   const [clipboard, setClipboard] = useState<SessionEditorBlock[]>([]);
@@ -108,7 +110,8 @@ export function WorkoutBuilder({
   const [dropIndex, setDropIndex] = useState<number | null>(null);
   const [landing, setLanding] = useState<{ id: string; left: number; top: number; message: string } | null>(null);
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
-  const [basicsDismissed, setBasicsDismissed] = useState(() => Boolean(draft.title.trim()));
+  const [basicsDismissed, setBasicsDismissed] = useState(() => Boolean(draft.id || draft.blocks.length));
+  const [basicsEditing, setBasicsEditing] = useState(false);
   const [notesOpen, setNotesOpen] = useState(() => Boolean(draft.summary));
   const suppressPaletteClick = useRef<SuppressedPaletteClick | null>(null);
   const lastFocused = useRef<string | null>(null);
@@ -122,8 +125,12 @@ export function WorkoutBuilder({
   const selectedBlock = selected[0] ?? null;
   const activePreset = activePresetId ? findPreset(activePresetId) : null;
   const basicsReady = Boolean(draft.title.trim() && draft.sport);
-  const basicsOpen = !basicsDismissed || !draft.title.trim();
+  const basicsOpen = !basicsDismissed;
   const itemNoun = titleLabel === 'Template name' ? 'template' : 'workout';
+
+  useEffect(() => {
+    onDetailsVisibilityChange?.(basicsDismissed);
+  }, [basicsDismissed, onDetailsVisibilityChange]);
 
   function commit(next: SessionEditorDraft) {
     setHistory((current) => [...current.slice(-39), draft]);
@@ -182,10 +189,14 @@ export function WorkoutBuilder({
   function undo() { const previous = history.at(-1); if (previous) { setHistory((current) => current.slice(0, -1)); setFuture((current) => [draft, ...current]); onChange(previous); } }
   function redo() { const next = future[0]; if (next) { setFuture((current) => current.slice(1)); setHistory((current) => [...current, draft]); onChange(next); } }
 
-  function closeBasicsOnBlur(event: React.FocusEvent<HTMLDivElement>) {
-    // Do not move a pointer target between pointerdown and click/drag.
-    if (event.relatedTarget instanceof Element && event.relatedTarget.closest('[aria-label="Block preset palette"]')) return;
-    if (basicsReady && !event.currentTarget.contains(event.relatedTarget as Node | null)) setBasicsDismissed(true);
+  function addRecoveryAfterSelection() {
+    if (selection.length !== 1) return;
+    const index = selection[0];
+    const recovery = createSessionEditorBlock({ kind: 'recovery', zone: 1, durationSec: 120, reps: null });
+    commit({ ...draft, blocks: [...draft.blocks.slice(0, index + 1), recovery, ...draft.blocks.slice(index + 1)] });
+    setSelection([index + 1]);
+    setPaletteZone(1);
+    setLanding({ id: recovery.clientId, left: NaN, top: NaN, message: `Recovery added after block ${index + 1}. Set its duration in block details.` });
   }
 
   function onDragStart(event: DragStartEvent) {
@@ -255,15 +266,14 @@ export function WorkoutBuilder({
     <section className="min-w-0 space-y-4" aria-label="Visual workout builder">
       {basicsOpen || !basicsReady ? (
         <div
-          className="space-y-3 rounded-[3px] border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-3"
-          onBlur={closeBasicsOnBlur}
+          className="mx-auto w-full max-w-[46rem] space-y-5 rounded-[3px] border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-5 shadow-[var(--shadow-inset)] sm:p-6"
           aria-labelledby="workout-basics-heading"
         >
           <div>
-            <h2 id="workout-basics-heading" className="text-base font-semibold text-[var(--text)]">Start with the basics</h2>
-            <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">Name this {itemNoun} and choose its sport. Then build the sequence.</p>
+            <h2 id="workout-basics-heading" className="text-xl font-medium tracking-[-0.02em] text-[var(--text)]">Start with the basics</h2>
+            <p className="mt-2 max-w-[52ch] text-sm leading-6 text-[var(--text-secondary)]">Give this {itemNoun} a clear name and choose its sport. You’ll shape the intervals on the next step.</p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-[minmax(0,1.35fr)_minmax(12rem,0.65fr)]">
+          <div className="grid gap-4 sm:grid-cols-[minmax(0,1.45fr)_minmax(12rem,0.55fr)]">
             <label className="block space-y-2">
               <span className={formLabelClassName}>{titleLabel}</span>
               <input
@@ -285,6 +295,30 @@ export function WorkoutBuilder({
               </select>
             </label>
           </div>
+          <div className="flex flex-col gap-3 border-t border-[var(--field-selected-border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="max-w-[38ch] text-xs leading-5 text-[var(--text-secondary)]">Next, add intervals and tune their intensity, repetitions, and recovery.</p>
+            <button type="button" className={`${primaryButtonClassName} w-full sm:w-auto`} disabled={!basicsReady} onClick={() => setBasicsDismissed(true)}>Continue to workout details</button>
+          </div>
+        </div>
+      ) : basicsEditing ? (
+        <div className="grid gap-3 border-b border-[var(--border)] pb-4 sm:grid-cols-[minmax(0,1.4fr)_minmax(12rem,0.55fr)_auto] sm:items-end" aria-label="Edit workout basics">
+          <label className="block space-y-2">
+            <span className={formLabelClassName}>{titleLabel}</span>
+            <input
+              autoFocus
+              className={formFieldClassName}
+              value={draft.title}
+              onChange={(event) => commit(updateSessionEditorFields(draft, { title: event.target.value }))}
+              placeholder={titleLabel === 'Template name' ? 'e.g. Base week' : 'e.g. Tuesday threshold'}
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className={formLabelClassName}>Sport</span>
+            <select className={formSelectClassName} value={draft.sport} onChange={(event) => commit(updateSessionEditorFields(draft, { sport: event.target.value }))}>
+              {SPORT_OPTIONS.map((sport) => <option key={sport} value={sport}>{getSportLabel(sport)}</option>)}
+            </select>
+          </label>
+          <button type="button" className={`${secondaryButtonClassName} w-full sm:w-auto`} disabled={!basicsReady} onClick={() => setBasicsEditing(false)}>Done</button>
         </div>
       ) : (
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-3" aria-label="Workout basics">
@@ -292,9 +326,10 @@ export function WorkoutBuilder({
             <h2 className="min-w-0 break-words text-base font-semibold text-[var(--text)]">{draft.title}</h2>
             <span className="text-sm text-[var(--text-secondary)]">{getSportLabel(draft.sport)}</span>
           </div>
-          <button type="button" className={compactSecondaryButtonClassName} onClick={() => setBasicsDismissed(false)}>Edit basics</button>
+          <button type="button" className={compactSecondaryButtonClassName} onClick={() => setBasicsEditing(true)}>Edit basics</button>
         </div>
       )}
+      {basicsDismissed ? <>
       <details open={notesOpen || Boolean(draft.summary)} onToggle={(event) => setNotesOpen(event.currentTarget.open)}>
         <summary className="inline-flex min-h-9 cursor-pointer list-none items-center text-sm font-medium text-[var(--text-secondary)] underline decoration-[var(--border)] underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">
           {summaryLabel}
@@ -323,7 +358,7 @@ export function WorkoutBuilder({
           <aside className="space-y-4 rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] p-4" aria-label="Block preset palette">
             <div>
               <h2 className="text-sm font-semibold text-[var(--text)]">Block library</h2>
-              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">Drag a preset into the sequence, or click to add it.</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]"><strong>Click Add</strong> to place a block at the end, or drag the card to an exact gap.</p>
             </div>
             <div className="grid grid-cols-5 gap-1.5" role="group" aria-label="Intensity zones">
               {ZONES.map((zone) => {
@@ -361,7 +396,7 @@ export function WorkoutBuilder({
 
           <div className="min-w-0 space-y-3" onKeyDown={(event) => { if (event.key === 'Escape') setSelection([]); if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'a') { event.preventDefault(); setSelection(draft.blocks.map((_, index) => index)); } }}>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div><h2 className="text-base font-semibold text-[var(--text)]">Workout sequence</h2><p className="text-xs text-[var(--text-secondary)]">{selection.length ? `${selection.length} block${selection.length === 1 ? '' : 's'} selected` : 'Drop a preset here to start'}</p></div>
+              <div><h2 className="text-base font-semibold text-[var(--text)]">Workout sequence</h2><p className="text-xs text-[var(--text-secondary)]">{selection.length ? `${selection.length} block${selection.length === 1 ? '' : 's'} selected — edit on the right` : 'Add a block from the library, then select it to edit'}</p></div>
               <MetricText>{formatDuration(metrics.durationSec)} / {metrics.tss} TSS</MetricText>
             </div>
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1.35fr)_minmax(10rem,0.65fr)]">
@@ -395,11 +430,17 @@ export function WorkoutBuilder({
 
           <aside className="ink-form-inspector space-y-4 rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] p-4" aria-live="polite">
             <div><h2 className="text-base font-semibold text-[var(--text)]">{selected.length > 1 ? `Edit ${selected.length} blocks` : 'Block details'}</h2><p className="mt-1 text-xs text-[var(--text-secondary)]">{selected.length > 1 ? 'Changes apply to the selected sequence.' : 'Edit the selected block.'}</p></div>
-            {selectedBlock ? <><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Training zone</span><select className={formSelectClassName} value={selectedBlock.zone} onChange={(event) => applyBlockPatch({ zone: Number(event.target.value) as TempoZone })}>{Object.entries(TEMPO_ZONE_META).map(([zone, meta]) => <option key={zone} value={zone}>{meta.label} {meta.name}</option>)}</select></label><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Duration ({durationUnit})</span><input className={formFieldClassName} type="number" min="1" value={durationUnit === 'minutes' ? Math.round(selectedBlock.durationSec / 60) : selectedBlock.durationSec} onChange={(event) => applyBlockPatch({ durationSec: Number(event.target.value) * (durationUnit === 'minutes' ? 60 : 1) })} /></label><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Repeats</span><input className={formFieldClassName} type="number" min="1" value={selectedBlock.reps ?? ''} onChange={(event) => applyBlockPatch({ reps: event.target.value ? Number(event.target.value) : null })} /></label><TargetEditor sport={draft.sport} target={selectedBlock.target} onChange={(target) => applyBlockPatch({ target })} /><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Coaching note</span><textarea className={formTextareaClassName} value={selectedBlock.note} onChange={(event) => applyBlockPatch({ note: event.target.value })} /></label><div className="flex flex-wrap gap-2"><button type="button" className={compactSecondaryButtonClassName} onClick={() => applyBlockPatch({ target: null })}>Clear target</button><button type="button" className={compactSecondaryButtonClassName} onClick={() => applyBlockPatch({ note: '', reps: null })}>Clear note and repeats</button><button type="button" className={compactDangerButtonClassName} onClick={removeSelection}>{selected.length > 1 ? 'Remove blocks' : 'Remove block'}</button></div></> : <p className="text-sm text-[var(--text-secondary)]">Select a block in the workout sequence.</p>}
+            {selectedBlock ? <>
+              <fieldset className="space-y-2"><legend className="text-xs text-[var(--text-secondary)]">Intensity</legend><div className="grid grid-cols-5 gap-1" aria-label="Training intensity zone">{ZONES.map((zoneNumber) => { const meta = TEMPO_ZONE_META[zoneNumber]; const active = selectedBlock.zone === zoneNumber; return <button key={zoneNumber} type="button" aria-pressed={active} title={`${meta.label} ${meta.name}`} className={`min-h-11 rounded-[3px] border text-xs font-semibold ${buttonFocusClassName} ${active ? 'border-[var(--brand)] bg-[var(--brand-tint)] text-[var(--brand)]' : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)]'}`} onClick={() => applyBlockPatch({ zone: zoneNumber })}><span className={`mx-auto mb-1 block w-6 ink-zone-${zoneNumber}`} style={{ height: `${zoneNumber * 3}px` }} aria-hidden="true" />{meta.label}</button>; })}</div><p className="text-xs text-[var(--text-secondary)]">{TEMPO_ZONE_META[selectedBlock.zone].name}. The block height updates in the timeline.</p></fieldset>
+              <div className="grid grid-cols-2 gap-2"><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Work duration ({durationUnit})</span><input className={formFieldClassName} type="number" min="1" value={durationUnit === 'minutes' ? Math.round(selectedBlock.durationSec / 60) : selectedBlock.durationSec} onChange={(event) => applyBlockPatch({ durationSec: Number(event.target.value) * (durationUnit === 'minutes' ? 60 : 1) })} /></label><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Repetitions</span><input className={formFieldClassName} type="number" min="1" value={selectedBlock.reps ?? 1} onChange={(event) => applyBlockPatch({ reps: Math.max(1, Number(event.target.value)) })} /></label></div>
+              {selectedBlock.kind !== 'recovery' ? <div className="rounded-[3px] border border-[var(--border)] bg-[var(--surface)] p-3"><p className="text-xs font-semibold text-[var(--text)]">Pause after this set</p><p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">Recovery is shown as its own low block, so its timing and intensity stay visible.</p><button type="button" className={`${compactSecondaryButtonClassName} mt-2`} disabled={selection.length !== 1} onClick={addRecoveryAfterSelection}>Add recovery block</button></div> : null}
+              <TargetEditor sport={draft.sport} target={selectedBlock.target} onChange={(target) => applyBlockPatch({ target })} /><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Coaching note</span><textarea className={formTextareaClassName} value={selectedBlock.note} onChange={(event) => applyBlockPatch({ note: event.target.value })} /></label><div className="flex flex-wrap gap-2"><button type="button" className={compactSecondaryButtonClassName} onClick={() => applyBlockPatch({ target: null })}>Clear target</button><button type="button" className={compactDangerButtonClassName} onClick={removeSelection}>{selected.length > 1 ? 'Remove blocks' : 'Remove block'}</button></div>
+            </> : <div className="rounded-[3px] border border-dashed border-[var(--border)] bg-[var(--surface)] p-4 text-sm text-[var(--text-secondary)]"><strong className="block text-[var(--text)]">Select a sequence block</strong><span className="mt-1 block">Its intensity, duration, repetitions, target, and recovery controls will appear here.</span></div>}
           </aside>
         </div>
         {activePreset ? <DragOverlay dropAnimation={null}><PresetDragPreview preset={activePreset} /></DragOverlay> : null}
       </DndContext>
+      </> : null}
     </section>
   );
 }
@@ -424,7 +465,7 @@ function PalettePreset({ preset, onAdd }: { preset: BlockPreset; onAdd: () => vo
         <span className="block truncate text-[13px] font-semibold text-[var(--text)]">{preset.name}</span>
         <span className="mt-0.5 block text-[11px] leading-4 text-[var(--text-secondary)]">{preset.description}</span>
       </span>
-      <span className="metric-text shrink-0 text-[11px] text-[var(--text-secondary)]">{formatDuration(duration)}{reps}</span>
+      <span className="flex shrink-0 flex-col items-end gap-1"><span className="metric-text text-[11px] text-[var(--text-secondary)]">{formatDuration(duration)}{reps}</span><span className="rounded-[2px] bg-[var(--brand)] px-1.5 py-1 text-[10px] font-semibold text-white">Add</span></span>
     </button>
   );
 }
@@ -444,7 +485,7 @@ function PresetDragPreview({ preset }: { preset: BlockPreset }) {
 function CanvasDropZone({ children }: { children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'workout-canvas' });
 
-  return <div ref={setNodeRef} className={`min-h-24 rounded-[3px] border border-dashed p-3 transition-colors ${isOver ? 'border-[var(--brand)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--field-surface)]'}`}>{children}</div>;
+  return <div ref={setNodeRef} className={`min-h-24 rounded-[3px] border border-dashed p-3 transition-colors ${isOver ? 'border-[var(--brand)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--field-surface)]'}`}><div className={`mb-3 flex min-h-10 items-center justify-center rounded-[2px] border border-dashed px-3 text-center text-xs font-semibold transition-colors ${isOver ? 'border-[var(--brand)] bg-[var(--surface)] text-[var(--brand)]' : 'border-[var(--border)] text-[var(--text-secondary)]'}`}>{isOver ? 'Release to place the block here' : 'Drop blocks anywhere in this sequence'}</div>{children}</div>;
 }
 
 function IntensityZoneChart({ segments }: { segments: Array<{ zone: number; durationSec: number }> }) {

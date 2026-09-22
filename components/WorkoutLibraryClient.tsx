@@ -79,6 +79,7 @@ export function WorkoutLibraryClient({
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
   const [draft, setDraft] = useState<SessionEditorDraft>(() => createNewDraft());
+  const [builderDetailsVisible, setBuilderDetailsVisible] = useState(false);
 
   const visibleWorkouts = useMemo(() => {
     const query = filterText.trim().toLowerCase();
@@ -107,6 +108,7 @@ export function WorkoutLibraryClient({
       setEditorOpen(false);
     }
     setIsDirty(false);
+    setBuilderDetailsVisible(action.kind === 'workout' || action.kind === 'template');
     setPendingDraftAction(null);
     setMessage('');
   }
@@ -328,8 +330,9 @@ export function WorkoutLibraryClient({
           summaryPlaceholder="What is this workout for?"
           durationUnit="minutes"
           performanceProfile={performanceProfile}
+          onDetailsVisibilityChange={setBuilderDetailsVisible}
           />
-        {templates.length > 0 ? (
+        {builderDetailsVisible && templates.length > 0 ? (
           <details className="rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] px-3">
             <summary className={`flex min-h-11 cursor-pointer list-none items-center text-[13px] font-medium text-[var(--text-secondary)] ${buttonFocusClassName}`}>
               Start from a saved template (optional)
@@ -343,12 +346,12 @@ export function WorkoutLibraryClient({
             </label>
           </details>
         ) : null}
-        <div className="sticky bottom-0 z-10 -mx-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3">
+        {builderDetailsVisible ? <div className="sticky bottom-0 z-10 -mx-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3">
           <button type="button" className={primaryButtonClassName} disabled={isPending || !draft.blocks.length} onClick={saveWorkout}>
             {isPending ? 'Saving…' : selectedWorkoutId ? 'Save changes' : 'Save workout'}
           </button>
           {selectedWorkoutId ? <button type="button" className={dangerButtonClassName} disabled={isPending} onClick={deleteWorkout}>Delete workout</button> : null}
-        </div>
+        </div> : null}
       </Surface> : null}
     </div>
   );

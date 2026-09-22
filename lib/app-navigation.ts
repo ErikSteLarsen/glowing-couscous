@@ -21,18 +21,9 @@ function getMatchSpecificity(item: NavItem) {
 }
 
 export function getPrimaryNavigation(
-  role: AppRole,
-  { hasActiveCoach = false }: { hasActiveCoach?: boolean } = {},
+  _role: AppRole,
+  _options: { hasActiveCoach?: boolean } = {},
 ): NavItem[] {
-  if (role === 'COACH') {
-    return [
-      { label: 'Athletes', description: 'Support your roster', href: '/coach', matchPrefix: '/coach' },
-      { label: 'Workouts', description: 'Create & manage', href: '/coach/workouts', matchPrefix: '/coach/workouts' },
-      { label: 'Planner', description: 'Place on dates', href: '/coach/planner', matchPrefix: '/coach/planner' },
-      { label: 'Templates', description: 'Reuse & assign', href: '/coach/templates', matchPrefix: '/coach/templates' },
-    ];
-  }
-
   return [
     { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete' },
     {
@@ -45,7 +36,6 @@ export function getPrimaryNavigation(
     { label: 'Templates', description: 'Reuse & assign', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
     { label: 'Calendar', description: 'See scheduled work', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
     { label: 'Activity', description: 'Review completed', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
-    ...(hasActiveCoach ? [] : [{ label: 'Coach', description: 'Find or manage', href: '/athlete/find-coach', matchPrefix: '/athlete/find-coach' }]),
   ];
 }
 
@@ -54,7 +44,7 @@ export function getMobileNavigation(
   options: { hasActiveCoach?: boolean } = {},
 ): NavItem[] {
   const items = getPrimaryNavigation(role, options);
-  const priorityLabels = role === 'ATHLETE' ? ['Home', 'Calendar', 'Workouts', 'Activity'] : ['Athletes', 'Planner', 'Workouts', 'Templates'];
+  const priorityLabels = ['Home', 'Calendar', 'Workouts', 'Planner'];
 
   return priorityLabels
     .map((label) => items.find((item) => item.label === label))

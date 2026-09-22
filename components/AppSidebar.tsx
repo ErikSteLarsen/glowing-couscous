@@ -10,8 +10,6 @@ import {
   Dumbbell,
   House,
   LayoutTemplate,
-  Search,
-  UsersRound,
 } from 'lucide-react';
 import { getPrimaryNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import { AppProfileMenu } from '@/components/AppProfileMenu';
@@ -20,10 +18,8 @@ import { compactSecondaryButtonClassName } from '@/components/ui';
 import type { LucideIcon } from 'lucide-react';
 
 const navIcons: Record<string, LucideIcon> = {
-  Athletes: UsersRound,
   Activity,
   Calendar: CalendarDays,
-  Coach: Search,
   Home: House,
   Planner: ClipboardList,
   Templates: LayoutTemplate,
@@ -76,7 +72,9 @@ export function AppSidebar(props: {
         <button
           type="button"
           aria-label="Close menu overlay"
-           className="fixed inset-0 z-30 bg-[var(--overlay)] md:hidden"
+          aria-hidden="true"
+          tabIndex={-1}
+          className="fixed inset-0 z-30 bg-[var(--overlay)] md:hidden"
           onClick={props.onClose}
         />
       ) : null}
@@ -101,11 +99,6 @@ export function AppSidebar(props: {
                </div>
                <div>
                   <p className="text-[15px] font-semibold uppercase tracking-[0.28em] text-[var(--nav-text)]">Tempo</p>
-                 {props.user.role === 'COACH' ? (
-                   <span className="mt-2 inline-flex text-[9px] font-semibold uppercase tracking-[0.18em] text-[var(--nav-muted)]">
-                     COACH
-                   </span>
-                ) : null}
               </div>
             </div>
             <button

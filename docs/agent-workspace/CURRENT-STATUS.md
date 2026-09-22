@@ -1,12 +1,12 @@
 # Current Status
 
-Implementation verification last recorded on **2026-09-18**. The functional repair plan is complete and verified locally. Source and tests are the authority; this file is a short operational snapshot, not a changelog.
+Implementation verification last recorded on **2026-09-22**. The functional repair plan and focused interface-quality pass are complete and verified locally. Source and tests are the authority; this file is a short operational snapshot, not a changelog.
 
 Checkout reconciliation was verified on **2026-09-22**. The Windows layout and
 product changes were rebased onto the newer Ubuntu commit history, later Ubuntu
 working-tree refinements and its live Impeccable configuration were included,
 and unique changes from both checkouts were preserved. On the reconciled Windows
-tree, `pnpm test` passes all 196 tests, `pnpm lint` passes, and `pnpm build`
+tree, the current test suite passes all 199 tests, lint passes, and the production build
 passes with the existing middleware-to-proxy deprecation warning.
 
 ## Product
@@ -46,13 +46,40 @@ linework carries focus and flow. The comparison dialog uses the defined overlay
 shadow token. The installed Impeccable launcher has no `document` command, so the
 sidecar is kept synchronized manually from the canonical contract and tokens.
 
+The focused 2026-09-22 interface pass made the personal create-to-plan loop
+directly reachable on mobile, added useful empty-Home actions, converted the
+narrow Home week to a horizontal channel, removed the fixed-width mobile month
+canvas, hardened drawer and comparison-dialog isolation, and exposed live
+completion state to assistive technology. The Impeccable detector completed
+with advisory-only existing type-ramp findings. This pass did not rerun browser
+acceptance; the browser gate below remains the recorded 2026-09-18 evidence.
+
+The shared workout creator now uses an explicit basics-to-details step, keeps
+the block library and sequence hidden until a name and sport are confirmed,
+makes click-to-add and drag targets visible, maps timeline height to intensity
+at every size, and exposes selected-block intensity, duration, repetitions,
+targets, notes, and an adjacent recovery-block action. The refinement was
+browser-checked at desktop and 390px mobile widths on 2026-09-22. The full
+199-test suite, lint, and production build pass; the build retains the existing
+middleware deprecation warning. A standalone `tsc --noEmit` still reports
+pre-existing typing errors in test fixtures while the production build's
+TypeScript gate passes.
+
+The basics step was subsequently tightened to a centered 46rem maximum measure
+with clearer spacing and a standard-size Continue action. Template selection
+and save controls now remain out of the first-step hierarchy and appear only
+with the detailed authoring workspace. Once details are unlocked, Edit basics
+now edits name and sport inline while leaving the block library, sequence, and
+inspector visible.
+
 ## Verified Gates
 
 | Gate | Result | Command or evidence |
 |---|---|---|
-| Tests | Pass, 196 tests | pnpm test on 2026-09-18 |
-| Lint | Pass | pnpm lint on 2026-09-18 |
-| Production build | Pass | pnpm build on 2026-09-18; existing middleware deprecation warning remains |
+| Tests | Pass, 199 tests | package-script equivalent on 2026-09-22 |
+| Lint | Pass | package-script equivalent on 2026-09-22 |
+| Production build | Pass | package-script equivalent on 2026-09-22; existing middleware deprecation warning remains |
+| Interface quality pass | Pass | Independent Impeccable design and technical assessments, focused source regression coverage, and detector scan on 2026-09-22; detector findings were advisory-only |
 | Database setup | PostgreSQL migration ready; Neon connection not run here | Prisma schema validation and PostgreSQL baseline diff verified on 2026-09-22; local `.env` still points to the legacy SQLite database |
 | Design context | Pass | `DESIGN.md`, `.impeccable/design.json`, and the signed-in surface brief synchronized with Ink Is Movement tokens and shared components; focused workout builder presets, progressive basics, zone chart, and three workout-flow direction previews verified in source; detector completed with advisory-only findings |
 | Button standardization | Pass | Shared standard/compact/ghost tiers now use 40px/32px targets with 13px/12px sentence-case labels; compact controls are shadow-free, navigation uses ghost controls, and segmented controls plus production utility controls use the same sizing and focus rules; detector completed with advisory-only type-ramp findings |

@@ -25,6 +25,6 @@ export async function requireAthlete() {
   const session = await auth();
   const user = parseSessionPrincipal(session?.user);
   if (!user) return { user: null, error: unauthorized };
-  if (!hasAppRole(user) || user.role !== 'ATHLETE') return { user: null, error: forbidden };
+  if (!hasAppRole(user)) return { user: null, error: forbidden };
   return { user, error: null };
 }

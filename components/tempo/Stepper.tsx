@@ -28,11 +28,11 @@ export function Stepper({ items }: { items: StepperItem[] }) {
             {index < items.length - 1 ? <div className="mt-1 h-8 w-px bg-[var(--border)]" /> : null}
           </div>
           <div
-            className={`flex-1 rounded-[10px] border px-4 py-3 ${
+            className={`flex-1 rounded-[3px] border px-4 py-3 ${
             item.active ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--surface)]'
           }`}
           >
-            <p className="text-sm font-semibold text-[var(--text)]">{item.title}</p>
+            <p className="text-sm font-semibold text-[var(--text)]">{item.title}{item.done ? <span className="sr-only"> — completed</span> : null}</p>
             <p className="mt-1 text-[13px] leading-[1.5] text-[var(--text-secondary)]">{item.detail}</p>
           </div>
         </li>

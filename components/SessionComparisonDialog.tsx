@@ -33,6 +33,8 @@ export function SessionComparisonDialog({
   const [selectedVersion, setSelectedVersion] = useState<'baseline' | 'actual'>('actual');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const triggerButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -62,8 +64,24 @@ export function SessionComparisonDialog({
   }, [endpoint, isOpen]);
 
   useEffect(() => {
-    if (isOpen) closeButtonRef.current?.focus();
+    if (!isOpen) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const triggerButton = triggerButtonRef.current;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    dialog.showModal();
+    closeButtonRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      if (dialog.open) dialog.close();
+      triggerButton?.focus();
+    };
   }, [isOpen]);
+
+  const closeDialog = () => dialogRef.current?.close();
 
   const selectedDraft = data
     ? selectedVersion === 'actual'
@@ -74,6 +92,7 @@ export function SessionComparisonDialog({
   return (
     <>
       <button
+        ref={triggerButtonRef}
         type="button"
         className={compactSecondaryButtonClassName}
         onClick={() => {
@@ -86,18 +105,22 @@ export function SessionComparisonDialog({
         {label}
       </button>
       {isOpen ? (
-        <div
-          className="fixed inset-0 z-50 overflow-y-auto bg-black/30 p-4 sm:p-8"
-          role="presentation"
-          onKeyDown={(event) => {
-            if (event.key === 'Escape') setIsOpen(false);
+        <dialog
+          ref={dialogRef}
+          className="fixed inset-0 z-50 m-auto max-h-[calc(100dvh-2rem)] w-[min(48rem,calc(100%-2rem))] overflow-y-auto rounded-[5px] border border-[var(--border)] bg-[var(--surface)] p-0 text-[var(--text)] shadow-[var(--shadow-overlay)] backdrop:bg-black/30"
+          aria-labelledby={`comparison-title-${sessionId}`}
+          aria-busy={isLoading}
+          onCancel={(event) => {
+            event.preventDefault();
+            closeDialog();
+          }}
+          onClose={() => setIsOpen(false)}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) closeDialog();
           }}
         >
           <div
-            className="mx-auto my-4 max-w-3xl rounded-[14px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-overlay)] sm:my-10 sm:p-7"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={`comparison-title-${sessionId}`}
+            className="p-5 sm:p-7"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -110,15 +133,15 @@ export function SessionComparisonDialog({
                 ref={closeButtonRef}
                 type="button"
                 className={`${compactSecondaryButtonClassName} shrink-0`}
-                onClick={() => setIsOpen(false)}
+                onClick={closeDialog}
                 aria-label="Close comparison"
               >
                 Close
               </button>
             </div>
 
-            {isLoading ? <p className="mt-6 text-sm text-[var(--text-secondary)]">Loading comparison...</p> : null}
-            {error ? <p className="mt-6 text-sm text-[var(--status-danger)]">{error}</p> : null}
+            {isLoading ? <p role="status" className="mt-6 text-sm text-[var(--text-secondary)]">Loading comparison…</p> : null}
+            {error ? <p role="alert" className="mt-6 text-sm text-[var(--status-danger)]">{error}</p> : null}
             {!isLoading && !error && !selectedDraft ? (
               <p className="mt-6 text-sm text-[var(--text-secondary)]">No planned or actual snapshot is available for this session.</p>
             ) : null}
@@ -126,11 +149,10 @@ export function SessionComparisonDialog({
             {!isLoading && !error && selectedDraft ? (
               <div className="mt-6 space-y-5">
                 {data?.baseline && data.actual ? (
-                  <div className="flex gap-2 rounded-[10px] bg-[var(--field-surface)] p-1" role="tablist" aria-label="Comparison version">
+                  <div className="flex gap-2 rounded-[3px] bg-[var(--field-surface)] p-1" role="group" aria-label="Comparison version">
                     <button
                       type="button"
-                      role="tab"
-                      aria-selected={selectedVersion === 'baseline'}
+                      aria-pressed={selectedVersion === 'baseline'}
                       className={getSegmentedChoiceClassName(selectedVersion === 'baseline', 'compact')}
                       onClick={() => setSelectedVersion('baseline')}
                     >
@@ -138,8 +160,7 @@ export function SessionComparisonDialog({
                     </button>
                     <button
                       type="button"
-                      role="tab"
-                      aria-selected={selectedVersion === 'actual'}
+                      aria-pressed={selectedVersion === 'actual'}
                       className={getSegmentedChoiceClassName(selectedVersion === 'actual', 'compact')}
                       onClick={() => setSelectedVersion('actual')}
                     >
@@ -155,7 +176,7 @@ export function SessionComparisonDialog({
               </div>
             ) : null}
           </div>
-        </div>
+        </dialog>
       ) : null}
     </>
   );
@@ -180,13 +201,13 @@ function SnapshotView({ draft }: { draft: SessionEditorDraft }) {
       <SessionBlockBar segments={metrics.segments} />
       {draft.coachNotes || draft.athleteNotes ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          {draft.coachNotes ? <p className="rounded-[10px] bg-[var(--brand-tint)] px-3 py-2 text-sm text-[var(--text)]"><strong>Coach note:</strong> {draft.coachNotes}</p> : null}
-          {draft.athleteNotes ? <p className="rounded-[10px] bg-[var(--brand-tint)] px-3 py-2 text-sm text-[var(--text)]"><strong>Athlete note:</strong> {draft.athleteNotes}</p> : null}
+          {draft.coachNotes ? <p className="rounded-[3px] bg-[var(--brand-tint)] px-3 py-2 text-sm text-[var(--text)]"><strong>Coach note:</strong> {draft.coachNotes}</p> : null}
+          {draft.athleteNotes ? <p className="rounded-[3px] bg-[var(--brand-tint)] px-3 py-2 text-sm text-[var(--text)]"><strong>Athlete note:</strong> {draft.athleteNotes}</p> : null}
         </div>
       ) : null}
       <div className="space-y-2">
         {draft.blocks.map((block, index) => (
-          <div key={block.clientId} className={`rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] p-3 ${block.skipped ? 'opacity-60' : ''}`}>
+          <div key={block.clientId} className={`rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] p-3 ${block.skipped ? 'opacity-60' : ''}`}>
             <div className="flex items-center justify-between gap-3 text-sm text-[var(--text)]">
               <span className="font-semibold">{index + 1}. {block.kind}{block.skipped ? ' · skipped' : ''}</span>
               <span>{formatDuration(block.durationSec)}</span>

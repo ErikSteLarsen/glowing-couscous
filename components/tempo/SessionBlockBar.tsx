@@ -19,7 +19,6 @@ export function SessionBlockBar({
   compact?: boolean;
 }) {
   const resolvedSize = size ?? (compact ? 'compact' : 'full');
-  const isIntensityTimeline = resolvedSize !== 'full';
   const summary = segments.map((segment) => `Zone ${segment.zone}: ${segment.label}, ${segment.durationSec} seconds`).join('; ');
   const height = {
     full: 'h-[26px]',
@@ -30,18 +29,18 @@ export function SessionBlockBar({
   return (
     <div
       role="img"
-      aria-label={`${isIntensityTimeline ? 'Workout intensity timeline' : 'Workout structure'}: ${summary}`}
-      className={`flex w-full max-w-[18rem] items-end overflow-hidden border-b border-[var(--border)] ${isIntensityTimeline ? 'rounded-none' : 'rounded-[7px]'} bg-transparent ${height}`}
+      aria-label={`Workout intensity timeline: ${summary}`}
+      className={`flex w-full items-end overflow-hidden border-b border-[var(--border)] bg-transparent ${height}`}
       style={{ gap: '2px' }}
     >
       {segments.map((segment) => (
         <div
           key={segment.key}
           aria-hidden="true"
-          className={`ink-zone-${Math.min(Math.max(segment.zone, 1), 5)} ${isIntensityTimeline ? 'transition-[height] duration-150 ease-out' : ''}`}
+          className={`ink-zone-${Math.min(Math.max(segment.zone, 1), 5)} transition-[height] duration-150 ease-out`}
           style={{
             flexGrow: Math.max(segment.durationSec, 1),
-            height: isIntensityTimeline ? `${Math.min(Math.max(segment.zone, 1), 5) * 20}%` : '100%',
+            height: `${Math.min(Math.max(segment.zone, 1), 5) * 20}%`,
           }}
         />
       ))}

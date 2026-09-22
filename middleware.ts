@@ -22,23 +22,19 @@ export default auth((req) => {
   }
 
   if (pathname === '/setup' && hasValidRole) {
-    return NextResponse.redirect(new URL(role === 'COACH' ? '/coach' : '/athlete', req.url));
+    return NextResponse.redirect(new URL('/athlete', req.url));
   }
 
-  if (role === 'COACH' && pathname.startsWith('/athlete')) {
-    return NextResponse.redirect(new URL('/coach', req.url));
-  }
-
-  if (role === 'ATHLETE' && pathname.startsWith('/coach')) {
+  if (pathname.startsWith('/coach')) {
     return NextResponse.redirect(new URL('/athlete', req.url));
   }
 
   if ((pathname === '/login' || pathname === '/signup') && role) {
-    return NextResponse.redirect(new URL(role === 'COACH' ? '/coach' : '/athlete', req.url));
+    return NextResponse.redirect(new URL('/athlete', req.url));
   }
 
   if (pathname === '/' && role) {
-    return NextResponse.redirect(new URL(role === 'COACH' ? '/coach' : '/athlete', req.url));
+    return NextResponse.redirect(new URL('/athlete', req.url));
   }
 
   return NextResponse.next();

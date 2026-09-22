@@ -45,7 +45,7 @@ export default async function AthleteCalendarPage({
         description="Browse your scheduled sessions by week or month."
         actions={
           <>
-            <div className="inline-flex gap-1 rounded-[12px] border border-[var(--field-border)] bg-[var(--field-surface)] p-1">
+            <div className="inline-flex gap-1 rounded-[3px] border border-[var(--field-border)] bg-[var(--field-surface)] p-1">
                 <Link href={buildCalendarHref('week', resolvedReferenceDate)} aria-current={selectedView === 'week' ? 'page' : undefined} className={getSegmentedChoiceClassName(selectedView === 'week', 'compact')}>
                 Week
               </Link>
@@ -106,9 +106,9 @@ export default async function AthleteCalendarPage({
             </nav>
           </div>
 
-          <div className="overflow-x-auto pb-1">
-            <div className="min-w-[720px] space-y-3 sm:min-w-0">
-              <div className="grid grid-cols-7 gap-2">
+          <div className="min-w-0 pb-1">
+            <div className="space-y-2 sm:space-y-3">
+              <div className="grid grid-cols-7 gap-1 sm:gap-2">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((label) => (
                   <p
                     key={label}
@@ -119,36 +119,36 @@ export default async function AthleteCalendarPage({
                 ))}
               </div>
 
-              <div className="grid gap-2">
+              <div className="grid gap-1 sm:gap-2">
                   {calendar.weeks.map((week, weekIndex) => (
-                    <div key={`week-${weekIndex}`} className="grid grid-cols-7 gap-2">
+                    <div key={`week-${weekIndex}`} className="grid grid-cols-7 gap-1 sm:gap-2">
                       {week.map((day) => (
                         <div
                           key={day.isoDate}
                           aria-label={`${day.dateLabel}, ${day.sessions.length} ${day.sessions.length === 1 ? 'session' : 'sessions'}`}
                           role="group"
-                          className={`min-h-[112px] rounded-[10px] border p-2.5 sm:min-h-[128px] sm:p-3 ${
+                          className={`min-h-16 min-w-0 rounded-[3px] border p-1.5 sm:min-h-[128px] sm:p-3 ${
                             day.isCurrentMonth
                               ? 'border-[var(--border)] bg-[var(--surface)]'
                               : 'border-[var(--field-border)] bg-[var(--field-surface)] text-[var(--text-muted)]'
                           }`}
                         >
-                           <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-2">
+                           <div className="flex items-start justify-between gap-1 sm:gap-2">
+                            <div className="flex min-w-0 items-center gap-2">
                               <p className="text-[15px] font-semibold text-[var(--text)]">{day.dateLabel}</p>
                               {day.isToday ? (
-                                <span className="rounded-full bg-[var(--brand-tint)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--field-selected-text)]">
+                                <span className="hidden rounded-full bg-[var(--brand-tint)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--field-selected-text)] sm:inline-flex">
                                   Today
                                 </span>
                               ) : null}
                             </div>
-                             <span className="rounded-full border border-[var(--field-border)] bg-[var(--field-surface)] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                             <span className="rounded-full border border-[var(--field-border)] bg-[var(--field-surface)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--text-secondary)] sm:px-2 sm:py-1">
                                {day.sessions.length}
                              </span>
                           </div>
-                           <div className="mt-3 space-y-2">
+                           <div className="mt-2 hidden space-y-2 sm:block">
                              {day.sessions.length > 0 ? (
-                               day.sessions.map((session) => (
+                               day.sessions.slice(0, 1).map((session) => (
                                  <SessionRow
                                    key={session.id}
                                     session={session}
@@ -166,7 +166,11 @@ export default async function AthleteCalendarPage({
                                 No session
                               </Link>
                             )}
+                            {day.sessions.length > 1 ? <p className="text-[11px] text-[var(--text-secondary)]">+{day.sessions.length - 1} more</p> : null}
                           </div>
+                          <Link href={buildCalendarHref('week', new Date(`${day.isoDate}T12:00:00`))} className="mt-1 flex min-h-11 items-center text-[11px] font-medium text-[var(--brand)] sm:hidden">
+                            {day.isToday ? 'Today' : day.sessions.length ? 'View' : ''}
+                          </Link>
                         </div>
                       ))}
                     </div>

@@ -87,3 +87,16 @@ test('input-heavy app screens reuse shared form field helpers', async () => {
     assert.match(source, /form(Field|Textarea|Select)ClassName/);
   }
 });
+
+test('high-impact dialogs and execution controls expose complete accessible state', async () => {
+  const comparisonSource = await read('components/SessionComparisonDialog.tsx');
+  const stepperSource = await read('components/tempo/Stepper.tsx');
+  const liveSource = await read('app/(app)/athlete/live/[sessionId]/LiveSessionClient.tsx');
+
+  assert.match(comparisonSource, /<dialog/);
+  assert.match(comparisonSource, /showModal\(\)/);
+  assert.match(comparisonSource, /role="status"/);
+  assert.match(comparisonSource, /role="alert"/);
+  assert.match(stepperSource, /completed<\/span>/);
+  assert.match(liveSource, /disabled=\{pending \|\| saved\}/);
+});

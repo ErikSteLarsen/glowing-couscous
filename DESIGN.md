@@ -429,6 +429,16 @@ for contextual return and execution controls.
 three-part palette, canvas, and inspector model for new workout editing. Drag
 reordering is supported, but keyboard and explicit earlier/later controls must
 remain available. Do not make drag-and-drop the only way to edit block order.
+New workout creation is progressive: name and sport are confirmed before the
+library, sequence, and inspector appear. Presets expose a visible Add action as
+well as drag behavior, the sequence exposes its drop target, and selecting a
+block reveals direct intensity, duration, repetition, target, note, and adjacent
+recovery controls. Every `SessionBlockBar` maps zone to segment height and time
+to width, including the full-size authoring timeline. The basics step uses a
+centered reading-width panel and presents Continue as its only forward action;
+template and save controls appear with the detailed authoring workspace.
+After details are unlocked, Edit basics changes the existing summary row into
+inline name and sport fields without hiding or resetting the authoring workspace.
 
 ## Do's and Don'ts
 

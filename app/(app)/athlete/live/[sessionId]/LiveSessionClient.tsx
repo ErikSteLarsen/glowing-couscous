@@ -35,6 +35,7 @@ export function LiveSessionClient({ sessionId, blocks }: { sessionId: number; bl
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [saved, setSaved] = useState(false);
   const hasBlocks = blocks.length > 0;
   const complete = hasBlocks && isExecutionComplete(state);
 
@@ -52,6 +53,7 @@ export function LiveSessionClient({ sessionId, blocks }: { sessionId: number; bl
         setError(payload.error ?? 'Failed to complete session.');
         return;
       }
+      setSaved(true);
       setMessage('Session marked complete.');
       router.refresh();
     } catch {
@@ -110,8 +112,8 @@ export function LiveSessionClient({ sessionId, blocks }: { sessionId: number; bl
         <p role="status" className="text-sm font-semibold text-[var(--text)]">All blocks complete. Save the outcome to finish.</p>
       ) : null}
       {complete ? (
-        <button type="button" className={primaryButtonClassName} disabled={pending} onClick={() => void completeSession()}>
-          {pending ? 'Saving…' : 'Mark session complete'}
+        <button type="button" className={primaryButtonClassName} disabled={pending || saved} onClick={() => void completeSession()}>
+          {pending ? 'Saving…' : saved ? 'Session complete' : 'Mark session complete'}
         </button>
       ) : null}
       <p className="text-[12px] text-[var(--text-secondary)]">Progress is local to this device and restarts if you refresh.</p>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AppSidebar } from '@/components/AppSidebar';
 import { InkFlow } from '@/components/InkFlow';
@@ -72,7 +73,11 @@ export function AppShell({
         isMobileViewport={isMobileViewport}
         onClose={closeMobileMenu}
       />
-      <div className="relative z-10 min-w-0 pb-20 md:pb-0">
+      <div
+        className="relative z-10 min-w-0 pb-20 md:pb-0"
+        aria-hidden={mobileOpen && isMobileViewport ? true : undefined}
+        inert={mobileOpen && isMobileViewport ? true : undefined}
+      >
         <div className="border-b border-[var(--border)] bg-[var(--background)] px-5 py-4 md:hidden">
           <button
             type="button"
@@ -87,13 +92,18 @@ export function AppShell({
         </div>
         {children}
       </div>
-      <nav aria-label="Primary navigation" className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--nav-border)] bg-[var(--nav-surface)] pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden">
+      <nav
+        aria-label="Primary navigation"
+        aria-hidden={mobileOpen && isMobileViewport ? true : undefined}
+        inert={mobileOpen && isMobileViewport ? true : undefined}
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--nav-border)] bg-[var(--nav-surface)] pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden"
+      >
         <div className="grid grid-cols-4 gap-1 px-3 pt-2">
           {navItems.slice(0, 4).map((item) => {
             const isActive = isNavigationItemActive(pathname, item, navItems);
 
             return (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
@@ -102,7 +112,7 @@ export function AppShell({
                 }`}
               >
                 {item.label}
-              </a>
+              </Link>
             );
           })}
         </div>

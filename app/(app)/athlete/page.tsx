@@ -33,12 +33,12 @@ export default async function AthletePage() {
   return (
     <PageShell className="ink-home">
       <TopBar
-        title={`Good morning, ${dashboard.athlete.name}`}
+        title={`Welcome, ${dashboard.athlete.name}`}
         description="See your next session and review your training week."
       />
 
       <div className="space-y-6 xl:space-y-8">
-        <section aria-labelledby="next-action-heading" className="ink-next-action ink-next-action--quiet-tone ink-next-action--summary rounded-[14px] border border-[var(--border)] px-4 py-5 xl:px-6 xl:py-6">
+        <section aria-labelledby="next-action-heading" className="ink-next-action ink-next-action--quiet-tone ink-next-action--summary rounded-[5px] border border-[var(--border)] px-4 py-5 xl:px-6 xl:py-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 id="next-action-heading" className={sectionHeadingClassName}>Today</h2>
@@ -56,7 +56,13 @@ export default async function AthletePage() {
                 </ActionLink>
               </div>
             ) : (
-              <p className="text-[13px] text-[var(--text-secondary)]">No session scheduled today.</p>
+              <div className="flex flex-1 flex-col gap-3 lg:max-w-3xl lg:flex-row lg:items-center lg:justify-end">
+                <p className="text-[13px] text-[var(--text-secondary)]">Nothing is scheduled today. Create a workout or place saved training on your calendar.</p>
+                <div className="flex flex-wrap gap-2">
+                  <ActionLink href="/athlete/workouts" tone="secondary" size="compact">Create workout</ActionLink>
+                  <ActionLink href="/athlete/planner" size="compact">Open Planner</ActionLink>
+                </div>
+              </div>
             )}
           </div>
         </section>
@@ -69,10 +75,10 @@ export default async function AthletePage() {
             </div>
           </div>
 
-          <div className="ink-week-ribbon">
-            <div className="ink-week-track grid gap-3 p-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 xl:gap-4 xl:p-4">
+          <div className="ink-week-ribbon overflow-x-auto pb-2">
+            <div className="ink-week-track flex snap-x snap-mandatory gap-3 p-3 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 xl:gap-4 xl:p-4">
               {dashboard.weekDays.map((day) => (
-                <section key={day.isoDate} aria-labelledby={`home-day-${day.isoDate}`} className={`ink-day-channel min-w-0 border-t pt-3 2xl:border-t-0 2xl:border-l 2xl:pl-3 ${day.isToday ? 'ink-day-channel--today border-[var(--brand)] bg-[var(--brand-tint)] px-3 2xl:rounded-[8px]' : 'border-[var(--border)]'}`}>
+                <section key={day.isoDate} aria-labelledby={`home-day-${day.isoDate}`} className={`ink-day-channel w-[min(82vw,320px)] shrink-0 snap-start border-t pt-3 md:w-auto md:min-w-0 2xl:border-l 2xl:border-t-0 2xl:pl-3 ${day.isToday ? 'ink-day-channel--today border-[var(--brand)] bg-[var(--brand-tint)] px-3 2xl:rounded-[3px]' : 'border-[var(--border)]'}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 id={`home-day-${day.isoDate}`} className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day.label}</h3>

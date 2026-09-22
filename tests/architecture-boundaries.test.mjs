@@ -144,18 +144,19 @@ test('coach request UI surfaces failures and blocks duplicate actions', async ()
   assert.match(discoverySource, /Failed to send request/);
 });
 
-test('athlete home page uses the week wall and explicit session actions', async () => {
+test('athlete home page uses the week channel and explicit session actions', async () => {
   const athletePageSource = await read('app/(app)/athlete/page.tsx');
   const sessionRowSource = await read('components/tempo/SessionRow.tsx');
   const statusBadgeSource = await read('components/tempo/StatusBadge.tsx');
 
-  assert.match(athletePageSource, /Good morning/);
+  assert.match(athletePageSource, /Welcome/);
   assert.match(athletePageSource, /Today/);
   assert.match(athletePageSource, /Week at a glance/);
   assert.match(athletePageSource, /Next session/);
   assert.doesNotMatch(athletePageSource, /actions=\{/);
   assert.doesNotMatch(athletePageSource, /Open full calendar/);
-  assert.match(athletePageSource, /No session scheduled today/);
+  assert.match(athletePageSource, /Nothing is scheduled today/);
+  assert.match(athletePageSource, /Open Planner/);
   assert.doesNotMatch(athletePageSource, /Customise overview in Settings/);
   assert.match(athletePageSource, /athlete\/session/);
   assert.match(athletePageSource, /SessionRow/);
