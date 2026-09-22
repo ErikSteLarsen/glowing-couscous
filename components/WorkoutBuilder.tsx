@@ -205,7 +205,7 @@ export function WorkoutBuilder({
   }
 
   function onDragOver(event: DragOverEvent) {
-    const index = event.over?.id === 'workout-canvas' ? draft.blocks.length : draft.blocks.findIndex((block) => block.clientId === event.over?.id);
+    const index = isEndDropTarget(event.over?.id) ? draft.blocks.length : draft.blocks.findIndex((block) => block.clientId === event.over?.id);
     setDropIndex(index >= 0 ? index : null);
   }
 
@@ -229,7 +229,7 @@ export function WorkoutBuilder({
       const preset = findPreset(activeId.slice(PALETTE_DRAG_PREFIX.length));
       const overId = event.over?.id;
       const overIndex = draft.blocks.findIndex((block) => block.clientId === overId);
-      if (preset && (overId === 'workout-canvas' || overIndex >= 0)) {
+      if (preset && (isEndDropTarget(overId) || overIndex >= 0)) {
         insertPreset(preset, overIndex >= 0 ? overIndex : draft.blocks.length, event.active.rect.current.translated ?? undefined);
       }
       setActivePresetId(null);
@@ -238,7 +238,7 @@ export function WorkoutBuilder({
     }
 
     const activeIndex = draft.blocks.findIndex((block) => block.clientId === event.active.id);
-    const overIndex = event.over?.id === 'workout-canvas'
+    const overIndex = isEndDropTarget(event.over?.id)
       ? draft.blocks.length
       : draft.blocks.findIndex((block) => block.clientId === event.over?.id);
     if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) {
@@ -349,7 +349,7 @@ export function WorkoutBuilder({
         onDragEnd={onDragEnd}
         accessibility={{ announcements: {
           onDragStart: ({ active }) => `Picked up ${dragName(active.id)}. Choose a position in the sequence.`,
-          onDragOver: ({ over }) => over ? `Insert at position ${over.id === 'workout-canvas' ? draft.blocks.length + 1 : draft.blocks.findIndex((block) => block.clientId === over.id) + 1}.` : 'Outside the sequence. Release to cancel.',
+          onDragOver: ({ over }) => over ? `Insert at position ${isEndDropTarget(over.id) ? draft.blocks.length + 1 : draft.blocks.findIndex((block) => block.clientId === over.id) + 1}.` : 'Outside the sequence. Release to cancel.',
           onDragEnd: ({ over }) => over ? 'Sequence updated. Changes are not saved yet.' : 'Drop cancelled. Sequence unchanged.',
           onDragCancel: () => 'Movement cancelled. Sequence unchanged.',
         } }}
@@ -399,8 +399,8 @@ export function WorkoutBuilder({
               <div><h2 className="text-base font-semibold text-[var(--text)]">Workout sequence</h2><p className="text-xs text-[var(--text-secondary)]">{selection.length ? `${selection.length} block${selection.length === 1 ? '' : 's'} selected — edit on the right` : 'Add a block from the library, then select it to edit'}</p></div>
               <MetricText>{formatDuration(metrics.durationSec)} / {metrics.tss} TSS</MetricText>
             </div>
-            <div className="grid gap-3 sm:grid-cols-[minmax(0,1.35fr)_minmax(10rem,0.65fr)]">
-              <div className="rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] p-3"><SessionBlockBar segments={metrics.segments} /><p className="mt-2 text-xs text-[var(--text-secondary)]">Timeline: width is time, height is zone.</p></div>
+            <div className="grid items-start gap-3 sm:grid-cols-[minmax(0,1.35fr)_minmax(10rem,0.65fr)]">
+              <div className="rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] p-3"><SessionBlockBar segments={metrics.segments} size="authoring" /><p className="mt-2 text-xs text-[var(--text-secondary)]">Timeline: width is time; height is intensity. Recovery stays low but visible.</p></div>
               <IntensityZoneChart segments={metrics.segments} />
             </div>
             <div className="flex flex-wrap items-center gap-2" aria-label="Canvas commands">
@@ -422,7 +422,7 @@ export function WorkoutBuilder({
             <CanvasDropZone>
               <SortableContext items={draft.blocks.map((block) => block.clientId)} strategy={verticalListSortingStrategy}>
                 {draft.blocks.length ? <div className="space-y-2">{draft.blocks.map((block, index) => <SortableBlock key={block.clientId} landing={landing?.id === block.clientId ? landing : null} insertionBefore={dropIndex === index} block={block} index={index} selected={selection.includes(index)} profile={performanceProfile} profileLabel={profileLabel} onSelect={select} />)}</div> : <p className="py-6 text-center text-sm text-[var(--text-secondary)]">Choose a preset in the block library to start the sequence.</p>}
-                {dropIndex === draft.blocks.length ? <p className="border-t-2 border-[var(--brand)] pt-2 text-xs text-[var(--brand)]">Drop at end of sequence</p> : null}
+                <EndOfSequenceDropZone active={dropIndex === draft.blocks.length} />
             </SortableContext>
             <p role="status" className="mt-2 text-xs text-[var(--text-secondary)]">{landing && draft.blocks.some((block) => block.clientId === landing.id) ? landing.message : 'Changes stay in this draft until you save.'}</p>
             </CanvasDropZone>
@@ -486,6 +486,18 @@ function CanvasDropZone({ children }: { children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'workout-canvas' });
 
   return <div ref={setNodeRef} className={`min-h-24 rounded-[3px] border border-dashed p-3 transition-colors ${isOver ? 'border-[var(--brand)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--field-surface)]'}`}><div className={`mb-3 flex min-h-10 items-center justify-center rounded-[2px] border border-dashed px-3 text-center text-xs font-semibold transition-colors ${isOver ? 'border-[var(--brand)] bg-[var(--surface)] text-[var(--brand)]' : 'border-[var(--border)] text-[var(--text-secondary)]'}`}>{isOver ? 'Release to place the block here' : 'Drop blocks anywhere in this sequence'}</div>{children}</div>;
+}
+
+const END_OF_SEQUENCE_DROP_ID = 'workout-canvas-end';
+
+function isEndDropTarget(id: string | number | null | undefined) {
+  return id === 'workout-canvas' || id === END_OF_SEQUENCE_DROP_ID;
+}
+
+function EndOfSequenceDropZone({ active }: { active: boolean }) {
+  const { setNodeRef, isOver } = useDroppable({ id: END_OF_SEQUENCE_DROP_ID });
+  const highlighted = active || isOver;
+  return <div ref={setNodeRef} className={`mt-2 min-h-10 rounded-[2px] border border-dashed px-3 py-2 text-center text-xs font-semibold transition-colors ${highlighted ? 'border-[var(--brand)] bg-[var(--brand-tint)] text-[var(--brand)]' : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)]'}`}>{highlighted ? 'Release to place at the end' : 'Drag here to place at the end'}</div>;
 }
 
 function IntensityZoneChart({ segments }: { segments: Array<{ zone: number; durationSec: number }> }) {

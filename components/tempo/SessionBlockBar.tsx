@@ -6,7 +6,7 @@ type Segment = {
   color: string;
 };
 
-type SessionBlockBarSize = 'full' | 'card' | 'compact';
+type SessionBlockBarSize = 'authoring' | 'full' | 'card' | 'compact';
 
 export function SessionBlockBar({
   segments,
@@ -21,6 +21,7 @@ export function SessionBlockBar({
   const resolvedSize = size ?? (compact ? 'compact' : 'full');
   const summary = segments.map((segment) => `Zone ${segment.zone}: ${segment.label}, ${segment.durationSec} seconds`).join('; ');
   const height = {
+    authoring: 'h-40 px-1 pt-2',
     full: 'h-[26px]',
     card: 'h-[32px]',
     compact: 'h-[24px]',

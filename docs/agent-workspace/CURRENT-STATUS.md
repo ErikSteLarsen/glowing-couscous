@@ -70,12 +70,28 @@ middleware deprecation warning. A standalone `tsc --noEmit` still reports
 pre-existing typing errors in test fixtures while the production build's
 TypeScript gate passes.
 
+The workout creator’s session-shape preview now uses a dedicated 160px terrain:
+each block remains time-proportional in width and rises from a visible Zone 1
+recovery baseline through Zone 5. Compact and card previews keep their denser
+shared timeline treatment. The focused source check and direct lint pass on
+2026-09-22; the production build remains blocked by pre-existing duplicate
+`redirect`, Prisma package-read, and Google Font network failures.
+
 The basics step was subsequently tightened to a centered 46rem maximum measure
 with clearer spacing and a standard-size Continue action. Template selection
 and save controls now remain out of the first-step hierarchy and appear only
 with the detailed authoring workspace. Once details are unlocked, Edit basics
 now edits name and sport inline while leaving the block library, sequence, and
 inspector visible.
+
+On 2026-09-22, Planner now keeps a selected checkmark visible alongside the
+Today label, and Workout Builder has a dedicated, announced trailing drop zone
+for placing a block last. Direct lint and 35 focused dependency-independent
+tests pass. The full suite is currently blocked when Prisma-importing test
+modules hit access-denied reads of the installed Prisma client. A direct
+production compilation is likewise blocked by those package reads, an
+unavailable Google Font fetch, and a pre-existing duplicate `redirect` import;
+these failures are outside the repaired files.
 
 ## Verified Gates
 

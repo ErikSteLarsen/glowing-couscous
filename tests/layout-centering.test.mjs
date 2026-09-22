@@ -52,6 +52,7 @@ test('session block bars show colored zones without a gray track', async () => {
   assert.doesNotMatch(barSource, /bg-\[var\(--sunken\)\]/);
   assert.match(barSource, /height: `\$\{Math\.min\(Math\.max\(segment\.zone, 1\), 5\) \* 20\}%`/);
   assert.doesNotMatch(barSource, /height: isIntensityTimeline/);
+  assert.match(barSource, /authoring: 'h-40 px-1 pt-2'/);
 });
 
 test('workout authoring gates details behind basics and exposes direct block controls', async () => {
@@ -69,6 +70,8 @@ test('workout authoring gates details behind basics and exposes direct block con
   assert.match(builderSource, /Training intensity zone/);
   assert.match(builderSource, /Repetitions/);
   assert.match(builderSource, /Add recovery block/);
+  assert.match(builderSource, /size="authoring"/);
+  assert.match(builderSource, /Recovery stays low but visible/);
 });
 
 test('signed-in routes use grouped app shell while auth pages stay centered', async () => {
