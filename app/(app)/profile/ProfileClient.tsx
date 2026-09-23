@@ -57,7 +57,7 @@ export function ProfileClient({ account }: {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+    <div className="page-content--compact">
       <Surface>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

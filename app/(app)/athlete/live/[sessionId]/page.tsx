@@ -46,14 +46,14 @@ export default async function AthleteLivePage({
         actions={<ActionLink href={`/athlete/session/${detail.session.id}?from=${sessionOrigin}`} tone="secondary">Back to session</ActionLink>}
       />
 
-      <div className="flex flex-wrap items-center gap-3 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">
+      <div className="page-content--standard flex flex-wrap items-center gap-3 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">
         <span>Week of {format(startOfWeek(detail.session.date, { weekStartsOn: 1 }), 'd MMM')}</span>
         <span aria-hidden="true">·</span>
         <span>{format(detail.session.date, 'EEE d MMM · HH:mm')}</span>
         <StatusBadge status={detail.session.status} />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="page-content--standard grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <Surface className="space-y-4">
           <SessionBlockBar segments={detail.session.segments} />
           <LiveSessionClient sessionId={detail.session.id} blocks={detail.session.blocks} />

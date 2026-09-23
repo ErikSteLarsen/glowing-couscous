@@ -1,6 +1,63 @@
 # Current Status
 
-Implementation verification last recorded on **2026-09-22**. The functional repair plan and focused interface-quality pass are complete and verified locally. Source and tests are the authority; this file is a short operational snapshot, not a changelog.
+On **2026-09-23**, Home, Calendar week/month, and the personal and coach Planning
+Desk now mark the current date directly on its numeral with a restrained ink
+underline and tint. The Today badges were removed; selected Planner dates keep
+their separate fill and checkmark. Date controls retain spoken today labels and
+current-date semantics. Mobile month day links now have a visible “View day”
+action even without sessions. Focused ESLint and the Impeccable detector passed
+(detector findings were existing advisories). The full `pnpm` test, lint, and
+build commands each stopped at a noninteractive dependency-purge prompt before
+running. Browser rendering was not verified in this pass.
+
+On **2026-09-23**, authenticated content widths were fitted to their tasks
+inside the unchanged 1800px page frame. The initial caps were too close to the
+available width at common desktop sizes, so they were tightened: Profile and
+Preferences stop at 860px; the single-column workout library stops at 800px;
+session detail and live execution stop at 960px; Activity and the template
+library stop at 1080px. Limited content sections center horizontally within
+the shared frame when there is spare width and remain fluid on narrower screens.
+The unused second desktop grid column in Profile was also removed so its form
+uses the full compact measure. Workout and template editors expand to the
+available frame width when active, while workout basics retains its centered
+46rem panel. Home, Calendar, and Planner keep their full width. Page headings,
+descriptions, gutters, and header positions are unchanged. A stale local dev
+server stylesheet initially omitted the centering rule despite serving the
+new width caps; restarting the server corrected it. In the browser at 1280px,
+the Workouts header spans 1016px from x=240 to x=1256, while the 800px library
+is centered from x=348 to x=1148 with 108px on each side. Opening its editor
+restores the full 1016px content width. The Impeccable layout detector reported
+no findings, all six focused layout tests passed, and focused ESLint passed.
+The full suite and direct build remain blocked locally by denied
+reads of the installed Prisma client; the build also could not fetch the Google
+Font. The normal `pnpm` commands stopped at a noninteractive dependency-purge
+prompt, so direct local binaries were used for available checks.
+
+On **2026-09-23**, a stale JWT from the previous local database could send
+`/athlete` to `/login` while middleware sent `/login` back to `/athlete`,
+creating a redirect loop. Middleware now leaves sign-in and sign-up reachable
+even when a cookie claims an existing role, so the user can establish a fresh
+session against PostgreSQL. All 199 tests and lint pass. The full build could
+not complete while the active dev server held Prisma's Windows engine DLL open
+during `prisma generate` (`EPERM` rename); it was not stopped for this check.
+
+The local PostgreSQL setup was verified on **2026-09-23**. The user supplied
+pooled and direct Neon URLs in the ignored `.env`. An empty leftover SQLite-era
+migration directory was removed, `pnpm db:migrate` reported no pending
+migrations, and a Prisma `User` count succeeded through the pooled runtime URL.
+The database contains one user. No seed was run, so existing data was preserved.
+
+On **2026-09-23**, middleware authentication was separated from the Prisma-backed
+server auth setup. The Edge middleware now loads a shared JWT/session config
+without importing Prisma. The reported `@prisma/client` package read failure is
+specific to the restricted local sandbox: the installed file reads normally
+outside it. All 199 tests and lint pass outside the sandbox, and direct Next.js
+compilation succeeds. Full `pnpm build` stops before Next.js because the local
+`.env` lacks `DIRECT_URL`; direct `next build` then reaches an unrelated existing
+type error in `app/(app)/settings/SettingsClient.tsx` (`coachNote` is absent from
+its `overviewLabels` record).
+
+Full gate verification last recorded on **2026-09-22**. Focused Planner usability changes were reviewed on **2026-09-23**. Source and tests are the authority; this file is a short operational snapshot, not a changelog.
 
 Checkout reconciliation was verified on **2026-09-22**. The Windows layout and
 product changes were rebased onto the newer Ubuntu commit history, later Ubuntu
@@ -59,6 +116,17 @@ completion state to assistive technology. The Impeccable detector completed
 with advisory-only existing type-ramp findings. This pass did not rerun browser
 acceptance; the browser gate below remains the recorded 2026-09-18 evidence.
 
+On 2026-09-23, Planner now distinguishes an empty source library from an empty
+search, links first-use athletes to creating the selected content type, and
+uses pressed buttons for source filters instead of tabs without tab-key
+navigation. Selected-day details move above the month grid on narrow screens,
+calendar day names are included in accessible labels, and reversed template
+range selection now reports chronological endpoints. The post-change
+Impeccable detector returned no findings and focused ESLint passed. Browser
+rendering could not be verified: Next/Turbopack was denied access to the local
+`@prisma/client` package metadata, so the previously recorded browser evidence
+remains the 2026-09-18 acceptance pass.
+
 The shared workout creator now uses an explicit basics-to-details step, keeps
 the block library and sequence hidden until a name and sport are confirmed,
 makes click-to-add and drag targets visible, maps timeline height to intensity
@@ -102,7 +170,8 @@ unavailable Google Font fetch; these failures are outside the repaired files.
 | Lint | Pass | `pnpm lint` on 2026-09-22 after the unified-workspace release change |
 | Production build | Blocked locally | Prisma could not resolve the local `DIRECT_URL` value on 2026-09-22; no application build failure was reached |
 | Interface quality pass | Pass | Independent Impeccable design and technical assessments, focused source regression coverage, and detector scan on 2026-09-22; detector findings were advisory-only |
-| Database setup | PostgreSQL migration ready; Neon connection not run here | Prisma schema validation and PostgreSQL baseline diff verified on 2026-09-22; local `.env` still points to the legacy SQLite database |
+| Planner usability refinements | Source and detector pass; browser blocked | Focused ESLint passed and post-change `impeccable detect --json components/PlannerDesk.tsx` returned `[]` on 2026-09-23; local Next rendering was blocked by access denied reading `@prisma/client` metadata |
+| Database setup | Pass | Neon URLs configured locally; `pnpm db:migrate` found no pending migrations and a pooled Prisma `User` count succeeded on 2026-09-23 |
 | Design context | Pass | `DESIGN.md`, `.impeccable/design.json`, and the signed-in surface brief synchronized with Ink Is Movement tokens and shared components; focused workout builder presets, progressive basics, zone chart, and three workout-flow direction previews verified in source; detector completed with advisory-only findings |
 | Button standardization | Pass | Shared standard/compact/ghost tiers now use 40px/32px targets with 13px/12px sentence-case labels; compact controls are shadow-free, navigation uses ghost controls, and segmented controls plus production utility controls use the same sizing and focus rules; detector completed with advisory-only type-ramp findings |
 | Browser workflow verification | Pass | Headless Chromium completed the personal plan-to-Activity journey at desktop and 390px mobile widths on 2026-09-18 |

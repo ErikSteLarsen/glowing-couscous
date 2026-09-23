@@ -338,9 +338,14 @@ body {
 }
 
 .ink-day-channel--today {
-  border-color: var(--field-selected-border) !important;
-  background: var(--signal-tint);
-  box-shadow: var(--shadow-inset);
+  border-color: var(--brand) !important;
+  background: color-mix(in srgb, var(--surface) 85%, var(--brand-tint));
+}
+
+.current-day-date {
+  width: fit-content;
+  border-bottom: 2px solid var(--brand);
+  box-shadow: inset 0 -0.35em var(--brand-tint);
 }
 
 .ink-readout {
@@ -1298,6 +1303,19 @@ body {
   container-type: inline-size;
 }
 .page-layout > * { min-width: 0; }
+/* Content measures sit inside the shared page frame, leaving headers aligned. */
+.page-content--compact,
+.page-content--workout-list,
+.page-content--standard,
+.page-content--library {
+  width: 100%;
+  min-width: 0;
+  margin-inline: auto;
+}
+.page-content--compact { max-width: 860px; }
+.page-content--workout-list { max-width: 800px; }
+.page-content--standard { max-width: 960px; }
+.page-content--library { max-width: 1080px; }
 .page-header {
   display: flex;
   align-items: flex-start;
@@ -1353,9 +1371,10 @@ body {
   .planner-desk__selection { grid-column: 3; grid-row: 1; max-height: calc(100dvh - 240px); }
 }
 @container (max-width: 600px) {
+  .planner-desk__calendar { order: 1; }
+  .planner-desk__selection { order: 0; max-height: none; overflow: visible; }
   .planner-desk__day { padding: 6px 3px; }
   .planner-desk__day > span:first-child { gap: 2px; }
-  .planner-desk__today { font-size: 0; padding: 0; width: 6px; height: 6px; }
   .planner-desk__sessions { display: none; }
   .planner-desk__count { display: block; margin-top: 4px; font-size: 10px; }
 }

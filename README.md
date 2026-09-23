@@ -45,11 +45,17 @@ Use `pnpm`.
 1. Copy `.env.example` to `.env`.
 2. Set a real `AUTH_SECRET`, for example with `openssl rand -base64 32`.
 3. Optionally set `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` for Google OAuth.
-4. Set `DATABASE_URL` to a Neon pooled PostgreSQL connection string and
-   `DIRECT_URL` to the matching Neon direct connection string. For local
-   development, a local PostgreSQL database can be used for both values.
-5. Run `pnpm db:setup` to apply migrations and seed demo data.
+4. In the project root `.env`, paste the Neon pooled PostgreSQL connection
+   string into `DATABASE_URL` and the matching direct connection string into
+   `DIRECT_URL`. Keep the surrounding quotes. The pooled host contains
+   `-pooler`; the direct host does not. For a local PostgreSQL database, the
+   same URL can be used for both values.
+5. Run `pnpm db:migrate` to apply migrations without changing existing data.
 6. Run `pnpm dev`.
+
+For a fresh, disposable development database only, run `pnpm db:seed` after
+the migration to create demo accounts. Seeding deletes existing application
+data; it is not needed to fix the connection error.
 
 Prisma CLI reads `.env`, so a database-only `.env.local` is not sufficient for
 `pnpm db:push`, `pnpm db:migrate`, or `pnpm db:setup`. `DATABASE_URL` is the

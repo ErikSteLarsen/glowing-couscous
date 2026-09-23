@@ -174,7 +174,7 @@ export function CoachTemplatesClient({
   }
 
   return (
-    <div className="space-y-5">
+    <div className={`${editorOpen ? '' : 'page-content--library'} space-y-5`}>
       <div className="rounded-[12px] border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-5">
         <div className="max-w-2xl">
            <h2 className="text-lg font-semibold text-[var(--text)]">{isAthlete ? 'Build a private template' : 'Build reusable training structure'}</h2>

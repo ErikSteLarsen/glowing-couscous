@@ -126,7 +126,7 @@ export default async function AthleteCalendarPage({
                       {week.map((day) => (
                         <div
                           key={day.isoDate}
-                          aria-label={`${day.dateLabel}, ${day.sessions.length} ${day.sessions.length === 1 ? 'session' : 'sessions'}`}
+                          aria-label={`${day.dateLabel}${day.isToday ? ', today' : ''}, ${day.sessions.length} ${day.sessions.length === 1 ? 'session' : 'sessions'}`}
                           role="group"
                           className={`min-h-16 min-w-0 rounded-[3px] border p-1.5 sm:min-h-[128px] sm:p-3 ${
                             day.isCurrentMonth
@@ -136,12 +136,7 @@ export default async function AthleteCalendarPage({
                         >
                            <div className="flex items-start justify-between gap-1 sm:gap-2">
                             <div className="flex min-w-0 items-center gap-2">
-                              <p className="text-[15px] font-semibold text-[var(--text)]">{day.dateLabel}</p>
-                              {day.isToday ? (
-                                <span className="hidden rounded-full bg-[var(--brand-tint)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--field-selected-text)] sm:inline-flex">
-                                  Today
-                                </span>
-                              ) : null}
+                              <p className={`text-[15px] font-semibold text-[var(--text)] ${day.isToday ? 'current-day-date' : ''}`}>{day.dateLabel}</p>
                             </div>
                              <span className="rounded-full border border-[var(--field-border)] bg-[var(--field-surface)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--text-secondary)] sm:px-2 sm:py-1">
                                {day.sessions.length}
@@ -170,7 +165,7 @@ export default async function AthleteCalendarPage({
                             {day.sessions.length > 1 ? <p className="text-[11px] text-[var(--text-secondary)]">+{day.sessions.length - 1} more</p> : null}
                           </div>
                           <Link href={buildCalendarHref('week', new Date(`${day.isoDate}T12:00:00`))} className="mt-1 flex min-h-11 items-center text-[11px] font-medium text-[var(--brand)] sm:hidden">
-                            {day.isToday ? 'Today' : day.sessions.length ? 'View' : ''}
+                            View day
                           </Link>
                         </div>
                       ))}

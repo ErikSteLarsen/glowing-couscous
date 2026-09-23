@@ -36,6 +36,14 @@ Current verification and gaps are in `CURRENT-STATUS.md`. When a capability
 changes owner or state, update this row and the current status in the same
 change.
 
+The athlete Planning Desk distinguishes first-use empties from search misses,
+offers creation actions for missing workout or template sources, and puts
+selected-day details before the calendar on narrow screens. Calendar buttons
+announce planned session names, and template ranges report chronological
+endpoints in either selection direction.
+Home, Calendar, and Planning Desk use the shared `current-day-date` cue in
+`app/globals.css`; date selection remains separate from the current date.
+
 ## Design Context
 
 `DESIGN.md` is the durable visual contract. Verify implementation details in

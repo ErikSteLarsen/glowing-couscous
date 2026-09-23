@@ -93,4 +93,9 @@ test('auth role setup keeps the adapter and account-linking contracts explicit',
   assert.match(await read('lib/auth-role-service.ts'), /updateMany/);
   assert.match(route, /status: result\.status/);
   assert.match(middleware, /pathname === '\/setup'/);
+  assert.match(middleware, /authConfig/);
+  assert.doesNotMatch(middleware, /from ['"]@\/auth['"]/);
+  assert.doesNotMatch(middleware, /pathname === '\/login' \|\| pathname === '\/signup'/);
+  const edgeConfig = await read('auth.config.ts');
+  assert.doesNotMatch(edgeConfig, /@prisma\/client|@\/lib\/prisma|PrismaAdapter/);
 });

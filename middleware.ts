@@ -1,5 +1,8 @@
-import { auth } from '@/auth';
+import NextAuth from 'next-auth';
+import { authConfig } from '@/auth.config';
 import { NextResponse } from 'next/server';
+
+const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
@@ -26,10 +29,6 @@ export default auth((req) => {
   }
 
   if (pathname.startsWith('/coach')) {
-    return NextResponse.redirect(new URL('/athlete', req.url));
-  }
-
-  if ((pathname === '/login' || pathname === '/signup') && role) {
     return NextResponse.redirect(new URL('/athlete', req.url));
   }
 

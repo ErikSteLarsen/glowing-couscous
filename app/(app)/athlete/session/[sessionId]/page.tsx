@@ -63,14 +63,14 @@ export default async function AthleteSessionPage({
         }
       />
 
-      <div className="flex flex-wrap items-center gap-3 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">
+      <div className="page-content--standard flex flex-wrap items-center gap-3 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">
         <span>Week of {format(startOfWeek(detail.session.date, { weekStartsOn: 1 }), 'd MMM')}</span>
         <span aria-hidden="true">·</span>
         <span>{format(detail.session.date, 'EEE d MMM · HH:mm')}</span>
         <StatusBadge status={detail.session.status} />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="page-content--standard grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
           <Surface className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">

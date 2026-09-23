@@ -279,13 +279,19 @@ route's metrics as a new visual object.
 
 The product is a week-first workspace, not a marketing canvas. `PageShell` in
 `components/ui.tsx` is the single workspace frame and main landmark. All signed-in
-pages use its full width; there are no route-level size variants. The `page-layout`
+pages share its full-width frame; there are no route-level frame variants. The `page-layout`
 rules and `--page-*` tokens in `app/globals.css` own the centered 1800px maximum,
 20px mobile / 24px desktop / 32px large-screen gutters, 24px top padding, 96px
 minimum header band, and 16px page-group gap. `TopBar` top-aligns titles and actions.
 Descriptions, long titles, zoom, and narrow screens may grow the band to preserve
-content rather than clipping it. Forms and prose can limit their inner reading
-measure without moving the page heading or outer content anchor. Authentication
+content rather than clipping it. Content below the header can use shared
+maximum measures of 860px for compact account forms, 800px for the single-column
+workout library, 960px for session detail, and 1080px for activity and template libraries. These
+sections stay fluid below their maximum and center within the page frame when
+there is extra horizontal space. Workout and template editors use the full available frame width when
+active; the workout basics step keeps its centered 46rem panel. Home, Calendar,
+and Planner retain the full available frame width. None of these content
+measures moves the page heading or outer content anchor. Authentication
 uses the separate `AuthPageShell` reading-width frame.
 
 Planner adapts to the actual page container: below 900px its source, calendar,
@@ -310,6 +316,11 @@ week, Workouts and Session retain scheduled context, and Planner uses a
 month-first assignment desk with selected dates and exact template ranges. At `2xl`, a week can expand into a wall; at
   smaller widths, the home week ribbon becomes a horizontal channel and controls
   wrap without hiding the primary save or navigation action.
+
+Mark the current date on its numeral with the shared understated ink underline
+and tint. Keep that cue independent of a selected day, which uses the selected
+surface and checkmark. Preserve accessible current-date semantics and spoken
+labels; reserve “Today” text for headings and navigation actions.
 
 ## Elevation & Depth
 

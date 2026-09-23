@@ -83,9 +83,8 @@ export default async function AthletePage() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 id={`home-day-${day.isoDate}`} className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day.label}</h3>
-                      <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{day.dateLabel}</p>
+                      <p className={`metric-text mt-1 text-[20px] font-semibold text-[var(--text)] ${day.isToday ? 'current-day-date' : ''}`}>{day.dateLabel}</p>
                     </div>
-                    {day.isToday ? <span className="rounded-full bg-[var(--brand)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--signal-ink)]">Today</span> : null}
                   </div>
                   <div className="mt-3 space-y-2">
                     {day.sessions.length > 0 ? day.sessions.map((session) => (

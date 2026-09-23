@@ -24,19 +24,21 @@ export default async function AthleteActivityPage() {
         description="Review completed sessions and compare results with your plan."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="page-content--library grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatTile label="Completed sessions" value={String(activityFeed.activities.length)} detail="Latest 12" />
         <StatTile label="Duration" value={formatDuration(activityFeed.totals.durationSec)} detail="Latest 12 sessions" />
         <StatTile label="Load" value={`${activityFeed.totals.tss}`} detail="Latest 12 sessions" />
       </div>
 
       {activityFeed.activities.length === 0 ? (
-        <EmptyState
-          title="No completed sessions yet"
-          description="Complete a session to see it here."
-        />
+        <div className="page-content--library">
+          <EmptyState
+            title="No completed sessions yet"
+            description="Complete a session to see it here."
+          />
+        </div>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="page-content--library grid gap-4 lg:grid-cols-2">
           {activityFeed.activities.map((activity) => (
             <Surface key={activity.id} className="space-y-4">
                 <div className="flex items-start justify-between gap-4">

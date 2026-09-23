@@ -58,7 +58,7 @@ export function SettingsClient({
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+    <div className="page-content--compact grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
       <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
             Overview

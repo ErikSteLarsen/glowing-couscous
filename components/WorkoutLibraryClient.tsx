@@ -203,7 +203,7 @@ export function WorkoutLibraryClient({
   const metrics = deriveSessionEditorMetrics(draft);
 
   return (
-    <div className="min-w-0">
+    <div className={editorOpen ? 'min-w-0' : 'page-content--workout-list'}>
       {!editorOpen ? <Surface className="min-w-0 space-y-4">
         <div className="flex items-end justify-between gap-3">
           <div>

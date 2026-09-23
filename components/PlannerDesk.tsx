@@ -181,7 +181,8 @@ export function PlannerDesk({
         return;
       }
       const dates = datesBetween(rangeStart, date);
-      setRangeEnd(date);
+      setRangeStart(dates[0]);
+      setRangeEnd(dates.at(-1) ?? null);
       setSelectedDates(dates);
       const rangeError = validateTemplateDateRange(dates, selectedSource.cadence ?? 'day');
       setMessageTone(rangeError ? 'danger' : 'neutral');
@@ -417,11 +418,11 @@ function AssignmentSummary({ source, selectedDates, selectedTemplateDays, rangeS
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <p className={`text-xs ${source?.kind === 'template' && !valid ? 'text-[var(--status-warning)]' : 'text-[var(--text-muted)]'}`}>
-            {source?.kind === 'template' ? (valid ? 'Range length matches the template.' : `Select exactly ${selectedTemplateDays} days.`) : 'Click dates to toggle the selection.'}
+            {!source ? 'Choose a workout or template below to start planning.' : source.kind === 'template' ? (valid ? 'Range length matches the template.' : `Select exactly ${selectedTemplateDays} days.`) : 'Click dates to toggle the selection.'}
           </p>
-          <button type="button" disabled={isPending || !canAssign} onClick={onAssign} className={primaryButtonClassName}>
+          {source ? <button type="button" disabled={isPending || !canAssign} onClick={onAssign} className={primaryButtonClassName}>
             <Check aria-hidden="true" className="mr-2 h-4 w-4" /> {isAssigning ? 'Placing...' : buttonLabel}
-          </button>
+          </button> : null}
         </div>
       </div>
       {message ? <p role={messageTone === 'danger' ? 'alert' : 'status'} aria-live="polite" className={`mt-2 border-t border-[var(--border)] pt-2 ${messageTone === 'danger' ? dangerTextClassName : messageTone === 'success' ? successTextClassName : 'text-sm text-[var(--text-secondary)]'}`}>{message}</p> : null}
@@ -431,6 +432,8 @@ function AssignmentSummary({ source, selectedDates, selectedTemplateDays, rangeS
 
 function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSources, selectedDate, athletes, selectedAthleteId, onAthleteChange, onQueryChange, onTabChange, onSelectSource }: { role: PlannerDeskRole; sources: PlannerDeskSource[]; selectedSource: PlannerDeskSource | null; sourceTab: SourceTab; query: string; visibleSources: PlannerDeskSource[]; selectedDate: string; athletes: PlannerDeskAthlete[]; selectedAthleteId: number | null; onAthleteChange: (athleteId: number) => void; onQueryChange: (query: string) => void; onTabChange: (tab: SourceTab) => void; onSelectSource: (source: PlannerDeskSource) => void }) {
   const tabs: SourceTab[] = role === 'coach' ? ['workout', 'template', 'training-plan'] : ['workout', 'template'];
+  const tabSources = sources.filter((source) => source.kind === sourceTab);
+  const hasSearch = query.trim().length > 0;
   return (
     <aside className="planner-desk__sources min-w-0 border border-[var(--border)] bg-[var(--nav-surface)] p-3 shadow-[var(--shadow-inset)]">
       {role === 'coach' ? (
@@ -453,14 +456,27 @@ function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSo
         <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
         <input type="search" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Search by name or sport" className={`${formFieldClassName} pl-9`} />
       </label>
-      <div role="tablist" aria-label="Planner source type" className="mt-3 flex overflow-x-auto border-b border-[var(--nav-border)]">
+      <div role="group" aria-label="Filter sources by type" className="mt-3 flex overflow-x-auto border-b border-[var(--nav-border)]">
         {tabs.map((tab) => {
           const count = sources.filter((source) => source.kind === tab).length;
-          return <button key={tab} type="button" role="tab" aria-selected={sourceTab === tab} onClick={() => onTabChange(tab)} className={`min-h-9 shrink-0 border-b-2 px-2.5 text-xs font-semibold capitalize transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${sourceTab === tab ? 'border-[var(--brand)] text-[var(--brand)]' : 'border-transparent text-[var(--nav-muted)] hover:text-[var(--nav-text)]'}`}>{tab === 'training-plan' ? 'Plans' : `${tab}s`} <span className="font-normal">{count}</span></button>;
+          return <button key={tab} type="button" aria-pressed={sourceTab === tab} onClick={() => onTabChange(tab)} className={`min-h-9 shrink-0 border-b-2 px-2.5 text-xs font-semibold capitalize transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${sourceTab === tab ? 'border-[var(--brand)] text-[var(--brand)]' : 'border-transparent text-[var(--nav-muted)] hover:text-[var(--nav-text)]'}`}>{tab === 'training-plan' ? 'Plans' : `${tab}s`} <span className="font-normal">{count}</span></button>;
         })}
       </div>
       <div className="mt-3 space-y-2">
-        {visibleSources.length ? visibleSources.map((source) => <SourceResult key={source.key} source={source} selected={source.key === selectedSource?.key} selectedDate={selectedDate} onSelect={onSelectSource} />) : <p className="border border-dashed border-[var(--nav-border)] px-3 py-4 text-sm text-[var(--nav-muted)]">No {sourceTab === 'training-plan' ? 'plans' : `${sourceTab}s`} match “{query}”.</p>}
+        {visibleSources.length ? visibleSources.map((source) => <SourceResult key={source.key} source={source} selected={source.key === selectedSource?.key} selectedDate={selectedDate} onSelect={onSelectSource} />) : hasSearch && tabSources.length > 0 ? (
+          <div className="border border-dashed border-[var(--nav-border)] px-3 py-4">
+            <p className="text-sm text-[var(--nav-muted)]">No {sourceTab === 'training-plan' ? 'plans' : `${sourceTab}s`} match “{query.trim()}”.</p>
+            <button type="button" onClick={() => onQueryChange('')} className="mt-2 text-sm font-semibold text-[var(--brand)] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">Clear search</button>
+          </div>
+        ) : role === 'athlete' ? (
+          <div className="border border-dashed border-[var(--nav-border)] px-3 py-4">
+            <p className="text-sm font-semibold text-[var(--nav-text)]">No saved {sourceTab === 'template' ? 'templates' : 'workouts'} yet.</p>
+            <p className="mt-1 text-sm leading-5 text-[var(--nav-muted)]">Create one in your library, then return here to add it to your calendar.</p>
+            <div className="mt-3"><ActionLink href={sourceTab === 'template' ? '/athlete/templates' : '/athlete/workouts'} tone="secondary" size="compact">Create {sourceTab === 'template' ? 'template' : 'workout'}</ActionLink></div>
+          </div>
+        ) : (
+          <p className="border border-dashed border-[var(--nav-border)] px-3 py-4 text-sm text-[var(--nav-muted)]">No {sourceTab === 'training-plan' ? 'plans' : `${sourceTab}s`} available.</p>
+        )}
       </div>
       <div className="mt-4 border-t border-[var(--nav-border)] pt-3 text-xs leading-5 text-[var(--nav-muted)]">
         <p>Planner places independent copies. Editing stays in the library.</p>
@@ -529,9 +545,14 @@ function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, d
 }
 
 function CalendarCell({ feedback, day, today, selected, templateMode, onSelect }: { feedback: PlacementFeedback | null; day: PlannerDeskCalendarDay; today: boolean; selected: boolean; templateMode: boolean; onSelect: () => void }) {
+  const sessionNames = day.sessions.slice(0, 3).map((session) => session.title).join(', ');
+  const extraSessionCount = Math.max(0, day.sessions.length - 3);
+  const scheduleDescription = day.sessions.length === 0
+    ? 'No sessions planned.'
+    : `${day.sessions.length} planned: ${sessionNames}${extraSessionCount ? `, and ${extraSessionCount} more` : ''}.`;
   return (
-    <button type="button" aria-pressed={selected} aria-current={today ? 'date' : undefined} aria-label={`${day.label} ${day.dateLabel}, ${day.sessions.length} assigned. ${templateMode ? 'Choose for template range.' : 'Toggle date.'}`} onClick={onSelect} className={`planner-desk__day flex min-w-0 flex-col p-2 text-left transition focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] ${day.inMonth ? 'bg-[var(--field-surface)]' : 'bg-[var(--sunken)]'} ${selected ? 'bg-[var(--brand-tint)]' : ''} ${!selected ? 'hover:bg-[var(--selection)]' : ''}`}>
-      <span className="flex items-center justify-between gap-2"><span className={`metric-text text-sm font-semibold ${day.inMonth ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>{day.dateLabel.split(' ')[0]}</span><span className="flex items-center gap-1">{today ? <span className="planner-desk__today rounded-full bg-[var(--brand)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--signal-ink)]">Today</span> : null}{selected ? <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--signal-ink)]"><Check aria-hidden="true" className="h-3 w-3" /><span className="sr-only">Selected</span></span> : null}</span></span>
+    <button type="button" aria-pressed={selected} aria-current={today ? 'date' : undefined} aria-label={`${day.label} ${day.dateLabel}${today ? ', today' : ''}. ${scheduleDescription} ${templateMode ? 'Choose for template range.' : 'Toggle date.'}`} onClick={onSelect} className={`planner-desk__day flex min-w-0 flex-col p-2 text-left transition focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] ${day.inMonth ? 'bg-[var(--field-surface)]' : 'bg-[var(--sunken)]'} ${selected ? 'bg-[var(--brand-tint)]' : ''} ${!selected ? 'hover:bg-[var(--selection)]' : ''}`}>
+      <span className="flex items-center justify-between gap-2"><span className={`metric-text text-sm font-semibold ${day.inMonth ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'} ${today ? 'current-day-date' : ''}`}>{day.dateLabel.split(' ')[0]}</span>{selected ? <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--signal-ink)]"><Check aria-hidden="true" className="h-3 w-3" /><span className="sr-only">Selected</span></span> : null}</span>
       {feedback ? <span className={`planner-desk__feedback mt-1 block truncate text-xs ${feedback.state === 'failed' ? 'text-[var(--status-danger)]' : feedback.state === 'saved' ? 'text-[var(--status-success)]' : 'text-[var(--text-secondary)]'}`}>{feedback.state === 'placing' ? 'Placing' : feedback.state === 'saved' ? 'Placed' : 'Not confirmed'}: {feedback.title}</span> : null}
       <span className="planner-desk__sessions mt-1 w-full min-w-0">{day.sessions.slice(0, 1).map((session) => <span key={session.id} className="block truncate border-l-2 border-[var(--brand)] bg-[var(--surface)] px-1.5 py-1 text-[11px] font-medium text-[var(--text)]">{session.title}</span>)}{day.sessions.length > 1 ? <span className="block px-1.5 text-[11px] text-[var(--text-muted)]">+{day.sessions.length - 1} more</span> : null}</span>
       <span className="planner-desk__count text-[11px] text-[var(--text-secondary)]">{day.sessions.length ? `${day.sessions.length} planned` : ''}</span>

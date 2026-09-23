@@ -4,7 +4,8 @@ import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { isAppRole, parseApplicationUserId } from '@/lib/auth-principal';
+import { parseApplicationUserId } from '@/lib/auth-principal';
+import { authConfig } from '@/auth.config';
 
 const googleClientId = process.env.AUTH_GOOGLE_ID ?? process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.AUTH_GOOGLE_SECRET ?? process.env.GOOGLE_CLIENT_SECRET;
@@ -14,11 +15,8 @@ const googleProvider =
     : null;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt' },
-  pages: {
-    signIn: '/login',
-  },
   providers: [
     ...(googleProvider ? [googleProvider] : []),
     Credentials({
@@ -61,16 +59,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return token;
     },
-    async session({ session, token }) {
-      // Cast through unknown to reconcile next-auth's base string id type with our numeric id
-      const userId = parseApplicationUserId(token.userId);
-      const validRole = token.role == null || isAppRole(token.role);
-      (session.user as unknown as { id: number }).id = userId ?? 0;
-      (session.user as unknown as { role: string | null }).role = validRole ? token.role ?? null : null;
-      if (!userId || !validRole) return session;
-      session.user.name = (token.name as string | undefined) ?? session.user.name;
-      session.user.email = (token.email as string | undefined) ?? session.user.email;
-      return session;
-    },
+    session: authConfig.callbacks.session,
   },
 });
