@@ -11,18 +11,16 @@ import type { SessionUser } from '@/lib/auth-session';
 
 export function AppShell({
   user,
-  hasActiveCoach,
   children,
 }: {
   user: SessionUser & { role: 'COACH' | 'ATHLETE' };
-  hasActiveCoach: boolean;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const navItems = getMobileNavigation(user.role, { hasActiveCoach });
+  const navItems = getMobileNavigation();
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 767px)');
@@ -68,7 +66,6 @@ export function AppShell({
       <AppSidebar
         user={user}
         pathname={pathname}
-        hasActiveCoach={hasActiveCoach}
         mobileOpen={mobileOpen}
         isMobileViewport={isMobileViewport}
         onClose={closeMobileMenu}

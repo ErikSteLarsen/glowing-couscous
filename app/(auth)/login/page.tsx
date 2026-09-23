@@ -53,10 +53,6 @@ export default function LoginPage() {
     <AuthPageShell>
       <TopBar title="Sign in" align="center" />
       <Surface className="mx-auto w-full max-w-md">
-        <div className="mb-5 rounded-[12px] border border-[var(--field-selected-border)] bg-[var(--brand-tint)] px-4 py-3 text-sm text-[var(--field-selected-text)]">
-          <p className="font-semibold text-[var(--text)]">Demo athlete</p>
-          <p className="mt-1">Use <span className="font-medium">mara@demo.local</span> with password <span className="font-medium">demo1234</span>.</p>
-        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="login-email" className={formLabelClassName}>Email</label>

@@ -1,5 +1,18 @@
 # Current Status
 
+On **2026-09-23**, the signed-in sidebar's decorative “Current flow / Indigo /
+paper” specimen and its unused CSS were removed. The public sign-in page no
+longer advertises seeded demo credentials; they remain documented for optional
+local seeding in README.md. Personal navigation no longer carries unused role
+and active-coach parameters through the layout, shell, sidebar, and navigation
+helpers. Settings now defines metadata only for the three personal overview
+cards it displays, resolving an existing build-time type mismatch while keeping
+legacy `coachNote` preferences in storage. Existing role guards and coach
+routes remain intact. All 199 tests passed outside the restricted sandbox,
+full ESLint passed, and direct production build passed with the existing
+middleware deprecation warning. The Impeccable detector found advisory-only
+style findings. Browser rendering was not verified in this pass.
+
 On **2026-09-23**, Home, Calendar week/month, and the personal and coach Planning
 Desk now mark the current date directly on its numeral with a restrained ink
 underline and tint. The Today badges were removed; selected Planner dates keep

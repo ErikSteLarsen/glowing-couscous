@@ -25,7 +25,7 @@ operation.
 
 FIRST VIEWPORT: The desktop frame opens with a narrow paper navigation rail at
 left and a wide editorial field at right. A circular ink mark, Tempo wordmark,
-line icons, and a small current-flow specimen sit in the rail. The main field
+line icons, and the account menu sit in the rail. The main field
 starts with a large thin greeting over authored indigo flow linework, followed
 by the next session and a connected Monday-first week ribbon. Supporting totals
 become distinct study tiles below. On mobile the rail becomes the existing

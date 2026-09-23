@@ -214,26 +214,6 @@ body {
   transform: translate(4px, -2px);
 }
 
-.ink-sidebar-specimen {
-  border-top: 1px solid var(--nav-border);
-  border-bottom: 1px solid var(--nav-border);
-  padding: 18px 8px;
-}
-
-.ink-sidebar-flow {
-  height: 62px;
-  overflow: hidden;
-  color: var(--ink-line);
-  opacity: 0.74;
-}
-
-.ink-sidebar-flow svg {
-  width: 260px;
-  height: 190px;
-  max-width: none;
-  transform: translate(-56px, -55px) rotate(-8deg);
-}
-
 .ink-session-row {
   position: relative;
   isolation: isolate;

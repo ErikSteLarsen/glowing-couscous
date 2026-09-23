@@ -53,7 +53,7 @@ test('anchor color inheritance stays in the base layer so link utilities can win
   assert.doesNotMatch(globalsSource, /(?:^|\n)a \{\n  color: inherit;/);
 });
 
-test('auth pages reuse shared accessible form styling and document demo athlete access', async () => {
+test('auth pages reuse shared accessible form styling without demo account copy', async () => {
   const loginSource = await read('app/(auth)/login/page.tsx');
   const signupSource = await read('app/(auth)/signup/page.tsx');
   const setupSource = await read('app/(auth)/setup/page.tsx');
@@ -65,9 +65,7 @@ test('auth pages reuse shared accessible form styling and document demo athlete 
   assert.match(loginSource, /formFieldClassName/);
   assert.match(loginSource, /primaryButtonClassName/);
   assert.match(loginSource, /secondaryButtonClassName/);
-  assert.match(loginSource, /Demo athlete/);
-  assert.match(loginSource, /mara@demo\.local/);
-  assert.match(loginSource, /demo1234/);
+  assert.doesNotMatch(loginSource, /Demo athlete|mara@demo\.local|demo1234/);
 
   assert.match(signupSource, /formFieldClassName/);
   assert.match(signupSource, /primaryButtonClassName/);

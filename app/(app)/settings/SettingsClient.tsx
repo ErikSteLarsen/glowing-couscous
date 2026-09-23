@@ -4,7 +4,9 @@ import { useState, useTransition } from 'react';
 import { OVERVIEW_CARD_IDS, type OverviewCardId } from '@/lib/overview-preferences';
 import { Toggle } from '@/components/tempo/Toggle';
 
-const overviewLabels: Record<OverviewCardId, { title: string; description: string }> = {
+const personalOverviewCardIds = ['lastActivity', 'weekLoad', 'trend'] as const satisfies readonly OverviewCardId[];
+
+const overviewLabels: Record<(typeof personalOverviewCardIds)[number], { title: string; description: string }> = {
   lastActivity: {
     title: 'Last activity',
     description: 'Keep the most recent completed session visible on Home.',
@@ -64,7 +66,7 @@ export function SettingsClient({
             Overview
           </p>
           <div className="mt-4 space-y-3">
-            {OVERVIEW_CARD_IDS.filter((cardId) => cardId !== 'coachNote').map((cardId) => {
+            {personalOverviewCardIds.map((cardId) => {
               const meta = overviewLabels[cardId];
               const checked = overviewCards.includes(cardId);
 

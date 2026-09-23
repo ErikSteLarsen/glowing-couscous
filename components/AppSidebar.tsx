@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { getPrimaryNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import { AppProfileMenu } from '@/components/AppProfileMenu';
-import { InkFlow } from '@/components/InkFlow';
 import { compactSecondaryButtonClassName } from '@/components/ui';
 import type { LucideIcon } from 'lucide-react';
 
@@ -29,12 +28,11 @@ const navIcons: Record<string, LucideIcon> = {
 export function AppSidebar(props: {
   user: { name: string; email: string; role: 'COACH' | 'ATHLETE' };
   pathname: string;
-  hasActiveCoach: boolean;
   mobileOpen: boolean;
   isMobileViewport: boolean;
   onClose: () => void;
 }) {
-  const navItems = getPrimaryNavigation(props.user.role, { hasActiveCoach: props.hasActiveCoach });
+  const navItems = getPrimaryNavigation();
   const sidebarRef = useRef<HTMLElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -132,24 +130,13 @@ export function AppSidebar(props: {
                       <span className="absolute inset-y-[9px] left-0 w-[3px] rounded-full bg-[var(--nav-signal)]" />
                     ) : null}
                      <span className="flex min-w-0 items-center gap-3">
-                       {(() => {
-                         const Icon = navIcons[item.label] ?? Circle;
-                         return <Icon aria-hidden="true" size={15} strokeWidth={1.5} />;
-                       })()}
+                       <NavigationIcon label={item.label} />
                        <span className="block">{item.label}</span>
                      </span>
                   </Link>
                 );
               })}
              </nav>
-           </div>
-
-           <div className="ink-sidebar-specimen hidden md:block">
-             <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--nav-muted)]">Current flow</p>
-             <div className="ink-sidebar-flow mt-3" aria-hidden="true">
-               <InkFlow />
-             </div>
-             <p className="mt-3 text-[10px] uppercase tracking-[0.12em] text-[var(--nav-muted)]">Indigo / paper</p>
            </div>
 
            <div className="mt-auto">
@@ -159,4 +146,9 @@ export function AppSidebar(props: {
       </aside>
     </>
   );
+}
+
+function NavigationIcon({ label }: { label: string }) {
+  const Icon = navIcons[label] ?? Circle;
+  return <Icon aria-hidden="true" size={15} strokeWidth={1.5} />;
 }

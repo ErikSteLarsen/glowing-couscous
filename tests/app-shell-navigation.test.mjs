@@ -20,6 +20,8 @@ test('root route and app navigation define one signed-in personal workspace', as
   assert.match(homeSource, /redirect\('\/athlete'\)/);
 
   assert.match(navSource, /export function getPrimaryNavigation/);
+  assert.match(navSource, /export function getPrimaryNavigation\(\)/);
+  assert.doesNotMatch(navSource, /hasActiveCoach/);
   assert.doesNotMatch(navSource, /label: 'Coach'/);
   assert.doesNotMatch(navSource, /label: 'Athletes'/);
   assert.match(navSource, /label: 'Planner'/);

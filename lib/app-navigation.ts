@@ -20,10 +20,7 @@ function getMatchSpecificity(item: NavItem) {
   return Math.max(...getMatchPrefixes(item).map((prefix) => prefix.length));
 }
 
-export function getPrimaryNavigation(
-  _role: AppRole,
-  _options: { hasActiveCoach?: boolean } = {},
-): NavItem[] {
+export function getPrimaryNavigation(): NavItem[] {
   return [
     { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete' },
     {
@@ -39,11 +36,8 @@ export function getPrimaryNavigation(
   ];
 }
 
-export function getMobileNavigation(
-  role: AppRole,
-  options: { hasActiveCoach?: boolean } = {},
-): NavItem[] {
-  const items = getPrimaryNavigation(role, options);
+export function getMobileNavigation(): NavItem[] {
+  const items = getPrimaryNavigation();
   const priorityLabels = ['Home', 'Calendar', 'Workouts', 'Planner'];
 
   return priorityLabels

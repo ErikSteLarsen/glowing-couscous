@@ -9,7 +9,7 @@ export default async function SignedInLayout({ children }: { children: React.Rea
   if (!hasAppRole(user)) redirect('/setup');
 
   return (
-    <AppShell user={user} hasActiveCoach={false}>
+    <AppShell user={user}>
       {children}
     </AppShell>
   );
