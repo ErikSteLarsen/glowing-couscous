@@ -203,15 +203,31 @@ export function WorkoutCanvasEditor({ draft, onChange, performanceProfile, profi
             </div>
           </SortableContext>
           <div className="canvas-preview__ruler"><span>Start</span><span>{formatDuration(previewSeconds)} · Finish</span></div>
+          {active ? <BlockInspector className="canvas-preview__inspector--mobile" active={active} sport={draft.sport} onPatch={patch} performanceProfile={performanceProfile} profileLabel={profileLabel} /> : null}
           <div className="canvas-preview__repeat"><div><strong>Repeat selected pattern</strong><span>{copiesCount ? `${repeatCount} times · ${formatDuration(previewSeconds)} preview` : 'Choose bars, then slide to preview repeats'}</span></div><label><span className="sr-only">Repeat count</span><input type="range" min="1" max="10" step="1" value={repeatCount} disabled={!selected.length} onChange={(event) => setRepeatCount(Number(event.target.value))} /><output>{repeatCount}×</output></label><button type="button" disabled={!copiesCount} onClick={repeat}>Apply repeats</button></div>
           <div className="canvas-preview__actions" aria-label="Selected block actions"><strong>{selected.length ? `${selected.length} selected` : 'Click a bar to edit'}</strong><button type="button" aria-pressed={multiSelect} className={multiSelect ? 'is-active' : ''} onClick={() => setMultiSelect(!multiSelect)}>Select multiple</button><button type="button" disabled={!selected.length} onClick={() => move(-1)}><ArrowLeft size={14} /> Earlier</button><button type="button" disabled={!selected.length} onClick={() => move(1)}>Later <ArrowRight size={14} /></button><button type="button" disabled={!selected.length} onClick={copy}><Copy size={14} /> Add copy</button><button type="button" className="is-danger" disabled={!selected.length} onClick={remove}><Trash2 size={14} /> Delete</button></div>
           <div className="canvas-preview__draft-tools"><button type="button" disabled={!history.length} onClick={undo}><Undo2 size={14} /> Undo</button><button type="button" disabled={!future.length} onClick={redo}><Redo2 size={14} /> Redo</button><span role="status">{notice}</span></div>
         </section>
-        <aside className="canvas-preview__inspector" aria-label="Block details"><h2>Block details</h2><p>Select a bar while the full workout stays in view.</p>{active ? <BlockDetails key={active.clientId} block={active} sport={draft.sport} onPatch={patch} performanceProfile={performanceProfile} profileLabel={profileLabel} /> : <p className="canvas-preview__hint">Click one bar in the chart to edit it.</p>}</aside>
+        <BlockInspector className="canvas-preview__inspector--desktop" active={active} sport={draft.sport} onPatch={patch} performanceProfile={performanceProfile} profileLabel={profileLabel} />
       </div>
       <DragOverlay dropAnimation={null}>{draggingZone && zones.includes(draggingZone) ? <div className={`canvas-preview__drag-tile ${dropIndex !== null ? 'is-over-chart' : ''}`}><PresetContent zone={draggingZone} /></div> : draggingBlock ? <div className="canvas-preview__drag-chart" style={{ '--zone': `var(--color-zone-${draggingBlock.zone})`, '--effort-height': `${24 + draggingBlock.zone * 15}%` } as CSSProperties}><span /></div> : null}</DragOverlay>
     </DndContext>
   </div>;
+}
+
+function BlockInspector({ className, active, sport, onPatch, performanceProfile, profileLabel }: {
+  className: string;
+  active: SessionEditorBlock | null;
+  sport: string;
+  onPatch: (id: string, patch: Partial<SessionEditorBlock>) => void;
+  performanceProfile: PerformanceProfile | null;
+  profileLabel: string;
+}) {
+  return <aside className={`canvas-preview__inspector ${className}`} aria-label="Block details">
+    <h2>Block details</h2>
+    <p>Select a bar to edit its effort, time, and targets.</p>
+    {active ? <BlockDetails key={active.clientId} block={active} sport={sport} onPatch={onPatch} performanceProfile={performanceProfile} profileLabel={profileLabel} /> : <p className="canvas-preview__hint">Click one bar in the chart to edit it.</p>}
+  </aside>;
 }
 
 function IntensityPreset({ zone, onAdd }: { zone: TempoZone; onAdd: () => void }) {

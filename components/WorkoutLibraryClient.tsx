@@ -205,7 +205,7 @@ export function WorkoutLibraryClient({
   return (
     <div className={editorOpen ? 'min-w-0' : 'page-content--workout-list'}>
       {!editorOpen ? <Surface className="min-w-0 space-y-4">
-        <div className="flex items-end justify-between gap-3">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-[var(--text)]">Workout library</h2>
             <p className="mt-1 max-w-[44ch] text-sm leading-6 text-[var(--text-secondary)]">

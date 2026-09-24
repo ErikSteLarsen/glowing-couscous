@@ -92,6 +92,9 @@
 
 .canvas-preview--production { min-height: 0; padding: 0; background: transparent; }
 .canvas-preview--production .canvas-preview__workspace { margin-top: 0; }
+.canvas-preview__inspector--mobile { display: none; }
+@media (min-width: 681px) and (max-width: 1300px) { .canvas-preview--production .canvas-preview__workspace:has(.canvas-preview__session--score) { grid-template-columns: 190px minmax(0, 1fr); }.canvas-preview--production .canvas-preview__inspector--desktop { grid-column: 2; } }
+@media (max-width: 680px) { .canvas-preview--production .canvas-preview__inspector--desktop { display: none; }.canvas-preview--production .canvas-preview__inspector--mobile { display: block; margin-top: 16px; padding: 16px 0 0; border: 0; border-top: 1px solid var(--border); } }
 .canvas-preview--production .canvas-preview__session--score .canvas-preview__repeat { grid-template-columns: minmax(0, 1fr) auto; }
 .canvas-preview--production .canvas-preview__session--score .canvas-preview__repeat label { grid-column: 1 / -1; grid-row: 2; }
 .canvas-preview--production .canvas-preview__session--score .canvas-preview__repeat > button { grid-column: 2; grid-row: 1; }
