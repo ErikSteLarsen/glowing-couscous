@@ -28,7 +28,7 @@ secondary; preserve their behavior and shared ownership boundaries.
 | PLAN-001 | Personal planning and secondary coach planning | shipped | components/PlannerDesk.tsx, lib/coach-planner-service.ts, lib/athlete-planner-service.ts, lib/assignment-service.ts | /coach/planner, /athlete/planner |
 | `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | `/coach/workouts`, `/athlete/workouts` |
 | `TEMPLATE-001` | Templates and training plans | `in-progress` | `lib/template-service.ts`, `lib/coach-training-plan-service.ts` | `/coach/templates`, `/athlete/templates` |
-| SESSION-001 | Canonical editor and outcomes | shipped | lib/session-editor.ts, lib/session-snapshot-service.ts, lib/athlete-completion-service.ts | Session detail, WorkoutBuilder, outcome APIs |
+| SESSION-001 | Canonical editor and outcomes | shipped | lib/session-editor.ts, lib/workout-canvas-drop.ts, components/WorkoutBuilder.tsx, components/WorkoutCanvasEditor.tsx, lib/session-snapshot-service.ts, lib/athlete-completion-service.ts | Session detail, workout canvas, outcome APIs |
 | `SHARE-001` | Sanitized workout sharing | `in-progress` | `lib/share-link.ts`, `lib/share-link-service.ts` | `/share/[token]`, share APIs |
 | `COMPAT-001` | Older coach session adapter | `transitional` | `lib/planner-service.ts` | `/api/coach/sessions/[sessionId]` |
 
@@ -56,7 +56,7 @@ styles:
 | Shell and responsive navigation | `components/AppShell.tsx`, `components/AppSidebar.tsx` | `lib/app-navigation.ts` |
 | Page-level controls and surfaces | `components/ui.tsx` | `PageShell` (single workspace frame), `AuthPageShell`, `TopBar`, button, field, `Surface`, `Badge`, and `EmptyState` classes |
 | Workout/session language | `components/tempo/*` | `SessionRow`, `SessionBlockBar`, `StatusBadge`, `MetricText`, `Stepper`, and `Toggle` |
-| Authoring surface | `components/WorkoutBuilder.tsx` | `WorkoutBuilder` and editor services |
+| Authoring surface | `components/WorkoutBuilder.tsx`, `components/WorkoutCanvasEditor.tsx`, `components/design/workout-canvas.css` | Shared workout, template, and planned-session visual editor backed by canonical draft services |
 | Visual experiments | `app/design/*`, `components/design/*` | Preview only; never copy their tokens into product screens without an explicit system decision |
 
 ## Active Tasks

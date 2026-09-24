@@ -57,21 +57,27 @@ test('session block bars show colored zones without a gray track', async () => {
 
 test('workout authoring gates details behind basics and exposes direct block controls', async () => {
   const builderSource = await read('components/WorkoutBuilder.tsx');
+  const canvasSource = await read('components/WorkoutCanvasEditor.tsx');
 
   assert.match(builderSource, /Continue to workout details/);
-  assert.match(builderSource, /\{basicsDismissed \? <>/);
   assert.match(builderSource, /max-w-\[46rem\]/);
   assert.match(builderSource, /onDetailsVisibilityChange/);
   assert.match(builderSource, /aria-label="Edit workout basics"/);
   assert.match(builderSource, /setBasicsEditing\(true\)/);
-  assert.doesNotMatch(builderSource, /onClick=\{\(\) => setBasicsDismissed\(false\)\}>Edit basics/);
-  assert.match(builderSource, /Click Add/);
-  assert.match(builderSource, /Drop blocks anywhere in this sequence/);
-  assert.match(builderSource, /Training intensity zone/);
-  assert.match(builderSource, /Repetitions/);
-  assert.match(builderSource, /Add recovery block/);
-  assert.match(builderSource, /size="authoring"/);
-  assert.match(builderSource, /Recovery stays low but visible/);
+  assert.match(builderSource, /<WorkoutCanvasEditor/);
+  assert.match(canvasSource, /createSessionEditorBlock/);
+  assert.match(canvasSource, /updateSessionEditorBlock/);
+  assert.match(canvasSource, /canvas-preview__session--score/);
+  assert.doesNotMatch(canvasSource, /canvas-preview__concepts/);
+  assert.match(canvasSource, /aria-label="Block details"/);
+  assert.match(canvasSource, /max="30"/);
+  assert.match(canvasSource, /Apply repeats/);
+  assert.match(canvasSource, /Add copy/);
+  assert.match(canvasSource, /className="canvas-preview__preset-button" \{\.\.\.attributes\} \{\.\.\.listeners\}/);
+  assert.doesNotMatch(canvasSource, /<button[^>]*className="canvas-preview__preset-grip"/);
+  assert.match(canvasSource, /<DragOverlay dropAnimation=\{null\}>/);
+  assert.match(canvasSource, /<ChartPlacement block=\{placementBlock\}/);
+  assert.match(canvasSource, /<PresetContent zone=\{zone\}/);
 });
 
 test('signed-in routes use grouped app shell while auth pages stay centered', async () => {
