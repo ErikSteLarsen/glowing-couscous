@@ -92,9 +92,6 @@
 
 .canvas-preview--production { min-height: 0; padding: 0; background: transparent; }
 .canvas-preview--production .canvas-preview__workspace { margin-top: 0; }
-.canvas-preview__inspector--mobile { display: none; }
-@media (min-width: 681px) and (max-width: 1300px) { .canvas-preview--production .canvas-preview__workspace:has(.canvas-preview__session--score) { grid-template-columns: 190px minmax(0, 1fr); }.canvas-preview--production .canvas-preview__inspector--desktop { grid-column: 2; } }
-@media (max-width: 680px) { .canvas-preview--production .canvas-preview__inspector--desktop { display: none; }.canvas-preview--production .canvas-preview__inspector--mobile { display: block; margin-top: 16px; padding: 16px 0 0; border: 0; border-top: 1px solid var(--border); } }
 .canvas-preview--production .canvas-preview__session--score .canvas-preview__repeat { grid-template-columns: minmax(0, 1fr) auto; }
 .canvas-preview--production .canvas-preview__session--score .canvas-preview__repeat label { grid-column: 1 / -1; grid-row: 2; }
 .canvas-preview--production .canvas-preview__session--score .canvas-preview__repeat > button { grid-column: 2; grid-row: 1; }
@@ -122,3 +119,32 @@
 .canvas-preview__inspector .canvas-preview__inline { gap: 12px; }
 .canvas-preview__inspector .canvas-preview__duration { min-width: 0; }
 @media (max-width: 680px) { .canvas-preview__draft-tools span { width: 100%; margin-left: 0; }.canvas-preview__advanced > div { grid-template-columns: 1fr; } }
+
+/* Production authoring keeps the chart central and reveals tools with selection. */
+.canvas-preview--production { container-type: inline-size; }
+.canvas-preview--production .canvas-preview__workspace:has(.canvas-preview__session--score) { grid-template-columns: 190px minmax(0, 1fr); }
+.canvas-preview--production .canvas-preview__inspector--desktop { display: none; }
+.canvas-preview--production .canvas-preview__inspector--inline { display: block; margin: 16px 0 0; padding: 16px; }
+.canvas-preview--production .canvas-preview__legend { margin: 17px 0 11px; }
+.canvas-preview--production .canvas-preview__selection-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 12px 0; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 12px; }
+.canvas-preview--production .canvas-preview__selection-head button { min-height: 40px; padding: 0 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+.canvas-preview--production .canvas-preview__selection-head button.is-active { background: var(--brand-tint); border-color: var(--field-selected-border); }
+.canvas-preview--production .canvas-preview__actions { justify-content: flex-start; padding: 16px 0 0; }
+.canvas-preview--production .canvas-preview__actions button,
+.canvas-preview--production .canvas-preview__repeat > button,
+.canvas-preview--production .canvas-preview__draft-tools button { min-height: 40px; }
+.canvas-preview--production .canvas-preview__repeat { border-top: 0; padding: 16px 0; }
+.canvas-preview--production .canvas-preview__notice { margin: 8px 0 0; color: var(--text-secondary); font-size: 11px; line-height: 1.45; }
+.canvas-preview--production .canvas-preview__block.is-skipped .canvas-preview__bar { opacity: .38; background-image: repeating-linear-gradient(135deg, transparent 0 9px, var(--surface) 9px 11px); }
+.canvas-preview--production .canvas-preview__skipped-label { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); padding: 2px 4px; background: var(--surface); color: var(--text); font-size: 10px; font-weight: 600; white-space: nowrap; pointer-events: none; }
+@container (min-width: 1180px) {
+  .canvas-preview--production .canvas-preview__workspace:has(.canvas-preview__inspector--desktop) { grid-template-columns: 190px minmax(0, 1fr) 280px; }
+  .canvas-preview--production .canvas-preview__inspector--inline { display: none; }
+  .canvas-preview--production .canvas-preview__inspector--desktop { display: block; grid-column: 3; }
+}
+@container (max-width: 720px) {
+  .canvas-preview--production .canvas-preview__workspace:has(.canvas-preview__session--score) { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .canvas-preview--production .canvas-preview__palette > div { display: flex; overflow-x: auto; }
+  .canvas-preview--production .canvas-preview__preset { min-width: 140px; }
+  .canvas-preview--production .canvas-preview__inspector--inline { padding: 14px; }
+}

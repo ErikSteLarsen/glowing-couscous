@@ -38,7 +38,7 @@ export function WorkoutCanvasEditor({ draft, onChange, performanceProfile, profi
   const [dragId, setDragId] = useState<string | null>(null);
   const [history, setHistory] = useState<SessionEditorDraft[]>([]);
   const [future, setFuture] = useState<SessionEditorDraft[]>([]);
-  const [notice, setNotice] = useState('Click a bar to inspect it. Shift-click or turn on multi-select to choose a pattern.');
+  const [notice, setNotice] = useState('');
   const suppressPresetClick = useRef<{ zone: TempoZone; until: number } | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
@@ -50,9 +50,12 @@ export function WorkoutCanvasEditor({ draft, onChange, performanceProfile, profi
   const blocks = draft.blocks;
   const selected = blocks.filter((block) => selectedIds.includes(block.clientId));
   const active = selected.length === 1 ? selected[0] : null;
+  const activeBlocks = blocks.filter((block) => !block.skipped);
+  const canMoveEarlier = selected.length > 0 && blocks.findIndex((block) => selectedIds.includes(block.clientId)) > 0;
+  const canMoveLater = selected.length > 0 && blocks.findLastIndex((block) => selectedIds.includes(block.clientId)) < blocks.length - 1;
   const metrics = deriveSessionEditorMetrics(draft);
   const copiesCount = selected.length ? repeatCount - 1 : 0;
-  const selectionSeconds = selected.reduce((sum, block) => sum + effectiveSeconds(block), 0);
+  const selectionSeconds = selected.reduce((sum, block) => sum + (block.skipped ? 0 : effectiveSeconds(block)), 0);
   const previewSeconds = metrics.durationSec + selectionSeconds * copiesCount;
   const lastSelectedIndex = selected.length ? Math.max(...selected.map((block) => blocks.findIndex((item) => item.clientId === block.clientId))) : -1;
   const chartPieces = blocks.flatMap((block, index) => {
@@ -99,7 +102,7 @@ export function WorkoutCanvasEditor({ draft, onChange, performanceProfile, profi
   }
   function patch(blockId: string, change: Partial<SessionEditorBlock>) {
     commit(updateSessionEditorBlock(draft, blockId, change));
-    setNotice('Block updated in the workout draft.');
+    setNotice(change.skipped === true ? 'Block skipped. It no longer counts toward workout time.' : 'Block updated in the workout draft.');
   }
   function copy() {
     if (!selected.length) return;
@@ -192,10 +195,10 @@ export function WorkoutCanvasEditor({ draft, onChange, performanceProfile, profi
   return <div className="canvas-preview canvas-preview--production">
     <DndContext sensors={sensors} collisionDetection={(args) => { if (!args.pointerCoordinates) return closestCenter(args); const bounds = trackRef.current?.getBoundingClientRect(); const { x, y } = args.pointerCoordinates; pointerRef.current = { x, y }; if (!bounds || x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom) return []; const collisions = pointerWithin(args); return collisions.length ? collisions : closestCenter(args); }} onDragStart={(event: DragStartEvent) => { pointerRef.current = null; setDropIndex(null); setDragId(String(event.active.id)); }} onDragMove={() => setDropIndex(indexAtPointer())} onDragCancel={() => { pointerRef.current = null; setDropIndex(null); setDragId(null); }} onDragEnd={dragEnd}>
       <div className="canvas-preview__workspace">
-        <aside className="canvas-preview__palette" aria-label="Intensity blocks"><h2>Intensity blocks</h2><p>Each starts at 10 min. Drag from anywhere on a tile into the chart, then set its time.</p><div>{zones.map((zone) => <IntensityPreset key={zone} zone={zone} onAdd={() => { const suppression = suppressPresetClick.current; if (suppression?.zone === zone && suppression.until > Date.now()) { suppressPresetClick.current = null; return; } insert(zone); }} />)}</div><p className="canvas-preview__palette-foot">Click a zone to add it at the end.</p></aside>
+        <aside className="canvas-preview__palette" aria-label="Intensity blocks"><h2>Intensity blocks</h2><p>Click to add at the end, or drag into the chart. Each block starts at 10 min.</p><div>{zones.map((zone) => <IntensityPreset key={zone} zone={zone} onAdd={() => { const suppression = suppressPresetClick.current; if (suppression?.zone === zone && suppression.until > Date.now()) { suppressPresetClick.current = null; return; } insert(zone); }} />)}</div></aside>
         <section className="canvas-preview__session canvas-preview__session--score" aria-label="Editable workout session">
-          <div className="canvas-preview__session-head"><div><h2>{draft.title}</h2><p>{formatDuration(metrics.durationSec)} · {blocks.length} blocks{copiesCount ? <span role="status"> · preview {formatDuration(previewSeconds)}</span> : null}</p></div><span>Unsaved draft</span></div>
-          <div className="canvas-preview__legend"><span><i className="zone-1" /> Easy / recovery</span><span><i className="zone-3" /> Steady</span><span><i className="zone-4" /> Hard</span><span>Width = time · Height = effort</span></div>
+          <div className="canvas-preview__session-head"><div><h2>Workout chart</h2><p>{formatDuration(metrics.durationSec)} · {activeBlocks.length} active block{activeBlocks.length === 1 ? '' : 's'}{blocks.length !== activeBlocks.length ? ` · ${blocks.length - activeBlocks.length} skipped` : ''}{copiesCount ? <span role="status"> · preview {formatDuration(previewSeconds)}</span> : null}</p></div><span>Unsaved draft</span></div>
+          <div className="canvas-preview__legend"><span>Width shows block time · Height shows effort{activeBlocks.length !== blocks.length ? ' · Skipped blocks are excluded from the total' : ''}</span></div>
           <SortableContext items={blocks.map((block) => block.clientId)} strategy={rectSortingStrategy}>
             <div className="canvas-preview__track" ref={trackRef} aria-label="Workout chart">
               {blocks.length ? <>{chartPieces.map(({ block, preview, key, previousSelectedZone, nextSelectedZone }) => <Fragment key={key}>{!preview && placementBlock && placementIndex === blocks.findIndex((item) => item.clientId === block.clientId) ? <ChartPlacement block={placementBlock} /> : null}{preview ? <ChartGhost block={block} /> : <ChartBar block={block} index={blocks.findIndex((item) => item.clientId === block.clientId)} selected={selectedIds.includes(block.clientId)} previousSelectedZone={previousSelectedZone} nextSelectedZone={nextSelectedZone} onSelect={(id, additive, range) => select(id, additive || multiSelect, range)} />}</Fragment>)}{placementBlock && placementIndex === blocks.length ? <ChartPlacement block={placementBlock} /> : null}</> : <>{placementBlock && placementIndex === 0 ? <ChartPlacement block={placementBlock} /> : null}<EmptyChartDrop /></>}
@@ -203,30 +206,37 @@ export function WorkoutCanvasEditor({ draft, onChange, performanceProfile, profi
             </div>
           </SortableContext>
           <div className="canvas-preview__ruler"><span>Start</span><span>{formatDuration(previewSeconds)} · Finish</span></div>
-          {active ? <BlockInspector className="canvas-preview__inspector--mobile" active={active} sport={draft.sport} onPatch={patch} performanceProfile={performanceProfile} profileLabel={profileLabel} /> : null}
-          <div className="canvas-preview__repeat"><div><strong>Repeat selected pattern</strong><span>{copiesCount ? `${repeatCount} times · ${formatDuration(previewSeconds)} preview` : 'Choose bars, then slide to preview repeats'}</span></div><label><span className="sr-only">Repeat count</span><input type="range" min="1" max="10" step="1" value={repeatCount} disabled={!selected.length} onChange={(event) => setRepeatCount(Number(event.target.value))} /><output>{repeatCount}×</output></label><button type="button" disabled={!copiesCount} onClick={repeat}>Apply repeats</button></div>
-          <div className="canvas-preview__actions" aria-label="Selected block actions"><strong>{selected.length ? `${selected.length} selected` : 'Click a bar to edit'}</strong><button type="button" aria-pressed={multiSelect} className={multiSelect ? 'is-active' : ''} onClick={() => setMultiSelect(!multiSelect)}>Select multiple</button><button type="button" disabled={!selected.length} onClick={() => move(-1)}><ArrowLeft size={14} /> Earlier</button><button type="button" disabled={!selected.length} onClick={() => move(1)}>Later <ArrowRight size={14} /></button><button type="button" disabled={!selected.length} onClick={copy}><Copy size={14} /> Add copy</button><button type="button" className="is-danger" disabled={!selected.length} onClick={remove}><Trash2 size={14} /> Delete</button></div>
-          <div className="canvas-preview__draft-tools"><button type="button" disabled={!history.length} onClick={undo}><Undo2 size={14} /> Undo</button><button type="button" disabled={!future.length} onClick={redo}><Redo2 size={14} /> Redo</button><span role="status">{notice}</span></div>
+          <div className="canvas-preview__selection-head"><span>{selected.length ? `${selected.length} block${selected.length === 1 ? '' : 's'} selected` : 'Select a bar to edit it; select several to build a pattern.'}</span><button type="button" aria-pressed={multiSelect} className={multiSelect ? 'is-active' : ''} onClick={() => setMultiSelect(!multiSelect)}>Select multiple</button></div>
+          {selected.length ? <>
+            <div className="canvas-preview__actions" aria-label="Selected block actions"><button type="button" disabled={!canMoveEarlier} onClick={() => move(-1)}><ArrowLeft size={14} /> Earlier</button><button type="button" disabled={!canMoveLater} onClick={() => move(1)}>Later <ArrowRight size={14} /></button><button type="button" onClick={copy}><Copy size={14} /> Duplicate selected</button><button type="button" className="is-danger" onClick={remove}><Trash2 size={14} /> Remove selected</button></div>
+          </> : null}
+          {active ? <BlockInspector className="canvas-preview__inspector--inline" active={active} sport={draft.sport} onPatch={patch} performanceProfile={performanceProfile} profileLabel={profileLabel} allowSkip={draft.mode !== 'create' || Boolean(draft.id) || active.skipped} /> : null}
+          {selected.length ? <>
+            <div className="canvas-preview__repeat"><div><strong>Repeat selected pattern</strong><span>{copiesCount ? `${repeatCount} times · ${formatDuration(previewSeconds)} preview` : 'Copies the selected bars after this pattern'}</span></div><label><span className="sr-only">Repeat count</span><input type="range" min="1" max="10" step="1" value={repeatCount} onChange={(event) => setRepeatCount(Number(event.target.value))} /><output>{repeatCount}×</output></label><button type="button" disabled={!copiesCount} onClick={repeat}>Apply repeats</button></div>
+          </> : null}
+          {history.length || future.length ? <div className="canvas-preview__draft-tools"><button type="button" disabled={!history.length} onClick={undo}><Undo2 size={14} /> Undo block edit</button><button type="button" disabled={!future.length} onClick={redo}><Redo2 size={14} /> Redo block edit</button></div> : null}
+          {notice ? <p className="canvas-preview__notice" role="status">{notice}</p> : null}
         </section>
-        <BlockInspector className="canvas-preview__inspector--desktop" active={active} sport={draft.sport} onPatch={patch} performanceProfile={performanceProfile} profileLabel={profileLabel} />
+        {active ? <BlockInspector className="canvas-preview__inspector--desktop" active={active} sport={draft.sport} onPatch={patch} performanceProfile={performanceProfile} profileLabel={profileLabel} allowSkip={draft.mode !== 'create' || Boolean(draft.id) || active.skipped} /> : null}
       </div>
       <DragOverlay dropAnimation={null}>{draggingZone && zones.includes(draggingZone) ? <div className={`canvas-preview__drag-tile ${dropIndex !== null ? 'is-over-chart' : ''}`}><PresetContent zone={draggingZone} /></div> : draggingBlock ? <div className="canvas-preview__drag-chart" style={{ '--zone': `var(--color-zone-${draggingBlock.zone})`, '--effort-height': `${24 + draggingBlock.zone * 15}%` } as CSSProperties}><span /></div> : null}</DragOverlay>
     </DndContext>
   </div>;
 }
 
-function BlockInspector({ className, active, sport, onPatch, performanceProfile, profileLabel }: {
+function BlockInspector({ className, active, sport, onPatch, performanceProfile, profileLabel, allowSkip }: {
   className: string;
   active: SessionEditorBlock | null;
   sport: string;
   onPatch: (id: string, patch: Partial<SessionEditorBlock>) => void;
   performanceProfile: PerformanceProfile | null;
   profileLabel: string;
+  allowSkip: boolean;
 }) {
   return <aside className={`canvas-preview__inspector ${className}`} aria-label="Block details">
     <h2>Block details</h2>
     <p>Select a bar to edit its effort, time, and targets.</p>
-    {active ? <BlockDetails key={active.clientId} block={active} sport={sport} onPatch={onPatch} performanceProfile={performanceProfile} profileLabel={profileLabel} /> : <p className="canvas-preview__hint">Click one bar in the chart to edit it.</p>}
+    {active ? <BlockDetails key={active.clientId} block={active} sport={sport} onPatch={onPatch} performanceProfile={performanceProfile} profileLabel={profileLabel} allowSkip={allowSkip} /> : <p className="canvas-preview__hint">Click one bar in the chart to edit it.</p>}
   </aside>;
 }
 
@@ -241,7 +251,7 @@ function PresetContent({ zone }: { zone: TempoZone }) {
 
 function ChartBar({ block, index, selected, previousSelectedZone, nextSelectedZone, onSelect }: { block: SessionEditorBlock; index: number; selected: boolean; previousSelectedZone: TempoZone | null; nextSelectedZone: TempoZone | null; onSelect: (id: string, additive: boolean, range: boolean) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.clientId });
-  return <div ref={setNodeRef} className={`canvas-preview__block ${selected ? 'is-selected' : ''} ${selected && previousSelectedZone === null ? 'is-selection-start' : ''} ${selected && nextSelectedZone === null ? 'is-selection-end' : ''} ${selected && previousSelectedZone !== null ? 'is-selection-continuation' : ''}`} style={{ '--zone': `var(--color-zone-${block.zone})`, '--effort-height': `${24 + block.zone * 15}%`, '--previous-effort-height': previousSelectedZone === null ? '0%' : `${24 + previousSelectedZone * 15}%`, flexGrow: effectiveSeconds(block), transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? .15 : block.skipped ? .35 : 1 } as CSSProperties}><button type="button" className="canvas-preview__bar" {...attributes} {...listeners} aria-pressed={selected} aria-label={`${selected ? 'Selected, ' : ''}${TEMPO_ZONE_META[block.zone].label} ${formatBlockKind(block.kind)}, ${formatDuration(effectiveSeconds(block))}. Block ${index + 1}. Click to inspect; drag to move.`} onClick={(event) => onSelect(block.clientId, event.ctrlKey || event.metaKey, event.shiftKey)}><span className="sr-only">{TEMPO_ZONE_META[block.zone].label} block</span></button></div>;
+  return <div ref={setNodeRef} className={`canvas-preview__block ${selected ? 'is-selected' : ''} ${block.skipped ? 'is-skipped' : ''} ${selected && previousSelectedZone === null ? 'is-selection-start' : ''} ${selected && nextSelectedZone === null ? 'is-selection-end' : ''} ${selected && previousSelectedZone !== null ? 'is-selection-continuation' : ''}`} style={{ '--zone': `var(--color-zone-${block.zone})`, '--effort-height': `${24 + block.zone * 15}%`, '--previous-effort-height': previousSelectedZone === null ? '0%' : `${24 + previousSelectedZone * 15}%`, flexGrow: effectiveSeconds(block), transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? .15 : 1 } as CSSProperties}><button type="button" className="canvas-preview__bar" {...attributes} {...listeners} aria-pressed={selected} aria-label={`${selected ? 'Selected, ' : ''}${block.skipped ? 'Skipped, excluded from workout time, ' : ''}${TEMPO_ZONE_META[block.zone].label} ${formatBlockKind(block.kind)}, ${formatDuration(effectiveSeconds(block))}. Block ${index + 1}. Click to inspect; drag to move.`} onClick={(event) => onSelect(block.clientId, event.ctrlKey || event.metaKey, event.shiftKey)}><span className="sr-only">{block.skipped ? 'Skipped ' : ''}{TEMPO_ZONE_META[block.zone].label} block</span>{block.skipped ? <span className="canvas-preview__skipped-label" aria-hidden="true">Skipped</span> : null}</button></div>;
 }
 
 function ChartPlacement({ block }: { block: VisualBlock }) {
@@ -254,7 +264,7 @@ function ChartGhost({ block }: { block: SessionEditorBlock }) {
 
 function EmptyChartDrop() {
   const { setNodeRef, isOver } = useDroppable({ id: emptyId });
-  return <div ref={setNodeRef} className={`canvas-preview__empty-chart ${isOver ? 'is-over' : ''}`}>Drag an intensity block here to start the workout.</div>;
+  return <div ref={setNodeRef} className={`canvas-preview__empty-chart ${isOver ? 'is-over' : ''}`}>Click a zone to add it, or drag one here to choose its position.</div>;
 }
 
 function EndDrop({ active }: { active: boolean }) {
@@ -262,12 +272,28 @@ function EndDrop({ active }: { active: boolean }) {
   return <div ref={setNodeRef} className={`canvas-preview__end ${active || isOver ? 'is-over' : ''}`} aria-hidden="true" />;
 }
 
-function BlockDetails({ block, sport, onPatch, performanceProfile, profileLabel }: { block: SessionEditorBlock; sport: string; onPatch: (id: string, patch: Partial<SessionEditorBlock>) => void; performanceProfile: PerformanceProfile | null; profileLabel: string }) {
+function BlockDetails({ block, sport, onPatch, performanceProfile, profileLabel, allowSkip }: { block: SessionEditorBlock; sport: string; onPatch: (id: string, patch: Partial<SessionEditorBlock>) => void; performanceProfile: PerformanceProfile | null; profileLabel: string; allowSkip: boolean }) {
   const minutes = block.durationSec / 60;
   const targetSummary = block.target ? formatWorkoutTarget(block.target) : 'No target';
   const resolved = block.target ? formatResolvedWorkoutTarget(block.target, performanceProfile) : null;
   const missing = block.target ? missingProfileAction(block.target) : null;
-  return <div className="canvas-preview__details"><div className="canvas-preview__inline"><strong>Edit {TEMPO_ZONE_META[block.zone].label} {formatBlockKind(block.kind)}</strong><label>Effort<select value={block.zone} onChange={(event) => onPatch(block.clientId, { zone: Number(event.target.value) as TempoZone })}>{zones.map((zone) => <option key={zone} value={zone}>Zone {zone} · {names[zone]}</option>)}</select></label><label className="canvas-preview__duration"><span>Duration <output>{formatDuration(block.durationSec)}</output></span><input type="range" aria-label="Duration in minutes" min="1" max="30" step="1" value={Math.min(30, Math.max(1, Math.round(minutes)))} onChange={(event) => onPatch(block.clientId, { durationSec: Number(event.target.value) * 60 })} /><span className="canvas-preview__slider-ends"><span>1 min</span><span>30 min</span></span></label></div>{minutes > 30 ? <p className="canvas-preview__legacy-note">This existing block is longer than 30 min. Move the slider to set a shorter duration, or copy blocks to build a longer effort.</p> : null}<details className="canvas-preview__advanced"><summary>More block details</summary><div><label>Exact duration (seconds)<ValidatedNumberInput min={1} max={1800} value={block.durationSec} onChange={(durationSec) => onPatch(block.clientId, { durationSec })} /></label><label>Repetitions<ValidatedNumberInput min={1} value={block.reps ?? 1} onChange={(reps) => onPatch(block.clientId, { reps })} /></label><label className="canvas-preview__skip"><input type="checkbox" checked={block.skipped} onChange={(event) => onPatch(block.clientId, { skipped: event.target.checked })} /> Skip this block</label><TargetFields sport={sport} target={block.target} onChange={(target) => onPatch(block.clientId, { target })} /><label>Coaching note<textarea value={block.note} onChange={(event) => onPatch(block.clientId, { note: event.target.value })} /></label><p>Target: {targetSummary}{resolved ? ` · ${resolved} using ${profileLabel}` : missing ? ` · ${missing}` : ''}</p></div></details></div>;
+  return <div className="canvas-preview__details">
+    <div className="canvas-preview__inline">
+      <strong>Edit {TEMPO_ZONE_META[block.zone].label} {formatBlockKind(block.kind)}</strong>
+      <label>Block type<select value={block.kind} onChange={(event) => onPatch(block.clientId, { kind: event.target.value as SessionEditorBlock['kind'] })}><option value="work">Work</option><option value="recovery">Recovery</option><option value="warmup">Warm-up</option><option value="cooldown">Cool-down</option></select></label>
+      <label>Effort<select value={block.zone} onChange={(event) => onPatch(block.clientId, { zone: Number(event.target.value) as TempoZone })}>{zones.map((zone) => <option key={zone} value={zone}>Zone {zone} · {names[zone]}</option>)}</select></label>
+      <label className="canvas-preview__duration"><span>Duration <output>{formatDuration(block.durationSec)}</output></span><input type="range" aria-label="Duration in minutes" min="1" max="30" step="1" value={Math.min(30, Math.max(1, Math.round(minutes)))} onChange={(event) => onPatch(block.clientId, { durationSec: Number(event.target.value) * 60 })} /><span className="canvas-preview__slider-ends"><span>1 min</span><span>30 min</span></span></label>
+    </div>
+    {minutes > 30 ? <p className="canvas-preview__legacy-note">This existing block is longer than 30 min. Move the slider to set a shorter duration, or copy blocks to build a longer effort.</p> : null}
+    <details className="canvas-preview__advanced"><summary>More block details</summary><div>
+      <label>Exact duration (seconds)<ValidatedNumberInput min={1} max={1800} value={block.durationSec} onChange={(durationSec) => onPatch(block.clientId, { durationSec })} /></label>
+      <label>Repetitions within this block<ValidatedNumberInput min={1} value={block.reps ?? 1} onChange={(reps) => onPatch(block.clientId, { reps })} /></label>
+      {allowSkip ? <label className="canvas-preview__skip"><input type="checkbox" checked={block.skipped} onChange={(event) => onPatch(block.clientId, { skipped: event.target.checked })} /> Skip this block (excluded from workout time)</label> : null}
+      <TargetFields sport={sport} target={block.target} onChange={(target) => onPatch(block.clientId, { target })} />
+      <label>Block note<textarea value={block.note} onChange={(event) => onPatch(block.clientId, { note: event.target.value })} /></label>
+      <p>Target: {targetSummary}{resolved ? ` · ${resolved} using ${profileLabel}` : missing ? ` · ${missing}` : ''}</p>
+    </div></details>
+  </div>;
 }
 
 function TargetFields({ sport, target, onChange }: { sport: string; target: WorkoutTarget | null; onChange: (target: WorkoutTarget | null) => void }) {

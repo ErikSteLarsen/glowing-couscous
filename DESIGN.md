@@ -450,6 +450,12 @@ centered reading-width panel and presents Continue as its only forward action;
 template and save controls appear with the detailed authoring workspace.
 After details are unlocked, Edit basics changes the existing summary row into
 inline name and sport fields without hiding or resetting the authoring workspace.
+The chart remains the primary authoring surface. Block details follow the chart
+when the available content width cannot support a readable side inspector;
+selection actions and pattern repeats appear only when blocks are selected.
+Block type and effort are separate fields. Skipped blocks remain identifiable in
+existing sessions and do not count toward active workout time. New reusable
+workouts require an active block before saving.
 
 ## Do's and Don'ts
 

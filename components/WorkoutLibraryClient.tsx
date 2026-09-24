@@ -139,6 +139,11 @@ export function WorkoutLibraryClient({
   }
 
   function saveWorkout() {
+    if (!draft.blocks.some((block) => !block.skipped)) {
+      setMessageTone('danger');
+      setMessage('Add at least one active block before saving this workout.');
+      return;
+    }
     const validationError = validateSessionEditorDraft(draft);
     if (validationError) {
       setMessageTone('danger');
@@ -318,20 +323,6 @@ export function WorkoutLibraryClient({
           </p>
         ) : null}
 
-        <WorkoutBuilder
-          key={`${draft.id ?? 'new'}:${draft.templateId ?? 'none'}`}
-          draft={draft}
-          onChange={(next) => {
-            setDraft((current) => ({ ...next, scheduledDate: null, planWeekday: null, mode: 'create', id: current.id }));
-            setIsDirty(true);
-          }}
-          showSportMetrics
-          summaryLabel="Notes (optional)"
-          summaryPlaceholder="What is this workout for?"
-          durationUnit="minutes"
-          performanceProfile={performanceProfile}
-          onDetailsVisibilityChange={setBuilderDetailsVisible}
-          />
         {builderDetailsVisible && templates.length > 0 ? (
           <details className="rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] px-3">
             <summary className={`flex min-h-11 cursor-pointer list-none items-center text-[13px] font-medium text-[var(--text-secondary)] ${buttonFocusClassName}`}>
@@ -346,12 +337,27 @@ export function WorkoutLibraryClient({
             </label>
           </details>
         ) : null}
+        <WorkoutBuilder
+          key={`${draft.id ?? 'new'}:${draft.templateId ?? 'none'}`}
+          draft={draft}
+          onChange={(next) => {
+            setDraft((current) => ({ ...next, scheduledDate: null, planWeekday: null, mode: 'create', id: current.id }));
+            setIsDirty(true);
+          }}
+          showSportMetrics
+          summaryLabel="Notes (optional)"
+          summaryPlaceholder="What is this workout for?"
+          durationUnit="minutes"
+          performanceProfile={performanceProfile}
+          onDetailsVisibilityChange={setBuilderDetailsVisible}
+          />
         {builderDetailsVisible ? <div className="sticky bottom-0 z-10 -mx-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3">
-          <button type="button" className={primaryButtonClassName} disabled={isPending || !draft.blocks.length} onClick={saveWorkout}>
+          <button type="button" className={primaryButtonClassName} disabled={isPending || !draft.blocks.some((block) => !block.skipped)} onClick={saveWorkout}>
             {isPending ? 'Saving…' : selectedWorkoutId ? 'Save changes' : 'Save workout'}
           </button>
-          {selectedWorkoutId ? <button type="button" className={dangerButtonClassName} disabled={isPending} onClick={deleteWorkout}>Delete workout</button> : null}
+          {!draft.blocks.some((block) => !block.skipped) ? <span className="text-xs text-[var(--text-secondary)]">Add an active block to save.</span> : null}
         </div> : null}
+        {builderDetailsVisible && selectedWorkoutId ? <div className="border-t border-[var(--border)] pt-4"><button type="button" className={dangerButtonClassName} disabled={isPending} onClick={deleteWorkout}>Delete workout from library</button></div> : null}
       </Surface> : null}
     </div>
   );

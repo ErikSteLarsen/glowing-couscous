@@ -72,7 +72,7 @@ test('workout authoring gates details behind basics and exposes direct block con
   assert.match(canvasSource, /aria-label="Block details"/);
   assert.match(canvasSource, /max="30"/);
   assert.match(canvasSource, /Apply repeats/);
-  assert.match(canvasSource, /Add copy/);
+  assert.match(canvasSource, /Duplicate selected/);
   assert.match(canvasSource, /className="canvas-preview__preset-button" \{\.\.\.attributes\} \{\.\.\.listeners\}/);
   assert.doesNotMatch(canvasSource, /<button[^>]*className="canvas-preview__preset-grip"/);
   assert.match(canvasSource, /<DragOverlay dropAnimation=\{null\}>/);
