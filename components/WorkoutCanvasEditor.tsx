@@ -207,16 +207,16 @@ export function WorkoutCanvasEditor({ draft, onChange, performanceProfile, profi
           </SortableContext>
           <div className="canvas-preview__ruler"><span>Start</span><span>{formatDuration(previewSeconds)} · Finish</span></div>
           <div className="canvas-preview__selection-toolbar">
-            <span>{selected.length ? `${selected.length} block${selected.length === 1 ? '' : 's'} selected` : 'Select a bar to edit it; select several to build a pattern.'}</span>
-            <div className="canvas-preview__actions" aria-label="Selected block actions">
+            <div className="canvas-preview__selection-context">
+              <span>{selected.length ? `${selected.length} block${selected.length === 1 ? '' : 's'} selected` : 'Select a bar to edit it; select several to build a pattern.'}</span>
               <button type="button" aria-pressed={multiSelect} className={multiSelect ? 'is-active' : ''} onClick={() => setMultiSelect(!multiSelect)}>Select multiple</button>
-              {selected.length ? <>
+            </div>
+            {selected.length ? <div className="canvas-preview__actions" aria-label="Selected block actions">
                 <button type="button" disabled={!canMoveEarlier} onClick={() => move(-1)}><ArrowLeft size={14} /> Earlier</button>
                 <button type="button" disabled={!canMoveLater} onClick={() => move(1)}>Later <ArrowRight size={14} /></button>
                 <button type="button" onClick={copy}><Copy size={14} /> Duplicate selected</button>
                 <button type="button" className="is-danger" onClick={remove}><Trash2 size={14} /> Remove selected</button>
-              </> : null}
-            </div>
+            </div> : null}
           </div>
           {active ? <BlockInspector className="canvas-preview__inspector--inline" active={active} sport={draft.sport} onPatch={patch} performanceProfile={performanceProfile} profileLabel={profileLabel} allowSkip={draft.mode !== 'create' || Boolean(draft.id) || active.skipped} /> : null}
           {selected.length ? <>
