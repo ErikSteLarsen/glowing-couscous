@@ -41,6 +41,9 @@ Coach-only authoring, roster management, requests, and multi-athlete planning ar
 
 - A `Session` is structured content made from ordered workout blocks.
 - Blocks provide sport, targets, duration, repetitions, notes, skipped state, and zone information.
+- New effort blocks use the selected zone's target preset. Profile-backed running pace starts at the midpoint of the user's editable zone range; Olympiatoppen heart-rate targets use the user's BPM range for that zone. Numeric adjustments can move effort into another zone, and choosing a zone resets its preset. Relative profile targets remain generic in stored workouts so each user resolves them against their own profile.
+- The performance profile stores maximum heart rate for Olympiatoppen I-1–I-5 boundaries and a recent running race distance/time to seed five editable pace ranges. Pace defaults use Tempo's race-speed bands, not Olympiatoppen-published pace bands; profile users can set the fastest and slowest min/km for each zone.
+- Short pause blocks sit between efforts or repeated sets. They count toward elapsed time but do not contribute training load.
 - Duration, training load, zones, and timelines are derived from structured blocks.
 - `Workouts` stores private reusable definitions without dates or assignments.
 - `Planner` places independent copies of reusable content onto selected athlete dates or training-plan weekdays. Workouts can target multiple dates; day, week, and month templates use exact cadence-length date ranges.
@@ -54,6 +57,7 @@ Coach-only authoring, roster management, requests, and multi-athlete planning ar
 - Coach and athlete workout libraries with a shared visual editor.
 - Coach planner, reusable training plans, templates, source-copy assignment, and athlete planner.
 - Athlete Home, Calendar, Workouts, Session, Live, Activity, Profile, and Settings surfaces.
+- Personal maximum-heart-rate and race-based pace zones that resolve in workout creation.
 - Planned session adjustments, actual outcome editing, baseline and actual comparison, and completion.
 - Public sanitized workout and template snapshots with explicit authenticated intake.
 

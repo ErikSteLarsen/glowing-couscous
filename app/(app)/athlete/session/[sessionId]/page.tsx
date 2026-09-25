@@ -6,7 +6,7 @@ import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
-import { formatDuration } from '@/lib/format-duration';
+import { formatDuration, formatDurationExact } from '@/lib/format-duration';
 import { getSessionOrigin, getSessionReturnTarget } from '@/lib/app-navigation';
 import { SessionDetailClient } from './SessionDetailClient';
 import { ShareLinkButton } from '@/components/ShareLinkButton';
@@ -98,7 +98,7 @@ export default async function AthleteSessionPage({
                   >
                     {block.label}
                   </span>
-                  <MetricText>{formatDuration(block.durationSec)}</MetricText>
+                  <MetricText>{formatDurationExact(block.durationSec)}</MetricText>
                   {block.reps ? <MetricText>{block.reps} reps</MetricText> : null}
                   {block.targetLabel ? <span className="text-[12px] text-[var(--text-secondary)]">{block.targetLabel}</span> : null}
                 </div>

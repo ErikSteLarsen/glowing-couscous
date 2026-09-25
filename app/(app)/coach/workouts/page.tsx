@@ -5,14 +5,16 @@ import { WorkoutLibraryClient } from '@/components/WorkoutLibraryClient';
 import { getCurrentUser } from '@/lib/auth-session';
 import { templateService } from '@/lib/template-service';
 import { workoutLibraryService } from '@/lib/workout-library-service';
+import { accountService } from '@/lib/account-service';
 
 export default async function CoachWorkoutsPage() {
   const user = await getCurrentUser();
   if (!user || user.role !== 'COACH') redirect('/login');
 
-  const [workouts, templates] = await Promise.all([
+  const [workouts, templates, account] = await Promise.all([
     workoutLibraryService.listForOwner('coach', user.id),
     templateService.listForOwner(user.id),
+    accountService.getAccount(user.id),
   ]);
 
   return (
@@ -26,6 +28,7 @@ export default async function CoachWorkoutsPage() {
         workouts={workouts}
         templates={templates}
         endpoint="/api/coach/workouts"
+        performanceProfile={account?.performanceProfile}
       />
     </PageShell>
   );

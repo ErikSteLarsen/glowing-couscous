@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireSignedInUser } from '@/lib/api-auth';
 import { accountService } from '@/lib/account-service';
 import { isJsonObject } from '@/lib/route-params';
+import { validatePerformanceProfile } from '@/lib/performance-profile';
 
 export async function PATCH(req: NextRequest) {
   const { user, error } = await requireSignedInUser();
@@ -17,6 +18,11 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
   const { name, overviewCards, performanceProfile } = body;
+
+  if (performanceProfile !== undefined) {
+    const profileError = validatePerformanceProfile(performanceProfile);
+    if (profileError) return NextResponse.json({ error: profileError }, { status: 400 });
+  }
 
   if (name !== undefined) {
     const trimmedName = String(name ?? '').trim();

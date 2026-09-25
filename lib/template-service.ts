@@ -1,20 +1,20 @@
 import { prisma } from './prisma.ts';
 import { SPORT_OPTIONS } from './sport.ts';
 import { getTemplateCadence, isTemplateCadence } from './template-cadence.ts';
-import { normalizeWorkoutTarget, serializeDecimal } from './workout-targets.ts';
+import { normalizeWorkoutTarget, serializeDecimal, type WorkoutTargetReference } from './workout-targets.ts';
 
 type TemplateServiceDeps = {
   db?: typeof prisma;
 };
 
 type NormalizedBlock = {
-  kind: 'warmup' | 'work' | 'recovery' | 'cooldown';
+  kind: 'warmup' | 'work' | 'recovery' | 'cooldown' | 'pause';
   zone: 1 | 2 | 3 | 4 | 5;
   durationSec: number;
   reps: number | null;
   targetType: 'power' | 'pace' | 'hr' | 'rpe' | null;
   targetMode: 'absolute' | 'relative';
-  targetReference: 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null;
+  targetReference: WorkoutTargetReference | null;
   targetLow: number | null;
   targetHigh: number | null;
   targetLowDecimal: string | null;
@@ -45,7 +45,7 @@ function normalizeBlocks(input: unknown): NormalizedBlock[] {
     const item = (block ?? {}) as Record<string, unknown>;
     const kindSource = typeof item.kind === 'string' ? item.kind : typeof item.blockType === 'string' ? mapLegacyBlockType(item.blockType) : 'work';
     const normalizedKind =
-      kindSource === 'warmup' || kindSource === 'work' || kindSource === 'recovery' || kindSource === 'cooldown'
+      kindSource === 'warmup' || kindSource === 'work' || kindSource === 'recovery' || kindSource === 'cooldown' || kindSource === 'pause'
         ? kindSource
         : 'work';
     const zone = Number(item.zone);
@@ -68,8 +68,8 @@ function normalizeBlocks(input: unknown): NormalizedBlock[] {
       targetType: target?.metric ?? null,
       targetMode: target?.mode ?? 'absolute',
       targetReference: target?.reference ?? null,
-      targetLow: target?.low ?? null,
-      targetHigh: target?.high ?? null,
+      targetLow: target ? Math.round(target.low) : null,
+      targetHigh: target ? Math.round(target.high) : null,
       targetLowDecimal: target ? serializeDecimal(target.low) : null,
       targetHighDecimal: target ? serializeDecimal(target.high) : null,
       note:

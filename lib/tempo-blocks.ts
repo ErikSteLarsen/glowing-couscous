@@ -7,7 +7,7 @@ export const TEMPO_ZONE_META = {
 } as const;
 
 export type TempoZone = keyof typeof TEMPO_ZONE_META;
-export type TempoBlockKind = 'warmup' | 'work' | 'recovery' | 'cooldown';
+export type TempoBlockKind = 'warmup' | 'work' | 'recovery' | 'cooldown' | 'pause';
 
 import type { WorkoutTarget } from './workout-targets.ts';
 

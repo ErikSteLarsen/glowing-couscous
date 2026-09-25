@@ -29,6 +29,7 @@ import {
 } from '@/lib/session-editor-adapters';
 import { getSportLabel } from '@/lib/sport';
 import { getTemplateCadence, TEMPLATE_CADENCES, templateCadenceMeta, type TemplateCadence } from '@/lib/template-cadence';
+import type { PerformanceProfile } from '@/lib/performance-profile';
 
 type TemplateRecord = {
   id: number;
@@ -61,11 +62,13 @@ export function CoachTemplatesClient({
   apiBasePath = '/api/coach/templates',
   plannerHref = '/coach/planner',
   role = 'COACH',
+  performanceProfile = null,
 }: {
   templates: TemplateRecord[];
   apiBasePath?: string;
   plannerHref?: string;
   role?: 'COACH' | 'ATHLETE';
+  performanceProfile?: PerformanceProfile | null;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -225,6 +228,7 @@ export function CoachTemplatesClient({
           <WorkoutBuilder
             draft={editorDraft}
             onChange={setEditorDraft}
+            performanceProfile={performanceProfile}
             titleLabel="Template name"
             summaryLabel="Template summary"
             summaryPlaceholder="What is this template for?"

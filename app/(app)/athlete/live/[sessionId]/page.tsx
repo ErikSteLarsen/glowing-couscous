@@ -5,7 +5,7 @@ import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
-import { formatDuration } from '@/lib/format-duration';
+import { formatDurationExact } from '@/lib/format-duration';
 import { getSessionOrigin } from '@/lib/app-navigation';
 import { LiveSessionClient } from './LiveSessionClient';
 
@@ -62,7 +62,7 @@ export default async function AthleteLivePage({
         <div className="space-y-4">
           <Surface>
             <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Session total</p>
-            <p className="mt-3 text-[20px] font-semibold text-[var(--text)]">{formatDuration(detail.session.durationSec)}</p>
+            <p className="mt-3 text-[20px] font-semibold text-[var(--text)]">{formatDurationExact(detail.session.durationSec)}</p>
             <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{detail.session.blocks.length} blocks</p>
           </Surface>
           <Surface>

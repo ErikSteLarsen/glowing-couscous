@@ -443,19 +443,34 @@ remain available. Do not make drag-and-drop the only way to edit block order.
 New workout creation is progressive: name and sport are confirmed before the
 library, sequence, and inspector appear. Presets expose a visible Add action as
 well as drag behavior, the sequence exposes its drop target, and selecting a
-block reveals direct intensity, duration, repetition, target, note, and adjacent
-recovery controls. Every `SessionBlockBar` maps zone to segment height and time
-to width, including the full-size authoring timeline. The basics step uses a
+block reveals direct intensity and duration controls, an action to edit its
+target range in a focused dialog, and adjacent recovery controls. Repeats are
+created from the selected chart pattern rather than a per-block repetition
+field. Every `SessionBlockBar` maps zone to segment height and time to width,
+including the full-size authoring timeline. The basics step uses a
 centered reading-width panel and presents Continue as its only forward action;
 template and save controls appear with the detailed authoring workspace.
 After details are unlocked, Edit basics changes the existing summary row into
 inline name and sport fields without hiding or resetting the authoring workspace.
 The chart remains the primary authoring surface. Block details follow the chart
 when the available content width cannot support a readable side inspector;
-selection actions and pattern repeats appear only when blocks are selected.
+selection, selected-block actions, and history controls share a compact toolbar
+beside the Workout chart title where space allows. History starts the toolbar
+as quiet icon buttons, followed by a 40px square selected-count badge and the
+selection control. Block actions use a soft group surface; at narrow widths the
+groups wrap without divider lines. Selected-block actions and pattern
+repeats appear only when blocks are selected. The workout
+library shows unsaved status in its Create/Edit workout header, not inside the
+chart.
 Block type and effort are separate fields. Skipped blocks remain identifiable in
 existing sessions and do not count toward active workout time. New reusable
 workouts require an active block before saving.
+
+Profile uses the shared field controls for heart-rate maximum, race result, and
+per-zone running paces. Show the calculated Olympiatoppen heart-rate BPM bands
+beside HRmax, and make race-derived pace defaults directly editable as fastest
+and slowest `m:ss /km` values. Workout blocks show the selected zone's resolved
+target and keep other target systems out of that block's readout.
 
 ## Do's and Don'ts
 
@@ -492,6 +507,8 @@ workouts require an active block before saving.
   `app/globals.css` already expresses the state.
 
 ## Interaction Feedback Contract
+
+In the workout editor, chart bar height follows the block's numeric target within its zone. Adjacent values within one zone should be distinguishable; a pause remains a short visible mark above the baseline. Keep session-wide target configuration beside the sport selector and individual adjustments immediately below the block's zone selector. Resolve profile pace bounds and HRmax percentages for the current user, and expose only the current block's relevant pace or heart-rate target in its inspector and spoken chart label.
 
 Functional repairs must preserve or improve usability. Prefer simpler flows and
 visual feedback at the affected block, session, or calendar date. Keep the

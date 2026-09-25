@@ -1,5 +1,6 @@
 import { SPORT_OPTIONS } from './sport.ts';
 import type { TempoBlock, TempoBlockKind, TempoZone } from './tempo-blocks.ts';
+import { isProfilePaceZoneReference, type WorkoutTargetReference } from './workout-targets.ts';
 
 export type PlannerTargetType = 'power' | 'pace' | 'hr' | 'rpe';
 
@@ -20,7 +21,7 @@ export type PlannerBlockDraft = {
   reps: number | null;
   targetType: PlannerTargetType | null;
   targetMode: 'absolute' | 'relative';
-  targetReference: 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null;
+  targetReference: WorkoutTargetReference | null;
   targetLow: number | null;
   targetHigh: number | null;
   targetLowDecimal: string | null;
@@ -320,7 +321,7 @@ export function validatePlannerSessionDraft(draft: PlannerSessionDraft) {
 }
 
 function normalizeKind(input: unknown): TempoBlockKind {
-  return input === 'warmup' || input === 'work' || input === 'recovery' || input === 'cooldown'
+  return input === 'warmup' || input === 'work' || input === 'recovery' || input === 'cooldown' || input === 'pause'
     ? input
     : 'work';
 }
@@ -335,7 +336,7 @@ function normalizeTargetType(input: unknown): PlannerTargetType | null {
 }
 
 function normalizeTargetReference(input: unknown): PlannerBlockDraft['targetReference'] {
-  return input === 'ftp' || input === 'threshold-pace' || input === 'css' || input === 'threshold-hr' ? input : null;
+  return input === 'ftp' || input === 'threshold-pace' || input === 'css' || input === 'threshold-hr' || input === 'max-hr' || input === 'profile-pace' || isProfilePaceZoneReference(input) ? input as WorkoutTargetReference : null;
 }
 
 function normalizePositiveInt(input: unknown, fallback: number) {

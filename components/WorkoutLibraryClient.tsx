@@ -23,7 +23,7 @@ import { WorkoutBuilder } from '@/components/WorkoutBuilder';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { ShareLinkButton } from '@/components/ShareLinkButton';
-import { formatDuration } from '@/lib/format-duration';
+import { formatDurationExact } from '@/lib/format-duration';
 import {
   createEmptySessionEditorDraft,
   createSessionEditorDraftFromPersisted,
@@ -139,7 +139,7 @@ export function WorkoutLibraryClient({
   }
 
   function saveWorkout() {
-    if (!draft.blocks.some((block) => !block.skipped)) {
+    if (!draft.blocks.some((block) => !block.skipped && block.kind !== 'pause')) {
       setMessageTone('danger');
       setMessage('Add at least one active block before saving this workout.');
       return;
@@ -276,7 +276,7 @@ export function WorkoutLibraryClient({
                     <div className="mt-3 space-y-2">
                       <SessionBlockBar segments={workoutMetrics.segments} compact />
                       <div className="flex gap-3 text-[12px] text-[var(--text-secondary)]">
-                        <MetricText>{formatDuration(workoutMetrics.durationSec)}</MetricText>
+                        <MetricText>{formatDurationExact(workoutMetrics.durationSec)}</MetricText>
                         <MetricText>{workoutMetrics.tss} TSS</MetricText>
                       </div>
                     </div>
@@ -291,9 +291,9 @@ export function WorkoutLibraryClient({
 
       {editorOpen ? <Surface className="min-w-0 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-3">
-          <h2 className="min-w-0 text-lg font-semibold text-[var(--text)]">{selectedWorkoutId ? 'Edit workout' : 'Create workout'}</h2>
+          <div className="flex min-w-0 flex-wrap items-center gap-3"><h2 className="min-w-0 text-lg font-semibold text-[var(--text)]">{selectedWorkoutId ? 'Edit workout' : 'Create workout'}</h2>{!selectedWorkoutId || isDirty ? <span className="inline-flex min-h-8 items-center rounded-[3px] border border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] px-3 text-xs font-semibold text-[var(--status-warning)]" role="status">{isPending ? 'Saving…' : selectedWorkoutId ? 'Unsaved changes' : 'Unsaved draft'}</span> : null}</div>
           <div className="flex items-center gap-2">
-            <Badge tone="brand">{formatDuration(metrics.durationSec)}</Badge>
+            <Badge tone="brand">{formatDurationExact(metrics.durationSec)}</Badge>
             <button type="button" className={compactSecondaryButtonClassName} disabled={isPending} onClick={() => requestDraftAction({ kind: 'close' })}>
               Back to library
             </button>
@@ -350,12 +350,13 @@ export function WorkoutLibraryClient({
           durationUnit="minutes"
           performanceProfile={performanceProfile}
           onDetailsVisibilityChange={setBuilderDetailsVisible}
+          showCanvasDraftStatus={false}
           />
         {builderDetailsVisible ? <div className="sticky bottom-0 z-10 -mx-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3">
-          <button type="button" className={primaryButtonClassName} disabled={isPending || !draft.blocks.some((block) => !block.skipped)} onClick={saveWorkout}>
+          <button type="button" className={primaryButtonClassName} disabled={isPending || !draft.blocks.some((block) => !block.skipped && block.kind !== 'pause')} onClick={saveWorkout}>
             {isPending ? 'Saving…' : selectedWorkoutId ? 'Save changes' : 'Save workout'}
           </button>
-          {!draft.blocks.some((block) => !block.skipped) ? <span className="text-xs text-[var(--text-secondary)]">Add an active block to save.</span> : null}
+          {!draft.blocks.some((block) => !block.skipped && block.kind !== 'pause') ? <span className="text-xs text-[var(--text-secondary)]">Add an active block to save.</span> : null}
         </div> : null}
         {builderDetailsVisible && selectedWorkoutId ? <div className="border-t border-[var(--border)] pt-4"><button type="button" className={dangerButtonClassName} disabled={isPending} onClick={deleteWorkout}>Delete workout from library</button></div> : null}
       </Surface> : null}

@@ -140,7 +140,7 @@ export function ShareLandingClient({
                     </div>
                     {block.target ? (
                       <p className="mt-3 text-[12px] text-[var(--text-secondary)]">
-                        Target: {formatWorkoutTarget(block.target)}
+                        Target: {formatWorkoutTarget(block.target, projection.sport)}
                       </p>
                     ) : null}
                   </div>

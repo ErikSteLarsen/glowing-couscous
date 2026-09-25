@@ -3,6 +3,7 @@ import { prisma } from './prisma.ts';
 import { getWeekDays } from './week.ts';
 import { deriveSessionMetrics } from './session-math.ts';
 import { parseActivitySegments } from './activity-metrics.ts';
+import type { WorkoutTargetReference } from './workout-targets.ts';
 
 type CoachServiceDeps = {
   db?: typeof prisma;
@@ -40,7 +41,7 @@ type SessionRecord = {
 function mapSessionSummary(session: SessionRecord) {
   const metrics = deriveSessionMetrics(
     session.blocks.map((block) => ({
-      kind: block.kind as 'warmup' | 'work' | 'recovery' | 'cooldown',
+      kind: block.kind as 'warmup' | 'work' | 'recovery' | 'cooldown' | 'pause',
       zone: block.zone as 1 | 2 | 3 | 4 | 5,
       durationSec: block.durationSec,
       reps: block.reps,
@@ -49,7 +50,7 @@ function mapSessionSummary(session: SessionRecord) {
           ? {
               metric: block.targetType as 'power' | 'pace' | 'hr' | 'rpe',
               mode: block.targetMode === 'relative' ? 'relative' : 'absolute',
-              reference: block.targetReference as 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null,
+              reference: block.targetReference as WorkoutTargetReference | null,
               low: block.targetLow,
               high: block.targetHigh,
             }

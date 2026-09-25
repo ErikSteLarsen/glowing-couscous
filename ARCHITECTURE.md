@@ -88,8 +88,8 @@ navigation.
 | Templates | `lib/template-service.ts` | Coach-owned reusable templates and cadence |
 | Assignment | `lib/assignment-service.ts` | Snapshot copies, lineage, deduplication, and training-plan assignment |
 | Session compatibility | `lib/planner-service.ts` | Older coach session mutation adapter; transitional only |
-| Workout content | `lib/session-editor.ts`, `lib/session-editor-adapters.ts`, `lib/workout-editor.ts`, `lib/workout-blocks.ts` | Canonical drafts, editor modes, block normalization, and persistence shaping |
-| Targets and metrics | `lib/workout-targets.ts`, `lib/workout-target-resolution.ts`, `lib/performance-profile.ts`, `lib/session-math.ts`, `lib/tempo-blocks.ts` | Relative target catalogs, profile resolution, derived metrics, and timeline segments |
+| Workout content | `lib/session-editor.ts`, `lib/session-editor-adapters.ts`, `lib/workout-editor.ts`, `lib/workout-blocks.ts`, `lib/workout-pattern.ts` | Canonical drafts, editor modes, block normalization, pattern and pause insertion, and persistence shaping |
+| Targets and metrics | `lib/workout-targets.ts`, `lib/workout-target-resolution.ts`, `lib/workout-zone-intensity.ts`, `lib/profile-training-zones.ts`, `lib/performance-profile.ts`, `lib/account-service.ts`, `lib/session-math.ts`, `lib/tempo-blocks.ts` | Relative target catalogs, profile-backed zone calculations and persistence, zone presets and classification, derived metrics, and timeline segments |
 | Session outcomes | `lib/athlete-completion-service.ts`, `lib/session-snapshot-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/session-comparison-service.ts` | Completion, baseline/actual snapshots, planned edits, and comparison reads |
 | Sharing | `lib/share-link.ts`, `lib/share-link-service.ts` | Sanitized snapshots, opaque tokens, public lookup, and explicit recipient copies |
 
@@ -100,9 +100,12 @@ navigation.
 `Assignment`, `TrainingPlanAssignment`, and `ShareLink`.
 
 - `User.role` controls access. It is nullable only before first-login setup.
+- `User.performanceProfileJson` is read and written through `lib/account-service.ts`. It stores maximum heart rate, sport thresholds, a running race result, and optional per-zone pace overrides; normalization retains existing version 1 values.
 - `User.coachId` represents the accepted coach-athlete relationship.
 - `Session` can be an athlete assignment, a coach library source, or a training-plan child. A standalone library session has no date, `Plan`, or `TrainingPlan`.
 - `Block` is the structured source for workout content and derived metrics.
+- `Block.kind = pause` represents a seconds-based rest between efforts. It contributes elapsed duration but no zone distribution or training load; the shared pattern helper inserts it only between blocks or repeated sets.
+- The workout editor's zone presets live in `lib/workout-zone-intensity.ts`. `lib/profile-training-zones.ts` mirrors Olympiatoppen's HRmax calculator for I-1–I-5 and seeds five editable pace bands from average race speed. `max-hr` and `profile-pace-zone-N` block references remain generic in stored workouts and sanitized shares; resolve them against the current user's profile in the workout/session UI. Fine adjustments can reclassify a block's zone. Existing targets change only when their relative profile reference is resolved or a user edits/reapplies a preset.
 - `Assignment` and `TrainingPlanAssignment` record source-copy lineage and prevent duplicates.
 - `Activity` stores completion outcomes and the latest actual snapshot. Planned session data stores the latest coach baseline snapshot.
 - `ShareLink` stores a token hash and one sanitized snapshot tied to either a `Session` or `Template`; the raw token is never persisted.
@@ -113,11 +116,12 @@ navigation.
 2. Find and extend the existing owning service before adding Prisma logic to a route or page.
 3. Keep Workouts unscheduled. Date and week assignment belongs to Planner or `assignment-service`.
 4. Use the canonical session editor and shared block components for new workout authoring.
-5. Keep completed sessions immutable through planner paths. Completion/reopen behavior belongs to `athlete-completion-service`.
-6. Keep source-copy behavior in `assignment-service`; copied sessions are independent snapshots.
-7. Keep baseline and actual payloads behind `session-snapshot-service`; do not derive history from mutable current blocks.
-8. Keep public sharing sanitized and explicit. Never include Activity, actual/baseline JSON, private notes, RPE, ownership, or relationship data.
-9. Treat `lib/planner-service.ts` and `/api/coach/sessions/[sessionId]` as compatibility code, not a new extension point.
+5. Read and write personal training metrics through `account-service`; keep profile-derived workout targets as relative profile references so copied content resolves per user.
+6. Keep completed sessions immutable through planner paths. Completion/reopen behavior belongs to `athlete-completion-service`.
+7. Keep source-copy behavior in `assignment-service`; copied sessions are independent snapshots.
+8. Keep baseline and actual payloads behind `session-snapshot-service`; do not derive history from mutable current blocks.
+9. Keep public sharing sanitized and explicit. Never include Activity, actual/baseline JSON, private notes, RPE, ownership, or relationship data.
+10. Treat `lib/planner-service.ts` and `/api/coach/sessions/[sessionId]` as compatibility code, not a new extension point.
 
 ## Known Gaps
 

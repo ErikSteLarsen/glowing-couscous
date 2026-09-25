@@ -349,6 +349,7 @@ export function validateSessionEditorDraft(draft: SessionEditorDraft): string | 
     return 'Plan weekday must be an integer from 1 through 7.';
   }
   if (draft.blocks.length === 0) return 'At least one block is required.';
+  if (!draft.blocks.some((block) => block.kind !== 'pause' && !block.skipped)) return 'Add an active workout block before saving.';
 
   for (const block of draft.blocks) {
     if (!Number.isInteger(block.durationSec) || block.durationSec <= 0) {
@@ -356,6 +357,9 @@ export function validateSessionEditorDraft(draft: SessionEditorDraft): string | 
     }
     if (block.reps !== null && (!Number.isInteger(block.reps) || block.reps <= 0)) {
       return 'Repetitions must be a positive integer when provided.';
+    }
+    if (block.kind === 'pause' && (block.target !== null || block.reps !== null)) {
+      return 'Pause blocks cannot have a training target or repetitions.';
     }
     if (block.target !== null) {
       const targetError = validateWorkoutTarget(block.target, draft.sport);
@@ -509,7 +513,7 @@ function normalizeMode(input: unknown): SessionEditorMode {
 }
 
 function normalizeKind(input: unknown): TempoBlockKind {
-  return input === 'warmup' || input === 'work' || input === 'recovery' || input === 'cooldown' ? input : 'work';
+  return input === 'warmup' || input === 'work' || input === 'recovery' || input === 'cooldown' || input === 'pause' ? input : 'work';
 }
 
 function normalizeZone(input: unknown): TempoZone {

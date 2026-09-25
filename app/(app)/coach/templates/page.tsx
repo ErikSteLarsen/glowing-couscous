@@ -2,13 +2,17 @@ import { redirect } from 'next/navigation';
 import { PageShell, TopBar } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth-session';
 import { templateService } from '@/lib/template-service';
+import { accountService } from '@/lib/account-service';
 import { CoachTemplatesClient } from './CoachTemplatesClient';
 
 export default async function CoachTemplatesPage() {
   const user = await getCurrentUser();
   if (!user || user.role !== 'COACH') redirect('/login');
 
-  const templates = await templateService.listForCoach(user.id);
+  const [templates, account] = await Promise.all([
+    templateService.listForCoach(user.id),
+    accountService.getAccount(user.id),
+  ]);
 
   return (
     <PageShell>
@@ -16,7 +20,7 @@ export default async function CoachTemplatesPage() {
         title="Templates"
         description="Build reusable day, week, and month training templates."
       />
-       <CoachTemplatesClient templates={templates} role="COACH" />
+        <CoachTemplatesClient templates={templates} role="COACH" performanceProfile={account?.performanceProfile} />
     </PageShell>
   );
 }

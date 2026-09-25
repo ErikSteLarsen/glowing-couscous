@@ -62,8 +62,8 @@ test('workout authoring gates details behind basics and exposes direct block con
   assert.match(builderSource, /Continue to workout details/);
   assert.match(builderSource, /max-w-\[46rem\]/);
   assert.match(builderSource, /onDetailsVisibilityChange/);
-  assert.match(builderSource, /aria-label="Edit workout basics"/);
-  assert.match(builderSource, /setBasicsEditing\(true\)/);
+  assert.match(builderSource, /aria-label=\{basicsEditing \? 'Finish editing workout name'/);
+  assert.match(builderSource, /setBasicsEditing\(!basicsEditing\)/);
   assert.match(builderSource, /<WorkoutCanvasEditor/);
   assert.match(canvasSource, /createSessionEditorBlock/);
   assert.match(canvasSource, /updateSessionEditorBlock/);
@@ -72,6 +72,12 @@ test('workout authoring gates details behind basics and exposes direct block con
   assert.match(canvasSource, /aria-label="Block details"/);
   assert.match(canvasSource, /max="30"/);
   assert.match(canvasSource, /Apply repeats/);
+  assert.match(canvasSource, /Pause between sets/);
+  assert.match(canvasSource, /Add before/);
+  assert.match(canvasSource, /Add after/);
+  assert.match(canvasSource, /canvas-preview__target-trigger/);
+  assert.match(canvasSource, /blockTargetDialogRef/);
+  assert.doesNotMatch(canvasSource, /More block details|canvas-preview__advanced/);
   assert.match(canvasSource, /Duplicate selected/);
   assert.match(canvasSource, /className="canvas-preview__preset-button" \{\.\.\.attributes\} \{\.\.\.listeners\}/);
   assert.doesNotMatch(canvasSource, /<button[^>]*className="canvas-preview__preset-grip"/);

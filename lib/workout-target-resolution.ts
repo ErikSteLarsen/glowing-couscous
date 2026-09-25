@@ -1,44 +1,70 @@
 import type { PerformanceProfile } from './performance-profile.ts';
-import type { WorkoutTarget } from './workout-targets.ts';
+import { isProfilePaceZoneReference, profilePaceZoneFromReference, type WorkoutTarget } from './workout-targets.ts';
+import { getRunningPaceZones } from './profile-training-zones.ts';
 
 export type ResolvedWorkoutTarget = { low: number; high: number; unit: 'W' | 'bpm' | 'pace' };
 
-export function resolveWorkoutTarget(target: WorkoutTarget, profile: PerformanceProfile | null | undefined): ResolvedWorkoutTarget | null {
+export function resolveWorkoutTarget(target: WorkoutTarget, profile: PerformanceProfile | null | undefined, sport?: string): ResolvedWorkoutTarget | null {
   if (target.metric === 'rpe') return null;
   if (target.mode === 'absolute') return { low: target.low, high: target.high, unit: target.metric === 'power' ? 'W' : target.metric === 'hr' ? 'bpm' : 'pace' };
   if (!profile) return null;
   if (target.reference === 'ftp' && profile.cycling.ftpWatts) return scaled(target, profile.cycling.ftpWatts, 'W');
+  if (target.reference === 'max-hr' && profile.heartRateMaxBpm) {
+    const low = target.low <= 55
+      ? Math.floor(profile.heartRateMaxBpm * target.low / 100)
+      : Math.floor(profile.heartRateMaxBpm * target.low / 100) + 1;
+    const high = target.high >= 100
+      ? profile.heartRateMaxBpm
+      : Math.floor(profile.heartRateMaxBpm * target.high / 100);
+    return { low, high, unit: 'bpm' };
+  }
   if (target.reference === 'threshold-hr') {
-    const value = profile.cycling.thresholdHrBpm ?? profile.running.thresholdHrBpm ?? profile.swimming.thresholdHrBpm;
+    const value = sport === 'BIKING' ? profile.cycling.thresholdHrBpm : sport === 'RUNNING' ? profile.running.thresholdHrBpm : sport === 'SWIMMING' ? profile.swimming.thresholdHrBpm : profile.cycling.thresholdHrBpm ?? profile.running.thresholdHrBpm ?? profile.swimming.thresholdHrBpm;
     return value ? scaled(target, value, 'bpm') : null;
   }
-  if (target.reference === 'threshold-pace' && profile.running.thresholdPaceSecPerKm) return paceScaled(target, profile.running.thresholdPaceSecPerKm);
+  if (isProfilePaceZoneReference(target.reference) && sport === 'RUNNING') {
+    const zone = profilePaceZoneFromReference(target.reference);
+    const range = zone ? getRunningPaceZones(profile)[zone] : null;
+    if (!range) return null;
+    const paceAtPosition = (position: number) => range.slowestSecPerKm - (range.slowestSecPerKm - range.fastestSecPerKm) * position / 100;
+    return { low: Math.round(paceAtPosition(target.high)), high: Math.round(paceAtPosition(target.low)), unit: 'pace' };
+  }
+  if (target.reference === 'threshold-pace') {
+    const value = profile.running.thresholdPaceSecPerKm ?? (profile.running.raceDistanceMeters && profile.running.raceTimeSec ? Math.round(profile.running.raceTimeSec * 1000 / profile.running.raceDistanceMeters) : null);
+    if (value) return paceScaled(target, value);
+  }
   if (target.reference === 'css' && profile.swimming.cssSecPer100m) return paceScaled(target, profile.swimming.cssSecPer100m);
   return null;
 }
 
-export function formatWorkoutTarget(target: WorkoutTarget): string {
-  const range = `${formatNumber(target.low)}-${formatNumber(target.high)}`;
+export function formatWorkoutTarget(target: WorkoutTarget, sport?: string): string {
+  const range = target.metric === 'pace' && target.mode === 'absolute'
+    ? `${formatPace(target.low)}${target.low === target.high ? '' : `-${formatPace(target.high)}`}`
+    : target.low === target.high ? formatNumber(target.low) : `${formatNumber(target.low)}-${formatNumber(target.high)}`;
   if (target.metric === 'rpe') return `RPE ${range}`;
   if (target.mode === 'relative') {
-    const reference = target.reference === 'ftp' ? 'FTP' : target.reference === 'threshold-pace' ? 'threshold speed' : target.reference === 'css' ? 'CSS' : 'threshold HR';
+    const profileZone = profilePaceZoneFromReference(target.reference);
+    const reference = target.reference === 'ftp' ? 'FTP' : target.reference === 'threshold-pace' ? 'threshold speed' : profileZone ? `Zone ${profileZone} profile pace` : target.reference === 'profile-pace' ? 'profile pace zones' : target.reference === 'css' ? 'CSS' : target.reference === 'max-hr' ? 'Olympiatoppen HRmax' : 'threshold HR';
     return `${range}% ${reference}`;
   }
-  return `${range} ${target.metric === 'power' ? 'W' : target.metric === 'hr' ? 'bpm' : 'pace'}`;
+  if (target.metric === 'pace') return `${range} ${sport === 'SWIMMING' ? '/100 m' : '/km'}`;
+  return `${range} ${target.metric === 'power' ? 'W' : 'bpm'}`;
 }
 
-export function formatResolvedWorkoutTarget(target: WorkoutTarget, profile: PerformanceProfile | null | undefined): string | null {
-  const resolved = resolveWorkoutTarget(target, profile);
+export function formatResolvedWorkoutTarget(target: WorkoutTarget, profile: PerformanceProfile | null | undefined, sport?: string): string | null {
+  const resolved = resolveWorkoutTarget(target, profile, sport);
   if (!resolved) return null;
-  if (resolved.unit === 'pace') return `${formatPace(resolved.low)}-${formatPace(resolved.high)}${target.reference === 'css' ? ' /100 m' : ' /km'}`;
-  return `${formatNumber(resolved.low)}-${formatNumber(resolved.high)} ${resolved.unit}`;
+  if (resolved.unit === 'pace') return `${formatPace(resolved.low)}${resolved.low === resolved.high ? '' : `-${formatPace(resolved.high)}`}${target.reference === 'css' ? ' /100 m' : ' /km'}`;
+  return `${formatNumber(resolved.low)}${resolved.low === resolved.high ? '' : `-${formatNumber(resolved.high)}`} ${resolved.unit}`;
 }
 
 export function missingProfileAction(target: WorkoutTarget): string | null {
   if (target.mode !== 'relative') return null;
   if (target.reference === 'ftp') return 'Add FTP to preview watts.';
   if (target.reference === 'threshold-pace') return 'Add threshold pace to preview pace.';
+  if (target.reference === 'profile-pace' || isProfilePaceZoneReference(target.reference)) return 'Add a race result or pace ranges in Profile to preview your running zones.';
   if (target.reference === 'css') return 'Add CSS to preview pace.';
+  if (target.reference === 'max-hr') return 'Add maximum heart rate in Profile to preview Olympiatoppen zones.';
   return 'Add threshold HR to preview bpm.';
 }
 

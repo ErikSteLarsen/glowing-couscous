@@ -8,15 +8,17 @@ export function deriveSessionMetrics(blocks: TempoBlock[]) {
 
   let rawTss = 0;
   const segments = expandedBlocks.map((block) => {
-    zoneDistributionSec[block.zone - 1] += block.durationSec;
     const zoneMeta = getTempoZoneMeta(block.zone);
-    rawTss += (block.durationSec / 3600) * zoneMeta.factor * zoneMeta.factor * 100;
+    if (block.kind !== 'pause') {
+      zoneDistributionSec[block.zone - 1] += block.durationSec;
+      rawTss += (block.durationSec / 3600) * zoneMeta.factor * zoneMeta.factor * 100;
+    }
 
     return {
        key: block.key,
       zone: block.zone,
       durationSec: block.durationSec,
-      label: `${zoneMeta.label} ${zoneMeta.name}`,
+      label: block.kind === 'pause' ? 'Pause' : `${zoneMeta.label} ${zoneMeta.name}`,
       color: zoneMeta.solid,
       tint: zoneMeta.tint,
     };

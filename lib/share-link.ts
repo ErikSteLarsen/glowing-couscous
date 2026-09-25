@@ -14,7 +14,7 @@ export const SHARE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43,128}$/;
 export type ShareLinkAction = 'planner' | 'template';
 
 export type SharedWorkoutBlock = {
-  kind: 'warmup' | 'work' | 'recovery' | 'cooldown';
+  kind: 'warmup' | 'work' | 'recovery' | 'cooldown' | 'pause';
   zone: 1 | 2 | 3 | 4 | 5;
   durationSec: number;
   reps: number | null;
@@ -183,7 +183,7 @@ function isValidSharedWorkoutBlocks(input: unknown): input is SharedWorkoutBlock
     if (!block || typeof block !== 'object') return false;
     const value = block as Record<string, unknown>;
     if (
-      !['warmup', 'work', 'recovery', 'cooldown'].includes(String(value.kind)) ||
+      !['warmup', 'work', 'recovery', 'cooldown', 'pause'].includes(String(value.kind)) ||
       !Number.isSafeInteger(value.zone) ||
       Number(value.zone) < 1 ||
       Number(value.zone) > 5 ||

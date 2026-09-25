@@ -8,3 +8,10 @@ export function formatDuration(durationSec: number) {
 
   return `${minutes}m`;
 }
+
+export function formatDurationExact(durationSec: number) {
+  const hours = Math.floor(durationSec / 3600);
+  const minutes = Math.floor((durationSec % 3600) / 60);
+  const seconds = durationSec % 60;
+  return [hours ? `${hours}h` : '', minutes ? `${minutes}m` : '', seconds || (!hours && !minutes) ? `${seconds}s` : ''].filter(Boolean).join(' ');
+}

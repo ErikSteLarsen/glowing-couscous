@@ -2,7 +2,8 @@ import type { SportType } from './sport.ts';
 
 export type WorkoutTargetMetric = 'power' | 'pace' | 'hr' | 'rpe';
 export type WorkoutTargetMode = 'absolute' | 'relative';
-export type WorkoutTargetReference = 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr';
+export type ProfilePaceZoneReference = 'profile-pace-zone-1' | 'profile-pace-zone-2' | 'profile-pace-zone-3' | 'profile-pace-zone-4' | 'profile-pace-zone-5';
+export type WorkoutTargetReference = 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | 'max-hr' | 'profile-pace' | ProfilePaceZoneReference;
 
 export type WorkoutTarget = {
   metric: WorkoutTargetMetric;
@@ -24,9 +25,9 @@ export function getAvailableWorkoutTargets(sport: string): Array<{
     { metric: 'rpe', mode: 'absolute', reference: null, label: 'RPE' },
   ];
   if (sport === 'BIKING') options.push({ metric: 'power', mode: 'absolute', reference: null, label: 'Watts' }, { metric: 'power', mode: 'relative', reference: 'ftp', label: '% FTP' });
-  if (sport === 'RUNNING') options.push({ metric: 'pace', mode: 'absolute', reference: null, label: 'Pace' }, { metric: 'pace', mode: 'relative', reference: 'threshold-pace', label: '% threshold speed' });
+  if (sport === 'RUNNING') options.push({ metric: 'pace', mode: 'absolute', reference: null, label: 'Pace' }, { metric: 'pace', mode: 'relative', reference: 'threshold-pace', label: '% threshold speed' }, { metric: 'pace', mode: 'relative', reference: 'profile-pace', label: 'Your profile pace zones' });
   if (sport === 'SWIMMING') options.push({ metric: 'pace', mode: 'absolute', reference: null, label: 'Pace /100 m' }, { metric: 'pace', mode: 'relative', reference: 'css', label: '% CSS' });
-  if (enduranceSports.includes(sport as SportType)) options.push({ metric: 'hr', mode: 'absolute', reference: null, label: 'Heart rate' }, { metric: 'hr', mode: 'relative', reference: 'threshold-hr', label: '% threshold HR' });
+  if (enduranceSports.includes(sport as SportType)) options.push({ metric: 'hr', mode: 'absolute', reference: null, label: 'Heart rate' }, { metric: 'hr', mode: 'relative', reference: 'threshold-hr', label: '% threshold HR' }, { metric: 'hr', mode: 'relative', reference: 'max-hr', label: 'Olympiatoppen HRmax zones' });
   return options;
 }
 
@@ -54,7 +55,10 @@ export function validateWorkoutTarget(target: WorkoutTarget, sport?: string): st
   } else if (!target.reference) {
     return 'Relative targets need a reference.';
   }
-  if (sport && target.mode === 'relative' && !getAvailableWorkoutTargets(sport).some((option) => option.metric === target.metric && option.mode === target.mode && option.reference === target.reference)) {
+  if (isProfilePaceZoneReference(target.reference) && (target.metric !== 'pace' || target.mode !== 'relative' || (sport && sport !== 'RUNNING'))) {
+    return 'Profile pace zones are only valid for relative running targets.';
+  }
+  if (sport && target.mode === 'relative' && !isProfilePaceZoneReference(target.reference) && !getAvailableWorkoutTargets(sport).some((option) => option.metric === target.metric && option.mode === target.mode && option.reference === target.reference)) {
     return 'This target is not available for the selected sport.';
   }
   return null;
@@ -75,4 +79,21 @@ function decimalNumber(input: unknown): number | null {
 
 function isMetric(input: unknown): input is WorkoutTargetMetric { return input === 'power' || input === 'pace' || input === 'hr' || input === 'rpe'; }
 function isMode(input: unknown): input is WorkoutTargetMode { return input === 'absolute' || input === 'relative'; }
-function isReference(input: unknown): input is WorkoutTargetReference { return input === 'ftp' || input === 'threshold-pace' || input === 'css' || input === 'threshold-hr'; }
+function isReference(input: unknown): input is WorkoutTargetReference { return input === 'ftp' || input === 'threshold-pace' || input === 'css' || input === 'threshold-hr' || input === 'max-hr' || input === 'profile-pace' || isProfilePaceZoneReference(input); }
+
+export function profilePaceZoneReference(zone: number): WorkoutTargetReference | null {
+  return zone >= 1 && zone <= 5 ? `profile-pace-zone-${zone}` as WorkoutTargetReference : null;
+}
+
+export function profilePaceZoneFromReference(reference: WorkoutTargetReference | null | undefined): 1 | 2 | 3 | 4 | 5 | null {
+  const match = typeof reference === 'string' ? reference.match(/^profile-pace-zone-([1-5])$/) : null;
+  return match ? Number(match[1]) as 1 | 2 | 3 | 4 | 5 : null;
+}
+
+export function isProfilePaceZoneReference(reference: unknown): reference is ProfilePaceZoneReference {
+  return typeof reference === 'string' && /^profile-pace-zone-[1-5]$/.test(reference);
+}
+
+export function targetOptionReference(reference: WorkoutTargetReference | null): WorkoutTargetReference | null {
+  return isProfilePaceZoneReference(reference) ? 'profile-pace' : reference;
+}

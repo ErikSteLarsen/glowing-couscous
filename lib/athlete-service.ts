@@ -5,6 +5,7 @@ import { deriveSessionMetrics } from './session-math.ts';
 import { getTempoZoneMeta } from './tempo-blocks.ts';
 import { parseActivitySegments } from './activity-metrics.ts';
 import { createSessionEditorDraftFromPersisted } from './session-editor.ts';
+import type { WorkoutTargetReference } from './workout-targets.ts';
 
 type AthleteServiceDeps = {
   db?: typeof prisma;
@@ -48,7 +49,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
   }) {
     const metrics = deriveSessionMetrics(
       session.blocks.filter((block) => !block.skipped).map((block) => ({
-        kind: block.kind as 'warmup' | 'work' | 'recovery' | 'cooldown',
+        kind: block.kind as 'warmup' | 'work' | 'recovery' | 'cooldown' | 'pause',
         zone: block.zone as 1 | 2 | 3 | 4 | 5,
         durationSec: block.durationSec,
         reps: block.reps,
@@ -57,7 +58,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
             ? {
                 metric: block.targetType as 'power' | 'pace' | 'hr' | 'rpe',
                 mode: block.targetMode === 'relative' ? 'relative' : 'absolute',
-                reference: block.targetReference as 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null,
+                reference: block.targetReference as WorkoutTargetReference | null,
                 low: block.targetLow,
                 high: block.targetHigh,
               }
@@ -494,7 +495,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
             const meta = getTempoZoneMeta(block.zone as 1 | 2 | 3 | 4 | 5);
             return {
               id: block.id,
-              label: `${meta.label} ${meta.name}`,
+              label: block.kind === 'pause' ? 'Pause' : `${meta.label} ${meta.name}`,
               kind: block.kind,
               zone: block.zone,
               durationSec: block.durationSec,

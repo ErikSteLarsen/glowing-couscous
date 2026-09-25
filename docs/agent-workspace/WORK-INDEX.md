@@ -28,7 +28,7 @@ secondary; preserve their behavior and shared ownership boundaries.
 | PLAN-001 | Personal planning and secondary coach planning | shipped | components/PlannerDesk.tsx, lib/coach-planner-service.ts, lib/athlete-planner-service.ts, lib/assignment-service.ts | /coach/planner, /athlete/planner |
 | `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | `/coach/workouts`, `/athlete/workouts` |
 | `TEMPLATE-001` | Templates and training plans | `in-progress` | `lib/template-service.ts`, `lib/coach-training-plan-service.ts` | `/coach/templates`, `/athlete/templates` |
-| SESSION-001 | Canonical editor and outcomes | shipped | lib/session-editor.ts, lib/workout-canvas-drop.ts, components/WorkoutBuilder.tsx, components/WorkoutCanvasEditor.tsx, lib/session-snapshot-service.ts, lib/athlete-completion-service.ts | Session detail, workout canvas, outcome APIs |
+| SESSION-001 | Canonical editor and outcomes | in-progress | lib/session-editor.ts, lib/workout-canvas-drop.ts, lib/workout-pattern.ts, lib/workout-zone-intensity.ts, lib/profile-training-zones.ts, lib/performance-profile.ts, lib/account-service.ts, components/WorkoutBuilder.tsx, components/WorkoutCanvasEditor.tsx, lib/session-snapshot-service.ts, lib/athlete-completion-service.ts | Profile, session detail, workout canvas, outcome APIs; profile-backed zones and target adjustments |
 | `SHARE-001` | Sanitized workout sharing | `in-progress` | `lib/share-link.ts`, `lib/share-link-service.ts` | `/share/[token]`, share APIs |
 | `COMPAT-001` | Older coach session adapter | `transitional` | `lib/planner-service.ts` | `/api/coach/sessions/[sessionId]` |
 
@@ -60,6 +60,9 @@ styles:
 | Visual experiments | `app/design/*`, `components/design/*` | Preview only; never copy their tokens into product screens without an explicit system decision |
 
 ## Active Tasks
+
+- `2026-09-25-target-intensity-adjustments.md` - zone presets, target adjustments, and responsive verification.
+
 
 - `2026-09-15-workout-flow-previews.md` - three interactive workout authoring direction previews; routes live under `/design/workout-flow/*`.
 - `2026-09-15-workbench-middle-experiments.md` - three Workbench middle-surface experiments; routes live under `/design/workout-flow/workbench/{terrain,ribbon,staging}`.

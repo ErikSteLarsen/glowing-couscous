@@ -19,11 +19,12 @@ import {
   restartExecution,
   type ExecutionState,
 } from '@/lib/athlete-execution';
-import { formatDuration } from '@/lib/format-duration';
+import { formatDurationExact } from '@/lib/format-duration';
 
 type LiveBlock = {
   id: number;
   label: string;
+  kind: string;
   durationSec: number;
   targetLabel: string | null;
   note: string | null;
@@ -68,8 +69,8 @@ export function LiveSessionClient({ sessionId, blocks }: { sessionId: number; bl
       <Stepper
         items={blocks.map((block, index) => ({
           id: block.id,
-          title: `${block.label} · ${formatDuration(block.durationSec)}`,
-          detail: [block.targetLabel, block.note].filter(Boolean).join(' · ') || 'Stay smooth and controlled.',
+          title: `${block.label} · ${formatDurationExact(block.durationSec)}`,
+          detail: [block.targetLabel, block.note].filter(Boolean).join(' · ') || (block.kind === 'pause' ? 'Rest before the next block.' : 'Stay smooth and controlled.'),
           active: index === state.currentIndex && !complete,
           done: state.completed[index],
         }))}

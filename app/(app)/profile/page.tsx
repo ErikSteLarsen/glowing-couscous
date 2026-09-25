@@ -15,7 +15,7 @@ export default async function ProfilePage() {
     <PageShell>
       <TopBar
         title={account.name ?? 'Your profile'}
-        description="Update your name and training metrics."
+        description="Set personal heart-rate and running pace zones, alongside your training metrics."
       />
       <ProfileClient account={account} />
     </PageShell>

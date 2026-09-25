@@ -69,6 +69,34 @@ test('workout library saves a source-owned standalone session', async () => {
   assert.equal(createdData?.date, null);
 });
 
+test('workout library preserves relative zone precision beside the integer compatibility values', async () => {
+  let blockData: Record<string, unknown> | undefined;
+  const service = createWorkoutLibraryService({
+    db: {
+      session: {
+        async create(args: { data: { blocks: { create: Array<Record<string, unknown>> } } }) {
+          blockData = args.data.blocks.create[0];
+          return { id: 14 };
+        },
+      },
+    } as never,
+  });
+
+  await service.saveForOwner('athlete', 7, {
+    ...validDraft,
+    blocks: [{
+      ...validDraft.blocks[0],
+      target: { metric: 'pace', mode: 'relative', reference: 'profile-pace-zone-1', low: 64.94, high: 75 },
+    }],
+  });
+
+  assert.equal(blockData?.targetReference, 'profile-pace-zone-1');
+  assert.equal(blockData?.targetLow, 65);
+  assert.equal(blockData?.targetHigh, 75);
+  assert.equal(blockData?.targetLowDecimal, '64.94');
+  assert.equal(blockData?.targetHighDecimal, '75');
+});
+
 test('workout library rejects a template owned by another user', async () => {
   let created = false;
   const service = createWorkoutLibraryService({

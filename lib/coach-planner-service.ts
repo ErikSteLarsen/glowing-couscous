@@ -7,6 +7,7 @@ import {
   type PlannerSessionDraft,
 } from './planner-draft.ts';
 import { createSessionSnapshotJson } from './session-snapshot-service.ts';
+import type { WorkoutTargetReference } from './workout-targets.ts';
 
 type CoachPlannerDeps = {
   db?: typeof prisma;
@@ -92,7 +93,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
             reps: block.reps,
             target:
               block.targetType && block.targetLow !== null && block.targetHigh !== null
-                 ? { metric: toTargetType(block.targetType), mode: block.targetMode === 'relative' ? 'relative' : 'absolute', reference: block.targetReference as 'ftp' | 'threshold-pace' | 'css' | 'threshold-hr' | null, low: Number(block.targetLowDecimal ?? block.targetLow), high: Number(block.targetHighDecimal ?? block.targetHigh) }
+                 ? { metric: toTargetType(block.targetType), mode: block.targetMode === 'relative' ? 'relative' : 'absolute', reference: block.targetReference as WorkoutTargetReference | null, low: Number(block.targetLowDecimal ?? block.targetLow), high: Number(block.targetHighDecimal ?? block.targetHigh) }
                : null,
           })),
         );
@@ -236,8 +237,8 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
         targetType: block.targetType,
         targetMode: block.targetMode,
         targetReference: block.targetReference,
-        targetLow: block.targetLow,
-        targetHigh: block.targetHigh,
+         targetLow: block.targetLow === null ? null : Math.round(block.targetLow),
+         targetHigh: block.targetHigh === null ? null : Math.round(block.targetHigh),
         targetLowDecimal: block.targetLowDecimal,
         targetHighDecimal: block.targetHighDecimal,
         note: block.note,
@@ -360,7 +361,7 @@ function parseReferenceDate(input?: string) {
 }
 
 function toTempoKind(input: string) {
-  return input === 'warmup' || input === 'work' || input === 'recovery' || input === 'cooldown' ? input : 'work';
+  return input === 'warmup' || input === 'work' || input === 'recovery' || input === 'cooldown' || input === 'pause' ? input : 'work';
 }
 
 function toTempoZone(input: number) {
