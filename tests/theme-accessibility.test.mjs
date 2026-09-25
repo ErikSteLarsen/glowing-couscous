@@ -81,9 +81,10 @@ test('input-heavy app screens reuse shared form field helpers', async () => {
   const sessionDetailSource = await read('app/(app)/athlete/session/[sessionId]/SessionDetailClient.tsx');
   const coachTemplatesSource = await read('app/(app)/coach/templates/CoachTemplatesClient.tsx');
 
-  for (const source of [profileSource, findCoachSource, sessionDetailSource, coachTemplatesSource]) {
+  for (const source of [profileSource, findCoachSource, coachTemplatesSource]) {
     assert.match(source, /form(Field|Textarea|Select)ClassName/);
   }
+  assert.doesNotMatch(sessionDetailSource, /form(Field|Textarea|Select)ClassName|<input|<textarea|WorkoutBuilder/);
 });
 
 test('high-impact dialogs and execution controls expose complete accessible state', async () => {

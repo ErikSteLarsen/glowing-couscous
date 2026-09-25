@@ -73,7 +73,8 @@ test('Workouts is a standalone library destination and session detail keeps its 
   assert.match(calendarPageSource, /from=calendar/);
   assert.match(profileMenuSource, /isProfileActionActive/);
   assert.match(profileMenuSource, /aria-current=\{isActive \? 'page' : undefined\}/);
-  assert.match(workoutsClientSource, /const \[editorOpen, setEditorOpen\] = useState\(false\)/);
+  assert.match(workoutsClientSource, /const \[editorOpen, setEditorOpen\] = useState\(\(\) => initialWorkout !== null\)/);
+  assert.match(workoutsPageSource, /initialWorkoutId=\{initialWorkoutId\}/);
   assert.match(workoutsClientSource, /if \(editorOpen && isDirty\)/);
   assert.match(workoutsClientSource, /Discard unsaved changes\?/);
   assert.match(workoutsClientSource, /Keep editing/);

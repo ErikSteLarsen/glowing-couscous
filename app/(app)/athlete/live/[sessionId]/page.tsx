@@ -1,12 +1,11 @@
 import { notFound, redirect } from 'next/navigation';
-import { format, startOfWeek } from 'date-fns';
-import { ActionLink, EmptyState, PageShell, Surface, TopBar } from '@/components/ui';
-import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { format } from 'date-fns';
+import { ActionLink, EmptyState, PageShell, TopBar } from '@/components/ui';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
-import { formatDurationExact } from '@/lib/format-duration';
 import { getSessionOrigin } from '@/lib/app-navigation';
+import { getSportLabel } from '@/lib/sport';
 import { LiveSessionClient } from './LiveSessionClient';
 
 export default async function AthleteLivePage({
@@ -38,41 +37,29 @@ export default async function AthleteLivePage({
   }
 
   const sessionOrigin = getSessionOrigin(from);
+  const sessionHref = `/athlete/session/${detail.session.id}?from=${sessionOrigin}`;
 
   return (
     <PageShell>
       <TopBar
-        title={`Execute ${detail.session.title}`}
-        actions={<ActionLink href={`/athlete/session/${detail.session.id}?from=${sessionOrigin}`} tone="secondary">Back to session</ActionLink>}
+        title={detail.session.title}
+        actions={<ActionLink href={sessionHref} tone="secondary">Back to session</ActionLink>}
       />
 
-      <div className="page-content--standard flex flex-wrap items-center gap-3 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">
-        <span>Week of {format(startOfWeek(detail.session.date, { weekStartsOn: 1 }), 'd MMM')}</span>
-        <span aria-hidden="true">·</span>
+      <div className="page-content--standard flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">
         <span>{format(detail.session.date, 'EEE d MMM · HH:mm')}</span>
+        <span aria-hidden="true">·</span>
+        <span>{getSportLabel(detail.session.sport)}</span>
         <StatusBadge status={detail.session.status} />
       </div>
 
-      <div className="page-content--standard grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <Surface className="space-y-4">
-          <SessionBlockBar segments={detail.session.segments} />
-          <LiveSessionClient sessionId={detail.session.id} blocks={detail.session.blocks} />
-        </Surface>
-
-        <div className="space-y-4">
-          <Surface>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Session total</p>
-            <p className="mt-3 text-[20px] font-semibold text-[var(--text)]">{formatDurationExact(detail.session.durationSec)}</p>
-            <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{detail.session.blocks.length} blocks</p>
-          </Surface>
-          <Surface>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Coach cue</p>
-            <p className="mt-3 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
-              Follow targets and steps.
-            </p>
-          </Surface>
-        </div>
-      </div>
+      <LiveSessionClient
+        sessionId={detail.session.id}
+        sessionHref={sessionHref}
+        blocks={detail.session.blocks}
+        initialNotes={detail.session.notes}
+        alreadyCompleted={detail.session.status === 'completed'}
+      />
     </PageShell>
   );
 }

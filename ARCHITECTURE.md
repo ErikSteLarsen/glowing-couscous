@@ -50,8 +50,8 @@ one-time account creation flow directly.
 - `/athlete/workouts` - owner-scoped unscheduled workout library
 - `/athlete/planner` - private month-first multi-date Planning Desk
 - `/athlete/templates` - athlete reusable content surface
-- `/athlete/session/[sessionId]` - session detail and planned/actual editing
-- `/athlete/live/[sessionId]` - local block execution stepper
+- `/athlete/session/[sessionId]` - read-only scheduled-session score and outcome review
+- `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion
 - `/athlete/activity` - completion history
 - `/athlete/find-coach` - coach discovery and requests
 - `/athlete/profile`, `/profile` - profile surfaces and compatibility alias

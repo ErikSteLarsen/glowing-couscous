@@ -208,7 +208,7 @@ test('athlete planned-edit route stays a thin authenticated transport adapter', 
   assert.match(source, /athleteSessionAdjustmentService\.savePlannedSession/);
 });
 
-test('athlete session detail exposes the shared editor and schedule adjustment controls', async () => {
+test('athlete session detail is read-only and links to live execution and its reusable source', async () => {
   const client = await readFile(
     path.join(process.cwd(), 'app/(app)/athlete/session/[sessionId]/SessionDetailClient.tsx'),
     'utf8',
@@ -218,9 +218,10 @@ test('athlete session detail exposes the shared editor and schedule adjustment c
     'utf8',
   );
 
-  assert.match(client, /WorkoutBuilder/);
-  assert.match(client, /Adjust planned session/);
-  assert.match(client, /showSchedule/);
-  assert.match(client, /\/api\/athlete\/sessions\/\$\{sessionId\}/);
-  assert.match(page, /initialDraft/);
+  assert.doesNotMatch(client, /WorkoutBuilder|Adjust planned session|showSchedule|\/actual/);
+  assert.match(client, /SessionComparisonDialog/);
+  assert.match(page, /SessionPlanCanvas/);
+  assert.match(page, /Read-only scheduled copy/);
+  assert.match(page, /Start live/);
+  assert.match(page, /sourceWorkout/);
 });

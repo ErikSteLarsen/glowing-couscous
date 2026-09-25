@@ -4,7 +4,6 @@ import { prisma } from './prisma.ts';
 import { deriveSessionMetrics } from './session-math.ts';
 import { getTempoZoneMeta } from './tempo-blocks.ts';
 import { parseActivitySegments } from './activity-metrics.ts';
-import { createSessionEditorDraftFromPersisted } from './session-editor.ts';
 import type { WorkoutTargetReference } from './workout-targets.ts';
 
 type AthleteServiceDeps = {
@@ -468,6 +467,24 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
             orderBy: { sortOrder: 'asc' },
           },
           activity: true,
+          assignments: {
+            where: { athleteId: userId },
+            take: 1,
+            include: {
+              sourceSession: {
+                select: {
+                  id: true,
+                  title: true,
+                  athleteId: true,
+                  coachOwnerId: true,
+                  date: true,
+                  planId: true,
+                  trainingPlanId: true,
+                  activity: { select: { id: true } },
+                },
+              },
+            },
+          },
         },
       });
 
@@ -476,6 +493,16 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       }
 
       const summary = mapSessionSummary({ ...session, date: session.date });
+      const sourceWorkout = session.assignments[0]?.sourceSession;
+      const editableSourceWorkout = sourceWorkout
+        && sourceWorkout.athleteId === userId
+        && sourceWorkout.coachOwnerId === null
+        && sourceWorkout.date === null
+        && sourceWorkout.planId === null
+        && sourceWorkout.trainingPlanId === null
+        && sourceWorkout.activity === null
+        ? { id: sourceWorkout.id, title: sourceWorkout.title }
+        : null;
 
       return {
         athlete: {
@@ -485,12 +512,8 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         coachName: session.athlete.coach?.name ?? null,
         session: {
           ...summary,
-          notes: session.activity?.notes ?? '',
-          editor: createSessionEditorDraftFromPersisted(session.activity ? 'actual' : 'planned', {
-            ...session,
-            scheduledDate: session.date,
-            blocks: session.blocks,
-          }),
+          notes: session.activity?.notes ?? session.athleteNotes ?? '',
+          sourceWorkout: editableSourceWorkout,
           blocks: session.blocks.map((block) => {
             const meta = getTempoZoneMeta(block.zone as 1 | 2 | 3 | 4 | 5);
             return {
@@ -503,12 +526,14 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
               targetLabel:
                 block.targetType && block.targetLow !== null && block.targetHigh !== null
                   ? `${block.targetLow}-${block.targetHigh} ${
-                      block.targetType === 'power'
-                        ? 'W'
-                        : block.targetType === 'hr'
-                          ? 'bpm'
+                    block.targetType === 'power'
+                      ? 'W'
+                      : block.targetType === 'hr'
+                        ? 'bpm'
+                        : block.targetType === 'rpe'
+                          ? 'RPE'
                           : 'pace'
-              }`
+                  }`
                   : null,
               note: block.note,
               skipped: block.skipped,

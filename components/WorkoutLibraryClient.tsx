@@ -62,24 +62,29 @@ export function WorkoutLibraryClient({
   templates,
   endpoint,
   performanceProfile = null,
+  initialWorkoutId = null,
 }: {
   role: 'COACH' | 'ATHLETE';
   workouts: WorkoutRecord[];
   templates: PlannerEditorTemplateRecord[];
   endpoint: string;
   performanceProfile?: PerformanceProfile | null;
+  initialWorkoutId?: number | null;
 }) {
   const router = useRouter();
+  const initialWorkout = initialWorkoutId === null ? null : workouts.find((workout) => workout.id === initialWorkoutId) ?? null;
   const [isPending, startTransition] = useTransition();
   const [filterText, setFilterText] = useState('');
-  const [selectedWorkoutId, setSelectedWorkoutId] = useState<number | null>(null);
-  const [editorOpen, setEditorOpen] = useState(false);
+  const [selectedWorkoutId, setSelectedWorkoutId] = useState<number | null>(() => initialWorkout?.id ?? null);
+  const [editorOpen, setEditorOpen] = useState(() => initialWorkout !== null);
   const [isDirty, setIsDirty] = useState(false);
   const [pendingDraftAction, setPendingDraftAction] = useState<PendingDraftAction | null>(null);
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
-  const [draft, setDraft] = useState<SessionEditorDraft>(() => createNewDraft());
-  const [builderDetailsVisible, setBuilderDetailsVisible] = useState(false);
+  const [draft, setDraft] = useState<SessionEditorDraft>(() => initialWorkout
+    ? createSessionEditorDraftFromPersisted('create', { ...initialWorkout, date: null, scheduledDate: null })
+    : createNewDraft());
+  const [builderDetailsVisible, setBuilderDetailsVisible] = useState(() => initialWorkout !== null);
 
   const visibleWorkouts = useMemo(() => {
     const query = filterText.trim().toLowerCase();
@@ -98,6 +103,7 @@ export function WorkoutLibraryClient({
       setSelectedWorkoutId(action.workout.id);
       setDraft(createSessionEditorDraftFromPersisted('create', { ...action.workout, date: null, scheduledDate: null }));
       setEditorOpen(true);
+      if (initialWorkoutId !== null) router.replace(`/athlete/workouts?edit=${action.workout.id}`, { scroll: false });
     } else if (action.kind === 'template') {
       setSelectedWorkoutId(null);
       setDraft(createTemplateEditorDraftFromRecord(action.template));
@@ -106,6 +112,7 @@ export function WorkoutLibraryClient({
       setSelectedWorkoutId(null);
       setDraft(createNewDraft());
       setEditorOpen(false);
+      if (initialWorkoutId !== null) router.replace('/athlete/workouts', { scroll: false });
     }
     setIsDirty(false);
     setBuilderDetailsVisible(action.kind === 'workout' || action.kind === 'template');

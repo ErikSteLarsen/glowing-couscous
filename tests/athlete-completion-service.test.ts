@@ -253,7 +253,7 @@ test('actual correction permits the roster coach, rejects unrelated coaches, and
   });
 });
 
-test('actual outcome route adapters keep role guards and use the shared save command', async () => {
+test('actual outcome routes keep role guards while session detail stays read-only', async () => {
   const athleteRoute = await readFile(
     path.join(process.cwd(), 'app/api/athlete/sessions/[sessionId]/actual/route.ts'),
     'utf8',
@@ -271,7 +271,6 @@ test('actual outcome route adapters keep role guards and use the shared save com
   assert.match(athleteRoute, /saveActualOutcome/);
   assert.match(coachRoute, /requireCoach/);
   assert.match(coachRoute, /saveActualOutcome/);
-  assert.match(detailClient, /Correct completed outcome/);
-  assert.match(detailClient, /\/actual/);
-  assert.match(detailClient, /WorkoutBuilder/);
+  assert.match(detailClient, /SessionComparisonDialog/);
+  assert.doesNotMatch(detailClient, /Correct completed outcome|\/actual|WorkoutBuilder/);
 });
