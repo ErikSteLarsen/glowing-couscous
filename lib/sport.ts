@@ -12,5 +12,6 @@ export const sportLabels: Record<SportType, string> = {
 };
 
 export function getSportLabel(sportType: string) {
+  if (sportType === 'OTHER') return 'Other';
   return sportLabels[sportType as SportType] ?? sportType;
 }

@@ -294,6 +294,16 @@ and Planner retain the full available frame width. None of these content
 measures moves the page heading or outer content anchor. Authentication
 uses the separate `AuthPageShell` reading-width frame.
 
+### Return Navigation
+
+Pages and nested editing states with a clear parent use the shared 40px
+icon-only `BackControl`. At page level, `TopBar` places its left arrow inline
+immediately before the title so the control adds no header row. Its accessible
+name and hover hint identify the destination; navigation uses an explicit
+parent URL and preserves relevant entry context. Main destinations reachable
+from workspace navigation do not repeat a back control. Nested editors place
+the same control beside their local heading and preserve any draft safeguards.
+
 Planner adapts to the actual page container: below 900px its source, calendar,
 and selection panels stack; from 900px the source and selection share a 240px
 rail alongside the calendar; from 1400px they flank it in three columns. The
@@ -426,9 +436,23 @@ for contextual return and execution controls.
   and week surfaces. `default` includes metrics and the timeline, `compact`
   preserves essential context for a week wall, and `month` shows only what a
   month grid can support.
+- Planner month cells preview one session on a single row, with a short
+  zone-colored swatch beside its title. The swatch color represents the rounded,
+  duration-weighted average intensity zone; pause time is excluded. Below
+  600px container width they show counts instead. Other month calendar rows
+  keep their title-only summary.
+- Current dates use a tinted full-day surface, an inset brand frame, and a
+  filled date marker across Home, Calendar, and Planning Desk. Hover remains a
+  separate neutral state, and day selection keeps its own check treatment.
 - `SessionBlockBar` uses duration-proportional segments. On card and compact
   variants, segment height maps to Zone 1 through Zone 5 and color identifies
   the zone. Its accessible label carries the same information in text.
+- `ActivityMetricBars` keeps recorded heart rate, pace/speed, power, cadence,
+  temperature, elevation, and grade in a bar-based visual language. Time-based
+  metrics use one-minute buckets (five minutes for temperature); terrain uses
+  50 m distance buckets and widens only to cap a long chart. Pace uses taller
+  bars for faster intervals. Each chart has average/range context and an
+  expandable interval table so the graph is not the only way to read values.
 - `StatusBadge` shows planned, adjusted, or missed text states. Completed work
   does not need a repeated completed badge.
 - `MetricText` provides tabular numerals. `Stepper` owns ordered live execution

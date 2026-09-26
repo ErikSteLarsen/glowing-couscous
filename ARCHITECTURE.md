@@ -71,6 +71,7 @@ navigation.
 - `/api/coach/templates/*`, `/api/athlete/templates/*` - reusable templates
 - `/api/athlete/planner/*`, `/api/athlete/sessions/*` - athlete planning and outcomes
 - `/api/share-links/*` - authenticated share creation and intake
+- `/api/strava/*` - per-user OAuth, activity review/import, webhook receipt, disconnect/deauthorization cleanup, and webhook worker recovery
 
 ## Service Ownership
 
@@ -91,13 +92,16 @@ navigation.
 | Workout content | `lib/session-editor.ts`, `lib/session-editor-adapters.ts`, `lib/workout-editor.ts`, `lib/workout-blocks.ts`, `lib/workout-pattern.ts` | Canonical drafts, editor modes, block normalization, pattern and pause insertion, and persistence shaping |
 | Targets and metrics | `lib/workout-targets.ts`, `lib/workout-target-resolution.ts`, `lib/workout-zone-intensity.ts`, `lib/profile-training-zones.ts`, `lib/performance-profile.ts`, `lib/account-service.ts`, `lib/session-math.ts`, `lib/tempo-blocks.ts` | Relative target catalogs, profile-backed zone calculations and persistence, zone presets and classification, derived metrics, and timeline segments |
 | Session outcomes | `lib/athlete-completion-service.ts`, `lib/session-snapshot-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/session-comparison-service.ts` | Completion, baseline/actual snapshots, planned edits, and comparison reads |
+| Activity file imports | `lib/activity-file-parser.ts`, `lib/activity-import-service.ts`, `lib/activity-series.ts` | Local FIT/TCX/GPX parsing, validated user-selected imports, planned-session matching, deduplication, telemetry persistence, and metric-specific bar buckets |
+| Strava sync | `lib/strava-service.ts`, `app/api/strava/*`, `components/StravaImportPanel.tsx`, `prisma/schema.prisma` | User-scoped OAuth tokens encrypted at rest, recent activity inbox, webhook event queue, server-side stream normalization, explicit import via the shared activity importer, and disconnect/revocation cleanup |
 | Sharing | `lib/share-link.ts`, `lib/share-link-service.ts` | Sanitized snapshots, opaque tokens, public lookup, and explicit recipient copies |
 
 ## Data Ownership
 
 `prisma/schema.prisma` defines `User`, Auth.js `Account`, `CoachRequest`,
 `Plan`, `TrainingPlan`, `Session`, `Block`, `Template`, `Activity`,
-`Assignment`, `TrainingPlanAssignment`, and `ShareLink`.
+`Assignment`, `TrainingPlanAssignment`, `ShareLink`, `StravaConnection`,
+`StravaInboxActivity`, and `StravaWebhookEvent`.
 
 - `User.role` controls access. It is nullable only before first-login setup.
 - `User.performanceProfileJson` is read and written through `lib/account-service.ts`. It stores maximum heart rate, sport thresholds, a running race result, and optional per-zone pace overrides; normalization retains existing version 1 values.
@@ -108,6 +112,8 @@ navigation.
 - The workout editor's zone presets live in `lib/workout-zone-intensity.ts`. `lib/profile-training-zones.ts` mirrors Olympiatoppen's HRmax calculator for I-1–I-5 and seeds five editable pace bands from average race speed. `max-hr` and `profile-pace-zone-N` block references remain generic in stored workouts and sanitized shares; resolve them against the current user's profile in the workout/session UI. Fine adjustments can reclassify a block's zone. Existing targets change only when their relative profile reference is resolved or a user edits/reapplies a preset.
 - `Assignment` and `TrainingPlanAssignment` record source-copy lineage and prevent duplicates.
 - `Activity` stores completion outcomes and the latest actual snapshot. Planned session data stores the latest coach baseline snapshot.
+- File imports store normalized recorded samples and import provenance on the owner's `Activity`. The uploaded original file is parsed in the browser and is never persisted. `Activity.importFingerprint` prevents importing the same normalized file twice for one account. Users can delete an import: matched sessions restore their prior status and keep their planned blocks; standalone imported sessions are removed.
+- Strava connections belong to one Tempo `User.id` and one Strava athlete ID. OAuth tokens are AES-GCM encrypted with a server-only key. The recent-activity inbox and webhook receipt queue are separate from Tempo sessions; a user must explicitly review and import an activity. Imported Strava sessions carry source identity so activity updates, privacy changes, disconnect, and deauthorization can be reflected in Tempo and matched planned sessions restored.
 - `ShareLink` stores a token hash and one sanitized snapshot tied to either a `Session` or `Template`; the raw token is never persisted.
 
 ## Safe Extension Rules

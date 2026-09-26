@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { WorkoutBuilder } from '@/components/WorkoutBuilder';
 import { formatWorkoutTarget } from '@/lib/workout-target-resolution';
 import {
+  BackControl,
   Badge,
   compactSecondaryButtonClassName,
   dangerTextClassName,
@@ -149,7 +150,7 @@ export function ShareLandingClient({
             </Surface>
 
             <Surface className="flex flex-col justify-between gap-6">
-              <div>
+              <div className="min-w-0">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Choose what to do</p>
                 <p className="mt-2 text-sm leading-[1.55] text-[var(--text-secondary)]">
                   Nothing is saved or scheduled until you edit and confirm one of these actions.
@@ -169,17 +170,17 @@ export function ShareLandingClient({
       ) : (
         <Surface className="space-y-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                {action === 'planner' ? 'Planner intake' : 'Template intake'}
-              </p>
-              <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">
-                {action === 'planner' ? 'Edit before saving to Planner' : 'Edit before saving as Template'}
-              </h2>
+            <div className="flex min-w-0 items-start gap-3">
+              <BackControl onClick={() => setAction(null)} label="Back to preview" disabled={isPending} />
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
+                  {action === 'planner' ? 'Planner intake' : 'Template intake'}
+                </p>
+                <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">
+                  {action === 'planner' ? 'Edit before saving to Planner' : 'Edit before saving as Template'}
+                </h2>
+              </div>
             </div>
-            <button type="button" className={compactSecondaryButtonClassName} onClick={() => setAction(null)} disabled={isPending}>
-              Back to preview
-            </button>
           </div>
           <WorkoutBuilder
             draft={draft}

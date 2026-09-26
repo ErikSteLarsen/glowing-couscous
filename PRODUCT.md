@@ -59,11 +59,13 @@ Coach-only authoring, roster management, requests, and multi-athlete planning ar
 - Athlete Home, Calendar, Workouts, Session, Live, Activity, Profile, and Settings surfaces.
 - Personal maximum-heart-rate and race-based pace zones that resolve in workout creation.
 - Planned session adjustments, actual outcome editing, baseline and actual comparison, and completion.
+- Explicit FIT, TCX, and GPX activity-file review and import, including optional matching to an unfinished planned session and recorded metric bars in the imported-activity workspace.
 - Public sanitized workout and template snapshots with explicit authenticated intake.
 
 ## Capabilities and Constraints
 
 - Live execution is a local block stepper; it does not collect device or sensor telemetry.
+- Activity recording imports support both user-selected files and a Strava OAuth/webhook review flow. Users choose whether to import a Strava activity and may match it to an unfinished planned session.
 - Messaging, multi-coach collaboration, shared business accounts, custom sports, and deep analytics are not implemented.
 - Flexible recurring-session rules and month-level plan editing are outside the current product model; Planner supports exact day, week, and month cadence spans.
 - Public sharing exposes only a sanitized workout definition; it never exposes ownership, relationship, private notes, or actual data.

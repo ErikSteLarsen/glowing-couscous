@@ -75,6 +75,9 @@ export function LiveSessionClient({
   const wakeLockRef = useRef<ScreenWakeLockSentinel | null>(null);
 
   const currentBlock = activeBlocks[execution.currentIndex] ?? null;
+  const currentZone = currentBlock ? Math.min(Math.max(currentBlock.zone, 1), 5) : 1;
+  const timerTone = currentBlock?.kind === 'pause' ? 'var(--text-muted)' : `var(--color-zone-${currentZone})`;
+  const timerTint = currentBlock?.kind === 'pause' ? 'var(--sunken)' : `var(--color-zone-${currentZone}-tint)`;
   const isFinished = activeBlocks.length > 0 && isExecutionComplete(execution);
   const remainingSessionSec = remainingExecutionSeconds(execution, remainingSec, blockDurations);
   const handledCount = execution.completed.filter(Boolean).length + execution.skipped.filter(Boolean).length;
@@ -296,10 +299,21 @@ export function LiveSessionClient({
                 {isFinished ? 'Workout complete' : currentBlock.kind === 'pause' ? 'Pause and reset' : currentBlock.label}
               </h2>
 
-              <div className="border-y border-[var(--border)] py-3 sm:py-5">
-                <p className="text-[11px] font-medium text-[var(--text-secondary)]">
-                  {isFinished ? 'BLOCK TIMER · COMPLETE' : isRunning ? 'BLOCK TIMER · COUNTING DOWN' : hasStarted ? 'BLOCK TIMER · PAUSED' : 'BLOCK TIMER · READY'}
-                </p>
+              <div
+                className="border-y px-3 py-3 sm:px-5 sm:py-5"
+                style={{
+                  backgroundColor: `color-mix(in srgb, var(--surface) 50%, ${timerTint})`,
+                  borderColor: `color-mix(in srgb, var(--border) 45%, ${timerTone})`,
+                }}
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                  <p className="text-[11px] font-medium text-[var(--text-secondary)]">
+                    {isFinished ? 'BLOCK TIMER · COMPLETE' : isRunning ? 'BLOCK TIMER · COUNTING DOWN' : hasStarted ? 'BLOCK TIMER · PAUSED' : 'BLOCK TIMER · READY'}
+                  </p>
+                  <span className="text-[11px] font-semibold text-[var(--text)]">
+                    {currentBlock.kind === 'pause' ? 'Recovery' : `Zone ${currentZone}`}
+                  </span>
+                </div>
                 <p
                   role="timer"
                   aria-live="off"
@@ -491,7 +505,7 @@ export function LiveSessionClient({
           Live progress is stored on this device and resets if you refresh or leave this page. Session completion is saved when you choose Finish workout.
         </p>
         {alreadyCompleted ? <p className="px-1 text-[11px] leading-[1.5] text-[var(--text-secondary)]">This session was already completed. Another run will not change its saved outcome.</p> : null}
-        {saved ? <ActionLink href={sessionHref} tone="secondary">Back to session details</ActionLink> : null}
+        {saved ? <ActionLink href={sessionHref} tone="secondary">View session details</ActionLink> : null}
       </div>
     </div>
   );

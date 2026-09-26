@@ -49,7 +49,7 @@ export default async function AthletePage() {
               <div className="flex min-w-0 flex-1 items-center gap-3 lg:max-w-3xl">
                 <div className="min-w-0 flex-1">
                   <p className="break-words text-[15px] font-semibold text-[var(--text)]">{nextAction.title}</p>
-                  <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{nextAction.timeLabel} · {formatDuration(nextAction.durationSec)} · <MetricText>{nextAction.tss} TSS</MetricText></p>
+                  <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{nextAction.timeLabel} · {formatDuration(nextAction.durationSec)} · <MetricText>{nextAction.loadAvailable === false ? 'Load unavailable' : `${nextAction.tss} TSS`}</MetricText></p>
                 </div>
                 <StatusBadge status={nextAction.status} />
                 <ActionLink href={`/athlete/session/${nextAction.id}?from=home`} size="compact">
@@ -79,11 +79,11 @@ export default async function AthletePage() {
           <div className="ink-week-ribbon overflow-x-auto pb-2">
             <div className="ink-week-track flex snap-x snap-mandatory gap-3 p-3 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 xl:gap-4 xl:p-4">
               {dashboard.weekDays.map((day) => (
-                <section key={day.isoDate} aria-labelledby={`home-day-${day.isoDate}`} className={`ink-day-channel w-[min(82vw,320px)] shrink-0 snap-start border-t pt-3 md:w-auto md:min-w-0 2xl:border-l 2xl:border-t-0 2xl:pl-3 ${day.isToday ? 'ink-day-channel--today border-[var(--brand)] bg-[var(--brand-tint)] px-3 2xl:rounded-[3px]' : 'border-[var(--border)]'}`}>
+                <section key={day.isoDate} aria-labelledby={`home-day-${day.isoDate}`} className={`ink-day-channel w-[min(82vw,320px)] shrink-0 snap-start border-t pt-3 md:w-auto md:min-w-0 2xl:border-l 2xl:border-t-0 2xl:pl-3 ${day.isToday ? 'ink-day-channel--today calendar-day--today border-[var(--brand)] px-3 2xl:rounded-[3px]' : 'border-[var(--border)]'}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 id={`home-day-${day.isoDate}`} className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day.label}</h3>
-                      <p className={`metric-text mt-1 text-[20px] font-semibold text-[var(--text)] ${day.isToday ? 'current-day-date' : ''}`}>{day.dateLabel}</p>
+                      <p aria-current={day.isToday ? 'date' : undefined} className={`metric-text mt-1 text-[20px] font-semibold text-[var(--text)] ${day.isToday ? 'calendar-day-date--today' : ''}`}>{day.dateLabel}</p>
                     </div>
                   </div>
                   <div className="mt-3 space-y-2">
@@ -108,7 +108,7 @@ export default async function AthletePage() {
               </p>
               <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
                 <MetricText>{formatDuration(dashboard.lastActivity.durationSec)}</MetricText> ·{' '}
-                <MetricText>{dashboard.lastActivity.tss} TSS</MetricText>
+                <MetricText>{dashboard.lastActivity.loadAvailable ? `${dashboard.lastActivity.tss} TSS` : 'Load unavailable'}</MetricText>
               </p>
             </Surface>
           ) : null}
@@ -123,6 +123,11 @@ export default async function AthletePage() {
               </p>
               <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
                 <MetricText>{dashboard.weekTotals.tss} TSS</MetricText>
+                {dashboard.weekTotals.loadUnavailableCount > 0 ? (
+                  <span className="ml-2 text-[11px] text-[var(--text-muted)]">
+                    Partial · unavailable for {dashboard.weekTotals.loadUnavailableCount} imported {dashboard.weekTotals.loadUnavailableCount === 1 ? 'activity' : 'activities'}
+                  </span>
+                ) : null}
               </p>
             </Surface>
           ) : null}
@@ -137,8 +142,11 @@ export default async function AthletePage() {
                   dashboard.trend.map((point) => (
                     <div key={point.label} className="flex flex-1 flex-col items-center gap-2">
                       <div
-                        className="w-full rounded-[4px] bg-[var(--color-liquid)] opacity-80"
-                        style={{ height: `${Math.max(12, Math.min(52, point.tss / 3))}px` }}
+                        role="img"
+                        aria-label={point.loadAvailable ? `${point.tss} TSS` : 'Load unavailable'}
+                        title={point.loadAvailable ? `${point.tss} TSS` : 'Load unavailable'}
+                        className={`w-full rounded-[4px] ${point.loadAvailable ? 'bg-[var(--color-liquid)] opacity-80' : 'bg-[var(--border)]'}`}
+                        style={{ height: `${point.loadAvailable ? Math.max(12, Math.min(52, point.tss / 3)) : 12}px` }}
                       />
                       <span className="text-[10px] text-[var(--text-muted)]">{point.label}</span>
                     </div>

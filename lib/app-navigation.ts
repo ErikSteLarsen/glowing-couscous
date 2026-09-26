@@ -33,6 +33,12 @@ export function getPrimaryNavigation(): NavItem[] {
     { label: 'Templates', description: 'Reuse & assign', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
     { label: 'Calendar', description: 'See scheduled work', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
     { label: 'Activity', description: 'Review completed', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
+    {
+      label: 'Imported activities',
+      description: 'Review Strava and activity files',
+      href: '/athlete/imported-activities',
+      matchPrefix: '/athlete/imported-activities',
+    },
   ];
 }
 
@@ -72,8 +78,10 @@ export function isProfileActionActive(
 
 const sessionReturnTargets = {
   home: { href: '/athlete', label: 'Back to Home' },
-  calendar: { href: '/athlete/calendar', label: 'Back to calendar' },
+  calendar: { href: '/athlete/calendar', label: 'Back to Calendar' },
   activity: { href: '/athlete/activity', label: 'Back to Activity' },
+  imports: { href: '/athlete/imported-activities', label: 'Back to Imported activities' },
+  planner: { href: '/athlete/planner', label: 'Back to Planner' },
 } as const;
 
 export type SessionOrigin = keyof typeof sessionReturnTargets;
@@ -88,4 +96,23 @@ export function getSessionOrigin(origin?: string): SessionOrigin {
 
 export function getSessionReturnTarget(origin?: string) {
   return sessionReturnTargets[getSessionOrigin(origin)];
+}
+
+export function getCoachAthleteReturnTarget(origin: string | undefined, athleteId: number, date?: string) {
+  if (origin !== 'planner') {
+    return { href: '/coach', label: 'Back to your athletes' };
+  }
+
+  const params = new URLSearchParams({ athleteId: String(athleteId) });
+  if (date && isCalendarDate(date)) params.set('date', date);
+
+  return { href: `/coach/planner?${params.toString()}`, label: 'Back to Planner' };
+}
+
+function isCalendarDate(value?: string) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }

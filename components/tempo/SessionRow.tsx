@@ -15,6 +15,7 @@ export type SessionRowData = {
   status: SessionStatus;
   durationSec: number;
   tss: number;
+  loadAvailable?: boolean;
   targetLabel?: string | null;
   segments: Array<{
     key: string;
@@ -84,6 +85,7 @@ export function SessionRow({
   const resolvedVariant = variant ?? (compact ? 'compact' : 'default');
   const styles = variantStyles[resolvedVariant];
   const visibleDateLabel = dateLabel ?? session.dateLabel;
+  const loadLabel = session.loadAvailable === false ? 'Load unavailable' : `${session.tss} TSS`;
   const accessibleName = [
     actionLabel,
     session.title,
@@ -91,7 +93,7 @@ export function SessionRow({
     showTime ? session.timeLabel : null,
     getSportLabel(session.sport),
     formatDuration(session.durationSec),
-    `${session.tss} TSS`,
+    loadLabel,
     session.targetLabel,
     session.status,
   ].filter(Boolean).join(', ');
@@ -115,7 +117,7 @@ export function SessionRow({
         {styles.metrics ? (
           <div className={`flex flex-wrap items-center ${styles.metrics} text-[var(--text-secondary)]`}>
             <MetricText>{formatDuration(session.durationSec)}</MetricText>
-            <MetricText>{session.tss} TSS</MetricText>
+            <MetricText>{loadLabel}</MetricText>
             {session.targetLabel ? <span>{session.targetLabel}</span> : null}
           </div>
         ) : null}

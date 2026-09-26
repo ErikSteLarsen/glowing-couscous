@@ -10,6 +10,7 @@ import { getSessionOrigin, getSessionReturnTarget } from '@/lib/app-navigation';
 import { SessionDetailClient } from './SessionDetailClient';
 import { ShareLinkButton } from '@/components/ShareLinkButton';
 import { getSportLabel } from '@/lib/sport';
+import { ImportedActivityMeasurements } from '@/components/ImportedActivityMeasurements';
 
 export default async function AthleteSessionPage({
   params,
@@ -29,18 +30,18 @@ export default async function AthleteSessionPage({
     notFound();
   }
 
+  const sessionOrigin = getSessionOrigin(from);
+  const returnTarget = getSessionReturnTarget(sessionOrigin);
   const detail = await athleteService.loadSessionDetail(user.id, parsedSessionId);
   if (!detail) {
     return (
       <PageShell>
-        <TopBar title="Session" />
+        <TopBar title="Session" back={returnTarget} />
         <EmptyState title="Session not found" description="This session is unavailable or belongs to another athlete." />
       </PageShell>
     );
   }
 
-  const sessionOrigin = getSessionOrigin(from);
-  const returnTarget = getSessionReturnTarget(sessionOrigin);
   const sessionAction = detail.session.status === 'completed' ? 'Review outcome' : 'Start live';
   const sessionActionHref = detail.session.status === 'completed'
     ? '#session-outcome'
@@ -51,11 +52,9 @@ export default async function AthleteSessionPage({
       <TopBar
         title={detail.session.title}
         description={detail.session.summary ?? 'Session details.'}
+        back={returnTarget}
         actions={
           <>
-            <ActionLink href={returnTarget.href} tone="secondary">
-              {returnTarget.label}
-            </ActionLink>
             <ActionLink href={sessionActionHref}>{sessionAction}</ActionLink>
           </>
         }
@@ -86,7 +85,7 @@ export default async function AthleteSessionPage({
                   </div>
                   <div>
                     <p className="text-[11px] font-medium text-[var(--text-muted)]">Training load</p>
-                    <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{detail.session.tss} TSS</p>
+                    <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{detail.session.loadAvailable === false ? 'Unavailable' : `${detail.session.tss} TSS`}</p>
                   </div>
                 </div>
               </div>
@@ -132,6 +131,20 @@ export default async function AthleteSessionPage({
                 <p className="border-y border-[var(--border)] py-5 text-[13px] text-[var(--text-secondary)]">This session has no workout blocks.</p>
               )}
             </Surface>
+
+            {detail.session.importedActivityId ? (
+              <Surface className="space-y-4">
+                <div>
+                  <h2 className={sectionHeadingClassName}>Recorded activity</h2>
+                  <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Sensor measurements imported from your activity file.</p>
+                </div>
+                <ImportedActivityMeasurements
+                  activityId={detail.session.importedActivityId}
+                  durationSec={detail.session.recordedDurationSec ?? detail.session.durationSec}
+                  sport={detail.session.sport}
+                />
+              </Surface>
+            ) : null}
           </div>
 
           <aside className="space-y-4">

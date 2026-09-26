@@ -1,10 +1,10 @@
 import { notFound, redirect } from 'next/navigation';
 import { format } from 'date-fns';
-import { ActionLink, EmptyState, PageShell, TopBar } from '@/components/ui';
+import { EmptyState, PageShell, TopBar } from '@/components/ui';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
-import { getSessionOrigin } from '@/lib/app-navigation';
+import { getSessionOrigin, getSessionReturnTarget } from '@/lib/app-navigation';
 import { getSportLabel } from '@/lib/sport';
 import { LiveSessionClient } from './LiveSessionClient';
 
@@ -26,24 +26,25 @@ export default async function AthleteLivePage({
     notFound();
   }
 
+  const sessionOrigin = getSessionOrigin(from);
+  const returnTarget = getSessionReturnTarget(sessionOrigin);
   const detail = await athleteService.loadSessionDetail(user.id, parsedSessionId);
   if (!detail) {
     return (
       <PageShell>
-        <TopBar title="Live session" />
+        <TopBar title="Live session" back={returnTarget} />
         <EmptyState title="Live session unavailable" description="This session could not be loaded for live execution." />
       </PageShell>
     );
   }
 
-  const sessionOrigin = getSessionOrigin(from);
   const sessionHref = `/athlete/session/${detail.session.id}?from=${sessionOrigin}`;
 
   return (
     <PageShell>
       <TopBar
         title={detail.session.title}
-        actions={<ActionLink href={sessionHref} tone="secondary">Back to session</ActionLink>}
+        back={{ href: sessionHref, label: 'Back to session details' }}
       />
 
       <div className="page-content--standard flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">

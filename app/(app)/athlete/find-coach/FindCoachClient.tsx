@@ -126,6 +126,7 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
       <TopBar
         title="Search coaches"
         description="Find a coach and send a connection request."
+        back={{ href: '/profile', label: 'Back to profile' }}
       />
       <Surface>
          {requestState.latestRequest?.status === 'PENDING' ? (
@@ -163,14 +164,6 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
             {loading ? 'Searching…' : 'Search'}
           </button>
         </form>
-
-        {requestState.latestRequest?.status === 'PENDING' ? (
-          <div className="mt-4">
-            <ActionLink href="/profile" tone="secondary">
-              Back to profile
-            </ActionLink>
-          </div>
-        ) : null}
 
         {results.length > 0 && (
           <div className="mt-4 space-y-3">

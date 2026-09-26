@@ -44,6 +44,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       compliancePct?: number | null;
       segmentsJson?: string | null;
       metricsSource?: string;
+      durationSec?: number;
     } | null;
   }) {
     const metrics = deriveSessionMetrics(
@@ -98,6 +99,10 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
           : null,
       durationSec: metrics.durationSec,
       tss: session.activity?.tss ?? metrics.tss,
+      loadAvailable: !(session.activity?.metricsSource === 'file-import' && session.activity.tss === 0),
+      recordedDurationSec: session.activity?.metricsSource === 'file-import'
+        ? session.activity.durationSec ?? null
+        : null,
       segments: session.activity?.segmentsJson
         ? parseActivitySegments(session.activity.segmentsJson)
         : metrics.segments,
@@ -230,9 +235,10 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         (accumulator, session) => {
           accumulator.durationSec += session.durationSec;
           accumulator.tss += session.tss;
+          if (!session.loadAvailable) accumulator.loadUnavailableCount += 1;
           return accumulator;
         },
-        { durationSec: 0, tss: 0 },
+        { durationSec: 0, tss: 0, loadUnavailableCount: 0 },
       );
 
       return {
@@ -253,6 +259,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
               completedAt: athlete.activities[0].completedAt,
               durationSec: athlete.activities[0].durationSec,
               tss: athlete.activities[0].tss,
+              loadAvailable: !(athlete.activities[0].metricsSource === 'file-import' && athlete.activities[0].tss === 0),
             }
           : null,
         trend: athlete.activities
@@ -261,6 +268,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
           .map((activity) => ({
             label: format(activity.completedAt, 'd MMM'),
             tss: activity.tss,
+            loadAvailable: !(activity.metricsSource === 'file-import' && activity.tss === 0),
           })),
         weekTotals,
         coachNote:
@@ -413,10 +421,11 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       const totals = athlete.activities.reduce(
         (summary, activity) => {
           summary.durationSec += activity.durationSec;
-          summary.tss += activity.tss;
+          if (activity.metricsSource === 'file-import' && activity.tss === 0) summary.loadUnavailableCount += 1;
+          else summary.tss += activity.tss;
           return summary;
         },
-        { durationSec: 0, tss: 0 },
+        { durationSec: 0, tss: 0, loadUnavailableCount: 0 },
       );
 
       return {
@@ -512,6 +521,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         coachName: session.athlete.coach?.name ?? null,
         session: {
           ...summary,
+          importedActivityId: session.activity?.metricsSource === 'file-import' ? session.activity.id : null,
           notes: session.activity?.notes ?? session.athleteNotes ?? '',
           sourceWorkout: editableSourceWorkout,
           blocks: session.blocks.map((block) => {

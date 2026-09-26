@@ -16,6 +16,7 @@ type CalendarScrollerSession = {
   status: 'planned' | 'completed' | 'adjusted' | 'missed';
   durationSec: number;
   tss: number;
+  loadAvailable?: boolean;
   segments: Array<{
     key: string;
     zone: number;
@@ -200,7 +201,7 @@ export function AthleteCalendarWeekScroller({
                   isFocused
                     ? 'border-[var(--brand)] bg-[var(--brand-tint)] px-3 2xl:rounded-[8px]'
                     : 'border-[var(--border)]'
-                }`}
+                } ${day.isToday ? 'calendar-day--today' : ''}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <button
@@ -212,7 +213,7 @@ export function AthleteCalendarWeekScroller({
                   >
                     <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">{day.label}</p>
                     <div className="mt-1 flex items-center gap-2">
-                      <span id={`calendar-day-${day.isoDate}`} className={`metric-text text-[20px] font-semibold text-[var(--text)] ${day.isToday ? 'current-day-date' : ''}`}>{day.dateLabel}</span>
+                      <span id={`calendar-day-${day.isoDate}`} className={`metric-text text-[20px] font-semibold text-[var(--text)] ${day.isToday ? 'calendar-day-date--today' : ''}`}>{day.dateLabel}</span>
                     </div>
                   </button>
                   <span className="rounded-full border border-[var(--field-border)] bg-[var(--field-surface)] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">{day.sessions.length}</span>

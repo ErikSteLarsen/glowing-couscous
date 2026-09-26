@@ -1,5 +1,76 @@
 # Current Status
 
+On **2026-09-26**, `public/tempo-sports-loop.svg` is a standalone, transparent
+triathlon mark proposal: swimming, cycling, then running in a twelve-second loop.
+The bicycle wheelbase is shortened from 162 to 116 SVG units; spokes and rim
+marks rotate, and road speed follows wheel circumference and rotation speed.
+The running gait uses articulated legs, a rearward push-off and heel recovery,
+lower arm swing, and ground speed matched to the planted foot. Eight additional
+running poses were visually inspected after refining the gait to remove the
+high-knee marching appearance; the full GIF and a running-only preview were
+regenerated. Water and ground move continuously left through repeating, edge-faded
+patterns. Tempo colors, the monoline style, and a static swimmer for reduced
+motion are preserved. `scripts/generate-tempo-sports.mjs` rebuilds the SVG without
+dependencies and optionally renders preview frames using an existing Sharp
+installation. Twelve representative poses were visually inspected from a local
+300-frame render; the GIF preview uses the same poses, timing, and surface motion.
+SVG XML parsing, generator execution/syntax, the Impeccable detector, and targeted
+diff checks pass. ESLint is unavailable in the incomplete local dependency tree.
+The SVG has not been browser-verified or integrated into signup. Application
+test/build gates were not run for this standalone asset revision.
+
+On **2026-09-26**, Strava accounts can be linked to a Tempo user through OAuth;
+encrypted tokens refresh server-side. The Imported activities page lists and
+reviews Strava activities, loads streams for bar previews, lets the user adjust
+the Tempo category and optionally match an unfinished planned session, then
+imports through the shared activity service. The webhook endpoint queues
+create/update/delete, privacy, and deauthorization events, acknowledges quickly,
+and processes them asynchronously. Disconnect or Strava deauthorization
+removes the connection, inbox data, credentials, imported sessions, and
+associated measurements while restoring matched planned sessions. Cleanup is
+atomic with imports so an in-flight review cannot recreate data after
+disconnect; token revocation failure is surfaced with a Strava settings link.
+The review shows approved training metadata, and over-dense streams are capped
+while retaining the final sample. A subscription setup script and authenticated
+queue-recovery endpoint are included. External configuration and verification
+remain: OAuth credentials, a public callback, a webhook subscription, a
+non-production database migration, and authenticated browser verification.
+
+Focused pure Node tests and TypeScript/JavaScript syntax checks pass. Full
+verification is blocked by an incomplete local `node_modules` tree and an
+inaccessible package registry. Prisma validation/client generation, complete
+import-service tests, lint, build, migration, and authenticated browser flow
+were not completed. See the
+[activity import task](tasks/2026-09-26-strava-activity-import.md).
+
+On **2026-09-26**, the shared Imported activities page now accepts FIT, TCX, and
+GPX files for both signed-in roles, previews available metrics with
+parameter-specific bars, offers matching to an unfinished personal planned
+session of the same sport, and imports to a new completed session otherwise.
+Imports are owner-scoped, fingerprinted to prevent repeats, validated
+server-side, and persist normalized telemetry on `Activity`; planned workout
+blocks are kept intact. Heart-rate-based zone/load estimates use the saved
+HRmax when available; otherwise load is explicitly unavailable across the
+activity, Home, Calendar, and session views. Time charts use minute bars
+(temperature uses five-minute bars); elevation and grade use distance buckets,
+capped at 120 bars. Focused parser, import service, and chart tests pass
+(17/17); full ESLint and `git diff --check` pass. The full suite is 233/237,
+with the same four pre-existing athlete planned-session adjustment failures.
+TypeScript reports existing test-fixture errors and none in the importer or
+changed production files. Prisma schema validation and client generation pass.
+A direct production build is blocked when Next.js cannot fetch Schibsted
+Grotesk from Google Fonts. The schema migration has not been applied or
+verified against a non-production database, and authenticated browser behavior
+remains unverified in this environment.
+
+On **2026-09-26**, Home, athlete Calendar week/month, and the shared athlete/coach Planning Desk mark today across the full day cell with a tinted surface, inset brand frame, and filled date marker. Hover remains a separate lighter treatment, and date selection keeps its check or focused-day state. Current dates carry `aria-current="date"` where the view exposes an individual date control. `git diff --check` passes. The Impeccable detector completed with advisory type/radius findings in the touched files. No authenticated browser tab was available, so responsive rendering was not visually verified.
+
+On **2026-09-26**, Planner month cells in the shared athlete/coach Planning Desk show the first assigned workout title and a zone-colored swatch on one row. The swatch represents the rounded, duration-weighted average intensity zone; pause time is excluded and narrow calendars keep their count-only treatment. Selected-day details retain the full timeline. Home and week Calendar continue using compact `SessionRow` timelines, while the athlete Calendar month view remains title-only. `DESIGN.md` records this boundary. Targeted ESLint, `git diff --check`, and the confirming Impeccable detector pass with no findings; an initial 10px type-size advisory was corrected to 11px. The bundled Node test suite is 216/220, with the same four existing athlete planned-edit validation failures. The `pnpm test` wrapper stops at the noninteractive module-purge preflight, so the suite was run directly with the bundled Node runtime. Authenticated browser verification was unavailable because the local planner redirects to sign-in and no browser session is attached; build was not run while the local app server is active.
+
+On **2026-09-26**, the live current-block timer now carries a restrained zone tint and matching horizontal rules, with a text zone label; pause blocks use a neutral recovery treatment. The countdown remains dark and legible. `git diff --check` passes. The Impeccable detector reported only the existing intentional 60px/84px timer type-size advisories. `pnpm test`, `pnpm lint`, and `pnpm build` could not start because the dependency preflight again stopped at the noninteractive module-purge prompt. This change has not been browser-verified.
+
+On **2026-09-26**, pages and nested editing states with a clear parent now use a shared 40px icon-only back control. Page-level arrows sit inline before the title; their accessible name and hover hint identify the destination. Athlete session details preserve Home, Calendar, Activity, or Planner origin; the Planner origin now resolves correctly. Live sessions return to session details, and coach athlete details return to the roster or restore the Planner's selected athlete and date. Workout editing retains its unsaved-change confirmation, and shared-workout intake returns to its preview. The post-save live action is labeled “View session details.” Focused navigation-target tests pass 2/2 using the bundled Node runtime, and `git diff --check` passes. The Impeccable detector reported only advisory font-size findings on the existing page-heading tokens in `components/ui.tsx`. Full `pnpm test` and `pnpm lint` did not start: dependency preflight required a noninteractive refresh, and the refresh retry failed with `EPERM` while replacing the repo-local Sharp package file. That left `node_modules` incomplete, so `pnpm build` and browser verification could not run.
+
 On **2026-09-25**, athlete session detail now presents the scheduled workout as a read-only duration/zone score and ordered block list, with a read-only saved outcome and comparison. An edit-source link appears only for the athlete's own reusable source and opens that workout directly in Workouts; scheduled copies remain independent. Live execution now has a deadline-based current-block and session countdown, auto-advance/catch-up, start/pause/resume, previous, next, skip, restart confirmation, optional screen wake lock, and an explicit completion save after the final block. Progress remains local and resets on refresh. Headless Chromium rendered the shared production components at 1440×1200 and 390×844 from a temporary synthetic review surface, and exercised countdown, pause, next, skip, previous, and restart. The independent Impeccable review returned `ship` with no material findings. The connected authenticated browser was unavailable, so the actual session routes were not browser-tested. `pnpm lint`, `pnpm build`, and `git diff --check` pass. `pnpm test` passes 214/218; the same four existing athlete planned-edit validation failures recorded below remain. The Impeccable detector reported advisory type-ramp findings; non-timer values were aligned to documented sizes, while the prominent 60px mobile / 84px desktop timer remains intentional.
 
 On **2026-09-25**, Profile now saves backward-compatible max-HR, race-result, and five-zone running pace defaults in `User.performanceProfileJson`. HR ranges mirror the [Olympiatoppen intensity-scale calculator](https://olt-skala.nif.no/): 55–72%, 72–82%, 82–87%, 87–92%, and 92–100% HRmax, with the site's floor/+1 bpm boundaries. Running defaults are clearly identified as Tempo race-speed estimates (not OLT pace bands), editable as fastest/slowest min/km. Workout and template creators now pass the current profile for athletes and coaches; profile pace and HR target references stay relative in saved/shared content and resolve per user. The selected block shows its applicable range/current target and its accessible chart label carries the resolved value. Focused profile/target/persistence checks (22) pass, and `pnpm lint` passes. The build script now reuses Prisma Client when its generated schema matches the checked-in schema, avoiding Windows `EPERM` when a running Next server holds the query-engine DLL; it regenerates the client when missing or stale. Full `pnpm build` and direct `pnpm exec next build` pass with the existing middleware deprecation warning; Prisma reports no pending migrations. Full `pnpm test` is 210/214: the same four athlete planned-edit validation failures recorded below remain. Direct `pnpm exec tsc --noEmit` reports existing test-fixture errors, none in the changed production source. Browser review was unavailable because no desktop browser was connected.

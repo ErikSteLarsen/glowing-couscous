@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { ActionLink, EmptyState, PageShell, StatTile, Surface, TopBar } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth-session';
 import { getCoachAthleteDetail } from '@/lib/coach-service';
+import { getCoachAthleteReturnTarget } from '@/lib/app-navigation';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
 import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
@@ -13,13 +14,15 @@ import { ShareLinkButton } from '@/components/ShareLinkButton';
 
 export default async function CoachAthleteDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ athleteId: string }>;
+  searchParams: Promise<{ from?: string; date?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user || user.role !== 'COACH') redirect('/login');
 
-  const { athleteId } = await params;
+  const [{ athleteId }, { from, date }] = await Promise.all([params, searchParams]);
   const parsedAthleteId = Number(athleteId);
   if (!Number.isInteger(parsedAthleteId) || parsedAthleteId <= 0) {
     notFound();
@@ -31,6 +34,7 @@ export default async function CoachAthleteDetailPage({
     notFound();
   }
 
+  const returnTarget = getCoachAthleteReturnTarget(from, parsedAthleteId, date);
   const todayIso = format(new Date(), 'yyyy-MM-dd');
 
   return (
@@ -38,6 +42,7 @@ export default async function CoachAthleteDetailPage({
       <TopBar
         title={detail.athlete.name}
         description={`Coach: ${detail.athlete.coachName}. ${detail.athlete.activePlan?.goalRace ? `Goal race: ${detail.athlete.activePlan.goalRace}.` : 'No goal race set yet.'}`}
+        back={returnTarget}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

@@ -27,7 +27,13 @@ export default async function AthleteActivityPage() {
       <div className="page-content--library grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatTile label="Completed sessions" value={String(activityFeed.activities.length)} detail="Latest 12" />
         <StatTile label="Duration" value={formatDuration(activityFeed.totals.durationSec)} detail="Latest 12 sessions" />
-        <StatTile label="Load" value={`${activityFeed.totals.tss}`} detail="Latest 12 sessions" />
+        <StatTile
+          label="Load"
+          value={activityFeed.totals.loadUnavailableCount > 0 ? '—' : String(activityFeed.totals.tss)}
+          detail={activityFeed.totals.loadUnavailableCount > 0
+            ? `Unavailable for ${activityFeed.totals.loadUnavailableCount} imported ${activityFeed.totals.loadUnavailableCount === 1 ? 'activity' : 'activities'}`
+            : 'Latest 12 sessions'}
+        />
       </div>
 
       {activityFeed.activities.length === 0 ? (
@@ -62,7 +68,9 @@ export default async function AthleteActivityPage() {
               <SessionBlockBar segments={activity.segments} />
               <div className="flex flex-wrap gap-4 text-[13px] text-[var(--text-secondary)]">
                 <MetricText>{formatDuration(activity.durationSec)}</MetricText>
-                <MetricText>{activity.tss} TSS</MetricText>
+                <MetricText>
+                  {activity.metricsSource === 'file-import' && activity.tss === 0 ? 'Load unavailable' : `${activity.tss} TSS`}
+                </MetricText>
                 <MetricText>
                   {activity.compliancePct === null ? 'Compliance unavailable' : `${activity.compliancePct}% compliance`}
                 </MetricText>

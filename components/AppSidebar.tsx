@@ -10,6 +10,7 @@ import {
   Dumbbell,
   House,
   LayoutTemplate,
+  Upload,
 } from 'lucide-react';
 import { getPrimaryNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import { AppProfileMenu } from '@/components/AppProfileMenu';
@@ -23,6 +24,7 @@ const navIcons: Record<string, LucideIcon> = {
   Planner: ClipboardList,
   Templates: LayoutTemplate,
   Workouts: Dumbbell,
+  'Imported activities': Upload,
 };
 
 export function AppSidebar(props: {

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import { ReactNode } from 'react';
 
 export const pageHeadingClassName = 'text-[40px] font-normal leading-none tracking-[-0.045em] text-[var(--text)] max-md:text-[34px]';
@@ -62,31 +63,72 @@ export function AuthPageShell({ children }: { children: ReactNode }) {
   return <main className="auth-page-layout">{children}</main>;
 }
 
+const backControlClassName = `inline-flex h-10 w-10 flex-none items-center justify-center rounded-[3px] text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] ${buttonFocusClassName}`;
+
+type BackControlProps =
+  | { href: string; label: string; onClick?: never; disabled?: never }
+  | { onClick: () => void; label: string; disabled?: boolean; href?: never };
+
+export function BackControl(props: BackControlProps) {
+  const icon = <ArrowLeft aria-hidden="true" size={18} strokeWidth={1.75} />;
+
+  if (props.href) {
+    return (
+      <Link href={props.href} aria-label={props.label} title={props.label} className={backControlClassName}>
+        {icon}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      aria-label={props.label}
+      title={props.label}
+      disabled={props.disabled}
+      onClick={props.onClick}
+      className={`${backControlClassName} disabled:cursor-not-allowed disabled:opacity-50`}
+    >
+      {icon}
+    </button>
+  );
+}
+
 export function TopBar({
   title,
   description,
   actions,
+  back,
   align = 'left',
 }: {
   title: string;
   description?: string;
   actions?: ReactNode;
+  back?: { href: string; label: string };
   align?: 'left' | 'center';
 }) {
   const isCentered = align === 'center';
+  const heading = (
+    <div className="min-w-0 space-y-2">
+      <div className={isCentered ? 'space-y-2 text-center' : 'space-y-2'}>
+        <h1 className={pageHeadingClassName}>{title}</h1>
+        {description ? (
+          <p className={`text-[15px] leading-[1.55] text-[var(--text-secondary)] ${isCentered ? 'mx-auto max-w-2xl' : 'max-w-3xl'}`}>
+            {description}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
 
   return (
     <div className={`page-header ink-topbar ${isCentered ? 'page-header--center' : ''}`}>
-      <div className="min-w-0 space-y-2">
-        <div className={isCentered ? 'space-y-2 text-center' : 'space-y-2'}>
-          <h1 className={pageHeadingClassName}>{title}</h1>
-          {description ? (
-            <p className={`text-[15px] leading-[1.55] text-[var(--text-secondary)] ${isCentered ? 'mx-auto max-w-2xl' : 'max-w-3xl'}`}>
-              {description}
-            </p>
-          ) : null}
+      {back ? (
+        <div className="flex min-w-0 items-start gap-3">
+          <BackControl href={back.href} label={back.label} />
+          {heading}
         </div>
-      </div>
+      ) : heading}
       {actions ? <div className={`flex flex-wrap gap-3 ${isCentered ? 'justify-center' : ''}`}>{actions}</div> : null}
     </div>
   );

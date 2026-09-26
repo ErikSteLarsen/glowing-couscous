@@ -57,6 +57,34 @@ For a fresh, disposable development database only, run `pnpm db:seed` after
 the migration to create demo accounts. Seeding deletes existing application
 data; it is not needed to fix the connection error.
 
+## Strava Sync Setup
+
+The Imported activities page supports connecting a Strava account, reviewing
+recent activities, previewing streams, categorizing the sport, matching an
+unfinished planned session, and explicitly importing the result. Strava OAuth
+tokens are encrypted at rest with `STRAVA_TOKEN_ENCRYPTION_KEY`; use a fresh,
+random 32-byte key encoded as 64 hexadecimal characters and keep it server-only.
+
+1. Register a Strava API application. Set `STRAVA_CLIENT_ID`,
+   `STRAVA_CLIENT_SECRET`, and `STRAVA_TOKEN_ENCRYPTION_KEY` in the server
+   environment. Set `STRAVA_OAUTH_REDIRECT_URI` to the full public callback URL
+   ending in `/api/strava/callback` and register its domain with Strava.
+2. Deploy the app or expose local development over a public HTTPS tunnel. Set
+   `STRAVA_WEBHOOK_CALLBACK_URL` to the full public HTTPS URL ending in `/api/strava/webhook` and
+   `STRAVA_WEBHOOK_VERIFY_TOKEN` to a separate random value.
+3. Run `pnpm db:migrate`, then `pnpm strava:webhook`. The command creates (or
+   finds) the single app-wide Strava webhook subscription and prints its ID;
+   set that as `STRAVA_WEBHOOK_SUBSCRIPTION_ID` in the app environment.
+4. Optionally set `STRAVA_WEBHOOK_WORKER_SECRET` and schedule authenticated
+   `POST /api/strava/webhook-worker` requests to retry queued webhook events if
+   background processing fails. Webhook delivery is acknowledged quickly and
+   event work runs asynchronously.
+
+Disconnecting in Tempo clears the connection and its imported Strava sessions,
+then attempts to revoke the provider token. If Strava does not confirm
+revocation, the page links to Strava's connected-app settings. Strava-side
+authorization changes are received through the webhook.
+
 Prisma CLI reads `.env`, so a database-only `.env.local` is not sufficient for
 `pnpm db:push`, `pnpm db:migrate`, or `pnpm db:setup`. `DATABASE_URL` is the
 pooled runtime URL; `DIRECT_URL` is used for Prisma migrations and

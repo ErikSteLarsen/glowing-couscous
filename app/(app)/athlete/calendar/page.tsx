@@ -127,8 +127,9 @@ export default async function AthleteCalendarPage({
                         <div
                           key={day.isoDate}
                           aria-label={`${day.dateLabel}${day.isToday ? ', today' : ''}, ${day.sessions.length} ${day.sessions.length === 1 ? 'session' : 'sessions'}`}
+                          aria-current={day.isToday ? 'date' : undefined}
                           role="group"
-                          className={`min-h-16 min-w-0 rounded-[3px] border p-1.5 sm:min-h-[128px] sm:p-3 ${
+                          className={`min-h-16 min-w-0 rounded-[3px] border p-1.5 sm:min-h-[128px] sm:p-3 ${day.isToday ? 'calendar-day--today' : ''} ${
                             day.isCurrentMonth
                               ? 'border-[var(--border)] bg-[var(--surface)]'
                               : 'border-[var(--field-border)] bg-[var(--field-surface)] text-[var(--text-muted)]'
@@ -136,7 +137,7 @@ export default async function AthleteCalendarPage({
                         >
                            <div className="flex items-start justify-between gap-1 sm:gap-2">
                             <div className="flex min-w-0 items-center gap-2">
-                              <p className={`text-[15px] font-semibold text-[var(--text)] ${day.isToday ? 'current-day-date' : ''}`}>{day.dateLabel}</p>
+                              <p className={`text-[15px] font-semibold text-[var(--text)] ${day.isToday ? 'calendar-day-date--today' : ''}`}>{day.dateLabel}</p>
                             </div>
                              <span className="rounded-full border border-[var(--field-border)] bg-[var(--field-surface)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--text-secondary)] sm:px-2 sm:py-1">
                                {day.sessions.length}
