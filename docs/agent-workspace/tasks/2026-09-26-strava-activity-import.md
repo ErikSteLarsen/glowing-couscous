@@ -33,6 +33,9 @@ bar granularity.
   planned workout score and block list on session detail.
 - [x] Replace the empty score and block list with a recorded activity overview
   when an imported session has no matched workout.
+- [x] Polish the standalone activity detail into a single-column view with
+  relevant activity data and saved notes, removing plan-only context and the
+  inapplicable share action.
 - [ ] Verify automatic webhook delivery against the live Strava app.
 - [ ] Verify the additive migration on a non-production database.
 - [ ] Run full repository checks when the local dependency environment allows.

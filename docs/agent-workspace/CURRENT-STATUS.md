@@ -7,6 +7,13 @@ than its CLI executable. The helper now reads the executable declared by the
 installed Prisma package. The user confirmed the next Vercel deployment reached
 Ready and the deployed Strava connection/manual import worked.
 
+On **2026-09-26**, standalone imported activities without matched workouts use
+a single-column detail view. It leads with recorded duration and training load,
+then shows available metric charts and saved notes; plan-only context and an
+inapplicable share action are omitted. `git diff --check` and the Impeccable
+detector pass. Local dependencies are absent, and browser and production
+rendering have not been verified.
+
 On **2026-09-26**, pace review found that tiny positive speed samples from
 stops/GPS drift were converted into extreme min/km values, inflating the
 average and flattening the bars. Pace now ignores speeds below 0.5 m/s, uses a

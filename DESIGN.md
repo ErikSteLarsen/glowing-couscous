@@ -467,8 +467,10 @@ for contextual return and execution controls.
 - Session detail keeps the scheduled score and ordered workout blocks visible.
   For imported FIT and Strava sessions, recorded sensor charts follow the block
   list so the athlete can compare planned structure with measured activity.
-  An import without a matched workout uses an activity overview with recorded
-  duration and load, and omits the empty plan canvas and block list.
+  An import without a matched workout uses a single-column activity overview
+  with recorded duration and load, followed by its available measurements and
+  any saved activity notes. It omits plan-only context and the empty plan
+  canvas and block list.
 - `StatusBadge` shows planned, adjusted, or missed text states. Completed work
   does not need a repeated completed badge.
 - `MetricText` provides tabular numerals. `Stepper` owns ordered live execution

@@ -8,12 +8,28 @@ export function SessionDetailClient({
   isDone,
   notes,
   compliancePct,
+  isImportedWithoutWorkout = false,
 }: {
   sessionId: number;
   isDone: boolean;
   notes: string;
   compliancePct: number | null;
+  isImportedWithoutWorkout?: boolean;
 }) {
+  if (isImportedWithoutWorkout) {
+    const activityNotes = notes.trim();
+    if (!activityNotes) return null;
+
+    return (
+      <Surface id="session-outcome" className="space-y-3">
+        <h2 className={sectionHeadingClassName}>Activity notes</h2>
+        <p className="border-t border-[var(--border)] pt-4 text-[13px] leading-[1.55] text-[var(--text)] whitespace-pre-wrap break-words">
+          {activityNotes}
+        </p>
+      </Surface>
+    );
+  }
+
   return (
     <Surface id="session-outcome" className="space-y-4">
       <div>

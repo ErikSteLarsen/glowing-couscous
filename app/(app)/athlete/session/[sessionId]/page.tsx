@@ -46,16 +46,20 @@ export default async function AthleteSessionPage({
   const scoreDurationSec = importedWithoutWorkout
     ? detail.session.recordedDurationSec ?? detail.session.durationSec
     : detail.session.durationSec;
-  const sessionAction = detail.session.status === 'completed' ? 'Review outcome' : 'Start live';
-  const sessionActionHref = detail.session.status === 'completed'
-    ? '#session-outcome'
-    : `/athlete/live/${detail.session.id}?from=${sessionOrigin}`;
+  const sessionAction = importedWithoutWorkout
+    ? 'View activity data'
+    : detail.session.status === 'completed' ? 'Review outcome' : 'Start live';
+  const sessionActionHref = importedWithoutWorkout
+    ? '#recorded-activity'
+    : detail.session.status === 'completed'
+      ? '#session-outcome'
+      : `/athlete/live/${detail.session.id}?from=${sessionOrigin}`;
 
   return (
     <PageShell>
       <TopBar
         title={detail.session.title}
-        description={detail.session.summary ?? 'Session details.'}
+        description={detail.session.summary ?? (importedWithoutWorkout ? 'Imported activity.' : 'Session details.')}
         back={returnTarget}
         actions={
           <>
@@ -69,12 +73,16 @@ export default async function AthleteSessionPage({
           <span>{getSportLabel(detail.session.sport)}</span>
           <span aria-hidden="true">·</span>
           <span>{format(detail.session.date, 'EEE d MMM · HH:mm')}</span>
-          <span aria-hidden="true">·</span>
-          <span>Week of {format(startOfWeek(detail.session.date, { weekStartsOn: 1 }), 'd MMM')}</span>
+          {!importedWithoutWorkout ? (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>Week of {format(startOfWeek(detail.session.date, { weekStartsOn: 1 }), 'd MMM')}</span>
+            </>
+          ) : null}
           <StatusBadge status={detail.session.status} />
         </div>
 
-        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_304px]">
+        <div className={`grid items-start gap-5 ${importedWithoutWorkout ? '' : 'xl:grid-cols-[minmax(0,1fr)_304px]'}`}>
           <div className="min-w-0 space-y-5">
             <Surface className="space-y-5">
               <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--border)] pb-4">
@@ -82,33 +90,32 @@ export default async function AthleteSessionPage({
                   <h2 className={sectionHeadingClassName}>{importedWithoutWorkout ? 'Activity overview' : 'Session score'}</h2>
                   <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
                     {importedWithoutWorkout
-                      ? 'No planned workout was matched. Recorded measurements appear below.'
+                      ? 'Imported activity · no planned workout matched'
                       : 'The full workout in its planned order.'}
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-x-6 gap-y-2">
-                  <div>
-                    <p className="text-[11px] font-medium text-[var(--text-muted)]">{importedWithoutWorkout ? 'Recorded time' : 'Planned time'}</p>
+                <div className={importedWithoutWorkout
+                  ? 'grid w-full grid-cols-2 divide-x divide-[var(--border)] border-y border-[var(--border)] sm:w-auto sm:min-w-[20rem]'
+                  : 'flex flex-wrap gap-x-6 gap-y-2'}
+                >
+                  <div className={importedWithoutWorkout ? 'py-3 pr-4 sm:pr-6' : ''}>
+                    <p className="text-[11px] font-medium text-[var(--text-muted)]">{importedWithoutWorkout ? 'Duration' : 'Planned time'}</p>
                     <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{formatDurationExact(scoreDurationSec)}</p>
                   </div>
-                  <div>
+                  <div className={importedWithoutWorkout ? 'py-3 pl-4 sm:pl-6' : ''}>
                     <p className="text-[11px] font-medium text-[var(--text-muted)]">Training load</p>
                     <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{detail.session.loadAvailable === false ? 'Unavailable' : `${detail.session.tss} TSS`}</p>
                   </div>
                 </div>
               </div>
               {!importedWithoutWorkout ? <SessionPlanCanvas blocks={detail.session.blocks} /> : null}
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[var(--border)] pt-4 text-[12px] text-[var(--text-secondary)]">
-                {importedWithoutWorkout ? (
-                  <span>Recorded charts below show the sensor data available for this activity.</span>
-                ) : (
-                  <>
-                    <span>Targets are shown with each block.</span>
-                    {detail.session.metricsSource === 'manual-planned' ? <span>Planned estimate</span> : null}
-                    <span>{detail.session.blocks.length} blocks in this session</span>
-                  </>
-                )}
-              </div>
+              {!importedWithoutWorkout ? (
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[var(--border)] pt-4 text-[12px] text-[var(--text-secondary)]">
+                  <span>Targets are shown with each block.</span>
+                  {detail.session.metricsSource === 'manual-planned' ? <span>Planned estimate</span> : null}
+                  <span>{detail.session.blocks.length} blocks in this session</span>
+                </div>
+              ) : null}
             </Surface>
 
             {!importedWithoutWorkout ? <Surface className="space-y-4">
@@ -147,10 +154,14 @@ export default async function AthleteSessionPage({
             </Surface> : null}
 
             {detail.session.importedActivityId ? (
-              <Surface className="space-y-4">
+              <Surface id="recorded-activity" className="space-y-4">
                 <div>
-                  <h2 className={sectionHeadingClassName}>Recorded activity</h2>
-                  <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Recorded sensor measurements are shown here; the scheduled workout blocks are listed above.</p>
+                  <h2 className={sectionHeadingClassName}>{importedWithoutWorkout ? 'Activity data' : 'Recorded activity'}</h2>
+                  <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
+                    {importedWithoutWorkout
+                      ? 'Charts show the measurements saved with this activity.'
+                      : 'Compare recorded measurements with the scheduled workout blocks above.'}
+                  </p>
                 </div>
                 <ImportedActivityMeasurements
                   activityId={detail.session.importedActivityId}
@@ -159,9 +170,19 @@ export default async function AthleteSessionPage({
                 />
               </Surface>
             ) : null}
+
+            {importedWithoutWorkout ? (
+              <SessionDetailClient
+                sessionId={detail.session.id}
+                isDone={detail.session.status === 'completed'}
+                notes={detail.session.notes}
+                compliancePct={detail.session.compliancePct}
+                isImportedWithoutWorkout
+              />
+            ) : null}
           </div>
 
-          <aside className="space-y-4">
+          {!importedWithoutWorkout ? <aside className="space-y-4">
             <Surface className="space-y-3">
               <h2 className={sectionHeadingClassName}>Session context</h2>
               <p className="text-[13px] leading-[1.5] text-[var(--text-secondary)]">
@@ -199,7 +220,7 @@ export default async function AthleteSessionPage({
               notes={detail.session.notes}
               compliancePct={detail.session.compliancePct}
             />
-          </aside>
+          </aside> : null}
         </div>
       </div>
     </PageShell>
