@@ -42,6 +42,10 @@ export default async function AthleteSessionPage({
     );
   }
 
+  const importedWithoutWorkout = detail.session.importedActivityId !== null && detail.session.blocks.length === 0;
+  const scoreDurationSec = importedWithoutWorkout
+    ? detail.session.recordedDurationSec ?? detail.session.durationSec
+    : detail.session.durationSec;
   const sessionAction = detail.session.status === 'completed' ? 'Review outcome' : 'Start live';
   const sessionActionHref = detail.session.status === 'completed'
     ? '#session-outcome'
@@ -75,13 +79,17 @@ export default async function AthleteSessionPage({
             <Surface className="space-y-5">
               <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--border)] pb-4">
                 <div>
-                  <h2 className={sectionHeadingClassName}>Session score</h2>
-                  <p className="mt-1 text-[13px] text-[var(--text-secondary)]">The full workout in its planned order.</p>
+                  <h2 className={sectionHeadingClassName}>{importedWithoutWorkout ? 'Activity overview' : 'Session score'}</h2>
+                  <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
+                    {importedWithoutWorkout
+                      ? 'No planned workout was matched. Recorded measurements appear below.'
+                      : 'The full workout in its planned order.'}
+                  </p>
                 </div>
                 <div className="flex flex-wrap gap-x-6 gap-y-2">
                   <div>
-                    <p className="text-[11px] font-medium text-[var(--text-muted)]">Planned time</p>
-                    <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{formatDurationExact(detail.session.durationSec)}</p>
+                    <p className="text-[11px] font-medium text-[var(--text-muted)]">{importedWithoutWorkout ? 'Recorded time' : 'Planned time'}</p>
+                    <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{formatDurationExact(scoreDurationSec)}</p>
                   </div>
                   <div>
                     <p className="text-[11px] font-medium text-[var(--text-muted)]">Training load</p>
@@ -89,15 +97,21 @@ export default async function AthleteSessionPage({
                   </div>
                 </div>
               </div>
-              <SessionPlanCanvas blocks={detail.session.blocks} />
+              {!importedWithoutWorkout ? <SessionPlanCanvas blocks={detail.session.blocks} /> : null}
               <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[var(--border)] pt-4 text-[12px] text-[var(--text-secondary)]">
-                <span>Targets are shown with each block.</span>
-                {detail.session.metricsSource === 'manual-planned' ? <span>Planned estimate</span> : null}
-                <span>{detail.session.blocks.length} blocks in this session</span>
+                {importedWithoutWorkout ? (
+                  <span>Recorded charts below show the sensor data available for this activity.</span>
+                ) : (
+                  <>
+                    <span>Targets are shown with each block.</span>
+                    {detail.session.metricsSource === 'manual-planned' ? <span>Planned estimate</span> : null}
+                    <span>{detail.session.blocks.length} blocks in this session</span>
+                  </>
+                )}
               </div>
             </Surface>
 
-            <Surface className="space-y-4">
+            {!importedWithoutWorkout ? <Surface className="space-y-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className={sectionHeadingClassName}>Workout blocks</h2>
                 <span className="text-[12px] text-[var(--text-secondary)]">Read-only scheduled copy</span>
@@ -130,7 +144,7 @@ export default async function AthleteSessionPage({
               ) : (
                 <p className="border-y border-[var(--border)] py-5 text-[13px] text-[var(--text-secondary)]">This session has no workout blocks.</p>
               )}
-            </Surface>
+            </Surface> : null}
 
             {detail.session.importedActivityId ? (
               <Surface className="space-y-4">

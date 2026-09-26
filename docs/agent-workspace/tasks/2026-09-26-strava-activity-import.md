@@ -31,6 +31,8 @@ bar granularity.
   bars, with profile-based zones where available and explicit gaps otherwise.
 - [x] Show recorded measurements for both file and Strava imports beneath the
   planned workout score and block list on session detail.
+- [x] Replace the empty score and block list with a recorded activity overview
+  when an imported session has no matched workout.
 - [ ] Verify automatic webhook delivery against the live Strava app.
 - [ ] Verify the additive migration on a non-production database.
 - [ ] Run full repository checks when the local dependency environment allows.

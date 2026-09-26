@@ -23,7 +23,10 @@ color uses the saved HRmax zones when available, and intervals without samples
 remain blank. The chart caps at 48 bars to fit compact calendar rows. The
 calendar also uses the recorded duration for imported FIT and Strava sessions.
 Session detail now exposes recorded measurement charts for both FIT and Strava
-imports beneath the scheduled score and workout block list.
+imports beneath the scheduled score and workout block list. Standalone imports
+without planned blocks use an activity overview with recorded duration/load and
+hide the empty plan canvas and block list; matched workouts retain their plan
+score and blocks.
 `git diff --check`,
 Node TypeScript syntax checks for the changed service files, and the Impeccable
 detector pass with no new findings; its only hits are existing type-ramp
