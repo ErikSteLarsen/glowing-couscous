@@ -447,6 +447,14 @@ for contextual return and execution controls.
 - `SessionBlockBar` uses duration-proportional segments. On card and compact
   variants, segment height maps to Zone 1 through Zone 5 and color identifies
   the zone. Its accessible label carries the same information in text.
+- Imported sessions in the week Calendar use `ActivityIntensityBars` when
+  heart-rate samples are available. Equal-width, minute-aligned bins follow the
+  recorded session duration and widen only for long activities to cap the chart
+  at 48 bars. Bar height follows the recorded heart-rate range, and saved HRmax
+  enables Olympiatoppen zone colors. Without HRmax, the chart stays signal-blue
+  and does not imply calibrated zones. Missing samples remain visible as gaps.
+  The row shows average bpm and bin duration; hover text
+  carries each bin's average and range. Month rows keep their title-only summary.
 - `ActivityMetricBars` keeps recorded heart rate, pace/speed, power, cadence,
   temperature, elevation, and grade in a bar-based visual language. Time-based
   metrics use one-minute buckets (five minutes for temperature); terrain uses

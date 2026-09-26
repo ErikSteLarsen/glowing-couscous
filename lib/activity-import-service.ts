@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { prisma } from './prisma.ts';
 import { getTempoZoneMeta } from './tempo-blocks.ts';
 import { calculateOlympiatoppenHeartRateZones } from './profile-training-zones.ts';
+import { parseActivityTelemetry } from './activity-metrics.ts';
 import { parsePerformanceProfileJson } from './performance-profile.ts';
 import type { ActivitySeriesPoint } from './activity-series.ts';
 
@@ -419,21 +420,7 @@ function createImportFingerprint(value: ActivityImportInput) {
 }
 
 function parseTelemetry(value: unknown): ImportedActivityHistory['telemetry'] {
-  if (typeof value !== 'string') return null;
-  try {
-    const parsed: unknown = JSON.parse(value);
-    if (!parsed || typeof parsed !== 'object') return null;
-    const record = parsed as Record<string, unknown>;
-    if (record.version !== 1 || !Array.isArray(record.points)) return null;
-    return {
-      version: 1 as const,
-      distanceMeters: typeof record.distanceMeters === 'number' && Number.isFinite(record.distanceMeters) ? record.distanceMeters : null,
-      elevationGainMeters: typeof record.elevationGainMeters === 'number' && Number.isFinite(record.elevationGainMeters) ? record.elevationGainMeters : null,
-      points: record.points.filter(isActivitySeriesPoint),
-    };
-  } catch {
-    return null;
-  }
+  return parseActivityTelemetry(value);
 }
 
 function recordValue(value: unknown) {
@@ -454,12 +441,6 @@ function stringValue(value: unknown) {
 
 function dateValue(value: unknown) {
   return value instanceof Date && Number.isFinite(value.getTime()) ? value : null;
-}
-
-function isActivitySeriesPoint(value: unknown): value is ActivitySeriesPoint {
-  if (!value || typeof value !== 'object') return false;
-  const point = value as Record<string, unknown>;
-  return Number.isInteger(point.elapsedSec) && (point.elapsedSec as number) >= 0;
 }
 
 function optionalBoundedNumber(value: unknown, min: number, max: number): number | null | 'invalid' {

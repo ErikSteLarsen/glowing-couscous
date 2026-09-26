@@ -3,12 +3,58 @@ import { readOverviewCardsFromPrefsJson } from './overview-preferences.ts';
 import { prisma } from './prisma.ts';
 import { deriveSessionMetrics } from './session-math.ts';
 import { getTempoZoneMeta } from './tempo-blocks.ts';
-import { parseActivitySegments } from './activity-metrics.ts';
+import { parseActivitySegments, parseActivityTelemetry } from './activity-metrics.ts';
+import { bucketActivityMetric, type ActivityIntensityTimeline } from './activity-series.ts';
+import { parsePerformanceProfileJson } from './performance-profile.ts';
+import { zoneForHeartRateBpm } from './profile-training-zones.ts';
 import type { WorkoutTargetReference } from './workout-targets.ts';
 
 type AthleteServiceDeps = {
   db?: typeof prisma;
 };
+
+function buildActivityIntensityTimeline(
+  activity: { metricsSource?: string; durationSec?: number; telemetryJson?: string | null },
+  maxHeartRateBpm: number | null,
+): ActivityIntensityTimeline | null {
+  if (!['file-import', 'strava-import'].includes(activity.metricsSource ?? '') || !activity.telemetryJson) {
+    return null;
+  }
+
+  const telemetry = parseActivityTelemetry(activity.telemetryJson);
+  if (!telemetry) return null;
+
+  const chart = bucketActivityMetric(telemetry.points, 'heartRate', {
+    durationSec: activity.durationSec,
+    maxBars: 48,
+  });
+  if (chart.buckets.length === 0) return null;
+
+  const count = Math.ceil(Math.max(activity.durationSec ?? 0, chart.buckets.at(-1)?.to ?? 0) / chart.interval);
+  const buckets = new Map(chart.buckets.map((bucket) => [bucket.index, bucket] as const));
+  const bins = Array.from({ length: count }, (_, index) => {
+    const bucket = buckets.get(index);
+    return {
+      index,
+      from: index * chart.interval,
+      to: (index + 1) * chart.interval,
+      averageBpm: bucket ? Math.round(bucket.average) : null,
+      minBpm: bucket ? Math.round(bucket.min) : null,
+      maxBpm: bucket ? Math.round(bucket.max) : null,
+      heightPercent: bucket?.heightPercent ?? null,
+      zone: bucket ? zoneForHeartRateBpm(bucket.average, maxHeartRateBpm) : null,
+    };
+  });
+
+  return {
+    intervalSec: chart.interval,
+    averageBpm: Math.round(chart.average),
+    minBpm: Math.round(chart.min),
+    maxBpm: Math.round(chart.max),
+    maxHeartRateBpm,
+    bins,
+  };
+}
 
 function selectPrimaryRequest<T extends { status: string }>(requests: T[]) {
   return requests.find((request) => request.status === 'PENDING') ?? requests[0] ?? null;
@@ -45,8 +91,9 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       segmentsJson?: string | null;
       metricsSource?: string;
       durationSec?: number;
+      telemetryJson?: string | null;
     } | null;
-  }) {
+  }, options: { includeIntensityTimeline?: boolean; heartRateMaxBpm?: number | null } = {}) {
     const metrics = deriveSessionMetrics(
       session.blocks.filter((block) => !block.skipped).map((block) => ({
         kind: block.kind as 'warmup' | 'work' | 'recovery' | 'cooldown' | 'pause',
@@ -70,6 +117,11 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       (block) =>
         block.targetType !== null && block.targetLow !== null && block.targetHigh !== null,
     );
+    const isImportedActivity = ['file-import', 'strava-import'].includes(session.activity?.metricsSource ?? '');
+
+    const intensityTimeline = options.includeIntensityTimeline && session.activity
+      ? buildActivityIntensityTimeline(session.activity, options.heartRateMaxBpm ?? null)
+      : null;
 
     return {
       id: session.id,
@@ -99,13 +151,14 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
           : null,
       durationSec: metrics.durationSec,
       tss: session.activity?.tss ?? metrics.tss,
-      loadAvailable: !(session.activity?.metricsSource === 'file-import' && session.activity.tss === 0),
-      recordedDurationSec: session.activity?.metricsSource === 'file-import'
-        ? session.activity.durationSec ?? null
+      loadAvailable: !(isImportedActivity && session.activity?.tss === 0),
+      recordedDurationSec: isImportedActivity
+        ? session.activity?.durationSec ?? null
         : null,
       segments: session.activity?.segmentsJson
         ? parseActivitySegments(session.activity.segmentsJson)
         : metrics.segments,
+      intensityTimeline,
       compliancePct: session.activity?.compliancePct ?? null,
       metricsSource: session.activity?.metricsSource ?? null,
       blockCount: session.blocks.length,
@@ -207,7 +260,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
 
       const sessions = athlete.sessions
         .filter((s): s is typeof s & { date: Date } => s.date !== null)
-        .map(mapSessionSummary);
+        .map((session) => mapSessionSummary(session));
       const today = new Date();
       const todaySessions = sessions.filter((session) => isSameDay(session.date, today));
       const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
@@ -339,7 +392,16 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
               blocks: {
                 orderBy: { sortOrder: 'asc' },
               },
-              activity: true,
+              activity: {
+                select: {
+                  tss: true,
+                  compliancePct: true,
+                  segmentsJson: true,
+                  metricsSource: true,
+                  durationSec: true,
+                  telemetryJson: resolvedView === 'week',
+                },
+              },
             },
             orderBy: [{ date: 'asc' }, { id: 'asc' }],
           },
@@ -350,9 +412,13 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         return null;
       }
 
+      const heartRateMaxBpm = parsePerformanceProfileJson(athlete.performanceProfileJson).heartRateMaxBpm;
       const sessions = athlete.sessions
         .filter((s): s is typeof s & { date: Date } => s.date !== null)
-        .map(mapSessionSummary);
+        .map((session) => mapSessionSummary(session, {
+          includeIntensityTimeline: resolvedView === 'week',
+          heartRateMaxBpm,
+        }));
       const buildDay = (date: Date) => ({
         label: format(date, 'EEE'),
         dateLabel: format(date, 'd'),

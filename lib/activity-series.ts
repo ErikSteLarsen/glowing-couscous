@@ -31,6 +31,26 @@ export type ActivityMetricBucket = {
   heightPercent: number;
 };
 
+export type ActivityIntensityBin = {
+  index: number;
+  from: number;
+  to: number;
+  averageBpm: number | null;
+  minBpm: number | null;
+  maxBpm: number | null;
+  heightPercent: number | null;
+  zone: number | null;
+};
+
+export type ActivityIntensityTimeline = {
+  intervalSec: number;
+  averageBpm: number;
+  minBpm: number;
+  maxBpm: number;
+  maxHeartRateBpm: number | null;
+  bins: ActivityIntensityBin[];
+};
+
 export type BucketedActivityMetric = {
   metric: ActivityMetric;
   label: string;

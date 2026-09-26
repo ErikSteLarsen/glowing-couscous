@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { ActivityIntensityBars } from '@/components/tempo/ActivityIntensityBars';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
+import type { ActivityIntensityTimeline } from '@/lib/activity-series';
 
 type SessionStatus = 'planned' | 'completed' | 'adjusted' | 'missed';
 
@@ -16,6 +18,7 @@ export type SessionRowData = {
   durationSec: number;
   tss: number;
   loadAvailable?: boolean;
+  intensityTimeline?: ActivityIntensityTimeline | null;
   targetLabel?: string | null;
   segments: Array<{
     key: string;
@@ -113,7 +116,11 @@ export function SessionRow({
             </p>
           </div>
         </div>
-        {styles.showBar ? <SessionBlockBar segments={session.segments} size={styles.barSize} /> : null}
+        {styles.showBar ? (
+          session.intensityTimeline?.bins.length
+            ? <ActivityIntensityBars timeline={session.intensityTimeline} />
+            : <SessionBlockBar segments={session.segments} size={styles.barSize} />
+        ) : null}
         {styles.metrics ? (
           <div className={`flex flex-wrap items-center ${styles.metrics} text-[var(--text-secondary)]`}>
             <MetricText>{formatDuration(session.durationSec)}</MetricText>

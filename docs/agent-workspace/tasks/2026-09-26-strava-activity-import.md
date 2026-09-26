@@ -27,6 +27,8 @@ bar granularity.
   connection and imported records, restoring matched planned sessions.
 - [x] Confirm the Vercel build and production migration after correcting Prisma
   CLI resolution; user confirmed the deployed OAuth/manual import flow.
+- [x] Show imported heart-rate intensity in week Calendar as duration-aligned
+  bars, with profile-based zones where available and explicit gaps otherwise.
 - [ ] Verify automatic webhook delivery against the live Strava app.
 - [ ] Verify the additive migration on a non-production database.
 - [ ] Run full repository checks when the local dependency environment allows.
@@ -40,3 +42,8 @@ inaccessible package registry. Production OAuth/manual import were confirmed
 by the user; live webhook delivery and non-production migration verification
 remain open. Current details are in
 [`CURRENT-STATUS.md`](../CURRENT-STATUS.md).
+
+The week-calendar intensity timeline has `git diff --check`, Node syntax checks
+for the changed service files, and one Impeccable detector pass. ESLint is
+unavailable because dependencies are absent and registry access is blocked;
+browser rendering and a production build were not verified.

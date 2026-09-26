@@ -70,9 +70,10 @@ export default async function AthleteCalendarPage({
               sport: session.sport,
               timeLabel: session.timeLabel,
               status: session.status,
-              durationSec: session.durationSec,
+              durationSec: session.recordedDurationSec ?? session.durationSec,
               tss: session.tss,
               segments: session.segments,
+              intensityTimeline: session.intensityTimeline,
             })),
           }))}
           initialActiveDateIso={format(resolvedReferenceDate, 'yyyy-MM-dd')}

@@ -34,6 +34,15 @@ export function calculateOlympiatoppenHeartRateZones(maxHeartRate: number | null
   };
 }
 
+export function zoneForHeartRateBpm(heartRateBpm: number, maxHeartRate: number | null | undefined): TempoZone | null {
+  const ranges = calculateOlympiatoppenHeartRateZones(maxHeartRate);
+  if (!ranges || !Number.isFinite(heartRateBpm)) return null;
+
+  const match = zones.find((zone) => heartRateBpm >= ranges[zone].low && heartRateBpm <= ranges[zone].high);
+  if (match) return match;
+  return heartRateBpm < ranges[1].low ? 1 : 5;
+}
+
 export function racePaceSecondsPerKm(profile: Pick<PerformanceProfile, 'running'>): number | null {
   const { raceDistanceMeters, raceTimeSec } = profile.running;
   if (!raceDistanceMeters || !raceTimeSec) return null;

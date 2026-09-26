@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ActionLink, buttonFocusClassName, ghostButtonClassName } from '@/components/ui';
 import { SessionRow } from '@/components/tempo/SessionRow';
 import { getWeekScrollerSearchHref } from '@/lib/calendar-scroller';
+import type { ActivityIntensityTimeline } from '@/lib/activity-series';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 type CalendarScrollerSession = {
@@ -17,6 +18,7 @@ type CalendarScrollerSession = {
   durationSec: number;
   tss: number;
   loadAvailable?: boolean;
+  intensityTimeline?: ActivityIntensityTimeline | null;
   segments: Array<{
     key: string;
     zone: number;
