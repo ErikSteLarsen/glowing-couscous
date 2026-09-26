@@ -1,5 +1,11 @@
 # Current Status
 
+On **2026-09-26**, the first Vercel deployment of the activity import and
+Strava work stopped before migrations because `ensure-prisma-client.mjs` used
+`require.resolve("prisma")`, which resolves Prisma's package export rather
+than its CLI executable. The helper now reads the executable declared by the
+installed Prisma package. This deployment fix has not yet been built on Vercel.
+
 On **2026-09-26**, `public/tempo-sports-loop.svg` is a standalone, transparent
 triathlon mark proposal: swimming, cycling, then running in a twelve-second loop.
 The bicycle wheelbase is shortened from 162 to 116 SVG units; spokes and rim

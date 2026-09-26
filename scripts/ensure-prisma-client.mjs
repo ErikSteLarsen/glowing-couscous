@@ -67,7 +67,21 @@ console.log("Prisma Client is missing or out of date; generating it from the sch
 let prismaCli;
 
 try {
-  prismaCli = require.resolve("prisma");
+  const prismaPackagePath = require.resolve("prisma/package.json");
+  const prismaPackage = JSON.parse(readFileSync(prismaPackagePath, "utf8"));
+  const prismaBin =
+    typeof prismaPackage.bin === "string"
+      ? prismaPackage.bin
+      : prismaPackage.bin?.prisma;
+
+  if (!prismaBin) {
+    throw new Error("The Prisma package does not declare a CLI executable.");
+  }
+
+  prismaCli = resolve(dirname(prismaPackagePath), prismaBin);
+  if (!existsSync(prismaCli)) {
+    throw new Error(`The Prisma CLI executable was not found at ${prismaCli}.`);
+  }
 } catch (error) {
   console.error("Unable to locate the Prisma CLI.", error);
   process.exit(1);

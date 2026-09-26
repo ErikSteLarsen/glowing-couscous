@@ -26,6 +26,7 @@ bar granularity.
   recovery. Disconnect and deauthorization remove the associated Tempo
   connection and imported records, restoring matched planned sessions.
 - [ ] Verify the additive database migration against a non-production database.
+- [ ] Confirm the Vercel build and deployed migration after correcting Prisma CLI resolution.
 - [ ] Complete authenticated browser and live OAuth/webhook verification.
 - [ ] Run full repository checks when the local dependency environment allows.
 
