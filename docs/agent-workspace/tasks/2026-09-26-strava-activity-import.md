@@ -25,15 +25,18 @@ bar granularity.
 - [x] Idempotent asynchronous webhook processing and authenticated queue
   recovery. Disconnect and deauthorization remove the associated Tempo
   connection and imported records, restoring matched planned sessions.
-- [ ] Verify the additive database migration against a non-production database.
-- [ ] Confirm the Vercel build and deployed migration after correcting Prisma CLI resolution.
-- [ ] Complete authenticated browser and live OAuth/webhook verification.
+- [x] Confirm the Vercel build and production migration after correcting Prisma
+  CLI resolution; user confirmed the deployed OAuth/manual import flow.
+- [ ] Verify automatic webhook delivery against the live Strava app.
+- [ ] Verify the additive migration on a non-production database.
 - [ ] Run full repository checks when the local dependency environment allows.
 
 ## Verification
 
-Focused parser, import, chart, and pure Node checks have passed in prior runs.
-Full repository verification is currently limited by an incomplete local
-dependency tree and inaccessible package registry. The migration and live
-authenticated browser flow remain unverified. Current details are in
+Focused parser, import, chart, and pure Node checks passed in prior runs. The
+pace chart correction has syntax and diff checks only; full repository
+verification is currently limited by an incomplete local dependency tree and
+inaccessible package registry. Production OAuth/manual import were confirmed
+by the user; live webhook delivery and non-production migration verification
+remain open. Current details are in
 [`CURRENT-STATUS.md`](../CURRENT-STATUS.md).

@@ -4,7 +4,17 @@ On **2026-09-26**, the first Vercel deployment of the activity import and
 Strava work stopped before migrations because `ensure-prisma-client.mjs` used
 `require.resolve("prisma")`, which resolves Prisma's package export rather
 than its CLI executable. The helper now reads the executable declared by the
-installed Prisma package. This deployment fix has not yet been built on Vercel.
+installed Prisma package. The user confirmed the next Vercel deployment reached
+Ready and the deployed Strava connection/manual import worked.
+
+On **2026-09-26**, pace review found that tiny positive speed samples from
+stops/GPS drift were converted into extreme min/km values, inflating the
+average and flattening the bars. Pace now ignores speeds below 0.5 m/s, uses a
+harmonic mean of accepted pace samples, and scales bar height to the 5th–95th
+percentile while the interval table keeps the accepted sample range. Node's
+TypeScript syntax check, `git diff --check`, and the Impeccable detector pass.
+Chart tests, a full build, and browser inspection after this change have not
+been run.
 
 On **2026-09-26**, `public/tempo-sports-loop.svg` is a standalone, transparent
 triathlon mark proposal: swimming, cycling, then running in a twelve-second loop.
@@ -38,15 +48,17 @@ atomic with imports so an in-flight review cannot recreate data after
 disconnect; token revocation failure is surfaced with a Strava settings link.
 The review shows approved training metadata, and over-dense streams are capped
 while retaining the final sample. A subscription setup script and authenticated
-queue-recovery endpoint are included. External configuration and verification
-remain: OAuth credentials, a public callback, a webhook subscription, a
-non-production database migration, and authenticated browser verification.
+queue-recovery endpoint are included. The user configured production OAuth and
+confirmed the deployed manual connection/import flow. Automatic webhook
+subscription and event verification remain; the production migration ran in
+the successful Vercel build, while a separate non-production migration check
+has not been done.
 
-Focused pure Node tests and TypeScript/JavaScript syntax checks pass. Full
-verification is blocked by an incomplete local `node_modules` tree and an
-inaccessible package registry. Prisma validation/client generation, complete
-import-service tests, lint, build, migration, and authenticated browser flow
-were not completed. See the
+Focused parser, import, chart, and pure Node checks passed in earlier runs. The
+latest pace correction has syntax and diff checks only. Full local repository
+verification is limited by an incomplete `node_modules` tree and inaccessible
+package registry; complete import-service tests, lint, and a local production
+build remain unverified. See the
 [activity import task](tasks/2026-09-26-strava-activity-import.md).
 
 On **2026-09-26**, the shared Imported activities page now accepts FIT, TCX, and

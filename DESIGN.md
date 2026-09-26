@@ -450,8 +450,11 @@ for contextual return and execution controls.
 - `ActivityMetricBars` keeps recorded heart rate, pace/speed, power, cadence,
   temperature, elevation, and grade in a bar-based visual language. Time-based
   metrics use one-minute buckets (five minutes for temperature); terrain uses
-  50 m distance buckets and widens only to cap a long chart. Pace uses taller
-  bars for faster intervals. Each chart has average/range context and an
+  50 m distance buckets and widens only to cap a long chart. Pace omits
+  near-stationary readings below 0.5 m/s, averages from the underlying speeds,
+  and scales bars to the central 90% of samples so outliers do not flatten the
+  chart. Faster pace intervals still use taller bars; the interval table keeps
+  the accepted sample range. Each chart has average/range context and an
   expandable interval table so the graph is not the only way to read values.
 - `StatusBadge` shows planned, adjusted, or missed text states. Completed work
   does not need a repeated completed badge.

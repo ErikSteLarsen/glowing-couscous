@@ -52,6 +52,9 @@ type MetricDefinition = {
   read(point: ActivitySeriesPoint): number | null | undefined;
 };
 
+// Below this speed, GPS drift at stops is not a useful pace reading.
+const MIN_PACE_SPEED_METERS_PER_SECOND = 0.5;
+
 const definitions: Record<ActivityMetric, MetricDefinition> = {
   heartRate: {
     label: 'Heart rate', unit: 'bpm', axis: 'time', baseInterval: 60,
@@ -61,7 +64,9 @@ const definitions: Record<ActivityMetric, MetricDefinition> = {
     label: 'Pace', unit: 'min/km', axis: 'time', baseInterval: 60, inverse: true,
     read: (point) => {
       const speed = point.speedMetersPerSecond;
-      return speed && speed > 0 ? 1000 / speed : null;
+      const usableSpeed = typeof speed === 'number' && Number.isFinite(speed) &&
+        speed >= MIN_PACE_SPEED_METERS_PER_SECOND;
+      return usableSpeed ? 1000 / speed : null;
     },
   },
   speed: {
@@ -144,7 +149,7 @@ export function bucketActivityMetric(
     index,
     from: group.from,
     to: group.to,
-    average: mean(group.values),
+    average: mean(group.values, metric),
     min: Math.min(...group.values),
     max: Math.max(...group.values),
     sampleCount: group.values.length,
@@ -152,9 +157,11 @@ export function bucketActivityMetric(
   const overallValues = metricEntries.map(({ value }) => value);
   const minimum = overallValues.length ? Math.min(...overallValues) : 0;
   const maximum = overallValues.length ? Math.max(...overallValues) : 0;
+  const scaleMinimum = metric === 'pace' ? percentile(overallValues, 0.05) : minimum;
+  const scaleMaximum = metric === 'pace' ? percentile(overallValues, 0.95) : maximum;
   const buckets = rawBuckets.map((bucket) => ({
     ...bucket,
-    heightPercent: heightFor(bucket.average, minimum, maximum, definition.inverse === true),
+    heightPercent: heightFor(bucket.average, scaleMinimum, scaleMaximum, definition.inverse === true),
   }));
 
   return {
@@ -163,7 +170,7 @@ export function bucketActivityMetric(
     unit: definition.unit,
     axis,
     interval,
-    average: overallValues.length ? mean(overallValues) : 0,
+    average: overallValues.length ? mean(overallValues, metric) : 0,
     min: minimum,
     max: maximum,
     buckets,
@@ -206,11 +213,26 @@ function getExtent(
 
 function heightFor(value: number, minimum: number, maximum: number, inverse: boolean) {
   if (maximum <= minimum) return 54;
-  const normalized = (value - minimum) / (maximum - minimum);
+  const normalized = Math.max(0, Math.min(1, (value - minimum) / (maximum - minimum)));
   const visual = inverse ? 1 - normalized : normalized;
   return Math.round(18 + visual * 82);
 }
 
-function mean(values: number[]) {
+function mean(values: number[], metric: ActivityMetric) {
+  if (metric === 'pace') {
+    // Harmonic mean of min/km samples corresponds to the mean underlying speed.
+    const reciprocalSum = values.reduce((sum, value) => sum + 1 / value, 0);
+    return values.length / reciprocalSum;
+  }
   return values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1);
+}
+
+function percentile(values: number[], fraction: number) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((left, right) => left - right);
+  const position = (sorted.length - 1) * fraction;
+  const lowerIndex = Math.floor(position);
+  const upperIndex = Math.ceil(position);
+  const weight = position - lowerIndex;
+  return sorted[lowerIndex] * (1 - weight) + sorted[upperIndex] * weight;
 }
