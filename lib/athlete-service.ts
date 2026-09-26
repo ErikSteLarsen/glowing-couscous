@@ -587,7 +587,9 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         coachName: session.athlete.coach?.name ?? null,
         session: {
           ...summary,
-          importedActivityId: session.activity?.metricsSource === 'file-import' ? session.activity.id : null,
+          importedActivityId: session.activity && ['file-import', 'strava-import'].includes(session.activity.metricsSource)
+            ? session.activity.id
+            : null,
           notes: session.activity?.notes ?? session.athleteNotes ?? '',
           sourceWorkout: editableSourceWorkout,
           blocks: session.blocks.map((block) => {

@@ -22,6 +22,8 @@ Minute-aligned bars expose interval shape and widen for long activities; their
 color uses the saved HRmax zones when available, and intervals without samples
 remain blank. The chart caps at 48 bars to fit compact calendar rows. The
 calendar also uses the recorded duration for imported FIT and Strava sessions.
+Session detail now exposes recorded measurement charts for both FIT and Strava
+imports beneath the scheduled score and workout block list.
 `git diff --check`,
 Node TypeScript syntax checks for the changed service files, and the Impeccable
 detector pass with no new findings; its only hits are existing type-ramp

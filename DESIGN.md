@@ -464,6 +464,9 @@ for contextual return and execution controls.
   chart. Faster pace intervals still use taller bars; the interval table keeps
   the accepted sample range. Each chart has average/range context and an
   expandable interval table so the graph is not the only way to read values.
+- Session detail keeps the scheduled score and ordered workout blocks visible.
+  For imported FIT and Strava sessions, recorded sensor charts follow the block
+  list so the athlete can compare planned structure with measured activity.
 - `StatusBadge` shows planned, adjusted, or missed text states. Completed work
   does not need a repeated completed badge.
 - `MetricText` provides tabular numerals. `Stepper` owns ordered live execution

@@ -136,7 +136,7 @@ export default async function AthleteSessionPage({
               <Surface className="space-y-4">
                 <div>
                   <h2 className={sectionHeadingClassName}>Recorded activity</h2>
-                  <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Sensor measurements imported from your activity file.</p>
+                  <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Recorded sensor measurements are shown here; the scheduled workout blocks are listed above.</p>
                 </div>
                 <ImportedActivityMeasurements
                   activityId={detail.session.importedActivityId}

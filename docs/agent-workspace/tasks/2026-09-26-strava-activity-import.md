@@ -29,6 +29,8 @@ bar granularity.
   CLI resolution; user confirmed the deployed OAuth/manual import flow.
 - [x] Show imported heart-rate intensity in week Calendar as duration-aligned
   bars, with profile-based zones where available and explicit gaps otherwise.
+- [x] Show recorded measurements for both file and Strava imports beneath the
+  planned workout score and block list on session detail.
 - [ ] Verify automatic webhook delivery against the live Strava app.
 - [ ] Verify the additive migration on a non-production database.
 - [ ] Run full repository checks when the local dependency environment allows.
