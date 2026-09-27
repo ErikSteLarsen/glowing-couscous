@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createEmptyPerformanceProfile, normalizePerformanceProfile } from '../lib/performance-profile.ts';
 import { expandRepeatedBlocks } from '../lib/workout-blocks.ts';
 import { formatResolvedWorkoutTarget, formatWorkoutTarget, missingProfileAction, resolveWorkoutTarget } from '../lib/workout-target-resolution.ts';
-import { getAvailableWorkoutTargets, normalizeWorkoutTarget, validateWorkoutTarget } from '../lib/workout-targets.ts';
+import { getAvailableWorkoutTargets, normalizeWorkoutTarget, validateWorkoutTarget, type WorkoutTarget } from '../lib/workout-targets.ts';
 import { presetTarget, reanchorProfilePaceTarget, zoneForTarget } from '../lib/workout-zone-intensity.ts';
 import { adjustWorkoutTarget } from '../lib/workout-target-adjustment.ts';
 import { deriveSessionMetrics } from '../lib/session-math.ts';
@@ -68,7 +68,7 @@ test('new running and heart-rate presets resolve from private profile values', (
     },
   });
   assert.equal(formatResolvedWorkoutTarget(pace, secondProfile, 'RUNNING'), '7:40 /km');
-  let increased = pace;
+  let increased: WorkoutTarget = pace;
   for (let index = 0; index < 51; index += 1) increased = adjustWorkoutTarget(increased, 1)!;
   assert.equal(zoneForTarget(increased, 'RUNNING', profile), 2);
   const reanchored = reanchorProfilePaceTarget(increased, profile, 2);

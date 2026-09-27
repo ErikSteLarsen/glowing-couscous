@@ -38,7 +38,7 @@ function createDraft(): SessionEditorDraft {
     zone: 4,
     durationSec: 900,
     reps: 2,
-    target: { type: 'pace', low: 240, high: 250 },
+    target: { metric: 'pace', mode: 'absolute', reference: null, low: 240, high: 250 },
     note: 'Hold form',
     skipped: true,
   });

@@ -181,7 +181,7 @@ test('session editor adds, updates, removes, and reorders blocks immutably', () 
     zone: 3,
     durationSec: 900,
     reps: 4,
-    target: { type: 'pace', low: 240, high: 250 },
+    target: { metric: 'pace', mode: 'absolute', reference: null, low: 240, high: 250 },
     note: 'Cruise intervals',
   });
   const addedRecovery = addSessionEditorBlock(added, { kind: 'recovery', zone: 1, durationSec: 300 });
@@ -257,14 +257,14 @@ test('session editor validates duration, repetitions, targets, schedule, and RPE
   assert.equal(
     validateSessionEditorDraft({
       ...draft,
-      blocks: [{ ...draft.blocks[0], target: { type: 'power', low: 280, high: 260 } }],
+      blocks: [{ ...draft.blocks[0], target: { metric: 'power', mode: 'absolute', reference: null, low: 280, high: 260 } }],
     }),
     'Target low must be less than or equal to target high.',
   );
   assert.equal(
     validateSessionEditorDraft({
       ...draft,
-      blocks: [{ ...draft.blocks[0], target: { type: 'power', low: -1, high: 260 } }],
+      blocks: [{ ...draft.blocks[0], target: { metric: 'power', mode: 'absolute', reference: null, low: -1, high: 260 } }],
     }),
     'Target values must be non-negative numbers.',
   );
@@ -291,7 +291,7 @@ test('session editor serializes canonical fields into the persistence block shap
         zone: 3,
         durationSec: 900,
         reps: 2,
-        target: { type: 'hr', low: 150, high: 165 },
+        target: { metric: 'hr', mode: 'absolute', reference: null, low: 150, high: 165 },
         note: '  Hold steady  ',
         skipped: true,
       }),

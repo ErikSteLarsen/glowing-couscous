@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { isJsonObject } from '@/lib/route-params';
+import { isPlausibleEmailAddress, normalizeEmailAddress } from '@/lib/email-address';
 
 export async function POST(req: NextRequest) {
   let body: unknown;
@@ -18,17 +19,42 @@ export async function POST(req: NextRequest) {
   if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
   }
+  const displayName = name.trim();
+  if (!displayName) {
+    return NextResponse.json({ error: 'Enter your name' }, { status: 400 });
+  }
+  const normalizedEmail = normalizeEmailAddress(email);
+  if (!isPlausibleEmailAddress(normalizedEmail)) {
+    return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 });
+  }
   if (password.length < 8) {
     return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
   }
+  if (Buffer.byteLength(password, 'utf8') > 72) {
+    return NextResponse.json({ error: 'Password must be no more than 72 bytes' }, { status: 400 });
+  }
 
-  const existing = await prisma.user.findUnique({ where: { email } });
+  const existing = await prisma.user.findFirst({
+    where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
+    select: { id: true },
+  });
   if (existing) {
     return NextResponse.json({ error: 'Email already in use' }, { status: 409 });
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
-  await prisma.user.create({ data: { name, email, passwordHash, role: 'ATHLETE', selfCoached: true } });
+  try {
+    await prisma.user.create({ data: { name: displayName, email: normalizedEmail, passwordHash, role: 'ATHLETE', selfCoached: true } });
+  } catch (error) {
+    if (isUniqueConflict(error)) {
+      return NextResponse.json({ error: 'Email already in use' }, { status: 409 });
+    }
+    throw error;
+  }
 
   return NextResponse.json({ ok: true }, { status: 201 });
+}
+
+function isUniqueConflict(error: unknown) {
+  return Boolean(error && typeof error === 'object' && 'code' in error && (error as { code?: string }).code === 'P2002');
 }

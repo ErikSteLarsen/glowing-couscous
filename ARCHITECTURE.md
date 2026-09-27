@@ -31,7 +31,7 @@ one-time account creation flow directly.
 ### Public and authentication
 
 - `/` - entry redirect
-- `/login`, `/signup`, `/setup` - authentication and first-login role setup
+- `/login`, `/signup`, `/setup`, `/forgot-password`, `/reset-password` - credentials authentication, first-login role setup, and one-time credential recovery
 - `/share/[token]` - public sanitized workout snapshot
 
 ### Coach
@@ -49,21 +49,21 @@ one-time account creation flow directly.
 - `/athlete/calendar` - week and month calendar
 - `/athlete/workouts` - owner-scoped unscheduled workout library
 - `/athlete/planner` - private month-first multi-date Planning Desk
-- `/athlete/templates` - athlete reusable content surface
+- `/athlete/templates` - private reusable day, week, and month training templates
 - `/athlete/session/[sessionId]` - read-only scheduled-session score and outcome review
 - `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion
-- `/athlete/activity` - completion history
+- `/athlete/activity` - History for completed sessions and imported activities
 - `/athlete/import` - activity-file and Strava review/import; the previous `/athlete/imported-activities` path redirects here
 - `/athlete/find-coach` - coach discovery and requests
 - `/athlete/profile`, `/profile` - profile surfaces and compatibility alias
-- `/settings` - account and overview preferences
+- `/settings` - Home overview card preferences
 
 Internal visual demos live under `/design/*` and are not part of the primary
 navigation.
 
 ### API areas
 
-- `/api/auth/*` - Auth.js, signup, and role setup
+- `/api/auth/*` - Auth.js, signup, role setup, and rate-limited password recovery
 - `/api/account/*` - account profile and preferences
 - `/api/coaches` and `/api/athlete/coach-requests` - athlete discovery
 - `/api/coach/requests/*` - coach request decisions
@@ -78,7 +78,7 @@ navigation.
 
 | Area | Owner | Responsibility |
 |---|---|---|
-| Authentication | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | Session shaping, redirects, current-user access, and API role guards |
+| Authentication | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts`, `lib/password-reset-service.ts` | Session shaping, redirects, current-user access, API role guards, and one-time password recovery |
 | Account | `lib/account-service.ts` | Profile, performance profile, and overview preference reads/writes |
 | Coach reads | `lib/coach-service.ts` | Roster and athlete-detail read models |
 | Coach requests | `lib/coach-request-service.ts` | Search, request creation, approval, rejection, and pending uniqueness |
@@ -102,9 +102,10 @@ navigation.
 `prisma/schema.prisma` defines `User`, Auth.js `Account`, `CoachRequest`,
 `Plan`, `TrainingPlan`, `Session`, `Block`, `Template`, `Activity`,
 `Assignment`, `TrainingPlanAssignment`, `ShareLink`, `StravaConnection`,
-`StravaInboxActivity`, and `StravaWebhookEvent`.
+`StravaInboxActivity`, `StravaWebhookEvent`, and `PasswordResetToken`.
 
 - `User.role` controls access. It is nullable only before first-login setup.
+- `User.sessionVersion` invalidates previously issued JWT sessions after a credential password reset; server auth refreshes the version before accepting protected work.
 - `User.performanceProfileJson` is read and written through `lib/account-service.ts`. It stores maximum heart rate, sport thresholds, a running race result, and optional per-zone pace overrides; normalization retains existing version 1 values.
 - `User.coachId` represents the accepted coach-athlete relationship.
 - `Session` can be an athlete assignment, a coach library source, or a training-plan child. A standalone library session has no date, `Plan`, or `TrainingPlan`.
@@ -116,6 +117,7 @@ navigation.
 - File imports store normalized recorded samples and import provenance on the owner's `Activity`. The uploaded original file is parsed in the browser and is never persisted. `Activity.importFingerprint` prevents importing the same normalized file twice for one account. Users can delete an import: matched sessions restore their prior status and keep their planned blocks; standalone imported sessions are removed.
 - Strava connections belong to one Tempo `User.id` and one Strava athlete ID. OAuth tokens are AES-GCM encrypted with a server-only key. The recent-activity inbox and webhook receipt queue are separate from Tempo sessions; a user must explicitly review and import an activity. Imported Strava sessions carry source identity so activity updates, privacy changes, disconnect, and deauthorization can be reflected in Tempo and matched planned sessions restored.
 - `ShareLink` stores a token hash and one sanitized snapshot tied to either a `Session` or `Template`; the raw token is never persisted.
+- `PasswordResetToken` stores one hashed, 30-minute reset token per credentials account, plus a per-account email cooldown and hourly send limit. Resend delivery requires `RESEND_API_KEY`, a verified `PASSWORD_RESET_FROM_EMAIL`, and an HTTPS `AUTH_URL` in production; raw reset tokens are sent by email and never stored. Password reset increments the account session version so older JWTs are rejected.
 
 ## Safe Extension Rules
 

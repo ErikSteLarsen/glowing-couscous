@@ -89,6 +89,8 @@ test('comparison hides equal actuals, supports missing baselines, and rejects un
     },
   };
   const missing = await createSessionComparisonService({ db: missingBaselineDb as never }).loadComparison({ role: 'ATHLETE', userId: 7 }, 40);
+  assert.equal(missing.ok, true);
+  if (!missing.ok) return;
   assert.equal(missing.baseline, null);
   assert.ok(missing.actual);
 

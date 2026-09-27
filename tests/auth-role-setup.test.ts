@@ -88,11 +88,13 @@ test('auth role setup keeps the adapter and account-linking contracts explicit',
   assert.match(schema, /role\s+String\?/);
   assert.match(schema, /emailVerified\s+DateTime\?/);
   assert.match(schema, /image\s+String\?/);
+  assert.match(schema, /sessionVersion\s+Int\s+@default\(0\)/);
   assert.doesNotMatch(auth, /allowDangerousEmailAccountLinking/);
   assert.match(route, /authRoleService\.assignRole/);
   assert.match(await read('lib/auth-role-service.ts'), /updateMany/);
   assert.match(route, /status: result\.status/);
   assert.match(middleware, /pathname === '\/setup'/);
+  assert.match(middleware, /parseApplicationUserId\(user\?\.id\)/);
   assert.match(middleware, /authConfig/);
   assert.doesNotMatch(middleware, /from ['"]@\/auth['"]/);
   assert.doesNotMatch(middleware, /pathname === '\/login' \|\| pathname === '\/signup'/);

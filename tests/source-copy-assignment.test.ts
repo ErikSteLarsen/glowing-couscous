@@ -45,7 +45,8 @@ function createSourceDb() {
       { ...sourceSession, id: 32, title: 'Wednesday run', planWeekday: 3 },
     ],
   };
-  const db = {
+  let db: Record<string, unknown>;
+  db = {
     user: {
       async findFirst() {
         return { id: 7 };
@@ -92,7 +93,7 @@ function createSourceDb() {
         return { id: 77 };
       },
     },
-    async $transaction<T>(callback: (tx: typeof db) => Promise<T>) {
+    async $transaction<T>(callback: (tx: Record<string, unknown>) => Promise<T>) {
       return callback(db);
     },
   };

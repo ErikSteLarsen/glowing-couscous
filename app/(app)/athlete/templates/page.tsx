@@ -22,7 +22,7 @@ export default async function AthleteTemplatesPage() {
     <PageShell>
       <TopBar
         title="Templates"
-        description="Build reusable day, week, and month training templates."
+        description="Save a day, week, or month of training as a template, then place it on your calendar from Planner."
       />
       <MobileLibrarySwitch active="templates" />
       <CoachTemplatesClient

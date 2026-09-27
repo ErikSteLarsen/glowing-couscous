@@ -64,6 +64,7 @@ test('assignment service creates an assigned session from a coach template', asy
           ownerId: 2,
           sport: 'RUNNING',
           name: 'Threshold 4×8′',
+          cadence: 'day',
           summary: 'Controlled threshold session.',
           blocks: [
             {
@@ -126,6 +127,7 @@ test('assignment service creates an assigned session from a coach template', asy
           status: string;
           source: string;
           adjusted: boolean;
+          coachBaselineJson: string;
           blocks: {
             create: Array<{
               kind: string;
@@ -159,7 +161,7 @@ test('assignment service creates an assigned session from a coach template', asy
 
   const assignedAt = new Date('2026-06-23T07:30:00.000Z');
   const assignmentService = createAssignmentService({
-    db,
+    db: db as never,
     now: () => assignedAt,
   });
 
@@ -216,6 +218,7 @@ test('assignment service reuses an existing matching scheduled session instead o
           ownerId: 2,
           sport: 'RUNNING',
           name: 'Threshold 4×8′',
+          cadence: 'day',
           summary: 'Controlled threshold session.',
           blocks: [
             {
@@ -258,7 +261,7 @@ test('assignment service reuses an existing matching scheduled session instead o
   };
 
   const assignmentService = createAssignmentService({
-    db,
+    db: db as never,
     now: () => new Date('2026-06-23T07:30:00.000Z'),
   });
 

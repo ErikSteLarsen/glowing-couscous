@@ -282,7 +282,7 @@ function fakeDatabase(
     user: { findUnique: async () => ({ performanceProfileJson: null }) },
     session,
     activity,
-    $transaction: async <T>(operation: (transaction: { session: typeof session; activity: typeof activity; stravaInboxActivity: { findUnique: () => Promise<{ fetchedAt: Date }> }; $queryRaw: () => Promise<Array<{ id: string }>> }) => Promise<T>) => operation({
+    $transaction: async <T>(operation: (transaction: { session: typeof session; activity: typeof activity; stravaInboxActivity: { findUnique: (args: unknown) => Promise<{ fetchedAt: Date } | null> }; $queryRaw: () => Promise<Array<{ id: string }>> }) => Promise<T>) => operation({
       session,
       activity,
       stravaInboxActivity: { findUnique: async (args: unknown) => {

@@ -22,18 +22,23 @@ export default function SetupPage() {
     const callbackUrl = readCallbackUrl();
     setLoading(true);
     setError('');
-    const res = await fetch('/api/auth/setup', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'ATHLETE' }),
-    });
-    if (!res.ok) {
-      setError('Something went wrong. Please try again.');
+    try {
+      const response = await fetch('/api/auth/setup', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'ATHLETE' }),
+      });
+      if (!response.ok) {
+        setError('We couldn’t finish setting up your workspace. Please try again.');
+        return;
+      }
+      await update({ role: 'ATHLETE' });
+      router.push(callbackUrl ?? '/athlete');
+    } catch {
+      setError('We couldn’t finish setting up your workspace. Check your connection and try again.');
+    } finally {
       setLoading(false);
-      return;
     }
-    await update({ role: 'ATHLETE' });
-    router.push(callbackUrl ?? '/athlete');
   }
 
   return (

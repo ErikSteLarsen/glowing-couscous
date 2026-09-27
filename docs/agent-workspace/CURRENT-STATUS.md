@@ -1,5 +1,73 @@
 # Current Status
 
+## First-Run and Production Readiness Review — 2026-09-27
+
+The production route and copy review found a coherent self-directed path:
+sign up, complete personal setup, create a reusable workout, place it in
+Planner, follow it in Live, then review it in History. Existing page purposes
+are distinct enough to keep the current structure: Home is the starting and
+progress overview; Workouts is the reusable library and editor; Planner places
+saved workouts and templates on dates; Calendar browses scheduled work by date;
+Templates stores reusable multi-session structures; Live guides the current
+session; History reviews completed work and opens imports; Profile owns training
+metrics and zones; Preferences configures the Home overview. Sharing remains a
+read-only view of a saved snapshot. Coach routes remain secondary to the
+personal workflow. The mobile Plan / Workouts / History groupings already match
+these jobs; no broad route move was warranted.
+
+Small first-run fixes improve signup purpose and password guidance, browser
+autofill, recoverable network errors in signup/login/setup, and consistency of
+the desktop History label with mobile navigation. Signup also rejects a blank
+display name and returns the normal duplicate-email response if concurrent
+requests race. Workout target and editor
+instructions explain effort levels and time/target entry in direct terms. Home,
+Workouts, Profile, Settings, History, and Templates now define their jobs and
+clarify training metrics. Preferences shows only the Home-card controls that
+users can change; static Units and Notifications notes have been removed. No
+route move was needed.
+
+Credentials now have a short-lived, single-use password recovery flow with
+generic responses, per-account request limits, and session invalidation after a
+reset. Shared error and not-found screens provide a way to recover from
+unexpected failures and missing routes. Production migration
+`20260927150000_password_reset` has been applied; a follow-up Prisma status
+check confirms all four migrations are up to date. Password recovery still
+requires a Resend API key, verified sender, and HTTPS `AUTH_URL` before email
+delivery can work.
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Source tests | Pass, 254/254 | `node --experimental-strip-types --test tests/*.test.mjs tests/*.test.ts` |
+| ESLint | Pass | `node node_modules/eslint/bin/eslint.js .` |
+| Strict TypeScript | Pass | All sources and tests type-check using a temporary Prisma Client generated from the current schema; workspace DLL replacement is blocked by the running dev server. |
+| Prisma schema | Pass | `prisma validate --schema prisma/schema.prisma` |
+| Impeccable detector | Advisory only | One scan of changed UI TSX returned two non-blocking type-ramp findings on existing Home metrics (22px and 10px); no blockers. |
+| Independent critique | Not run | This review used direct source and route review, the browser, automated checks, and the Impeccable detector. |
+| Browser visual check | Partial | Local `/signup`, `/login`, `/forgot-password`, valid-token and missing-token `/reset-password`, and 404 checked at desktop size; signup and missing-token reset checked at 320×780. No authenticated account was available for the complete personal-workflow journey. |
+| Local HTTP smoke | Pass | Public auth pages return 200, protected `/athlete` redirects to sign-in, unknown route returns 404, and invalid signup/reset requests return 400. No email was sent. |
+| `pnpm test` / `pnpm lint` | Blocked before scripts ran | pnpm attempted a dependency install and aborted with `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` |
+| Production build | Limited pass | An isolated Webpack build compiled all routes after the Google font import was replaced by a system-font fallback in the temporary copy. An unmodified build stopped because this environment denies network access to Google Fonts; this does not verify the production font build. |
+| Production migration status | Pass | Applied `20260927150000_password_reset`; follow-up `prisma migrate status` reports all four migrations applied. |
+| `pnpm build` | Not run | Build was not run in this database update; migration was applied and verified separately. |
+| Device acceptance | Partial | Auth screens checked at 320×780; previous Planner/History phone review remains the authenticated responsive evidence. No physical touch/device run was performed in this pass. |
+
+Remaining release checks are provider setup and delivery, authenticated
+first-run journey checks against a connected database, and a build environment
+that can fetch the configured Google font. There is no in-app privacy/support
+information or account-deletion flow, and public signup has no server-side
+abuse limit; decide and complete those launch controls before opening signups
+widely. The local authenticated journey was not run because no test account or
+session was available and no account or data was created for this review.
+
+Before this review added the password-reset migration, a read-only Prisma query
+through the pooled `DATABASE_URL` succeeded and `prisma migrate status`
+reported the three then-existing migrations applied. On 2026-09-27, at the
+user's request, the new migration was applied successfully; the follow-up
+read-only status check confirms all four migrations are applied. The migration
+adds password-reset storage and a session-version field; no other application
+records were modified. The restarted development server returned HTTP 200 for
+`/login` during the earlier review.
+
 On **2026-09-27**, phone-only usability work is implemented across the shared
 shell, Calendar/Planner, workout editor/libraries, and Activity History.
 Athlete mobile navigation is Home, Plan, Workouts, and History; coach mobile

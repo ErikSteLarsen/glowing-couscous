@@ -213,7 +213,7 @@ test('profile and settings routes use shared account service and profile alias r
   assert.match(settingsPageSource, /SettingsClient/);
   assert.match(settingsClientSource, /metric|notification|overview/i);
   assert.match(profileAliasSource, /redirect\('\/profile'\)/);
-  assert.match(authSource, /select: \{ role: true, name: true, email: true \}/);
+  assert.match(authSource, /select: \{ role: true, name: true, email: true, sessionVersion: true \}/);
 });
 
 test('legacy coach planner surfaces were removed after Tempo convergence', async () => {

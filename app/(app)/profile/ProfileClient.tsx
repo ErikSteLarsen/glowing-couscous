@@ -211,19 +211,19 @@ export function ProfileClient({ account }: { account: Account }) {
 
           <fieldset disabled={saving} className="space-y-4 border-t border-[var(--border)] pt-5">
             <legend className="text-base font-semibold text-[var(--text)]">Training metrics</legend>
-            <p className="max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">New blocks use your saved zone defaults. Existing workout prescriptions stay in place, while relative targets resolve against your latest profile.</p>
+            <p className="max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">These details are optional. New blocks use them for default zone targets. Saved workout settings stay the same, while profile-based targets use your latest values.</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <MetricInput label="Maximum heart rate (bpm)" value={performanceProfile.heartRateMaxBpm} min={100} max={250} onChange={(heartRateMaxBpm) => setPerformanceProfile((current) => ({ ...current, heartRateMaxBpm }))} />
-              <MetricInput label="Cycling FTP (W)" value={performanceProfile.cycling.ftpWatts} onChange={(ftpWatts) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, ftpWatts } }))} />
+              <MetricInput label="Cycling threshold power (FTP, W)" value={performanceProfile.cycling.ftpWatts} onChange={(ftpWatts) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, ftpWatts } }))} />
               <MetricInput label="Cycling threshold HR (bpm)" value={performanceProfile.cycling.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, thresholdHrBpm } }))} />
               <MetricInput label="Running threshold HR (bpm)" value={performanceProfile.running.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, running: { ...current.running, thresholdHrBpm } }))} />
-              <MetricInput label="Swimming CSS (sec/100 m)" value={performanceProfile.swimming.cssSecPer100m} onChange={(cssSecPer100m) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, cssSecPer100m } }))} />
+              <MetricInput label="Swimming threshold pace (CSS, sec/100 m)" value={performanceProfile.swimming.cssSecPer100m} onChange={(cssSecPer100m) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, cssSecPer100m } }))} />
               <MetricInput label="Swimming threshold HR (bpm)" value={performanceProfile.swimming.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, thresholdHrBpm } }))} />
             </div>
             {heartRateZones ? <div className="space-y-3 border-t border-[var(--border)] pt-4">
               <div>
                 <h3 className="text-sm font-semibold text-[var(--text)]">Olympiatoppen heart-rate zones</h3>
-                <p className="mt-1 text-sm leading-5 text-[var(--text-secondary)]">I-1 to I-5, calculated from HRmax using the <a className="underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--text)]" href="https://olt-skala.nif.no/" target="_blank" rel="noreferrer">Olympiatoppen calculator</a>.</p>
+                <p className="mt-1 text-sm leading-5 text-[var(--text-secondary)]">Calculated from your maximum heart rate. I-1 to I-5 are Olympiatoppen&apos;s effort levels; see the <a className="underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--text)]" href="https://olt-skala.nif.no/" target="_blank" rel="noreferrer">Olympiatoppen calculator</a>.</p>
               </div>
               <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
                 {zones.map((zone) => {

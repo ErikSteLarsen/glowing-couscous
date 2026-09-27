@@ -53,6 +53,10 @@ Use `pnpm`.
 5. Run `pnpm db:migrate` to apply migrations without changing existing data.
 6. Run `pnpm dev`.
 
+For production credential password recovery, set `RESEND_API_KEY`, a verified
+`PASSWORD_RESET_FROM_EMAIL`, and an HTTPS `AUTH_URL` in the server environment.
+See `.env.example`; the Resend account must allow sending from that address.
+
 For a fresh, disposable development database only, run `pnpm db:seed` after
 the migration to create demo accounts. Seeding deletes existing application
 data; it is not needed to fix the connection error.

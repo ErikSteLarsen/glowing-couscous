@@ -15,7 +15,8 @@ export default async function AthleteActivityPage() {
   return (
     <PageShell>
       <TopBar
-        title="Completed work"
+        title="History"
+        description="Review completed sessions and imported activities by week or month."
       />
       <div className="page-content--library">
         <ActivityHistoryOverview

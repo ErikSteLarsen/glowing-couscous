@@ -18,7 +18,7 @@ export default async function CoachTemplatesPage() {
     <PageShell>
       <TopBar
         title="Templates"
-        description="Build reusable day, week, and month training templates."
+        description="Build a reusable day, week, or month of training, then schedule it with Planner."
       />
         <CoachTemplatesClient templates={templates} role="COACH" performanceProfile={account?.performanceProfile} />
     </PageShell>

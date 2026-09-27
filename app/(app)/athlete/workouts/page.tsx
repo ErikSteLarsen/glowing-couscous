@@ -29,7 +29,7 @@ export default async function AthleteWorkoutsPage({
     <PageShell>
       <TopBar
         title="Workouts"
-        description="Create and edit reusable workouts."
+        description="Create and edit reusable workouts, then schedule them in Planner."
       />
       <MobileLibrarySwitch active="workouts" />
       <WorkoutLibraryClient

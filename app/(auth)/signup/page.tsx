@@ -41,30 +41,46 @@ export default function SignupPage() {
     const callbackUrl = readCallbackUrl();
     setLoading(true);
     setError('');
-    const res = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
-    });
-    if (!res.ok) {
-      const data = await res.json();
-      setError(data.error ?? 'Something went wrong');
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) {
+        if (response.status === 409) {
+          setError('An account with this email already exists. Sign in below or use another email.');
+          return;
+        }
+        setError(payload.error ?? 'We couldn’t create your account. Please try again.');
+        return;
+      }
+
+      try {
+        const result = await signIn('credentials', { email, password, redirect: false });
+        if (result?.error) {
+          setError('Your account was created, but automatic sign-in did not finish. Use the Sign in link to continue.');
+          return;
+        }
+        router.push(callbackUrl ?? '/');
+      } catch {
+        setError('Your account was created, but automatic sign-in did not finish. Use the Sign in link to continue.');
+      }
+    } catch {
+      setError('We couldn’t create your account. Check your connection and try again.');
+    } finally {
       setLoading(false);
-      return;
-    }
-    const result = await signIn('credentials', { email, password, redirect: false });
-    setLoading(false);
-    if (result?.error) {
-      setError('Account created — please sign in.');
-      router.push(callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : '/login');
-    } else {
-      router.push(callbackUrl ?? '/');
     }
   }
 
   return (
     <AuthPageShell>
-      <TopBar title="Create account" align="center" />
+      <TopBar
+        title="Create account"
+        description="Plan, follow, and review your own training. You can start without a coach."
+        align="center"
+      />
       <Surface className="mx-auto w-full max-w-md">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -72,6 +88,7 @@ export default function SignupPage() {
             <input
               id="signup-name"
               type="text"
+              autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Your full name"
@@ -84,6 +101,9 @@ export default function SignupPage() {
             <input
               id="signup-email"
               type="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
@@ -96,13 +116,17 @@ export default function SignupPage() {
             <input
               id="signup-password"
               type="password"
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters"
+              placeholder="Choose a password"
+              aria-describedby="signup-password-hint"
               minLength={8}
+              maxLength={72}
               required
               className={formFieldClassName}
             />
+              <p id="signup-password-hint" className="mt-1.5 text-xs leading-5 text-[var(--text-secondary)]">Use 8–72 characters.</p>
           </div>
           {error && <p className={dangerTextClassName} role="alert">{error}</p>}
           <button

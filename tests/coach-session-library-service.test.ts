@@ -11,8 +11,12 @@ const block = {
   durationSec: 1800,
   reps: null,
   targetType: null,
+  targetMode: 'absolute' as const,
+  targetReference: null,
   targetLow: null,
   targetHigh: null,
+  targetLowDecimal: null,
+  targetHighDecimal: null,
   note: 'Steady work',
 };
 

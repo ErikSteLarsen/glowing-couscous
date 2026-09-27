@@ -3,11 +3,11 @@
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
-  Activity,
   CalendarDays,
   Circle,
   ClipboardList,
   Dumbbell,
+  History as HistoryIcon,
   House,
   LayoutTemplate,
   Upload,
@@ -18,7 +18,7 @@ import { compactSecondaryButtonClassName } from '@/components/ui';
 import type { LucideIcon } from 'lucide-react';
 
 const navIcons: Record<string, LucideIcon> = {
-  Activity,
+  History: HistoryIcon,
   Calendar: CalendarDays,
   Home: House,
   Planner: ClipboardList,

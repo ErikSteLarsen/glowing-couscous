@@ -13,11 +13,11 @@ const overviewLabels: Record<(typeof personalOverviewCardIds)[number], { title: 
   },
   weekLoad: {
     title: 'Weekly load',
-    description: 'Show total planned duration and TSS for the current week.',
+    description: 'Show planned training time and load for the current week.',
   },
   trend: {
     title: 'Fitness trend',
-    description: 'Display recent TSS bars in the Home side rail.',
+    description: 'Show a recent training-load chart on Home. Load is estimated from session effort and duration.',
   },
 };
 
@@ -60,7 +60,7 @@ export function SettingsClient({
   }
 
   return (
-    <div className="page-content--compact grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+    <div className="page-content--compact grid gap-6 xl:max-w-[640px]">
       <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
             Overview
@@ -92,26 +92,11 @@ export function SettingsClient({
             })}
           </div>
         </section>
-
-      <div className="space-y-6">
-        <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
-          <p className="text-[15px] font-semibold text-[var(--text)]">Units</p>
-          <p className="mt-2 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
-            Metric remains the active default for distance and pace across Tempo screens.
-          </p>
-        </section>
-        <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
-          <p className="text-[15px] font-semibold text-[var(--text)]">Notifications</p>
-          <p className="mt-2 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
-            Notification delivery preferences stay intentionally minimal while the first personal workspace ships.
-          </p>
-        </section>
-        {message ? (
-          <p className={`text-sm ${messageTone === 'success' ? 'text-[var(--status-success)]' : 'text-[var(--status-danger)]'}`} role="status">
-            {message}
-          </p>
-        ) : null}
-      </div>
+      {message ? (
+        <p className={`text-sm ${messageTone === 'success' ? 'text-[var(--status-success)]' : 'text-[var(--status-danger)]'}`} role="status">
+          {message}
+        </p>
+      ) : null}
     </div>
   );
 }

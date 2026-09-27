@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { getProviders, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   dangerTextClassName,
   formFieldClassName,
@@ -40,12 +41,17 @@ export default function LoginPage() {
     const callbackUrl = readCallbackUrl();
     setLoading(true);
     setError('');
-    const result = await signIn('credentials', { email, password, redirect: false });
-    setLoading(false);
-    if (result?.error) {
-      setError('Invalid email or password');
-    } else {
+    try {
+      const result = await signIn('credentials', { email: email.trim().toLowerCase(), password, redirect: false });
+      if (result?.error) {
+        setError('Invalid email or password. Check your details and try again.');
+        return;
+      }
       router.push(callbackUrl ?? '/');
+    } catch {
+      setError('We couldn’t sign you in. Check your connection and try again.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -59,6 +65,9 @@ export default function LoginPage() {
             <input
               id="login-email"
               type="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
@@ -71,11 +80,15 @@ export default function LoginPage() {
             <input
               id="login-password"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               className={formFieldClassName}
             />
+            <p className="mt-2 text-right text-sm">
+              <Link href="/forgot-password" className="font-medium text-[var(--brand)] underline-offset-4 hover:underline">Forgot password?</Link>
+            </p>
           </div>
           {error && <p className={dangerTextClassName} role="alert">{error}</p>}
           <button

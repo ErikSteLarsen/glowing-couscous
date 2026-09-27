@@ -16,8 +16,12 @@ const block = {
   durationSec: 1800,
   reps: null,
   targetType: null,
+  targetMode: 'absolute' as const,
+  targetReference: null,
   targetLow: null,
   targetHigh: null,
+  targetLowDecimal: null,
+  targetHighDecimal: null,
   note: 'Steady',
   sortOrder: 0,
 };
@@ -228,12 +232,15 @@ test('coach planner creates a direct coach session and assignment record', async
   });
 
   const result = await service.saveSession(2, {
+    ownershipMode: 'athlete',
     athleteId: 5,
     scheduledDate: '2026-06-25',
+    planWeekday: null,
     sport: 'RUNNING',
     title: 'Endurance build',
     summary: 'Keep it smooth.',
     sourceTemplateId: null,
+    sportMetrics: { ftp: null, thresholdPaceSecPerKm: null, thresholdHr: null },
     blocks: [{ ...block, clientId: 'b1' }],
   });
 
@@ -293,12 +300,15 @@ test('coach planner updates only sessions owned by roster athletes', async () =>
   const result = await service.saveSession(
     2,
     {
+      ownershipMode: 'athlete',
       athleteId: 5,
       scheduledDate: '2026-06-25',
+      planWeekday: null,
       sport: 'RUNNING',
       title: 'Edited endurance',
       summary: '',
       sourceTemplateId: null,
+      sportMetrics: { ftp: null, thresholdPaceSecPerKm: null, thresholdHr: null },
       blocks: [{ ...block, clientId: 'b1', durationSec: 2400 }],
     },
     88,
@@ -354,12 +364,15 @@ test('coach planned edits clear adjusted state and move the current assignment d
   const result = await service.saveSession(
     2,
     {
+      ownershipMode: 'athlete',
       athleteId: 5,
       scheduledDate: '2026-06-27',
+      planWeekday: null,
       sport: 'RUNNING',
       title: 'Coach overwrite',
       summary: '',
       sourceTemplateId: null,
+      sportMetrics: { ftp: null, thresholdPaceSecPerKm: null, thresholdHr: null },
       blocks: [{ ...block, clientId: 'b1' }],
     },
     88,

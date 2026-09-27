@@ -2,15 +2,26 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   getCoachAthleteReturnTarget,
+  getPrimaryNavigation,
   getSessionOrigin,
   getSessionReturnTarget,
 } from '../lib/app-navigation.ts';
+
+test('desktop history navigation uses the same label as the mobile destination', () => {
+  const history = getPrimaryNavigation().find((item) => item.href === '/athlete/activity');
+  assert.deepEqual(history, {
+    label: 'History',
+    description: 'Review completed work',
+    href: '/athlete/activity',
+    matchPrefix: '/athlete/activity',
+  });
+});
 
 test('athlete session return targets preserve supported origins including Planner', () => {
   assert.equal(getSessionOrigin('planner'), 'planner');
   assert.deepEqual(getSessionReturnTarget('home'), { href: '/athlete', label: 'Back to Home' });
   assert.deepEqual(getSessionReturnTarget('calendar'), { href: '/athlete/calendar', label: 'Back to Calendar' });
-  assert.deepEqual(getSessionReturnTarget('activity'), { href: '/athlete/activity', label: 'Back to Activity' });
+  assert.deepEqual(getSessionReturnTarget('activity'), { href: '/athlete/activity', label: 'Back to History' });
   assert.deepEqual(getSessionReturnTarget('planner'), { href: '/athlete/planner', label: 'Back to Planner' });
   assert.equal(getSessionOrigin('unknown'), 'calendar');
 });

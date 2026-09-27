@@ -15,7 +15,7 @@ export default async function ProfilePage() {
     <PageShell>
       <TopBar
         title={account.name ?? 'Your profile'}
-        description="Set personal heart-rate and running pace zones, alongside your training metrics."
+        description="Manage the optional heart-rate, power, and pace values used for workout targets. Leave any value blank if you don’t know it."
       />
       <ProfileClient account={account} />
     </PageShell>
