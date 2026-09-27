@@ -1,5 +1,18 @@
 # Current Status
 
+On **2026-09-26**, the activity workspace is labeled **Import** and lives at
+`/athlete/import`; the former `/athlete/imported-activities` route redirects to
+it, and Strava OAuth returns to the new path.
+
+On **2026-09-26**, Profile now keeps its save action in a viewport-pinned
+footer above the mobile navigation and reserves scroll space beneath the form.
+The footer shows unsaved, saving, saved, and error states; Save changes is
+disabled until the draft differs from the last confirmed save. The targeted
+diff check passes. The Impeccable detector ran and reported advisory findings
+across the shared stylesheet. `pnpm lint` could not complete because local
+dependencies are absent and registry requests return `EACCES`; `pnpm test` and
+`pnpm build` were not run for the same reason.
+
 On **2026-09-26**, the first Vercel deployment of the activity import and
 Strava work stopped before migrations because `ensure-prisma-client.mjs` used
 `require.resolve("prisma")`, which resolves Prisma's package export rather

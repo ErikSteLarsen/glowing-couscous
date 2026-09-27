@@ -53,6 +53,7 @@ one-time account creation flow directly.
 - `/athlete/session/[sessionId]` - read-only scheduled-session score and outcome review
 - `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion
 - `/athlete/activity` - completion history
+- `/athlete/import` - activity-file and Strava review/import; the previous `/athlete/imported-activities` path redirects here
 - `/athlete/find-coach` - coach discovery and requests
 - `/athlete/profile`, `/profile` - profile surfaces and compatibility alias
 - `/settings` - account and overview preferences

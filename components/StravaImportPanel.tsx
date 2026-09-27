@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
-import { Surface, dangerTextClassName, formFieldClassName, formLabelClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import type { ImportableSession } from '@/lib/activity-import-service';
 import type { ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { StravaConnectionSummary, StravaInboxActivitySummary } from '@/lib/strava-service';
@@ -27,16 +27,21 @@ export function StravaImportPanel({
 }) {
   const router = useRouter();
   const [connection, setConnection] = useState(initialConnection);
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [activeActivityId, setActiveActivityId] = useState<string | null>(null);
   const [details, setDetails] = useState<Record<string, StravaDetail>>({});
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const [detailErrors, setDetailErrors] = useState<Record<string, string>>({});
   const [importing, setImporting] = useState<Record<string, boolean>>({});
+  const [importErrors, setImportErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [providerRevocationFailed, setProviderRevocationFailed] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const activityButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const oauthNotice = oauthResult === 'connected'
     ? 'Strava is connected. Recent activities are ready to review.'
@@ -59,6 +64,23 @@ export function StravaImportPanel({
   useEffect(() => {
     setConnection(initialConnection);
   }, [initialConnection]);
+
+  useEffect(() => {
+    if (!activeActivityId) return;
+    const dialog = dialogRef.current;
+    if (!dialog || dialog.open) return;
+    const trigger = activityButtonRefs.current[activeActivityId];
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    dialog.showModal();
+    closeButtonRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      if (dialog.open) dialog.close();
+      trigger?.focus();
+    };
+  }, [activeActivityId]);
 
   async function syncActivities() {
     setSyncing(true);
@@ -97,10 +119,9 @@ export function StravaImportPanel({
   }
 
   async function loadDetails(activity: StravaInboxActivitySummary) {
-    setExpanded((current) => ({ ...current, [activity.id]: !current[activity.id] }));
     if (details[activity.id] || loading[activity.id]) return;
     setLoading((current) => ({ ...current, [activity.id]: true }));
-    setError(null);
+    setDetailErrors((current) => ({ ...current, [activity.id]: '' }));
     try {
       const response = await fetch(`/api/strava/activities/${encodeURIComponent(activity.id)}`);
       const result = await response.json() as { error?: string; activity?: StravaDetail };
@@ -111,10 +132,19 @@ export function StravaImportPanel({
         [activity.id]: current[activity.id] ?? { title: result.activity!.title, sport: result.activity!.sport, plannedSessionId: null },
       }));
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Activity details could not be loaded.');
+      setDetailErrors((current) => ({
+        ...current,
+        [activity.id]: reason instanceof Error ? reason.message : 'Activity details could not be loaded.',
+      }));
     } finally {
       setLoading((current) => ({ ...current, [activity.id]: false }));
     }
+  }
+
+  function openDetails(activity: StravaInboxActivitySummary) {
+    setActiveActivityId(activity.id);
+    setError(null);
+    void loadDetails(activity);
   }
 
   function updateDraft(activityId: string, patch: Partial<Draft>) {
@@ -125,7 +155,7 @@ export function StravaImportPanel({
     const draft = drafts[activityId];
     if (!draft) return;
     setImporting((current) => ({ ...current, [activityId]: true }));
-    setError(null);
+    setImportErrors((current) => ({ ...current, [activityId]: '' }));
     setNotice(null);
     try {
       const response = await fetch('/api/strava/import', {
@@ -137,12 +167,23 @@ export function StravaImportPanel({
       if (!response.ok) throw new Error(result.error || 'Strava activity could not be imported.');
       setNotice(`${draft.title} was imported into Tempo.`);
       router.refresh();
+      dialogRef.current?.close();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Strava activity could not be imported.');
+      setImportErrors((current) => ({
+        ...current,
+        [activityId]: reason instanceof Error ? reason.message : 'Strava activity could not be imported.',
+      }));
     } finally {
       setImporting((current) => ({ ...current, [activityId]: false }));
     }
   }
+
+  const activeActivity = connection.activities.find((activity) => activity.id === activeActivityId) ?? null;
+  const activeDetail = activeActivityId ? details[activeActivityId] : null;
+  const activeDraft = activeActivityId ? drafts[activeActivityId] : null;
+  const activeMatchingSessions = activeActivity
+    ? plannedSessions.filter((session) => session.sport === (activeDraft?.sport ?? activeActivity.sport))
+    : [];
 
   return (
     <Surface className="space-y-4">
@@ -193,87 +234,123 @@ export function StravaImportPanel({
 
       {connection.connected ? connection.activities.length ? (
         <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
-          {connection.activities.map((activity) => {
-            const isExpanded = expanded[activity.id] ?? false;
-            const detail = details[activity.id];
-            const draft = drafts[activity.id];
-            const matchingSessions = plannedSessions.filter((session) => session.sport === (draft?.sport ?? activity.sport));
-            return (
-              <article key={activity.id} className="py-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    className="min-w-0 flex-1 rounded-[3px] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-liquid)]"
-                    aria-expanded={isExpanded}
-                    onClick={() => void loadDetails(activity)}
-                  >
-                    <span className="block break-words text-[15px] font-semibold text-[var(--text)]">{activity.title}</span>
-                    <span className="mt-1 block text-[12px] text-[var(--text-secondary)]">
-                      {format(new Date(activity.startedAt), 'EEE d MMM yyyy · HH:mm')} · {getSportLabel(activity.sport)} · {formatDuration(activity.durationSec)}
-                      {activity.distanceMeters !== null ? ` · ${(activity.distanceMeters / 1000).toFixed(2)} km` : ''}
-                      {activity.elevationGainMeters !== null ? ` · ${Math.round(activity.elevationGainMeters)} m up` : ''}
-                    </span>
-                  </button>
-                  <span className="flex items-center gap-3">
-                    {activity.imported ? <span className="text-[11px] font-medium text-[var(--status-success)]">Imported</span> : null}
-                    <span className="text-[12px] font-medium text-[var(--brand)]">{loading[activity.id] ? 'Loading…' : isExpanded ? 'Close review' : 'Review'}</span>
-                  </span>
-                </div>
-                {isExpanded ? (
-                  <div className="mt-4 space-y-4 border-t border-[var(--border)] pt-4">
-                    {detail ? (
-                      <>
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                          <SummaryValue label="Original Strava sport" value={activity.sportType} />
-                          <SummaryValue label="Duration" value={formatDuration(detail.durationSec)} />
-                          <SummaryValue label="Distance" value={detail.distanceMeters === null ? 'Not recorded' : `${(detail.distanceMeters / 1000).toFixed(2)} km`} />
-                          <SummaryValue label="Elevation gain" value={detail.elevationGainMeters === null ? 'Not recorded' : `${Math.round(detail.elevationGainMeters)} m`} />
-                          {formatStravaMetadata(detail.metadata).map(([label, value]) => <SummaryValue key={label} label={label} value={value} />)}
-                        </div>
-                        <label className="block">
-                          <span className={formLabelClassName}>Activity name in Tempo</span>
-                          <input className={formFieldClassName} value={draft?.title ?? detail.title} maxLength={140} onChange={(event) => updateDraft(activity.id, { title: event.target.value })} />
-                        </label>
-                        <label className="block">
-                          <span className={formLabelClassName}>Categorize as</span>
-                          <select className={formFieldClassName} value={draft?.sport ?? detail.sport} onChange={(event) => updateDraft(activity.id, { sport: event.target.value, plannedSessionId: null })}>
-                            {sportOptions.map((sport) => <option key={sport} value={sport}>{getSportLabel(sport)}</option>)}
-                          </select>
-                        </label>
-                        <label className="block">
-                          <span className={formLabelClassName}>Planned session to complete</span>
-                          <select className={formFieldClassName} value={draft?.plannedSessionId ?? ''} onChange={(event) => updateDraft(activity.id, { plannedSessionId: event.target.value ? Number(event.target.value) : null })}>
-                            <option value="">Create a new completed session</option>
-                            {matchingSessions.map((session) => (
-                              <option key={session.id} value={session.id}>
-                                {session.date ? `${format(new Date(session.date), 'd MMM')} · ` : ''}{session.title} · {getSportLabel(session.sport)}
-                              </option>
-                            ))}
-                          </select>
-                          {matchingSessions.length === 0 ? <p className="mt-1 text-[12px] text-[var(--text-secondary)]">No unfinished planned session for this category is available.</p> : null}
-                        </label>
-                        <ActivityMetricPreview points={detail.points} durationSec={detail.durationSec} distanceMeters={detail.distanceMeters} sport={draft?.sport ?? detail.sport} />
-                        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
-                          <p className="text-[12px] text-[var(--text-secondary)]">{draft?.plannedSessionId ? 'The planned workout stays available for comparison.' : 'Tempo will create a completed session from the recorded activity.'}</p>
-                          <button type="button" className={primaryButtonClassName} disabled={Boolean(importing[activity.id]) || activity.imported || !draft?.title.trim()} onClick={() => void importActivity(activity.id)}>
-                            {activity.imported ? 'Already imported' : importing[activity.id] ? 'Importing…' : 'Import activity'}
-                          </button>
-                        </div>
-                      </>
-                    ) : loading[activity.id] ? (
-                      <p role="status" className="text-[13px] text-[var(--text-secondary)]">Loading activity data and recorded streams…</p>
-                    ) : null}
-                  </div>
-                ) : null}
-              </article>
-            );
-          })}
+          {connection.activities.map((activity) => (
+            <button
+              key={activity.id}
+              ref={(element) => { activityButtonRefs.current[activity.id] = element; }}
+              type="button"
+              className="group flex min-h-16 w-full items-center justify-between gap-3 rounded-[3px] px-3 py-3 text-left transition-colors hover:bg-[var(--field-surface)] active:bg-[var(--sunken)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-liquid)]"
+              aria-label={`Open activity details for ${activity.title}`}
+              aria-haspopup="dialog"
+              aria-controls="strava-activity-details"
+              onClick={() => openDetails(activity)}
+            >
+              <span className="min-w-0">
+                <span className="block break-words text-[15px] font-semibold text-[var(--text)] group-hover:text-[var(--brand)]">{activity.title}</span>
+                <span className="mt-1 block text-[12px] text-[var(--text-secondary)]">
+                  {format(new Date(activity.startedAt), 'EEE d MMM yyyy · HH:mm')} · {getSportLabel(activity.sport)} · {formatDuration(activity.durationSec)}
+                  {activity.distanceMeters !== null ? ` · ${(activity.distanceMeters / 1000).toFixed(2)} km` : ''}
+                  {activity.elevationGainMeters !== null ? ` · ${Math.round(activity.elevationGainMeters)} m up` : ''}
+                </span>
+              </span>
+              {activity.imported ? <Badge tone="success">Imported</Badge> : null}
+            </button>
+          ))}
         </div>
       ) : (
         <p className="border-y border-[var(--border)] py-4 text-[13px] text-[var(--text-secondary)]">
           No recent Strava activities found. {connection.webhookConfigured ? 'New activities will appear here after the next webhook sync.' : 'Use Sync now to check again.'}
         </p>
       ) : null}
+
+      <dialog
+        ref={dialogRef}
+        id="strava-activity-details"
+        className="fixed inset-0 z-50 m-auto max-h-[calc(100dvh-2rem)] w-[min(48rem,calc(100%-2rem))] overflow-y-auto rounded-[5px] border border-[var(--border)] bg-[var(--surface)] p-0 text-[var(--text)] shadow-[var(--shadow-overlay)] backdrop:bg-[var(--overlay)]"
+        aria-labelledby="strava-activity-details-title"
+        aria-busy={Boolean(activeActivityId && loading[activeActivityId])}
+        onClose={() => setActiveActivityId(null)}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) dialogRef.current?.close();
+        }}
+      >
+        {activeActivity ? (
+          <>
+            <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--border)] bg-[var(--surface)] px-5 py-4 sm:px-7">
+              <div className="min-w-0">
+                <h2 id="strava-activity-details-title" className="break-words text-xl font-semibold text-[var(--text)]">{activeActivity.title}</h2>
+                <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
+                  {format(new Date(activeActivity.startedAt), 'EEE d MMM yyyy · HH:mm')} · {getSportLabel(activeActivity.sport)} · {formatDuration(activeActivity.durationSec)}
+                  {activeActivity.distanceMeters !== null ? ` · ${(activeActivity.distanceMeters / 1000).toFixed(2)} km` : ''}
+                  {activeActivity.elevationGainMeters !== null ? ` · ${Math.round(activeActivity.elevationGainMeters)} m up` : ''}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                {activeActivity.imported ? <Badge tone="success">Imported</Badge> : null}
+                <button
+                  ref={closeButtonRef}
+                  type="button"
+                  className={secondaryButtonClassName}
+                  aria-label="Close activity details"
+                  onClick={() => dialogRef.current?.close()}
+                >
+                  Close
+                </button>
+              </div>
+            </header>
+            <div className="space-y-4 p-5 sm:p-7">
+              {activeActivityId && detailErrors[activeActivityId] ? (
+                <p role="alert" className={dangerTextClassName}>{detailErrors[activeActivityId]}</p>
+              ) : null}
+              {activeActivityId && importErrors[activeActivityId] ? (
+                <p role="alert" className={dangerTextClassName}>{importErrors[activeActivityId]}</p>
+              ) : null}
+              {activeDetail ? (
+                <>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <SummaryValue label="Original Strava sport" value={activeActivity.sportType} />
+                    <SummaryValue label="Duration" value={formatDuration(activeDetail.durationSec)} />
+                    <SummaryValue label="Distance" value={activeDetail.distanceMeters === null ? 'Not recorded' : `${(activeDetail.distanceMeters / 1000).toFixed(2)} km`} />
+                    <SummaryValue label="Elevation gain" value={activeDetail.elevationGainMeters === null ? 'Not recorded' : `${Math.round(activeDetail.elevationGainMeters)} m`} />
+                    {formatStravaMetadata(activeDetail.metadata).map(([label, value]) => <SummaryValue key={label} label={label} value={value} />)}
+                  </div>
+                  <label className="block">
+                    <span className={formLabelClassName}>Activity name in Tempo</span>
+                    <input className={formFieldClassName} value={activeDraft?.title ?? activeDetail.title} maxLength={140} onChange={(event) => updateDraft(activeActivity.id, { title: event.target.value })} />
+                  </label>
+                  <label className="block">
+                    <span className={formLabelClassName}>Categorize as</span>
+                    <select className={formFieldClassName} value={activeDraft?.sport ?? activeDetail.sport} onChange={(event) => updateDraft(activeActivity.id, { sport: event.target.value, plannedSessionId: null })}>
+                      {sportOptions.map((sport) => <option key={sport} value={sport}>{getSportLabel(sport)}</option>)}
+                    </select>
+                  </label>
+                  <label className="block">
+                    <span className={formLabelClassName}>Planned session to complete</span>
+                    <select className={formFieldClassName} value={activeDraft?.plannedSessionId ?? ''} onChange={(event) => updateDraft(activeActivity.id, { plannedSessionId: event.target.value ? Number(event.target.value) : null })}>
+                      <option value="">Create a new completed session</option>
+                      {activeMatchingSessions.map((session) => (
+                        <option key={session.id} value={session.id}>
+                          {session.date ? `${format(new Date(session.date), 'd MMM')} · ` : ''}{session.title} · {getSportLabel(session.sport)}
+                        </option>
+                      ))}
+                    </select>
+                    {activeMatchingSessions.length === 0 ? <p className="mt-1 text-[12px] text-[var(--text-secondary)]">No unfinished planned session for this category is available.</p> : null}
+                  </label>
+                  <ActivityMetricPreview points={activeDetail.points} durationSec={activeDetail.durationSec} distanceMeters={activeDetail.distanceMeters} sport={activeDraft?.sport ?? activeDetail.sport} />
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
+                    <p className="text-[12px] text-[var(--text-secondary)]">{activeDraft?.plannedSessionId ? 'The planned workout stays available for comparison.' : 'Tempo will create a completed session from the recorded activity.'}</p>
+                    <button type="button" className={primaryButtonClassName} disabled={Boolean(importing[activeActivity.id]) || activeActivity.imported || !activeDraft?.title.trim()} onClick={() => void importActivity(activeActivity.id)}>
+                      {activeActivity.imported ? 'Already imported' : importing[activeActivity.id] ? 'Importing…' : 'Import activity'}
+                    </button>
+                  </div>
+                </>
+              ) : loading[activeActivity.id] ? (
+                <p role="status" className="text-[13px] text-[var(--text-secondary)]">Loading activity data and recorded streams…</p>
+              ) : null}
+            </div>
+          </>
+        ) : null}
+      </dialog>
     </Surface>
   );
 }

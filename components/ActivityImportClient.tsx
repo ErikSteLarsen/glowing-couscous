@@ -146,7 +146,7 @@ export function ActivityImportClient({
         delete next[activity.id];
         return next;
       });
-      setHistoryNotice(`${activity.title} was removed from your imported activities.`);
+      setHistoryNotice(`${activity.title} was removed from your imports.`);
       router.refresh();
     } catch (error) {
       setHistoryError(error instanceof Error ? error.message : 'The imported activity could not be deleted. Try again.');
@@ -261,15 +261,15 @@ export function ActivityImportClient({
         </section>
       ) : null}
 
-      <section aria-labelledby="imported-history-heading" className="space-y-4">
+      <section aria-labelledby="import-history-heading" className="space-y-4">
         <div>
-          <h2 id="imported-history-heading" className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Imported activities</h2>
+          <h2 id="import-history-heading" className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Import history</h2>
           <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Saved Strava and file imports are included in your completed activity history.</p>
         </div>
         {historyNotice ? <p role="status" className="text-sm text-[var(--status-success)]">{historyNotice}</p> : null}
         {historyError ? <p role="alert" className={dangerTextClassName}>{historyError}</p> : null}
         {initialActivities.length === 0 ? (
-          <EmptyState title="No imported activities yet" description="Review a Strava activity above or choose a FIT, TCX, or GPX file to add your first activity." />
+          <EmptyState title="No imports yet" description="Review a Strava activity above or choose a FIT, TCX, or GPX file to add your first activity." />
         ) : (
           <div className="space-y-3">
             {initialActivities.map((activity) => (

@@ -1,6 +1,7 @@
 'use client';
 
-import { useId, useState, type FormEvent } from 'react';
+import { useEffect, useId, useState, type FormEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
@@ -43,11 +44,15 @@ export function ProfileClient({ account }: { account: Account }) {
   const [raceTimeDraft, setRaceTimeDraft] = useState(() => formatRaceTime(account.performanceProfile.running.raceTimeSec));
   const [customizedZones, setCustomizedZones] = useState<CustomizedZones>(() => Object.fromEntries(zones.map((zone) => [zone, account.performanceProfile.running.paceZoneOverrides[zone].fastestSecPerKm !== null])) as CustomizedZones);
   const [paceDrafts, setPaceDrafts] = useState(() => createPaceDrafts(account.performanceProfile));
+  const [savedSnapshot, setSavedSnapshot] = useState(() => getDraftSnapshot(name, performanceProfile, raceTimeDraft, customizedZones, paceDrafts));
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [savebarPortalReady, setSavebarPortalReady] = useState(false);
   const router = useRouter();
   const { update } = useSession();
+
+  useEffect(() => setSavebarPortalReady(true), []);
 
   function refreshCalculatedPaces(profile: PerformanceProfile) {
     const ranges = getRunningPaceZones(profile);
@@ -146,6 +151,7 @@ export function ProfileClient({ account }: { account: Account }) {
         paceZoneOverrides: overrides,
       },
     };
+    const submittedSnapshot = getDraftSnapshot(name, profileToSave, raceTimeDraft, customizedZones, paceDrafts);
     const profileError = validatePerformanceProfile(profileToSave);
     if (profileError) {
       setError(profileError);
@@ -153,6 +159,7 @@ export function ProfileClient({ account }: { account: Account }) {
       return;
     }
 
+    let profileSaved = false;
     try {
       const res = await fetch('/api/account/profile', {
         method: 'PATCH',
@@ -167,33 +174,41 @@ export function ProfileClient({ account }: { account: Account }) {
         return;
       }
 
+      profileSaved = true;
       setPerformanceProfile(profileToSave);
+      setSavedSnapshot(submittedSnapshot);
       await update();
       router.refresh();
       setMessage('Profile updated. New workout blocks will use these zone defaults.');
     } catch {
-      setError('Could not reach Tempo. Your profile changes are still here; try saving again.');
+      if (profileSaved) {
+        setMessage('Your profile was saved. Reload if your account details do not refresh.');
+      } else {
+        setError('Could not reach Tempo. Your profile changes are still here; try saving again.');
+      }
     }
     setSaving(false);
   }
 
   const heartRateZones = calculateOlympiatoppenHeartRateZones(performanceProfile.heartRateMaxBpm);
+  const currentSnapshot = getDraftSnapshot(name, performanceProfile, raceTimeDraft, customizedZones, paceDrafts);
+  const hasUnsavedChanges = currentSnapshot !== savedSnapshot;
 
   return (
-    <div className="page-content--compact">
+    <div className="page-content--compact profile-page__content">
       <Surface>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form id="profile-form" onSubmit={handleSubmit} onChangeCapture={() => { setError(''); setMessage(''); }} className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block space-y-2">
               <span className={formLabelClassName}>Display name</span>
-              <input value={name} onChange={(event) => setName(event.target.value)} className={formFieldClassName} />
+              <input value={name} onChange={(event) => setName(event.target.value)} disabled={saving} className={`${formFieldClassName} disabled:cursor-wait disabled:opacity-60`} />
             </label>
             <div className="flex min-h-10 items-center rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] px-3 text-sm text-[var(--text-secondary)]">
               <span>Email: {account.email}</span>
             </div>
           </div>
 
-          <fieldset className="space-y-4 border-t border-[var(--border)] pt-5">
+          <fieldset disabled={saving} className="space-y-4 border-t border-[var(--border)] pt-5">
             <legend className="text-base font-semibold text-[var(--text)]">Training metrics</legend>
             <p className="max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">New blocks use your saved zone defaults. Existing workout prescriptions stay in place, while relative targets resolve against your latest profile.</p>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -223,7 +238,7 @@ export function ProfileClient({ account }: { account: Account }) {
             </div> : <p className="text-sm text-[var(--text-secondary)]">Add maximum heart rate to calculate your Olympiatoppen heart-rate zones.</p>}
           </fieldset>
 
-          <fieldset className="space-y-4 border-t border-[var(--border)] pt-5">
+          <fieldset disabled={saving} className="space-y-4 border-t border-[var(--border)] pt-5">
             <legend className="text-base font-semibold text-[var(--text)]">Running pace zones</legend>
             <p className="max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">Enter a recent race result to estimate pace ranges for each zone. Starting bands use 65–75%, 75–85%, 85–93%, 93–103%, and 103–115% of race speed. These are editable Tempo estimates, not Olympiatoppen pace bands.</p>
             <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(10rem,0.8fr)]">
@@ -253,17 +268,42 @@ export function ProfileClient({ account }: { account: Account }) {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-3">
               <p className="max-w-[52ch] text-xs leading-5 text-[var(--text-secondary)]">Race results fill the editable ranges; reset to return to those calculated values. Pace is stored as seconds per kilometre.</p>
-              <button type="button" className="min-h-10 text-sm font-medium text-[var(--text-secondary)] underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--text)]" onClick={resetPaceZones}>{performanceProfile.running.raceDistanceMeters && performanceProfile.running.raceTimeSec ? 'Reset to calculated paces' : 'Clear pace overrides'}</button>
+              <button type="button" disabled={saving} className="min-h-10 text-sm font-medium text-[var(--text-secondary)] underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--text)] disabled:cursor-wait disabled:opacity-60" onClick={() => { resetPaceZones(); setError(''); setMessage(''); }}>{performanceProfile.running.raceDistanceMeters && performanceProfile.running.raceTimeSec ? 'Reset to calculated paces' : 'Clear pace overrides'}</button>
             </div>
           </fieldset>
 
-          {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
-          {message ? <p role="status" className={successTextClassName}>{message}</p> : null}
-          <button type="submit" disabled={saving} className={primaryButtonClassName}>{saving ? 'Saving…' : 'Save changes'}</button>
         </form>
       </Surface>
+
+      {savebarPortalReady ? createPortal(<footer className="profile-savebar" aria-label="Profile save controls">
+        <div className="profile-savebar__inner">
+          <div className="profile-savebar__copy">
+            {error ? (
+              <p role="alert" className={`${dangerTextClassName} profile-savebar__status`}>
+                <span className="profile-savebar__indicator profile-savebar__indicator--error" aria-hidden="true" />
+                {error}
+              </p>
+            ) : (
+              <>
+                <p role="status" aria-live="polite" aria-atomic="true" className={`profile-savebar__status ${saving ? 'profile-savebar__status--saving' : hasUnsavedChanges ? 'profile-savebar__status--dirty' : 'profile-savebar__status--saved'}`}>
+                  <span className={`profile-savebar__indicator ${saving ? 'profile-savebar__indicator--saving' : hasUnsavedChanges ? 'profile-savebar__indicator--dirty' : 'profile-savebar__indicator--saved'}`} aria-hidden="true" />
+                  {saving ? 'Saving profile…' : hasUnsavedChanges ? 'Unsaved changes' : 'All changes saved'}
+                </p>
+                {!hasUnsavedChanges && !saving && message ? <p className={`profile-savebar__detail ${successTextClassName}`}>{message}</p> : null}
+              </>
+            )}
+          </div>
+          <button form="profile-form" type="submit" disabled={saving || !hasUnsavedChanges} className={`${primaryButtonClassName} profile-savebar__button`}>
+            {saving ? 'Saving…' : 'Save changes'}
+          </button>
+        </div>
+      </footer>, document.body) : null}
     </div>
   );
+}
+
+function getDraftSnapshot(name: string, profile: PerformanceProfile, raceTimeDraft: string, customizedZones: CustomizedZones, paceDrafts: PaceDrafts): string {
+  return JSON.stringify({ name, profile, raceTimeDraft, customizedZones, paceDrafts });
 }
 
 function MetricInput({ label, value, onChange, min = 1, max = 1000000 }: { label: string; value: number | null; onChange: (value: number | null) => void; min?: number; max?: number }) {

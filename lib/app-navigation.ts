@@ -34,10 +34,10 @@ export function getPrimaryNavigation(): NavItem[] {
     { label: 'Calendar', description: 'See scheduled work', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
     { label: 'Activity', description: 'Review completed', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
     {
-      label: 'Imported activities',
+      label: 'Import',
       description: 'Review Strava and activity files',
-      href: '/athlete/imported-activities',
-      matchPrefix: '/athlete/imported-activities',
+      href: '/athlete/import',
+      matchPrefix: '/athlete/import',
     },
   ];
 }
@@ -80,7 +80,7 @@ const sessionReturnTargets = {
   home: { href: '/athlete', label: 'Back to Home' },
   calendar: { href: '/athlete/calendar', label: 'Back to Calendar' },
   activity: { href: '/athlete/activity', label: 'Back to Activity' },
-  imports: { href: '/athlete/imported-activities', label: 'Back to Imported activities' },
+  imports: { href: '/athlete/import', label: 'Back to Import' },
   planner: { href: '/athlete/planner', label: 'Back to Planner' },
 } as const;
 

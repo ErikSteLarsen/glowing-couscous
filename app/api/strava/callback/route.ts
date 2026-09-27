@@ -5,10 +5,10 @@ import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { stravaService, StravaConnectionConflictError } from '@/lib/strava-service';
 
 const STATE_COOKIE = 'tempo_strava_oauth_state';
-const IMPORTS_PATH = '/athlete/imported-activities';
+const IMPORT_PATH = '/athlete/import';
 
-function redirectToImports(request: Request, result: string) {
-  const url = new URL(IMPORTS_PATH, request.url);
+function redirectToImport(request: Request, result: string) {
+  const url = new URL(IMPORT_PATH, request.url);
   url.searchParams.set('strava', result);
   const response = NextResponse.redirect(url);
   response.cookies.set(STATE_COOKIE, '', {
@@ -36,10 +36,10 @@ export async function GET(request: Request) {
   const user = await getCurrentUser();
   const responseState = `${state.split('.')[0] ?? ''}.${user?.id ?? ''}`;
   if (!user || !hasAppRole(user) || !cookieState || !matchesState(state, cookieState) || !matchesState(state, responseState)) {
-    return redirectToImports(request, 'error:state');
+    return redirectToImport(request, 'error:state');
   }
-  if (url.searchParams.get('error') === 'access_denied') return redirectToImports(request, 'cancelled');
-  if (!code) return redirectToImports(request, 'error:authorization');
+  if (url.searchParams.get('error') === 'access_denied') return redirectToImport(request, 'cancelled');
+  if (!code) return redirectToImport(request, 'error:authorization');
 
   try {
     const scopes = url.searchParams.get('scope') ?? '';
@@ -50,12 +50,12 @@ export async function GET(request: Request) {
     } catch {
       syncFailed = true;
     }
-    if (syncFailed && !connection.previousProviderRevoked) return redirectToImports(request, 'connected:sync-revoke-error');
-    if (syncFailed) return redirectToImports(request, 'connected:sync-error');
-    if (!connection.previousProviderRevoked) return redirectToImports(request, 'connected:revoke-error');
-    return redirectToImports(request, 'connected');
+    if (syncFailed && !connection.previousProviderRevoked) return redirectToImport(request, 'connected:sync-revoke-error');
+    if (syncFailed) return redirectToImport(request, 'connected:sync-error');
+    if (!connection.previousProviderRevoked) return redirectToImport(request, 'connected:revoke-error');
+    return redirectToImport(request, 'connected');
   } catch (error) {
-    if (error instanceof StravaConnectionConflictError) return redirectToImports(request, 'error:account-linked');
-    return redirectToImports(request, 'error:connect');
+    if (error instanceof StravaConnectionConflictError) return redirectToImport(request, 'error:account-linked');
+    return redirectToImport(request, 'error:connect');
   }
 }

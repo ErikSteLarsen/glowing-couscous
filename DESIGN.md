@@ -511,8 +511,11 @@ workouts require an active block before saving.
 Profile uses the shared field controls for heart-rate maximum, race result, and
 per-zone running paces. Show the calculated Olympiatoppen heart-rate BPM bands
 beside HRmax, and make race-derived pace defaults directly editable as fastest
-and slowest `m:ss /km` values. Workout blocks show the selected zone's resolved
-target and keep other target systems out of that block's readout.
+and slowest `m:ss /km` values. Keep its save action and explicit saved,
+unsaved, pending, and error feedback in a viewport-pinned footer above mobile
+navigation, with content space reserved below the form. Workout blocks show
+the selected zone's resolved target and keep other target systems out of that
+block's readout.
 
 ## Do's and Don'ts
 

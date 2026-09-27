@@ -1317,6 +1317,51 @@ body {
 .page-content--workout-list { max-width: 800px; }
 .page-content--standard { max-width: 960px; }
 .page-content--library { max-width: 1080px; }
+.profile-page__content { padding-bottom: 160px; }
+.profile-savebar {
+  position: fixed;
+  z-index: 20;
+  right: 0;
+  bottom: calc(53px + max(0.5rem, env(safe-area-inset-bottom)));
+  left: 0;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.profile-savebar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: min(860px, 100%);
+  min-height: 72px;
+  margin-inline: auto;
+  padding: 12px var(--page-gutter);
+}
+.profile-savebar__copy { flex: 1; min-width: 0; }
+.profile-savebar__status {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.profile-savebar__status--saved { color: var(--status-success); }
+.profile-savebar__status--dirty { color: var(--status-warning); }
+.profile-savebar__status--saving { color: var(--text-secondary); }
+.profile-savebar__indicator {
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 9999px;
+}
+.profile-savebar__indicator--saved { background: var(--status-success); }
+.profile-savebar__indicator--dirty { background: var(--status-warning); }
+.profile-savebar__indicator--saving { background: var(--brand); }
+.profile-savebar__indicator--error { background: var(--status-danger); }
+.profile-savebar__detail { margin: 2px 0 0 17px; font-size: 12px; line-height: 1.4; }
+.profile-savebar__button { flex: 0 0 auto; }
 .page-header {
   display: flex;
   align-items: flex-start;
@@ -1348,6 +1393,8 @@ body {
 
 @media (min-width: 768px) {
   :root { --page-gutter: 24px; }
+  .profile-page__content { padding-bottom: 112px; }
+  .profile-savebar { right: 0; bottom: 0; left: 216px; }
 }
 @media (min-width: 1600px) {
   :root { --page-gutter: 32px; }

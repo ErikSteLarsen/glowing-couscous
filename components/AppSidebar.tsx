@@ -24,7 +24,7 @@ const navIcons: Record<string, LucideIcon> = {
   Planner: ClipboardList,
   Templates: LayoutTemplate,
   Workouts: Dumbbell,
-  'Imported activities': Upload,
+  Import: Upload,
 };
 
 export function AppSidebar(props: {

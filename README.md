@@ -59,7 +59,7 @@ data; it is not needed to fix the connection error.
 
 ## Strava Sync Setup
 
-The Imported activities page supports connecting a Strava account, reviewing
+The Import page supports connecting a Strava account, reviewing
 recent activities, previewing streams, categorizing the sport, matching an
 unfinished planned session, and explicitly importing the result. Strava OAuth
 tokens are encrypted at rest with `STRAVA_TOKEN_ENCRYPTION_KEY`; use a fresh,

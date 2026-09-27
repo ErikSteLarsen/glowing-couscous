@@ -21,7 +21,7 @@ importers:
         specifier: ^3.2.2
         version: 3.2.2(react@19.2.5)
       '@prisma/client':
-        specifier: ^6.10.0
+        specifier: 6.10.0
         version: 6.10.0(prisma@6.10.0(typescript@5.9.3))(typescript@5.9.3)
       '@tailwindcss/postcss':
         specifier: ^4.2.1
@@ -73,7 +73,7 @@ importers:
         specifier: ^8.5.6
         version: 8.5.14
       prisma:
-        specifier: ^6.10.0
+        specifier: 6.10.0
         version: 6.10.0(typescript@5.9.3)
       tailwindcss:
         specifier: ^4.2.1
