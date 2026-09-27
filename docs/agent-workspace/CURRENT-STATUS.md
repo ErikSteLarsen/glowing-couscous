@@ -1,5 +1,32 @@
 # Current Status
 
+On **2026-09-27**, the Workouts library uses the 1080px measure without an
+enclosing `Surface`. Compact workout cards form a responsive grid, reaching
+three columns at 900px of content width. Create workout now sits beside its
+description at wider sizes and stacks below it on narrow screens. The count
+moved beside search and updates to show filtered results against the total.
+Completed work now uses an open three-metric summary and separated history
+rows; Activity notes remain inline. Planner selection now uses a persistent
+tinted cell and inset frame, while today remains marked on its numeral.
+`DESIGN.md` records the visual rules. `pnpm test` passes (248 tests), full
+`eslint .` passes, and `pnpm build` passes in an isolated clean checkout
+containing these changes. The configured database has three migrations and an
+up-to-date schema. In the active checkout, Prisma regeneration cannot replace
+the Windows query-engine DLL held by the running local server; the isolated
+build completes the full script. Next.js reports its existing middleware
+deprecation warning. The populated workout grid, populated Activity rows, and
+mobile render were not visually verified.
+
+On **2026-09-27**, a route-by-route mobile readiness review recorded the
+responsive foundation, current owners, historical browser evidence, and
+unverified route states. The focused Impeccable detector returned 11 advisory
+type-ramp findings and no blockers. Source review confirmed muted-text contrast
+below 4.5:1 and a roughly 35px Planner date target at 320px; these need
+mobile-specific follow-up. The recent Workouts and Activity states, populated
+views, Import, sharing, and physical touch behavior were not freshly verified.
+No UI code or runtime tests changed in this review. See
+[MOBILE-READINESS-REVIEW.md](MOBILE-READINESS-REVIEW.md).
+
 On **2026-09-26**, the activity workspace is labeled **Import** and lives at
 `/athlete/import`; the former `/athlete/imported-activities` route redirects to
 it, and Strava OAuth returns to the new path.

@@ -26,10 +26,10 @@ secondary; preserve their behavior and shared ownership boundaries.
 | `SHELL-001` | Unified personal shell and navigation | `shipped` | `components/AppShell.tsx`, `components/AppSidebar.tsx`, `components/ui.tsx` (`TopBar`, `BackControl`), `app/globals.css`, `lib/app-navigation.ts` | Authenticated `(app)` layout and `/athlete/*` |
 | `COACH-001` | Dormant coach roster and requests | `transitional` | `lib/coach-service.ts`, `lib/coach-request-service.ts` | Hidden pending a later collaboration release |
 | PLAN-001 | Personal planning and secondary coach planning | shipped | components/PlannerDesk.tsx, lib/coach-planner-service.ts, lib/athlete-planner-service.ts, lib/assignment-service.ts | /coach/planner, /athlete/planner |
-| `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | `/coach/workouts`, `/athlete/workouts` |
+| `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts`, `components/WorkoutLibraryClient.tsx` | `/coach/workouts`, `/athlete/workouts` |
 | `TEMPLATE-001` | Templates and training plans | `in-progress` | `lib/template-service.ts`, `lib/coach-training-plan-service.ts` | `/coach/templates`, `/athlete/templates` |
 | SESSION-001 | Canonical editor and outcomes | in-progress | lib/session-editor.ts, lib/athlete-execution.ts, lib/athlete-service.ts, lib/workout-canvas-drop.ts, lib/workout-pattern.ts, lib/workout-zone-intensity.ts, lib/profile-training-zones.ts, lib/performance-profile.ts, lib/account-service.ts, components/WorkoutBuilder.tsx, components/WorkoutCanvasEditor.tsx, components/SessionPlanCanvas.tsx, components/WorkoutLibraryClient.tsx, lib/session-snapshot-service.ts, lib/athlete-completion-service.ts | Profile, read-only session detail, timed live execution, workout canvas, outcome APIs; profile-backed zones and target adjustments |
-| `ACTIVITY-001` | Activity file review, import, and removal | `in-progress` | `lib/activity-file-parser.ts`, `lib/activity-import-service.ts`, `lib/activity-series.ts`, `components/tempo/ActivityIntensityBars.tsx`, `components/ImportedActivityMeasurements.tsx`, `components/ActivityImportClient.tsx`, `components/tempo/SessionRow.tsx`, `lib/athlete-service.ts`, athlete session detail page | Shared `/athlete/import` page (legacy `/athlete/imported-activities` redirects) and `/api/activity-imports`; imported activity measurements and single-column no-plan detail in athlete Calendar/session detail |
+| `ACTIVITY-001` | Activity file review, import, removal, and outcome history | `in-progress` | `lib/activity-file-parser.ts`, `lib/activity-import-service.ts`, `lib/activity-series.ts`, `components/tempo/ActivityIntensityBars.tsx`, `components/ImportedActivityMeasurements.tsx`, `components/ActivityImportClient.tsx`, `components/tempo/SessionRow.tsx`, `lib/athlete-service.ts`, athlete session detail page, `app/(app)/athlete/activity/page.tsx` | `/athlete/activity` completed-work history; shared `/athlete/import` page (legacy `/athlete/imported-activities` redirects) and `/api/activity-imports`; imported activity measurements and single-column no-plan detail in athlete Calendar/session detail |
 | `STRAVA-001` | Automatic Strava API sync | `in-progress` | `lib/strava-service.ts`, `app/api/strava/*`, `components/StravaImportPanel.tsx` | OAuth, activity review/import, webhooks, and disconnect cleanup are implemented; external setup and live verification remain |
 | `SHARE-001` | Sanitized workout sharing | `in-progress` | `lib/share-link.ts`, `lib/share-link-service.ts` | `/share/[token]`, share APIs |
 | `COMPAT-001` | Older coach session adapter | `transitional` | `lib/planner-service.ts` | `/api/coach/sessions/[sessionId]` |
@@ -43,9 +43,10 @@ offers creation actions for missing workout or template sources, and puts
 selected-day details before the calendar on narrow screens. Calendar buttons
 announce planned session names, and template ranges report chronological
 endpoints in either selection direction.
-Home, Calendar, and Planning Desk mark today with the shared
-`calendar-day--today` full-cell treatment and `calendar-day-date--today` marker
-in `app/globals.css`; date selection remains separate from the current date.
+Home and Calendar mark today with the shared `calendar-day--today` full-cell
+treatment and `calendar-day-date--today` marker in `app/globals.css`. Planning
+Desk marks today on its numeral, and selected dates use a separate tinted cell
+and inset frame.
 Page and nested-editor return controls use `TopBar` and `BackControl` in
 `components/ui.tsx`; return targets live in `lib/app-navigation.ts` and retain
 their originating route context.
@@ -73,8 +74,6 @@ still, and no runtime dependencies.
 
 ## Active Tasks
 
-
-
 - `2026-09-26-strava-activity-import.md` - activity file and Strava review/import; integration is implemented, with external setup and database/browser verification remaining.
 - `2026-09-25-target-intensity-adjustments.md` - zone presets, target adjustments, and responsive verification.
 
@@ -85,7 +84,7 @@ still, and no runtime dependencies.
 
 ## Current Assessment
 
-See [ASSESSMENT.md](ASSESSMENT.md) for the 2026-09-17 prioritized personal workflow findings and verification results.
+See [ASSESSMENT.md](ASSESSMENT.md) for the 2026-09-17 prioritized personal workflow findings and verification results, and [MOBILE-READINESS-REVIEW.md](MOBILE-READINESS-REVIEW.md) for the 2026-09-27 route-by-route mobile evidence, gaps, and next-step acceptance plan.
 
 
 ## Completed Functional Repairs

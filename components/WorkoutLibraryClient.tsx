@@ -216,33 +216,37 @@ export function WorkoutLibraryClient({
   const metrics = deriveSessionEditorMetrics(draft);
 
   return (
-    <div className={editorOpen ? 'min-w-0' : 'page-content--workout-list'}>
-      {!editorOpen ? <Surface className="min-w-0 space-y-4">
-        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-[var(--text)]">Workout library</h2>
-            <p className="mt-1 max-w-[44ch] text-sm leading-6 text-[var(--text-secondary)]">
+    <div className={editorOpen ? 'min-w-0' : 'page-content--library workout-library'}>
+      {!editorOpen ? <section aria-labelledby="workout-library-title" className="min-w-0 space-y-5">
+        <div className="space-y-3">
+          <h2 id="workout-library-title" className="text-lg font-semibold text-[var(--text)]">Workout library</h2>
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
+            <p className="max-w-[44ch] text-sm leading-6 text-[var(--text-secondary)]">
               Keep reusable workouts here. They stay unscheduled until you add a copy to a day in Planner.
             </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge>{workouts.length}</Badge>
-            <button type="button" className={compactPrimaryButtonClassName} onClick={() => requestDraftAction({ kind: 'new' })}>
+            <button type="button" className={primaryButtonClassName} onClick={() => requestDraftAction({ kind: 'new' })}>
               Create workout
             </button>
           </div>
         </div>
-        <label className="block space-y-2">
-          <span className={formLabelClassName}>Find a workout</span>
-          <input
-            type="search"
-            value={filterText}
-            onChange={(event) => setFilterText(event.target.value)}
-            className={formFieldClassName}
-            placeholder="Search by name or summary"
-            aria-label="Search by name or summary"
-          />
-        </label>
+        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-5">
+          <label className="block w-full max-w-[32rem] space-y-2">
+            <span className={formLabelClassName}>Find a workout</span>
+            <input
+              type="search"
+              value={filterText}
+              onChange={(event) => setFilterText(event.target.value)}
+              className={formFieldClassName}
+              placeholder="Search by name or summary"
+              aria-label="Search by name or summary"
+            />
+          </label>
+          <p role="status" aria-live="polite" className="text-[12px] font-medium tabular-nums text-[var(--text-secondary)] sm:pb-3">
+            {filterText.trim()
+              ? `${visibleWorkouts.length} of ${workouts.length} workouts`
+              : `${workouts.length} ${workouts.length === 1 ? 'workout' : 'workouts'}`}
+          </p>
+        </div>
         {message ? (
           <p role={messageTone === 'danger' ? 'alert' : 'status'} className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>
             {message}
@@ -261,41 +265,51 @@ export function WorkoutLibraryClient({
             action={<button type="button" className={secondaryButtonClassName} onClick={() => setFilterText('')}>Clear search</button>}
           />
         ) : (
-          <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
+          <div className="workout-library-grid">
             {visibleWorkouts.map((workout) => {
               const workoutDraft = createSessionEditorDraftFromPersisted('create', { ...workout, date: null, scheduledDate: null });
               const workoutMetrics = deriveSessionEditorMetrics(workoutDraft);
               const selected = editorOpen && selectedWorkoutId === workout.id;
               return (
-                <div key={workout.id} className={`py-4 ${selected ? 'bg-[var(--brand-tint)]' : ''}`}>
-                  <button
-                    type="button"
+                <div key={workout.id} className="flex min-w-0 flex-col gap-1.5">
+                  <div
+                    role="button"
+                    tabIndex={0}
                     aria-current={selected ? 'true' : undefined}
+                    aria-label={selected ? `Editing ${workout.title}` : `Edit workout ${workout.title}`}
                     onClick={() => requestDraftAction({ kind: 'workout', workout })}
-                    className={`w-full rounded-[3px] px-2 text-left ${buttonFocusClassName} focus-visible:ring-inset`}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        requestDraftAction({ kind: 'workout', workout });
+                      }
+                    }}
+                    className={`workout-library-card group cursor-pointer ${buttonFocusClassName} focus-visible:ring-inset ${selected ? 'workout-library-card--selected' : ''}`}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="break-words text-[13px] font-semibold text-[var(--text)]">{workout.title}</p>
-                        <p className="mt-1 text-[12px] text-[var(--text-secondary)]">{getSportLabel(workout.sport)} · Saved in library</p>
+                    <div className="workout-library-card__content">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="break-words text-[13px] font-semibold leading-[1.35] text-[var(--text)]">{workout.title}</p>
+                          <p className="mt-1 text-[12px] text-[var(--text-secondary)]">{getSportLabel(workout.sport)} · Saved in library</p>
+                        </div>
+                        <span className="shrink-0 pt-0.5 text-[11px] text-[var(--text-secondary)] group-hover:text-[var(--brand)]">{selected ? 'Editing' : 'Edit'}</span>
                       </div>
-                      <span className="shrink-0 text-[12px] text-[var(--text-secondary)]">{selected ? 'Editing' : 'Edit workout'}</span>
-                    </div>
-                    <div className="mt-3 space-y-2">
-                      <SessionBlockBar segments={workoutMetrics.segments} compact />
-                      <div className="flex gap-3 text-[12px] text-[var(--text-secondary)]">
-                        <MetricText>{formatDurationExact(workoutMetrics.durationSec)}</MetricText>
-                        <MetricText>{workoutMetrics.tss} TSS</MetricText>
+                      <div className="space-y-2">
+                        <SessionBlockBar segments={workoutMetrics.segments} compact />
+                        <div className="flex gap-3 text-[12px] text-[var(--text-secondary)]">
+                          <MetricText>{formatDurationExact(workoutMetrics.durationSec)}</MetricText>
+                          <MetricText>{workoutMetrics.tss} TSS</MetricText>
+                        </div>
                       </div>
                     </div>
-                  </button>
-                  {role === 'COACH' ? <div className="mt-2 px-2"><ShareLinkButton sourceKind="session" sourceId={workout.id} /></div> : null}
+                  </div>
+                  {role === 'COACH' ? <div className="px-1"><ShareLinkButton sourceKind="session" sourceId={workout.id} /></div> : null}
                 </div>
               );
             })}
           </div>
         )}
-      </Surface> : null}
+      </section> : null}
 
       {editorOpen ? <Surface className="min-w-0 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-3">

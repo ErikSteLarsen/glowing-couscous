@@ -344,7 +344,8 @@ body {
   padding-inline: 0.375rem;
 }
 
-.calendar-day--today:hover .calendar-day-date--today {
+.calendar-day--today:hover .calendar-day-date--today,
+.planner-desk__day:hover .calendar-day-date--today {
   border-color: var(--signal-hover);
   background: var(--signal-hover);
 }
@@ -1317,6 +1318,30 @@ body {
 .page-content--workout-list { max-width: 800px; }
 .page-content--standard { max-width: 960px; }
 .page-content--library { max-width: 1080px; }
+.workout-library { container-type: inline-size; }
+.workout-library-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.workout-library-card {
+  display: flex;
+  min-width: 0;
+  min-height: 160px;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface);
+  padding: 13px;
+  text-align: left;
+  transition: background-color 160ms ease-out, border-color 160ms ease-out;
+}
+.workout-library-card:hover { border-color: var(--field-selected-border); background: var(--field-surface); }
+.workout-library-card:active { background: var(--sunken); }
+.workout-library-card--selected { border-color: var(--field-selected-border); background: var(--brand-tint); }
+.workout-library-card__content { display: flex; width: 100%; flex-direction: column; justify-content: space-between; gap: 12px; }
+@container (min-width: 560px) {
+  .workout-library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container (min-width: 900px) {
+  .workout-library-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 .profile-page__content { padding-bottom: 160px; }
 .profile-savebar {
   position: fixed;
@@ -1388,6 +1413,11 @@ body {
 .planner-desk__month { height: clamp(264px, calc(100dvh - 450px - var(--planner-range-space, 0px)), 528px); }
 .planner-desk__calendar--range { --planner-range-space: 80px; }
 .planner-desk__day { min-height: 0; overflow: hidden; }
+.planner-desk__day[aria-pressed="true"] {
+  background-color: var(--brand-tint) !important;
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+}
 .planner-desk__count { display: none; }
 .planner-desk__feedback { max-width: 100%; }
 

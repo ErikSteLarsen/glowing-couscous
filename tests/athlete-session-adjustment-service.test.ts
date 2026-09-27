@@ -34,7 +34,7 @@ const baselineJson = JSON.stringify({
 });
 
 function createDraft() {
-  return addSessionEditorBlock(
+  const draftWithSkippedBlock = addSessionEditorBlock(
     createEmptySessionEditorDraft({
       mode: 'planned',
       id: 40,
@@ -47,6 +47,12 @@ function createDraft() {
     }),
     { kind: 'work', zone: 2, durationSec: 600, skipped: true, note: 'Skip if tired' },
   );
+  return addSessionEditorBlock(draftWithSkippedBlock, {
+    kind: 'work',
+    zone: 2,
+    durationSec: 300,
+    note: 'Active work',
+  });
 }
 
 function createDb({

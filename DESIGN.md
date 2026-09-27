@@ -185,6 +185,9 @@ layouts.
 - One clear next action before secondary metrics or history.
 - Shared session, status, metric, and block-structure language across routes.
 - Warm paper surfaces with semantic borders, fine linework, and restrained depth.
+- Content libraries and history favor open collections, clear spacing, and fine
+  separators; reserve enclosing frames for focused tasks, controls, and
+  deliberately compact grids.
 - Text-visible states and persistent keyboard focus.
 
 ## Colors
@@ -285,8 +288,10 @@ rules and `--page-*` tokens in `app/globals.css` own the centered 1800px maximum
 minimum header band, and 16px page-group gap. `TopBar` top-aligns titles and actions.
 Descriptions, long titles, zoom, and narrow screens may grow the band to preserve
 content rather than clipping it. Content below the header can use shared
-maximum measures of 860px for compact account forms, 800px for the single-column
-workout library, 960px for session detail, and 1080px for activity and template libraries. These
+maximum measures of 860px for compact account forms, 960px for session detail,
+and 1080px for activity, template, and workout libraries. The workout library
+uses an unframed section and responsive compact-card grid, reaching three
+columns when its content measure is at least 900px. These
 sections stay fluid below their maximum and center within the page frame when
 there is extra horizontal space. Workout and template editors use the full available frame width when
 active; the workout basics step keeps its centered 46rem panel. Home, Calendar,
@@ -327,10 +332,11 @@ month-first assignment desk with selected dates and exact template ranges. At `2
   smaller widths, the home week ribbon becomes a horizontal channel and controls
   wrap without hiding the primary save or navigation action.
 
-Mark the current date on its numeral with the shared understated ink underline
-and tint. Keep that cue independent of a selected day, which uses the selected
-surface and checkmark. Preserve accessible current-date semantics and spoken
-labels; reserve “Today” text for headings and navigation actions.
+Mark the current date with a filled square around its numeral. Keep that cue
+independent of selection. In Planner, selected dates use a tinted square with
+an inset brand frame, and expose selection through the button state. Preserve
+accessible current-date semantics and spoken labels; reserve “Today” text for
+headings and navigation actions.
 
 ## Elevation & Depth
 
@@ -344,6 +350,11 @@ Do not add a shadow to make a repeated content row feel more important.
 **The Paper Depth Rule.** A surface earns outer elevation only when it is raised
 by state or interaction, such as a menu, drawer, or dialog. Inset depth belongs
 to the paper material and should remain quiet.
+
+Repeated content does not need a separate enclosing surface for every item.
+Use open rows with spacing and a fine separator for activity history and other
+reading-first collections. Keep a frame when it helps users recognize an active
+work area, a control group, a date cell, or a compact interactive library card.
 
 ## Shapes
 
@@ -441,9 +452,9 @@ for contextual return and execution controls.
   duration-weighted average intensity zone; pause time is excluded. Below
   600px container width they show counts instead. Other month calendar rows
   keep their title-only summary.
-- Current dates use a tinted full-day surface, an inset brand frame, and a
-  filled date marker across Home, Calendar, and Planning Desk. Hover remains a
-  separate neutral state, and day selection keeps its own check treatment.
+- Home and Calendar current dates use a tinted full-day surface and inset brand
+  frame. Planning Desk marks today on the numeral; selected dates use a tinted
+  full-day surface and inset brand frame, including when today is selected.
 - `SessionBlockBar` uses duration-proportional segments. On card and compact
   variants, segment height maps to Zone 1 through Zone 5 and color identifies
   the zone. Its accessible label carries the same information in text.

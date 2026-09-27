@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useId, useState, useSyncExternalStore, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -29,6 +29,9 @@ type PaceDrafts = Record<TempoZone, PaceDraft>;
 type CustomizedZones = Record<TempoZone, boolean>;
 
 const zones: TempoZone[] = [1, 2, 3, 4, 5];
+const subscribePortalReady = () => () => {};
+const getPortalClientSnapshot = () => true;
+const getPortalServerSnapshot = () => false;
 const zoneNames: Record<TempoZone, string> = { 1: 'Recovery', 2: 'Easy', 3: 'Steady', 4: 'Threshold', 5: 'Fast' };
 const raceDistances = [
   { value: 3000, label: '3 km' },
@@ -48,11 +51,9 @@ export function ProfileClient({ account }: { account: Account }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [savebarPortalReady, setSavebarPortalReady] = useState(false);
+  const savebarPortalReady = useSyncExternalStore(subscribePortalReady, getPortalClientSnapshot, getPortalServerSnapshot);
   const router = useRouter();
   const { update } = useSession();
-
-  useEffect(() => setSavebarPortalReady(true), []);
 
   function refreshCalculatedPaces(profile: PerformanceProfile) {
     const ranges = getRunningPaceZones(profile);
