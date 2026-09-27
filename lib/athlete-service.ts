@@ -463,17 +463,22 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
     async loadActivityFeed(userId: number) {
       const athlete = await db.user.findUnique({
         where: { id: userId },
-        include: {
+        select: {
           activities: {
-            orderBy: { completedAt: 'desc' },
-            take: 12,
-            include: {
+            orderBy: [{ completedAt: 'desc' }, { id: 'desc' }],
+            select: {
+              id: true,
+              sessionId: true,
+              completedAt: true,
+              durationSec: true,
+              tss: true,
+              metricsSource: true,
+              notes: true,
+              distanceMeters: true,
+              importTitle: true,
+              importedSessionStatus: true,
               session: {
-                include: {
-                  blocks: {
-                    orderBy: { sortOrder: 'asc' },
-                  },
-                },
+                select: { title: true, sport: true },
               },
             },
           },
@@ -484,34 +489,20 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         return null;
       }
 
-      const totals = athlete.activities.reduce(
-        (summary, activity) => {
-          summary.durationSec += activity.durationSec;
-          if (activity.metricsSource === 'file-import' && activity.tss === 0) summary.loadUnavailableCount += 1;
-          else summary.tss += activity.tss;
-          return summary;
-        },
-        { durationSec: 0, tss: 0, loadUnavailableCount: 0 },
-      );
-
       return {
-        athlete: {
-          id: athlete.id,
-          name: athlete.name ?? '',
-        },
-        totals,
         activities: athlete.activities.map((activity) => ({
           id: activity.id,
           sessionId: activity.sessionId,
-          title: activity.session.title,
+          title: activity.importTitle || activity.session.title,
+          plannedTitle: activity.importedSessionStatus === null ? null : activity.session.title,
           sport: activity.session.sport,
           completedAt: activity.completedAt,
           durationSec: activity.durationSec,
           tss: activity.tss,
-          compliancePct: activity.compliancePct,
+          loadAvailable: !(['file-import', 'strava-import'].includes(activity.metricsSource) && activity.tss === 0),
           metricsSource: activity.metricsSource,
           notes: activity.notes,
-          segments: parseActivitySegments(activity.segmentsJson),
+          distanceMeters: activity.distanceMeters,
         })),
       };
     },

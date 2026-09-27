@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
         status: session.status,
         durationSec: session.recordedDurationSec ?? session.durationSec,
         tss: session.tss,
+        loadAvailable: session.loadAvailable,
         segments: session.segments,
         intensityTimeline: session.intensityTimeline,
       })),

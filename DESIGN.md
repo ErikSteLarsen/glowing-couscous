@@ -413,8 +413,10 @@ dashboard cards.
   content. It is a warm paper, bordered, inset work surface using the field
   radius.
 - **Session row:** use `SessionRow` for navigable workout summaries. The whole
-  row is the link; `default` uses the field radius, while `compact` and `month`
-  use the compact radius.
+  row is the link; `default` uses the field radius, while `compact`, `calendar`,
+  and `month` use the compact radius. Calendar variants highlight the row
+  border and surface on hover and keyboard focus without the animated leading
+  stripe.
 - **Empty state:** use `EmptyState` beside the task that produced the empty
   result, with a recovery action when one exists.
 - **Selection:** selected editor blocks and selected sessions use the liquid
@@ -445,13 +447,16 @@ for contextual return and execution controls.
 
 - `SessionRow` is the shared workout-card unit across Home, Calendar, Workouts,
   and week surfaces. `default` includes metrics and the timeline, `compact`
-  preserves essential context for a week wall, and `month` shows only what a
-  month grid can support.
+  preserves essential context for a week wall, `calendar` uses a shorter
+  timeline for stacked same-day entries, and `month` shows only what a month
+  grid can support.
 - Planner month cells preview one session on a single row, with a short
   zone-colored swatch beside its title. The swatch color represents the rounded,
   duration-weighted average intensity zone; pause time is excluded. Below
-  600px container width they show counts instead. Other month calendar rows
-  keep their title-only summary.
+  600px container width they show counts instead. Athlete month calendar cells
+  show up to two single-line session titles, then a remaining-session count;
+  the small-screen month view keeps its day link. Other month calendar rows keep
+  their title-only summary.
 - Home and Calendar current dates use a tinted full-day surface and inset brand
   frame. Planning Desk marks today on the numeral; selected dates use a tinted
   full-day surface and inset brand frame, including when today is selected.
@@ -464,8 +469,9 @@ for contextual return and execution controls.
   at 48 bars. Bar height follows the recorded heart-rate range, and saved HRmax
   enables Olympiatoppen zone colors. Without HRmax, the chart stays signal-blue
   and does not imply calibrated zones. Missing samples remain visible as gaps.
-  The row shows average bpm and bin duration; hover text
-  carries each bin's average and range. Month rows keep their title-only summary.
+  Calendar rows keep average bpm visible and move bin duration into the chart's
+  accessible label; hover text carries each bin's time, average, and
+  range. Month rows keep their title-only summary.
 - `ActivityMetricBars` keeps recorded heart rate, pace/speed, power, cadence,
   temperature, elevation, and grade in a bar-based visual language. Time-based
   metrics use one-minute buckets (five minutes for temperature); terrain uses

@@ -6,7 +6,7 @@ type Segment = {
   color: string;
 };
 
-type SessionBlockBarSize = 'authoring' | 'full' | 'card' | 'compact';
+type SessionBlockBarSize = 'authoring' | 'full' | 'card' | 'compact' | 'calendar';
 
 export function SessionBlockBar({
   segments,
@@ -25,6 +25,7 @@ export function SessionBlockBar({
     full: 'h-[26px]',
     card: 'h-[32px]',
     compact: 'h-[24px]',
+    calendar: 'h-4',
   }[resolvedSize];
 
   return (

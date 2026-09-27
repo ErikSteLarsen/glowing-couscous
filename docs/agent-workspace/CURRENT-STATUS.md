@@ -1,5 +1,28 @@
 # Current Status
 
+On **2026-09-27**, Athlete Calendar session rows use a shorter stacked layout
+for multiple sessions per day; month cells preview up to two single-line titles
+and a remaining count. Imported week rows keep `Avg HR` visible while the
+two-minute label is removed from the visual summary; it describes each chart
+bin's duration and remains in the chart's accessible label and interval
+tooltips. Calendar-row hover and focus retain the border/surface highlight
+without the animated leading stripe. `git diff --check` passes. The Impeccable
+detector reported advisory typography and radius findings in shared styling.
+Tests, lint, build, and authenticated browser rendering were not run in this
+turn.
+
+On **2026-09-27**, Completed work now covers the full history with week/month
+navigation, a sport filter, and date/sport ordering. The period summary breaks
+out completed sessions, total time, and recorded distance for running,
+swimming, biking, strength, and any additional sports in the history. App
+completions and file/Strava imports use the same summary; a matched import
+remains one activity and shows both its imported title and planned session.
+Outcome details and plan/actual comparison remain available from each row.
+`git diff --check` and targeted ESLint pass. `pnpm lint` stopped in its
+noninteractive dependency preflight; direct TypeScript checking reports
+pre-existing fixture/type errors under `tests/`, with none reported in the
+changed production files. Tests, build, and browser rendering were not run.
+
 On **2026-09-27**, the Workouts library uses the 1080px measure without an
 enclosing `Surface`. Compact workout cards form a responsive grid, reaching
 three columns at 900px of content width. Create workout now sits beside its
@@ -17,14 +40,22 @@ build completes the full script. Next.js reports its existing middleware
 deprecation warning. The populated workout grid, populated Activity rows, and
 mobile render were not visually verified.
 
-On **2026-09-27**, a route-by-route mobile readiness review recorded the
-responsive foundation, current owners, historical browser evidence, and
-unverified route states. The focused Impeccable detector returned 11 advisory
+On **2026-09-27**, the route-by-route mobile readiness review was expanded into
+a specific proposed implementation plan. It recommends four athlete mobile
+destinations (Home, Plan, Workouts, History), a day-agenda-first planning flow,
+touch-first workout editing, task-focused session/live screens, and clear
+secondary locations for templates, imports, metrics, account settings, and
+coach work. The plan now explicitly scopes visual and interaction changes to
+phone layouts: desktop navigation, page hierarchy, editor canvas, global color
+tokens, control sizes, and default service behavior must remain unchanged.
+Mobile-only History pagination may add service support while preserving the
+existing desktop result. It specifies per-route phone adjustments, work
+packages, and device acceptance criteria while preserving desktop behavior and
+existing routes. The focused Impeccable detector returned 11 advisory
 type-ramp findings and no blockers. Source review confirmed muted-text contrast
-below 4.5:1 and a roughly 35px Planner date target at 320px; these need
-mobile-specific follow-up. The recent Workouts and Activity states, populated
-views, Import, sharing, and physical touch behavior were not freshly verified.
-No UI code or runtime tests changed in this review. See
+below 4.5:1 and a roughly 35px Planner date target at 320px. Populated mobile
+routes, Import, sharing, and physical touch behavior still need fresh
+verification. This is a proposal only: no UI code or runtime tests changed. See
 [MOBILE-READINESS-REVIEW.md](MOBILE-READINESS-REVIEW.md).
 
 On **2026-09-26**, the activity workspace is labeled **Import** and lives at

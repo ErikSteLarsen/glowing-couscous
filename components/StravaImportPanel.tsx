@@ -302,9 +302,6 @@ export function StravaImportPanel({
               {activeActivityId && detailErrors[activeActivityId] ? (
                 <p role="alert" className={dangerTextClassName}>{detailErrors[activeActivityId]}</p>
               ) : null}
-              {activeActivityId && importErrors[activeActivityId] ? (
-                <p role="alert" className={dangerTextClassName}>{importErrors[activeActivityId]}</p>
-              ) : null}
               {activeDetail ? (
                 <>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -337,17 +334,24 @@ export function StravaImportPanel({
                     {activeMatchingSessions.length === 0 ? <p className="mt-1 text-[12px] text-[var(--text-secondary)]">No unfinished planned session for this category is available.</p> : null}
                   </label>
                   <ActivityMetricPreview points={activeDetail.points} durationSec={activeDetail.durationSec} distanceMeters={activeDetail.distanceMeters} sport={activeDraft?.sport ?? activeDetail.sport} />
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
-                    <p className="text-[12px] text-[var(--text-secondary)]">{activeDraft?.plannedSessionId ? 'The planned workout stays available for comparison.' : 'Tempo will create a completed session from the recorded activity.'}</p>
-                    <button type="button" className={primaryButtonClassName} disabled={Boolean(importing[activeActivity.id]) || activeActivity.imported || !activeDraft?.title.trim()} onClick={() => void importActivity(activeActivity.id)}>
-                      {activeActivity.imported ? 'Already imported' : importing[activeActivity.id] ? 'Importing…' : 'Import activity'}
-                    </button>
-                  </div>
                 </>
               ) : loading[activeActivity.id] ? (
                 <p role="status" className="text-[13px] text-[var(--text-secondary)]">Loading activity data and recorded streams…</p>
               ) : null}
             </div>
+            <footer className="sticky bottom-0 z-10 -mx-5 -mb-5 flex flex-col gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-4 sm:-mx-7 sm:-mb-7 sm:px-7">
+              {activeActivityId && importErrors[activeActivityId] ? (
+                <p role="alert" className={dangerTextClassName}>{importErrors[activeActivityId]}</p>
+              ) : null}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-[12px] text-[var(--text-secondary)]">
+                  {activeDraft?.plannedSessionId ? 'The planned workout stays available for comparison.' : 'Tempo will create a completed session from the recorded activity.'}
+                </p>
+                <button type="button" className={primaryButtonClassName} disabled={Boolean(importing[activeActivity.id]) || activeActivity.imported || !activeDraft?.title.trim()} onClick={() => void importActivity(activeActivity.id)}>
+                  {activeActivity.imported ? 'Already imported' : importing[activeActivity.id] ? 'Importing…' : 'Import activity'}
+                </button>
+              </div>
+            </footer>
           </>
         ) : null}
       </dialog>

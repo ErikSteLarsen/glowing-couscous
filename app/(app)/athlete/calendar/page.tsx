@@ -72,6 +72,7 @@ export default async function AthleteCalendarPage({
               status: session.status,
               durationSec: session.recordedDurationSec ?? session.durationSec,
               tss: session.tss,
+              loadAvailable: session.loadAvailable,
               segments: session.segments,
               intensityTimeline: session.intensityTimeline,
             })),
@@ -144,9 +145,9 @@ export default async function AthleteCalendarPage({
                                {day.sessions.length}
                              </span>
                           </div>
-                           <div className="mt-2 hidden space-y-2 sm:block">
+                           <div className="mt-2 hidden space-y-1 sm:block">
                              {day.sessions.length > 0 ? (
-                               day.sessions.slice(0, 1).map((session) => (
+                               day.sessions.slice(0, 2).map((session) => (
                                  <SessionRow
                                    key={session.id}
                                     session={session}
@@ -164,7 +165,7 @@ export default async function AthleteCalendarPage({
                                 No session
                               </Link>
                             )}
-                            {day.sessions.length > 1 ? <p className="text-[11px] text-[var(--text-secondary)]">+{day.sessions.length - 1} more</p> : null}
+                            {day.sessions.length > 2 ? <p className="px-1.5 text-[11px] leading-4 text-[var(--text-secondary)]">+{day.sessions.length - 2} more</p> : null}
                           </div>
                           <Link href={buildCalendarHref('week', new Date(`${day.isoDate}T12:00:00`))} className="mt-1 flex min-h-11 items-center text-[11px] font-medium text-[var(--brand)] sm:hidden">
                             View day

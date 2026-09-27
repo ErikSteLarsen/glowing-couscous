@@ -1,6 +1,6 @@
 import type { ActivityIntensityTimeline } from '@/lib/activity-series';
 
-export function ActivityIntensityBars({ timeline }: { timeline: ActivityIntensityTimeline }) {
+export function ActivityIntensityBars({ timeline, compact = false }: { timeline: ActivityIntensityTimeline; compact?: boolean }) {
   const intervalLabel = timeline.intervalSec >= 60
     ? `${Math.round(timeline.intervalSec / 60)} min`
     : `${timeline.intervalSec} sec`;
@@ -10,15 +10,15 @@ export function ActivityIntensityBars({ timeline }: { timeline: ActivityIntensit
   const description = `Recorded heart-rate intensity, ${timeline.bins.length} intervals of ${intervalLabel}. Average ${timeline.averageBpm} bpm, range ${timeline.minBpm} to ${timeline.maxBpm} bpm. ${zoneDescription}`;
 
   return (
-    <div className="space-y-1.5">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-2 text-[11px] leading-4 text-[var(--text-secondary)]">
-        <span className="font-medium text-[var(--text)]">Heart rate</span>
-        <span className="tabular-nums">Avg {timeline.averageBpm} bpm · {intervalLabel}</span>
+    <div className={compact ? 'space-y-0.5' : 'space-y-1.5'}>
+      <div className={`flex flex-wrap items-baseline ${compact ? 'justify-end' : 'justify-between'} gap-x-2 text-[11px] leading-4 text-[var(--text-secondary)]`}>
+        {compact ? null : <span className="font-medium text-[var(--text)]">Heart rate</span>}
+        <span className="tabular-nums">{compact ? `Avg HR ${timeline.averageBpm} bpm` : `Avg ${timeline.averageBpm} bpm · ${intervalLabel}`}</span>
       </div>
       <div
         role="img"
         aria-label={description}
-        className="flex h-9 items-end gap-px overflow-hidden border-b border-[var(--border)] pb-px"
+        className={`flex ${compact ? 'h-5' : 'h-9'} items-end gap-px overflow-hidden border-b border-[var(--border)] pb-px`}
       >
         {timeline.bins.map((bin) => {
           const range = `${formatDuration(bin.from)}–${formatDuration(bin.to)}`;

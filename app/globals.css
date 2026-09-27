@@ -239,6 +239,10 @@ body {
   transform: scaleY(1);
 }
 
+.ink-session-row--calendar::before {
+  display: none;
+}
+
 .ink-form-inspector > div > button {
   min-height: 2.5rem;
   padding: 0.5rem 1rem;

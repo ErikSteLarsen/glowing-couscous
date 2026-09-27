@@ -222,16 +222,18 @@ export function AthleteCalendarWeekScroller({
                 </div>
 
                 {day.sessions.length > 0 ? (
-                  day.sessions.map((session) => (
-                    <SessionRow
-                      key={session.id}
-                      session={session}
-                      href={`/athlete/session/${session.id}?from=calendar`}
-                      variant="compact"
-                      muted={session.status === 'completed'}
-                      showTime={false}
-                    />
-                  ))
+                  <div className="mt-2 grid gap-1.5">
+                    {day.sessions.map((session) => (
+                      <SessionRow
+                        key={session.id}
+                        session={session}
+                        href={`/athlete/session/${session.id}?from=calendar`}
+                        variant="calendar"
+                        muted={session.status === 'completed'}
+                        showTime={false}
+                      />
+                    ))}
+                  </div>
                 ) : (
                   <p className="py-2 text-[13px] text-[var(--text-muted)]">Rest</p>
                 )}
