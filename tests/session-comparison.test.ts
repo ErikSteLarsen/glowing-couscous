@@ -104,12 +104,13 @@ test('comparison hides equal actuals, supports missing baselines, and rejects un
   });
 });
 
-test('comparison routes and shared dialog declare both role adapters and complete-version toggles', async () => {
+test('comparison routes and history outcomes preserve both role adapters and comparison access', async () => {
   const athleteRoute = await readFile(path.join(process.cwd(), 'app/api/athlete/sessions/[sessionId]/comparison/route.ts'), 'utf8');
   const coachRoute = await readFile(path.join(process.cwd(), 'app/api/coach/sessions/[sessionId]/comparison/route.ts'), 'utf8');
   const dialog = await readFile(path.join(process.cwd(), 'components/SessionComparisonDialog.tsx'), 'utf8');
   const athleteDetail = await readFile(path.join(process.cwd(), 'app/(app)/athlete/session/[sessionId]/SessionDetailClient.tsx'), 'utf8');
   const activityPage = await readFile(path.join(process.cwd(), 'app/(app)/athlete/activity/page.tsx'), 'utf8');
+  const activityHistory = await readFile(path.join(process.cwd(), 'components/ActivityHistoryOverview.tsx'), 'utf8');
   const coachDetail = await readFile(path.join(process.cwd(), 'app/(app)/coach/athletes/[athleteId]/page.tsx'), 'utf8');
 
   assert.match(athleteRoute, /requireAthlete/);
@@ -125,6 +126,7 @@ test('comparison routes and shared dialog declare both role adapters and complet
   assert.match(dialog, /Loading comparison/);
   assert.match(dialog, /Close comparison/);
   assert.match(athleteDetail, /SessionComparisonDialog/);
-  assert.match(activityPage, /SessionComparisonDialog/);
+  assert.match(activityPage, /ActivityHistoryOverview/);
+  assert.match(activityHistory, /`\/athlete\/session\/\$\{activity\.sessionId\}\?from=activity`/);
   assert.match(coachDetail, /SessionComparisonDialog/);
 });

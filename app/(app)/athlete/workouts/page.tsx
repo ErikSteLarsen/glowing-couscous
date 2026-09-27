@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { PageShell, TopBar } from '@/components/ui';
 import { WorkoutLibraryClient } from '@/components/WorkoutLibraryClient';
+import { MobileLibrarySwitch } from '@/components/MobileLibrarySwitch';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { templateService } from '@/lib/template-service';
 import { workoutLibraryService } from '@/lib/workout-library-service';
@@ -30,6 +31,7 @@ export default async function AthleteWorkoutsPage({
         title="Workouts"
         description="Create and edit reusable workouts."
       />
+      <MobileLibrarySwitch active="workouts" />
       <WorkoutLibraryClient
         role="ATHLETE"
         workouts={workouts}

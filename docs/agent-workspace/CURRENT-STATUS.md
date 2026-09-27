@@ -1,5 +1,37 @@
 # Current Status
 
+On **2026-09-27**, phone-only usability work is implemented across the shared
+shell, Calendar/Planner, workout editor/libraries, and Activity History.
+Athlete mobile navigation is Home, Plan, Workouts, and History; coach mobile
+links remain role-owned. Calendar carries its selected date into Planner, whose
+week strip has 44px date targets, scrolls the current date into view, and keeps
+a compact selected-workout action available while scrolling. Workout editing
+uses a tap-first ordered block list on phones, while desktop keeps its chart.
+History keeps the complete feed and desktop table while adding three compact
+phone metrics, sport/filter disclosures, and a populated-history Import action.
+Muted text and frequent controls were adjusted below 768px; global tokens,
+services, data behavior, routes, and desktop output remain unchanged.
+
+The authenticated visual pass covered a synthetic Planner and populated
+History at 320×780 and 390×844, plus the Planner at 1280×900. The selected day
+and compact sticky action were visible at 320px, and the 1280px view retained
+the desktop sidebar and month layout. Temporary fixtures were removed and no
+review record or assignment was saved. The configured Neon database was
+unreachable during the final preview, so connected-data assignment, saved
+library, and populated production-route checks remain open, along with physical
+iOS/Android, native keyboard/safe-area, assistive-technology, and import
+performance checks.
+
+Verification: **249/249 tests pass**, full ESLint passes, and a full production
+Next.js build passes using Webpack and a loopback-only database URL. No
+migration or database write ran. Next’s existing Google font was fetched for
+the successful build; the build reports existing `jose` Edge Runtime warnings
+and the middleware deprecation notice. `pnpm test`/`pnpm lint` could not pass
+their noninteractive dependency-install preflight, so equivalent commands ran
+directly with the installed Node executables. `git diff --check` passes. See
+[MOBILE-READINESS-REVIEW.md](MOBILE-READINESS-REVIEW.md) for the route inventory,
+implemented phone adjustments, and remaining acceptance gates.
+
 On **2026-09-27**, Athlete Calendar session rows use a shorter stacked layout
 for multiple sessions per day; month cells preview up to two single-line titles
 and a remaining count. Imported week rows keep `Avg HR` visible while the

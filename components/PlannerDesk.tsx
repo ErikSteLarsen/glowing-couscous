@@ -1,9 +1,9 @@
 'use client';
 
-import { addMonths, format, parseISO, startOfMonth, startOfWeek, subMonths } from 'date-fns';
+import { addDays, addMonths, format, parseISO, startOfMonth, startOfWeek, subMonths } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useRef, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import {
   ArrowRight,
   CalendarDays,
@@ -236,6 +236,22 @@ export function PlannerDesk({
     router.push(`${role === 'coach' ? '/coach/planner' : '/athlete/planner'}?${params.toString()}`);
   }
 
+  function navigateWeek(offset: -1 | 1) {
+    const referenceDate = parseISO(`${selectedDate}T00:00:00`);
+    const shiftedDate = addDays(referenceDate, offset * 7);
+    const nextDate = selectedSource?.kind === 'training-plan'
+      ? format(startOfWeek(shiftedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+      : format(shiftedDate, 'yyyy-MM-dd');
+    setSelectedDates([nextDate]);
+    setRangeStart(selectedSource?.kind === 'template' ? nextDate : null);
+    setRangeEnd(null);
+    setMessage('');
+    setMessageTone('neutral');
+    const params = new URLSearchParams({ date: nextDate });
+    if (role === 'coach' && selectedAthleteId) params.set('athleteId', String(selectedAthleteId));
+    router.push(`${role === 'coach' ? '/coach/planner' : '/athlete/planner'}?${params.toString()}`);
+  }
+
   function assignSource() {
     if (mutationInFlight.current) return;
     if (!selectedSource || !selectedDates.length) {
@@ -376,11 +392,13 @@ export function PlannerDesk({
           onSelectTemplateRange={selectTemplateRange}
           label={calendarLabel}
           initialDate={initialDate}
+          selectedDate={selectedDate}
           days={calendarDays.map((day) => ({ ...day, sessions: day.sessions.filter((session) => role === 'athlete' || session.athleteId === selectedAthleteId) }))}
           placement={role === 'athlete' || placement?.athleteId === selectedAthleteId ? placement : null}
           selectedDates={selectedDates}
           selectedSource={selectedSource}
           onNavigate={navigateMonth}
+          onNavigateWeek={navigateWeek}
           onSelectDate={selectDate}
         />
         <SelectionPanel
@@ -407,7 +425,7 @@ function AssignmentSummary({ source, selectedDates, selectedTemplateDays, rangeS
         ? `Assign ${selectedTemplateDays}-day template`
         : `Assign workout to ${selectedCount} day${selectedCount === 1 ? '' : 's'}`;
   return (
-    <section className="border-y border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-[var(--shadow-inset)] sm:px-5">
+    <section className={`planner-desk__assignment ${source ? 'planner-desk__assignment--active' : 'planner-desk__assignment--idle'} border-y border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-[var(--shadow-inset)] sm:px-5`}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-[var(--text)]">{source ? source.title : 'No source selected'}{source ? <span className="font-normal text-[var(--text-secondary)]"> · {getSportLabel(source.sport)} · {sourceMeta(source, selectedDates[0])}</span> : null}</p>
@@ -421,8 +439,10 @@ function AssignmentSummary({ source, selectedDates, selectedTemplateDays, rangeS
           <p className={`text-xs ${source?.kind === 'template' && !valid ? 'text-[var(--status-warning)]' : 'text-[var(--text-muted)]'}`}>
             {!source ? 'Choose a workout or template below to start planning.' : source.kind === 'template' ? (valid ? 'Range length matches the template.' : `Select exactly ${selectedTemplateDays} days.`) : 'Click dates to toggle the selection.'}
           </p>
-          {source ? <button type="button" disabled={isPending || !canAssign} onClick={onAssign} className={primaryButtonClassName}>
-            <Check aria-hidden="true" className="mr-2 h-4 w-4" /> {isAssigning ? 'Placing...' : buttonLabel}
+          {source ? <button type="button" aria-label={isAssigning ? 'Placing workout' : buttonLabel} disabled={isPending || !canAssign} onClick={onAssign} className={`${primaryButtonClassName} planner-desk__assignment-action`}>
+            <Check aria-hidden="true" className="mr-2 h-4 w-4" />
+            <span className="md:hidden">{isAssigning ? 'Placing…' : 'Assign'}</span>
+            <span className="hidden md:inline">{isAssigning ? 'Placing...' : buttonLabel}</span>
           </button> : null}
         </div>
       </div>
@@ -503,10 +523,37 @@ function SourceResult({ source, selected, selectedDate, onSelect }: { source: Pl
   );
 }
 
-function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, days, selectedDates, selectedSource, onNavigate, onSelectDate }: { onSelectTemplateRange: () => void; placement: PlacementFeedback | null; label: string; initialDate: string; days: PlannerDeskCalendarDay[]; selectedDates: string[]; selectedSource: PlannerDeskSource | null; onNavigate: (offset: number) => void; onSelectDate: (date: string) => void }) {
+function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, selectedDate, days, selectedDates, selectedSource, onNavigate, onNavigateWeek, onSelectDate }: { onSelectTemplateRange: () => void; placement: PlacementFeedback | null; label: string; initialDate: string; selectedDate: string; days: PlannerDeskCalendarDay[]; selectedDates: string[]; selectedSource: PlannerDeskSource | null; onNavigate: (offset: number) => void; onNavigateWeek: (offset: -1 | 1) => void; onSelectDate: (date: string) => void }) {
+  const weekStripRef = useRef<HTMLDivElement>(null);
   const todayIso = format(new Date(), 'yyyy-MM-dd');
+  const weekStart = startOfWeek(parseISO(`${selectedDate}T00:00:00`), { weekStartsOn: 1 });
+  const selectedWeekDays = Array.from({ length: 7 }, (_, index) => {
+    const date = addDays(weekStart, index);
+    const isoDate = format(date, 'yyyy-MM-dd');
+    const calendarDay = days.find((day) => day.isoDate === isoDate);
+    return {
+      isoDate,
+      label: format(date, 'EEEE'),
+      dateLabel: format(date, 'd MMMM yyyy'),
+      shortDate: format(date, 'd'),
+      sessions: calendarDay?.sessions ?? [],
+    };
+  });
   const shortcutDates = selectedSource?.kind === 'template' ? templateDatesForSelection(selectedSource.cadence ?? 'day', selectedDates[0] ?? initialDate) : [];
   const rangeError = selectedSource?.kind === 'template' ? validateTemplateDateRange(selectedDates, selectedSource.cadence ?? 'day') : null;
+  useEffect(() => {
+    if (window.matchMedia('(min-width: 768px)').matches) return;
+    const strip = weekStripRef.current;
+    const selectedDay = strip?.querySelector<HTMLButtonElement>(`[data-date="${selectedDate}"]`);
+    if (!strip || !selectedDay) return;
+
+    const dayLeft = selectedDay.offsetLeft;
+    const dayRight = dayLeft + selectedDay.offsetWidth;
+    const stripLeft = strip.scrollLeft;
+    const stripRight = stripLeft + strip.clientWidth;
+    if (dayRight > stripRight) strip.scrollLeft = dayRight - strip.clientWidth;
+    else if (dayLeft < stripLeft) strip.scrollLeft = dayLeft;
+  }, [selectedDate]);
   return (
     <section className={`planner-desk__calendar ${selectedSource?.kind === 'template' && selectedSource.cadence !== 'day' ? 'planner-desk__calendar--range' : ''} min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-inset)]`}>
       <div className="flex flex-col gap-3 border-b border-[var(--border)] pb-3 sm:flex-row sm:items-end sm:justify-between">
@@ -515,9 +562,9 @@ function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, d
           <p className="mt-1 text-sm text-[var(--text-secondary)]">{calendarInstruction(selectedSource)}</p>
         </div>
         <div className="flex items-center gap-1" aria-label="Month navigation">
-          <button type="button" aria-label="Previous month" onClick={() => onNavigate(-1)} className="inline-flex h-8 w-8 items-center justify-center rounded-[3px] text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ChevronLeft aria-hidden="true" className="h-4 w-4" /></button>
-          <button type="button" onClick={() => onNavigate(0)} className="min-h-8 rounded-[3px] px-2.5 text-xs font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">This month</button>
-          <button type="button" aria-label="Next month" onClick={() => onNavigate(1)} className="inline-flex h-8 w-8 items-center justify-center rounded-[3px] text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ChevronRight aria-hidden="true" className="h-4 w-4" /></button>
+          <button type="button" aria-label="Previous month" onClick={() => onNavigate(-1)} className="planner-desk__month-nav rounded-[3px] text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ChevronLeft aria-hidden="true" className="h-4 w-4" /></button>
+          <button type="button" onClick={() => onNavigate(0)} className="planner-desk__month-current rounded-[3px] px-2.5 text-xs font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">This month</button>
+          <button type="button" aria-label="Next month" onClick={() => onNavigate(1)} className="planner-desk__month-nav rounded-[3px] text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ChevronRight aria-hidden="true" className="h-4 w-4" /></button>
         </div>
       </div>
       {selectedSource?.kind === 'template' && selectedSource.cadence !== 'day' ? <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -526,9 +573,40 @@ function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, d
       </div> : null}
       {rangeError ? <p className="mt-2 text-sm text-[var(--status-warning)]">{rangeError}</p> : null}
       <div className="mt-3">
+        <div className="planner-desk__week-picker mb-4 border-b border-[var(--border)] pb-3 md:hidden">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-[var(--text)]">Choose a day</h3>
+              <p className="mt-0.5 truncate text-xs text-[var(--text-secondary)]">{format(parseISO(`${selectedDate}T00:00:00`), 'EEEE d MMMM yyyy')}</p>
+            </div>
+            <div className="flex shrink-0 gap-1">
+              <button type="button" aria-label="Previous week" onClick={() => onNavigateWeek(-1)} className="planner-desk__week-nav" ><ChevronLeft aria-hidden="true" className="h-4 w-4" /></button>
+              <button type="button" aria-label="Next week" onClick={() => onNavigateWeek(1)} className="planner-desk__week-nav"><ChevronRight aria-hidden="true" className="h-4 w-4" /></button>
+            </div>
+          </div>
+          <div ref={weekStripRef} className="planner-desk__week-strip" aria-label="Dates in this week">
+            {selectedWeekDays.map((day) => (
+              <button
+                key={day.isoDate}
+                data-date={day.isoDate}
+                type="button"
+                aria-pressed={selectedDates.includes(day.isoDate)}
+                aria-current={day.isoDate === todayIso ? 'date' : undefined}
+                aria-label={`${day.label}, ${day.dateLabel}${day.sessions.length ? `, ${day.sessions.length} planned` : ', no sessions planned'}`}
+                onClick={() => onSelectDate(day.isoDate)}
+                className="planner-desk__week-day"
+              >
+                <span>{format(parseISO(`${day.isoDate}T00:00:00`), 'EEE')}</span>
+                <strong>{day.shortDate}</strong>
+                {day.sessions.length ? <span className="planner-desk__week-count">{day.sessions.length}</span> : <span className="planner-desk__week-count planner-desk__week-count--empty" aria-hidden="true">·</span>}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-[11px] text-[var(--text-secondary)]">Swipe to browse days. Use the month below for a date range.</p>
+        </div>
         <div className="min-w-0">
           <div className="grid grid-cols-7 border-y border-[var(--border)] bg-[var(--sunken)]">
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => <div key={day} className="px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day}</div>)}
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => <div key={day} className="planner-desk__month-heading px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day}</div>)}
           </div>
           <div className="planner-desk__month grid grid-cols-7 divide-x divide-y divide-[var(--border)] border-b border-[var(--border)]" style={{ gridTemplateRows: `repeat(${Math.ceil(days.length / 7)}, minmax(0, 1fr))` }}>
             {days.map((day) => <CalendarCell key={day.isoDate} feedback={placement?.dates.includes(day.isoDate) ? placement : null} day={day} today={day.isoDate === todayIso} selected={selectedDates.includes(day.isoDate)} templateMode={selectedSource?.kind === 'template'} onSelect={() => onSelectDate(day.isoDate)} />)}

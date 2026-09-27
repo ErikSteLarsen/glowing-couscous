@@ -4,7 +4,7 @@ import { Fragment, useEffect, useRef, useState, type CSSProperties } from 'react
 import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, pointerWithin, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy, sortableKeyboardCoordinates, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ArrowLeft, ArrowRight, Copy, Minus, Plus, Redo2, Trash2, Undo2, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Copy, Minus, Plus, Redo2, Trash2, Undo2, X } from 'lucide-react';
 import { ValidatedNumberInput } from '@/components/ValidatedNumberInput';
 
 import { createSessionEditorBlock, deriveSessionEditorMetrics, updateSessionEditorBlock, type SessionEditorBlock, type SessionEditorDraft } from '@/lib/session-editor';
@@ -39,6 +39,8 @@ export function WorkoutCanvasEditor({ draft, onChange, performanceProfile, profi
   targetDialogRequest?: number;
 }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isPhoneLayout, setIsPhoneLayout] = useState(false);
+  const [advancedControlsOpen, setAdvancedControlsOpen] = useState(false);
   const [multiSelect, setMultiSelect] = useState(false);
   const [repeatCount, setRepeatCount] = useState(1);
   const [pauseSeconds, setPauseSeconds] = useState(30);
@@ -54,6 +56,13 @@ export function WorkoutCanvasEditor({ draft, onChange, performanceProfile, profi
   const targetDialogRef = useRef<HTMLDialogElement | null>(null);
   const blockTargetDialogRef = useRef<HTMLDialogElement | null>(null);
   const [blockTargetId, setBlockTargetId] = useState<string | null>(null);
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const updateViewport = () => setIsPhoneLayout(mediaQuery.matches);
+    updateViewport();
+    mediaQuery.addEventListener('change', updateViewport);
+    return () => mediaQuery.removeEventListener('change', updateViewport);
+  }, []);
   useEffect(() => { if (targetDialogRequest > 0 && !targetDialogRef.current?.open) { setTargetDialogNotice(''); targetDialogRef.current?.showModal(); } }, [targetDialogRequest]);
   useEffect(() => { if (blockTargetId && !blockTargetDialogRef.current?.open) blockTargetDialogRef.current?.showModal(); }, [blockTargetId]);
   const suppressPresetClick = useRef<TempoZone | null>(null);
@@ -214,6 +223,39 @@ export function WorkoutCanvasEditor({ draft, onChange, performanceProfile, profi
     setSelectedIds([]);
     setRepeatCount(1);
   }
+  function selectOnlyBlock(blockId: string) {
+    setSelectedIds([blockId]);
+    setRepeatCount(1);
+  }
+  function moveBlock(blockId: string, direction: -1 | 1) {
+    const index = blocks.findIndex((block) => block.clientId === blockId);
+    const nextIndex = index + direction;
+    if (index < 0 || nextIndex < 0 || nextIndex >= blocks.length) return;
+    const nextBlocks = [...blocks];
+    [nextBlocks[index], nextBlocks[nextIndex]] = [nextBlocks[nextIndex], nextBlocks[index]];
+    commit({ ...draft, blocks: nextBlocks });
+    setSelectedIds([blockId]);
+    setRepeatCount(1);
+    setNotice(`Block moved ${direction < 0 ? 'up' : 'down'} to position ${nextIndex + 1}.`);
+  }
+  function duplicateBlock(blockId: string) {
+    const index = blocks.findIndex((block) => block.clientId === blockId);
+    if (index < 0) return;
+    const duplicate = clone(blocks[index]);
+    commit({ ...draft, blocks: [...blocks.slice(0, index + 1), duplicate, ...blocks.slice(index + 1)] });
+    setSelectedIds([duplicate.clientId]);
+    setRepeatCount(1);
+    setNotice(`Block copied to position ${index + 2}.`);
+  }
+  function removeBlock(blockId: string) {
+    const index = blocks.findIndex((block) => block.clientId === blockId);
+    if (index < 0) return;
+    const nextBlocks = blocks.filter((block) => block.clientId !== blockId);
+    commit({ ...draft, blocks: nextBlocks });
+    setSelectedIds([]);
+    setRepeatCount(1);
+    setNotice(`${formatBlockKind(blocks[index].kind)} block removed from the draft.`);
+  }
   function move(direction: -1 | 1) {
     if (!selected.length) return;
     const first = blocks.findIndex((block) => selectedIds.includes(block.clientId));
@@ -284,10 +326,10 @@ export function WorkoutCanvasEditor({ draft, onChange, performanceProfile, profi
   return <div className="canvas-preview canvas-preview--production">
     <DndContext sensors={sensors} collisionDetection={(args) => { if (!args.pointerCoordinates) return closestCenter(args); const bounds = trackRef.current?.getBoundingClientRect(); const { x, y } = args.pointerCoordinates; pointerRef.current = { x, y }; if (!bounds || x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom) return []; const collisions = pointerWithin(args); return collisions.length ? collisions : closestCenter(args); }} onDragStart={(event: DragStartEvent) => { pointerRef.current = null; setDropIndex(null); setDragId(String(event.active.id)); }} onDragMove={() => setDropIndex(indexAtPointer())} onDragCancel={() => { pointerRef.current = null; setDropIndex(null); setDragId(null); }} onDragEnd={dragEnd}>
       <div className="canvas-preview__workspace">
-        <aside className="canvas-preview__palette" aria-label="Intensity blocks"><h2>Intensity blocks</h2><p>Click to add at the end, or drag into the chart. Each block starts at 10 min with a target at its zone midpoint.</p><div>{zones.map((zone) => <IntensityPreset key={zone} zone={zone} onAdd={() => { if (suppressPresetClick.current === zone) { suppressPresetClick.current = null; return; } insert(zone); }} />)}</div></aside>
+        <aside className="canvas-preview__palette" aria-label="Add workout blocks"><h2><span className="canvas-preview__palette-title--desktop">Intensity blocks</span><span className="canvas-preview__palette-title--mobile">Add a block</span></h2><p className="canvas-preview__palette-help--desktop">Click to add at the end, or drag into the chart. Each block starts at 10 min with a target at its zone midpoint.</p><p className="canvas-preview__palette-help--mobile">Tap an effort zone to add a 10-minute block.</p><div>{zones.map((zone) => <IntensityPreset key={zone} zone={zone} onAdd={() => { if (suppressPresetClick.current === zone) { suppressPresetClick.current = null; return; } insert(zone); }} />)}</div></aside>
         <section className="canvas-preview__session canvas-preview__session--score" aria-label="Editable workout session">
           <div className="canvas-preview__session-head">
-            <div className="canvas-preview__session-title"><h2>Workout chart</h2><p>{formatDurationExact(metrics.durationSec)} · {activeBlocks.length} active block{activeBlocks.length === 1 ? '' : 's'}{blocks.filter((block) => block.kind === 'pause').length ? ` · ${blocks.filter((block) => block.kind === 'pause').length} pause${blocks.filter((block) => block.kind === 'pause').length === 1 ? '' : 's'}` : ''}{blocks.some((block) => block.skipped) ? ` · ${blocks.filter((block) => block.skipped).length} skipped` : ''}{copiesCount ? <span role="status"> · preview {formatDurationExact(previewSeconds)}</span> : null}</p></div>
+            <div className="canvas-preview__session-title"><h2><span className="canvas-preview__chart-title--desktop">Workout chart</span><span className="canvas-preview__chart-title--mobile">Workout blocks</span></h2><p>{formatDurationExact(metrics.durationSec)} · {activeBlocks.length} active block{activeBlocks.length === 1 ? '' : 's'}{blocks.filter((block) => block.kind === 'pause').length ? ` · ${blocks.filter((block) => block.kind === 'pause').length} pause${blocks.filter((block) => block.kind === 'pause').length === 1 ? '' : 's'}` : ''}{blocks.some((block) => block.skipped) ? ` · ${blocks.filter((block) => block.skipped).length} skipped` : ''}{copiesCount ? <span role="status"> · preview {formatDurationExact(previewSeconds)}</span> : null}</p></div>
             <div className="canvas-preview__editor-tools">
               {showDraftStatus ? <span className="canvas-preview__draft-label">Unsaved draft</span> : null}
               {history.length || future.length ? <div className="canvas-preview__draft-tools" aria-label="Block edit history"><button type="button" aria-label="Undo block edit" title="Undo" disabled={!history.length} onClick={undo}><Undo2 size={16} /></button><button type="button" aria-label="Redo block edit" title="Redo" disabled={!future.length} onClick={redo}><Redo2 size={16} /></button></div> : null}
@@ -311,8 +353,44 @@ export function WorkoutCanvasEditor({ draft, onChange, performanceProfile, profi
             </div>
           </SortableContext>
           <div className="canvas-preview__ruler"><span>Start</span><span>{formatDurationExact(previewSeconds)} · Finish</span></div>
+          <div className="canvas-preview__mobile-block-list">
+            {blocks.length ? (
+              <ol aria-label="Workout blocks" className="space-y-3">
+                {blocks.map((block, index) => {
+                  const isSelected = selectedIds.includes(block.clientId);
+                  const targetLabel = block.target
+                    ? formatResolvedWorkoutTarget(block.target, performanceProfile, draft.sport) ?? formatWorkoutTarget(block.target, draft.sport)
+                    : 'No target set';
+                  const blockTitle = block.kind === 'pause'
+                    ? 'Pause between blocks'
+                    : `Zone ${block.zone} · ${names[block.zone]} · ${formatBlockKind(block.kind)}`;
+                  return (
+                    <li key={block.clientId} className={`canvas-preview__mobile-block ${isSelected ? 'is-selected' : ''}`}>
+                      <button type="button" aria-pressed={isSelected} aria-label={`Edit block ${index + 1}: ${blockTitle}`} onClick={() => selectOnlyBlock(block.clientId)} className="canvas-preview__mobile-block-summary">
+                        <span className="canvas-preview__mobile-block-mark" style={{ background: `var(--color-zone-${block.zone})` }} aria-hidden="true" />
+                        <span className="min-w-0 flex-1 text-left">
+                          <strong>{index + 1}. {blockTitle}</strong>
+                          <span>{formatDurationExact(effectiveSeconds(block))}{block.reps && block.reps > 1 ? ` · ${block.reps} repeats` : ''} · {block.kind === 'pause' ? 'Recovery' : targetLabel}</span>
+                          {block.skipped ? <span className="canvas-preview__mobile-block-skipped">Skipped · excluded from total time</span> : null}
+                        </span>
+                        <ChevronDown aria-hidden="true" className={`h-4 w-4 shrink-0 transition-transform ${isSelected ? 'rotate-180' : ''}`} />
+                      </button>
+                      <div className="canvas-preview__mobile-block-actions" aria-label={`Actions for block ${index + 1}`}>
+                        <button type="button" aria-label={`Move block ${index + 1} up`} disabled={index === 0} onClick={() => moveBlock(block.clientId, -1)}><ChevronUp aria-hidden="true" size={16} /> Up</button>
+                        <button type="button" aria-label={`Move block ${index + 1} down`} disabled={index === blocks.length - 1} onClick={() => moveBlock(block.clientId, 1)}><ChevronDown aria-hidden="true" size={16} /> Down</button>
+                        <button type="button" aria-label={`Duplicate block ${index + 1}`} onClick={() => duplicateBlock(block.clientId)}><Copy aria-hidden="true" size={15} /> Copy</button>
+                        <button type="button" aria-label={`Remove block ${index + 1}`} className="is-danger" onClick={() => removeBlock(block.clientId)}><Trash2 aria-hidden="true" size={15} /> Remove</button>
+                      </div>
+                      {isSelected ? <BlockInspector className="canvas-preview__inspector--mobile" active={block} selectionCount={1} targetedSelectionCount={block.target && block.kind !== 'pause' ? 1 : 0} onAdjustSelection={(direction) => adjustTargets('selection', direction)} onEditTarget={openBlockTargetDialog} sport={draft.sport} onPatch={patch} performanceProfile={performanceProfile} profileLabel={profileLabel} /> : null}
+                    </li>
+                  );
+                })}
+              </ol>
+            ) : <p className="canvas-preview__mobile-block-empty">Add an intensity block above to start your workout.</p>}
+          </div>
           <BlockInspector className="canvas-preview__inspector--inline" active={active} selectionCount={selected.length} targetedSelectionCount={targetedSelection.length} onAdjustSelection={(direction) => adjustTargets('selection', direction)} onEditTarget={openBlockTargetDialog} sport={draft.sport} onPatch={patch} performanceProfile={performanceProfile} profileLabel={profileLabel} />
-          {selected.some((block) => block.kind !== 'pause') ? <>
+          {selected.some((block) => block.kind !== 'pause') ? <details className="canvas-preview__pattern-disclosure" open={!isPhoneLayout || advancedControlsOpen} onToggle={(event) => setAdvancedControlsOpen(event.currentTarget.open)}>
+            <summary>Repeat blocks and add pauses</summary>
             <div className="canvas-preview__pattern-tools" aria-label="Pattern and pause controls">
               <div className="canvas-preview__pattern-grid">
                 <div className="canvas-preview__pattern-row">
@@ -325,7 +403,7 @@ export function WorkoutCanvasEditor({ draft, onChange, performanceProfile, profi
                 </div>
               </div>
             </div>
-          </> : null}
+          </details> : null}
           {notice ? <p className="canvas-preview__notice" role="status">{notice}</p> : null}
         </section>
         <BlockInspector className="canvas-preview__inspector--desktop" active={active} selectionCount={selected.length} targetedSelectionCount={targetedSelection.length} onAdjustSelection={(direction) => adjustTargets('selection', direction)} onEditTarget={openBlockTargetDialog} sport={draft.sport} onPatch={patch} performanceProfile={performanceProfile} profileLabel={profileLabel} />
@@ -377,7 +455,7 @@ function BlockInspector({ className, active, selectionCount, targetedSelectionCo
 
 function IntensityPreset({ zone, onAdd }: { zone: TempoZone; onAdd: () => void }) {
   const { attributes, listeners, setNodeRef } = useDraggable({ id: `${palettePrefix}${zone}` });
-  return <div className="canvas-preview__preset" ref={setNodeRef}><button type="button" className="canvas-preview__preset-button" {...attributes} {...listeners} aria-label={`Zone ${zone} ${names[zone]}, 10 min. Click to add or drag into the chart.`} onClick={onAdd}><PresetContent zone={zone} /></button></div>;
+  return <div className="canvas-preview__preset" ref={setNodeRef}><button type="button" className="canvas-preview__preset-button" {...attributes} {...listeners} aria-label={`Zone ${zone} ${names[zone]}, 10 min. Tap or click to add it at the end. Dragging is also supported in the chart view.`} onClick={onAdd}><PresetContent zone={zone} /></button></div>;
 }
 
 function PresetContent({ zone }: { zone: TempoZone }) {

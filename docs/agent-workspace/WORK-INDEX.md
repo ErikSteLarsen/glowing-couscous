@@ -43,6 +43,11 @@ offers creation actions for missing workout or template sources, and puts
 selected-day details before the calendar on narrow screens. Calendar buttons
 announce planned session names, and template ranges report chronological
 endpoints in either selection direction.
+Below 768px, the shared shell uses role-aware four-item navigation. Athlete
+Plan groups Calendar and Planner; Workouts includes Templates; History includes
+Import. The phone Planner adds a selected-date-aware week strip and compact
+assignment action, the shared workout editor exposes tap controls, and History
+adds compact totals/disclosures while preserving full data and desktop output.
 Home and Calendar mark today with the shared `calendar-day--today` full-cell
 treatment and `calendar-day-date--today` marker in `app/globals.css`. Planning
 Desk marks today on its numeral, and selected dates use a separate tinted cell
@@ -84,7 +89,7 @@ still, and no runtime dependencies.
 
 ## Current Assessment
 
-See [ASSESSMENT.md](ASSESSMENT.md) for the 2026-09-17 prioritized personal workflow findings and verification results, and [MOBILE-READINESS-REVIEW.md](MOBILE-READINESS-REVIEW.md) for the 2026-09-27 route-by-route mobile evidence, mobile-only scope boundary, per-screen recommendations, proposed work sequence, and desktop/mobile acceptance criteria.
+See [ASSESSMENT.md](ASSESSMENT.md) for the 2026-09-17 prioritized personal workflow findings and verification results, and [MOBILE-READINESS-REVIEW.md](MOBILE-READINESS-REVIEW.md) for the 2026-09-27 route inventory, implemented phone-only changes, responsive evidence, and remaining physical-device/data acceptance gates.
 
 
 ## Completed Functional Repairs

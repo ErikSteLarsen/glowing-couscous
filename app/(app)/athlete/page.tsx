@@ -73,6 +73,7 @@ export default async function AthletePage() {
             <div>
               <h2 id="week-glance-heading" className={sectionHeadingClassName}>Week at a glance</h2>
               <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{format(weekStart, 'd MMM')} – {format(weekEnd, 'd MMM')} · Monday-first</p>
+              <p className="mt-1 text-[12px] text-[var(--text-secondary)] md:hidden">Swipe to browse your week.</p>
             </div>
           </div>
 

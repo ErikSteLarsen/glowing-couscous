@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
   PageShell,
+  ActionLink,
   ghostButtonClassName,
   Surface,
   TopBar,
@@ -46,13 +47,20 @@ export default async function AthleteCalendarPage({
         description="Browse your scheduled sessions by week or month."
         actions={
           <>
-            <div className="inline-flex gap-1 rounded-[3px] border border-[var(--field-border)] bg-[var(--field-surface)] p-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex gap-1 rounded-[3px] border border-[var(--field-border)] bg-[var(--field-surface)] p-1">
                 <Link href={buildCalendarHref('week', resolvedReferenceDate)} aria-current={selectedView === 'week' ? 'page' : undefined} className={getSegmentedChoiceClassName(selectedView === 'week', 'compact')}>
                 Week
               </Link>
                <Link href={buildCalendarHref('month', resolvedReferenceDate)} aria-current={selectedView === 'month' ? 'page' : undefined} className={getSegmentedChoiceClassName(selectedView === 'month', 'compact')}>
                 Month
               </Link>
+              </div>
+              <div className="md:hidden">
+                <ActionLink href={`/athlete/planner?date=${format(resolvedReferenceDate, 'yyyy-MM-dd')}`}>
+                  Schedule workout
+                </ActionLink>
+              </div>
             </div>
           </>
         }

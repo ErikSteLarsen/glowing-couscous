@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { PageShell, TopBar } from '@/components/ui';
+import { MobileLibrarySwitch } from '@/components/MobileLibrarySwitch';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { templateService } from '@/lib/template-service';
 import { accountService } from '@/lib/account-service';
@@ -23,6 +24,7 @@ export default async function AthleteTemplatesPage() {
         title="Templates"
         description="Build reusable day, week, and month training templates."
       />
+      <MobileLibrarySwitch active="templates" />
       <CoachTemplatesClient
         templates={templates}
         apiBasePath="/api/athlete/templates"

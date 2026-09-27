@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { getMobileNavigation, isNavigationItemActive } from '../lib/app-navigation.ts';
 
 const root = process.cwd();
 const read = (relativePath) => readFile(path.join(root, relativePath), 'utf8');
@@ -46,14 +47,31 @@ test('navigation matching prefers the most specific active destination', async (
   assert.match(sidebarSource, /isNavigationItemActive\(props\.pathname, item, navItems\)/);
 });
 
-test('athlete mobile navigation keeps the create-to-plan loop directly reachable', async () => {
+test('mobile navigation keeps the main personal training jobs directly reachable', async () => {
   const navSource = await read('lib/app-navigation.ts');
   const shellSource = await read('components/AppShell.tsx');
 
-  assert.match(navSource, /\['Home', 'Calendar', 'Workouts', 'Planner'\]/);
+  assert.match(navSource, /label: 'Plan'.*href: '\/athlete\/calendar'/s);
+  assert.match(navSource, /label: 'History'.*href: '\/athlete\/activity'/s);
+  assert.match(shellSource, /getMobileNavigation\(user\.role\)/);
   assert.match(shellSource, /import Link from 'next\/link'/);
   assert.match(shellSource, /<Link/);
   assert.doesNotMatch(shellSource, /<a\s/);
+});
+
+test('mobile navigation maps task routes by role without leaking athlete destinations to coaches', () => {
+  const athleteItems = getMobileNavigation('ATHLETE');
+  assert.deepEqual(athleteItems.map((item) => item.label), ['Home', 'Plan', 'Workouts', 'History']);
+  assert.equal(isNavigationItemActive('/athlete/templates', athleteItems[2], athleteItems), true);
+  assert.equal(isNavigationItemActive('/athlete/import', athleteItems[3], athleteItems), true);
+  assert.equal(isNavigationItemActive('/athlete/planner', athleteItems[1], athleteItems), true);
+  assert.equal(isNavigationItemActive('/athlete/workouts', athleteItems[0], athleteItems), false);
+
+  const coachItems = getMobileNavigation('COACH');
+  assert.deepEqual(coachItems.map((item) => item.href), ['/coach', '/coach/planner', '/coach/workouts', '/coach/templates']);
+  assert.equal(isNavigationItemActive('/coach/templates', coachItems[2], coachItems), false);
+  assert.equal(isNavigationItemActive('/coach/templates', coachItems[3], coachItems), true);
+  assert.equal(coachItems.some((item) => item.href.startsWith('/athlete')), false);
 });
 
 test('Workouts is a standalone library destination and session detail keeps its entry context', async () => {

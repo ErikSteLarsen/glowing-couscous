@@ -122,7 +122,7 @@ export function ActivityHistoryOverview({
             <button
               type="button"
               aria-label={`Previous ${period}`}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-[3px] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--brand-tint)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+              className="inline-flex h-10 w-10 max-md:h-11 max-md:w-11 items-center justify-center rounded-[3px] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--brand-tint)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
               onClick={() => movePeriod(-1)}
             >
               <ChevronLeft aria-hidden="true" size={17} />
@@ -134,15 +134,16 @@ export function ActivityHistoryOverview({
               type="button"
               aria-label={`Next ${period}`}
               disabled={!canAdvance}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-[3px] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--brand-tint)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-10 w-10 max-md:h-11 max-md:w-11 items-center justify-center rounded-[3px] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--brand-tint)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-40"
               onClick={() => movePeriod(1)}
             >
               <ChevronRight aria-hidden="true" size={17} />
             </button>
           </div>
+          <div className="md:hidden"><ActionLink href="/athlete/import" tone="secondary" size="compact">Import activity</ActionLink></div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="hidden gap-3 md:grid md:grid-cols-2">
           <label className="block text-[12px] font-medium text-[var(--text-secondary)]" htmlFor="activity-sport-filter">
             Sport
             <select
@@ -176,7 +177,54 @@ export function ActivityHistoryOverview({
           <h2 className="text-[18px] font-semibold tracking-[-0.02em] text-[var(--text)]">Training summary</h2>
           <p className="text-[12px] text-[var(--text-secondary)]">{sportFilter === 'ALL' ? 'All sports' : getSportLabel(sportFilter)} · {periodLabel}</p>
         </div>
-        <div className="border-y border-[var(--border)]">
+        <div className="grid grid-cols-3 gap-2 md:hidden">
+          <SummaryMetric label="Sessions" value={String(total.count)} />
+          <SummaryMetric label="Time" value={formatDuration(total.durationSec)} />
+          <SummaryMetric label="Distance" value={total.distanceMeters === null ? '—' : formatDistance(total.distanceMeters)} />
+        </div>
+        <details className="activity-history__mobile-breakdown md:hidden">
+          <summary>By sport</summary>
+          <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
+            {summaryRows.filter((row) => row.count > 0 || sportFilter !== 'ALL').map((row) => (
+              <div key={row.sport} className="flex items-center justify-between gap-3 py-2.5 text-[12px]">
+                <span className="font-medium text-[var(--text)]">{getSportLabel(row.sport)}</span>
+                <span className="metric-text text-right text-[var(--text-secondary)]">{row.count} · {formatDuration(row.durationSec)} · {row.distanceMeters === null ? '—' : formatDistance(row.distanceMeters)}</span>
+              </div>
+            ))}
+            {summaryRows.every((row) => row.count === 0) ? <p className="py-3 text-[12px] text-[var(--text-secondary)]">No sessions in this period.</p> : null}
+          </div>
+        </details>
+        <details className="activity-history__mobile-filters md:hidden">
+          <summary>Filter and sort history</summary>
+          <div className="grid gap-3 pt-3">
+            <label className="block text-[12px] font-medium text-[var(--text-secondary)]" htmlFor="activity-sport-filter-mobile">
+              Sport
+              <select
+                id="activity-sport-filter-mobile"
+                className={`${formSelectClassName} mt-1 block`}
+                value={sportFilter}
+                onChange={(event) => setSportFilter(event.target.value)}
+              >
+                <option value="ALL">All sports</option>
+                {sportOptions.map((sport) => <option key={sport} value={sport}>{getSportLabel(sport)}</option>)}
+              </select>
+            </label>
+            <label className="block text-[12px] font-medium text-[var(--text-secondary)]" htmlFor="activity-sort-order-mobile">
+              Sort sessions
+              <select
+                id="activity-sort-order-mobile"
+                className={`${formSelectClassName} mt-1 block`}
+                value={sortOrder}
+                onChange={(event) => setSortOrder(event.target.value as SortOrder)}
+              >
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="sport">Group by sport</option>
+              </select>
+            </label>
+          </div>
+        </details>
+        <div className="hidden border-y border-[var(--border)] md:block">
           <table className="w-full table-fixed text-[11px] sm:text-[13px]" aria-label="Completed sessions, time, and recorded distance by sport">
             <thead className="border-b border-[var(--border)] text-[10px] font-semibold uppercase tracking-[0.04em] text-[var(--text-muted)] sm:text-[11px]">
               <tr>
@@ -256,6 +304,15 @@ function summarize(activities: ActivityHistoryItem[]) {
     durationSec: activities.reduce((total, activity) => total + activity.durationSec, 0),
     distanceMeters: recordedDistances.length === 0 ? null : recordedDistances.reduce((total, meters) => total + meters, 0),
   };
+}
+
+function SummaryMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 border-y border-[var(--border)] px-2 py-2.5 text-center">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">{label}</p>
+      <p className="metric-text mt-1 truncate text-[13px] font-semibold text-[var(--text)]">{value}</p>
+    </div>
+  );
 }
 
 function formatDistance(distanceMeters: number) {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { Activity, CalendarDays, Dumbbell, House, LayoutTemplate } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { AppSidebar } from '@/components/AppSidebar';
 import { InkFlow } from '@/components/InkFlow';
@@ -20,7 +21,7 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const navItems = getMobileNavigation();
+  const navItems = getMobileNavigation(user.role);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 767px)');
@@ -71,7 +72,7 @@ export function AppShell({
         onClose={closeMobileMenu}
       />
       <div
-        className="relative z-10 min-w-0 pb-20 md:pb-0"
+        className="relative z-10 min-w-0 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
         aria-hidden={mobileOpen && isMobileViewport ? true : undefined}
         inert={mobileOpen && isMobileViewport ? true : undefined}
       >
@@ -96,18 +97,28 @@ export function AppShell({
         className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--nav-border)] bg-[var(--nav-surface)] pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden"
       >
         <div className="grid grid-cols-4 gap-1 px-3 pt-2">
-          {navItems.slice(0, 4).map((item) => {
+          {navItems.map((item) => {
             const isActive = isNavigationItemActive(pathname, item, navItems);
+            const Icon = item.label === 'Home'
+              ? House
+              : item.label === 'Plan'
+                ? CalendarDays
+                : item.label === 'Workouts'
+                  ? Dumbbell
+                  : item.label === 'Templates'
+                    ? LayoutTemplate
+                    : Activity;
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
-                  className={`flex min-h-11 items-center justify-center rounded-[3px] px-3 text-[11px] font-semibold uppercase tracking-[0.06em] ${buttonFocusClassName} ${
+                  className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-[3px] px-1 text-[10px] font-semibold uppercase tracking-[0.04em] ${buttonFocusClassName} ${
                   isActive ? 'bg-[var(--nav-active)] text-[var(--nav-signal)]' : 'text-[var(--nav-muted)]'
                 }`}
               >
+                <Icon aria-hidden="true" size={17} strokeWidth={1.8} />
                 {item.label}
               </Link>
             );

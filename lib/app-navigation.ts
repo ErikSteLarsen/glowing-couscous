@@ -6,6 +6,7 @@ export type NavItem = {
   href: string;
   matchPrefix: string;
   activeMatchPrefixes?: readonly string[];
+  exact?: boolean;
 };
 
 function getMatchPrefixes(item: NavItem) {
@@ -13,7 +14,8 @@ function getMatchPrefixes(item: NavItem) {
 }
 
 function matchesPath(pathname: string, item: NavItem) {
-  return pathname === item.href || getMatchPrefixes(item).some((prefix) => pathname.startsWith(prefix + '/'));
+  if (item.exact) return pathname === item.href;
+  return pathname === item.href || getMatchPrefixes(item).some((prefix) => pathname === prefix || pathname.startsWith(prefix + '/'));
 }
 
 function getMatchSpecificity(item: NavItem) {
@@ -42,13 +44,31 @@ export function getPrimaryNavigation(): NavItem[] {
   ];
 }
 
-export function getMobileNavigation(): NavItem[] {
-  const items = getPrimaryNavigation();
-  const priorityLabels = ['Home', 'Calendar', 'Workouts', 'Planner'];
+export function getMobileNavigation(role: AppRole): NavItem[] {
+  if (role === 'COACH') {
+    return [
+      { label: 'Home', description: 'Coach overview', href: '/coach', matchPrefix: '/coach' },
+      { label: 'Plan', description: 'Assign training', href: '/coach/planner', matchPrefix: '/coach/planner' },
+      { label: 'Workouts', description: 'Manage workouts', href: '/coach/workouts', matchPrefix: '/coach/workouts' },
+      { label: 'Templates', description: 'Reuse training', href: '/coach/templates', matchPrefix: '/coach/templates' },
+    ];
+  }
 
-  return priorityLabels
-    .map((label) => items.find((item) => item.label === label))
-    .filter((item): item is NavItem => Boolean(item));
+  return [
+    { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete', exact: true },
+    {
+      label: 'Plan', description: 'Upcoming and scheduled work', href: '/athlete/calendar',
+      matchPrefix: '/athlete/calendar', activeMatchPrefixes: ['/athlete/planner'],
+    },
+    {
+      label: 'Workouts', description: 'Create & manage', href: '/athlete/workouts',
+      matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/templates'],
+    },
+    {
+      label: 'History', description: 'Review completed work', href: '/athlete/activity',
+      matchPrefix: '/athlete/activity', activeMatchPrefixes: ['/athlete/import'],
+    },
+  ];
 }
 
 export const profileActions = [

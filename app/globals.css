@@ -1424,6 +1424,17 @@ body {
 }
 .planner-desk__count { display: none; }
 .planner-desk__feedback { max-width: 100%; }
+.planner-desk__week-strip { display: flex; gap: 2px; min-width: 0; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x mandatory; scrollbar-color: var(--scrollbar-thumb) transparent; }
+.planner-desk__week-day { position: relative; display: flex; flex: 1 0 44px; min-width: 44px; min-height: 56px; flex-direction: column; align-items: center; justify-content: center; gap: 1px; border: 1px solid var(--border); background: var(--field-surface); color: var(--text-secondary); scroll-snap-align: start; }
+.planner-desk__week-day[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-tint); color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); }
+.planner-desk__week-day[aria-current="date"] strong { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
+.planner-desk__week-day > span:first-child { font-size: 10px; font-weight: 600; text-transform: uppercase; }
+.planner-desk__week-day strong { font-size: 14px; font-variant-numeric: tabular-nums; }
+.planner-desk__week-count { position: absolute; right: 3px; top: 2px; min-width: 14px; border-radius: 999px; background: var(--surface); color: var(--text-secondary); font-size: 9px; line-height: 14px; text-align: center; }
+.planner-desk__week-count--empty { background: transparent; color: transparent; }
+.planner-desk__week-nav { display: inline-flex; width: 44px; min-height: 44px; align-items: center; justify-content: center; border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary); }
+.planner-desk__month-nav { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; }
+.planner-desk__month-current { min-height: 32px; }
 
 @media (min-width: 768px) {
   :root { --page-gutter: 24px; }
@@ -1459,4 +1470,26 @@ body {
   .planner-desk__day > span:first-child { gap: 2px; }
   .planner-desk__sessions { display: none; }
   .planner-desk__count { display: block; margin-top: 4px; font-size: 10px; }
+}
+
+@media (max-width: 767px) {
+  .ink-studio-app { --text-muted: #686E72; --nav-muted: #5E6870; }
+  .planner-desk__assignment--active { position: sticky; top: 0; z-index: 20; }
+  .planner-desk__assignment--active { padding: 6px 8px; }
+  .planner-desk__assignment--active > div:first-child { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
+  .planner-desk__assignment--active > div > div:first-child { flex: 1 1 auto; }
+  .planner-desk__assignment--active > div > div:first-child > p:first-child > span { display: none; }
+  .planner-desk__assignment--active > div > div:first-child > p:nth-child(2) { margin-top: 0; font-size: 11px; }
+  .planner-desk__assignment--active > div > div:nth-child(2) { flex: 0 0 auto; }
+  .planner-desk__assignment--active > div > div:nth-child(2) > p:not([role]) { display: none; }
+  .planner-desk__assignment-action { min-height: 44px; padding-inline: 10px; }
+  .planner-desk__assignment-action > svg { margin-right: 6px; }
+  .planner-desk__day { min-height: 44px; padding: 3px 1px; }
+  .planner-desk__month-heading { padding-inline: 1px; font-size: 9px; }
+  .planner-desk__month-nav { width: 44px; height: 44px; }
+  .planner-desk__month-current { min-height: 44px; }
+  .activity-history__mobile-filters > summary,
+  .activity-history__mobile-breakdown > summary { display: flex; min-height: 44px; align-items: center; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--brand); }
+  .activity-history__mobile-filters > summary:focus-visible,
+  .activity-history__mobile-breakdown > summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 }

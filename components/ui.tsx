@@ -6,7 +6,7 @@ export const pageHeadingClassName = 'text-[40px] font-normal leading-none tracki
 export const sectionHeadingClassName = 'text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]';
 export const formLabelClassName = 'mb-1.5 block text-[13px] font-medium text-[var(--text-secondary)]';
 export const formFieldClassName =
-  'min-h-10 w-full rounded-[3px] border border-[var(--field-border)] bg-[var(--field-surface)] px-3 py-2 text-[13px] text-[var(--text)] outline-none shadow-[var(--shadow-inset)] transition placeholder:text-[var(--text-muted)] focus:border-[var(--field-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--field-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
+  'min-h-10 max-md:min-h-11 w-full rounded-[3px] border border-[var(--field-border)] bg-[var(--field-surface)] px-3 py-2 text-[13px] text-[var(--text)] outline-none shadow-[var(--shadow-inset)] transition placeholder:text-[var(--text-muted)] focus:border-[var(--field-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--field-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
 export const formSelectClassName = `${formFieldClassName} pr-10`;
 export const formTextareaClassName =
   'w-full rounded-[3px] border border-[var(--field-border)] bg-[var(--field-surface)] px-3 py-2.5 text-[13px] text-[var(--text)] outline-none shadow-[var(--shadow-inset)] transition placeholder:text-[var(--text-muted)] focus:border-[var(--field-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--field-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
@@ -14,9 +14,9 @@ export const buttonFocusClassName =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
 const buttonDisabledClassName = 'disabled:cursor-not-allowed disabled:opacity-50';
 const standardButtonBaseClassName =
-  `inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-[3px] px-4 py-2 text-[13px] font-semibold tracking-[0.01em] transition ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `inline-flex min-h-10 max-md:min-h-11 items-center justify-center whitespace-nowrap rounded-[3px] px-4 py-2 text-[13px] font-semibold tracking-[0.01em] transition ${buttonFocusClassName} ${buttonDisabledClassName}`;
 const compactButtonBaseClassName =
-  `inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-[3px] px-2.5 py-1.5 text-xs font-medium tracking-[0.01em] transition ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `inline-flex min-h-8 max-md:min-h-11 items-center justify-center whitespace-nowrap rounded-[3px] px-2.5 py-1.5 text-xs font-medium tracking-[0.01em] transition ${buttonFocusClassName} ${buttonDisabledClassName}`;
 export const primaryButtonClassName =
   `${standardButtonBaseClassName} bg-[var(--brand)] text-[var(--signal-ink)] shadow-[var(--shadow-raised)] hover:bg-[var(--signal-hover)]`;
 export const secondaryButtonClassName =
@@ -30,13 +30,13 @@ export const compactSecondaryButtonClassName =
 export const compactDangerButtonClassName =
   `${compactButtonBaseClassName} border border-[var(--danger-border)] bg-[var(--danger-tint)] text-[var(--status-danger)] hover:bg-[var(--danger-tint-strong)] focus-visible:ring-[var(--status-danger)]`;
 export const compactListButtonClassName =
-  `flex min-h-8 w-full items-center justify-start rounded-[3px] bg-[var(--surface)] px-2.5 py-1.5 text-left text-xs text-[var(--text)] transition hover:bg-[var(--field-surface)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `flex min-h-8 max-md:min-h-11 w-full items-center justify-start rounded-[3px] bg-[var(--surface)] px-2.5 py-1.5 text-left text-xs text-[var(--text)] transition hover:bg-[var(--field-surface)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
 export const dangerTextClassName = 'text-sm text-[var(--status-danger)]';
 export const successTextClassName = 'text-sm text-[var(--status-success)]';
 
 export function ghostButtonClassName(size: 'default' | 'compact') {
   return size === 'compact'
-    ? `inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-[3px] px-2 py-1.5 text-xs font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--text)] ${buttonFocusClassName}`
+    ? `inline-flex min-h-8 max-md:min-h-11 items-center justify-center whitespace-nowrap rounded-[3px] px-2 py-1.5 text-xs font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--text)] ${buttonFocusClassName}`
     : `inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-[3px] px-2 py-2 text-[13px] font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--text)] ${buttonFocusClassName}`;
 }
 
