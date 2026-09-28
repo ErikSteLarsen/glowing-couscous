@@ -33,6 +33,8 @@ import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
 import { getTempoZoneMeta } from '@/lib/tempo-blocks';
+import { getAverageSessionZone } from '@/lib/session-intensity';
+import { SessionIntensitySwatch } from '@/components/tempo/SessionIntensitySwatch';
 import { getTemplateCadence, getTemplateDurationDays, templateDatesForSelection, templateCadenceMeta, validateTemplateDateRange, type TemplateCadence } from '@/lib/template-cadence';
 
 export type PlannerDeskRole = 'coach' | 'athlete';
@@ -623,20 +625,11 @@ function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, s
   );
 }
 
-function averageSessionZone(segments: PlannerDeskSession['segments']) {
-  const activeSegments = segments.filter((segment) => segment.label.toLowerCase() !== 'pause' && segment.durationSec > 0);
-  const activeDuration = activeSegments.reduce((sum, segment) => sum + segment.durationSec, 0);
-  if (!activeDuration) return null;
-
-  const weightedZone = activeSegments.reduce((sum, segment) => sum + segment.zone * segment.durationSec, 0) / activeDuration;
-  return Math.min(5, Math.max(1, Math.round(weightedZone)));
-}
-
 function CalendarCell({ feedback, day, today, selected, templateMode, onSelect }: { feedback: PlacementFeedback | null; day: PlannerDeskCalendarDay; today: boolean; selected: boolean; templateMode: boolean; onSelect: () => void }) {
   const sessionNames = day.sessions.slice(0, 3).map((session) => session.title).join(', ');
   const extraSessionCount = Math.max(0, day.sessions.length - 3);
   const previewSession = day.sessions[0];
-  const previewAverageZone = previewSession ? averageSessionZone(previewSession.segments) : null;
+  const previewAverageZone = previewSession ? getAverageSessionZone(previewSession.segments) : null;
   const previewAverageZoneName = previewAverageZone ? getTempoZoneMeta(previewAverageZone).name : null;
   const scheduleDescription = day.sessions.length === 0
     ? 'No sessions planned.'
@@ -645,7 +638,7 @@ function CalendarCell({ feedback, day, today, selected, templateMode, onSelect }
     <button type="button" aria-pressed={selected} aria-current={today ? 'date' : undefined} aria-label={`${day.label} ${day.dateLabel}${today ? ', today' : ''}. ${scheduleDescription} ${templateMode ? 'Choose for template range.' : 'Toggle date.'}`} onClick={onSelect} className={`planner-desk__day flex min-w-0 flex-col p-2 text-left transition focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] ${day.inMonth ? 'bg-[var(--field-surface)]' : 'bg-[var(--sunken)]'} ${!selected ? 'hover:bg-[var(--selection)]' : ''}`}>
       <span className="flex items-center justify-between gap-2"><span className={`metric-text text-sm font-semibold ${day.inMonth ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'} ${today ? 'calendar-day-date--today' : ''}`}>{day.dateLabel.split(' ')[0]}</span></span>
       {feedback ? <span className={`planner-desk__feedback mt-1 block truncate text-xs ${feedback.state === 'failed' ? 'text-[var(--status-danger)]' : feedback.state === 'saved' ? 'text-[var(--status-success)]' : 'text-[var(--text-secondary)]'}`}>{feedback.state === 'placing' ? 'Placing' : feedback.state === 'saved' ? 'Placed' : 'Not confirmed'}: {feedback.title}</span> : null}
-      <span className="planner-desk__sessions mt-1 w-full min-w-0">{previewSession ? <span key={previewSession.id} className="flex min-w-0 items-center gap-1.5 bg-[var(--surface)] px-1.5 py-1">{previewAverageZone ? <span aria-hidden="true" className={`ink-zone-${previewAverageZone} h-3 w-1 shrink-0`} /> : null}<span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[var(--text)]">{previewSession.title}</span></span> : null}{day.sessions.length > 1 ? <span className="block px-1.5 text-[11px] text-[var(--text-muted)]">+{day.sessions.length - 1} more</span> : null}</span>
+      <span className="planner-desk__sessions mt-1 w-full min-w-0">{previewSession ? <span key={previewSession.id} className="flex min-w-0 items-center gap-1.5 bg-[var(--surface)] px-1.5 py-1">{previewAverageZone ? <SessionIntensitySwatch zone={previewAverageZone} /> : null}<span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[var(--text)]">{previewSession.title}</span></span> : null}{day.sessions.length > 1 ? <span className="block px-1.5 text-[11px] text-[var(--text-muted)]">+{day.sessions.length - 1} more</span> : null}</span>
       <span className="planner-desk__count text-[11px] text-[var(--text-secondary)]">{day.sessions.length ? `${day.sessions.length} planned` : ''}</span>
     </button>
   );

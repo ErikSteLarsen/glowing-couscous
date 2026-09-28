@@ -168,22 +168,23 @@ export function AthleteCalendarWeekScroller({
   );
 
   return (
-    <section aria-labelledby="calendar-week-heading" className="space-y-4">
+    <section aria-labelledby="calendar-week-heading" className="calendar-week-scroller space-y-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 id="calendar-week-heading" className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)]">{weekLabel}</h2>
-          <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Monday-first · {weekDays.reduce((count, day) => count + day.sessions.length, 0)} sessions</p>
+          <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Monday-first · {weekDays.reduce((count, day) => count + day.sessions.length, 0)} sessions this week</p>
+          <span className="sr-only" aria-live="polite">{activeDay.label} {activeDay.dateLabel} selected</span>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <ActionLink href={`/athlete/calendar?view=week&date=${todayIso}`} tone={showBackToToday ? 'secondary' : 'ghost'} size="compact">
             Today
           </ActionLink>
-          <button type="button" aria-label="Previous day" disabled={loadingBefore} className={ghostButtonClassName('compact')} onClick={() => void moveFocus(-1)}>
+          <button type="button" aria-label="Previous day" disabled={loadingBefore} className={`${ghostButtonClassName('compact')} min-h-11 px-3`} onClick={() => void moveFocus(-1)}>
             <ChevronLeft aria-hidden="true" className="mr-1 h-4 w-4" />
             Previous
           </button>
-          <button type="button" aria-label="Next day" disabled={loadingAfter} className={ghostButtonClassName('compact')} onClick={() => void moveFocus(1)}>
+          <button type="button" aria-label="Next day" disabled={loadingAfter} className={`${ghostButtonClassName('compact')} min-h-11 px-3`} onClick={() => void moveFocus(1)}>
             Next
             <ChevronRight aria-hidden="true" className="ml-1 h-4 w-4" />
           </button>
@@ -191,38 +192,42 @@ export function AthleteCalendarWeekScroller({
       </div>
 
       <div className="space-y-3">
-        <div className="grid gap-x-3 gap-y-6 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-7">
+        <div className="calendar-week-grid">
           {weekDays.map((day) => {
             const isFocused = day.isoDate === activeDateIso;
 
             return (
               <section
                 key={day.isoDate}
+                data-active={isFocused ? 'true' : undefined}
                 aria-labelledby={`calendar-day-${day.isoDate}`}
-                className={`min-w-0 border-t pt-3 transition 2xl:border-t-0 2xl:border-l 2xl:pl-3 ${
+                className={`min-w-0 border-t pt-3 transition ${isFocused ? '' : 'hidden md:block'} ${
                   isFocused
                     ? 'border-[var(--brand)] bg-[var(--brand-tint)] px-3 2xl:rounded-[8px]'
                     : 'border-[var(--border)]'
                 } ${day.isToday ? 'calendar-day--today' : ''}`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <button
-                    type="button"
-                    aria-current={day.isToday ? 'date' : undefined}
-                    aria-label={`Focus ${day.label} ${day.dateLabel}${day.isToday ? ', today' : ''}`}
-                    className={`inline-flex min-h-11 min-w-11 flex-col justify-center rounded-[3px] px-2 py-1 text-left ${buttonFocusClassName}`}
-                    onClick={() => setActiveDateIso(day.isoDate)}
-                  >
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">{day.label}</p>
-                    <div className="mt-1 flex items-center gap-2">
-                      <span id={`calendar-day-${day.isoDate}`} className={`metric-text text-[20px] font-semibold text-[var(--text)] ${day.isToday ? 'calendar-day-date--today' : ''}`}>{day.dateLabel}</span>
-                    </div>
-                  </button>
+                  <h3 id={`calendar-day-${day.isoDate}`} className="min-w-0">
+                    <button
+                      type="button"
+                      aria-current={day.isToday ? 'date' : undefined}
+                      aria-pressed={isFocused}
+                      aria-label={`Focus ${day.label} ${day.dateLabel}${day.isToday ? ', today' : ''}`}
+                      className={`inline-flex min-h-11 min-w-11 flex-col justify-center rounded-[3px] px-2 py-1 text-left ${buttonFocusClassName}`}
+                      onClick={() => setActiveDateIso(day.isoDate)}
+                    >
+                      <span>
+                        <span className="block text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">{day.label}</span>
+                        <span className={`metric-text mt-1 inline-flex text-[20px] font-semibold text-[var(--text)] ${day.isToday ? 'calendar-day-date--today' : ''}`}>{day.dateLabel}</span>
+                      </span>
+                    </button>
+                  </h3>
                   <span className="rounded-full border border-[var(--field-border)] bg-[var(--field-surface)] px-2 py-1 text-[11px] font-medium text-[var(--text-secondary)]">{day.sessions.length}</span>
                 </div>
 
                 {day.sessions.length > 0 ? (
-                  <div className="mt-2 grid gap-1.5">
+                  <div className="calendar-week-sessions mt-3 grid">
                     {day.sessions.map((session) => (
                       <SessionRow
                         key={session.id}

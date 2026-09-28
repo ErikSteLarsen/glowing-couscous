@@ -1413,6 +1413,13 @@ body {
   padding: 28px 20px;
 }
 .planner-desk { display: grid; gap: 16px; min-width: 0; }
+.calendar-week-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  column-gap: 16px;
+  row-gap: 24px;
+}
+.calendar-week-sessions { gap: 10px; }
 .planner-desk__layout { display: grid; align-items: start; gap: 16px; min-width: 0; }
 .planner-desk__month { height: clamp(264px, calc(100dvh - 450px - var(--planner-range-space, 0px)), 528px); }
 .planner-desk__calendar--range { --planner-range-space: 80px; }

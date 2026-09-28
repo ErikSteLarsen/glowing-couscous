@@ -455,8 +455,9 @@ for contextual return and execution controls.
   duration-weighted average intensity zone; pause time is excluded. Below
   600px container width they show counts instead. Athlete month calendar cells
   show up to two single-line session titles, then a remaining-session count;
-  the small-screen month view keeps its day link. Other month calendar rows keep
-  their title-only summary.
+  the small-screen month view keeps its day link. Calendar week and month rows
+  use the same zone swatch immediately before the session title; week rows retain
+  their session details and recorded heart-rate timeline.
 - Home and Calendar current dates use a tinted full-day surface and inset brand
   frame. Planning Desk marks today on the numeral; selected dates use a tinted
   full-day surface and inset brand frame, including when today is selected.

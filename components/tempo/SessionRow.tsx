@@ -2,8 +2,11 @@ import Link from 'next/link';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { ActivityIntensityBars } from '@/components/tempo/ActivityIntensityBars';
+import { SessionIntensitySwatch } from '@/components/tempo/SessionIntensitySwatch';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
+import { getAverageSessionZone } from '@/lib/session-intensity';
+import { getTempoZoneMeta } from '@/lib/tempo-blocks';
 import type { ActivityIntensityTimeline } from '@/lib/activity-series';
 
 type SessionStatus = 'planned' | 'completed' | 'adjusted' | 'missed';
@@ -59,8 +62,8 @@ const variantStyles: Record<SessionRowVariant, {
     barSize: 'compact',
   },
   calendar: {
-    root: 'ink-session-row ink-session-row--calendar rounded-[3px] bg-[var(--surface)] px-2.5 py-1.5',
-    title: 'truncate text-[12px] font-semibold leading-4',
+    root: 'ink-session-row ink-session-row--calendar rounded-[3px] bg-[var(--surface)] px-3 py-2.5',
+    title: 'break-words text-[13px] font-semibold leading-5',
     metadata: 'mt-0.5 text-[11px] leading-4',
     metrics: 'gap-x-2.5 gap-y-0 text-[11px] leading-4',
     showMetadata: true,
@@ -102,6 +105,10 @@ export function SessionRow({
   const styles = variantStyles[resolvedVariant];
   const visibleDateLabel = dateLabel ?? session.dateLabel;
   const loadLabel = session.loadAvailable === false ? 'Load unavailable' : `${session.tss} TSS`;
+  const averageZone = resolvedVariant === 'calendar' || resolvedVariant === 'month'
+    ? getAverageSessionZone(session.segments)
+    : null;
+  const averageZoneMeta = averageZone ? getTempoZoneMeta(averageZone) : null;
   const accessibleName = [
     actionLabel,
     session.title,
@@ -110,6 +117,7 @@ export function SessionRow({
     getSportLabel(session.sport),
     formatDuration(session.durationSec),
     loadLabel,
+    averageZoneMeta ? `Average intensity ${averageZoneMeta.label} ${averageZoneMeta.name}; pause time excluded` : null,
     session.intensityTimeline ? `Average heart rate ${session.intensityTimeline.averageBpm} bpm` : null,
     session.targetLabel,
     session.status,
@@ -122,7 +130,8 @@ export function SessionRow({
       className={`group block min-w-0 border border-[var(--border)] transition hover:border-[var(--field-focus)] hover:bg-[var(--field-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] ${styles.root}`}
     >
       <div className={muted ? 'opacity-70' : undefined}>
-        <div className="flex min-w-0 items-start gap-3">
+        <div className={`flex min-w-0 items-start ${averageZone ? 'gap-1.5' : 'gap-3'}`}>
+          {averageZone ? <SessionIntensitySwatch zone={averageZone} /> : null}
           <div className="min-w-0 flex-1">
             <p
               title={resolvedVariant === 'calendar' || resolvedVariant === 'month' ? session.title : undefined}

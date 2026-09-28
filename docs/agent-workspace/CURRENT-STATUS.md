@@ -1,5 +1,35 @@
 # Current Status
 
+## Calendar Week Density and Mobile Day Navigation — 2026-09-28
+
+The Athlete Calendar week view now lays out day columns according to the
+available width. Day stacks expand with their session lists and use more space
+between rows. Phones show only the selected day, with previous/next controls
+and the selected date kept in the URL. Calendar week/month rows and Planner's
+compact date preview share a rounded, duration-weighted average-zone swatch
+before the session title; pause segments are excluded. Week rows retain their
+session details and recorded heart-rate timeline.
+
+| Gate | Result |
+|---|---|
+| Source tests | Pass, 254/254 using `node --experimental-strip-types --test tests/*.test.mjs tests/*.test.ts`. The `pnpm test` wrapper stopped during its dependency preflight with `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`. |
+| ESLint | Pass using `node node_modules/eslint/bin/eslint.js .` and targeted lint on the changed files. The `pnpm lint` wrapper stopped at the same dependency preflight. |
+| TypeScript | `tsc --noEmit` reports three generated Prisma Client mismatches in `auth.ts` and `lib/password-reset-service.ts`; it reported no errors in the changed files. |
+| Impeccable detector | Ran once. It reported advisory typography and radius findings in shared styles and the existing Calendar heading. |
+| Browser/device view | Not verified: an unauthenticated request to the local Calendar redirected to sign-in, and no account or session was used. |
+| Production build | Not run because the `pnpm build` script runs `prisma migrate deploy` against the configured database before building. |
+
+## Import Activity Dialog Width — 2026-09-27
+
+The Strava activity details dialog keeps long metadata and measurement values
+inside its available width. Its sticky footer aligns within the dialog, and
+expanded interval tables use fixed proportional columns, wrap long values, and
+scroll vertically without a horizontal scroll area. The Impeccable detector,
+targeted ESLint, and `git diff --check` pass.
+The production build could not finish because this environment could not fetch
+Schibsted Grotesk from Google Fonts; browser/device rendering and tests were not
+run.
+
 ## First-Run and Production Readiness Review — 2026-09-27
 
 The production route and copy review found a coherent self-directed path:

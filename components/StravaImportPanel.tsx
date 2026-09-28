@@ -266,7 +266,7 @@ export function StravaImportPanel({
       <dialog
         ref={dialogRef}
         id="strava-activity-details"
-        className="fixed inset-0 z-50 m-auto max-h-[calc(100dvh-2rem)] w-[min(48rem,calc(100%-2rem))] overflow-y-auto rounded-[5px] border border-[var(--border)] bg-[var(--surface)] p-0 text-[var(--text)] shadow-[var(--shadow-overlay)] backdrop:bg-[var(--overlay)]"
+        className="fixed inset-0 z-50 m-auto max-h-[calc(100dvh-2rem)] w-[min(48rem,calc(100%-2rem))] overflow-x-hidden overflow-y-auto rounded-[5px] border border-[var(--border)] bg-[var(--surface)] p-0 text-[var(--text)] shadow-[var(--shadow-overlay)] backdrop:bg-[var(--overlay)]"
         aria-labelledby="strava-activity-details-title"
         aria-busy={Boolean(activeActivityId && loading[activeActivityId])}
         onClose={() => setActiveActivityId(null)}
@@ -298,7 +298,7 @@ export function StravaImportPanel({
                 </button>
               </div>
             </header>
-            <div className="space-y-4 p-5 sm:p-7">
+            <div className="min-w-0 space-y-4 p-5 sm:p-7">
               {activeActivityId && detailErrors[activeActivityId] ? (
                 <p role="alert" className={dangerTextClassName}>{detailErrors[activeActivityId]}</p>
               ) : null}
@@ -339,7 +339,7 @@ export function StravaImportPanel({
                 <p role="status" className="text-[13px] text-[var(--text-secondary)]">Loading activity data and recorded streams…</p>
               ) : null}
             </div>
-            <footer className="sticky bottom-0 z-10 -mx-5 -mb-5 flex flex-col gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-4 sm:-mx-7 sm:-mb-7 sm:px-7">
+            <footer className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-4 sm:px-7">
               {activeActivityId && importErrors[activeActivityId] ? (
                 <p role="alert" className={dangerTextClassName}>{importErrors[activeActivityId]}</p>
               ) : null}
@@ -360,7 +360,7 @@ export function StravaImportPanel({
 }
 
 function SummaryValue({ label, value }: { label: string; value: string }) {
-  return <div className="border-l-2 border-[var(--border)] pl-3"><p className="text-[11px] font-medium text-[var(--text-muted)]">{label}</p><p className="metric-text mt-1 text-[15px] font-semibold text-[var(--text)]">{value}</p></div>;
+  return <div className="min-w-0 border-l-2 border-[var(--border)] pl-3"><p className="text-[11px] font-medium text-[var(--text-muted)]">{label}</p><p className="metric-text mt-1 wrap-anywhere text-[15px] font-semibold text-[var(--text)]">{value}</p></div>;
 }
 
 export function formatStravaMetadata(metadata: Record<string, unknown>) {

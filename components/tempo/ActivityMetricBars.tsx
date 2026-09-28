@@ -64,26 +64,31 @@ export function ActivityMetricBars({
         <summary className="w-fit cursor-pointer rounded-[3px] py-1 font-medium text-[var(--text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-liquid)]">
           View interval data
         </summary>
-        <div className="mt-2 max-h-56 overflow-auto border-y border-[var(--border)]">
-          <table className="w-full border-collapse text-left tabular-nums">
+        <div className="mt-2 max-h-56 min-w-0 overflow-x-hidden overflow-y-auto border-y border-[var(--border)]">
+          <table className="w-full table-fixed border-collapse text-left tabular-nums">
             <caption className="sr-only">{description}</caption>
+            <colgroup>
+              <col className="w-[34%]" />
+              <col className="w-[30%]" />
+              <col className="w-[36%]" />
+            </colgroup>
             <thead className="sticky top-0 bg-[var(--surface)] text-[11px] text-[var(--text-muted)]">
               <tr>
-                <th className="py-2 pr-3 font-medium">{chart.axis === 'time' ? 'Time' : 'Distance'}</th>
-                <th className="py-2 pr-3 text-right font-medium">Average</th>
-                <th className="py-2 text-right font-medium">Range</th>
+                <th className="wrap-anywhere py-2 pr-2 font-medium sm:pr-3">{chart.axis === 'time' ? 'Time' : 'Distance'}</th>
+                <th className="wrap-anywhere py-2 pr-2 text-right font-medium sm:pr-3">Average</th>
+                <th className="wrap-anywhere py-2 text-right font-medium">Range</th>
               </tr>
             </thead>
             <tbody>
               {chart.buckets.map((bucket) => (
                 <tr key={bucket.index} className="border-t border-[var(--border)]">
-                  <th scope="row" className="py-2 pr-3 font-medium">
+                  <th scope="row" className="wrap-anywhere py-2 pr-2 font-medium sm:pr-3">
                     {chart.axis === 'time'
                       ? `${formatDuration(bucket.from)}–${formatDuration(bucket.to)}`
                       : `${Math.round(bucket.from)}–${Math.round(bucket.to)} m`}
                   </th>
-                  <td className="py-2 pr-3 text-right">{formatActivityMetricValue(metric, bucket.average)}</td>
-                  <td className="py-2 text-right">{formatActivityMetricValue(metric, bucket.min)}–{formatActivityMetricValue(metric, bucket.max)}</td>
+                  <td className="wrap-anywhere py-2 pr-2 text-right sm:pr-3">{formatActivityMetricValue(metric, bucket.average)}</td>
+                  <td className="wrap-anywhere py-2 text-right">{formatActivityMetricValue(metric, bucket.min)}–{formatActivityMetricValue(metric, bucket.max)}</td>
                 </tr>
               ))}
             </tbody>
