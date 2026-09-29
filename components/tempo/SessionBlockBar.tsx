@@ -1,9 +1,12 @@
+import { intensityColor } from '@/lib/intensity-color';
+
 type Segment = {
   key: string;
   zone: number;
   durationSec: number;
   label: string;
   color: string;
+  intensityFraction?: number;
 };
 
 type SessionBlockBarSize = 'authoring' | 'full' | 'card' | 'compact' | 'calendar';
@@ -39,10 +42,11 @@ export function SessionBlockBar({
         <div
           key={segment.key}
           aria-hidden="true"
-          className={`ink-zone-${Math.min(Math.max(segment.zone, 1), 5)} transition-[height] duration-150 ease-out`}
+          className="transition-[height,background-color] duration-150 ease-out"
           style={{
             flexGrow: Math.max(segment.durationSec, 1),
-            height: `${Math.min(Math.max(segment.zone, 1), 5) * 20}%`,
+            height: segment.label === 'Pause' ? '14%' : `${30 + (Math.min(Math.max(segment.zone, 1), 5) - 1 + (segment.intensityFraction ?? 0.5)) * 14}%`,
+            backgroundColor: segment.label === 'Pause' ? 'var(--text-muted)' : intensityColor(segment.zone, segment.intensityFraction),
           }}
         />
       ))}

@@ -8,6 +8,7 @@ tsconfig.tsbuildinfo
 
 .env
 .env.local
+.opencode/visual-test-account.local.md
 
 prisma/dev.db
 prisma/dev.db-journal

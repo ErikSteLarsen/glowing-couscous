@@ -23,14 +23,15 @@ secondary; preserve their behavior and shared ownership boundaries.
 | ID | Area | Status | Primary owners | Main entry points |
 |---|---|---|---|---|
 | `AUTH-001` | Authentication and dormant role compatibility | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts`, `lib/password-reset-service.ts` | `/login`, `/signup`, `/setup`, `/forgot-password`, `/reset-password`, `/api/auth/*` |
-| `SHELL-001` | Unified personal shell and navigation | `shipped` | `components/AppShell.tsx`, `components/AppSidebar.tsx`, `components/ui.tsx` (`TopBar`, `BackControl`), `app/globals.css`, `lib/app-navigation.ts` | Authenticated `(app)` layout and `/athlete/*` |
-| `DESIGN-001` | Monolith design-system rollout | `in-progress` | `DESIGN.md`, `app/globals.css`, `app/focus-monochrome.css`, `components/FocusHome.tsx`, `components/FocusWorkouts.tsx`, `docs/agent-workspace/tasks/2026-09-29-monolith-design-upgrade.md` | Selected Monolith preview `/design/focus-monochrome`; task plan covers complete route-family migration and preview cleanup |
+| `SHELL-001` | Unified personal shell, saved theme, and navigation | `shipped` | `components/AppShell.tsx`, `components/AppSidebar.tsx`, `components/ui.tsx` (`TopBar`, `BackControl`), `app/globals.css`, `lib/app-navigation.ts` | Authenticated `(app)` layout and `/athlete/*` |
+| `DESIGN-001` | Monolith design-system rollout | `shipped` | `DESIGN.md`, `app/globals.css`, `app/monolith.css`, `components/FocusHome.tsx`, `components/FocusWorkouts.tsx` | Shared authenticated shell and route families; accepted browser coverage limits are in `CURRENT-STATUS.md` |
+| `HOME-001` | Personal Home overview | `shipped` | `app/(app)/athlete/page.tsx`, `components/FocusHome.tsx`, `components/AthleteHomeContent.tsx` (prior composition), `lib/athlete-service.ts` | `/athlete`; current day, week, and overview readouts |
 | `COACH-001` | Dormant coach roster and requests | `transitional` | `lib/coach-service.ts`, `lib/coach-request-service.ts` | Hidden pending a later collaboration release |
 | PLAN-001 | Personal planning and secondary coach planning | shipped | app/(app)/athlete/calendar/AthleteCalendarWeekScroller.tsx, components/PlannerDesk.tsx, components/tempo/SessionRow.tsx, components/tempo/SessionIntensitySwatch.tsx, lib/session-intensity.ts, lib/coach-planner-service.ts, lib/athlete-planner-service.ts, lib/assignment-service.ts | /coach/planner, /athlete/planner, /athlete/calendar |
-| `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts`, `components/WorkoutLibraryClient.tsx` | `/coach/workouts`, `/athlete/workouts` |
+| `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts`, `components/WorkoutLibraryClient.tsx`, `components/FocusWorkouts.tsx` | `/coach/workouts`, `/athlete/workouts` |
 | `AI-WORKOUT-001` | Guided athlete workout creator | `in-progress` | `lib/guided-workout.ts`, `lib/guided-workout-service.ts`, `lib/workout-llm.ts`, `components/GuidedWorkoutForm.tsx`, `components/WorkoutLibraryClient.tsx` | `/athlete/workouts`, `/api/athlete/workouts/generate`, `/api/athlete/workouts/ai-status`; validated model-authored drafts, shared provider health cache, and keyless fallback work; live model and authenticated browser acceptance remain |
 | `TEMPLATE-001` | Templates and training plans | `in-progress` | `lib/template-service.ts`, `lib/coach-training-plan-service.ts` | `/coach/templates`, `/athlete/templates` |
-| SESSION-001 | Canonical editor and outcomes | in-progress | lib/session-editor.ts, lib/athlete-execution.ts, lib/athlete-service.ts, lib/workout-canvas-drop.ts, lib/workout-pattern.ts, lib/workout-zone-intensity.ts, lib/profile-training-zones.ts, lib/performance-profile.ts, lib/account-service.ts, components/WorkoutBuilder.tsx, components/WorkoutCanvasEditor.tsx, components/SessionPlanCanvas.tsx, components/WorkoutLibraryClient.tsx, lib/session-snapshot-service.ts, lib/athlete-completion-service.ts | Profile, read-only session detail, timed live execution, workout canvas, outcome APIs; profile-backed zones and target adjustments |
+| SESSION-001 | Canonical editor and outcomes | in-progress | lib/session-editor.ts, lib/athlete-execution.ts, lib/athlete-service.ts, lib/workout-canvas-drop.ts, lib/workout-pattern.ts, lib/workout-zone-intensity.ts, lib/intensity-color.ts, lib/profile-training-zones.ts, lib/performance-profile.ts, lib/account-service.ts, components/WorkoutBuilder.tsx, components/WorkoutCanvasEditor.tsx, components/SessionPlanCanvas.tsx, components/tempo/SessionBlockBar.tsx, components/WorkoutLibraryClient.tsx, lib/session-snapshot-service.ts, lib/athlete-completion-service.ts | Profile, read-only session detail, timed live execution, workout canvas, outcome APIs; profile-backed zones, target adjustments, and continuous five-color intensity ramp |
 | `ACTIVITY-001` | Activity import, removal, filtered history, and outcome review | `in-progress` | `lib/activity-file-parser.ts`, `lib/activity-import-service.ts`, `lib/activity-series.ts`, `components/tempo/ActivityIntensityBars.tsx`, `components/ImportedActivityMeasurements.tsx`, `components/ActivityImportClient.tsx`, `components/ActivityHistoryOverview.tsx`, `components/tempo/SessionRow.tsx`, `lib/athlete-service.ts`, athlete session detail page, `app/(app)/athlete/activity/page.tsx` | `/athlete/activity` week/month summaries and sport-filtered completed-work history; shared `/athlete/import` page (legacy `/athlete/imported-activities` redirects) and `/api/activity-imports`; imported activity measurements and single-column no-plan detail in athlete Calendar/session detail |
 | `STRAVA-001` | Automatic Strava API sync | `in-progress` | `lib/strava-service.ts`, `app/api/strava/*`, `components/StravaImportPanel.tsx` | OAuth, activity review/import, webhooks, and disconnect cleanup are implemented; external setup and live verification remain |
 | `SHARE-001` | Sanitized workout sharing | `in-progress` | `lib/share-link.ts`, `lib/share-link-service.ts` | `/share/[token]`, share APIs |
@@ -39,6 +40,9 @@ secondary; preserve their behavior and shared ownership boundaries.
 Current verification and gaps are in `CURRENT-STATUS.md`. When a capability
 changes owner or state, update this row and the current status in the same
 change.
+
+For authenticated visual acceptance, see `VISUAL-VERIFICATION.md`. Local
+credentials are intentionally kept in a gitignored file, not in this index.
 
 The athlete Planning Desk distinguishes first-use empties from search misses,
 offers creation actions for missing workout or template sources, and puts
@@ -71,7 +75,12 @@ styles:
 | Page-level controls and surfaces | `components/ui.tsx` | `PageShell` (single workspace frame), `AuthPageShell`, `TopBar`, button, field, `Surface`, `Badge`, and `EmptyState` classes |
 | Workout/session language | `components/tempo/*` | `SessionRow`, `SessionBlockBar`, `StatusBadge`, `MetricText`, `Stepper`, and `Toggle` |
 | Authoring surface | `components/WorkoutBuilder.tsx`, `components/WorkoutCanvasEditor.tsx`, `components/design/workout-canvas.css` | Shared workout, template, and planned-session visual editor backed by canonical draft services |
-| Visual experiments | `app/design/*`, `components/design/*` | Preview only; never copy their tokens into product screens without an explicit system decision |
+| Developer-only studies | `app/design/*`, `components/design/*` | Older workout and planning experiments; production Monolith composition is in `app/monolith.css` |
+
+`components/FocusHome.tsx` and `components/FocusWorkouts.tsx` own the selected
+production compositions; `app/monolith.css` owns their layout, and
+`app/globals.css` owns production light/dark tokens. The temporary Focus,
+actual-page, and color comparison routes and their selectors have been removed.
 
 `public/tempo-sports-loop.svg` owns the standalone triathlon mark proposal,
 generated by `scripts/generate-tempo-sports.mjs`. It is not yet embedded into

@@ -20,7 +20,7 @@ export function getSessionBlockStyle(block: Pick<SessionPlanBlock, 'kind' | 'zon
     return { backgroundColor: 'var(--sunken)', color: 'var(--text-secondary)' };
   }
   const zone = Math.min(Math.max(block.zone, 1), 5);
-  return { backgroundColor: `var(--color-zone-${zone}-tint)`, color: `var(--color-zone-${zone})` };
+  return { backgroundColor: `var(--color-zone-${zone}-tint)`, color: 'var(--text)' };
 }
 
 export function SessionPlanCanvas({

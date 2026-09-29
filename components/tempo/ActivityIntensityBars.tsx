@@ -1,4 +1,7 @@
 import type { ActivityIntensityTimeline } from '@/lib/activity-series';
+import { intensityColor } from '@/lib/intensity-color';
+import { OLYMPIATOPPEN_HEART_RATE_PERCENT_BANDS } from '@/lib/profile-training-zones';
+import type { TempoZone } from '@/lib/tempo-blocks';
 
 export function ActivityIntensityBars({ timeline, compact = false }: { timeline: ActivityIntensityTimeline; compact?: boolean }) {
   const intervalLabel = timeline.intervalSec >= 60
@@ -25,13 +28,18 @@ export function ActivityIntensityBars({ timeline, compact = false }: { timeline:
           const title = bin.averageBpm === null
             ? `${range}: no heart-rate samples`
             : `${range}: ${bin.averageBpm} bpm average, ${bin.minBpm}–${bin.maxBpm} bpm range${bin.zone ? `, Zone ${bin.zone}` : ''}`;
+          const band = bin.zone ? OLYMPIATOPPEN_HEART_RATE_PERCENT_BANDS[bin.zone as TempoZone] : null;
+          const heartRatePercent = bin.averageBpm !== null && timeline.maxHeartRateBpm
+            ? bin.averageBpm / timeline.maxHeartRateBpm * 100 : null;
+          const fraction = band && heartRatePercent !== null
+            ? (heartRatePercent - band.low) / (band.high - band.low) : 0.5;
           return (
             <span
               key={bin.index}
               aria-hidden="true"
               title={title}
-              className={`min-w-[2px] flex-1 ${bin.averageBpm === null ? 'bg-transparent' : bin.zone ? `ink-zone-${bin.zone}` : 'bg-[var(--color-signal)]'}`}
-              style={{ height: `${bin.heightPercent ?? 0}%` }}
+              className={`min-w-[2px] flex-1 ${bin.averageBpm === null ? 'bg-transparent' : bin.zone ? '' : 'bg-[var(--color-signal)]'}`}
+              style={{ height: `${bin.heightPercent ?? 0}%`, backgroundColor: bin.zone ? intensityColor(bin.zone, fraction) : undefined }}
             />
           );
         })}

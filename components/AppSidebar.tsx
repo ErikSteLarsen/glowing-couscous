@@ -10,6 +10,8 @@ import {
   History as HistoryIcon,
   House,
   LayoutTemplate,
+  Moon,
+  Sun,
   Upload,
 } from 'lucide-react';
 import { getPrimaryNavigation, isNavigationItemActive } from '@/lib/app-navigation';
@@ -33,6 +35,9 @@ export function AppSidebar(props: {
   mobileOpen: boolean;
   isMobileViewport: boolean;
   onClose: () => void;
+  previewMode?: boolean;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
 }) {
   const navItems = getPrimaryNavigation();
   const sidebarRef = useRef<HTMLElement>(null);
@@ -122,7 +127,7 @@ export function AppSidebar(props: {
                      href={item.href}
                      onClick={props.onClose}
                      aria-current={isActive ? 'page' : undefined}
-                       className={`relative flex min-h-11 items-center rounded-[3px] px-3 py-2.5 text-[12px] font-semibold uppercase tracking-[0.08em] transition md:min-h-10 ${
+                       className={`relative flex min-h-11 items-center rounded-[10px] px-3 py-2.5 text-[12px] font-semibold uppercase tracking-[0.08em] transition md:min-h-10 ${
                       isActive
                          ? 'bg-[var(--nav-active)] text-[var(--nav-text)]'
                          : 'text-[var(--nav-muted)] hover:bg-[var(--nav-active)] hover:text-[var(--nav-text)]'
@@ -142,7 +147,16 @@ export function AppSidebar(props: {
            </div>
 
            <div className="mt-auto">
-            <AppProfileMenu user={props.user} pathname={props.pathname} onNavigate={props.onClose} />
+            {!props.previewMode ? <button
+              type="button"
+              onClick={props.onToggleTheme}
+              aria-label={`Switch to ${props.theme === 'dark' ? 'light' : 'dark'} theme`}
+              className="mb-5 flex min-h-11 w-full items-center gap-3 rounded-[10px] border border-[var(--nav-border)] px-3 text-left text-[12px] font-semibold text-[var(--nav-text)] transition hover:border-[var(--nav-signal)] hover:bg-[var(--nav-active)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--nav-signal)]"
+            >
+              {props.theme === 'dark' ? <Sun aria-hidden="true" size={16} /> : <Moon aria-hidden="true" size={16} />}
+              {props.theme === 'dark' ? 'Light theme' : 'Dark theme'}
+            </button> : null}
+            <AppProfileMenu user={props.user} pathname={props.pathname} onNavigate={props.onClose} previewMode={props.previewMode} />
           </div>
         </div>
       </aside>

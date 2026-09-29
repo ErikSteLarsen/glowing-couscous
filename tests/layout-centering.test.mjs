@@ -33,16 +33,16 @@ test('production routes do not override page width and auth uses its own frame',
   }
 });
 
-test('athlete Home uses the shared header scale and section heading scale', async () => {
+test('athlete Home uses the selected Monolith header and section scale', async () => {
   const uiSource = await read('components/ui.tsx');
-  const athletePageSource = await read('app/(app)/athlete/page.tsx');
+  const athletePageSource = await read('components/FocusHome.tsx');
+  const designCss = await read('app/monolith.css');
 
   assert.match(uiSource, /<h1 className=\{pageHeadingClassName\}>\{title\}<\/h1>/);
-  assert.match(athletePageSource, /className=\{sectionHeadingClassName\}>Today/);
-  assert.match(athletePageSource, /className=\{sectionHeadingClassName\}>Week at a glance/);
+  assert.match(athletePageSource, /className="study-home__header"/);
+  assert.match(athletePageSource, /className="study-home__section-heading"/);
+  assert.match(designCss, /\.study-home__header h1, \.study-workouts__header h1/);
   assert.doesNotMatch(uiSource, /ink-topbar__title/);
-  assert.doesNotMatch(athletePageSource, /className="text-\[20px\] font-semibold tracking-\[-0\.02em\]/);
-  assert.doesNotMatch(athletePageSource, /week-glance-heading" className="[^"]*border-b/);
 });
 
 test('session block bars show colored zones without a gray track', async () => {
@@ -50,7 +50,8 @@ test('session block bars show colored zones without a gray track', async () => {
 
   assert.match(barSource, /bg-transparent/);
   assert.doesNotMatch(barSource, /bg-\[var\(--sunken\)\]/);
-  assert.match(barSource, /height: `\$\{Math\.min\(Math\.max\(segment\.zone, 1\), 5\) \* 20\}%`/);
+  assert.match(barSource, /intensityColor\(segment\.zone, segment\.intensityFraction\)/);
+  assert.match(barSource, /segment\.intensityFraction \?\? 0\.5/);
   assert.doesNotMatch(barSource, /height: isIntensityTimeline/);
   assert.match(barSource, /authoring: 'h-40 px-1 pt-2'/);
 });

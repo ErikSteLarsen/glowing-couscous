@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useState, useSyncExternalStore, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -58,6 +58,10 @@ type PendingDraftAction =
   | { kind: 'template'; template: PlannerEditorTemplateRecord }
   | { kind: 'close' };
 
+const subscribeToNothing = () => () => {};
+const clientSnapshot = () => true;
+const serverSnapshot = () => false;
+
 export function WorkoutLibraryClient({
   role,
   workouts,
@@ -65,6 +69,8 @@ export function WorkoutLibraryClient({
   endpoint,
   performanceProfile = null,
   initialWorkoutId = null,
+  previewMode = false,
+  designDirection = null,
 }: {
   role: 'COACH' | 'ATHLETE';
   workouts: WorkoutRecord[];
@@ -72,6 +78,8 @@ export function WorkoutLibraryClient({
   endpoint: string;
   performanceProfile?: PerformanceProfile | null;
   initialWorkoutId?: number | null;
+  previewMode?: boolean;
+  designDirection?: 'nocturne' | null;
 }) {
   const router = useRouter();
   const initialWorkout = initialWorkoutId === null ? null : workouts.find((workout) => workout.id === initialWorkoutId) ?? null;
@@ -89,6 +97,7 @@ export function WorkoutLibraryClient({
   const [builderDetailsVisible, setBuilderDetailsVisible] = useState(() => initialWorkout !== null);
   const [guidedFormOpen, setGuidedFormOpen] = useState(false);
   const [guidedInfo, setGuidedInfo] = useState<GuidedWorkoutInfo | null>(null);
+  const clientMounted = useSyncExternalStore(subscribeToNothing, clientSnapshot, serverSnapshot);
 
   const visibleWorkouts = useMemo(() => {
     const query = filterText.trim().toLowerCase();
@@ -152,6 +161,11 @@ export function WorkoutLibraryClient({
   }
 
   function saveWorkout() {
+    if (previewMode) {
+      setMessageTone('danger');
+      setMessage('This is a design preview. Open your Workouts page to save changes.');
+      return;
+    }
     if (!draft.blocks.some((block) => !block.skipped && block.kind !== 'pause')) {
       setMessageTone('danger');
       setMessage('Add at least one active block before saving this workout.');
@@ -195,6 +209,11 @@ export function WorkoutLibraryClient({
   }
 
   function deleteWorkout() {
+    if (previewMode) {
+      setMessageTone('danger');
+      setMessage('This is a design preview. Open your Workouts page to delete a workout.');
+      return;
+    }
     if (!selectedWorkoutId) return;
     const workoutName = draft.title.trim() || 'this workout';
     if (!window.confirm(`Delete "${workoutName}" from your workout library? This cannot be undone. Scheduled copies are not affected.`)) return;
@@ -219,17 +238,25 @@ export function WorkoutLibraryClient({
   }
 
   const metrics = deriveSessionEditorMetrics(draft);
+  const showEditor = editorOpen && (!designDirection || clientMounted);
 
   return (
-    <div className={editorOpen ? 'min-w-0' : 'page-content--library workout-library'}>
-      {!editorOpen ? <section aria-labelledby="workout-library-title" className="min-w-0 space-y-5">
+    <div className={designDirection ? 'study-workouts__body' : editorOpen ? 'min-w-0' : 'page-content--library workout-library'}>
+      {designDirection || !editorOpen ? <section aria-labelledby="workout-library-title" className="study-workouts__library min-w-0 space-y-5">
         <div className="space-y-3">
           <h2 id="workout-library-title" className="text-lg font-semibold text-[var(--text)]">Workout library</h2>
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
             <p className="max-w-[44ch] text-sm leading-6 text-[var(--text-secondary)]">
               Keep reusable workouts here. They stay unscheduled until you add a copy to a day in Planner.
             </p>
-            {role === 'ATHLETE' ? <button type="button" className={primaryButtonClassName} onClick={() => setGuidedFormOpen(true)}>Build guided workout</button> : null}
+            {role === 'ATHLETE' ? <button type="button" className={primaryButtonClassName} onClick={() => {
+              if (previewMode) {
+                setMessageTone('danger');
+                setMessage('Guided creation uses your account. Open your Workouts page to build a workout.');
+              } else {
+                setGuidedFormOpen(true);
+              }
+            }}>Build guided workout</button> : null}
             <button type="button" className={role === 'ATHLETE' ? secondaryButtonClassName : primaryButtonClassName} onClick={() => requestDraftAction({ kind: 'new' })}>{role === 'ATHLETE' ? 'Create manually' : 'Create workout'}</button>
           </div>
         </div>
@@ -325,7 +352,7 @@ export function WorkoutLibraryClient({
         )}
       </section> : null}
 
-      {editorOpen ? <Surface className="min-w-0 space-y-4">
+      {showEditor ? <Surface className="study-workouts__editor min-w-0 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-3">
           <div className="flex min-w-0 flex-wrap items-center gap-3">
             <BackControl onClick={() => requestDraftAction({ kind: 'close' })} label="Back to library" disabled={isPending} />

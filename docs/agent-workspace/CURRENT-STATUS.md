@@ -1,5 +1,47 @@
 # Current Status
 
+## Monolith Cobalt rollout - accepted ship (2026-09-29)
+
+The authenticated workspace now uses Monolith Cobalt in light and dark themes.
+Shared semantic tokens cover Home, Workouts, Templates, Planner, Calendar,
+session detail and Live, History and Import, Profile and Settings, and coach
+surfaces. The selected Home/Workouts composition is in `app/monolith.css`;
+theme tokens and shared control roles are in `app/globals.css`. The old Focus
+and actual-page comparisons, their palettes, and production query-selector
+branches were removed. Older workout/planning developer experiments are
+separate and cannot select a production theme.
+
+A disposable Athlete account was created through normal signup on the configured
+Neon branch. Its credentials are in the gitignored
+`.opencode/visual-test-account.local.md`; future-agent instructions are in
+`VISUAL-VERIFICATION.md`. No database seed or reset was run.
+
+Authenticated local headless Chrome opened Home, Workouts, Planner, Calendar,
+History, Templates, Import, Profile, and Settings. It captured empty states at
+1440px and 390px, switched to light theme and retained that preference across
+routes, then generated and saved a 45-minute running workout, placed a dated
+copy in Planner, finished three live blocks, and reopened the saved 45-minute,
+32-TSS outcome in History and session detail. After preview cleanup it captured
+populated Workouts at 1440px and Home at 390px. An Athlete visit to `/coach`
+redirected back to `/athlete`.
+
+The user explicitly accepted the remaining coverage limits for this release:
+authorized coach pages, import errors, assistive technology, and every route in
+both themes were not visually verified. The desktop browser integration was
+disconnected; the authenticated check used local Chrome DevTools Protocol.
+Do not claim those untested states passed.
+
+| Gate | Result |
+|---|---|
+| `pnpm test` | Pass, 273/273. |
+| `pnpm lint` and direct `tsc --noEmit` | Pass. |
+| Direct `next build --webpack` | Pass, 75 static pages; existing middleware warning. |
+| `pnpm build` | Not run because it deploys migrations to configured Neon first. |
+| `git diff --check` | Pass. |
+
+Historical notes below describe earlier snapshots and are not the current
+route inventory or acceptance gate.
+
 ## Guided Workout Creator — 2026-09-29
 
 The Athlete Workouts library offers a four-choice guided creator for running,

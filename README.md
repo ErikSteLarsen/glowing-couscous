@@ -32,8 +32,9 @@ Use this order for interface work:
 2. Read `app/globals.css` for the implemented semantic tokens and state colors.
 3. Reuse owners in `components/ui.tsx`, `components/tempo/`, `AppShell`, and
    `WorkoutBuilder` before adding route-local styles.
-4. Treat `app/design/*` as visual experiments only. They are not production
-   screens and their tokens must not be copied into authenticated routes.
+4. `app/monolith.css` owns the selected Home/Workouts composition;
+   `app/globals.css` owns theme tokens. Older `app/design/*` workout/planning
+   experiments are developer-only and do not select a production theme.
 
 If code and `DESIGN.md` disagree, verify the code and tests first, then update
 the design contract when the difference is a durable system rule.

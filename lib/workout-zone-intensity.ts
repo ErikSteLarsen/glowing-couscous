@@ -122,27 +122,34 @@ export function reanchorProfilePaceTarget(target: WorkoutTarget, profile: Perfor
 
 export function chartHeightPercent(target: WorkoutTarget | null, zone: TempoZone, sport: string, profile: PerformanceProfile | null, pause = false): number {
   if (pause) return 14;
+  return heightForFraction(chartIntensityFraction(target, zone, sport, profile), zone);
+}
+
+export function chartIntensityFraction(target: WorkoutTarget | null, zone: TempoZone, sport: string, profile: PerformanceProfile | null): number {
   const center = target ? (target.low + target.high) / 2 : null;
   if (center !== null && target?.metric === 'hr' && profile?.heartRateMaxBpm && (target.mode === 'absolute' || target.reference === 'max-hr')) {
     const range = calculateOlympiatoppenHeartRateZones(profile.heartRateMaxBpm)?.[zone];
     const heartRate = target.mode === 'relative' ? profile.heartRateMaxBpm * center / 100 : center;
-    if (range) return heightForFraction((heartRate - range.low) / Math.max(1, range.high - range.low), zone);
+    if (range) return boundedFraction((heartRate - range.low) / Math.max(1, range.high - range.low));
   }
   if (center !== null && target?.metric === 'pace' && sport === 'RUNNING' && (target.mode === 'absolute' || isProfilePaceZoneReference(target.reference))) {
     const range = getRunningPaceZones(profile)[zone];
     const resolved = target.mode === 'relative' ? resolveWorkoutTarget(target, profile, sport) : null;
     const pace = resolved ? (resolved.low + resolved.high) / 2 : center;
-    if (range) return heightForFraction((range.slowestSecPerKm - pace) / Math.max(1, range.slowestSecPerKm - range.fastestSecPerKm), zone);
+    if (range) return boundedFraction((range.slowestSecPerKm - pace) / Math.max(1, range.slowestSecPerKm - range.fastestSecPerKm));
   }
   const effort = target ? targetEffortPercent(target, sport, profile) : null;
   const band = ZONE_BANDS[target?.metric ?? defaultTargetMetric(sport)][zone];
-  const fraction = effort === null ? .5 : Math.max(0, Math.min(1, (effort - band.low) / (band.high - band.low)));
-  return heightForFraction(fraction, zone);
+  return effort === null ? .5 : boundedFraction((effort - band.low) / (band.high - band.low));
 }
 
 function heightForFraction(fraction: number, zone: TempoZone): number {
-  const bounded = Math.max(0, Math.min(1, fraction));
+  const bounded = boundedFraction(fraction);
   return Math.round((30 + ((zone - 1) + bounded) * 14) * 10) / 10;
+}
+
+function boundedFraction(value: number): number {
+  return Math.max(0, Math.min(1, value));
 }
 
 function roundTargetPercent(value: number): number {

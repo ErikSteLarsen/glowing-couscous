@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { adjustWorkoutTarget } from '../lib/workout-target-adjustment.ts';
-import { chartHeightPercent, presetTarget, zoneForTarget } from '../lib/workout-zone-intensity.ts';
+import { chartHeightPercent, chartIntensityFraction, presetTarget, zoneForTarget } from '../lib/workout-zone-intensity.ts';
+import { intensityColor } from '../lib/intensity-color.ts';
 import { formatResolvedWorkoutTarget, formatWorkoutTarget } from '../lib/workout-target-resolution.ts';
 import { createEmptyPerformanceProfile, type PerformanceProfile } from '../lib/performance-profile.ts';
 
@@ -33,10 +34,20 @@ test('adjustments change zones and chart height within a zone', () => {
   const higher = adjustWorkoutTarget(start, 1)!;
   assert.equal(zoneForTarget(start, 'RUNNING', null), 2);
   assert.equal(chartHeightPercent(higher, 2, 'RUNNING', null) > chartHeightPercent(start, 2, 'RUNNING', null), true);
+  assert.equal(chartIntensityFraction(higher, 2, 'RUNNING', null) > chartIntensityFraction(start, 2, 'RUNNING', null), true);
+  assert.notEqual(intensityColor(2, chartIntensityFraction(higher, 2, 'RUNNING', null)), intensityColor(2, chartIntensityFraction(start, 2, 'RUNNING', null)));
   let crossing = start;
   for (let index = 0; index < 12; index += 1) crossing = adjustWorkoutTarget(crossing, 1)!;
   assert.equal(zoneForTarget(crossing, 'RUNNING', null), 3);
   assert.equal(chartHeightPercent(null, 1, 'RUNNING', null, true) > 0, true);
+});
+
+test('the intensity ramp joins adjacent zones and keeps their named midpoints', () => {
+  for (const zone of [1, 2, 3, 4, 5]) {
+    assert.equal(intensityColor(zone, 0.5), `var(--color-zone-${zone})`);
+    if (zone < 5) assert.equal(intensityColor(zone, 1), intensityColor(zone + 1, 0));
+  }
+  assert.notEqual(intensityColor(3, 0.25), intensityColor(3, 0.75));
 });
 
 test('heart-rate presets use Olympiatoppen HRmax zones and preserve explicit threshold targets', () => {

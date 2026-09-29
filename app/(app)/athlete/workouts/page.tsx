@@ -1,11 +1,9 @@
 import { redirect } from 'next/navigation';
-import { PageShell, TopBar } from '@/components/ui';
-import { WorkoutLibraryClient } from '@/components/WorkoutLibraryClient';
-import { MobileLibrarySwitch } from '@/components/MobileLibrarySwitch';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { templateService } from '@/lib/template-service';
 import { workoutLibraryService } from '@/lib/workout-library-service';
 import { accountService } from '@/lib/account-service';
+import { FocusWorkouts } from '@/components/FocusWorkouts';
 
 export default async function AthleteWorkoutsPage({
   searchParams,
@@ -25,21 +23,12 @@ export default async function AthleteWorkoutsPage({
     accountService.getAccount(user.id),
   ]);
 
-  return (
-    <PageShell>
-      <TopBar
-        title="Workouts"
-        description="Create and edit reusable workouts, then schedule them in Planner."
-      />
-      <MobileLibrarySwitch active="workouts" />
-      <WorkoutLibraryClient
-        role="ATHLETE"
-        workouts={workouts}
-        templates={templates}
-        endpoint="/api/athlete/workouts"
-        performanceProfile={account?.performanceProfile}
-        initialWorkoutId={initialWorkoutId}
-      />
-    </PageShell>
-  );
+  return <FocusWorkouts
+    role="ATHLETE"
+    workouts={workouts}
+    templates={templates}
+    endpoint="/api/athlete/workouts"
+    performanceProfile={account?.performanceProfile}
+    initialWorkoutId={initialWorkoutId}
+  />;
 }

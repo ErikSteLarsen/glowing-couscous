@@ -146,26 +146,23 @@ test('coach request UI surfaces failures and blocks duplicate actions', async ()
   assert.match(discoverySource, /Failed to send request/);
 });
 
-test('athlete home page uses the week channel and explicit session actions', async () => {
-  const athletePageSource = await read('app/(app)/athlete/page.tsx');
+test('athlete home uses the selected Monolith composition and explicit session actions', async () => {
+  const athleteRouteSource = await read('app/(app)/athlete/page.tsx');
+  const athletePageSource = await read('components/FocusHome.tsx');
   const sessionRowSource = await read('components/tempo/SessionRow.tsx');
   const statusBadgeSource = await read('components/tempo/StatusBadge.tsx');
 
+  assert.match(athleteRouteSource, /<FocusHome dashboard=\{dashboard\}/);
   assert.match(athletePageSource, /Welcome/);
   assert.match(athletePageSource, /Today/);
-  assert.match(athletePageSource, /Week at a glance/);
-  assert.match(athletePageSource, /Next session/);
-  assert.doesNotMatch(athletePageSource, /actions=\{/);
-  assert.doesNotMatch(athletePageSource, /Open full calendar/);
+  assert.match(athletePageSource, /This week/);
+  assert.match(athletePageSource, /nextActionLabel/);
   assert.match(athletePageSource, /Nothing is scheduled today/);
   assert.match(athletePageSource, /Open Planner/);
-  assert.doesNotMatch(athletePageSource, /Customise overview in Settings/);
   assert.match(athletePageSource, /athlete\/session/);
-  assert.match(athletePageSource, /SessionRow/);
-  assert.doesNotMatch(athletePageSource, /showStatus/);
+  assert.match(athletePageSource, /StatusBadge/);
   assert.doesNotMatch(sessionRowSource, /StatusBadge|showStatus/);
   assert.match(statusBadgeSource, /status === 'completed'/);
-  assert.doesNotMatch(athletePageSource, /truncate text-\[13px\] font-semibold/);
   assert.match(sessionRowSource, /break-words text-\[13px\] font-semibold/);
 });
 

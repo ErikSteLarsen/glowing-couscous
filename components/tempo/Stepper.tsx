@@ -17,7 +17,7 @@ export function Stepper({ items }: { items: StepperItem[] }) {
             <div
               className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${
                 item.done
-                  ? 'bg-[var(--text)] text-white'
+                  ? 'bg-[var(--text)] text-[var(--background)]'
                   : item.active
                     ? 'bg-[var(--brand-tint)] text-[var(--field-selected-text)]'
                     : 'bg-[var(--sunken)] text-[var(--text-muted)]'
@@ -28,7 +28,7 @@ export function Stepper({ items }: { items: StepperItem[] }) {
             {index < items.length - 1 ? <div className="mt-1 h-8 w-px bg-[var(--border)]" /> : null}
           </div>
           <div
-            className={`flex-1 rounded-[3px] border px-4 py-3 ${
+            className={`flex-1 rounded-[16px] border px-4 py-3 ${
             item.active ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--surface)]'
           }`}
           >

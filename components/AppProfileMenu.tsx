@@ -6,10 +6,12 @@ export function AppProfileMenu({
   user,
   pathname,
   onNavigate,
+  previewMode = false,
 }: {
   user: { name: string; email: string };
   pathname: string;
   onNavigate?: () => void;
+  previewMode?: boolean;
 }) {
   return (
     <div className="border-t border-[var(--nav-border)] px-2 pt-5">
@@ -25,7 +27,7 @@ export function AppProfileMenu({
               href={action.href}
               onClick={onNavigate}
               aria-current={isActive ? 'page' : undefined}
-              className={`relative block rounded-[3px] px-3 py-2 text-[12px] transition hover:bg-[var(--nav-active)] ${
+              className={`relative block rounded-[10px] px-3 py-2 text-[12px] transition hover:bg-[var(--nav-active)] ${
                 isActive ? 'bg-[var(--nav-active)] font-semibold text-[var(--nav-text)]' : 'text-[var(--nav-muted)]'
               }`}
             >
@@ -34,7 +36,7 @@ export function AppProfileMenu({
             </Link>
           );
         })}
-        <SignOutButton size="compact" />
+        {previewMode ? <p className="px-3 py-2 text-[12px] text-[var(--nav-muted)]">Sample workspace</p> : <SignOutButton size="compact" />}
       </div>
     </div>
   );

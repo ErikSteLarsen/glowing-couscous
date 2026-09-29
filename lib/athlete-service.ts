@@ -111,6 +111,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
               }
             : null,
       })),
+      session.sport,
     );
 
     const targetBlock = session.blocks.find(

@@ -336,7 +336,7 @@ export function sessionEditorDraftToTempoBlocks(draft: SessionEditorDraft): Temp
 }
 
 export function deriveSessionEditorMetrics(draft: SessionEditorDraft) {
-  return deriveSessionMetrics(sessionEditorDraftToTempoBlocks(draft));
+  return deriveSessionMetrics(sessionEditorDraftToTempoBlocks(draft), draft.sport);
 }
 
 export function validateSessionEditorDraft(draft: SessionEditorDraft): string | null {

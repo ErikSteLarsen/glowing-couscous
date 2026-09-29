@@ -1,14 +1,32 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { Activity, CalendarDays, Dumbbell, House, LayoutTemplate } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { AppSidebar } from '@/components/AppSidebar';
-import { InkFlow } from '@/components/InkFlow';
 import { buttonFocusClassName, secondaryButtonClassName } from '@/components/ui';
 import { getMobileNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import type { SessionUser } from '@/lib/auth-session';
+
+type ColorTheme = 'dark' | 'light';
+let sessionTheme: ColorTheme = 'dark';
+
+function subscribeToTheme(onChange: () => void) {
+  window.addEventListener('storage', onChange);
+  window.addEventListener('tempo-theme-changed', onChange);
+  return () => {
+    window.removeEventListener('storage', onChange);
+    window.removeEventListener('tempo-theme-changed', onChange);
+  };
+}
+
+function getClientTheme(): ColorTheme {
+  try { return window.localStorage.getItem('tempo-theme') === 'light' ? 'light' : 'dark'; }
+  catch { return sessionTheme; }
+}
+
+function getServerTheme(): ColorTheme { return 'dark'; }
 
 export function AppShell({
   user,
@@ -18,10 +36,24 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const navigationPathname = pathname;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const theme = useSyncExternalStore(subscribeToTheme, getClientTheme, getServerTheme);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const navItems = getMobileNavigation(user.role);
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    sessionTheme = next;
+    try { window.localStorage.setItem('tempo-theme', next); } catch { /* Keep this session's choice. */ }
+    document.documentElement.dataset.workspaceTheme = next;
+    window.dispatchEvent(new Event('tempo-theme-changed'));
+  };
+
+  useEffect(() => {
+    document.documentElement.dataset.workspaceTheme = theme;
+  }, [theme]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 767px)');
@@ -60,16 +92,18 @@ export function AppShell({
   };
 
   return (
-    <div className="ink-studio-app relative min-h-screen bg-[var(--background)] text-[var(--text)] md:grid md:grid-cols-[216px_minmax(0,1fr)]">
-      <div className="ink-flow-backdrop">
-        <InkFlow />
-      </div>
+    <div
+      className="ink-studio-app relative min-h-screen bg-[var(--background)] text-[var(--text)] md:grid md:grid-cols-[228px_minmax(0,1fr)]"
+    >
       <AppSidebar
         user={user}
-        pathname={pathname}
+        pathname={navigationPathname}
         mobileOpen={mobileOpen}
         isMobileViewport={isMobileViewport}
         onClose={closeMobileMenu}
+        previewMode={false}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
       <div
         className="relative z-10 min-w-0 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
@@ -98,7 +132,7 @@ export function AppShell({
       >
         <div className="grid grid-cols-4 gap-1 px-3 pt-2">
           {navItems.map((item) => {
-            const isActive = isNavigationItemActive(pathname, item, navItems);
+            const isActive = isNavigationItemActive(navigationPathname, item, navItems);
             const Icon = item.label === 'Home'
               ? House
               : item.label === 'Plan'
@@ -114,7 +148,7 @@ export function AppShell({
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
-                  className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-[3px] px-1 text-[10px] font-semibold uppercase tracking-[0.04em] ${buttonFocusClassName} ${
+                  className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-[10px] px-1 text-[10px] font-semibold uppercase tracking-[0.04em] ${buttonFocusClassName} ${
                   isActive ? 'bg-[var(--nav-active)] text-[var(--nav-signal)]' : 'text-[var(--nav-muted)]'
                 }`}
               >
