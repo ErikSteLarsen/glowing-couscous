@@ -122,6 +122,26 @@ The seed command creates these local accounts:
 | Athlete | `jonas@demo.local` | `demo1234` |
 | Athlete | `sofie@demo.local` | `demo1234` |
 
+## Guided Workout Creator
+
+Athletes can build an editable workout draft from four choices in Workouts:
+sport, length, effort, and whether to use intervals. Tempo reads only their
+completed sessions from the past 28 days to summarize recent training. A
+server-side model call, when a model key is configured, chooses between
+two validated workout patterns using that summary. A hard request with sparse
+same-sport history or a recent high-RPE session uses the conservative pattern
+without a model call. Without a key, or if the
+model is unavailable, the creator uses a deterministic choice and still opens
+the complete draft in the regular editor. Saving to the workout library is
+always a separate action. The model sees no names, notes, activity streams, or
+raw performance profile values. OpenAI uses the built-in
+`https://api.openai.com/v1/responses` URL; set `OPENAI_WORKOUT_MODEL` to override
+its default model. A custom provider needs `WORKOUT_LLM_API_URL`,
+`WORKOUT_LLM_API_KEY`, `WORKOUT_LLM_MODEL`, and `WORKOUT_LLM_API_FORMAT`. The
+format can be `responses` or `chat-completions`; the endpoint must implement
+that OpenAI-compatible request and response shape. A key alone cannot select
+a custom provider. The custom provider's data handling terms apply.
+
 ## Commands
 
 ```bash

@@ -61,6 +61,7 @@ Coach-only authoring, roster management, requests, and multi-athlete planning ar
 - Planned session adjustments, actual outcome editing, baseline and actual comparison, and completion.
 - Explicit FIT, TCX, and GPX activity-file review and import, including optional matching to an unfinished planned session and recorded metric bars in the imported-activity workspace.
 - Public sanitized workout and template snapshots with explicit authenticated intake.
+- Athlete guided workout drafts from sport, length, effort, and interval choices, informed by the athlete's recent completed training. Model-assisted selection is optional and requires a server API key; drafts are reviewed in the normal workout editor before saving.
 
 ## Capabilities and Constraints
 

@@ -71,6 +71,7 @@ navigation.
 - `/api/coach/workouts/*`, `/api/athlete/workouts/*` - standalone libraries
 - `/api/coach/templates/*`, `/api/athlete/templates/*` - reusable templates
 - `/api/athlete/planner/*`, `/api/athlete/sessions/*` - athlete planning and outcomes
+- `/api/athlete/workouts/generate` - private guided workout draft generation from bounded choices and recent completed training
 - `/api/share-links/*` - authenticated share creation and intake
 - `/api/strava/*` - per-user OAuth, activity review/import, webhook receipt, disconnect/deauthorization cleanup, and webhook worker recovery
 
@@ -86,6 +87,7 @@ navigation.
 | Athlete planning | `lib/athlete-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, private dated copies, source search, and athlete planner mutations |
 | Coach planning | `lib/coach-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, dated sessions, source search, and roster-scoped planner writes |
 | Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |
+| Guided workout creation | `lib/guided-workout.ts`, `lib/guided-workout-service.ts`, `components/GuidedWorkoutForm.tsx` | Bounded workout patterns, owner-scoped recent-training summary, optional OpenAI or compatible custom model selection, and unsaved draft handoff to the shared builder |
 | Training plans | `lib/coach-training-plan-service.ts` | Reusable weekday-based coach plans |
 | Templates | `lib/template-service.ts` | Coach-owned reusable templates and cadence |
 | Assignment | `lib/assignment-service.ts` | Snapshot copies, lineage, deduplication, and training-plan assignment |
@@ -131,6 +133,7 @@ navigation.
 8. Keep baseline and actual payloads behind `session-snapshot-service`; do not derive history from mutable current blocks.
 9. Keep public sharing sanitized and explicit. Never include Activity, actual/baseline JSON, private notes, RPE, ownership, or relationship data.
 10. Treat `lib/planner-service.ts` and `/api/coach/sessions/[sessionId]` as compatibility code, not a new extension point.
+11. The guided creator selects only validated server-built candidate drafts. Its model call receives aggregate completed-training context, never raw notes or telemetry, and never persists the draft.
 
 ## Known Gaps
 

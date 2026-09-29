@@ -1,5 +1,47 @@
 # Current Status
 
+## Guided Workout Creator — 2026-09-29
+
+The Athlete Workouts library now offers a four-choice guided creator for
+running, biking, and swimming: duration (30, 45, 60, or 75 minutes), effort
+(easy, steady, or hard), and intervals (yes or no). The server reads only the
+signed-in user's completed activities from the preceding 28 days, summarizes
+session count, typical same-sport duration, recent high RPE, and import count,
+and builds two bounded, exact-duration drafts with profile-backed targets when
+available. Short interval recoveries are active recovery blocks. A configured
+OpenAI Responses or compatible Chat Completions endpoint can select one
+candidate using the aggregate history; model failures and missing keys use a
+deterministic choice.
+Hard requests with sparse same-sport history or a recent high-RPE session are
+limited to the conservative candidate before any model call.
+No model output can write arbitrary workout blocks. The resulting workout opens
+in the shared editor as an unsaved private draft and requires explicit saving
+to the library. Coach library behavior is preserved.
+
+The model request sends choice values, aggregate completed-training context,
+and candidate block kinds/zones/durations; it does not send account identity,
+notes, raw telemetry, or raw profile values. The UI discloses the optional
+model-provider transfer. OpenAI uses its built-in Responses URL with a key;
+custom OpenAI-compatible providers require a URL, API format, key, and model.
+No live model request was run because no AI key is configured in this
+environment. No authenticated browser session was used to inspect the new form
+visually; the local protected route redirects to login.
+
+| Gate | Result |
+|---|---|
+| Guided creator tests | Pass, 12/12, including all 72 input combinations, exact duration, profile targets, history scoping, conservative hard-workout selection, custom Chat Completions request, and invalid model fallback. |
+| Full source tests | Pass, 266/266 via direct Node script. `pnpm test` stopped before the script at the existing dependency preflight (`ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`). |
+| ESLint | Pass via direct ESLint on the full repo, plus targeted changed-file lint after final edits. `pnpm lint` stopped at the same preflight. |
+| TypeScript | The production Next.js build completed its TypeScript gate. An earlier direct `tsc --noEmit` saw stale generated Prisma Client errors for `sessionVersion`; Prisma generation is blocked by the running local server holding the Windows engine DLL. |
+| Production build | Pass via direct `next build --webpack`, including route compilation and static generation. Schibsted Grotesk is now bundled locally under its OFL license, so the build does not fetch Google Fonts. `pnpm build` was not run because its script first deploys database migrations to the configured database. |
+| UI detector | Pass, no findings on the changed components. |
+| Browser/API integration | Not verified with an authenticated account or a live OpenAI key. |
+
+Remaining release gate for this capability: configure a server model key if
+model selection is desired and verify one authenticated desktop/phone draft
+flow, including save and reopen, in a connected environment. The keyless
+validated creator is implemented and covered by source tests.
+
 ## Calendar Week Density and Mobile Day Navigation — 2026-09-28
 
 The Athlete Calendar week view now lays out day columns according to the

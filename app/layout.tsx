@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
-import { Schibsted_Grotesk } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import { SessionProviderWrapper } from '@/components/SessionProviderWrapper';
 
-const schibsted = Schibsted_Grotesk({
-  subsets: ['latin'],
+const schibsted = localFont({
+  src: './fonts/schibsted-grotesk-latin.woff2',
   variable: '--font-schibsted',
-  weight: ['400', '500', '600', '700'],
+  weight: '400 700',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {

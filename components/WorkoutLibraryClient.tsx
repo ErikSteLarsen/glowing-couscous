@@ -21,6 +21,7 @@ import {
   Surface,
 } from '@/components/ui';
 import { WorkoutBuilder } from '@/components/WorkoutBuilder';
+import { GuidedWorkoutForm, type GuidedWorkoutInfo } from '@/components/GuidedWorkoutForm';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { ShareLinkButton } from '@/components/ShareLinkButton';
@@ -86,6 +87,8 @@ export function WorkoutLibraryClient({
     ? createSessionEditorDraftFromPersisted('create', { ...initialWorkout, date: null, scheduledDate: null })
     : createNewDraft());
   const [builderDetailsVisible, setBuilderDetailsVisible] = useState(() => initialWorkout !== null);
+  const [guidedFormOpen, setGuidedFormOpen] = useState(false);
+  const [guidedInfo, setGuidedInfo] = useState<GuidedWorkoutInfo | null>(null);
 
   const visibleWorkouts = useMemo(() => {
     const query = filterText.trim().toLowerCase();
@@ -96,6 +99,8 @@ export function WorkoutLibraryClient({
   }, [filterText, workouts]);
 
   function applyDraftAction(action: PendingDraftAction) {
+    setGuidedInfo(null);
+    setGuidedFormOpen(false);
     if (action.kind === 'new') {
       setSelectedWorkoutId(null);
       setDraft(createNewDraft());
@@ -224,11 +229,20 @@ export function WorkoutLibraryClient({
             <p className="max-w-[44ch] text-sm leading-6 text-[var(--text-secondary)]">
               Keep reusable workouts here. They stay unscheduled until you add a copy to a day in Planner.
             </p>
-            <button type="button" className={primaryButtonClassName} onClick={() => requestDraftAction({ kind: 'new' })}>
-              Create workout
-            </button>
+            {role === 'ATHLETE' ? <button type="button" className={primaryButtonClassName} onClick={() => setGuidedFormOpen(true)}>Build guided workout</button> : null}
+            <button type="button" className={role === 'ATHLETE' ? secondaryButtonClassName : primaryButtonClassName} onClick={() => requestDraftAction({ kind: 'new' })}>{role === 'ATHLETE' ? 'Create manually' : 'Create workout'}</button>
           </div>
         </div>
+        {role === 'ATHLETE' && guidedFormOpen ? <GuidedWorkoutForm onCancel={() => setGuidedFormOpen(false)} onGenerated={(nextDraft, info) => {
+          setSelectedWorkoutId(null);
+          setDraft(nextDraft);
+          setIsDirty(true);
+          setGuidedInfo(info);
+          setGuidedFormOpen(false);
+          setEditorOpen(true);
+          setBuilderDetailsVisible(true);
+          setMessage('');
+        }} /> : null}
         <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-5">
           <label className="block w-full max-w-[32rem] space-y-2">
             <span className={formLabelClassName}>Find a workout</span>
@@ -252,11 +266,11 @@ export function WorkoutLibraryClient({
             {message}
           </p>
         ) : null}
-        {visibleWorkouts.length === 0 ? workouts.length === 0 ? (
+        {visibleWorkouts.length === 0 && guidedFormOpen ? null : visibleWorkouts.length === 0 ? workouts.length === 0 ? (
           <EmptyState
             title="Your workout library is empty"
-            description="Create a workout here, then add a copy to a day in Planner."
-            action={<button type="button" className={primaryButtonClassName} onClick={() => requestDraftAction({ kind: 'new' })}>Create workout</button>}
+            description={role === 'ATHLETE' ? 'Build a guided workout or create one manually, then add a copy to a day in Planner.' : 'Create a workout here, then add a copy to a day in Planner.'}
+            action={<button type="button" className={primaryButtonClassName} onClick={() => role === 'ATHLETE' ? setGuidedFormOpen(true) : requestDraftAction({ kind: 'new' })}>{role === 'ATHLETE' ? 'Build guided workout' : 'Create workout'}</button>}
           />
         ) : (
           <EmptyState
@@ -345,6 +359,13 @@ export function WorkoutLibraryClient({
             {message}
           </p>
         ) : null}
+
+        {guidedInfo ? <div className="space-y-1 border-b border-[var(--border)] pb-4 text-sm leading-6">
+          <p className="font-semibold text-[var(--text)]">{guidedInfo.source === 'ai' ? 'AI selected' : 'Guided pattern'}: {guidedInfo.selectedPattern}</p>
+          <p className="text-[var(--text-secondary)]">{guidedInfo.reason}</p>
+          <p className="text-[var(--text-secondary)]">{guidedInfo.context}</p>
+          <p className="text-xs text-[var(--text-secondary)]">Review every block and target below. This workout has not been saved.</p>
+        </div> : null}
 
         {builderDetailsVisible && templates.length > 0 ? (
           <details className="rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] px-3">
