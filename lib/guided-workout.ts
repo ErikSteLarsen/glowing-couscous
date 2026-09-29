@@ -85,6 +85,55 @@ function buildDraft(input: GuidedWorkoutInput, profile: PerformanceProfile | nul
   return draft;
 }
 
+export type ModelWorkout = {
+  title: string;
+  summary: string;
+  reason: string;
+  blocks: Array<{ kind: TempoBlockKind; zone: TempoZone; durationSec: number; note: string }>;
+};
+
+export function buildModelWorkoutDraft(value: unknown, input: GuidedWorkoutInput, profile: PerformanceProfile | null, history: GuidedHistory): { draft: SessionEditorDraft; reason: string } | null {
+  if (!value || typeof value !== 'object') return null;
+  const plan = value as Record<string, unknown>;
+  const cleanText = (text: unknown, max: number) => typeof text === 'string' && text.trim().length > 0 && text.trim().length <= max ? text.trim() : null;
+  const title = cleanText(plan.title, 80);
+  const summary = cleanText(plan.summary, 500);
+  const reason = cleanText(plan.reason, 300);
+  if (!title || !summary || !reason || !Array.isArray(plan.blocks) || plan.blocks.length < 3 || plan.blocks.length > 24) return null;
+  const blocks: ModelWorkout['blocks'] = [];
+  for (const item of plan.blocks) {
+    if (!item || typeof item !== 'object') return null;
+    const block = item as Record<string, unknown>;
+    if (!['warmup', 'work', 'recovery', 'cooldown'].includes(String(block.kind))) return null;
+    if (![1, 2, 3, 4, 5].includes(Number(block.zone)) || !Number.isInteger(block.zone)) return null;
+    if (!Number.isInteger(block.durationSec) || Number(block.durationSec) < 30 || Number(block.durationSec) > input.durationMinutes * 60) return null;
+    if (typeof block.note !== 'string' || block.note.length > 160) return null;
+    blocks.push({ kind: block.kind as TempoBlockKind, zone: block.zone as TempoZone, durationSec: block.durationSec as number, note: block.note.trim() });
+  }
+  if (blocks[0].kind !== 'warmup' || blocks.at(-1)?.kind !== 'cooldown') return null;
+  if (blocks.slice(1, -1).some((block) => block.kind === 'warmup' || block.kind === 'cooldown')) return null;
+  if (blocks[0].zone > 2 || blocks.at(-1)!.zone > 2) return null;
+  if (blocks[0].durationSec < (input.intensity === 'hard' || input.intervals ? 8 : 3) * 60 || blocks.at(-1)!.durationSec < (input.intensity === 'hard' ? 5 : 3) * 60) return null;
+  if (blocks.reduce((sum, block) => sum + block.durationSec, 0) !== input.durationMinutes * 60) return null;
+  if (input.intervals) {
+    if (blocks.filter((block) => block.kind === 'work').length < 2 || !blocks.some((block) => block.kind === 'recovery')) return null;
+    if (blocks.some((block, index) => block.kind === 'recovery' && (index === 0 || index === blocks.length - 1 || blocks[index - 1].kind !== 'work'))) return null;
+  } else if (blocks.some((block) => block.kind === 'recovery')) return null;
+  if (blocks.some((block) => block.kind === 'recovery' && block.zone > 2)) return null;
+  const hardSeconds = blocks.filter((block) => block.zone >= 4).reduce((sum, block) => sum + block.durationSec, 0);
+  const zoneFiveSeconds = blocks.filter((block) => block.zone === 5).reduce((sum, block) => sum + block.durationSec, 0);
+  if (input.intensity === 'easy' && blocks.some((block) => block.zone > 2)) return null;
+  if (input.intensity === 'steady' && blocks.some((block) => block.zone > 3)) return null;
+  if (input.intensity === 'hard' && (hardSeconds > input.durationMinutes * 24 || zoneFiveSeconds > 8 * 60)) return null;
+  const cautious = history.sameSportLast28Days < 3 || (history.recentHighRpeDaysAgo !== null && history.recentHighRpeDaysAgo <= 2);
+  if (input.intensity === 'hard' && cautious && (hardSeconds > 6 * 60 || zoneFiveSeconds > 0)) return null;
+  try {
+    return { draft: buildDraft(input, profile, 'model', title, summary, blocks.map(({ kind, zone, durationSec, note }) => ({ kind, zone, seconds: durationSec, note }))), reason };
+  } catch {
+    return null;
+  }
+}
+
 function continuousBlocks(input: GuidedWorkoutInput, mainZone: TempoZone, progression: boolean) {
   const total = input.durationMinutes * 60;
   const warmup = Math.min(10, Math.round(input.durationMinutes * .2)) * 60;

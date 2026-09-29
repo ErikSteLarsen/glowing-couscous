@@ -57,6 +57,14 @@ model PasswordResetToken {
   @@index([expiresAt])
 }
 
+model AiProviderHealth {
+  id         String    @id
+  configHash String
+  status     String
+  checkedAt  DateTime?
+  leaseUntil DateTime?
+}
+
 model PlacementRequest {
   id             Int      @id @default(autoincrement())
   userId         Int

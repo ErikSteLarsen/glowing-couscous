@@ -2,45 +2,44 @@
 
 ## Guided Workout Creator — 2026-09-29
 
-The Athlete Workouts library now offers a four-choice guided creator for
-running, biking, and swimming: duration (30, 45, 60, or 75 minutes), effort
-(easy, steady, or hard), and intervals (yes or no). The server reads only the
-signed-in user's completed activities from the preceding 28 days, summarizes
-session count, typical same-sport duration, recent high RPE, and import count,
-and builds two bounded, exact-duration drafts with profile-backed targets when
-available. Short interval recoveries are active recovery blocks. A configured
-OpenAI Responses or compatible Chat Completions endpoint can select one
-candidate using the aggregate history; model failures and missing keys use a
-deterministic choice.
-Hard requests with sparse same-sport history or a recent high-RPE session are
-limited to the conservative candidate before any model call.
-No model output can write arbitrary workout blocks. The resulting workout opens
-in the shared editor as an unsaved private draft and requires explicit saving
-to the library. Coach library behavior is preserved.
+The Athlete Workouts library offers a four-choice guided creator for running,
+biking, and swimming: duration (30, 45, 60, or 75 minutes), effort (easy,
+steady, or hard), and intervals (yes or no). The server summarizes only the
+signed-in user's completed activities from the preceding 28 days. When a
+configured OpenAI Responses or compatible Chat Completions provider is healthy,
+the model authors the entire title, summary, explanation, and ordered workout
+blocks. Server validation requires the requested sport and exact duration,
+valid block order, active interval recovery when requested, bounded zone time,
+and gentler limits for sparse same-sport history or recent high RPE. Targets
+come from the user's profile and are applied server-side; raw profile values
+are not sent to the model. A missing provider, failed health check, timeout, or
+invalid model draft uses a deterministic standard pattern. The form shows
+cached AI availability, and the editor labels the actual source of each draft.
+Every draft is private and unsaved until explicitly saved to the library.
 
-The model request sends choice values, aggregate completed-training context,
-and candidate block kinds/zones/durations; it does not send account identity,
-notes, raw telemetry, or raw profile values. The UI discloses the optional
-model-provider transfer. OpenAI uses its built-in Responses URL with a key;
-custom OpenAI-compatible providers require a URL, API format, key, and model.
-No live model request was run because no AI key is configured in this
-environment. No authenticated browser session was used to inspect the new form
-visually; the local protected route redirects to login.
+Provider health uses one database row and a short claim lease across app
+instances. A successful minimal model probe is reused for 15 minutes; a failed
+probe or invalid generation is cached as unavailable for two minutes. The
+model receives choice values and aggregate history, never identity, notes, raw
+telemetry, or profile values. No live provider request was run because no AI
+key is configured in this environment. No authenticated browser session was
+used to inspect the form visually. Coach library behavior is preserved.
 
 | Gate | Result |
 |---|---|
-| Guided creator tests | Pass, 12/12, including all 72 input combinations, exact duration, profile targets, history scoping, conservative hard-workout selection, custom Chat Completions request, and invalid model fallback. |
-| Full source tests | Pass, 266/266 via direct Node script. `pnpm test` stopped before the script at the existing dependency preflight (`ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`). |
-| ESLint | Pass via direct ESLint on the full repo, plus targeted changed-file lint after final edits. `pnpm lint` stopped at the same preflight. |
-| TypeScript | The production Next.js build completed its TypeScript gate. An earlier direct `tsc --noEmit` saw stale generated Prisma Client errors for `sessionVersion`; Prisma generation is blocked by the running local server holding the Windows engine DLL. |
-| Production build | Pass via direct `next build --webpack`, including route compilation and static generation. Schibsted Grotesk is now bundled locally under its OFL license, so the build does not fetch Google Fonts. `pnpm build` was not run because its script first deploys database migrations to the configured database. |
-| UI detector | Pass, no findings on the changed components. |
+| Guided creator tests | Pass, 18/18 focused tests, including all 72 standard input combinations, original model blocks, invalid-output rejection, custom Chat Completions, Responses structured output, and concurrent shared health cache. |
+| Full source tests | Pass, 272/272 via direct Node script. |
+| ESLint | Changed workout files pass. Full lint reports one `react-hooks/set-state-in-effect` error in a separate, uncommitted `components/AppShell.tsx` edit that appeared during this work; that file is not in this change. |
+| TypeScript | Pass via direct `tsc --noEmit`. |
+| Prisma schema | Pass via `prisma validate`. New additive `AiProviderHealth` migration has not been applied in this environment. |
+| Production build | Pass via direct `next build --webpack`, including TypeScript and all 75 static pages. The repo's `pnpm build` script was not run because it first deploys migrations to the configured database. |
+| UI detector | The previous guided form passed; the new availability copy has not been checked visually in an authenticated browser. |
 | Browser/API integration | Not verified with an authenticated account or a live OpenAI key. |
 
 Remaining release gate for this capability: configure a server model key if
-model selection is desired and verify one authenticated desktop/phone draft
-flow, including save and reopen, in a connected environment. The keyless
-validated creator is implemented and covered by source tests.
+AI-authored workouts are desired, apply the additive migration in the target
+environment, and verify an authenticated desktop/phone draft flow with a live
+provider, including save and reopen. The keyless validated creator works now.
 
 ## Calendar Week Density and Mobile Day Navigation — 2026-09-28
 

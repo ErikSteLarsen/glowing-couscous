@@ -361,7 +361,7 @@ export function WorkoutLibraryClient({
         ) : null}
 
         {guidedInfo ? <div className="space-y-1 border-b border-[var(--border)] pb-4 text-sm leading-6">
-          <p className="font-semibold text-[var(--text)]">{guidedInfo.source === 'ai' ? 'AI selected' : 'Guided pattern'}: {guidedInfo.selectedPattern}</p>
+          <p className="font-semibold text-[var(--text)]">{guidedInfo.source === 'ai' ? 'AI-created workout' : `Standard guided pattern: ${guidedInfo.selectedPattern}`}</p>
           <p className="text-[var(--text-secondary)]">{guidedInfo.reason}</p>
           <p className="text-[var(--text-secondary)]">{guidedInfo.context}</p>
           <p className="text-xs text-[var(--text-secondary)]">Review every block and target below. This workout has not been saved.</p>

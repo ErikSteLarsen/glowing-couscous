@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import { createEmptyPerformanceProfile } from '../lib/performance-profile.ts';
 import { deriveSessionEditorMetrics, validateSessionEditorDraft } from '../lib/session-editor.ts';
-import { GUIDED_DURATIONS, GUIDED_INTENSITIES, GUIDED_SPORTS, createGuidedCandidates, fallbackGuidedChoice, parseGuidedWorkoutInput, type GuidedHistory } from '../lib/guided-workout.ts';
+import { GUIDED_DURATIONS, GUIDED_INTENSITIES, GUIDED_SPORTS, buildModelWorkoutDraft, createGuidedCandidates, fallbackGuidedChoice, parseGuidedWorkoutInput, type GuidedHistory } from '../lib/guided-workout.ts';
 
 const emptyHistory: GuidedHistory = {
   completedLast7Days: 0,
@@ -64,4 +64,40 @@ test('guided input rejects invented settings', () => {
   assert.equal(parseGuidedWorkoutInput({ sport: 'STRENGTH', durationMinutes: 45, intensity: 'hard', intervals: true }), null);
   assert.equal(parseGuidedWorkoutInput({ sport: 'RUNNING', durationMinutes: 240, intensity: 'hard', intervals: true }), null);
   assert.equal(parseGuidedWorkoutInput({ sport: 'RUNNING', durationMinutes: 45, intensity: 'maximal', intervals: true }), null);
+});
+
+test('model-authored intervals can use an original sequence but must be valid', () => {
+  const request = { sport: 'BIKING' as const, durationMinutes: 30 as const, intensity: 'steady' as const, intervals: true };
+  const plan = {
+    title: 'Cadence waves', summary: 'Three uneven tempo efforts.', reason: 'Variety within a steady session.',
+    blocks: [
+      { kind: 'warmup', zone: 1, durationSec: 480, note: '' },
+      { kind: 'work', zone: 3, durationSec: 240, note: 'Build cadence.' },
+      { kind: 'recovery', zone: 1, durationSec: 60, note: '' },
+      { kind: 'work', zone: 3, durationSec: 300, note: 'Hold steady.' },
+      { kind: 'recovery', zone: 1, durationSec: 120, note: '' },
+      { kind: 'work', zone: 2, durationSec: 300, note: 'Smooth effort.' },
+      { kind: 'cooldown', zone: 1, durationSec: 300, note: '' },
+    ],
+  };
+  const result = buildModelWorkoutDraft(plan, request, null, emptyHistory);
+  assert.ok(result);
+  assert.equal(result.draft.blocks.length, 7);
+  assert.equal(validateSessionEditorDraft(result.draft), null);
+  assert.equal(deriveSessionEditorMetrics(result.draft).durationSec, 1800);
+  assert.equal(buildModelWorkoutDraft({ ...plan, blocks: plan.blocks.slice(0, -1) }, request, null, emptyHistory), null);
+  assert.equal(buildModelWorkoutDraft({ ...plan, blocks: plan.blocks.map((block, index) => index === 1 ? { ...block, zone: 5 } : block) }, request, null, emptyHistory), null);
+  assert.equal(buildModelWorkoutDraft({ ...plan, blocks: plan.blocks.map((block, index) => index === 3 ? { ...block, durationSec: 360 } : block) }, request, null, emptyHistory), null);
+});
+
+test('cautious hard request rejects too much high intensity from a model', () => {
+  const request = { sport: 'RUNNING' as const, durationMinutes: 30 as const, intensity: 'hard' as const, intervals: false };
+  const plan = { title: 'Threshold finish', summary: 'A controlled strong finish.', reason: 'Limited threshold time.', blocks: [
+    { kind: 'warmup', zone: 1, durationSec: 600, note: '' },
+    { kind: 'work', zone: 2, durationSec: 600, note: '' },
+    { kind: 'work', zone: 4, durationSec: 300, note: '' },
+    { kind: 'cooldown', zone: 1, durationSec: 300, note: '' },
+  ] };
+  assert.ok(buildModelWorkoutDraft(plan, request, null, emptyHistory));
+  assert.equal(buildModelWorkoutDraft({ ...plan, blocks: plan.blocks.map((block, index) => index === 2 ? { ...block, durationSec: 600 } : index === 1 ? { ...block, durationSec: 300 } : block) }, request, null, emptyHistory), null);
 });

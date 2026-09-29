@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { formLabelClassName, formSelectClassName, primaryButtonClassName, secondaryButtonClassName, dangerTextClassName } from '@/components/ui';
 import { GUIDED_DURATIONS, GUIDED_INTENSITIES, GUIDED_SPORTS, type GuidedWorkoutInput } from '@/lib/guided-workout';
@@ -19,6 +19,24 @@ export function GuidedWorkoutForm({ onGenerated, onCancel }: {
   const [intervals, setIntervals] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
+  const [aiStatus, setAiStatus] = useState<'available' | 'unavailable' | 'checking'>('checking');
+
+  useEffect(() => {
+    let active = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    async function check(attempt: number) {
+      try {
+        const response = await fetch('/api/athlete/workouts/ai-status');
+        const value = response.ok ? await response.json() as { status?: string } : null;
+        if (!active) return;
+        const status = value?.status === 'available' ? 'available' : value?.status === 'checking' ? 'checking' : 'unavailable';
+        setAiStatus(status);
+        if (status === 'checking' && attempt < 3) timer = setTimeout(() => void check(attempt + 1), 2_000);
+      } catch { if (active) setAiStatus('unavailable'); }
+    }
+    void check(0);
+    return () => { active = false; if (timer) clearTimeout(timer); };
+  }, []);
 
   async function generate() {
     if (pending) return;
@@ -52,6 +70,7 @@ export function GuidedWorkoutForm({ onGenerated, onCancel }: {
     <div className="space-y-1">
       <h3 id="guided-workout-title" className="text-base font-semibold text-[var(--text)]">Build a guided workout</h3>
       <p className="max-w-[65ch] text-sm leading-6 text-[var(--text-secondary)]">Choose four things. Tempo uses your completed training from the past four weeks when available, then opens an editable draft for you to review. When AI is enabled, only a summary of that training is sent to the configured model provider; notes and activity streams stay in Tempo.</p>
+      <p role="status" className="text-sm font-medium text-[var(--text)]">{aiStatus === 'available' ? 'AI workout creation is available. The model will design the full workout.' : aiStatus === 'checking' ? 'Checking AI availability. Standard guided creation is always available.' : 'AI workout creation is unavailable. Tempo will use its standard guided patterns.'}</p>
     </div>
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <label className="block space-y-2"><span className={formLabelClassName}>Sport</span><select className={formSelectClassName} value={sport} disabled={pending} onChange={(event) => setSport(event.target.value as GuidedWorkoutInput['sport'])}>{GUIDED_SPORTS.map((option) => <option key={option} value={option}>{getSportLabel(option)}</option>)}</select></label>
