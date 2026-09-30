@@ -34,6 +34,13 @@ controls. Older provider/device results retain their recorded scope.
   compilation; removing generated development types resolved it. Middleware
   deprecation remains. Existing unrelated account/recovery edits were preserved.
 
+- Publication: UI commit `964b58f` pushed to `origin/main` on 2026-09-30.
+  Production `/login` returned HTTP 200 and its CSS changed from
+  `01i-t978vz812.css` to `0vm3c6awhf476.css`. The live asset contains the new
+  toast dismiss rules, 64px header and 24px group gap. This confirms UI
+  publication, not an authenticated production journey or physical swipe test.
+  Unrelated uncommitted account-deletion work was excluded from this push.
+
 ## Latest recorded checks
 
 | Gate | Latest recorded result | Scope / limits |
