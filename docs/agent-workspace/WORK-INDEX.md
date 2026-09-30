@@ -30,9 +30,9 @@ means compatibility code, not the extension point for new work.
 
 ## Active work
 
-- [Publish Strava activity notifications](tasks/2026-09-30-publish-strava.md):
-  recheck, push the implementation to main, verify the production deployment.
-  Remaining integration/mobile/preview gates are in CURRENT-STATUS.md.
+No implementation task is active. Strava notifications were pushed and the
+production inbox endpoint verified on 2026-09-30. Remaining live activity,
+integration/mobile/preview gates are in CURRENT-STATUS.md.
 
 ## Task lifecycle
 

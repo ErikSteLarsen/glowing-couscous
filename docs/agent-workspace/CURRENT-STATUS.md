@@ -13,7 +13,7 @@ not rerun the app or certify production.
 | Direct TypeScript | Pass, 2026-09-30 | Existing generated client |
 | Direct `next build --webpack` | Pass, 2026-09-30 | TypeScript and 76 pages; middleware deprecation remains |
 | `pnpm build` | Blocked, 2026-09-30 | Windows Prisma DLL EPERM before migrations; loopback overrides prevented configured DB mutation |
-| Migration status | Target verification required | Password-reset migration confirmed 2026-09-27; not evidence that later migrations are applied |
+| Migration status | Strava notification migration confirmed, 2026-09-30 | Read-only configured database metadata: finished, not rolled back; other migrations and concurrent behavior require separate checks |
 
 Latest checks reused installed dependencies with
 `pnpm_config_verify_deps_before_run=false`. Prisma generation, migration deploy
@@ -62,11 +62,30 @@ and bundle compilation are distinct gates.
 Earlier task recorded user confirmation of deployed Strava OAuth/manual import.
 That is user-reported evidence, not a fresh provider check by this cleanup.
 
+## Strava production publication
+
+On 2026-09-30, implementation commit `251df37` was pushed to `origin/main` after
+284/284 tests, full lint, direct webpack bundle/TypeScript (76 pages), and diff
+checks passed. The independently published documentation consolidation was
+preserved. Standard `pnpm build` still hit the local Windows Prisma DLL lock
+before migrations; the running local preview was not stopped.
+
+Production at `https://glowing-couscous-delta.vercel.app` now serves the new
+`/api/strava/inbox` endpoint: HTTP 401 with its expected sign-in JSON, replacing
+the previous HTTP 404. `/login` returns 200. This verifies publication and the
+unauthenticated guard, not an authenticated activity review. The production
+webhook challenge returns 200 with the exact challenge. Read-only configured
+database metadata confirms `20260930150000_strava_notifications` finished and
+was not rolled back. No activity data was created, imported or deleted during
+publication checks. Real Strava upload-to-popup, persisted review/matching,
+scheduled retry execution and database concurrency remain acceptance gates.
+
 ## Open gates and risks
 
-1. Verify/apply current migrations in the intended target, including provider
-   health and `20260930150000_strava_notifications`; regenerate Prisma without
-   the Windows lock. Verify PostgreSQL persistence/concurrent placement and
+1. Verify remaining migrations in the intended target, including provider
+   health; the Strava notification migration is confirmed in the configured
+   database. Regenerate the local Prisma client without the Windows lock.
+   Verify PostgreSQL persistence/concurrent placement and
    webhook claims without resetting existing data.
 2. Configure HTTPS Strava callbacks/subscription and scheduled authenticated
    worker; verify live delivery, retry, update/privacy/delete/disconnect and
@@ -75,12 +94,9 @@ That is user-reported evidence, not a fresh provider check by this cleanup.
    challenge check on 2026-09-30 against
    `https://glowing-couscous-delta.vercel.app/api/strava/webhook` now returned
    HTTP 200 with the exact challenge using the local `.env` verification token.
-   The previous token mismatch is resolved. Publication preflight reran all
-   284 tests, full lint and the direct webpack bundle/TypeScript build (76 pages)
-   successfully. `pnpm build` still stopped at the Windows Prisma DLL lock before
-   migrations. The user authorized publication; deployment verification is
-   tracked in [the active publication task](tasks/2026-09-30-publish-strava.md).
-   No subscription or activity data was changed by the read-only check.
+   The previous token mismatch is resolved and the notification implementation
+   is published; see the production publication evidence above. No subscription
+   or activity data was changed by the read-only challenge checks.
 3. Verify guided creation with a server key and authenticated desktop/phone
    save/reopen, provider labels and fallback. No live model call recorded.
    Configure/test Resend delivery and optional Google OAuth independently.
