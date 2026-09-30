@@ -5,6 +5,11 @@ Read `README.md`, `docs/agent-workspace/CURRENT-STATUS.md`, and
 `ARCHITECTURE.md` when changing routes, services, Prisma, or authentication.
 Read `PRODUCT.md` and `DESIGN.md` for product or interface work.
 
+The same rules apply to every model and tool. Keep task scope, acceptance and
+blockers explicit; do not maintain separate instructions by model family.
+Setup commands live in `docs/OPERATIONS.md`; repeatable acceptance lives in
+`docs/VERIFICATION.md`. Consult the relevant section rather than copying it.
+
 ## MVP Priority
 
 Follow PRODUCT.md: complete self-directed personal training first, from a fresh
@@ -38,4 +43,6 @@ shared changes; coach-only gaps are secondary unless explicitly requested.
 
 Run the smallest relevant checks while iterating. Before finishing a behavior
 change, run `pnpm test`, `pnpm lint`, and `pnpm build` when the environment
-allows it, then record the actual result in the current status document.
+allows it, then record the actual result in the current status document. For prose-only
+changes, check references/source accuracy and `git diff --check`; application
+tests and a migration-bearing build are not required.

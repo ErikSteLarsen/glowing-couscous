@@ -107,8 +107,8 @@ spacing:
   md: "16px"
   lg: "24px"
   page-inline: "20px"
-  page-inline-sm: "28px"
-  page-inline-lg: "40px"
+  page-inline-sm: "24px"
+  page-inline-lg: "32px"
 components:
   button-primary:
     backgroundColor: "{colors.signal}"
@@ -359,12 +359,12 @@ content width the two groups stack. Disabled readouts reserve no grid space.
 Home and Workouts reuse the shared page gutters, and workout library columns
 fit their available width with a 280px preferred minimum, shrinking to one
 fluid column on phones. Preferences uses a 640px reading width; Profile keeps
-its 860px form width. Workouts keeps the library visible while the editor opens
-below it. Controls wrap without hiding save or navigation actions.
+its 860px form width. Workouts hides its library while the production editor is active; returning
+to the library preserves the shared page context. Controls wrap without hiding save or navigation actions.
 
-Mark the current date with a filled square around its numeral. Keep that cue
-independent of selection. In Planner, selected dates use a tinted square with
-an inset brand frame, and expose selection through the button state. Preserve
+Use the route-specific current-day treatment described under Workout / Session
+Language. Keep it independent of selection; expose selected Planner dates
+through their button state. Preserve
 accessible current-date semantics and spoken labels; reserve “Today” text for
 headings and navigation actions.
 
@@ -373,7 +373,7 @@ headings and navigation actions.
 Tempo is quiet and high contrast. Ordinary pages, rows, fields, and surfaces
 use tonal layering and one-pixel borders. The light canvas is a pale neutral
 `#F5F6F5` beneath white panels and lightly recessed `#F8F9F8` controls. Dark
-mode separates the `#0E1010` canvas, `#171919` work panels, `#202323` Today
+mode separates the `#080909` canvas, `#171919` work panels, `#202323` Today
 plane, and `#222424` fields. The shared inset highlight gives panel edges a
 subtle material cue without making repeated rows float. `--shadow-raised` is for a small number of
 persistently raised settings or utility surfaces. `--shadow-overlay` is for

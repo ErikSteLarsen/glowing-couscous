@@ -7,6 +7,9 @@
 - **Proof/content:** A Monday-first week, a readable month overview, assigned session summaries, source types, cadence, and an immediate confirmation of the selected target.
 - **Constraints:** Preview-only routes under `/design/*`; use synthetic sample data; do not change planner persistence; preserve Tempo's established visual system and accessible text states.
 
+These are historical developer-only studies; their paper/indigo palette does
+not override production Monolith in DESIGN.md.
+
 ## Direction contract
 
 ### THESIS
@@ -27,7 +30,8 @@ Three compositions are shipped as equal preview routes: `Field` (calendar-first 
 ### FINISH
 unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 
-## Unresolved decisions
+## Production relationship
 
-- Which composition should become the production Planner after user feedback.
-- Whether template range validation should use an exact day count or support a broader recurring-plan rule in production.
+Production uses components/PlannerDesk.tsx with explicit source/date placement.
+Template ranges follow exact day/week/month cadence; broader recurrence is not
+implemented. Deferred preview browser comparisons are listed in CURRENT-STATUS.md.

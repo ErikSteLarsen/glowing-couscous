@@ -1,32 +1,25 @@
-# Task: <short description>
+# Task: <outcome>
 
-- **Status:** `in-progress`
-- **Agent:** `<name or session id>`
-- **Started:** `YYYY-MM-DD`
-- **Updated:** `YYYY-MM-DD`
-- **Capability IDs:** `<WORK-INDEX IDs>`
+- **Status:** `in-progress` | `blocked`
+- **Owner:** <agent/session or contributor>
+- **Started / updated:** YYYY-MM-DD / YYYY-MM-DD
+- **Capabilities:** <WORK-INDEX IDs>
 
-## Goal
+## Goal and scope
 
-What will be different when this task is complete?
+Observable outcome, existing owners and important boundaries.
 
-## Plan
+## Next steps
 
-- [ ] Concrete step and completion condition
-- [ ] Concrete step and completion condition
+- [ ] Step with concrete completion condition
+- [ ] Relevant verification with environment/data constraints
 
-## Progress
+## Current evidence and blockers
 
-### YYYY-MM-DD
+Only findings needed to continue: actual checks, risks and what closes them.
+Link evidence instead of copying long logs; replace superseded progress notes.
 
-- Change:
-- Decision or discovery:
-- Files:
-- Verification:
-- Next step:
+## Finish
 
-## Completion
-
-- **Final status:** `completed` | `blocked` | `deferred`
-- **Current docs updated:**
-- **Remaining work:**
+Update current status and affected contracts/owner rows, carry forward unresolved
+gates, remove this brief/index entry and report changed files.

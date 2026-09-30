@@ -9,7 +9,7 @@ web
 ## Users
 
 - **Primary: people managing their own training.** They create workouts and reusable templates, plan their calendar, follow sessions, and record and review outcomes. The current implementation calls this role Athlete.
-- **Secondary: coaches and coached athletes.** Existing collaboration supports rosters, reusable content, and assignments. Coach discovery and connection are optional extensions to personal use.
+- **Secondary: coaches and coached athletes.** Existing collaboration supports rosters, reusable content, and assignments. Coach discovery and connection are deferred from the current personal navigation.
 
 ## Product Purpose
 
@@ -17,13 +17,13 @@ Workout Planner is a self-directed endurance training planner. It helps people c
 
 ## Positioning
 
-Workout Planner joins reusable structured workout authoring, Monday-first personal planning, guided session execution, and saved outcome review in one continuous self-directed workflow. Coach collaboration remains available without becoming a prerequisite for personal use.
+Workout Planner joins reusable structured workout authoring, Monday-first personal planning, guided session execution, and saved outcome review in one continuous self-directed workflow. Coach services remain compatibility paths; current page redirects keep the primary experience personal.
 
 ## Operating Context
 
 The first MVP is used as a recurring personal training workspace:
 
-1. Sign up and enter the Athlete workspace.
+1. Sign up and enter the personal Athlete workspace directly.
 2. Create, edit, save, and reuse a structured workout or template.
 3. Schedule personal content on selected dates and review or remove planned sessions.
 4. Open and follow a session, then record completion, notes, and actual outcomes.
@@ -47,13 +47,13 @@ Coach-only authoring, roster management, requests, and multi-athlete planning ar
 - Duration, training load, zones, and timelines are derived from structured blocks.
 - `Workouts` stores private reusable definitions without dates or assignments.
 - `Planner` places independent copies of reusable content onto selected athlete dates or training-plan weekdays. Workouts can target multiple dates; day, week, and month templates use exact cadence-length date ranges.
-- `Templates` stores reusable coach-owned day, week, or month cadence structures whose assignment span is validated by Planner.
+- `Templates` stores owner-scoped reusable personal and coach day, week, or month cadence structures whose assignment span is validated by Planner.
 - Completion stores performed metrics, notes, and the latest actual snapshot in `Activity`.
 
 ## Current Capabilities
 
-- Credentials authentication, signup, first-login role setup, and optional Google OAuth.
-- Coach roster, athlete detail, coach discovery, and request approval flows.
+- Credentials authentication, direct personal signup, compatibility role setup for accounts without a role, and optional Google OAuth.
+- Dormant coach roster, athlete detail, discovery and request services; current coach/discovery pages redirect to the personal workspace.
 - Coach and athlete workout libraries with a shared visual editor.
 - Coach planner, reusable training plans, templates, source-copy assignment, and athlete planner.
 - Athlete Home, Calendar, Workouts, Session, Live, Activity, Profile, and Settings surfaces.

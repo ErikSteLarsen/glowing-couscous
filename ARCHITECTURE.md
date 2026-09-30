@@ -7,8 +7,8 @@ This document describes the current implementation. The source code, tests, and
 
 The first MVP centers on independent personal training, as defined in
 PRODUCT.md. The existing ATHLETE role and /athlete/* routes are the current
-implementation of that personal workspace. Coach routes and services remain
-supported secondary capabilities; their presence in this owner map does not
+implementation of that personal workspace. Coach services remain secondary compatibility; coach pages currently redirect
+to `/athlete` through middleware, and discovery redirects in its page. Their presence in this owner map does not
 make coach feature completion a first-MVP gate. Extend the personal or shared
 service owner for personal workflows and preserve role/ownership boundaries.
 This priority does not change the current schema, roles, or route names.
@@ -31,10 +31,14 @@ one-time account creation flow directly.
 ### Public and authentication
 
 - `/` - entry redirect
-- `/login`, `/signup`, `/setup`, `/forgot-password`, `/reset-password` - credentials authentication, first-login role setup, and one-time credential recovery
+- `/login`, `/signup`, `/setup`, `/forgot-password`, `/reset-password` - credentials authentication, compatibility setup for accounts without a role, and one-time credential recovery
 - `/share/[token]` - public sanitized workout snapshot
 
-### Coach
+### Coach compatibility
+
+These route implementations remain in the tree, but middleware redirects all
+`/coach*` pages to `/athlete`. APIs bypass that redirect and keep their own role
+and ownership guards; page visibility is not API authorization.
 
 - `/coach` - roster
 - `/coach/athletes/[athleteId]` - athlete detail
@@ -54,7 +58,7 @@ one-time account creation flow directly.
 - `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion
 - `/athlete/activity` - History for completed sessions and imported activities
 - `/athlete/import` - activity-file and Strava review/import; the previous `/athlete/imported-activities` path redirects here
-- `/athlete/find-coach` - coach discovery and requests
+- `/athlete/find-coach` - dormant discovery entry; redirects to `/athlete`
 - `/athlete/profile`, `/profile` - profile surfaces and compatibility alias
 - `/settings` - Home overview card preferences
 
@@ -90,14 +94,14 @@ navigation.
 | Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |
 | Guided workout creation | `lib/guided-workout.ts`, `lib/guided-workout-service.ts`, `lib/workout-llm.ts`, `components/GuidedWorkoutForm.tsx` | Owner-scoped recent-training summary, validated full model-authored workouts, app-wide provider health cache, standard fallback patterns, and unsaved draft handoff to the shared builder |
 | Training plans | `lib/coach-training-plan-service.ts` | Reusable weekday-based coach plans |
-| Templates | `lib/template-service.ts` | Coach-owned reusable templates and cadence |
+| Templates | `lib/template-service.ts` | Owner-scoped personal and coach templates and cadence |
 | Assignment | `lib/assignment-service.ts` | Snapshot copies, lineage, deduplication, and training-plan assignment |
 | Session compatibility | `lib/planner-service.ts` | Older coach session mutation adapter; transitional only |
 | Workout content | `lib/session-editor.ts`, `lib/session-editor-adapters.ts`, `lib/workout-editor.ts`, `lib/workout-blocks.ts`, `lib/workout-pattern.ts` | Canonical drafts, editor modes, block normalization, pattern and pause insertion, and persistence shaping |
 | Targets and metrics | `lib/workout-targets.ts`, `lib/workout-target-resolution.ts`, `lib/workout-zone-intensity.ts`, `lib/profile-training-zones.ts`, `lib/performance-profile.ts`, `lib/account-service.ts`, `lib/session-math.ts`, `lib/tempo-blocks.ts` | Relative target catalogs, profile-backed zone calculations and persistence, zone presets and classification, derived metrics, and timeline segments |
 | Session outcomes | `lib/athlete-completion-service.ts`, `lib/session-snapshot-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/session-comparison-service.ts` | Completion, baseline/actual snapshots, planned edits, and comparison reads |
 | Activity file imports | `lib/activity-file-parser.ts`, `lib/activity-import-service.ts`, `lib/activity-series.ts` | Local FIT/TCX/GPX parsing, validated user-selected imports, planned-session matching, deduplication, telemetry persistence, and metric-specific bar buckets |
-| Strava sync | `lib/strava-service.ts`, `app/api/strava/*`, `components/StravaImportPanel.tsx`, `prisma/schema.prisma` | User-scoped OAuth tokens encrypted at rest, recent activity inbox, webhook event queue, server-side stream normalization, explicit import via the shared activity importer, and disconnect/revocation cleanup |
+| Strava sync | `lib/strava-service.ts`, `lib/strava-inbox-service.ts`, `app/api/strava/*`, `components/StravaImportPanel.tsx`, `components/StravaActivityNotifications.tsx`, `prisma/schema.prisma` | User-scoped OAuth, durable inbox review state, leased webhook queue and retry recovery, shared-shell notifications from local inbox reads, server-side stream normalization, explicit import via the shared importer, and existing disconnect/revocation cleanup |
 | Sharing | `lib/share-link.ts`, `lib/share-link-service.ts` | Sanitized snapshots, opaque tokens, public lookup, and explicit recipient copies |
 
 ## Data Ownership
@@ -105,20 +109,22 @@ navigation.
 `prisma/schema.prisma` defines `User`, Auth.js `Account`, `CoachRequest`,
 `Plan`, `TrainingPlan`, `Session`, `Block`, `Template`, `Activity`,
 `Assignment`, `TrainingPlanAssignment`, `ShareLink`, `StravaConnection`,
-`StravaInboxActivity`, `StravaWebhookEvent`, and `PasswordResetToken`.
+`StravaInboxActivity`, `StravaWebhookEvent`, `PasswordResetToken`,
+`PlacementRequest`, and `AiProviderHealth`.
 
-- `User.role` controls access. It is nullable only before first-login setup.
+- `User.role` controls access. Credentials signup sets ATHLETE and selfCoached directly; nullable roles use compatibility setup.
 - `User.sessionVersion` invalidates previously issued JWT sessions after a credential password reset; server auth refreshes the version before accepting protected work.
 - `User.performanceProfileJson` is read and written through `lib/account-service.ts`. It stores maximum heart rate, sport thresholds, a running race result, and optional per-zone pace overrides; normalization retains existing version 1 values.
 - `User.coachId` represents the accepted coach-athlete relationship.
 - `Session` can be an athlete assignment, a coach library source, or a training-plan child. A standalone library session has no date, `Plan`, or `TrainingPlan`.
 - `Block` is the structured source for workout content and derived metrics.
 - `Block.kind = pause` represents a seconds-based rest between efforts. It contributes elapsed duration but no zone distribution or training load; the shared pattern helper inserts it only between blocks or repeated sets.
-- The workout editor's zone presets live in `lib/workout-zone-intensity.ts`. `lib/profile-training-zones.ts` mirrors Olympiatoppen's HRmax calculator for I-1–I-5 and seeds five editable pace bands from average race speed. `max-hr` and `profile-pace-zone-N` block references remain generic in stored workouts and sanitized shares; resolve them against the current user's profile in the workout/session UI. Fine adjustments can reclassify a block's zone. Existing targets change only when their relative profile reference is resolved or a user edits/reapplies a preset.
+- The workout editor's zone presets live in `lib/workout-zone-intensity.ts`. `lib/profile-training-zones.ts` mirrors Olympiatoppen's HRmax calculator for I-1â€“I-5 and seeds five editable pace bands from average race speed. `max-hr` and `profile-pace-zone-N` block references remain generic in stored workouts and sanitized shares; resolve them against the current user's profile in the workout/session UI. Fine adjustments can reclassify a block's zone. Existing targets change only when their relative profile reference is resolved or a user edits/reapplies a preset.
 - `Assignment` and `TrainingPlanAssignment` record source-copy lineage and prevent duplicates.
 - `Activity` stores completion outcomes and the latest actual snapshot. Planned session data stores the latest coach baseline snapshot.
 - File imports store normalized recorded samples and import provenance on the owner's `Activity`. The uploaded original file is parsed in the browser and is never persisted. `Activity.importFingerprint` prevents importing the same normalized file twice for one account. Users can delete an import: matched sessions restore their prior status and keep their planned blocks; standalone imported sessions are removed.
 - Strava connections belong to one Tempo `User.id` and one Strava athlete ID. OAuth tokens are AES-GCM encrypted with a server-only key. The recent-activity inbox and webhook receipt queue are separate from Tempo sessions; a user must explicitly review and import an activity. Imported Strava sessions carry source identity so activity updates, privacy changes, disconnect, and deauthorization can be reflected in Tempo and matched planned sessions restored.
+- `StravaInboxActivity.notifiedAt` acknowledges a notification batch; `dismissedAt` records recoverable discard. Neither deletes data, and provider upserts preserve both. Import excludes already imported IDs from notification reads before batching. All unimported inbox items remain reachable on Import, including older discarded items. `StravaWebhookEvent.processingUntil` leases concurrent work and `nextAttemptAt` controls bounded backoff. The signed-in shell reads `/api/strava/inbox` every 15 seconds while visible; the route schedules only that owner's due recovery work. The authenticated worker handles retries while users are away. No storage-retention deletion was added.
 - `ShareLink` stores a token hash and one sanitized snapshot tied to either a `Session` or `Template`; the raw token is never persisted.
 - `PasswordResetToken` stores one hashed, 30-minute reset token per credentials account, plus a per-account email cooldown and hourly send limit. Resend delivery requires `RESEND_API_KEY`, a verified `PASSWORD_RESET_FROM_EMAIL`, and an HTTPS `AUTH_URL` in production; raw reset tokens are sent by email and never stored. Password reset increments the account session version so older JWTs are rejected.
 
@@ -136,8 +142,14 @@ navigation.
 10. Treat `lib/planner-service.ts` and `/api/coach/sessions/[sessionId]` as compatibility code, not a new extension point.
 11. The guided creator accepts model-authored blocks only after server validation of duration, structure, zones, and cautious-history limits. Its model call receives aggregate completed-training context, never raw notes or telemetry, and never persists the draft. Provider availability uses a short database-backed lease and cache shared across app instances.
 
-## Known Gaps
+## Persistence and verification
 
-- Browser acceptance for public sharing and some session mutation flows still needs a fresh pass.
-- Auth.js external OAuth integration is optional and not covered by local credentials tests.
-- The middleware convention emits a Next.js deprecation warning; it is not currently a build failure.
+PostgreSQL is the current datasource. `prisma/migrations/` owns committed schema
+changes; pooled `DATABASE_URL` serves runtime, direct `DIRECT_URL` serves Prisma.
+`PlacementRequest` records user-scoped request identity, normalized payload and
+placement results for atomic retry-safe batches. `AiProviderHealth` owns shared
+provider availability and claim leases. Do not replace database uniqueness or
+transactions with UI-only guards.
+
+See [operations](docs/OPERATIONS.md) for setup/deployment and
+[current status](docs/agent-workspace/CURRENT-STATUS.md) for unresolved gates.

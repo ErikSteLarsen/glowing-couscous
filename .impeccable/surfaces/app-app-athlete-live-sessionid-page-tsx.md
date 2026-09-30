@@ -11,7 +11,7 @@ AUDIENCE AND TASK: An athlete uses the screen during training from a phone or de
 
 THESIS: Live mode is a working timer, not a static checklist. The current block owns the visual focus while a quieter session-remaining clock and complete workout score preserve orientation.
 
-OWN-WORLD: Extend Tempo's Ink Is Movement system and workout-canvas grammar: paper and surface layers, indigo primary control, restrained zone colors, fine rules, continuous duration-weighted block bars, tabular numerals, and shared button/focus states. Avoid a dark fitness dashboard or gamified progress treatment.
+OWN-WORLD: Follow DESIGN.md's Monolith light/dark layers, contrasting actions, semantic zones, duration-weighted bars, tabular metrics and shared focus states. Do not introduce a competing palette.
 
 STORY: Begin with a ready state and a prominent Start workout action. During execution the athlete sees the current block, target, note, large stable countdown, remaining-session time, and progress. Timed blocks advance automatically; manual next and skip are distinct. Pausing is reliable, going previous rewinds safely, and the final block stops at zero and offers completion. Refresh behavior is stated plainly.
 

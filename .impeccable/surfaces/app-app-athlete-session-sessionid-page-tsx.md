@@ -11,12 +11,12 @@ AUDIENCE AND TASK: An athlete opens a calendar session to understand its structu
 
 THESIS: The scheduled session is a readable score, not an inline editor. It rejects editable forms on the dated copy and puts the full workout sequence ahead of metadata.
 
-OWN-WORLD: Extend Tempo's Ink Is Movement system: warm paper, indigo action ink, blue-gray focus/flow, restrained status and zone colors, fine rules, shared controls, and continuous duration-proportional session bars. Reuse the WorkoutCanvasEditor visual vocabulary without its editing tools.
+OWN-WORLD: Follow DESIGN.md's Monolith light/dark layers, contrasting actions, restrained status/zone colors, shared controls and duration-proportional bars. Reuse the WorkoutCanvasEditor visual vocabulary without its editing tools.
 
 STORY: Read the plan at a glance, scan every block and its target, then start live execution. Completed sessions expose their saved outcome note and comparison without inline correction controls. An athlete-owned reusable source may be opened in Workouts; that action must explain that the scheduled copy stays independent.
 
-FIRST VIEWPORT: Keep the shared page heading and contextual date/status row aligned with the shell. The session score dominates the content: full-width interval canvas, planned duration and load, then a numbered block list. A compact side rail carries the next action, source-workout link, and read-only outcome context; on mobile, stack this after the score and preserve the primary live action near the heading.
+FIRST VIEWPORT: Keep the shared page heading and contextual date/status row aligned with the shell. The session score dominates the content: full-width interval canvas, planned duration and load, then a numbered block list. Matched sessions retain plan/outcome context; unmatched imports use a single-column recorded outcome without an empty plan canvas or share action. On phones preserve the primary live action near the heading.
 
-FORM: Extend the existing authenticated session surface and WorkoutCanvasEditor language. The route remains an Operate surface inside Ink Is Movement; chart segments retain zone-height and duration-width semantics, while explicit labels keep pauses and skipped blocks legible. No new visual tokens or authoring surface.
+FORM: Extend the existing authenticated session surface and WorkoutCanvasEditor language. The route remains an Operate surface inside Monolith; chart segments retain zone-height and duration-width semantics, while explicit labels keep pauses and skipped blocks legible. No new visual tokens or authoring surface.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

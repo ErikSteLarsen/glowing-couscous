@@ -4,16 +4,16 @@ slug: "components-design-workoutflowpreviews-tsx"
 primary_target: "components/design/WorkoutFlowPreviews.tsx"
 related_targets: ["app/design/workout-flow/flowline/page.tsx","app/design/workout-flow/workbench/page.tsx","app/design/workout-flow/trail/page.tsx","app/globals.css"]
 ---
----
+
 THESIS: The workout builder should explain the shape of a session while it is
 being made. These previews refuse the opaque editor-first arrangement and put
 sequence, intent, and next action in the same field.
 
-OWN-WORLD: Keep Tempo's warm paper, indigo action ink, blue-gray flow lines,
-semantic zone colors, Schibsted Grotesk, fine rules, square controls, and quiet
-inset depth. The three previews differ in topology and pacing, not brand.
+OWN-WORLD: These developer-only studies retain their historical warm-paper/indigo
+preview styling. They are not the production visual contract; DESIGN.md owns
+Monolith. Do not promote their palette or square controls into production.
 
-STORY: A coach can see what to do first, add a familiar block without learning
+STORY: A preview visitor can see what to do first, add a familiar block without learning
 the data model, move or edit a block without relying on a pointer, and understand
 how the finished workout reads before saving it. The routes are sample-data
 previews, never connected to account persistence.
