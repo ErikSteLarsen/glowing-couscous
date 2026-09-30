@@ -84,6 +84,15 @@ was not rolled back. No activity data was created, imported or deleted during
 publication checks. Real Strava upload-to-popup, persisted review/matching,
 scheduled retry execution and database concurrency remain acceptance gates.
 
+Batch-review commit `eebb695` was pushed to `origin/main` after the recorded
+fixture, tests, lint and direct build checks. Production's public login build
+identifier changed from `px4Fm3HCkQRwQtCfjLQYa` to `GeGN8hEBlRyv3m38a-240`
+after the push; login returned 200 and the inbox retained its expected 401 guard.
+This confirms a new production build, not real authenticated batch acceptance.
+The design reviewer and documenter approved the scoped extension. The documenter
+reported pre-existing `.impeccable/design.json` drift from current Monolith
+rules; global design files were preserved.
+
 ## Open gates and risks
 
 1. Verify remaining migrations in the intended target, including provider
