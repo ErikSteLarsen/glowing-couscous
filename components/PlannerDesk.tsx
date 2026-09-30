@@ -485,7 +485,7 @@ function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSo
           return <button key={tab} type="button" aria-pressed={sourceTab === tab} onClick={() => onTabChange(tab)} className={`min-h-9 shrink-0 border-b-2 px-2.5 text-xs font-semibold capitalize transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${sourceTab === tab ? 'border-[var(--brand)] text-[var(--brand)]' : 'border-transparent text-[var(--nav-muted)] hover:text-[var(--nav-text)]'}`}>{tab === 'training-plan' ? 'Plans' : `${tab}s`} <span className="font-normal">{count}</span></button>;
         })}
       </div>
-      <div className="mt-3 space-y-2">
+      <div className="planner-desk__source-results mt-3 space-y-2">
         {visibleSources.length ? visibleSources.map((source) => <SourceResult key={source.key} source={source} selected={source.key === selectedSource?.key} selectedDate={selectedDate} onSelect={onSelectSource} />) : hasSearch && tabSources.length > 0 ? (
           <div className="border border-dashed border-[var(--nav-border)] px-3 py-4">
             <p className="text-sm text-[var(--nav-muted)]">No {sourceTab === 'training-plan' ? 'plans' : `${sourceTab}s`} match “{query.trim()}”.</p>

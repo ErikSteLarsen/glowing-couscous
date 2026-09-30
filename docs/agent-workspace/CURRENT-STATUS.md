@@ -1,5 +1,46 @@
 # Current Status
 
+## Content sizing and tonal depth — 2026-09-30
+
+Reviewed the latest pushed Monolith revision (`3c0ec03`, matching remote main)
+with Impeccable and the authenticated local visual account. Home's fixed
+620px Today panel and 360px scrolling week were the largest density mismatch.
+Today now follows its content (about 222px for the verified empty state), the
+complete week ledger grows naturally (about 445px for the verified week), and
+optional readouts leave no reserved grid slots when disabled. Session titles
+wrap above their duration/state and retain a 44px link target. Sparse trend
+bars are capped at 48px rather than stretching one activity across the panel.
+
+Home and Workouts now use shared page gutters. Workout library columns fit
+the available panel width with a preferred 280px minimum. Planner scrolls only
+long desktop source results, keeping search/creation controls and selected-day
+details outside that scrolling region. Preferences has an explicit 640px
+measure; Profile retains its existing 860px form width. Calendar, History,
+Templates, Import, and session detail retain their existing content measures.
+
+Shared light/dark tokens separate canvas, work panels, Today, and fields, with
+a subtle inset edge highlight. Ordinary rows retain their border-based depth;
+no repeated floating-card shadows or new accent roles were introduced.
+
+- Authenticated browser checks at 1440×900 and 390×844 covered Home, Workouts,
+  Planner, Templates, Calendar, History, Import, Profile, Preferences, and the
+  existing completed session detail in both themes. All 40 production-bundle
+  route/theme/viewport checks had no horizontal overflow. Home was checked
+  with all optional readouts enabled and disabled. The test account's original
+  disabled overview preferences were restored; no workout/session data was
+  created or removed. Screenshots are in `.impeccable/review/sizing-depth/`.
+- `pnpm test`: 273/273 pass. `pnpm lint`: pass. TypeScript and
+  `pnpm exec next build --webpack`: pass, 75 static pages. The existing
+  middleware deprecation warning remains. `git diff --check`: pass.
+- `pnpm build` was attempted and blocked by Windows EPERM while Prisma tried
+  to replace the engine DLL held by the existing preview. It stopped before
+  migration deployment. The separate bundle build reused the current client.
+- Impeccable's scoped layout detector returned no findings.
+- Coverage limits: populated Today, long multi-session weeks/source libraries,
+  active authoring/Live, import errors, coach-only pages, physical touch, and
+  assistive-technology behavior were not reverified. Mobile retains natural
+  page scrolling; this review does not claim every page fits one viewport.
+
 ## Monolith Cobalt rollout - accepted ship (2026-09-29)
 
 The authenticated workspace now uses Monolith Cobalt in light and dark themes.

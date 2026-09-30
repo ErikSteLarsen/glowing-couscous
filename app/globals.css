@@ -27,12 +27,12 @@
 }
 
 :root {
-  --background: var(--color-paper);
+  --background: #F5F6F5;
   --paper: var(--color-paper);
   --surface: var(--color-surface);
   --sunken: var(--color-sunken);
   --border: var(--color-border);
-  --field-surface: #FFFFFF;
+  --field-surface: #F8F9F8;
   --field-border: #BCC6BC;
   --field-focus: #3D64B0;
   --field-selected-border: #68786B;
@@ -77,7 +77,7 @@
   --shadow-overlay: 0 20px 42px -20px rgba(11, 17, 13, 0.34);
   --shadow-inset: 0 1px 0 rgba(255, 255, 255, 0.75) inset;
   --ink-line: #819486;
-  --focus-stage: #f8f8f8;
+  --focus-stage: #FFFFFF;
   --focus-stage-ink: #111412;
   --focus-highlight: #111412;
   --focus-highlight-ink: #fff;
@@ -86,6 +86,7 @@
 
 :root[data-workspace-theme="dark"] {
   color-scheme: dark;
+  --background: #0E1010;
   --color-paper: #080909; --color-surface: #171919; --color-sunken: #222424; --color-border: #414444;
   --color-ink: #f8f9f7; --color-ink-2: #d9ddda; --color-ink-3: #b5bdb7;
   --color-signal: #f7f8f5; --color-signal-ink: #121413; --color-signal-tint: #292c2a;
@@ -105,16 +106,20 @@
   --status-warning: #e8cd92; --status-warning-tint: #362f20; --status-warning-border: #8b7547;
   --status-adjusted: #e8cd92; --status-adjusted-tint: #362f20; --status-adjusted-border: #8b7547;
   --status-missed: #d2b7d1; --status-missed-tint: #302831; --status-missed-border: #796378;
-  --overlay: rgba(0, 0, 0, .72); --shadow-inset: 0 1px 0 rgba(255,255,255,.04) inset;
+  --overlay: rgba(0, 0, 0, .72); --shadow-inset: 0 1px 0 rgba(255,255,255,.07) inset;
   --shadow-raised: 0 8px 20px -15px rgba(0,0,0,.65);
   --shadow-overlay: 0 20px 42px -20px rgba(0,0,0,.8);
-  --focus-stage: #191919; --focus-stage-ink: #f8f9f7;
+  --focus-stage: #202323; --focus-stage-ink: #f8f9f7;
   --focus-highlight: #fafbf8; --focus-highlight-ink: #121413; --focus-rule: #969e98;
 }
 
 :root[data-workspace-theme="dark"] body { --signal-hover: #e5e8e5; }
 
 /* The selected Focus composition is production UI, not a preview tone. */
+.study-home__today, .study-home__week, .study-home__readout,
+.study-workouts__library, .study-workouts__library .workout-library-card {
+  box-shadow: var(--shadow-inset);
+}
 .ink-studio-app .study-home__today { border-radius: 24px; }
 .ink-studio-app .study-home__week, .ink-studio-app .study-home__readout { border-radius: 20px; }
 .ink-studio-app .study-workouts__library, .ink-studio-app .study-workouts__editor { border-radius: 22px; }
@@ -124,7 +129,7 @@
 .ink-studio-app .study-home__day--today { margin-inline: -12px; padding-inline: 12px; border-radius: 11px; background: var(--nav-active); }
 .study-home__trend-point div { background: var(--focus-rule); opacity: 1; border-radius: 3px 3px 0 0; }
 .study-workouts__header { border-bottom: 1px solid var(--focus-rule); padding-bottom: 25px; }
-.ink-studio-app .study-workouts__library .workout-library-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; border: 0; }
+.ink-studio-app .study-workouts__library .workout-library-grid { display: grid; gap: 12px; border: 0; }
 .ink-studio-app .study-workouts__library .workout-library-card { min-height: 130px; padding: 14px; border: 1px solid var(--border); }
 .study-workouts__library .workout-library-card--selected { border-color: var(--focus-rule); }
 :root[data-workspace-theme="dark"] .study-workouts__library .workout-library-card--selected {
@@ -142,13 +147,6 @@
 :root[data-workspace-theme="dark"] #tempo-sidebar button:hover { background: var(--nav-active); }
 :root[data-workspace-theme="light"] #tempo-sidebar nav a:hover,
 :root[data-workspace-theme="light"] #tempo-sidebar button:hover { background: var(--nav-active); }
-
-@media (max-width: 850px) {
-  .ink-studio-app .study-workouts__library .workout-library-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
-}
-@media (max-width: 600px) {
-  .ink-studio-app .study-workouts__library .workout-library-grid { grid-template-columns: minmax(0,1fr); }
-}
 
 * {
   box-sizing: border-box;
@@ -1391,6 +1389,7 @@ body {
   margin-inline: auto;
 }
 .page-content--compact { max-width: 860px; }
+.settings-preferences { max-width: 640px; }
 .page-content--workout-list { max-width: 800px; }
 .page-content--standard { max-width: 960px; }
 .page-content--library { max-width: 1080px; }
@@ -1545,15 +1544,22 @@ body[data-workspace-theme="dark"] .profile-savebar {
     grid-template-columns: 240px minmax(0, 1fr);
     grid-template-rows: auto 1fr;
   }
-  .planner-desk__sources { grid-column: 1; grid-row: 1; max-height: 300px; overflow-y: auto; }
+  .planner-desk__sources { grid-column: 1; grid-row: 1; }
   .planner-desk__calendar { grid-column: 2; grid-row: 1 / 3; }
-  .planner-desk__selection { grid-column: 1; grid-row: 2; max-height: 240px; overflow-y: auto; }
+  .planner-desk__selection { grid-column: 1; grid-row: 2; }
 }
 @container (min-width: 1400px) {
   .planner-desk__layout { grid-template-columns: 240px minmax(0, 1fr) 280px; grid-template-rows: auto; }
-  .planner-desk__sources { max-height: calc(100dvh - 240px); }
   .planner-desk__calendar { grid-column: 2; grid-row: 1; }
-  .planner-desk__selection { grid-column: 3; grid-row: 1; max-height: calc(100dvh - 240px); }
+  .planner-desk__selection { grid-column: 3; grid-row: 1; }
+}
+.planner-desk__sources > .planner-desk__source-results {
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+@container (max-width: 899px) {
+  .planner-desk__sources > .planner-desk__source-results { max-height: none; overflow: visible; }
 }
 @container (max-width: 600px) {
   .planner-desk__calendar { order: 1; }

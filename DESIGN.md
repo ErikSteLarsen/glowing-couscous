@@ -16,7 +16,7 @@ colors:
   liquid-tint: "#EDF1ED"
   paper: "#FFFFFF"
   surface: "#FFFFFF"
-  field-surface: "#FFFFFF"
+  field-surface: "#F8F9F8"
   sunken: "#FAFBF9"
   border: "#E1E5E0"
   field-border: "#BCC6BC"
@@ -333,8 +333,10 @@ rail alongside the calendar; from 1400px they flank it in three columns. The
 seven-day grid has no fixed minimum width. Month height responds to viewport
 height, including room for template-range controls, and always shows every week.
 Day cells preview one session and an additional count; the selection panel owns
-full details. Narrow calendars show counts instead of session titles. Supporting
-rails may scroll independently on desktop. Small screens and enlarged text retain
+full details. Narrow calendars show counts instead of session titles. Source
+results may scroll independently on desktop once their list exceeds 320px;
+search, creation links, and selected-day details remain outside that scroll
+area. Small screens and enlarged text retain
 natural page scrolling; never hide content to force the whole page into a viewport.
 
 Desktop reserves a `228px` viewport-bounded sidebar from the `md` breakpoint
@@ -347,8 +349,14 @@ bottom space for that navigation and never relies on hover.
 Training weeks always render Monday first. Home and Calendar compose around the
 week, Workouts and Session retain scheduled context, and Planner uses a
 month-first assignment desk with selected dates and exact template ranges.
-Home places the next session beside a compact week ledger; both stack on
-narrow screens. Workouts keeps the library visible while the editor opens
+Home uses a content-sized Today panel and compact optional readouts alongside
+a complete week ledger. The ledger has no fixed height or internal scrollbar;
+session titles wrap above their duration and state. Below 880px available
+content width the two groups stack. Disabled readouts reserve no grid space.
+Home and Workouts reuse the shared page gutters, and workout library columns
+fit their available width with a 280px preferred minimum, shrinking to one
+fluid column on phones. Preferences uses a 640px reading width; Profile keeps
+its 860px form width. Workouts keeps the library visible while the editor opens
 below it. Controls wrap without hiding save or navigation actions.
 
 Mark the current date with a filled square around its numeral. Keep that cue
@@ -360,7 +368,11 @@ headings and navigation actions.
 ## Elevation & Depth
 
 Tempo is quiet and high contrast. Ordinary pages, rows, fields, and surfaces
-use tonal layering and one-pixel borders. `--shadow-raised` is for a small number of
+use tonal layering and one-pixel borders. The light canvas is a pale neutral
+`#F5F6F5` beneath white panels and lightly recessed `#F8F9F8` controls. Dark
+mode separates the `#0E1010` canvas, `#171919` work panels, `#202323` Today
+plane, and `#222424` fields. The shared inset highlight gives panel edges a
+subtle material cue without making repeated rows float. `--shadow-raised` is for a small number of
 persistently raised settings or utility surfaces. `--shadow-overlay` is for
 menus, dialogs, drawers, and other layers that must clearly sit above the page.
 Do not add a shadow to make a repeated content row feel more important.

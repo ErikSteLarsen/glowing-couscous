@@ -60,7 +60,7 @@ export function SettingsClient({
   }
 
   return (
-    <div className="page-content--compact grid gap-6 xl:max-w-[640px]">
+    <div className="page-content--compact settings-preferences grid gap-6">
       <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
             Overview
