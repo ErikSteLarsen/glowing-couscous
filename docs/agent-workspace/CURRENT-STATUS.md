@@ -1,18 +1,18 @@
 # Current status
 
 Updated 2026-09-30. Current evidence snapshot, not implementation history.
-Results below are carried forward from recorded runs; documentation cleanup did
-not rerun the app or certify production.
+The Strava batch-review checks below were rerun for the latest UI change.
+Other results are carried forward at their recorded scope.
 
 ## Latest recorded checks
 
 | Gate | Latest recorded result | Scope / limits |
 |---|---|---|
-| `pnpm test` | 284/284 pass, 2026-09-30 | Includes 11 new Strava inbox/webhook service tests |
+| `pnpm test` | 284/284 pass, 2026-09-30 | Rerun for batch review; includes 11 Strava inbox/webhook service tests |
 | `pnpm lint` | Pass, 2026-09-30 | Full repository |
 | Direct TypeScript | Pass, 2026-09-30 | Existing generated client |
 | Direct `next build --webpack` | Pass, 2026-09-30 | TypeScript and 76 pages; middleware deprecation remains |
-| `pnpm build` | Blocked, 2026-09-30 | Windows Prisma DLL EPERM before migrations; loopback overrides prevented configured DB mutation |
+| `pnpm build` | Blocked, 2026-09-30 | Rerun for batch review: Windows Prisma DLL EPERM before migrations |
 | Migration status | Strava notification migration confirmed, 2026-09-30 | Read-only configured database metadata: finished, not rolled back; other migrations and concurrent behavior require separate checks |
 
 Latest checks reused installed dependencies with
@@ -41,7 +41,10 @@ and bundle compilation are distinct gates.
   use cached provider health and standard-pattern fallback, and remain unsaved
   until reviewed and saved.
 - Strava notifications read the local inbox on entry, every 15 visible seconds
-  and on focus. Review later acknowledges; discard is recoverable. All
+  and on focus. Review later acknowledges; dismissal is recoverable. More than
+  two arrivals open a selectable list that stays as the batch shrinks. Users can
+  bulk add standalone sessions or dismiss, and individually edit/match. Bulk
+  imports show progress and stop on failure with remaining selections preserved. All
   unimported rows remain on Import beyond the recent 100-activity provider page;
   provider updates preserve review state. Webhooks use two-minute leases,
   30-second-to-one-hour backoff, owner-only recovery and a secret-authenticated
@@ -52,6 +55,7 @@ and bundle compilation are distinct gates.
 | Date | Evidence | Limits |
 |---|---|---|
 | 2026-09-30 | Strava components in mock fixture at 1440/390px, both themes: matching/standalone, discard restore, failure draft, periodic arrival, keyboard/Escape and reload passed. `.impeccable/review/strava-notifications/` | Fixture session warnings; no authenticated login/live delivery/real DB concurrency; fixture removed |
+| 2026-09-30 | Strava batch mock fixture at 1440/390px, both themes: 30-row list, matching, preserved drafts, bulk standalone import, partial failure/retry, bulk dismiss, list at two remaining, Escape, live threshold transition and keyboard/overflow passed. `.impeccable/review/strava-batch/` | Mocked APIs, no live Strava delivery; fixture removed. Finish reviewer: ship; no material fixes |
 | 2026-09-30 | Shell/sidebar fixture at 1440/1024/768/390/320px: width recovery, desktop persistence, drawer focus/dismissal, inert/scroll/resize/history cleanup, blocked storage and themes passed. `.impeccable/review/collapsible-menu/` | Component interactions, not authenticated journey; fixture removed |
 | 2026-09-30 | Authenticated Home, Workouts, Planner, Templates, Calendar, History, Import, Profile, Preferences and completed detail at 1440/390px in both themes: 40 checks without horizontal overflow. `.impeccable/review/sizing-depth/` | Sparse data; populated Today/long lists, active editing/Live, import errors, coach/device acceptance unverified; preferences restored |
 | 2026-09-29 | Fresh signup, empty routes at 1440/390px, saved 45-minute run, dated copy, three-block Live completion, reopened 45-minute/32-TSS outcome; Athlete `/coach` redirect | Partial themes/states; coach/import errors/assistive technology not verified; ignored local credentials |

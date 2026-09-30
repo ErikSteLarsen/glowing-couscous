@@ -191,7 +191,7 @@ export function StravaImportPanel({
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || 'Activity review could not be saved.');
       setConnection((current) => ({ ...current, activities: current.activities.map((activity) => activity.id === activityId ? { ...activity, dismissed: action === 'discard' } : activity) }));
-      setNotice(action === 'discard' ? 'Discarded for now. You can still review and import this activity here.' : 'Restored to new-activity notifications.');
+      setNotice(action === 'discard' ? 'Dismissed for now. You can still review and import this activity here.' : 'Restored to new-activity notifications.');
       window.dispatchEvent(new Event('tempo-strava-inbox-changed'));
       dialogRef.current?.close();
       router.refresh();
@@ -277,7 +277,7 @@ export function StravaImportPanel({
                   {activity.elevationGainMeters !== null ? ` · ${Math.round(activity.elevationGainMeters)} m up` : ''}
                 </span>
               </span>
-              {activity.imported ? <Badge tone="success">Imported</Badge> : activity.dismissed ? <Badge>Discarded for now</Badge> : null}
+              {activity.imported ? <Badge tone="success">Imported</Badge> : activity.dismissed ? <Badge>Dismissed for now</Badge> : null}
             </button>
           ))}
         </div>
@@ -372,7 +372,7 @@ export function StravaImportPanel({
                   {activeDraft?.plannedSessionId ? 'The planned workout stays available for comparison.' : 'Tempo will create a completed session from the recorded activity.'}
                 </p>
                 {!activeActivity.imported ? <button type="button" className={secondaryButtonClassName} disabled={Boolean(importing[activeActivity.id])} onClick={() => void reviewActivity(activeActivity.id, activeActivity.dismissed ? 'restore' : 'discard')}>
-                  {activeActivity.dismissed ? 'Restore to notifications' : 'Discard for now'}
+                  {activeActivity.dismissed ? 'Restore to notifications' : 'Dismiss for now'}
                 </button> : null}
                 <button type="button" className={primaryButtonClassName} disabled={Boolean(importing[activeActivity.id]) || activeActivity.imported || !activeDraft?.title.trim()} onClick={() => void importActivity(activeActivity.id)}>
                   {activeActivity.imported ? 'Already imported' : importing[activeActivity.id] ? 'Importing…' : 'Import activity'}

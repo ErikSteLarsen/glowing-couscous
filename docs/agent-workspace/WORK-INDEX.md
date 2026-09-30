@@ -23,16 +23,16 @@ means compatibility code, not the extension point for new work.
 | `TEMPLATE-001` | Templates and training plans | `in-progress` | `lib/template-service.ts`, `lib/coach-training-plan-service.ts` | `/coach/templates`, `/athlete/templates` |
 | SESSION-001 | Canonical editor and outcomes | in-progress | lib/session-editor.ts, lib/athlete-execution.ts, lib/athlete-service.ts, lib/workout-canvas-drop.ts, lib/workout-pattern.ts, lib/workout-zone-intensity.ts, lib/intensity-color.ts, lib/profile-training-zones.ts, lib/performance-profile.ts, lib/account-service.ts, components/WorkoutBuilder.tsx, components/WorkoutCanvasEditor.tsx, components/SessionPlanCanvas.tsx, components/tempo/SessionBlockBar.tsx, components/WorkoutLibraryClient.tsx, lib/session-snapshot-service.ts, lib/athlete-completion-service.ts | Profile, read-only session detail, timed live execution, workout canvas, outcome APIs; profile-backed zones, target adjustments, and continuous five-color intensity ramp |
 | `ACTIVITY-001` | Activity import, removal, filtered history, and outcome review | `in-progress` | `lib/activity-file-parser.ts`, `lib/activity-import-service.ts`, `lib/activity-series.ts`, `components/tempo/ActivityIntensityBars.tsx`, `components/ImportedActivityMeasurements.tsx`, `components/ActivityImportClient.tsx`, `components/ActivityHistoryOverview.tsx`, `components/tempo/SessionRow.tsx`, `lib/athlete-service.ts`, athlete session detail page, `app/(app)/athlete/activity/page.tsx` | `/athlete/activity` week/month summaries and sport-filtered completed-work history; shared `/athlete/import` page (legacy `/athlete/imported-activities` redirects) and `/api/activity-imports`; imported activity measurements and single-column no-plan detail in athlete Calendar/session detail |
-| `STRAVA-001` | Automatic Strava API sync and activity notifications | `in-progress` | `lib/strava-service.ts`, `lib/strava-inbox-service.ts`, `app/api/strava/*`, `components/StravaImportPanel.tsx`, `components/StravaActivityNotifications.tsx`, `components/AppShell.tsx` | OAuth, leased webhook retry queue, app-entry/live notifications, planned-session/standalone import, and durable discard/restore; external setup, migration and live provider acceptance remain |
+| `STRAVA-001` | Automatic Strava API sync and activity notifications | `in-progress` | `lib/strava-service.ts`, `lib/strava-inbox-service.ts`, `app/api/strava/*`, `components/StravaImportPanel.tsx`, `components/StravaActivityNotifications.tsx`, `components/AppShell.tsx` | OAuth, leased retries, app-entry/live notifications, >2 activity batch list with bulk add/dismiss and individual matching, and durable dismiss/restore; live provider acceptance remains |
 | `SHARE-001` | Sanitized workout sharing | `in-progress` | `lib/share-link.ts`, `lib/share-link-service.ts` | `/share/[token]`, share APIs |
 | `COMPAT-001` | Older coach session adapter | `transitional` | `lib/planner-service.ts` | `/api/coach/sessions/[sessionId]` |
 
 
 ## Active work
 
-No implementation task is active. Strava notifications were pushed and the
-production inbox endpoint verified on 2026-09-30. Remaining live activity,
-integration/mobile/preview gates are in CURRENT-STATUS.md.
+No implementation task is active. Strava batch review is implemented and verified
+in browser fixtures. Remaining live activity, integration/mobile/preview gates
+are in CURRENT-STATUS.md.
 
 ## Task lifecycle
 

@@ -75,10 +75,15 @@ random 32-byte key encoded as 64 hexadecimal characters and keep it server-only.
 The signed-in shell checks the local Strava inbox on entry, every 15 seconds
 while visible, and on focus. This does not poll the Strava API. New activities
 open a review dialog where users can complete an unfinished planned session,
-add a standalone completed session, or **Discard for now**. Discard records
+add a standalone completed session, or **Dismiss for now**. Dismiss records
 inbox state only: it never deletes a recorded or imported activity. **Review
 later** acknowledges the current batch and leaves it available on Import.
-Discarded items stay on Import with **Restore to notifications**, even when
+When more than two activities arrive, they open together in a selectable list.
+Users can add selected activities as standalone completed sessions, dismiss
+selected activities together, or choose **Review** to edit or match one activity.
+The list stays in place as the batch shrinks. Bulk imports show progress and stop
+on the first failure, leaving unsuccessful and unattempted items selected for retry.
+Dismissed items stay on Import with **Restore to notifications**, even when
 they age out of the recent 100-activity provider page. Manual sync and webhook
 updates preserve these choices. Imported activities are excluded from new
 notifications. Returning users also recover due queue work for their own

@@ -1,0 +1,47 @@
+{
+  "screenshots": [
+    {
+      "file": "light-1440.png",
+      "width": 1440,
+      "theme": "light",
+      "pageOverflow": false,
+      "dialogOverflow": false,
+      "listScrolls": true,
+      "focusInside": true
+    },
+    {
+      "file": "light-390.png",
+      "width": 390,
+      "theme": "light",
+      "pageOverflow": false,
+      "dialogOverflow": false,
+      "listScrolls": true,
+      "focusInside": true
+    },
+    {
+      "file": "dark-1440.png",
+      "width": 1440,
+      "theme": "dark",
+      "pageOverflow": false,
+      "dialogOverflow": false,
+      "listScrolls": true,
+      "focusInside": true
+    },
+    {
+      "file": "dark-390.png",
+      "width": 390,
+      "theme": "dark",
+      "pageOverflow": false,
+      "dialogOverflow": false,
+      "listScrolls": true,
+      "focusInside": true
+    }
+  ],
+  "checks": [
+    "30 activity list; matching returns to list; drafts survive back; bulk partial failure stops safely and retries remaining; bulk imports standalone; bulk dismiss; sticky list at two remaining; Escape acknowledges remaining together",
+    "1 initial activities keep individual review",
+    "Live arrival changes two activities to a three-activity list without losing draft",
+    "2 initial activities keep individual review"
+  ],
+  "errors": []
+}
