@@ -2,6 +2,7 @@ import { prisma } from './prisma.ts';
 import { createHash } from 'node:crypto';
 import {
   normalizeSessionEditorDraft,
+  createSessionEditorBlockData,
   serializeSessionEditorDraft,
   validateSessionEditorDraft,
 } from './session-editor.ts';
@@ -39,25 +40,6 @@ function normalizeWorkoutDraft(input: unknown) {
   }
 
   return { draft, error: validateSessionEditorDraft(draft) };
-}
-
-function blockData(draft: ReturnType<typeof normalizeSessionEditorDraft>) {
-  return draft.blocks.map((block, sortOrder) => ({
-    kind: block.kind,
-    zone: block.zone,
-    durationSec: block.durationSec,
-    reps: block.reps,
-    targetType: block.target?.metric ?? null,
-    targetMode: block.target?.mode ?? 'absolute',
-    targetReference: block.target?.reference ?? null,
-    targetLow: block.target ? Math.round(block.target.low) : null,
-    targetHigh: block.target ? Math.round(block.target.high) : null,
-    targetLowDecimal: block.target ? String(block.target.low) : null,
-    targetHighDecimal: block.target ? String(block.target.high) : null,
-    note: block.note.trim() || null,
-    skipped: block.skipped,
-    sortOrder,
-  }));
 }
 
 export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps = {}) {
@@ -121,7 +103,7 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
         status: 'planned',
         source: owner === 'coach' ? 'coach-library' : 'athlete-library',
         adjusted: false,
-        blocks: { create: blockData(draft) },
+        blocks: { create: createSessionEditorBlockData(serialized.blocks) },
       };
 
       if (!sessionId) {

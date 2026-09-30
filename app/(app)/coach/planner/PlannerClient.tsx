@@ -1,8 +1,9 @@
 'use client';
 
 import { derivePlannerSourceDurationSec, type PlannerSourceMetricBlock } from '@/lib/planner-source-metrics';
-import { getTemplateCadence, type TemplateCadence } from '@/lib/template-cadence';
-import { PlannerDesk, type PlannerDeskAthlete, type PlannerDeskCalendarDay, type PlannerDeskSource } from '@/components/PlannerDesk';
+import { getTemplateCadence } from '@/lib/template-cadence';
+import { PlannerDesk } from '@/components/PlannerDesk';
+import type { PlannerAthlete, PlannerCalendarDay, PlannerSource } from '@/lib/planner-view';
 
 type PlannerTemplate = {
   id: number;
@@ -38,16 +39,16 @@ export function PlannerClient({
   initialAthleteId,
   initialDate,
 }: {
-  athletes: PlannerDeskAthlete[];
+  athletes: PlannerAthlete[];
   templates: PlannerTemplate[];
   librarySessions: PlannerLibrarySession[];
   trainingPlans: PlannerTrainingPlan[];
-  calendarDays: PlannerDeskCalendarDay[];
+  calendarDays: PlannerCalendarDay[];
   calendarLabel: string;
   initialAthleteId: number | null;
   initialDate: string;
 }) {
-  const sources: PlannerDeskSource[] = [
+  const sources: PlannerSource[] = [
     ...librarySessions.map((session) => ({
       key: `workout:${session.id}`,
       id: session.id,
@@ -64,7 +65,7 @@ export function PlannerClient({
       title: template.name,
       sport: template.sport,
       summary: template.summary,
-      cadence: getTemplateCadence(template.cadence) as TemplateCadence,
+      cadence: getTemplateCadence(template.cadence),
     })),
     ...trainingPlans.map((plan) => ({
       key: `training-plan:${plan.id}`,

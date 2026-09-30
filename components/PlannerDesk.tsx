@@ -37,49 +37,9 @@ import { getAverageSessionZone } from '@/lib/session-intensity';
 import { SessionIntensitySwatch } from '@/components/tempo/SessionIntensitySwatch';
 import { getTemplateCadence, getTemplateDurationDays, templateDatesForSelection, templateCadenceMeta, validateTemplateDateRange, type TemplateCadence } from '@/lib/template-cadence';
 
-export type PlannerDeskRole = 'coach' | 'athlete';
-export type PlannerDeskSourceKind = 'workout' | 'template' | 'training-plan';
+import type { PlannerRole, PlannerSourceKind, PlannerSource, PlannerSession, PlannerCalendarDay, PlannerAthlete } from '@/lib/planner-view';
 
-export type PlannerDeskSource = {
-  key: string;
-  id: number;
-  kind: PlannerDeskSourceKind;
-  title: string;
-  sport: string;
-  summary: string | null;
-  durationSec?: number;
-  cadence?: TemplateCadence;
-  sessionCount?: number;
-};
-
-export type PlannerDeskSession = {
-  id: number;
-  athleteId?: number | null;
-  scheduledDate: string;
-  sport: string;
-  title: string;
-  summary?: string | null;
-  status: string;
-  durationSec: number;
-  tss: number;
-  segments: Array<{ key: string; zone: number; durationSec: number; label: string; color: string }>;
-};
-
-export type PlannerDeskCalendarDay = {
-  isoDate: string;
-  label: string;
-  dateLabel: string;
-  inMonth: boolean;
-  sessions: PlannerDeskSession[];
-};
-
-export type PlannerDeskAthlete = {
-  id: number;
-  name: string;
-  email?: string;
-};
-
-type SourceTab = PlannerDeskSourceKind;
+type SourceTab = PlannerSourceKind;
 type PlacementFeedback = { dates: string[]; title: string; state: 'placing' | 'saved' | 'failed'; athleteId: number | null };
 
 export function PlannerDesk({
@@ -91,12 +51,12 @@ export function PlannerDesk({
   athletes = [],
   initialAthleteId = null,
 }: {
-  role: PlannerDeskRole;
+  role: PlannerRole;
   initialDate: string;
   calendarLabel: string;
-  calendarDays: PlannerDeskCalendarDay[];
-  sources: PlannerDeskSource[];
-  athletes?: PlannerDeskAthlete[];
+  calendarDays: PlannerCalendarDay[];
+  sources: PlannerSource[];
+  athletes?: PlannerAthlete[];
   initialAthleteId?: number | null;
 }) {
   const router = useRouter();
@@ -135,7 +95,7 @@ export function PlannerDesk({
       : selectedDates.length === selectedTemplateDays && templateRangeError === null);
   const canAssign = Boolean(selectedSource && selectedDates.length && templateRangeValid && (role === 'athlete' || selectedAthleteId));
 
-  function selectSource(source: PlannerDeskSource) {
+  function selectSource(source: PlannerSource) {
     setSelectedSourceKey(source.key);
     setMessage('');
     setMessageTone('neutral');
@@ -319,7 +279,7 @@ export function PlannerDesk({
     });
   }
 
-  function removeSession(session: PlannerDeskSession) {
+  function removeSession(session: PlannerSession) {
     if (mutationInFlight.current) return;
     if (!window.confirm(`Remove "${session.title}" from the plan? This cannot be undone.`)) return;
     mutationInFlight.current = true;
@@ -417,7 +377,7 @@ export function PlannerDesk({
   );
 }
 
-function AssignmentSummary({ source, selectedDates, selectedTemplateDays, rangeStart, rangeEnd, valid, isPending, isAssigning, message, messageTone, canAssign, onAssign }: { source: PlannerDeskSource | null; selectedDates: string[]; selectedTemplateDays: number | null; rangeStart: string | null; rangeEnd: string | null; valid: boolean; isPending: boolean; isAssigning: boolean; message: string; messageTone: 'success' | 'danger' | 'neutral'; canAssign: boolean; onAssign: () => void }) {
+function AssignmentSummary({ source, selectedDates, selectedTemplateDays, rangeStart, rangeEnd, valid, isPending, isAssigning, message, messageTone, canAssign, onAssign }: { source: PlannerSource | null; selectedDates: string[]; selectedTemplateDays: number | null; rangeStart: string | null; rangeEnd: string | null; valid: boolean; isPending: boolean; isAssigning: boolean; message: string; messageTone: 'success' | 'danger' | 'neutral'; canAssign: boolean; onAssign: () => void }) {
   const selectedCount = selectedDates.length;
   const buttonLabel = !source
     ? 'Choose a source'
@@ -453,7 +413,7 @@ function AssignmentSummary({ source, selectedDates, selectedTemplateDays, rangeS
   );
 }
 
-function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSources, selectedDate, athletes, selectedAthleteId, onAthleteChange, onQueryChange, onTabChange, onSelectSource }: { role: PlannerDeskRole; sources: PlannerDeskSource[]; selectedSource: PlannerDeskSource | null; sourceTab: SourceTab; query: string; visibleSources: PlannerDeskSource[]; selectedDate: string; athletes: PlannerDeskAthlete[]; selectedAthleteId: number | null; onAthleteChange: (athleteId: number) => void; onQueryChange: (query: string) => void; onTabChange: (tab: SourceTab) => void; onSelectSource: (source: PlannerDeskSource) => void }) {
+function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSources, selectedDate, athletes, selectedAthleteId, onAthleteChange, onQueryChange, onTabChange, onSelectSource }: { role: PlannerRole; sources: PlannerSource[]; selectedSource: PlannerSource | null; sourceTab: SourceTab; query: string; visibleSources: PlannerSource[]; selectedDate: string; athletes: PlannerAthlete[]; selectedAthleteId: number | null; onAthleteChange: (athleteId: number) => void; onQueryChange: (query: string) => void; onTabChange: (tab: SourceTab) => void; onSelectSource: (source: PlannerSource) => void }) {
   const tabs: SourceTab[] = role === 'coach' ? ['workout', 'template', 'training-plan'] : ['workout', 'template'];
   const tabSources = sources.filter((source) => source.kind === sourceTab);
   const hasSearch = query.trim().length > 0;
@@ -512,7 +472,7 @@ function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSo
   );
 }
 
-function SourceResult({ source, selected, selectedDate, onSelect }: { source: PlannerDeskSource; selected: boolean; selectedDate: string; onSelect: (source: PlannerDeskSource) => void }) {
+function SourceResult({ source, selected, selectedDate, onSelect }: { source: PlannerSource; selected: boolean; selectedDate: string; onSelect: (source: PlannerSource) => void }) {
   return (
     <button type="button" aria-pressed={selected} onClick={() => onSelect(source)} className={`flex w-full min-w-0 items-start gap-3 rounded-[3px] border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${selected ? 'border-[var(--field-selected-border)] bg-[var(--surface)] shadow-[var(--shadow-inset)]' : 'border-[var(--nav-border)] bg-[var(--field-surface)] hover:border-[var(--field-selected-border)] hover:bg-[var(--surface)]'}`}>
       <span className={`mt-1 h-8 w-1 shrink-0 rounded-full ${source.kind === 'template' ? 'bg-[var(--color-zone-4)]' : source.kind === 'training-plan' ? 'bg-[var(--color-zone-5)]' : 'bg-[var(--color-zone-2)]'}`} />
@@ -525,7 +485,7 @@ function SourceResult({ source, selected, selectedDate, onSelect }: { source: Pl
   );
 }
 
-function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, selectedDate, days, selectedDates, selectedSource, onNavigate, onNavigateWeek, onSelectDate }: { onSelectTemplateRange: () => void; placement: PlacementFeedback | null; label: string; initialDate: string; selectedDate: string; days: PlannerDeskCalendarDay[]; selectedDates: string[]; selectedSource: PlannerDeskSource | null; onNavigate: (offset: number) => void; onNavigateWeek: (offset: -1 | 1) => void; onSelectDate: (date: string) => void }) {
+function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, selectedDate, days, selectedDates, selectedSource, onNavigate, onNavigateWeek, onSelectDate }: { onSelectTemplateRange: () => void; placement: PlacementFeedback | null; label: string; initialDate: string; selectedDate: string; days: PlannerCalendarDay[]; selectedDates: string[]; selectedSource: PlannerSource | null; onNavigate: (offset: number) => void; onNavigateWeek: (offset: -1 | 1) => void; onSelectDate: (date: string) => void }) {
   const weekStripRef = useRef<HTMLDivElement>(null);
   const todayIso = format(new Date(), 'yyyy-MM-dd');
   const weekStart = startOfWeek(parseISO(`${selectedDate}T00:00:00`), { weekStartsOn: 1 });
@@ -625,7 +585,7 @@ function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, s
   );
 }
 
-function CalendarCell({ feedback, day, today, selected, templateMode, onSelect }: { feedback: PlacementFeedback | null; day: PlannerDeskCalendarDay; today: boolean; selected: boolean; templateMode: boolean; onSelect: () => void }) {
+function CalendarCell({ feedback, day, today, selected, templateMode, onSelect }: { feedback: PlacementFeedback | null; day: PlannerCalendarDay; today: boolean; selected: boolean; templateMode: boolean; onSelect: () => void }) {
   const sessionNames = day.sessions.slice(0, 3).map((session) => session.title).join(', ');
   const extraSessionCount = Math.max(0, day.sessions.length - 3);
   const previewSession = day.sessions[0];
@@ -644,7 +604,7 @@ function CalendarCell({ feedback, day, today, selected, templateMode, onSelect }
   );
 }
 
-function SelectionPanel({ role, sessions, selectedDates, isPending, removingId, onSelectOnlyDate, onRemoveSession }: { role: PlannerDeskRole; sessions: PlannerDeskSession[]; selectedDates: string[]; isPending: boolean; removingId: number | null; onSelectOnlyDate: (date: string) => void; onRemoveSession: (session: PlannerDeskSession) => void }) {
+function SelectionPanel({ role, sessions, selectedDates, isPending, removingId, onSelectOnlyDate, onRemoveSession }: { role: PlannerRole; sessions: PlannerSession[]; selectedDates: string[]; isPending: boolean; removingId: number | null; onSelectOnlyDate: (date: string) => void; onRemoveSession: (session: PlannerSession) => void }) {
   const multiple = selectedDates.length > 1;
   return (
     <section className="planner-desk__selection min-w-0 border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-4 shadow-[var(--shadow-inset)]">
@@ -665,14 +625,14 @@ function SelectionPanel({ role, sessions, selectedDates, isPending, removingId, 
   );
 }
 
-function SelectedDaySessions({ role, date, sessions, isPending, removingId, onRemoveSession }: { role: PlannerDeskRole; date: string | undefined; sessions: PlannerDeskSession[]; isPending: boolean; removingId: number | null; onRemoveSession: (session: PlannerDeskSession) => void }) {
+function SelectedDaySessions({ role, date, sessions, isPending, removingId, onRemoveSession }: { role: PlannerRole; date: string | undefined; sessions: PlannerSession[]; isPending: boolean; removingId: number | null; onRemoveSession: (session: PlannerSession) => void }) {
   if (!date) return <p className="text-sm text-[var(--text-secondary)]">Select a day to see its sessions.</p>;
   const daySessions = sessions.filter((session) => session.scheduledDate === date);
   if (!daySessions.length) return <p className="text-sm text-[var(--text-secondary)]">No sessions assigned to this day.</p>;
   return <div className="space-y-2">{daySessions.map((session) => <SessionDetail key={session.id} role={role} session={session} isPending={isPending} removingId={removingId} onRemoveSession={onRemoveSession} />)}</div>;
 }
 
-function SessionDetail({ role, session, isPending, removingId, onRemoveSession }: { role: PlannerDeskRole; session: PlannerDeskSession; isPending: boolean; removingId: number | null; onRemoveSession: (session: PlannerDeskSession) => void }) {
+function SessionDetail({ role, session, isPending, removingId, onRemoveSession }: { role: PlannerRole; session: PlannerSession; isPending: boolean; removingId: number | null; onRemoveSession: (session: PlannerSession) => void }) {
   const sessionHref = role === 'athlete' ? `/athlete/session/${session.id}?from=planner` : session.athleteId ? `/coach/athletes/${session.athleteId}?from=planner&date=${session.scheduledDate}` : '/coach/planner';
   return (
     <div className="border border-[var(--field-selected-border)] bg-[var(--surface)] p-3">
@@ -692,25 +652,25 @@ function SessionStatusIcon({ status }: { status: string }) {
   return <Icon aria-hidden="true" className={`h-3 w-3 ${className}`} />;
 }
 
-function coachSource(source: PlannerDeskSource) {
+function coachSource(source: PlannerSource) {
   if (source.kind === 'template') return { kind: 'template' as const, templateId: source.id };
   if (source.kind === 'training-plan') return { kind: 'training-plan' as const, trainingPlanId: source.id };
   return { kind: 'library-session' as const, sessionId: source.id };
 }
 
-function sourceMeta(source: PlannerDeskSource, date: string) {
+function sourceMeta(source: PlannerSource, date: string) {
   if (source.kind === 'workout') return source.durationSec ? formatDuration(source.durationSec) : 'Workout';
   if (source.kind === 'training-plan') return `${source.sessionCount ?? 0} sessions`;
   return `${getTemplateDurationDays(source.cadence ?? 'day', date)} days`;
 }
 
-function sourceDescription(source: PlannerDeskSource, date: string) {
+function sourceDescription(source: PlannerSource, date: string) {
   if (source.kind === 'training-plan') return 'Monday-start plan with independent athlete sessions.';
   if (source.kind === 'template') return `${templateCadenceMeta[source.cadence ?? 'day'].label} · ${getTemplateDurationDays(source.cadence ?? 'day', date)} target day${getTemplateDurationDays(source.cadence ?? 'day', date) === 1 ? '' : 's'}.`;
   return 'Saved workout copied independently onto the selected dates.';
 }
 
-function calendarInstruction(source: PlannerDeskSource | null) {
+function calendarInstruction(source: PlannerSource | null) {
   if (source?.kind === 'template') return source.cadence === 'day' ? 'Select the day for this single-day template.' : 'Select a start date, then an end date for this template.';
   if (source?.kind === 'training-plan') return 'Select the week anchor. Training plans always begin on Monday.';
   return 'Select one or more dates for the saved workout.';

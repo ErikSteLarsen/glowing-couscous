@@ -1,8 +1,34 @@
 # Current status
 
 Updated 2026-09-30. Current evidence snapshot, not implementation history.
-Latest checks cover truthful Home, workout/Profile/Live recovery and Account
-controls and safe account deletion. Older provider/device results retain their recorded scope.
+Latest checks cover the planner/persistence architecture cleanup and safe
+account deletion/recovery regressions. Older browser/provider/device results
+retain their recorded scope.
+
+## Planner and persistence architecture cleanup, 2026-09-30
+
+- Pre-existing Calendar, training setup and deletion work was committed as
+  `3e634da` and pushed to `origin/main` before cleanup. Push success is recorded;
+  this round did not verify production deployment.
+- Planner source/session/day contracts now belong to `lib/planner-view.ts`.
+  Personal Calendar sources are restricted to workouts/templates and no longer
+  import their contract from coach UI. Both planner services use the shared
+  persisted-block metric adapter. Personal session and workout-library writes
+  share canonical block data shaping, preserving decimal precision and omitting
+  source block IDs. Account deletion exposes preparation and erasure phases;
+  retention/detachment remain inside the final serializable transaction.
+- `pnpm test`: 314/314; `pnpm lint`: pass; direct TypeScript: pass;
+  `pnpm build --webpack`: pass, including Prisma generation, all eight migrations,
+  TypeScript and 80 pages. Migrations and seven PostgreSQL acceptance tests ran
+  only against a new disposable local `tempo_acceptance` database. Deletion
+  rollback/concurrency, identity/throttle checks, anonymized shares, recipient
+  history and recovery conflicts passed. The configured database was not used.
+- The first full test run overlapped Prisma regeneration and hit a transient
+  missing PrismaClient export; after generation finished all 314 passed.
+  Default `pnpm build` successfully generated/migrated, then remained at Turbopack
+  compilation without further output and was interrupted. The migration-bearing
+  webpack build passed. Middleware deprecation remains. No browser, physical
+  device or live-provider acceptance was performed for this refactor.
 
 ## Guided training targets on Home, 2026-09-30
 
@@ -114,12 +140,12 @@ controls and safe account deletion. Older provider/device results retain their r
 
 | Gate | Latest recorded result | Scope / limits |
 |---|---|---|
-| `pnpm test` | 310/310 pass, 2026-09-30 | Training setup completeness/time parsing, metric validation and preference preservation, plus existing Home/recovery/account/deletion/save safety coverage |
+| `pnpm test` | 314/314 pass, 2026-09-30 | Planner contracts, decimal/repeated/pause metrics, independent block persistence, plus existing training setup/Home/recovery/account/deletion/save safety coverage |
 | `pnpm lint` | Pass, 2026-09-30 | Full repository |
 | Direct TypeScript | Pass, 2026-09-30 | Existing generated client |
 | Direct `next build --webpack` | Pass, 2026-09-30 | TypeScript and 80 pages; middleware deprecation remains |
-| `pnpm build` | Latest attempt stopped at unavailable local review database, 2026-09-30 | Prisma generation passed after own preview stopped; prior full pass on disposable PostgreSQL remains recorded above; configured database was not migrated |
-| PostgreSQL acceptance | Pass, 2026-09-30 | Recovery acceptance plus six deletion scenarios: owned data/provider/webhook removal, retained anonymized shares, unshare scope, recipient history, durable throttle, Google proof expiry, provider outage, rollback and concurrent deletion |
+| `pnpm build` | `pnpm build --webpack` pass, 2026-09-30; default Turbopack compilation interrupted | Generation, all eight migrations, TypeScript and 80 pages passed on disposable PostgreSQL; configured database was not migrated |
+| PostgreSQL acceptance | 7/7 pass after architecture cleanup, 2026-09-30 | Recovery acceptance plus six deletion scenarios: owned data/provider/webhook removal, retained anonymized shares, unshare scope, recipient history, durable throttle, Google proof expiry, provider outage, rollback and concurrent deletion |
 | HTTP deletion acceptance | Pass, 2026-09-30 | Local production server/disposable DB: credentials cookie, cross-site rejection, wrong password, actual deletion, retained public [deleted] preview, expired old cookie, export 404 |
 | Migration status | Workout-save and safe-account-deletion migrations applied only to disposable PostgreSQL | Deploy migrations with code before using the new behavior elsewhere; configured database was not changed by these checks |
 
@@ -253,7 +279,7 @@ rules; global design files were preserved.
 
 1. Verify remaining migrations in the intended target, including provider
    health; the Strava notification migration is confirmed in the configured
-   database. Regenerate the local Prisma client without the Windows lock.
+   database. The latest local Prisma generation passed against the current schema.
    Verify PostgreSQL persistence/concurrent placement and
    webhook claims without resetting existing data.
 2. Configure HTTPS Strava callbacks/subscription and scheduled authenticated
@@ -281,8 +307,9 @@ rules; global design files were preserved.
 6. Before broad signup, decide/complete privacy/support information, live-provider
    deletion acceptance and server-side signup abuse controls. Earlier readiness review
    recorded these missing; no launch certification is claimed.
-7. Middleware-to-proxy deprecation persists. Migration-bearing build and Google
-   font fetching remain environment-sensitive gates.
+7. Middleware-to-proxy deprecation persists. Default Turbopack compilation stalled
+   during the latest cleanup; the migration-bearing webpack build passed on
+   disposable PostgreSQL. The root font is bundled locally.
 
 ## Documentation maintenance
 

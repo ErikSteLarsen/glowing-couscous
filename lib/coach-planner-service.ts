@@ -1,13 +1,12 @@
 import { addDays, differenceInCalendarDays, endOfMonth, endOfWeek, format, formatISO, isValid, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 import { prisma } from './prisma.ts';
-import { deriveSessionMetrics } from './session-math.ts';
+import { derivePlannerSessionMetrics } from './planner-source-metrics.ts';
 import {
   serializePlannerDraftForSave,
   validatePlannerSessionDraft,
   type PlannerSessionDraft,
 } from './planner-draft.ts';
 import { createSessionSnapshotJson } from './session-snapshot-service.ts';
-import type { WorkoutTargetReference } from './workout-targets.ts';
 
 type CoachPlannerDeps = {
   db?: typeof prisma;
@@ -85,18 +84,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
       ]);
 
       const shapeSession = (session: typeof sessions[number]) => {
-        const metrics = deriveSessionMetrics(
-          session.blocks.map((block) => ({
-            kind: toTempoKind(block.kind),
-            zone: toTempoZone(block.zone),
-            durationSec: block.durationSec,
-            reps: block.reps,
-            target:
-              block.targetType && block.targetLow !== null && block.targetHigh !== null
-                 ? { metric: toTargetType(block.targetType), mode: block.targetMode === 'relative' ? 'relative' : 'absolute', reference: block.targetReference as WorkoutTargetReference | null, low: Number(block.targetLowDecimal ?? block.targetLow), high: Number(block.targetHighDecimal ?? block.targetHigh) }
-               : null,
-          })),
-        );
+        const metrics = derivePlannerSessionMetrics(session.blocks);
 
         return {
           id: session.id,
@@ -358,18 +346,6 @@ async function updateExistingSession(
 function parseReferenceDate(input?: string) {
   const parsed = input ? parseISO(input) : new Date();
   return isValid(parsed) ? parsed : new Date();
-}
-
-function toTempoKind(input: string) {
-  return input === 'warmup' || input === 'work' || input === 'recovery' || input === 'cooldown' || input === 'pause' ? input : 'work';
-}
-
-function toTempoZone(input: number) {
-  return input >= 1 && input <= 5 ? (Math.round(input) as 1 | 2 | 3 | 4 | 5) : 2;
-}
-
-function toTargetType(input: string) {
-  return input === 'power' || input === 'pace' || input === 'hr' || input === 'rpe' ? input : 'power';
 }
 
 export const coachPlannerService = createCoachPlannerService();

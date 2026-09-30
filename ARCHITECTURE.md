@@ -91,6 +91,7 @@ navigation.
 | Athlete reads | `lib/athlete-service.ts`, `lib/home-summary.ts` | Home, Calendar, Activity, profile, discovery, and session reads; Home reads current-week outcomes separately from the latest four activities and uses pure outcome/load summaries |
 | Athlete planning | `app/(app)/athlete/calendar/TrainingCalendar.tsx`, `lib/athlete-service.ts`, `lib/athlete-planner-service.ts`, `lib/template-service.ts`, `lib/workout-library-service.ts` | Unified week/month calendar, inline source selection and date review, private dated copies and existing planner API mutations |
 | Coach planning | `lib/coach-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, dated sessions, source search, and roster-scoped planner writes |
+| Shared planning contracts and metrics | `lib/planner-view.ts`, `lib/planner-source-metrics.ts` | UI-independent source/session/day contracts; personal sources exclude coach training plans; persisted planner block conversion and canonical repeated source durations |
 | Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |
 | Guided workout creation | `lib/guided-workout.ts`, `lib/guided-workout-service.ts`, `lib/workout-llm.ts`, `components/GuidedWorkoutForm.tsx` | Owner-scoped recent-training summary, validated full model-authored workouts, app-wide provider health cache, standard fallback patterns, and unsaved draft handoff to the shared builder |
 | Training plans | `lib/coach-training-plan-service.ts` | Reusable weekday-based coach plans |
@@ -164,6 +165,10 @@ actual targets, and no schema change is required.
 hashes for transactional workout creation. Keep the identity after workout
 deletion to refuse accidental recreation on retry. Edits claim the expected
 Session revision before replacing blocks inside the same transaction.
+`session-editor.createSessionEditorBlockData` shapes canonical serialized blocks
+for personal planner and workout-library writes: omit source block IDs, round
+legacy integer target fields and retain decimal targets, repetition, skip state
+and order. Do not create another route or service-specific block serializer.
 
 Account controls live separately from the Profile training form. Sign-out
 everywhere increments User.sessionVersion; fresh sign-ins read its current
@@ -176,6 +181,9 @@ OAuth callback metadata within five minutes; JWT refresh/update does not renew
 that timestamp. Final deletion rechecks sessionVersion and password hash.
 Serializable transactions with bounded serialization/deadlock retries protect
 anonymization, recipient detachment and cascade deletion as one unit.
+The service separates durable identity preparation from final erasure. Share
+retention and recipient detachment helpers receive the existing transaction;
+they must complete before User deletion and must not commit independently.
 
 `account-deletion-privacy` regenerates retained ShareLink snapshots through the
 existing projection allowlist and clears titles, summaries and block notes.

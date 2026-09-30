@@ -34,6 +34,20 @@ test('athlete pages and coach-request routes do not access prisma directly', asy
   }
 });
 
+test('planner view contracts belong to the domain and the personal Calendar does not depend on coach UI', async () => {
+  const [calendar, coachPlanner, plannerDesk, contracts] = await Promise.all([
+    read('app/(app)/athlete/calendar/TrainingCalendar.tsx'),
+    read('app/(app)/coach/planner/PlannerClient.tsx'),
+    read('components/PlannerDesk.tsx'),
+    read('lib/planner-view.ts'),
+  ]);
+  for (const consumer of [calendar, coachPlanner, plannerDesk]) {
+    assert.match(consumer, /from '@\/lib\/planner-view'/);
+  }
+  assert.doesNotMatch(calendar, /components\/PlannerDesk/);
+  assert.doesNotMatch(contracts, /components\//);
+});
+
 test('service modules expose factory constructors', async () => {
   const athleteServiceSource = await read('lib/athlete-service.ts');
   const coachRequestServiceSource = await read('lib/coach-request-service.ts');

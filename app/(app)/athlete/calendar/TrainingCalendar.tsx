@@ -6,7 +6,7 @@ import { addDays, addMonths, format, parseISO } from 'date-fns';
 import { ChevronLeft, ChevronRight, Plus, Search, X, Trash2 } from 'lucide-react';
 import { ActionLink, TopBar, primaryButtonClassName, ghostButtonClassName, formFieldClassName, getSegmentedChoiceClassName, buttonFocusClassName } from '@/components/ui';
 import { SessionRow, type SessionRowData } from '@/components/tempo/SessionRow';
-import type { PlannerDeskSource } from '@/components/PlannerDesk';
+import type { PersonalPlannerSource } from '@/lib/planner-view';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
 import { isAssignmentDate, templateDatesForSelection } from '@/lib/template-cadence';
@@ -14,7 +14,7 @@ import { isAssignmentDate, templateDatesForSelection } from '@/lib/template-cade
 type CalendarDay = { isoDate: string; label: string; dateLabel: string; isToday: boolean; isCurrentMonth: boolean; sessions: SessionRowData[] };
 export function TrainingCalendar({ date, view, label, today, days, sources, initiallyAdding = false }: {
   date: string; view: 'week' | 'month'; label: string; today: string;
-  days: CalendarDay[]; sources: PlannerDeskSource[]; initiallyAdding?: boolean;
+  days: CalendarDay[]; sources: PersonalPlannerSource[]; initiallyAdding?: boolean;
 }) {
   const router = useRouter();
   const [navigating, navigate] = useTransition();

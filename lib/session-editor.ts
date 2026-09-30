@@ -416,6 +416,25 @@ export function serializeSessionEditorDraft(draft: SessionEditorDraft) {
   };
 }
 
+export function createSessionEditorBlockData(blocks: ReturnType<typeof serializeSessionEditorDraft>['blocks']) {
+  return blocks.map((block) => ({
+    kind: block.kind,
+    zone: block.zone,
+    durationSec: block.durationSec,
+    reps: block.reps,
+    targetType: block.targetType,
+    targetMode: block.targetMode,
+    targetReference: block.targetReference,
+    targetLow: block.targetLow === null ? null : Math.round(block.targetLow),
+    targetHigh: block.targetHigh === null ? null : Math.round(block.targetHigh),
+    targetLowDecimal: block.targetLowDecimal,
+    targetHighDecimal: block.targetHighDecimal,
+    note: block.note,
+    skipped: block.skipped,
+    sortOrder: block.sortOrder,
+  }));
+}
+
 export function hasBaselineActualDifference(
   baseline: SessionEditorDraft,
   actual: SessionEditorDraft,

@@ -169,8 +169,8 @@ request; normal workout creation uses one model request per generated draft.
   Install/restore dependencies if the tree is actually incomplete.
 - `pnpm exec next build --webpack` checks the bundle separately from migrations.
   Using an existing Prisma Client does not verify generation or deployment.
-- Builds need access to the configured Google font. A temporary system-font
-  substitution does not verify the unmodified production build.
+- The root layout bundles Schibsted Grotesk from `app/fonts/`; production builds
+  use that local asset without a Google Fonts request.
 
 Use [verification](VERIFICATION.md) for acceptance and
 [current status](agent-workspace/CURRENT-STATUS.md) for evidence/open gates.

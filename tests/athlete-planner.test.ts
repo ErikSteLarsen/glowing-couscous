@@ -140,6 +140,37 @@ test('athlete planner creates independent sessions for each selected date', asyn
   assert.equal(state.plans.length, 1);
 });
 
+test('personal session saves copy block content without retaining source IDs or losing precision', async () => {
+  const { service, state } = createPlacementHarness();
+  const result = await service.saveSession(7, {
+    dates: ['2026-08-24', '2026-08-26'],
+    sport: 'RUNNING', title: 'Precise intervals',
+    blocks: [
+      {
+        id: 999, kind: 'work', zone: 4, durationSec: 300, reps: 4, skipped: true,
+        target: { metric: 'pace', mode: 'relative', reference: 'threshold-pace', low: 99.94, high: 100.25 },
+        note: '  Controlled  ',
+      },
+      { kind: 'cooldown', zone: 1, durationSec: 300 },
+    ],
+  });
+  assert.equal(result.ok, true);
+  for (const session of state.sessions) {
+    const blocks = (session.blocks as { create: Array<Record<string, unknown>> }).create;
+    assert.equal(blocks.length, 2);
+    assert.equal(Object.hasOwn(blocks[0], 'id'), false);
+    assert.equal(blocks[0].targetLow, 100);
+    assert.equal(blocks[0].targetHigh, 100);
+    assert.equal(blocks[0].targetLowDecimal, '99.94');
+    assert.equal(blocks[0].targetHighDecimal, '100.25');
+    assert.equal(blocks[0].targetReference, 'threshold-pace');
+    assert.equal(blocks[0].reps, 4);
+    assert.equal(blocks[0].skipped, true);
+    assert.equal(blocks[0].note, 'Controlled');
+    assert.equal(blocks[0].sortOrder, 0);
+  }
+});
+
 test('athlete planner places a saved workout atomically and replays the same request without duplicate writes', async () => {
   const { service, state } = createPlacementHarness();
   const input = {
