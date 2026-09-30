@@ -24,6 +24,7 @@ export default async function AthleteWorkoutsPage({
   ]);
 
   return <FocusWorkouts
+    ownerId={user.id}
     role="ATHLETE"
     workouts={workouts}
     templates={templates}

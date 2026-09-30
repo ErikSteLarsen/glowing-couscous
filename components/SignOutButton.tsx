@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
+import { parseApplicationUserId } from '@/lib/auth-principal';
+import { clearClientRecovery } from '@/lib/client-recovery-cleanup';
 import {
   compactPrimaryButtonClassName,
   compactSecondaryButtonClassName,
@@ -17,13 +19,17 @@ type SignOutButtonProps = {
 export function SignOutButton({ tone = 'secondary', size = 'default' }: SignOutButtonProps) {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const { data: session } = useSession();
 
   async function handleSignOut() {
     setIsSigningOut(true);
     setErrorMessage('');
 
     try {
-      await signOut({ callbackUrl: '/login' });
+      await signOut({ redirect: false });
+      const userId = parseApplicationUserId(session?.user?.id);
+      if (userId !== null) clearClientRecovery(userId);
+      window.location.assign('/login');
     } catch {
       setIsSigningOut(false);
       setErrorMessage('Could not sign out. Please try again.');

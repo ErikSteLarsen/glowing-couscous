@@ -17,7 +17,7 @@ export async function PATCH(
   if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   const result = await workoutLibraryService.saveForOwner('athlete', user.id, body.value, parsedSessionId);
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
-  return NextResponse.json({ ok: true, sessionId: result.sessionId });
+  return NextResponse.json(result);
 }
 
 export async function DELETE(

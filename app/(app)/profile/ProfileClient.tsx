@@ -16,12 +16,17 @@ import {
 import { validatePerformanceProfile, type PerformanceProfile } from '@/lib/performance-profile';
 import { calculateOlympiatoppenHeartRateZones, formatPaceSecondsPerKm, getRunningPaceZones, OLYMPIATOPPEN_HEART_RATE_PERCENT_BANDS, parsePaceSecondsPerKm } from '@/lib/profile-training-zones';
 import type { TempoZone } from '@/lib/tempo-blocks';
+import { useDraftRecovery } from '@/components/useDraftRecovery';
+import { DraftRecoveryNotice } from '@/components/DraftRecoveryNotice';
+import type { RecoveryDraft } from '@/lib/draft-recovery';
+import { parseProfileRecovery } from '@/lib/profile-recovery';
 
 type Account = {
   id: number;
   name: string | null;
   email: string | null;
   performanceProfile: PerformanceProfile;
+  updatedAt: Date | string;
 };
 
 type PaceDraft = { fastest: string; slowest: string };
@@ -54,6 +59,23 @@ export function ProfileClient({ account }: { account: Account }) {
   const savebarPortalReady = useSyncExternalStore(subscribePortalReady, getPortalClientSnapshot, getPortalServerSnapshot);
   const router = useRouter();
   const { update } = useSession();
+  const [revision, setRevision] = useState(() => new Date(account.updatedAt).toISOString());
+  const recoveryPayload = getDraftSnapshot(name, performanceProfile, raceTimeDraft, customizedZones, paceDrafts);
+  const recovery = useDraftRecovery({ userId: account.id, surface: 'profile', resource: 'profile', baseline: revision, payload: recoveryPayload, dirty: recoveryPayload !== savedSnapshot });
+
+  function restoreProfile(record: RecoveryDraft) {
+    const recovered = parseProfileRecovery(record.payload);
+    if (!recovered) { setError('This draft cannot be read. Discard it and start again.'); return; }
+    if (recoveryPayload !== savedSnapshot && !window.confirm('Replace your current unsaved Profile changes with this recovered draft?')) return;
+    if (record.baseline !== revision && !window.confirm('Your saved profile changed after this draft. Restore it for review? Nothing will be saved until you review and save the form.')) return;
+    setName(recovered.name);
+    setPerformanceProfile(recovered.profile);
+    setRaceTimeDraft(recovered.raceTimeDraft);
+    setCustomizedZones(recovered.customizedZones);
+    setPaceDrafts(recovered.paceDrafts);
+    recovery.restored(record);
+    setMessage('Profile draft restored. Review your changes, then save.');
+  }
 
   function refreshCalculatedPaces(profile: PerformanceProfile) {
     const ranges = getRunningPaceZones(profile);
@@ -165,7 +187,7 @@ export function ProfileClient({ account }: { account: Account }) {
       const res = await fetch('/api/account/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, performanceProfile: profileToSave }),
+        body: JSON.stringify({ name, performanceProfile: profileToSave, expectedUpdatedAt: revision }),
       });
 
       if (!res.ok) {
@@ -175,7 +197,10 @@ export function ProfileClient({ account }: { account: Account }) {
         return;
       }
 
+      const payload = await res.json() as { updatedAt: string };
       profileSaved = true;
+      setRevision(payload.updatedAt);
+      recovery.discard();
       setPerformanceProfile(profileToSave);
       setSavedSnapshot(submittedSnapshot);
       await update();
@@ -198,6 +223,7 @@ export function ProfileClient({ account }: { account: Account }) {
   return (
     <div className="page-content--compact profile-page__content">
       <Surface>
+        <DraftRecoveryNotice candidates={recovery.candidates} status={recovery.status} disabled={saving} onRestore={restoreProfile} onDiscard={recovery.discard} />
         <form id="profile-form" onSubmit={handleSubmit} onChangeCapture={() => { setError(''); setMessage(''); }} className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block space-y-2">

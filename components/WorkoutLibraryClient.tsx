@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useSyncExternalStore, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -40,6 +40,10 @@ import {
 } from '@/lib/session-editor-adapters';
 import { getSportLabel } from '@/lib/sport';
 import type { PerformanceProfile } from '@/lib/performance-profile';
+import { useDraftRecovery } from '@/components/useDraftRecovery';
+import { DraftRecoveryNotice } from '@/components/DraftRecoveryNotice';
+import { parseWorkoutRecovery } from '@/lib/workout-recovery';
+import type { RecoveryDraft } from '@/lib/draft-recovery';
 
 type WorkoutRecord = {
   id: number;
@@ -49,6 +53,7 @@ type WorkoutRecord = {
   summary: string | null;
   sportMetricsJson: string | null;
   date?: string | Date | null;
+  updatedAt?: string | Date;
   blocks: PlannerEditorTemplateRecord['blocks'];
 };
 
@@ -71,6 +76,7 @@ export function WorkoutLibraryClient({
   initialWorkoutId = null,
   previewMode = false,
   designDirection = null,
+  ownerId = null,
 }: {
   role: 'COACH' | 'ATHLETE';
   workouts: WorkoutRecord[];
@@ -80,6 +86,7 @@ export function WorkoutLibraryClient({
   initialWorkoutId?: number | null;
   previewMode?: boolean;
   designDirection?: 'nocturne' | null;
+  ownerId?: number | null;
 }) {
   const router = useRouter();
   const initialWorkout = initialWorkoutId === null ? null : workouts.find((workout) => workout.id === initialWorkoutId) ?? null;
@@ -98,6 +105,29 @@ export function WorkoutLibraryClient({
   const [guidedFormOpen, setGuidedFormOpen] = useState(false);
   const [guidedInfo, setGuidedInfo] = useState<GuidedWorkoutInfo | null>(null);
   const clientMounted = useSyncExternalStore(subscribeToNothing, clientSnapshot, serverSnapshot);
+  const [requestKey, setRequestKey] = useState('');
+  const [revision, setRevision] = useState(() => initialWorkout?.updatedAt ? new Date(initialWorkout.updatedAt).toISOString() : '');
+  const recovery = useDraftRecovery({ userId: previewMode ? null : ownerId, surface: 'workout', resource: selectedWorkoutId === null ? 'new' : String(selectedWorkoutId), baseline: revision, payload: JSON.stringify({ draft, requestKey }), dirty: editorOpen && isDirty });
+  const draftRef = useRef(draft);
+  useEffect(() => { draftRef.current = draft; }, [draft]);
+
+  function restoreWorkout(record: RecoveryDraft) {
+    const recovered = parseWorkoutRecovery(record.payload);
+    if (!recovered) { setMessageTone('danger'); setMessage('This draft cannot be read. Discard it and start again.'); return; }
+    if (editorOpen && isDirty && !window.confirm('Replace the open draft with this recovered draft?')) return;
+    const original = record.resource === 'new' ? null : workouts.find((workout) => String(workout.id) === record.resource);
+    const currentRevision = original?.updatedAt ? new Date(original.updatedAt).toISOString() : '';
+    const asCopy = record.resource !== 'new' && (!original || currentRevision !== record.baseline);
+    recovery.discard();
+    setSelectedWorkoutId(original && !asCopy ? original.id : null);
+    setRevision(original && !asCopy ? currentRevision : '');
+    setDraft({ ...recovered.draft, id: original && !asCopy ? original.id : null, mode: 'create', scheduledDate: null, planWeekday: null });
+    setRequestKey(asCopy || !recovered.requestKey ? crypto.randomUUID() : recovered.requestKey);
+    setIsDirty(true); setEditorOpen(true); setBuilderDetailsVisible(Boolean(recovered.draft.blocks.length));
+    recovery.restored(record);
+    setMessageTone('success');
+    setMessage(asCopy ? 'The saved workout changed or was removed. Your draft was restored as a new workout to protect the saved version.' : 'Workout draft restored. Review it before saving.');
+  }
 
   const visibleWorkouts = useMemo(() => {
     const query = filterText.trim().toLowerCase();
@@ -108,6 +138,9 @@ export function WorkoutLibraryClient({
   }, [filterText, workouts]);
 
   function applyDraftAction(action: PendingDraftAction) {
+    recovery.discard();
+    setRequestKey(crypto.randomUUID());
+    setRevision(action.kind === 'workout' && action.workout.updatedAt ? new Date(action.workout.updatedAt).toISOString() : '');
     setGuidedInfo(null);
     setGuidedFormOpen(false);
     if (action.kind === 'new') {
@@ -177,6 +210,7 @@ export function WorkoutLibraryClient({
       setMessage(validationError);
       return;
     }
+    const submittedSnapshot = JSON.stringify(draft);
     startTransition(async () => {
       try {
         const payload = {
@@ -184,22 +218,32 @@ export function WorkoutLibraryClient({
           scheduledDate: null,
           planWeekday: null,
           source: role === 'COACH' ? 'coach-library' : 'athlete-library',
+          ...(selectedWorkoutId && revision ? { expectedUpdatedAt: revision } : {}),
+          ...(!selectedWorkoutId && requestKey ? { requestKey } : {}),
         };
         const response = await fetch(selectedWorkoutId ? `${endpoint}/${selectedWorkoutId}` : endpoint, {
           method: selectedWorkoutId ? 'PATCH' : 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        const payloadResponse = await response.json().catch(() => ({})) as { error?: string };
+        const payloadResponse = await response.json().catch(() => ({})) as { error?: string; sessionId?: number; updatedAt?: string };
         if (!response.ok) {
           setMessageTone('danger');
           setMessage(payloadResponse.error ?? 'Could not save this workout. Check the fields and try again.');
           return;
         }
         setMessageTone('success');
+        const untouched = JSON.stringify(draftRef.current) === submittedSnapshot;
+        if (untouched) recovery.discard();
+        if (payloadResponse.updatedAt) setRevision(payloadResponse.updatedAt);
         setMessage(selectedWorkoutId ? 'Workout updated in your library.' : 'Workout created in your library. You can now add a copy in Planner.');
-        setIsDirty(false);
-        if (!selectedWorkoutId) setEditorOpen(false);
+        setIsDirty(!untouched);
+        if (!selectedWorkoutId && payloadResponse.sessionId) {
+          setSelectedWorkoutId(payloadResponse.sessionId);
+          setDraft((current) => ({ ...current, id: payloadResponse.sessionId! }));
+          if (untouched) setEditorOpen(false);
+        }
+        if (!untouched) setMessage('The submitted workout was saved. Your newer edits are still unsaved; save again to apply them.');
         router.refresh();
       } catch {
         setMessageTone('danger');
@@ -242,6 +286,7 @@ export function WorkoutLibraryClient({
 
   return (
     <div className={designDirection ? 'study-workouts__body' : editorOpen ? 'min-w-0' : 'page-content--library workout-library'}>
+      <DraftRecoveryNotice candidates={recovery.candidates} status={recovery.status} disabled={isPending} onRestore={restoreWorkout} onDiscard={recovery.discard} />
       {designDirection || !editorOpen ? <section aria-labelledby="workout-library-title" className="study-workouts__library min-w-0 space-y-5">
         <div className="space-y-3">
           <h2 id="workout-library-title" className="text-lg font-semibold text-[var(--text)]">Workout library</h2>
@@ -261,6 +306,9 @@ export function WorkoutLibraryClient({
           </div>
         </div>
         {role === 'ATHLETE' && guidedFormOpen ? <GuidedWorkoutForm onCancel={() => setGuidedFormOpen(false)} onGenerated={(nextDraft, info) => {
+          if (editorOpen && isDirty && !window.confirm('Replace the open unsaved workout with this generated draft?')) return;
+          recovery.discard();
+          setRequestKey(crypto.randomUUID()); setRevision('');
           setSelectedWorkoutId(null);
           setDraft(nextDraft);
           setIsDirty(true);

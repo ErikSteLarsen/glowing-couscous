@@ -47,7 +47,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (userId === null) return token;
           token.userId = userId;
           token.role = (user as { role?: string | null }).role ?? null;
-          token.sessionVersion = (user as { sessionVersion?: number }).sessionVersion ?? 0;
+          const current = await prisma.user.findUnique({ where: { id: userId }, select: { sessionVersion: true } });
+          token.sessionVersion = current?.sessionVersion ?? 0;
         }
         const userId = parseApplicationUserId(token.userId);
         if (!user && userId !== null) {

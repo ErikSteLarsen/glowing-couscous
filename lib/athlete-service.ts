@@ -8,9 +8,11 @@ import { bucketActivityMetric, type ActivityIntensityTimeline } from './activity
 import { parsePerformanceProfileJson } from './performance-profile.ts';
 import { zoneForHeartRateBpm } from './profile-training-zones.ts';
 import type { WorkoutTargetReference } from './workout-targets.ts';
+import { homeActivityLoadAvailable, homeActivityReadout, summarizeHomeActivities } from './home-summary.ts';
 
 type AthleteServiceDeps = {
   db?: typeof prisma;
+  now?: () => Date;
 };
 
 function buildActivityIntensityTimeline(
@@ -60,7 +62,7 @@ function selectPrimaryRequest<T extends { status: string }>(requests: T[]) {
   return requests.find((request) => request.status === 'PENDING') ?? requests[0] ?? null;
 }
 
-export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
+export function createAthleteService({ db = prisma, now = () => new Date() }: AthleteServiceDeps = {}) {
   function mapSessionSummary(session: {
     id: number;
     title: string;
@@ -222,6 +224,9 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
     },
 
     async loadHomeDashboard(userId: number) {
+      const today = now();
+      const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
+      const currentWeekEnd = endOfWeek(today, { weekStartsOn: 1 });
       const athlete = await db.user.findUnique({
         where: { id: userId },
         include: {
@@ -231,8 +236,8 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
           sessions: {
             where: {
               date: {
-                gte: startOfWeek(new Date(), { weekStartsOn: 1 }),
-                lte: endOfWeek(new Date(), { weekStartsOn: 1 }),
+                gte: currentWeekStart,
+                lte: currentWeekEnd,
               },
             },
             include: {
@@ -244,7 +249,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
             orderBy: { date: 'asc' },
           },
           activities: {
-            orderBy: { completedAt: 'desc' },
+            orderBy: [{ completedAt: 'desc' }, { id: 'desc' }],
             take: 4,
             include: {
               session: true,
@@ -259,12 +264,19 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
 
       const overviewCards = readOverviewCardsFromPrefsJson(athlete.prefsJson);
 
+      const completedActivities = await db.activity.findMany({
+        where: { athleteId: userId, completedAt: { gte: currentWeekStart, lte: currentWeekEnd } },
+        select: { id: true, sessionId: true, completedAt: true, durationSec: true, tss: true, metricsSource: true, zoneDistributionJson: true, session: { select: { title: true } } },
+        orderBy: [{ completedAt: 'desc' }, { id: 'desc' }],
+      });
+
       const sessions = athlete.sessions
         .filter((s): s is typeof s & { date: Date } => s.date !== null)
-        .map((session) => mapSessionSummary(session));
-      const today = new Date();
+        .map((session) => ({
+          ...mapSessionSummary(session),
+          ...(session.activity ? { durationSec: session.activity.durationSec, loadAvailable: homeActivityLoadAvailable(session.activity) } : {}),
+        }));
       const todaySessions = sessions.filter((session) => isSameDay(session.date, today));
-      const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
       const weekDays = Array.from({ length: 7 }, (_, index) => {
         const day = addDays(currentWeekStart, index);
         return {
@@ -285,14 +297,17 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         };
       });
 
-      const weekTotals = sessions.reduce(
+      // Scheduled structure stays independent from saved outcome values and
+      // standalone imports, whose sessions exist only to host their outcomes.
+      const scheduledSessions = athlete.sessions.filter((session) => session.date !== null && session.source !== 'activity-import');
+      const scheduledTotals = scheduledSessions.reduce(
         (accumulator, session) => {
-          accumulator.durationSec += session.durationSec;
-          accumulator.tss += session.tss;
-          if (!session.loadAvailable) accumulator.loadUnavailableCount += 1;
+          const planned = mapSessionSummary({ ...session, activity: null, date: session.date! });
+          accumulator.durationSec += planned.durationSec;
+          accumulator.tss += planned.tss;
           return accumulator;
         },
-        { durationSec: 0, tss: 0, loadUnavailableCount: 0 },
+        { count: scheduledSessions.length, durationSec: 0, tss: 0, loadUnavailableCount: 0 },
       );
 
       return {
@@ -307,24 +322,16 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         todaySessions,
         weekDays,
         nextDays,
+        dateLabels: { today: format(today, 'EEEE, d MMMM'), shortToday: format(today, 'd MMM'), weekNumber: format(today, 'II'), weekRange: `${format(currentWeekStart, 'd MMM')} – ${format(currentWeekEnd, 'd MMM')}` },
         lastActivity: athlete.activities[0]
-          ? {
-              title: athlete.activities[0].session.title,
-              completedAt: athlete.activities[0].completedAt,
-              durationSec: athlete.activities[0].durationSec,
-              tss: athlete.activities[0].tss,
-              loadAvailable: !(athlete.activities[0].metricsSource === 'file-import' && athlete.activities[0].tss === 0),
-            }
+          ? homeActivityReadout(athlete.activities[0])
           : null,
         trend: athlete.activities
           .slice()
           .reverse()
-          .map((activity) => ({
-            label: format(activity.completedAt, 'd MMM'),
-            tss: activity.tss,
-            loadAvailable: !(activity.metricsSource === 'file-import' && activity.tss === 0),
-          })),
-        weekTotals,
+          .map(homeActivityReadout),
+        scheduledTotals,
+        completedTotals: summarizeHomeActivities(completedActivities),
         coachNote:
           athlete.coach && todaySessions[0]
             ? `Keep ${todaySessions[0].title.toLowerCase()} controlled and smooth.`

@@ -12,8 +12,8 @@ test('account profile API keeps performance metrics in the account service and o
   ]);
   assert.match(service, /performanceProfileJson/);
   assert.match(service, /updatePerformanceProfile/);
-  assert.match(route, /accountService\.updatePerformanceProfile/);
-  assert.match(route, /validatePerformanceProfile/);
+  assert.match(route, /accountService\.updateProfile/);
+  assert.match(service, /validatePerformanceProfile/);
   assert.match(profile, /Training metrics/);
   assert.match(profile, /Maximum heart rate/);
   assert.match(profile, /Running pace zones/);

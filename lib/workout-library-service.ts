@@ -1,4 +1,5 @@
 import { prisma } from './prisma.ts';
+import { createHash } from 'node:crypto';
 import {
   normalizeSessionEditorDraft,
   serializeSessionEditorDraft,
@@ -70,6 +71,9 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
     },
 
     async saveForOwner(owner: WorkoutLibraryOwner, ownerId: number, input: unknown, sessionId?: number) {
+      const safety = input && typeof input === 'object' ? input as { requestKey?: unknown; expectedUpdatedAt?: unknown } : {};
+      if (safety.requestKey !== undefined && (typeof safety.requestKey !== 'string' || !/^[a-zA-Z0-9-]{16,80}$/.test(safety.requestKey))) return { ok: false as const, error: 'Invalid save request identity.', status: 400 };
+      if (safety.expectedUpdatedAt !== undefined && (typeof safety.expectedUpdatedAt !== 'string' || !Number.isFinite(Date.parse(safety.expectedUpdatedAt)))) return { ok: false as const, error: 'Invalid workout revision.', status: 400 };
       const normalized = normalizeWorkoutDraft(input);
       if (normalized.error) {
         return { ok: false as const, error: normalized.error, status: 400 };
@@ -89,7 +93,7 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
       const existing = sessionId
         ? await db.session.findFirst({
             where: { id: sessionId, ...standaloneWhere(owner, ownerId) },
-            select: { id: true, activity: { select: { id: true } } },
+            select: { id: true, updatedAt: true, activity: { select: { id: true } } },
           })
         : null;
 
@@ -100,6 +104,7 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
       if (existing?.activity) {
         return { ok: false as const, error: 'Completed workouts cannot be edited here.', status: 409 };
       }
+      if (existing && typeof safety.expectedUpdatedAt === 'string' && existing.updatedAt.getTime() !== Date.parse(safety.expectedUpdatedAt)) return { ok: false as const, error: 'This workout changed in another tab. Reload or restore your draft as a new workout.', status: 409 };
 
       const data = {
         ...ownerWhere(owner, ownerId),
@@ -120,8 +125,41 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
       };
 
       if (!sessionId) {
+        if (typeof safety.requestKey === 'string') {
+          const identity = { userId: ownerId, owner, requestKey: safety.requestKey };
+          const payloadHash = createHash('sha256').update(JSON.stringify(data)).digest('hex');
+          const replay = async () => {
+            const prior = await db.workoutSaveRequest.findUnique({ where: { userId_owner_requestKey: identity } });
+            if (!prior || prior.payloadHash !== payloadHash || prior.sessionId === null) return { ok: false as const, error: 'This save request changed or is not confirmed. Keep the draft and retry the original save.', status: 409 };
+            const saved = await db.session.findFirst({ where: { id: prior.sessionId, ...standaloneWhere(owner, ownerId) }, select: { id: true, updatedAt: true } });
+            return saved ? { ok: true as const, sessionId: saved.id, updatedAt: saved.updatedAt.toISOString() } : { ok: false as const, error: 'The previously saved workout is no longer available.', status: 409 };
+          };
+          if (await db.workoutSaveRequest.findUnique({ where: { userId_owner_requestKey: identity } })) return replay();
+          try {
+            return await db.$transaction(async (tx) => {
+              const request = await tx.workoutSaveRequest.create({ data: { ...identity, payloadHash } });
+              const created = await tx.session.create({ data, select: { id: true, updatedAt: true } });
+              await tx.workoutSaveRequest.update({ where: { id: request.id }, data: { sessionId: created.id } });
+              return { ok: true as const, sessionId: created.id, updatedAt: created.updatedAt.toISOString() };
+            });
+          } catch (error) {
+            if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') return replay();
+            throw error;
+          }
+        }
         const created = await db.session.create({ data });
         return { ok: true as const, sessionId: created.id };
+      }
+
+      if (existing && typeof safety.expectedUpdatedAt === 'string') {
+        return db.$transaction(async (tx) => {
+          const updatedAt = new Date(Math.max(Date.now(), existing.updatedAt.getTime() + 1));
+          const claimed = await tx.session.updateMany({ where: { id: sessionId, ...standaloneWhere(owner, ownerId), updatedAt: existing.updatedAt, activity: { is: null } }, data: { updatedAt } });
+          if (claimed.count !== 1) return { ok: false as const, error: 'This workout changed while saving. Keep your draft and reload.', status: 409 };
+          await tx.block.deleteMany({ where: { sessionId } });
+          await tx.session.update({ where: { id: sessionId }, data: { ...data, updatedAt } });
+          return { ok: true as const, sessionId, updatedAt: updatedAt.toISOString() };
+        });
       }
 
       await db.$transaction([

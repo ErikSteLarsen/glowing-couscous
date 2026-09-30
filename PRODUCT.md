@@ -49,6 +49,15 @@ Coach-only authoring, roster management, requests, and multi-athlete planning ar
 - `Planner` places independent copies of reusable content onto selected athlete dates or training-plan weekdays. Workouts can target multiple dates; day, week, and month templates use exact cadence-length date ranges.
 - `Templates` stores owner-scoped reusable personal and coach day, week, or month cadence structures whose assignment span is validated by Planner.
 - Completion stores performed metrics, notes, and the latest actual snapshot in `Activity`.
+- Home separates scheduled structure by Session date from completed outcomes by
+  Activity date. Standalone imports contribute only to completed totals; matched
+  outcomes are counted once. Completed duration comes from the saved Activity,
+  while scheduled duration comes from current workout blocks. These summaries
+  do not claim comparison against the original baseline.
+- Home's Recent session load shows the latest four activity estimates, not fitness
+  change. Unknown imported load is distinct from a valid rounded zero, and partial
+  totals identify unavailable load. Empty calendar dates mean nothing scheduled,
+  not an explicitly planned rest day.
 
 ## Current Capabilities
 
@@ -90,3 +99,18 @@ The repository contains implemented authenticated product routes, shared UI comp
 ## Accessibility & Inclusion
 
 Primary workflows must remain usable on desktop and mobile and through keyboard interaction. State must remain understandable without color alone, controls need visible focus, and reduced-motion preferences must preserve feedback without unnecessary movement.
+
+## Account and recovery
+
+Profile separates training settings from Account controls. Users can inspect
+sign-in methods, request credential recovery, manage Strava access, download
+allowlisted training data and sign out everywhere. Downloads state their
+exclusions and are not complete provider-data or raw-recording backups.
+
+Workout and Profile changes have browser-only recovery for seven days. Live
+checkpoints last 24 hours and restore paused; elapsed time is counted only by
+explicit choice, with completion still explicit. Account-scoped drafts must not
+overwrite another tab's work. Failed saves retain changes, new-workout retries
+reuse their request identity, and stale edits must not silently replace newer
+server content. Public privacy/support and safe deletion remain release gates
+until their operator facts and identity/provider policies are implemented.

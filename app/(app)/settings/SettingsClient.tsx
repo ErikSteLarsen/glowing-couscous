@@ -12,12 +12,12 @@ const overviewLabels: Record<(typeof personalOverviewCardIds)[number], { title: 
     description: 'Keep the most recent completed session visible on Home.',
   },
   weekLoad: {
-    title: 'Weekly load',
-    description: 'Show planned training time and load for the current week.',
+    title: 'Training this week',
+    description: 'Show scheduled training and completed outcomes separately for the current week.',
   },
   trend: {
-    title: 'Fitness trend',
-    description: 'Show a recent training-load chart on Home. Load is estimated from session effort and duration.',
+    title: 'Recent session load',
+    description: 'Show estimated load for the latest four completed activities. This is not a fitness measurement.',
   },
 };
 
@@ -39,6 +39,7 @@ export function SettingsClient({
     setOverviewCards(nextCards);
     setMessage('');
     startTransition(async () => {
+      try {
       const response = await fetch('/api/account/profile', {
         method: 'PATCH',
         headers: {
@@ -56,6 +57,11 @@ export function SettingsClient({
 
       setMessageTone('success');
       setMessage('Overview settings updated.');
+      } catch {
+        setOverviewCards(overviewCards);
+        setMessageTone('danger');
+        setMessage('Could not reach Tempo. Your saved preferences are unchanged; try again.');
+      }
     });
   }
 

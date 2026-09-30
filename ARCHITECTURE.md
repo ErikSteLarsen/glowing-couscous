@@ -88,7 +88,7 @@ navigation.
 | Account | `lib/account-service.ts` | Profile, performance profile, and overview preference reads/writes |
 | Coach reads | `lib/coach-service.ts` | Roster and athlete-detail read models |
 | Coach requests | `lib/coach-request-service.ts` | Search, request creation, approval, rejection, and pending uniqueness |
-| Athlete reads | `lib/athlete-service.ts` | Home, Calendar, Activity, profile, discovery, and session reads |
+| Athlete reads | `lib/athlete-service.ts`, `lib/home-summary.ts` | Home, Calendar, Activity, profile, discovery, and session reads; Home reads current-week outcomes separately from the latest four activities and uses pure outcome/load summaries |
 | Athlete planning | `lib/athlete-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, private dated copies, source search, and athlete planner mutations |
 | Coach planning | `lib/coach-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, dated sessions, source search, and roster-scoped planner writes |
 | Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |
@@ -143,6 +143,27 @@ navigation.
 11. The guided creator accepts model-authored blocks only after server validation of duration, structure, zones, and cautious-history limits. Its model call receives aggregate completed-training context, never raw notes or telemetry, and never persists the draft. Provider availability uses a short database-backed lease and cache shared across app instances.
 
 ## Persistence and verification
+
+`lib/draft-recovery.ts` owns bounded, versioned browser recovery. The shared hook
+uses an account/surface/resource key and independent mount writer identities;
+adopting a draft must not erase a newer snapshot written by the original tab.
+Workout/Profile drafts expire after seven days; content-bound Live checkpoints
+expire after 24 hours and restore paused. Sign-out clears the current browser's
+account drafts. Browser recovery never claims server persistence.
+
+`account-service.updateProfile` validates the complete request before one
+compare-and-swap write of name, performance profile and supplied preferences.
+`WorkoutSaveRequest` owns user/owner/request uniqueness and normalized-payload
+hashes for transactional workout creation. Keep the identity after workout
+deletion to refuse accidental recreation on retry. Edits claim the expected
+Session revision before replacing blocks inside the same transaction.
+
+Account controls live separately from the Profile training form. Sign-out
+everywhere increments User.sessionVersion; fresh sign-ins read its current
+value. `account-export-service` uses owner filters, explicit field selections,
+a repeatable-read transaction and collection/block/output bounds. It excludes
+provider credentials, other users' private content, Strava measurements, raw
+recordings and browser drafts; versioned exclusions accompany every download.
 
 PostgreSQL is the current datasource. `prisma/migrations/` owns committed schema
 changes; pooled `DATABASE_URL` serves runtime, direct `DIRECT_URL` serves Prisma.

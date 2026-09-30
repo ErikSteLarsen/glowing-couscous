@@ -1,25 +1,58 @@
 # Current status
 
 Updated 2026-09-30. Current evidence snapshot, not implementation history.
-The Strava batch-review checks below were rerun for the latest UI change.
-Other results are carried forward at their recorded scope.
+Latest checks cover truthful Home, workout/Profile/Live recovery and Account
+controls. Older provider/device results retain their recorded scope.
 
 ## Latest recorded checks
 
 | Gate | Latest recorded result | Scope / limits |
 |---|---|---|
-| `pnpm test` | 284/284 pass, 2026-09-30 | Rerun for batch review; includes 11 Strava inbox/webhook service tests |
+| `pnpm test` | 304/304 pass, 2026-09-30 | Home, recovery, account, export, save safety and protection of newer drafts in another tab |
 | `pnpm lint` | Pass, 2026-09-30 | Full repository |
 | Direct TypeScript | Pass, 2026-09-30 | Existing generated client |
 | Direct `next build --webpack` | Pass, 2026-09-30 | TypeScript and 76 pages; middleware deprecation remains |
-| `pnpm build` | Blocked, 2026-09-30 | Rerun for batch review: Windows Prisma DLL EPERM before migrations |
-| Migration status | Strava notification migration confirmed, 2026-09-30 | Read-only configured database metadata: finished, not rolled back; other migrations and concurrent behavior require separate checks |
+| `pnpm build` | Pass, 2026-09-30 | Prisma generation, seven migrations and 78 pages on disposable local PostgreSQL |
+| PostgreSQL acceptance | Pass, 2026-09-30 | Disposable PostgreSQL 17: four concurrent retries create one workout, competing revisions, forced rollback after block deletion, atomic Profile validation/revisions, scoped export and session version increment |
+| Migration status | New workout-save migration applied only to disposable PostgreSQL | Earlier configured database read-only check found all six existing migrations applied. New additive migration must deploy before new-workout retry safety is used there |
 
 Latest checks reused installed dependencies with
 `pnpm_config_verify_deps_before_run=false`. Prisma generation, migration deploy
 and bundle compilation are distinct gates.
 
 ## Implemented behavior
+
+- Home separates scheduled block structure from completion-date Activity
+  outcomes, including standalone imports. Recent load is proportional and
+  numerically labelled, with unknown/partial load distinguished from valid
+  zero. Last outcome links include date/source; empty days say Nothing scheduled.
+- Workout/Profile drafts use seven-day browser recovery, independent tab
+  writers, explicit Restore/Discard, malformed/expiry/size checks and unavailable
+  storage navigation guards. Profile updates validate before a single revision
+  claim/write. New workout identities commit with their session and replay
+  without duplicates; edit conflicts preserve drafts/blocks. Sign-out clears
+  this browser's account drafts. Live checkpoints restore paused within 24 hours;
+  accounting for elapsed time is explicit and completion remains server-owned.
+- Profile has a separate Account section: safe sign-in capability readout,
+  credential recovery, Strava access/consequences, versioned training download,
+  current-device sign-out and sign-out everywhere. Fresh logins read the current
+  sessionVersion. Export uses allowlisted fields, repeatable-read ownership
+  filters and collection/block/output bounds. Strava measurements, raw sensor
+  recordings, tokens, other people's private content and local drafts are omitted.
+- Authenticated browser acceptance used a synthetic account exclusively on
+  disposable local PostgreSQL: Profile reload/restore retained unfinished pace
+  input, save/reload cleared recovery; workout edit reload/restore/save passed;
+  Live reload offered a checkpoint and restored paused. Home was inspected with
+  synthetic planned/actual/unknown-load outcomes in desktop dark/light and 390px
+  light; Account controls were inspected at 390px dark. Physical devices, quota
+  guards and full multi-tab/failure UI acceptance remain open. Initial browser
+  timeouts were superseded by this successful isolated run.
+  The download button produced no visible error, but the browser download event
+  timed out; completed-file inspection remains unverified. Sign-out-everywhere
+  confirmation hit a browser focus timeout, so UI revocation remains open even
+  though the database service was verified. Temporary app processes and the
+  disposable PostgreSQL container were removed; screenshot artifacts use only
+  synthetic data. No configured account or provider data was changed.
 
 - Signup creates self-coached ATHLETE accounts. Personal Workouts/Templates,
   Planner copies, Calendar, local Live, completion/correction and History form
@@ -129,6 +162,28 @@ rules; global design files were preserved.
    font fetching remain environment-sensitive gates.
 
 ## Documentation maintenance
+
+### Remaining account/recovery rollout gates, 2026-09-30
+
+The initial source assessment has been followed by the implementation and
+isolated evidence above. The full active plan remains indexed; it is not complete.
+
+- Safe account deletion is not shipped. It needs recent credentials/OAuth proof,
+  preservation of other users' coach-derived copies, explicit Strava webhook
+  cleanup and deterministic provider-failure/retry behavior. No deletion endpoint
+  or placeholder deletion button was added.
+- Operator/support identity and actual retention/backup facts remain owner
+  inputs for public privacy/support. Durable signup/login abuse controls and
+  verified-email lifecycle are still pending before broad signup.
+- Deploy the additive WorkoutSaveRequest migration with the code. It has been
+  reviewed/applied on the disposable database only; existing accounts/provider
+  data and the configured database schema were not modified by these new checks.
+- Home retains existing server-local date rules. An account timezone must be
+  applied consistently across Calendar/Planner/History, rather than Home alone.
+- Complete browser failures, multi-tab/account transitions, storage denial,
+  changed/deleted-source restoration, export download and actual session
+  invalidation UI; finish physical phone sleep/wake and keyboard acceptance.
+
 
 The 2026-09-30 consolidation replaced superseded reviews/histories with this
 snapshot, owner index and operations/verification runbooks. Deferred gates are

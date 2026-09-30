@@ -24,6 +24,7 @@ export default async function CoachWorkoutsPage() {
         description="Create and edit reusable workouts."
       />
       <WorkoutLibraryClient
+        ownerId={user.id}
         role="COACH"
         workouts={workouts}
         templates={templates}

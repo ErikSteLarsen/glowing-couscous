@@ -20,6 +20,15 @@ persistence, missing-record, rollback, uniqueness and concurrency checks.
 Historical SQLite evidence does not certify current PostgreSQL behavior;
 permissive mocks and source regex checks alone cannot prove transactional behavior.
 
+`tests/postgres-recovery.acceptance.ts` is an explicit integration check, outside
+the unit-test glob. It requires the disposable local database named
+`tempo_acceptance` on port 55432 and rejects other targets. Apply current
+migrations there, set DATABASE_URL/DIRECT_URL for that process, then run
+`node --experimental-strip-types --test tests/postgres-recovery.acceptance.ts`.
+It creates/cleans its own synthetic accounts and covers concurrent creation,
+stale edit claims, rollback after block removal, Profile conflicts, export scope
+and session-version revocation. Never point it at a real account database.
+
 ## Accounts and evidence
 
 A dedicated local Athlete account was used on the configured Neon branch.

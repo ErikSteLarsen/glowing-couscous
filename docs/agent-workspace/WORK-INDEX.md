@@ -13,9 +13,11 @@ means compatibility code, not the extension point for new work.
 | ID | Area | Status | Primary owners | Main entry points |
 |---|---|---|---|---|
 | `AUTH-001` | Authentication and dormant role compatibility | `shipped` | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts`, `lib/password-reset-service.ts` | `/login`, `/signup`, `/setup`, `/forgot-password`, `/reset-password`, `/api/auth/*` |
+| `ACCOUNT-001` | Account controls and bounded training export | `in-progress` | `lib/account-service.ts`, `lib/account-export-service.ts`, `components/AccountControls.tsx`, `/api/account/*` | `/profile`; sign-in capability, credential recovery, connection access, downloads and session revocation; deletion/public trust/auth hardening gates remain |
+| `RECOVERY-001` | Browser draft and Live checkpoint recovery | `in-progress` | `lib/draft-recovery.ts`, `components/useDraftRecovery.ts`, `components/DraftRecoveryNotice.tsx`, `lib/profile-recovery.ts`, `lib/workout-recovery.ts`, `lib/live-recovery.ts`, `WorkoutSaveRequest`, `lib/workout-library-service.ts` | Profile, workout authoring and Live; independent writers, restore/discard, revision conflicts, duplicate-safe creation and paused checkpoints; rollout/device/failure gates remain |
 | `SHELL-001` | Unified personal shell, saved theme, collapsible desktop menu, and mobile drawer | `shipped` | `components/AppShell.tsx`, `components/AppSidebar.tsx`, `components/ui.tsx` (`TopBar`, `BackControl`), `app/globals.css`, `lib/app-navigation.ts` | Authenticated `(app)` layout; persisted desktop hide/show, sticky menu recovery, and focus-managed mobile navigation |
 | `DESIGN-001` | Production Monolith system | `shipped` | `DESIGN.md`, `app/globals.css`, `app/monolith.css`, `components/FocusHome.tsx`, `components/FocusWorkouts.tsx` | Shared authenticated shell and route families; accepted browser coverage limits are in `CURRENT-STATUS.md` |
-| `HOME-001` | Personal Home overview | `shipped` | `app/(app)/athlete/page.tsx`, `components/FocusHome.tsx`, `components/AthleteHomeContent.tsx` (prior composition), `lib/athlete-service.ts` | `/athlete`; current day, week, and overview readouts |
+| `HOME-001` | Personal Home overview | `shipped` | `app/(app)/athlete/page.tsx`, `components/FocusHome.tsx`, `components/HomeTrainingReadouts.tsx`, `components/AthleteHomeContent.tsx` (prior composition), `lib/athlete-service.ts`, `lib/home-summary.ts` | `/athlete`; current day, separate scheduled/completed week summaries, last outcome and proportional recent estimated load; current browser gate is in CURRENT-STATUS.md |
 | `COACH-001` | Dormant coach roster and requests | `transitional` | `lib/coach-service.ts`, `lib/coach-request-service.ts` | Current middleware redirects coach/discovery pages; APIs retain role guards |
 | PLAN-001 | Personal planning and secondary coach planning | shipped | app/(app)/athlete/calendar/AthleteCalendarWeekScroller.tsx, components/PlannerDesk.tsx, components/tempo/SessionRow.tsx, components/tempo/SessionIntensitySwatch.tsx, lib/session-intensity.ts, lib/coach-planner-service.ts, lib/athlete-planner-service.ts, lib/assignment-service.ts | /coach/planner, /athlete/planner, /athlete/calendar |
 | `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts`, `components/WorkoutLibraryClient.tsx`, `components/FocusWorkouts.tsx` | `/coach/workouts`, `/athlete/workouts` |
@@ -30,9 +32,7 @@ means compatibility code, not the extension point for new work.
 
 ## Active work
 
-No implementation task is active. Strava batch review is implemented and verified
-in browser fixtures. Remaining live activity, integration/mobile/preview gates
-are in CURRENT-STATUS.md.
+- [Trustworthy account controls, recoverable work and truthful Home](tasks/2026-09-30-account-recovery-home.md) — Home, workout/Profile/Live recovery and initial Account controls implemented; deletion, public trust facts, auth hardening and remaining acceptance are open.
 
 ## Task lifecycle
 

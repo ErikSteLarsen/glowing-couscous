@@ -81,6 +81,7 @@ test('athlete Home keeps every session assigned to an upcoming day', async () =>
   const nextDay = addDays(today, 1);
   const athleteService = createAthleteService({
     db: {
+      activity: { async findMany() { return []; } },
       user: {
         async findUnique() {
           return {

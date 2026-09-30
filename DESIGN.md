@@ -482,6 +482,14 @@ for contextual return and execution controls.
 
 ### Workout / Session Language
 
+- Home uses `HomeTrainingReadouts` for separate Scheduled and Completed summaries
+  and the latest four activity loads. Show estimated TSS numerically and use
+  proportional bar heights; unavailable values use an em dash and explanatory
+  text, while valid zero has no positive-height bar. Each chart item links to its
+  outcome with title/date/load in its accessible name. Last activity includes
+  date, source and an outcome link. Never call these estimates a fitness trend
+  or call an empty date a planned rest day.
+
 - `SessionRow` is the shared workout-card unit across Calendar, Planner, and
   session lists. Focus Home's week ledger and Workouts' library cards use
   their own compositions over the same data and `SessionBlockBar` language.
@@ -629,3 +637,11 @@ and useful context on failure, provide a clear recovery action, and confirm
 server persistence before claiming a save. Pair visual cues with meaningful
 text or accessible announcements; do not rely on color, motion, or distant
 banners alone. Reuse shared semantic tokens and component owners.
+
+Recovery offers explicit Restore and Discard actions with timestamps and
+browser-only wording. Present stale workout edits as new copies rather than
+silently overwriting the saved source. Live restores paused; counting elapsed
+time is a separate explicit choice, and Finish remains the persistence action.
+The Profile Account section stays outside its training form and save bar's
+meaning: session controls, sign-in capability, connection access and downloads
+are independently actionable. Export omissions must be visible before download.

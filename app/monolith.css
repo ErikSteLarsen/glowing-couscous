@@ -81,6 +81,20 @@
 .study-home__trend-point div { width: 100%; min-height: 9px; background: var(--brand); opacity: .78; }
 .study-home__trend-point span { color: var(--text-secondary); font-size: 10px; white-space: nowrap; }
 
+.home-week-summary { margin: 0; display: grid; gap: 16px; }
+.home-week-summary dt { color: var(--text-secondary); font-size: 13px; font-weight: 600; }
+.home-week-summary dd { margin: 4px 0 0; }
+.home-week-summary dd > .metric-text { display: block; font-size: 26px; }
+.home-week-summary dd > span:last-child { display: block; margin-top: 4px; color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+.home-recent-load { display: flex; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.home-recent-load li { flex: 1; min-width: 0; }
+.home-recent-load a { display: flex; flex-direction: column; align-items: center; gap: 8px; border-radius: var(--radius-control, 10px); padding: 6px 2px; }
+.home-recent-load a:focus-visible { outline: 2px solid var(--field-focus); outline-offset: 2px; }
+.home-recent-load a:hover { background: var(--field-surface); }
+.home-recent-load a > span:last-child { color: var(--text-secondary); font-size: 12px; }
+.home-recent-load__track { display: flex; align-items: end; height: 80px; width: 100%; border-bottom: 1px solid var(--border); }
+.home-recent-load__track > span { display: block; width: 100%; background: var(--brand); }
+
 .study-workouts__header-count { display: flex; align-items: center; gap: 9px; color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
 .study-workouts__header-count strong { color: var(--text); font-size: 25px; line-height: 1; }
 .study-workouts__body { display: grid; gap: 18px; align-items: start; min-width: 0; }

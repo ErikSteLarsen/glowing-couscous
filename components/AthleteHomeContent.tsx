@@ -1,17 +1,20 @@
-import { endOfWeek, format, startOfWeek } from 'date-fns';
 import { ActionLink, PageShell, sectionHeadingClassName, Surface, TopBar } from '@/components/ui';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionRow, type SessionRowData } from '@/components/tempo/SessionRow';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
+import { HomeRecentLoad, HomeWeekSummary } from '@/components/HomeTrainingReadouts';
+import type { HomeTotals, homeActivityReadout } from '@/lib/home-summary';
 
 export type HomeDashboardData = {
   athlete: { name: string };
   overviewCards: string[];
   todaySessions: SessionRowData[];
   weekDays: Array<{ label: string; dateLabel: string; isoDate: string; isToday: boolean; sessions: SessionRowData[] }>;
-  lastActivity: { title: string; durationSec: number; tss: number; loadAvailable: boolean } | null;
-  weekTotals: { durationSec: number; tss: number; loadUnavailableCount: number };
-  trend: Array<{ label: string; tss: number; loadAvailable: boolean }>;
+  dateLabels: { today: string; shortToday: string; weekNumber: string; weekRange: string };
+  lastActivity: ReturnType<typeof homeActivityReadout> | null;
+  scheduledTotals: HomeTotals;
+  completedTotals: HomeTotals;
+  trend: Array<ReturnType<typeof homeActivityReadout>>;
 };
 
 function formatDuration(durationSec: number) {
@@ -28,8 +31,6 @@ function formatDuration(durationSec: number) {
 export function AthleteHomeContent({ dashboard }: { dashboard: HomeDashboardData }) {
   const nextAction = dashboard.todaySessions.find((session) => session.status !== 'completed') ?? dashboard.todaySessions[0] ?? null;
   const nextActionLabel = nextAction?.status === 'completed' ? 'Review outcome' : nextAction?.status === 'missed' ? 'Review session' : 'Open session';
-  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
 
   return (
     <PageShell className="ink-home">
@@ -72,7 +73,7 @@ export function AthleteHomeContent({ dashboard }: { dashboard: HomeDashboardData
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 id="week-glance-heading" className={sectionHeadingClassName}>Week at a glance</h2>
-              <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{format(weekStart, 'd MMM')} – {format(weekEnd, 'd MMM')} · Monday-first</p>
+              <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{dashboard.dateLabels.weekRange} · Monday-first</p>
               <p className="mt-1 text-[12px] text-[var(--text-secondary)] md:hidden">Swipe to browse your week.</p>
             </div>
           </div>
@@ -90,7 +91,7 @@ export function AthleteHomeContent({ dashboard }: { dashboard: HomeDashboardData
                   <div className="mt-3 space-y-2">
                     {day.sessions.length > 0 ? day.sessions.map((session) => (
                       <SessionRow key={session.id} session={session} href={`/athlete/session/${session.id}?from=home`} variant="compact" />
-                    )) : <p className="py-2 text-[13px] text-[var(--text-muted)]">Rest</p>}
+                    )) : <p className="py-2 text-[13px] text-[var(--text-muted)]">Nothing scheduled</p>}
                   </div>
                 </section>
               ))}
@@ -119,43 +120,16 @@ export function AthleteHomeContent({ dashboard }: { dashboard: HomeDashboardData
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
                 This week
               </p>
-              <p className="metric-text mt-3 text-[22px] font-semibold tracking-[-0.01em] text-[var(--text)]">
-                {formatDuration(dashboard.weekTotals.durationSec)}
-              </p>
-              <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
-                <MetricText>{dashboard.weekTotals.tss} TSS</MetricText>
-                {dashboard.weekTotals.loadUnavailableCount > 0 ? (
-                  <span className="ml-2 text-[11px] text-[var(--text-muted)]">
-                    Partial · unavailable for {dashboard.weekTotals.loadUnavailableCount} imported {dashboard.weekTotals.loadUnavailableCount === 1 ? 'activity' : 'activities'}
-                  </span>
-                ) : null}
-              </p>
+              <HomeWeekSummary scheduled={dashboard.scheduledTotals} completed={dashboard.completedTotals} />
             </Surface>
           ) : null}
 
           {dashboard.overviewCards.includes('trend') ? (
             <Surface className="ink-readout ink-study-tile ink-study-tile--flow">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                Fitness trend
+                Recent session load
               </p>
-              <div className="mt-3 flex items-end gap-2">
-                {dashboard.trend.length > 0 ? (
-                  dashboard.trend.map((point) => (
-                    <div key={point.label} className="flex flex-1 flex-col items-center gap-2">
-                      <div
-                        role="img"
-                        aria-label={point.loadAvailable ? `${point.tss} TSS` : 'Load unavailable'}
-                        title={point.loadAvailable ? `${point.tss} TSS` : 'Load unavailable'}
-                        className={`w-full rounded-[4px] ${point.loadAvailable ? 'bg-[var(--color-liquid)] opacity-80' : 'bg-[var(--border)]'}`}
-                        style={{ height: `${point.loadAvailable ? Math.max(12, Math.min(52, point.tss / 3)) : 12}px` }}
-                      />
-                      <span className="text-[10px] text-[var(--text-muted)]">{point.label}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-[var(--text-secondary)]">No completed sessions yet.</p>
-                )}
-              </div>
+              <HomeRecentLoad points={dashboard.trend} />
             </Surface>
           ) : null}
 

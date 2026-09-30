@@ -210,7 +210,7 @@ export function StravaImportPanel({
     : [];
 
   return (
-    <Surface className="space-y-4">
+    <Surface id="strava" className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Sync from Strava</h2>

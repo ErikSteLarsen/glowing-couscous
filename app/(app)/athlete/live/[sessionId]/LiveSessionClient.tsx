@@ -18,6 +18,10 @@ import {
   type ExecutionState,
 } from '@/lib/athlete-execution';
 import { formatDurationExact } from '@/lib/format-duration';
+import { useDraftRecovery } from '@/components/useDraftRecovery';
+import { DraftRecoveryNotice } from '@/components/DraftRecoveryNotice';
+import { parseLiveCheckpoint, restoreLiveCheckpoint } from '@/lib/live-recovery';
+import type { RecoveryDraft } from '@/lib/draft-recovery';
 
 type ScreenWakeLockSentinel = {
   release: () => Promise<void>;
@@ -43,12 +47,14 @@ function formatCountdown(totalSeconds: number) {
 }
 
 export function LiveSessionClient({
+  ownerId = null,
   sessionId,
   sessionHref,
   blocks,
   initialNotes,
   alreadyCompleted,
 }: {
+  ownerId?: number | null;
   sessionId: number;
   sessionHref: string;
   blocks: SessionPlanBlock[];
@@ -73,6 +79,23 @@ export function LiveSessionClient({
   const [wakeLockError, setWakeLockError] = useState('');
   const deadlineRef = useRef<number | null>(null);
   const wakeLockRef = useRef<ScreenWakeLockSentinel | null>(null);
+  const [checkpointAt, setCheckpointAt] = useState(0);
+  const baseline = JSON.stringify(blocks);
+  const recovery = useDraftRecovery({ userId: ownerId, surface: 'live', resource: String(sessionId), baseline, payload: JSON.stringify({ execution, remainingSec, wasRunning: isRunning, checkpointAt, notes: initialNotes }), dirty: hasStarted && !saved && !alreadyCompleted });
+
+  function restoreCheckpoint(record: RecoveryDraft, elapsed = false) {
+    if (pending || saved || alreadyCompleted) return;
+    if (record.baseline !== baseline) { setError('This workout changed. Its old checkpoint cannot be applied. Discard it and start from the current plan.'); return; }
+    const value = parseLiveCheckpoint(record.payload, blockDurations);
+    if (!value) { setError('This checkpoint is invalid or expired. Discard it and start again.'); return; }
+    if (hasStarted && !window.confirm('Replace the current Live progress with this checkpoint?')) return;
+    const restored = restoreLiveCheckpoint(value, blockDurations, elapsed);
+    recovery.discard();
+    deadlineRef.current = null; setIsRunning(false); setHasStarted(true);
+    setExecution(restored.state); setRemainingSec(restored.remainingSec); setCheckpointAt(Date.now());
+    recovery.restored(record); setError('');
+    setMessage(elapsed ? 'Elapsed time applied. Review progress before resuming or finishing; the timer is paused.' : 'Checkpoint restored. The timer is paused.');
+  }
 
   const currentBlock = activeBlocks[execution.currentIndex] ?? null;
   const currentZone = currentBlock ? Math.min(Math.max(currentBlock.zone, 1), 5) : 1;
@@ -102,12 +125,14 @@ export function LiveSessionClient({
 
       if (millisecondsLeft > 0) {
         setRemainingSec(Math.ceil(millisecondsLeft / 1000));
+        setCheckpointAt(Math.floor(now / 1000) * 1000);
         return;
       }
 
       const result = advanceTimedExecution(execution, Math.max(0, (now - deadline) / 1000), blockDurations);
       setExecution(result.state);
       setRemainingSec(result.remainingSec);
+      setCheckpointAt(now);
       setError('');
 
       if (isExecutionComplete(result.state)) {
@@ -171,6 +196,7 @@ export function LiveSessionClient({
     if (!currentBlock || isFinished || pending) return;
     deadlineRef.current = Date.now() + remainingSec * 1000;
     setHasStarted(true);
+    setCheckpointAt(Date.now());
     setIsRunning(true);
     setError('');
     setMessage('Workout started.');
@@ -181,6 +207,7 @@ export function LiveSessionClient({
       const left = deadlineRef.current === null ? remainingSec : Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000));
       deadlineRef.current = null;
       setRemainingSec(left);
+      setCheckpointAt(Date.now());
       setIsRunning(false);
       setMessage('Workout paused.');
       return;
@@ -193,6 +220,7 @@ export function LiveSessionClient({
     const previous = previousExecution(execution);
     deadlineRef.current = null;
     setExecution(previous);
+    setCheckpointAt(Date.now());
     setRemainingSec(blockDurations[previous.currentIndex] ?? 0);
     setIsRunning(false);
     setHasStarted(true);
@@ -205,6 +233,7 @@ export function LiveSessionClient({
     const wasRunning = isRunning;
     const next = skip ? skipCurrentExecution(execution) : advanceExecution(execution);
     setExecution(next);
+    setCheckpointAt(Date.now());
     setError('');
     setConfirmRestart(false);
 
@@ -230,6 +259,7 @@ export function LiveSessionClient({
   function restartWorkout() {
     if (pending || saved || alreadyCompleted) return;
     deadlineRef.current = null;
+    recovery.discard();
     setExecution(restartExecution(execution));
     setRemainingSec(blockDurations[0] ?? 0);
     setIsRunning(false);
@@ -257,6 +287,7 @@ export function LiveSessionClient({
         }
       }
 
+      recovery.discard();
       setSaved(true);
       setMessage(alreadyCompleted ? 'Run complete. The saved session outcome was left unchanged.' : 'Session marked complete and saved.');
       if (!alreadyCompleted) router.refresh();
@@ -269,6 +300,7 @@ export function LiveSessionClient({
 
   return (
     <div className="page-content--standard grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_304px]">
+      {!alreadyCompleted && !saved ? <div className="xl:col-span-2"><DraftRecoveryNotice candidates={recovery.candidates.filter((record) => record.resource === String(sessionId))} status={recovery.status} disabled={pending} onRestore={(record) => restoreCheckpoint(record)} onElapsed={(record) => restoreCheckpoint(record, true)} onDiscard={recovery.discard} /></div> : null}
       <Surface className="min-w-0 space-y-4 p-4 sm:space-y-5 sm:p-5">
         <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-4">
           <div className="min-w-0">
@@ -502,7 +534,7 @@ export function LiveSessionClient({
         </Surface>
 
         <p className="px-1 text-[11px] leading-[1.5] text-[var(--text-muted)]">
-          Live progress is stored on this device and resets if you refresh or leave this page. Session completion is saved when you choose Finish workout.
+            Live checkpoints are kept in this browser for up to 24 hours. Restore paused after returning; session completion is saved only when you choose Finish workout.
         </p>
         {alreadyCompleted ? <p className="px-1 text-[11px] leading-[1.5] text-[var(--text-secondary)]">This session was already completed. Another run will not change its saved outcome.</p> : null}
         {saved ? <ActionLink href={sessionHref} tone="secondary">View session details</ActionLink> : null}

@@ -55,6 +55,7 @@ export default async function AthleteLivePage({
       </div>
 
       <LiveSessionClient
+        ownerId={user.id}
         sessionId={detail.session.id}
         sessionHref={sessionHref}
         blocks={detail.session.blocks}
