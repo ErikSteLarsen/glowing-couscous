@@ -104,7 +104,10 @@ test('signed-in routes use grouped app shell while auth pages stay centered', as
 
   assert.match(shellSource, /useState\(false\)/);
   assert.match(shellSource, /AppSidebar/);
-  assert.match(shellSource, /md:grid-cols-\[/);
+  const shellCss = await read('app/globals.css');
+  assert.match(shellSource, /tempo-shell/);
+  assert.match(shellCss, /grid-template-columns: 228px minmax\(0, 1fr\)/);
+  assert.match(shellCss, /data-menu-hidden="true"\]\s*\{ grid-template-columns: minmax\(0, 1fr\)/);
   assert.match(sidebarSource, /getPrimaryNavigation/);
   assert.match(sidebarSource, /props\.mobileOpen/);
   assert.match(sidebarSource, /onClick=\{props\.onClose\}|onClick=\{onNavigate\}/);

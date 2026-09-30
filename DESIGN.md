@@ -339,8 +339,11 @@ search, creation links, and selected-day details remain outside that scroll
 area. Small screens and enlarged text retain
 natural page scrolling; never hide content to force the whole page into a viewport.
 
-Desktop reserves a `228px` viewport-bounded sidebar from the `md` breakpoint
-(`768px`) upward. The sidebar owns primary navigation and local overflow; the
+Desktop shows a `228px` viewport-bounded sidebar from the `md` breakpoint
+(`768px`) upward. Hide menu releases the whole sidebar column to the page;
+the browser remembers this preference across pages and reloads. A sticky
+Show menu control at the top left restores it without obscuring page actions.
+The sidebar owns primary navigation and local overflow; the
 content column must remain `min-width: 0`. Below that breakpoint, secondary
 navigation moves into a focus-managed drawer and the first four role-aware
 destinations become a fixed four-item bottom navigation. Mobile content keeps
@@ -463,9 +466,16 @@ horizontal layout.
 
 `AppShell` and `AppSidebar` own authenticated navigation. Desktop uses a sticky
 228px sidebar with a near-black surface in dark mode and a white surface in
-light mode. Its active tint and identity cue use cobalt. The sidebar theme switch saves a user's light or
+light mode. Hide menu and Show menu use panel-direction icons and explicit
+labels; reserve back arrows for returning to a page. Hidden desktop navigation
+leaves no rail or focusable links. Its active tint and identity cue use cobalt. The sidebar theme switch saves a user's light or
 dark choice locally. Mobile uses a drawer with an overlay, Escape-to-close,
-focus containment, and a fixed bottom bar with four primary destinations. Do not add route-local
+focus containment, and a fixed bottom bar with four primary destinations.
+The sticky top-left Show menu control remains reachable when scrolling. Drawer
+dismissal restores focus, releases scroll lock, and retains the separate desktop
+preference. Route changes and crossing into desktop close the drawer; hidden
+page content is inert while it is open. Menu controls have 44px touch targets
+and honor safe areas and reduced motion. Do not add route-local
 primary navigation or a second shell. Page headers should not repeat sibling
 workspace destinations; reserve their actions for the current page's task or
 for contextual return and execution controls.

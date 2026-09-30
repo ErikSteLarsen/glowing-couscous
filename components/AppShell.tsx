@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { Activity, CalendarDays, Dumbbell, House, LayoutTemplate } from 'lucide-react';
+import { Activity, CalendarDays, Dumbbell, House, LayoutTemplate, PanelLeftOpen } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { AppSidebar } from '@/components/AppSidebar';
 import { buttonFocusClassName, secondaryButtonClassName } from '@/components/ui';
@@ -28,6 +28,23 @@ function getClientTheme(): ColorTheme {
 
 function getServerTheme(): ColorTheme { return 'dark'; }
 
+let sessionMenuHidden = false;
+let menuStorageUnavailable = false;
+function subscribeToMenu(onChange: () => void) {
+  window.addEventListener('storage', onChange);
+  window.addEventListener('tempo-menu-changed', onChange);
+  return () => {
+    window.removeEventListener('storage', onChange);
+    window.removeEventListener('tempo-menu-changed', onChange);
+  };
+}
+function getMenuHidden() {
+  if (menuStorageUnavailable) return sessionMenuHidden;
+  try { return window.localStorage.getItem('tempo-menu-hidden') === 'true'; }
+  catch { return sessionMenuHidden; }
+}
+function getServerMenuHidden() { return false; }
+
 export function AppShell({
   user,
   children,
@@ -37,11 +54,17 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const navigationPathname = pathname;
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileOpenPath, setMobileOpenPath] = useState<string | null>(null);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const mobileOpen = isMobileViewport && mobileOpenPath === pathname;
+  const menuHidden = useSyncExternalStore(subscribeToMenu, getMenuHidden, getServerMenuHidden);
   const theme = useSyncExternalStore(subscribeToTheme, getClientTheme, getServerTheme);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const navItems = getMobileNavigation(user.role);
+
+  // A browser history change also dismisses the drawer, without reopening it
+  // when the user returns to the route on which it was originally opened.
+  if (mobileOpenPath !== null && mobileOpenPath !== pathname) setMobileOpenPath(null);
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -57,7 +80,17 @@ export function AppShell({
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 767px)');
-    const updateViewport = () => setIsMobileViewport(mediaQuery.matches);
+    const updateViewport = (event?: MediaQueryListEvent) => {
+      const sidebarHadFocus = document.getElementById('tempo-sidebar')?.contains(document.activeElement);
+      setIsMobileViewport(mediaQuery.matches);
+      if (!mediaQuery.matches) setMobileOpenPath(null);
+      if (event) requestAnimationFrame(() => {
+        // CSS may hide the focused control before the media-query event fires.
+        if (!sidebarHadFocus && document.activeElement !== document.body) return;
+        if (mediaQuery.matches || getMenuHidden()) menuButtonRef.current?.focus();
+        else document.getElementById('tempo-hide-menu')?.focus();
+      });
+    };
     updateViewport();
     mediaQuery.addEventListener('change', updateViewport);
 
@@ -71,8 +104,8 @@ export function AppShell({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setMobileOpen(false);
-        menuButtonRef.current?.focus();
+        setMobileOpenPath(null);
+        requestAnimationFrame(() => menuButtonRef.current?.focus());
       }
     };
 
@@ -87,13 +120,25 @@ export function AppShell({
   }, [mobileOpen]);
 
   const closeMobileMenu = () => {
-    setMobileOpen(false);
-    requestAnimationFrame(() => menuButtonRef.current?.focus());
+    setMobileOpenPath(null);
+    if (mobileOpen) requestAnimationFrame(() => menuButtonRef.current?.focus());
+  };
+
+  const setDesktopMenuHidden = (hidden: boolean) => {
+    sessionMenuHidden = hidden;
+    try { window.localStorage.setItem('tempo-menu-hidden', String(hidden)); }
+    catch { menuStorageUnavailable = true; }
+    window.dispatchEvent(new Event('tempo-menu-changed'));
+    requestAnimationFrame(() => {
+      if (hidden) menuButtonRef.current?.focus();
+      else document.getElementById('tempo-hide-menu')?.focus();
+    });
   };
 
   return (
     <div
-      className="ink-studio-app relative min-h-screen bg-[var(--background)] text-[var(--text)] md:grid md:grid-cols-[228px_minmax(0,1fr)]"
+      className="ink-studio-app tempo-shell relative min-h-screen bg-[var(--background)] text-[var(--text)]"
+      data-menu-hidden={menuHidden}
     >
       <AppSidebar
         user={user}
@@ -101,6 +146,7 @@ export function AppShell({
         mobileOpen={mobileOpen}
         isMobileViewport={isMobileViewport}
         onClose={closeMobileMenu}
+        onHide={() => setDesktopMenuHidden(true)}
         previewMode={false}
         theme={theme}
         onToggleTheme={toggleTheme}
@@ -110,16 +156,17 @@ export function AppShell({
         aria-hidden={mobileOpen && isMobileViewport ? true : undefined}
         inert={mobileOpen && isMobileViewport ? true : undefined}
       >
-        <div className="border-b border-[var(--border)] bg-[var(--background)] px-5 py-4 md:hidden">
+        <div className="tempo-menu-bar">
           <button
             type="button"
             aria-controls="tempo-sidebar"
-            aria-expanded={mobileOpen}
+            aria-expanded={isMobileViewport ? mobileOpen : !menuHidden}
             ref={menuButtonRef}
-            className={secondaryButtonClassName}
-            onClick={() => setMobileOpen(true)}
+            className={`${secondaryButtonClassName} min-h-11`}
+            onClick={() => isMobileViewport ? setMobileOpenPath(pathname) : setDesktopMenuHidden(false)}
           >
-            Open menu
+            <PanelLeftOpen aria-hidden="true" size={18} strokeWidth={1.8} />
+            Show menu
           </button>
         </div>
         {children}

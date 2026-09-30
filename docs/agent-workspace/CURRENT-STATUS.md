@@ -1,5 +1,57 @@
 # Current Status
 
+## Main publication verification — 2026-09-30
+
+Current content-sizing/theme-depth and collapsible-menu changes were rechecked
+before publication: `pnpm test` passed 273/273, `pnpm lint` passed, and direct
+`node node_modules/next/dist/bin/next build --webpack` passed TypeScript and all
+75 static pages. The existing middleware deprecation warning remains.
+`pnpm_config_verify_deps_before_run=false` reused installed dependencies.
+`pnpm build` failed at Prisma generation with the existing Windows engine-DLL
+EPERM lock, before migrations; loopback database overrides prevented access
+to the configured database during that attempt. No new browser or production
+verification was performed. Existing visual evidence and coverage limits below
+remain applicable.
+
+## Collapsible workspace menu — 2026-09-30
+
+The shared authenticated shell exposes Hide menu on desktop and a sticky
+top-left Show menu control when navigation is hidden. Collapsing releases the
+entire 228px sidebar column. The browser saves this choice across navigation
+and reloads; storage failures retain the choice for the current session.
+Mobile retains the four-destination bottom bar and focus-managed drawer,
+independently of the desktop preference. Dismissal supports the close control,
+overlay, Escape, and navigation. Route/history changes and desktop resizing
+close the drawer, release body scroll lock and inert content, and recover
+focus when a breakpoint hides the focused control. Menu controls use 44px
+targets, semantic theme colors, safe-area padding, and reduced-motion support.
+The mobile navigation no longer overrides the shared dark-mode muted color.
+
+- Actual `AppShell`/`AppSidebar` components were checked in a temporary local
+  browser fixture at 1440, 1024, 768, 390, and 320px. Desktop width recovery,
+  client navigation/reload persistence, drawer focus containment and return,
+  Escape/overlay/close/link dismissal, inert content, scroll locking, resize
+  cleanup, sticky recovery, browser-history dismissal, blocked storage, and
+  both themes passed. No horizontal overflow or browser page errors occurred.
+  Light/dark screenshots are in `.impeccable/review/collapsible-menu/`.
+  The temporary fixture was removed before the final build.
+- `pnpm test`: 273/273 pass. `pnpm lint`: pass. Direct
+  `node node_modules/next/dist/bin/next build --webpack`: pass, including
+  TypeScript and 75 static pages; existing middleware deprecation warning.
+  `git diff --check`: pass. The bundled pnpm required
+  `pnpm_config_verify_deps_before_run=false` to reuse the installed dependencies
+  rather than attempt an unsolicited reinstall.
+- `pnpm build` was attempted and failed with Windows EPERM replacing Prisma's
+  engine DLL, before migration deployment. Authenticated browser verification
+  was attempted but login failed because the configured Neon database was
+  unreachable. No database data or authentication rules were changed.
+- Impeccable's mechanical detector ran over the changed shell/sidebar/CSS;
+  it reported existing typography/radius advisories in the scanned files.
+  No unrelated design-system cleanup was undertaken.
+- Coverage limits: authenticated route data, coach-only pages, physical touch,
+  and assistive-technology behavior were not verified in this change. The shell
+  fixture proves component interactions, not an authenticated training journey.
+
 ## Content sizing and tonal depth — 2026-09-30
 
 Reviewed the latest pushed Monolith revision (`3c0ec03`, matching remote main)

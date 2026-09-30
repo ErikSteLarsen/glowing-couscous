@@ -11,12 +11,14 @@ import {
   House,
   LayoutTemplate,
   Moon,
+  PanelLeftClose,
   Sun,
   Upload,
+  X,
 } from 'lucide-react';
 import { getPrimaryNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import { AppProfileMenu } from '@/components/AppProfileMenu';
-import { compactSecondaryButtonClassName } from '@/components/ui';
+import { buttonFocusClassName } from '@/components/ui';
 import type { LucideIcon } from 'lucide-react';
 
 const navIcons: Record<string, LucideIcon> = {
@@ -35,6 +37,7 @@ export function AppSidebar(props: {
   mobileOpen: boolean;
   isMobileViewport: boolean;
   onClose: () => void;
+  onHide: () => void;
   previewMode?: boolean;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
@@ -54,7 +57,7 @@ export function AppSidebar(props: {
       if (event.key !== 'Tab') return;
       const focusable = Array.from(
         sidebar.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])'),
-      );
+      ).filter((element) => element.getClientRects().length > 0);
       if (focusable.length === 0) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
@@ -79,7 +82,7 @@ export function AppSidebar(props: {
           aria-label="Close menu overlay"
           aria-hidden="true"
           tabIndex={-1}
-          className="fixed inset-0 z-30 bg-[var(--overlay)] md:hidden"
+          className="fixed inset-0 z-40 bg-[var(--overlay)] md:hidden"
           onClick={props.onClose}
         />
       ) : null}
@@ -91,12 +94,12 @@ export function AppSidebar(props: {
            aria-modal={props.isMobileViewport && props.mobileOpen ? true : undefined}
            inert={props.isMobileViewport && !props.mobileOpen ? true : undefined}
            ref={sidebarRef}
-            className={`fixed inset-y-0 left-0 z-40 w-[216px] overflow-y-auto border-r border-[var(--nav-border)] bg-[var(--nav-surface)] text-[var(--nav-text)] transition-transform duration-200 md:sticky md:top-0 md:h-screen md:max-h-screen md:self-start md:translate-x-0 ${
+            className={`tempo-sidebar fixed inset-y-0 left-0 z-50 w-[228px] max-w-[calc(100vw-3rem)] overflow-y-auto border-r border-[var(--nav-border)] bg-[var(--nav-surface)] text-[var(--nav-text)] transition-transform duration-200 motion-reduce:transition-none md:sticky md:top-0 md:z-40 md:h-screen md:max-h-screen md:self-start md:translate-x-0 ${
           props.mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
          <div className="flex min-h-full flex-col gap-7 p-4">
-           <div className="flex items-start justify-between gap-3 border-b border-[var(--nav-border)] px-2 pb-7 pt-2">
+           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--nav-border)] px-2 pb-5 pt-2">
              <div className="flex items-center gap-3">
                 <div className="ink-brand-mark" aria-hidden="true">
                   <span />
@@ -109,10 +112,22 @@ export function AppSidebar(props: {
             <button
               type="button"
               ref={closeButtonRef}
-                className={`${compactSecondaryButtonClassName} md:hidden`}
+              aria-label="Hide menu"
+              className={`flex min-h-11 min-w-11 items-center justify-center rounded-[10px] text-[var(--nav-muted)] hover:bg-[var(--nav-active)] hover:text-[var(--nav-text)] ${buttonFocusClassName} md:hidden`}
               onClick={props.onClose}
             >
-              Close
+              <X aria-hidden="true" size={18} />
+            </button>
+            <button
+              id="tempo-hide-menu"
+              type="button"
+              aria-controls="tempo-sidebar"
+              aria-expanded="true"
+              className={`hidden min-h-11 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[12px] font-semibold text-[var(--nav-muted)] hover:bg-[var(--nav-active)] hover:text-[var(--nav-text)] ${buttonFocusClassName} md:flex`}
+              onClick={props.onHide}
+            >
+              <PanelLeftClose aria-hidden="true" size={18} strokeWidth={1.8} />
+              Hide menu
             </button>
           </div>
 

@@ -120,7 +120,7 @@ test('desktop sidebar stays within the viewport and owns its overflow', async ()
 
   assert.match(
     sidebarSource,
-    /overflow-y-auto.*md:sticky md:top-0 md:h-screen md:max-h-screen md:self-start/,
+    /overflow-y-auto.*md:sticky md:top-0.*md:h-screen md:max-h-screen md:self-start/,
   );
   assert.match(sidebarSource, /flex min-h-full flex-col/);
 });

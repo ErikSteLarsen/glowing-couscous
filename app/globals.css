@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+/* Shared navigation: collapsed desktop gives its entire column to the page. */
+.tempo-menu-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: max(8px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-left)) 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+}
+
+.tempo-sidebar > div {
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .tempo-shell { display: grid; grid-template-columns: 228px minmax(0, 1fr); }
+  .tempo-shell[data-menu-hidden="true"] { grid-template-columns: minmax(0, 1fr); }
+  .tempo-shell[data-menu-hidden="true"] .tempo-sidebar { display: none; }
+  .tempo-shell[data-menu-hidden="false"] .tempo-menu-bar { display: none; }
+}
+
 @theme {
   --color-paper: #FFFFFF;
   --color-surface: #FFFFFF;
@@ -1571,7 +1593,7 @@ body[data-workspace-theme="dark"] .profile-savebar {
 }
 
 @media (max-width: 767px) {
-  .ink-studio-app { --text-muted: #686E72; --nav-muted: #5E6870; }
+  .ink-studio-app { --text-muted: #686E72; }
   .planner-desk__assignment--active { position: sticky; top: 0; z-index: 20; }
   .planner-desk__assignment--active { padding: 6px 8px; }
   .planner-desk__assignment--active > div:first-child { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
