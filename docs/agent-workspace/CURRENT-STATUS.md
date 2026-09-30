@@ -2,7 +2,76 @@
 
 Updated 2026-09-30. Current evidence snapshot, not implementation history.
 Latest checks cover truthful Home, workout/Profile/Live recovery and Account
-controls. Older provider/device results retain their recorded scope.
+controls and safe account deletion. Older provider/device results retain their recorded scope.
+
+## Guided training targets on Home, 2026-09-30
+
+- Home shows a restrained outlined setup section above Today when training
+  targets are incomplete. Inline steps choose sports, HRmax, then the selected
+  running/cycling/swimming targets. Running supports race-derived previews and
+  manual bounds; cycling uses FTP and swimming uses m:ss CSS. Sport threshold
+  HR is optional. Completed selected targets hide the section; blank values
+  retain a reminder and resume at the first missing step. Existing complete
+  three-sport profiles do not require setup.
+- Each step uses the Profile API/account service with revision protection,
+  preserving existing metrics and unrelated preferences. Sport selection is
+  stored separately in preferences. Validation now rejects malformed sport
+  metrics and reversed/out-of-range manual pace bounds instead of silently
+  normalizing them away. Failures retain entries; unsaved changes are explicit,
+  with navigation/close safeguards. Colon-formatted fields use a text keyboard.
+- Actual component fixture at 1440px dark/light, 390px dark/light and 320px
+  light: runner and all-sport progression/completion, save failure/retry,
+  completed-runner hiding, HR/race previews, manual-only completion and
+  incomplete manual-bound validation passed. No horizontal overflow at 390/320px.
+  Screenshots: `.impeccable/review/home-training-setup/`. Temporary fixture and
+  development process were removed. These are mocked-save component checks,
+  not authenticated database persistence or physical-device acceptance.
+- Independent design review found one mobile keyboard mismatch; the source
+  correction was scored resolved with scoped ship disposition. Detector ran
+  once: advisory typography/global design-scale drift was retained, matching
+  incumbent shared styling; no new design tokens were introduced. Existing
+  sidecar drift was preserved. Unrelated worktree changes were preserved.
+- Final `pnpm test`: 310/310; `pnpm lint`: pass; direct webpack bundle build:
+  pass, TypeScript and 80 pages; `git diff --check`: pass. Standard `pnpm build`
+  initially hit the preview's Prisma DLL lock; after stopping that process,
+  generation passed and migration deployment stopped against an intentionally
+  unavailable localhost review database. No configured database was migrated.
+  Generated fixture types were removed before the successful bundle build.
+  Authenticated save/reload, actual revision conflict UI and physical phone
+  keyboard entry remain open; middleware deprecation persists.
+
+## Unified personal Calendar, 2026-09-30
+
+- Calendar now owns week/month browsing and inline scheduling. Date-specific
+  Add session seeds the composer; saved workouts support multiple dates and
+  templates show full day/week/month ranges before scheduling. Existing
+  service-owned copies, cadence validation and retry identities remain in use.
+  Unfinished sessions can be removed with confirmation; completed rows stay
+  review links. Today remains distinct from selected scheduling dates.
+- Desktop uses a contextual right rail; narrow layouts retain the date grid
+  above the composer and a selected-day agenda. Navigation exposes one Calendar
+  destination. Legacy `/athlete/planner` redirects with its date; obsolete
+  personal Planner and week-scroller components were removed. Coach Planner
+  and API ownership boundaries remain unchanged.
+- Synthetic AppShell/PageShell fixture checked 1440px dark week/composer and
+  light month, 390px dark composer/light month, and 320px light month. Multi-date
+  selection, seven-day template highlighting, cross-week reference-field sync,
+  failure selection retention, same-key successful retry, Escape dismissal and
+  close focus return passed. No horizontal overflow at 390/320px. Independent
+  review scored all three fixes resolved: count/date separation, reference date
+  synchronization and persistent Today styling. Screenshots are under
+  `.impeccable/review/unified-calendar/`; fixture and preview processes removed.
+- Final `pnpm test`: 305/305; `pnpm lint`: pass; direct `next build --webpack`:
+  pass, including TypeScript and 80 pages. Detector on the calendar client and
+  `git diff --check`: pass. Standard `pnpm build` generated Prisma, then stopped
+  at migrations against an intentionally unavailable localhost review database.
+  No configured database was migrated. Temporary fixture type artifacts were
+  removed before the successful bundle build. Middleware deprecation persists.
+- Authenticated placement/removal and reload, actual week/month/history
+  navigation, imported timeline coverage and physical-device acceptance remain
+  open; mocked browser success does not establish database persistence. Existing
+  `.impeccable/design.json` identity/token drift was reported and preserved.
+  The unrelated account/recovery worktree changes were preserved.
 
 ## Shared spacing review, 2026-09-30
 
@@ -27,7 +96,7 @@ controls. Older provider/device results retain their recorded scope.
   native history gestures, populated libraries and actual notification delivery
   remain unverified; earlier authenticated route evidence predates this change.
 - Final `pnpm test`: 305/305; `pnpm lint`: pass; direct webpack build: pass,
-  including TypeScript and 80 pages in the combined local worktree. Layout detector and `git diff --check`: pass.
+  including TypeScript and 80 pages. Layout detector and `git diff --check`: pass.
   Standard `pnpm build` generated Prisma successfully but stopped at migration
   deployment against an intentionally unavailable local review URL. The configured
   database was not migrated. Temporary fixture type artifacts initially blocked
@@ -45,13 +114,14 @@ controls. Older provider/device results retain their recorded scope.
 
 | Gate | Latest recorded result | Scope / limits |
 |---|---|---|
-| `pnpm test` | 304/304 pass, 2026-09-30 | Home, recovery, account, export, save safety and protection of newer drafts in another tab |
+| `pnpm test` | 310/310 pass, 2026-09-30 | Training setup completeness/time parsing, metric validation and preference preservation, plus existing Home/recovery/account/deletion/save safety coverage |
 | `pnpm lint` | Pass, 2026-09-30 | Full repository |
 | Direct TypeScript | Pass, 2026-09-30 | Existing generated client |
-| Direct `next build --webpack` | Pass, 2026-09-30 | TypeScript and 76 pages; middleware deprecation remains |
-| `pnpm build` | Pass, 2026-09-30 | Prisma generation, seven migrations and 78 pages on disposable local PostgreSQL |
-| PostgreSQL acceptance | Pass, 2026-09-30 | Disposable PostgreSQL 17: four concurrent retries create one workout, competing revisions, forced rollback after block deletion, atomic Profile validation/revisions, scoped export and session version increment |
-| Migration status | New workout-save migration applied only to disposable PostgreSQL | Earlier configured database read-only check found all six existing migrations applied. New additive migration must deploy before new-workout retry safety is used there |
+| Direct `next build --webpack` | Pass, 2026-09-30 | TypeScript and 80 pages; middleware deprecation remains |
+| `pnpm build` | Latest attempt stopped at unavailable local review database, 2026-09-30 | Prisma generation passed after own preview stopped; prior full pass on disposable PostgreSQL remains recorded above; configured database was not migrated |
+| PostgreSQL acceptance | Pass, 2026-09-30 | Recovery acceptance plus six deletion scenarios: owned data/provider/webhook removal, retained anonymized shares, unshare scope, recipient history, durable throttle, Google proof expiry, provider outage, rollback and concurrent deletion |
+| HTTP deletion acceptance | Pass, 2026-09-30 | Local production server/disposable DB: credentials cookie, cross-site rejection, wrong password, actual deletion, retained public [deleted] preview, expired old cookie, export 404 |
+| Migration status | Workout-save and safe-account-deletion migrations applied only to disposable PostgreSQL | Deploy migrations with code before using the new behavior elsewhere; configured database was not changed by these checks |
 
 Latest checks reused installed dependencies with
 `pnpm_config_verify_deps_before_run=false`. Prisma generation, migration deploy
@@ -71,11 +141,28 @@ and bundle compilation are distinct gates.
   this browser's account drafts. Live checkpoints restore paused within 24 hours;
   accounting for elapsed time is explicit and completion remains server-owned.
 - Profile has a separate Account section: safe sign-in capability readout,
-  credential recovery, Strava access/consequences, versioned training download,
-  current-device sign-out and sign-out everywhere. Fresh logins read the current
-  sessionVersion. Export uses allowlisted fields, repeatable-read ownership
-  filters and collection/block/output bounds. Strava measurements, raw sensor
-  recordings, tokens, other people's private content and local drafts are omitted.
+  credential recovery, Strava access/consequences, current-device sign-out and
+  sign-out everywhere. Fresh logins read the current sessionVersion. Downloads
+  and their API/service were removed at the user's request.
+- Account deletion requires current password or signed Google callback metadata
+  within five minutes, with typed DELETE confirmation and durable password
+  attempt throttling. Profile shows consequences/link count and owner-scoped
+  Unshare all before deletion. Shared structure persists under [deleted] after
+  free-text/source/creator removal; no tombstone User retains personal identity.
+  Recipient sessions/outcomes survive coach deletion with coach-authored text
+  and lineage removed. Independent recipient-owned copies remain theirs.
+- Personal profile, owned training/outcomes, credentials/reset/request identities
+  and connected provider/inbox/webhook records are removed atomically. Webhooks
+  cannot enqueue without a locked live connection. Strava revocation runs after
+  commit; outages do not retain tokens or block erasure and show manual provider
+  revocation guidance. Other-device drafts and backups remain outside this action.
+- Deletion review was inspected on the local production build with a synthetic
+  account, desktop light and 390px light/dark. Public-link count, typed-confirmation
+  gating and open/cancel focus passed. Mobile checks exposed footer overlap;
+  Profile bottom spacing now encloses both training and Account controls, and
+  final deletion/cancel buttons were verified visible above the fixed controls.
+  Final UI deletion was not clicked; actual deletion was exercised through HTTP
+  and PostgreSQL acceptance with disposable accounts. Live providers remain open.
 - Authenticated browser acceptance used a synthetic account exclusively on
   disposable local PostgreSQL: Profile reload/restore retained unfinished pace
   input, save/reload cleared recovery; workout edit reload/restore/save passed;
@@ -84,8 +171,7 @@ and bundle compilation are distinct gates.
   light; Account controls were inspected at 390px dark. Physical devices, quota
   guards and full multi-tab/failure UI acceptance remain open. Initial browser
   timeouts were superseded by this successful isolated run.
-  The download button produced no visible error, but the browser download event
-  timed out; completed-file inspection remains unverified. Sign-out-everywhere
+  Sign-out-everywhere
   confirmation hit a browser focus timeout, so UI revocation remains open even
   though the database service was verified. Temporary app processes and the
   disposable PostgreSQL container were removed; screenshot artifacts use only
@@ -192,8 +278,8 @@ rules; global design files were preserved.
    included contrast, landmarks and template container ARIA; later token and
    landmark changes require a fresh audit rather than claiming old failures
    remain reproduced today.
-6. Before broad signup, decide/complete privacy/support information, account
-   deletion and server-side signup abuse controls. Earlier readiness review
+6. Before broad signup, decide/complete privacy/support information, live-provider
+   deletion acceptance and server-side signup abuse controls. Earlier readiness review
    recorded these missing; no launch certification is claimed.
 7. Middleware-to-proxy deprecation persists. Migration-bearing build and Google
    font fetching remain environment-sensitive gates.
@@ -205,20 +291,20 @@ rules; global design files were preserved.
 The initial source assessment has been followed by the implementation and
 isolated evidence above. The full active plan remains indexed; it is not complete.
 
-- Safe account deletion is not shipped. It needs recent credentials/OAuth proof,
-  preservation of other users' coach-derived copies, explicit Strava webhook
-  cleanup and deterministic provider-failure/retry behavior. No deletion endpoint
-  or placeholder deletion button was added.
+- Safe deletion is implemented and verified on disposable PostgreSQL and local
+  HTTP. Live Google/Strava callbacks, physical-device acceptance and the actual
+  backup/retention policy remain unverified. No real account deletion occurred.
 - Operator/support identity and actual retention/backup facts remain owner
   inputs for public privacy/support. Durable signup/login abuse controls and
-  verified-email lifecycle are still pending before broad signup.
-- Deploy the additive WorkoutSaveRequest migration with the code. It has been
+  verified-email lifecycle are still pending; email verification is deferred by
+  the user. Downloads are also deferred.
+- Deploy WorkoutSaveRequest and safe-account-deletion migrations with code. They have been
   reviewed/applied on the disposable database only; existing accounts/provider
   data and the configured database schema were not modified by these new checks.
 - Home retains existing server-local date rules. An account timezone must be
   applied consistently across Calendar/Planner/History, rather than Home alone.
 - Complete browser failures, multi-tab/account transitions, storage denial,
-  changed/deleted-source restoration, export download and actual session
+  changed/deleted-source restoration and actual sign-out-everywhere
   invalidation UI; finish physical phone sleep/wake and keyboard acceptance.
 
 

@@ -14,7 +14,7 @@ export default async function ProfilePage() {
   const controls = await accountService.getControls(user.id);
 
   return (
-    <PageShell>
+    <PageShell className="profile-page__content">
       <TopBar
         title={account.name ?? 'Your profile'}
         description="Manage the optional heart-rate, power, and pace values used for workout targets. Leave any value blank if you don’t know it."

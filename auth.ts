@@ -41,7 +41,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-      async jwt({ token, user, trigger }) {
+      async jwt({ token, user, trigger, account }) {
         if (user) {
           const userId = parseApplicationUserId(user.id);
           if (userId === null) return token;
@@ -49,6 +49,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.role = (user as { role?: string | null }).role ?? null;
           const current = await prisma.user.findUnique({ where: { id: userId }, select: { sessionVersion: true } });
           token.sessionVersion = current?.sessionVersion ?? 0;
+          token.signInProvider = account?.provider;
+          token.authenticatedAt = Date.now();
         }
         const userId = parseApplicationUserId(token.userId);
         if (!user && userId !== null) {

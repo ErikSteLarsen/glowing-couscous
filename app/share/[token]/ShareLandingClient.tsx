@@ -39,6 +39,7 @@ import type { PerformanceProfile } from '@/lib/performance-profile';
 export function ShareLandingClient({
   token,
   projection,
+  ownerDeleted = false,
   isSignedIn,
   userRole,
   initialAction,
@@ -46,6 +47,7 @@ export function ShareLandingClient({
 }: {
   token: string;
   projection: SharedWorkoutProjection;
+  ownerDeleted?: boolean;
   isSignedIn: boolean;
   userRole: AppRole | null;
   initialAction: ShareLinkAction | null;
@@ -109,7 +111,7 @@ export function ShareLandingClient({
     <PageShell>
       <TopBar
         title={projection.title || 'Shared workout'}
-        description="A read-only snapshot. Anyone with this URL can view the workout definition."
+        description={ownerDeleted ? 'Owner: [deleted]. This anonymized workout remains available to people with its link.' : 'A read-only snapshot. Anyone with this URL can view the workout definition.'}
       />
 
       {!action ? (

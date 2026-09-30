@@ -236,7 +236,7 @@ export function WorkoutLibraryClient({
         const untouched = JSON.stringify(draftRef.current) === submittedSnapshot;
         if (untouched) recovery.discard();
         if (payloadResponse.updatedAt) setRevision(payloadResponse.updatedAt);
-        setMessage(selectedWorkoutId ? 'Workout updated in your library.' : 'Workout created in your library. You can now add a copy in Planner.');
+        setMessage(selectedWorkoutId ? 'Workout updated in your library.' : 'Workout created in your library. You can now schedule a copy.');
         setIsDirty(!untouched);
         if (!selectedWorkoutId && payloadResponse.sessionId) {
           setSelectedWorkoutId(payloadResponse.sessionId);
@@ -292,7 +292,7 @@ export function WorkoutLibraryClient({
           <h2 id="workout-library-title" className="text-lg font-semibold text-[var(--text)]">Workout library</h2>
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
             <p className="max-w-[44ch] text-sm leading-6 text-[var(--text-secondary)]">
-              Keep reusable workouts here. They stay unscheduled until you add a copy to a day in Planner.
+              Keep reusable workouts here. They stay unscheduled until you schedule a copy.
             </p>
             {role === 'ATHLETE' ? <button type="button" className={primaryButtonClassName} onClick={() => {
               if (previewMode) {
@@ -344,7 +344,7 @@ export function WorkoutLibraryClient({
         {visibleWorkouts.length === 0 && guidedFormOpen ? null : visibleWorkouts.length === 0 ? workouts.length === 0 ? (
           <EmptyState
             title="Your workout library is empty"
-            description={role === 'ATHLETE' ? 'Build a guided workout or create one manually, then add a copy to a day in Planner.' : 'Create a workout here, then add a copy to a day in Planner.'}
+            description={role === 'ATHLETE' ? 'Build a guided workout or create one manually, then schedule a copy in Calendar.' : 'Create a workout here, then add a copy to a day in Planner.'}
             action={<button type="button" className={primaryButtonClassName} onClick={() => role === 'ATHLETE' ? setGuidedFormOpen(true) : requestDraftAction({ kind: 'new' })}>{role === 'ATHLETE' ? 'Build guided workout' : 'Create workout'}</button>}
           />
         ) : (

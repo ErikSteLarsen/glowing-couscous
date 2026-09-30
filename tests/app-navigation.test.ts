@@ -22,7 +22,7 @@ test('athlete session return targets preserve supported origins including Planne
   assert.deepEqual(getSessionReturnTarget('home'), { href: '/athlete', label: 'Back to Home' });
   assert.deepEqual(getSessionReturnTarget('calendar'), { href: '/athlete/calendar', label: 'Back to Calendar' });
   assert.deepEqual(getSessionReturnTarget('activity'), { href: '/athlete/activity', label: 'Back to History' });
-  assert.deepEqual(getSessionReturnTarget('planner'), { href: '/athlete/planner', label: 'Back to Planner' });
+  assert.deepEqual(getSessionReturnTarget('planner'), { href: '/athlete/calendar', label: 'Back to Calendar' });
   assert.equal(getSessionOrigin('unknown'), 'calendar');
 });
 

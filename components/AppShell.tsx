@@ -230,7 +230,7 @@ export function AppShell({
             const isActive = isNavigationItemActive(navigationPathname, item, navItems);
             const Icon = item.label === 'Home'
               ? House
-              : item.label === 'Plan'
+              : item.label === 'Plan' || item.label === 'Calendar'
                 ? CalendarDays
                 : item.label === 'Workouts'
                   ? Dumbbell

@@ -69,6 +69,15 @@ export function validatePerformanceProfile(input: unknown): string | null {
   if (heartRateMax !== null && heartRateMax !== undefined && heartRateMax !== '' && boundedInteger(heartRateMax, 100, 250) === null) {
     return 'Maximum heart rate must be a whole number between 100 and 250 bpm.';
   }
+  for (const [sport, fields] of Object.entries({ cycling: { ftpWatts: [1, 2000], thresholdHrBpm: [1, 250] }, running: { thresholdPaceSecPerKm: [120, 1800], thresholdHrBpm: [1, 250] }, swimming: { cssSecPer100m: [20, 1800], thresholdHrBpm: [1, 250] } })) {
+    const raw = asRecord(value[sport]);
+    for (const [field, [min, max]] of Object.entries(fields)) {
+      const metric = raw[field];
+      if (metric !== null && metric !== undefined && metric !== '' && (typeof metric !== 'number' || !Number.isFinite(metric) || metric < min || metric > max)) {
+        return `${sport === 'cycling' ? 'Cycling' : sport === 'running' ? 'Running' : 'Swimming'} ${field === 'thresholdHrBpm' ? 'threshold heart rate' : field === 'ftpWatts' ? 'FTP' : 'threshold pace'} must be between ${min} and ${max}${field.endsWith('Bpm') ? ' bpm' : field === 'ftpWatts' ? ' watts' : ' seconds'}.`;
+      }
+    }
+  }
 
   const distance = running.raceDistanceMeters;
   const time = running.raceTimeSec;
@@ -91,7 +100,7 @@ export function validatePerformanceProfile(input: unknown): string | null {
     const hasFastest = fastest !== null && fastest !== undefined && fastest !== '';
     const hasSlowest = slowest !== null && slowest !== undefined && slowest !== '';
     if (hasFastest !== hasSlowest) return `Enter both pace bounds for Zone ${zone}, or reset that zone to its calculated default.`;
-    if (hasFastest && !normalizePaceZone(raw)) return `Zone ${zone} paces must be whole seconds per kilometre, from 2:00 to 30:00, with the faster pace first.`;
+    if (hasFastest && normalizePaceZone(raw).fastestSecPerKm === null) return `Zone ${zone} paces must be whole seconds per kilometre, from 2:00 to 30:00, with the faster pace first.`;
   }
 
   const paceZones = getRunningPaceZones(profile);

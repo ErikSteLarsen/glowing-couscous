@@ -221,7 +221,7 @@ export function ProfileClient({ account }: { account: Account }) {
   const hasUnsavedChanges = currentSnapshot !== savedSnapshot;
 
   return (
-    <div className="page-content--compact profile-page__content">
+    <div className="page-content--compact">
       <Surface>
         <DraftRecoveryNotice candidates={recovery.candidates} status={recovery.status} disabled={saving} onRestore={restoreProfile} onDiscard={recovery.discard} />
         <form id="profile-form" onSubmit={handleSubmit} onChangeCapture={() => { setError(''); setMessage(''); }} className="space-y-6">

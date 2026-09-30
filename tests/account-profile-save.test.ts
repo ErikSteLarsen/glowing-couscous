@@ -26,3 +26,17 @@ test('profile refuses stale and concurrently replaced revisions without partial 
   const raced = await service.updateProfile(7, { name: 'Changed', expectedUpdatedAt: revision.toISOString() });
   assert.equal(raced.ok, false); assert.equal(attempts, 1);
 });
+
+test('Home sport selection preserves unrelated preferences and rejects invalid choices before writes', async () => {
+  const revision = new Date('2026-09-30T12:00:00Z');
+  const writes: Array<Record<string, unknown>> = [];
+  const tx = { user: { async findUnique() { return { updatedAt: revision, prefsJson: '{"overviewCards":["trend"],"keep":"existing"}' }; }, async updateMany(args: { data: Record<string, unknown> }) { writes.push(args.data); return { count: 1 }; } } };
+  const service = createAccountService({ db: { async $transaction(fn: (client: typeof tx) => unknown) { return fn(tx); } } as never });
+  const invalid = await service.updateProfile(7, { trainingSports: ['unknown'] });
+  assert.equal(invalid.ok, false); assert.equal(writes.length, 0);
+  const result = await service.updateProfile(7, { trainingSports: ['running'], expectedUpdatedAt: revision.toISOString() });
+  assert.equal(result.ok, true);
+  assert.deepEqual(JSON.parse(writes[0].prefsJson as string), { overviewCards: ['trend'], keep: 'existing', trainingSports: ['running'] });
+  assert.equal(writes[0].name, undefined);
+  assert.equal(writes[0].performanceProfileJson, undefined);
+});

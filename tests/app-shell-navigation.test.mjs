@@ -25,10 +25,11 @@ test('root route and app navigation define one signed-in personal workspace', as
   assert.doesNotMatch(navSource, /hasActiveCoach/);
   assert.doesNotMatch(navSource, /label: 'Coach'/);
   assert.doesNotMatch(navSource, /label: 'Athletes'/);
-  assert.match(navSource, /label: 'Planner'/);
+  assert.match(navSource, /label: 'Calendar'/);
+  assert.doesNotMatch(navSource, /label: 'Planner'/);
   assert.match(navSource, /label: 'Workouts'/);
   assert.match(navSource, /href: '\/athlete\/workouts'/);
-  assert.match(navSource, /href: '\/athlete\/planner'/);
+  assert.match(navSource, /href: '\/athlete\/calendar'/);
   assert.match(navSource, /href: '\/athlete\/templates'/);
   assert.match(navSource, /href: '\/profile'/);
   assert.match(navSource, /href: '\/settings'/);
@@ -51,7 +52,7 @@ test('mobile navigation keeps the main personal training jobs directly reachable
   const navSource = await read('lib/app-navigation.ts');
   const shellSource = await read('components/AppShell.tsx');
 
-  assert.match(navSource, /label: 'Plan'.*href: '\/athlete\/calendar'/s);
+  assert.match(navSource, /label: 'Calendar'.*href: '\/athlete\/calendar'/s);
   assert.match(navSource, /label: 'History'.*href: '\/athlete\/activity'/s);
   assert.match(shellSource, /getMobileNavigation\(user\.role\)/);
   assert.match(shellSource, /import Link from 'next\/link'/);
@@ -61,7 +62,7 @@ test('mobile navigation keeps the main personal training jobs directly reachable
 
 test('mobile navigation maps task routes by role without leaking athlete destinations to coaches', () => {
   const athleteItems = getMobileNavigation('ATHLETE');
-  assert.deepEqual(athleteItems.map((item) => item.label), ['Home', 'Plan', 'Workouts', 'History']);
+  assert.deepEqual(athleteItems.map((item) => item.label), ['Home', 'Calendar', 'Workouts', 'History']);
   assert.equal(isNavigationItemActive('/athlete/templates', athleteItems[2], athleteItems), true);
   assert.equal(isNavigationItemActive('/athlete/import', athleteItems[3], athleteItems), true);
   assert.equal(isNavigationItemActive('/athlete/planner', athleteItems[1], athleteItems), true);
@@ -78,7 +79,7 @@ test('Workouts is a standalone library destination and session detail keeps its 
   const workoutsPageSource = await read('app/(app)/athlete/workouts/page.tsx');
   const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
   const sessionPageSource = await read('app/(app)/athlete/session/[sessionId]/page.tsx');
-  const calendarPageSource = await read('app/(app)/athlete/calendar/page.tsx');
+  const calendarPageSource = await read('app/(app)/athlete/calendar/TrainingCalendar.tsx');
   const profileMenuSource = await read('components/AppProfileMenu.tsx');
 
   const navigationSource = await read('lib/app-navigation.ts');
@@ -101,15 +102,17 @@ test('Workouts is a standalone library destination and session detail keeps its 
 });
 
 test('athlete planner only places defined sources on selected dates', async () => {
-  const plannerPageSource = await read('app/(app)/athlete/planner/page.tsx');
-  const plannerClientSource = await read('app/(app)/athlete/planner/AthletePlannerClient.tsx');
+  const plannerPageSource = await read('app/(app)/athlete/calendar/page.tsx');
+  const legacySource = await read('app/(app)/athlete/planner/page.tsx');
+  const plannerClientSource = await read('app/(app)/athlete/calendar/TrainingCalendar.tsx');
   const templatesPageSource = await read('app/(app)/athlete/templates/page.tsx');
 
-  assert.match(plannerPageSource, /athletePlannerService\.loadWorkspace/);
-  assert.match(plannerPageSource, /AthletePlannerClient/);
+  assert.match(plannerPageSource, /templateService\.listForOwner/);
+  assert.match(plannerPageSource, /TrainingCalendar/);
+  assert.match(legacySource, /redirect\(/);
   assert.doesNotMatch(plannerClientSource, /WorkoutBuilder|Start from scratch|Create session/);
-  assert.match(plannerClientSource, /PlannerDesk/);
-  assert.match(plannerClientSource, /calendarDays/);
+  assert.match(plannerClientSource, /templateDatesForSelection/);
+  assert.match(plannerClientSource, /selectedDates/);
   assert.match(plannerClientSource, /workout/);
   assert.match(plannerClientSource, /template/);
   assert.match(templatesPageSource, /apiBasePath="\/api\/athlete\/templates"/);

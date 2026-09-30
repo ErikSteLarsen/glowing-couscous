@@ -9,11 +9,16 @@ declare module "next-auth" {
       name?: string | null
       email?: string | null
       image?: string | null
+      sessionVersion?: number
+      signInProvider?: string
+      authenticatedAt?: number
     }
   }
   interface User {
     role?: string | null
     sessionVersion?: number
+    signInProvider?: string
+    authenticatedAt?: number
   }
 }
 
@@ -22,5 +27,7 @@ declare module "next-auth/jwt" {
     userId?: number
     role?: string | null
     sessionVersion?: number
+    signInProvider?: string
+    authenticatedAt?: number
   }
 }

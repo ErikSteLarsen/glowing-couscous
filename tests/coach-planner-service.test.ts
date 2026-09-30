@@ -418,7 +418,7 @@ test('planner API routes and navigation use the coach planner service', async ()
   assert.match(createRoute, /requireCoach/);
   assert.match(sessionRoute, /coachPlannerService\.saveSession/);
   assert.match(sessionRoute, /coachPlannerService\.deleteSession/);
-  assert.match(navigation, /label: 'Planner'/);
+  assert.match(navigation, /label: 'Calendar'/);
   const desktopNavigation = navigation.slice(
     navigation.indexOf('export function getPrimaryNavigation'),
     navigation.indexOf('export function getMobileNavigation'),

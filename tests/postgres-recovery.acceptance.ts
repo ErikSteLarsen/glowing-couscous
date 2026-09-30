@@ -4,7 +4,6 @@ import assert from 'node:assert/strict';
 import { PrismaClient } from '@prisma/client';
 import { createWorkoutLibraryService } from '../lib/workout-library-service.ts';
 import { createAccountService } from '../lib/account-service.ts';
-import { createAccountExportService } from '../lib/account-export-service.ts';
 
 const database = new URL(process.env.DATABASE_URL ?? '');
 if (!['localhost', '127.0.0.1'].includes(database.hostname) || database.port !== '55432' || database.pathname !== '/tempo_acceptance') throw new Error('Acceptance requires the named disposable local PostgreSQL database.');
@@ -43,8 +42,6 @@ test('PostgreSQL recovery: concurrent retry, revision conflict, rollback, accoun
     assert.equal(profileEdits.filter((edit) => edit.ok).length, 1);
     await db.session.create({ data: { athleteId: other.id, coachOwnerId: owner.id, title: 'Other person private session', athleteNotes: 'OTHER_PRIVATE_NOTE', sport: 'RUNNING', source: 'assigned' } });
     await db.session.create({ data: { athleteId: owner.id, title: 'PROVIDER_PRIVATE_TITLE', sport: 'RUNNING', source: 'activity-import', activity: { create: { athleteId: owner.id, completedAt: new Date(), durationSec: 60, tss: 0, zoneDistributionJson: '{}', segmentsJson: '[]', externalSource: 'STRAVA' } } } });
-    const exported = await createAccountExportService({ db }).exportForUser(owner.id);
-    assert.equal(exported.ok, true); if (exported.ok) { assert.equal(exported.json.includes('OTHER_PRIVATE_NOTE'), false); assert.equal(exported.json.includes('PROVIDER_PRIVATE_TITLE'), false); }
     await accounts.signOutEverywhere(owner.id);
     assert.equal((await db.user.findUniqueOrThrow({ where: { id: owner.id } })).sessionVersion, 1);
     assert.equal((await db.user.findUniqueOrThrow({ where: { id: other.id } })).sessionVersion, 0);

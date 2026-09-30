@@ -31,9 +31,8 @@ export function getPrimaryNavigation(): NavItem[] {
       href: '/athlete/workouts',
       matchPrefix: '/athlete/workouts',
     },
-    { label: 'Planner', description: 'Place on dates', href: '/athlete/planner', matchPrefix: '/athlete/planner' },
     { label: 'Templates', description: 'Reuse & assign', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
-    { label: 'Calendar', description: 'See scheduled work', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
+    { label: 'Calendar', description: 'Schedule & view training', href: '/athlete/calendar', matchPrefix: '/athlete/calendar', activeMatchPrefixes: ['/athlete/planner'] },
     { label: 'History', description: 'Review completed work', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
     {
       label: 'Import',
@@ -57,7 +56,7 @@ export function getMobileNavigation(role: AppRole): NavItem[] {
   return [
     { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete', exact: true },
     {
-      label: 'Plan', description: 'Upcoming and scheduled work', href: '/athlete/calendar',
+      label: 'Calendar', description: 'Schedule & view training', href: '/athlete/calendar',
       matchPrefix: '/athlete/calendar', activeMatchPrefixes: ['/athlete/planner'],
     },
     {
@@ -101,7 +100,7 @@ const sessionReturnTargets = {
   calendar: { href: '/athlete/calendar', label: 'Back to Calendar' },
   activity: { href: '/athlete/activity', label: 'Back to History' },
   imports: { href: '/athlete/import', label: 'Back to Import' },
-  planner: { href: '/athlete/planner', label: 'Back to Planner' },
+  planner: { href: '/athlete/calendar', label: 'Back to Calendar' },
 } as const;
 
 export type SessionOrigin = keyof typeof sessionReturnTargets;

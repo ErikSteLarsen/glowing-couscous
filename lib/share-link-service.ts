@@ -107,13 +107,14 @@ export function createShareLinkService({
       };
     },
 
-    async loadPreview(token: string): Promise<SharedWorkoutProjection | null> {
+    async loadPreview(token: string): Promise<(SharedWorkoutProjection & { ownerDeleted?: boolean }) | null> {
       if (!isShareToken(token)) return null;
       const link = await db.shareLink.findUnique({
         where: { tokenHash: hashShareToken(token) },
       });
-      if (!link || !hasExactlyOneSource(link.sessionId, link.templateId)) return null;
-      return parseSharedWorkoutProjection(link.snapshotJson);
+      if (!link || (!link.ownerDeleted && !hasExactlyOneSource(link.sessionId, link.templateId))) return null;
+      const projection = parseSharedWorkoutProjection(link.snapshotJson);
+      return projection && link.ownerDeleted ? { ...projection, ownerDeleted: true } : projection;
     },
 
     async saveTemplateCopy(userId: number, token: string, input: unknown) {

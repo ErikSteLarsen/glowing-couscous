@@ -471,6 +471,11 @@ export const stravaService = {
     return { disconnected: true, removedActivities, providerRevoked };
   },
 
+  async revokeDeletedConnection(encryptedRefreshToken: string) {
+    try { return await revokeProviderToken(decryptToken(encryptedRefreshToken)); }
+    catch { return false; }
+  },
+
   async processWebhookEvent(eventId: number) {
     const now = new Date();
     const claim = await prisma.stravaWebhookEvent.updateMany({
@@ -547,7 +552,12 @@ export const stravaService = {
     subscriptionId: number;
   }) {
     const eventKey = createHash('sha256').update(JSON.stringify(input)).digest('hex');
-    const event = await prisma.stravaWebhookEvent.upsert({
+    return prisma.$transaction(async (tx) => {
+    // Lock the connection until enqueue commits: deletion will then remove this event,
+    // or a webhook arriving after deletion finds no connection and stores nothing.
+    const connections = await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "StravaConnection" WHERE "athleteId" = ${input.ownerAthleteId} FOR UPDATE`;
+    if (!connections.length) return null;
+    const event = await tx.stravaWebhookEvent.upsert({
       where: { eventKey },
       create: {
         eventKey,
@@ -563,6 +573,7 @@ export const stravaService = {
       select: { id: true },
     });
     return event.id;
+    });
   },
 
   async processPendingWebhookEvents(userId?: number) {

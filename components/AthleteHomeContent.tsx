@@ -62,7 +62,7 @@ export function AthleteHomeContent({ dashboard }: { dashboard: HomeDashboardData
                 <p className="text-[13px] text-[var(--text-secondary)]">Nothing is scheduled today. Create a workout or place saved training on your calendar.</p>
                 <div className="flex flex-wrap gap-2">
                   <ActionLink href="/athlete/workouts" tone="secondary" size="compact">Create workout</ActionLink>
-                  <ActionLink href="/athlete/planner" size="compact">Open Planner</ActionLink>
+                  <ActionLink href="/athlete/calendar?add=1" size="compact">Plan training</ActionLink>
                 </div>
               </div>
             )}

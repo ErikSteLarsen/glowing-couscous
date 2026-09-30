@@ -32,6 +32,7 @@ export default async function SharePage({
     <ShareLandingClient
       token={token}
       projection={projection}
+      ownerDeleted={projection.ownerDeleted}
       isSignedIn={Boolean(user)}
       userRole={user?.role ?? null}
       initialAction={isShareAction(action) ? action : null}

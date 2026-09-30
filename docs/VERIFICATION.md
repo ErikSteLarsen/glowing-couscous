@@ -26,8 +26,23 @@ the unit-test glob. It requires the disposable local database named
 migrations there, set DATABASE_URL/DIRECT_URL for that process, then run
 `node --experimental-strip-types --test tests/postgres-recovery.acceptance.ts`.
 It creates/cleans its own synthetic accounts and covers concurrent creation,
-stale edit claims, rollback after block removal, Profile conflicts, export scope
+stale edit claims, rollback after block removal, Profile conflicts
 and session-version revocation. Never point it at a real account database.
+
+`tests/postgres-deletion.acceptance.ts` uses the same disposable-only guard.
+Run explicitly with `node --experimental-strip-types --test
+tests/postgres-deletion.acceptance.ts`. It verifies credential/provider/webhook
+erasure, anonymized share preservation, unshare ownership, recipient history,
+durable attempt throttling, stale sessions, Google proof expiry, provider outage,
+transaction rollback and simultaneous deletion. Live Google/Strava callbacks
+require separate acceptance; do not delete a real account to verify this flow.
+
+`tests/http-deletion.acceptance.ts` additionally requires a local production
+server at `http://localhost:3100` with the same disposable DATABASE_URL/DIRECT_URL
+and AUTH_URL/NEXTAUTH_URL set to that origin. It creates its own account and
+checks actual credentials sign-in cookies, cross-site rejection, password
+confirmation, public deleted-owner rendering, session revocation and removal
+of the export endpoint. Run using Node's experimental strip-types test mode.
 
 ## Accounts and evidence
 
@@ -50,7 +65,7 @@ interaction/persistence checks; they do not replace them.
 2. Create/save/reopen a workout. A 300-second block repeated four times shows
    1,200 seconds. Exercise add, reorder, duplicate, remove, targets, pauses,
    undo/redo, failure draft retention and explicit save feedback.
-3. Schedule multiple dates; check Planner/Calendar after reload. Edit and
+3. Schedule multiple dates in Calendar; check week/month views after reload. Edit and
    cross-week reschedule personal work without requiring Assignment lineage.
 4. Reuse templates: day = one date, week = seven consecutive days starting
    Monday, month = a whole calendar month. Reject partial/gapped/invalid ranges

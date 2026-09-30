@@ -1,6 +1,7 @@
 import { prisma } from './prisma.ts';
 import { normalizeOverviewCards, parsePrefsJson } from './overview-preferences.ts';
 import { normalizePerformanceProfile, parsePerformanceProfileJson, serializePerformanceProfile, validatePerformanceProfile } from './performance-profile.ts';
+import { parseTrainingSports } from './training-setup.ts';
 
 type AccountServiceDeps = {
   db?: typeof prisma;
@@ -30,8 +31,9 @@ export function createAccountService({ db = prisma }: AccountServiceDeps = {}) {
     },
 
     async updateProfile(userId: number, input: Record<string, unknown>) {
-      const { name, overviewCards, performanceProfile, expectedUpdatedAt } = input;
-      if (name === undefined && overviewCards === undefined && performanceProfile === undefined) return { ok: false as const, status: 400, error: 'No profile changes supplied.' };
+      const { name, overviewCards, performanceProfile, expectedUpdatedAt, trainingSports } = input;
+      if (name === undefined && overviewCards === undefined && performanceProfile === undefined && trainingSports === undefined) return { ok: false as const, status: 400, error: 'No profile changes supplied.' };
+      if (trainingSports !== undefined && !parseTrainingSports(trainingSports)) return { ok: false as const, status: 400, error: 'Choose at least one supported training sport.' };
       if (name !== undefined && (typeof name !== 'string' || !name.trim() || name.trim().length > 200)) return { ok: false as const, status: 400, error: 'Enter a name of 1–200 characters.' };
       if (overviewCards !== undefined && !Array.isArray(overviewCards)) return { ok: false as const, status: 400, error: 'Overview cards must be a list.' };
       if (performanceProfile !== undefined) {
@@ -48,7 +50,7 @@ export function createAccountService({ db = prisma }: AccountServiceDeps = {}) {
           where: { id: userId, updatedAt: existing.updatedAt },
           data: {
             ...(typeof name === 'string' ? { name: name.trim() } : {}),
-            ...(overviewCards !== undefined ? { prefsJson: JSON.stringify({ ...parsePrefsJson(existing.prefsJson), overviewCards: normalizeOverviewCards(overviewCards) }) } : {}),
+            ...(overviewCards !== undefined || trainingSports !== undefined ? { prefsJson: JSON.stringify({ ...parsePrefsJson(existing.prefsJson), ...(overviewCards !== undefined ? { overviewCards: normalizeOverviewCards(overviewCards) } : {}), ...(trainingSports !== undefined ? { trainingSports: parseTrainingSports(trainingSports) } : {}) }) } : {}),
             ...(performanceProfile !== undefined ? { performanceProfileJson: serializePerformanceProfile(normalizePerformanceProfile(performanceProfile)) } : {}),
             updatedAt,
           },

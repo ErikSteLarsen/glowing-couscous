@@ -133,7 +133,7 @@ export function FindCoachClient({ initialState }: { initialState: InitialState }
            <div className="mb-4 rounded-[12px] border border-[var(--field-selected-border)] bg-[var(--brand-tint)] px-4 py-3 text-sm text-[var(--field-selected-text)]">
              <p>Request pending with {requestState.latestRequest.coach.name}.</p>
              <p className="mt-1 text-[13px]">You can keep shaping a private week while you wait.</p>
-             <ActionLink href="/athlete/planner" tone="ghost" size="compact">Continue private planning</ActionLink>
+             <ActionLink href="/athlete/calendar?add=1" tone="ghost" size="compact">Continue private planning</ActionLink>
            </div>
          ) : null}
 

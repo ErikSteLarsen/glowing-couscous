@@ -50,9 +50,9 @@ and ownership guards; page visibility is not API authorization.
 ### Athlete
 
 - `/athlete` - Home week overview
-- `/athlete/calendar` - week and month calendar
+- `/athlete/calendar` - unified week/month calendar with inline workout/template scheduling
 - `/athlete/workouts` - owner-scoped unscheduled workout library
-- `/athlete/planner` - private month-first multi-date Planning Desk
+- `/athlete/planner` - compatibility redirect to Calendar scheduling, preserving the date
 - `/athlete/templates` - private reusable day, week, and month training templates
 - `/athlete/session/[sessionId]` - read-only scheduled-session score and outcome review
 - `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion
@@ -89,7 +89,7 @@ navigation.
 | Coach reads | `lib/coach-service.ts` | Roster and athlete-detail read models |
 | Coach requests | `lib/coach-request-service.ts` | Search, request creation, approval, rejection, and pending uniqueness |
 | Athlete reads | `lib/athlete-service.ts`, `lib/home-summary.ts` | Home, Calendar, Activity, profile, discovery, and session reads; Home reads current-week outcomes separately from the latest four activities and uses pure outcome/load summaries |
-| Athlete planning | `lib/athlete-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, private dated copies, source search, and athlete planner mutations |
+| Athlete planning | `app/(app)/athlete/calendar/TrainingCalendar.tsx`, `lib/athlete-service.ts`, `lib/athlete-planner-service.ts`, `lib/template-service.ts`, `lib/workout-library-service.ts` | Unified week/month calendar, inline source selection and date review, private dated copies and existing planner API mutations |
 | Coach planning | `lib/coach-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, dated sessions, source search, and roster-scoped planner writes |
 | Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |
 | Guided workout creation | `lib/guided-workout.ts`, `lib/guided-workout-service.ts`, `lib/workout-llm.ts`, `components/GuidedWorkoutForm.tsx` | Owner-scoped recent-training summary, validated full model-authored workouts, app-wide provider health cache, standard fallback patterns, and unsaved draft handoff to the shared builder |
@@ -132,7 +132,7 @@ navigation.
 
 1. Keep all week calculations Monday-based.
 2. Find and extend the existing owning service before adding Prisma logic to a route or page.
-3. Keep Workouts unscheduled. Date and week assignment belongs to Planner or `assignment-service`.
+3. Keep Workouts unscheduled. Personal date and week assignment belongs to Calendar through `athlete-planner-service`; coach assignment remains in Planner or `assignment-service`.
 4. Use the canonical session editor and shared block components for new workout authoring.
 5. Read and write personal training metrics through `account-service`; keep profile-derived workout targets as relative profile references so copied content resolves per user.
 6. Keep completed sessions immutable through planner paths. Completion/reopen behavior belongs to `athlete-completion-service`.
@@ -153,6 +153,13 @@ account drafts. Browser recovery never claims server persistence.
 
 `account-service.updateProfile` validates the complete request before one
 compare-and-swap write of name, performance profile and supplied preferences.
+Home's `HomeTrainingSetup` reads through `account-service.getAccount` and saves
+through the same Profile endpoint with `expectedUpdatedAt`. Selected endurance
+sports live in `prefsJson.trainingSports`, separately from performance metrics;
+the service validates the selection and merges unrelated preferences. The pure
+`training-setup` helpers determine completeness using shared running-zone
+calculations, HRmax, FTP and CSS. No onboarding-completed flag substitutes for
+actual targets, and no schema change is required.
 `WorkoutSaveRequest` owns user/owner/request uniqueness and normalized-payload
 hashes for transactional workout creation. Keep the identity after workout
 deletion to refuse accidental recreation on retry. Edits claim the expected
@@ -160,10 +167,32 @@ Session revision before replacing blocks inside the same transaction.
 
 Account controls live separately from the Profile training form. Sign-out
 everywhere increments User.sessionVersion; fresh sign-ins read its current
-value. `account-export-service` uses owner filters, explicit field selections,
-a repeatable-read transaction and collection/block/output bounds. It excludes
-provider credentials, other users' private content, Strava measurements, raw
-recordings and browser drafts; versioned exclusions accompany every download.
+value. Training export is deferred; no download route is exposed.
+
+`account-deletion-service` owns preview, owner-scoped unsharing and account
+erasure. Password attempts reserve a durable, row-locked counter before bcrypt
+(five per 15 minutes). Provider-only Google accounts require signed initial
+OAuth callback metadata within five minutes; JWT refresh/update does not renew
+that timestamp. Final deletion rechecks sessionVersion and password hash.
+Serializable transactions with bounded serialization/deadlock retries protect
+anonymization, recipient detachment and cascade deletion as one unit.
+
+`account-deletion-privacy` regenerates retained ShareLink snapshots through the
+existing projection allowlist and clears titles, summaries and block notes.
+Invalid snapshots lose their raw blob and stay unavailable. Explicit
+ownerDeleted snapshots can outlive source and creator references; ordinary
+source deletion still cascades its links. ShareLink.createdBy is nullable, not a
+tombstone User. Recipient sessions/outcomes survive coach deletion; deleted
+coach references, authored free text and embedded baseline/actual lineage are
+removed. Independent saved copies remain recipient-owned.
+
+Account deletion explicitly removes StravaWebhookEvent by connected athlete ID;
+these rows have no User foreign key. Enqueue locks the connection and ignores
+unconnected owners, preventing post-deletion callbacks from recreating records.
+Local credentials/imports are removed in the transaction; remote Strava
+revocation runs only after commit, without a durable token retry store. Failure
+returns an instruction to revoke Tempo from Strava manually. No backup-erasure
+or live-provider verification is implied by active-database deletion.
 
 PostgreSQL is the current datasource. `prisma/migrations/` owns committed schema
 changes; pooled `DATABASE_URL` serves runtime, direct `DIRECT_URL` serves Prisma.

@@ -275,7 +275,7 @@ export function CoachTemplatesClient({
                     href={plannerHref}
                     className={compactPrimaryButtonClassName}
                   >
-                     {isAthlete ? 'Reuse in Planner' : 'Use in Planner'}
+                      {isAthlete ? 'Schedule in Calendar' : 'Use in Planner'}
                   </a>
                   <details className="relative">
                     <summary className={`${compactSecondaryButtonClassName} list-none`}>More actions</summary>

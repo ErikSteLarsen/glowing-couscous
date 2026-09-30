@@ -73,12 +73,8 @@ No production data deletion, seeding, publication or invented privacy claims.
   Show email, sign-in method, credential recovery action and connection access.
 - [x] Add sign out everywhere through account service using sessionVersion;
   invalidate current session too, clear local drafts and navigate to login.
-- [x] Add versioned owner-scoped JSON export: profile, preferences, workouts,
-  templates, scheduled content and outcomes. Exclude passwords, auth/provider
-  tokens, reset tokens, webhook errors and other users' private information.
-  Strava measurements/raw recordings are explicitly excluded pending provider
-  policy review; this is a training-data export, not a full backup. Use
-  no-store attachment responses and bounds/streaming for large accounts.
+- [x] Defer downloads at the user's request. Remove the download UI, export
+  route/service and export-only tests. Do not offer download before deletion.
 - [x] Reuse existing Strava disconnect service via Account's connection link. Explain that disconnect removes
   Strava-imported outcomes and restores matched plans; show remote revocation
   failure honestly. Do not silently alter this behavior in the Account UI.
@@ -89,27 +85,32 @@ No production data deletion, seeding, publication or invented privacy claims.
 - [ ] Add durable signup/login abuse controls before broad signup (before expensive
   password hashing), and define email verification/verified email change as an
   auth substep. Reset limits alone do not cover signup or login.
-- [ ] Tests: cross-user export denial, export field allowlist, session invalidation,
+- [ ] Tests/browser: session invalidation,
   network failures, keyboard/focus, mobile reach, provider failure copy.
 
 ### 4. Safe account deletion
 
-- [ ] Add recent identity verification: password confirmation for credentials,
-  fresh OAuth authentication for provider-only accounts. Short-lived server
-  proof bound to user/action; do not accept a checkbox or JWT refresh as proof.
-- [ ] Preview consequences and offer export before final confirmation. Lock account
+- [x] Add current password confirmation with durable throttling, or signed Google
+  callback metadata within five minutes for provider-only accounts. Metadata is
+  bound to the authenticated user; refresh/update does not renew it. Deletion
+  requires explicit typed DELETE. Password/session changes invalidate proof.
+- [x] Preview consequences and public-link count before final confirmation. Lock account
   deletion against concurrent mutations/imports and make retry deterministic.
-- [ ] Audit all relations. Preserve other users' independent session copies; detach
+- [x] Audit all relations. Preserve other users' independent session copies; detach
   coach relationships/shared lineage as appropriate before cascade deletion.
-  Remove owner content, outcomes, links, preferences, accounts/reset tokens and
+  Remove owner content, outcomes, preferences, accounts/reset tokens and
   placement identities. Clean Strava webhook rows explicitly (no User foreign key).
-- [ ] Coordinate local deletion and provider revocation without holding a database
-  transaction across a network request. Persist/retry revocation where required,
-  without preserving credentials longer than the documented policy permits.
+- [x] Retain shared workout structure under [deleted], regenerate an allowlisted
+  snapshot and remove free text/source/creator references. Offer owner-scoped
+  unshare before deletion; explain that others' saved copies remain theirs.
+- [x] Coordinate local deletion and provider revocation without holding a database
+  transaction across a network request. Prioritize personal erasure: retain no
+  token for retry, and show manual Strava revocation instructions on outage.
   Define backup retention separately; never promise immediate backup erasure.
-- [ ] Verify deletion/rollback/concurrency on disposable PostgreSQL, credentials and
+- [x] Verify deletion/rollback/concurrency on disposable PostgreSQL, credentials and
   OAuth cases, coach-owned shared content, invalid/expired proof, stale sessions,
   provider outage and duplicate submission. Never test deletion on real accounts.
+- [ ] Finish live Google/Strava callback acceptance and physical-device testing.
 
 ### 5. Live recovery
 
@@ -136,8 +137,8 @@ each coherent slice with actual results and unresolved gates in CURRENT-STATUS.
 
 - Source inspection and earlier assessment are in CURRENT-STATUS.md.
 - Operator/support and real retention/backup facts remain owner inputs.
-- Account timezone, provider export policy and coach deletion consequences need
-  their specified decisions before those substeps; other work can proceed.
+- Account timezone and actual backup/retention policy remain separate decisions.
+  Downloads and email verification are deferred by the user.
 - Physical-device and complete browser failure/multi-tab acceptance remain.
 - Dependency tree was restored from the frozen lockfile. Standard build and
   disposable PostgreSQL acceptance succeeded. New migration is applied only
@@ -146,12 +147,11 @@ each coherent slice with actual results and unresolved gates in CURRENT-STATUS.
   restore/save/reload and paused Live restore. Home was inspected desktop
   dark/light and 390px light; Account controls at 390px dark. No live provider,
   real account deletion or publication was performed. See CURRENT-STATUS.md.
-- Download completion and confirmation-driven session invalidation hit browser
-  event/focus limitations and remain open. Test app/container were cleaned up;
-  synthetic screenshot artifacts remain outside the repository.
-- Next work: safe recent-auth deletion/provider failure design and its disposable
-  PostgreSQL tests; durable auth abuse controls/verified-email lifecycle;
-  complete browser failure/account/multi-tab/download/session acceptance. Public
+- Confirmation-driven session invalidation hit browser event/focus limitations
+  and remains open; downloads were removed. Synthetic screenshot artifacts stay
+  outside the repository.
+- Next work: live provider deletion acceptance; durable auth abuse controls;
+  complete browser failure/account/multi-tab/session acceptance. Public
   privacy/support needs the unresolved owner facts above.
 - No subagents requested; work remains in this session.
 

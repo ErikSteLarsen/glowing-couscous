@@ -46,8 +46,8 @@ Coach-only authoring, roster management, requests, and multi-athlete planning ar
 - Short pause blocks sit between efforts or repeated sets. They count toward elapsed time but do not contribute training load.
 - Duration, training load, zones, and timelines are derived from structured blocks.
 - `Workouts` stores private reusable definitions without dates or assignments.
-- `Planner` places independent copies of reusable content onto selected athlete dates or training-plan weekdays. Workouts can target multiple dates; day, week, and month templates use exact cadence-length date ranges.
-- `Templates` stores owner-scoped reusable personal and coach day, week, or month cadence structures whose assignment span is validated by Planner.
+- Personal `Calendar` combines week/month review with inline scheduling of independent copies. Coach `Planner` places content onto athlete dates or training-plan weekdays. Workouts can target multiple dates; day, week, and month templates use exact cadence-length date ranges.
+- `Templates` stores owner-scoped reusable personal and coach day, week, or month cadence structures whose assignment span is validated by the scheduling service.
 - Completion stores performed metrics, notes, and the latest actual snapshot in `Activity`.
 - Home separates scheduled structure by Session date from completed outcomes by
   Activity date. Standalone imports contribute only to completed totals; matched
@@ -64,7 +64,7 @@ Coach-only authoring, roster management, requests, and multi-athlete planning ar
 - Credentials authentication, direct personal signup, compatibility role setup for accounts without a role, and optional Google OAuth.
 - Dormant coach roster, athlete detail, discovery and request services; current coach/discovery pages redirect to the personal workspace.
 - Coach and athlete workout libraries with a shared visual editor.
-- Coach planner, reusable training plans, templates, source-copy assignment, and athlete planner.
+- Coach planner, reusable training plans, templates, source-copy assignment, and unified personal Calendar scheduling.
 - Athlete Home, Calendar, Workouts, Session, Live, Activity, Profile, and Settings surfaces.
 - Personal maximum-heart-rate and race-based pace zones that resolve in workout creation.
 - Planned session adjustments, actual outcome editing, baseline and actual comparison, and completion.
@@ -77,7 +77,7 @@ Coach-only authoring, roster management, requests, and multi-athlete planning ar
 - Live execution is a local block stepper; it does not collect device or sensor telemetry.
 - Activity recording imports support both user-selected files and a Strava OAuth/webhook review flow. Users choose whether to import a Strava activity and may match it to an unfinished planned session.
 - Messaging, multi-coach collaboration, shared business accounts, custom sports, and deep analytics are not implemented.
-- Flexible recurring-session rules and month-level plan editing are outside the current product model; Planner supports exact day, week, and month cadence spans.
+- Flexible recurring-session rules and month-level plan editing are outside the current product model; Calendar scheduling supports exact day, week, and month cadence spans.
 - Public sharing exposes only a sanitized workout definition; it never exposes ownership, relationship, private notes, or actual data.
 
 ## Brand Commitments
@@ -102,15 +102,31 @@ Primary workflows must remain usable on desktop and mobile and through keyboard 
 
 ## Account and recovery
 
+Home offers inline training-target setup while maximum heart rate or selected
+sport targets are incomplete. People choose running, cycling and/or swimming,
+then save each step without leaving Home. Running supports a recent race result
+or all five manually entered pace ranges; cycling uses FTP and swimming uses
+CSS. Optional sport threshold heart rates remain optional. Unknown values may
+be left blank and keep the guide available. Complete selected targets hide it;
+subsequent target editing remains in Profile.
+
 Profile separates training settings from Account controls. Users can inspect
-sign-in methods, request credential recovery, manage Strava access, download
-allowlisted training data and sign out everywhere. Downloads state their
-exclusions and are not complete provider-data or raw-recording backups.
+sign-in methods, request credential recovery, manage Strava access and sign out
+everywhere. Data downloads are deferred by product choice.
+
+Account deletion prioritizes erasing personal data from the active database.
+Password confirmation or a Google sign-in within five minutes is required.
+Shared workout structure survives under owner `[deleted]`; identifying free
+text is removed. Users can unshare all public links before deletion. This
+does not retract other users' independent saved copies or erase their outcomes.
+Provider outages must not postpone local erasure or retain credentials for retry.
+Browser drafts on other devices and existing backups are outside this action;
+actual operator retention/backup policy still needs to be established.
 
 Workout and Profile changes have browser-only recovery for seven days. Live
 checkpoints last 24 hours and restore paused; elapsed time is counted only by
 explicit choice, with completion still explicit. Account-scoped drafts must not
 overwrite another tab's work. Failed saves retain changes, new-workout retries
 reuse their request identity, and stale edits must not silently replace newer
-server content. Public privacy/support and safe deletion remain release gates
-until their operator facts and identity/provider policies are implemented.
+server content. Public privacy/support remains a release gate until operator
+facts and retention policies are established. Email verification is deferred.

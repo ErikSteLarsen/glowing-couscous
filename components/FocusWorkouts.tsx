@@ -11,7 +11,7 @@ export function FocusWorkouts(libraryProps: LibraryProps) {
       <header className="study-workouts__header">
         <div>
           <h1>Workouts</h1>
-          <p>Create once. Refine when you need to. Add a copy to Planner when it is ready.</p>
+          <p>Create once. Refine when you need to. Add a copy to your calendar when it is ready.</p>
         </div>
         <div className="study-workouts__header-count"><strong>{libraryProps.workouts.length}</strong><span>saved {libraryProps.workouts.length === 1 ? 'workout' : 'workouts'}</span><ArrowUpRight size={18} aria-hidden="true" /></div>
       </header>

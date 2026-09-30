@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       eventTime: Number(eventTime),
       subscriptionId: Number(subscriptionId),
     });
-    after(async () => { await stravaService.processWebhookEvent(eventId).catch(() => undefined); });
+    if (eventId !== null) after(async () => { await stravaService.processWebhookEvent(eventId).catch(() => undefined); });
     return NextResponse.json({ accepted: true });
   } catch {
     return NextResponse.json({ error: 'Webhook event could not be queued.' }, { status: 500 });

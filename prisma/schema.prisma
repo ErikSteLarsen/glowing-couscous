@@ -44,6 +44,14 @@ model User {
   stravaConnection                StravaConnection?
   passwordResetToken              PasswordResetToken?
   workoutSaveRequests             WorkoutSaveRequest[]
+  deletionAttempts                AccountDeletionAttempt?
+}
+
+model AccountDeletionAttempt {
+  userId          Int      @id
+  windowStartedAt DateTime
+  attemptCount    Int
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model WorkoutSaveRequest {
@@ -241,12 +249,13 @@ model ShareLink {
   tokenHash    String    @unique
   sessionId    Int?
   templateId   Int?
-  createdById  Int
+  createdById  Int?
+  ownerDeleted Boolean   @default(false)
   snapshotJson String
   createdAt    DateTime  @default(now())
   session      Session?  @relation("SessionShareLinks", fields: [sessionId], references: [id], onDelete: Cascade)
   template     Template? @relation("TemplateShareLinks", fields: [templateId], references: [id], onDelete: Cascade)
-  createdBy    User      @relation("ShareLinkCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy    User?     @relation("ShareLinkCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([sessionId])
   @@index([templateId])

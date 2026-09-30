@@ -158,7 +158,7 @@ test('athlete home uses the selected Monolith composition and explicit session a
   assert.match(athletePageSource, /This week/);
   assert.match(athletePageSource, /nextActionLabel/);
   assert.match(athletePageSource, /Nothing is scheduled today/);
-  assert.match(athletePageSource, /Open Planner/);
+  assert.match(athletePageSource, /Plan training/);
   assert.match(athletePageSource, /athlete\/session/);
   assert.match(athletePageSource, /StatusBadge/);
   assert.doesNotMatch(sessionRowSource, /StatusBadge|showStatus/);

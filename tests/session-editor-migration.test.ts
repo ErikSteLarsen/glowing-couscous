@@ -102,7 +102,7 @@ test('template editor adapter initializes and serializes the canonical session d
 test('libraries and session detail own editing while planners place sources', async () => {
   const [coachPlannerSource, athletePlannerSource, templatesSource, composerSource, canvasSource] = await Promise.all([
     read('app/(app)/coach/planner/PlannerClient.tsx'),
-    read('app/(app)/athlete/planner/AthletePlannerClient.tsx'),
+    read('app/(app)/athlete/calendar/TrainingCalendar.tsx'),
     read('app/(app)/coach/templates/CoachTemplatesClient.tsx'),
     read('components/WorkoutBuilder.tsx'),
     read('components/WorkoutCanvasEditor.tsx'),

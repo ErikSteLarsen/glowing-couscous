@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { ArrowUpRight, CalendarDays, ChevronRight } from 'lucide-react';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
@@ -8,7 +9,7 @@ import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
 import { HomeRecentLoad, HomeWeekSummary } from '@/components/HomeTrainingReadouts';
 
-export function FocusHome({ dashboard }: { dashboard: HomeDashboardData }) {
+export function FocusHome({ dashboard, trainingSetup }: { dashboard: HomeDashboardData; trainingSetup?: ReactNode }) {
   const nextAction = dashboard.todaySessions.find((session) => session.status !== 'completed') ?? dashboard.todaySessions[0] ?? null;
   const nextActionLabel = nextAction?.status === 'completed' ? 'Review outcome' : nextAction?.status === 'missed' ? 'Review session' : 'Open session';
   const scheduledCount = dashboard.weekDays.reduce((total, day) => total + day.sessions.length, 0);
@@ -21,9 +22,10 @@ export function FocusHome({ dashboard }: { dashboard: HomeDashboardData }) {
           <h1>Welcome, {dashboard.athlete.name}</h1>
           <p className="study-home__intro">Your next session and the shape of this training week.</p>
         </div>
-        <Link className="study-home__planner-link" href="/athlete/planner"><CalendarDays size={17} aria-hidden="true" /> Open Planner <ArrowUpRight size={15} aria-hidden="true" /></Link>
+        <Link className="study-home__planner-link" href="/athlete/calendar?add=1"><CalendarDays size={17} aria-hidden="true" /> Plan training <ArrowUpRight size={15} aria-hidden="true" /></Link>
       </header>
 
+      {trainingSetup}
       <div className="study-home__layout">
         <div className="study-home__primary">
           <section className="study-home__today" aria-labelledby="study-today-title">
@@ -48,7 +50,7 @@ export function FocusHome({ dashboard }: { dashboard: HomeDashboardData }) {
             ) : (
               <div className="study-home__empty">
                 <p>Nothing is scheduled today. Your week is ready when you are.</p>
-                <div><Link href="/athlete/workouts">Create workout</Link><Link href="/athlete/planner">Open Planner</Link></div>
+                <div><Link href="/athlete/workouts">Create workout</Link><Link href="/athlete/calendar?add=1">Plan training</Link></div>
               </div>
             )}
           </section>
