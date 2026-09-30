@@ -302,8 +302,8 @@ The product is a week-first workspace, not a marketing canvas. `PageShell` in
 Home and Workouts use the selected Focus composition, backed by the real data
 and editor owners. The `page-layout`
 rules and `--page-*` tokens in `app/globals.css` own the centered 1800px maximum,
-20px mobile / 24px desktop / 32px large-screen gutters, 24px top padding, 96px
-minimum header band, and 16px page-group gap. `TopBar` top-aligns titles and actions.
+20px mobile / 24px desktop / 32px large-screen gutters and matching top padding,
+64px desktop minimum header band (content-sized on mobile), and 24px page-group gap. `TopBar` top-aligns titles and actions.
 Descriptions, long titles, zoom, and narrow screens may grow the band to preserve
 content rather than clipping it. Content below the header can use shared
 maximum measures of 860px for compact account forms, 960px for session detail,
@@ -319,7 +319,7 @@ uses the separate `AuthPageShell` reading-width frame.
 
 ### Return Navigation
 
-Pages and nested editing states with a clear parent use the shared 40px
+Pages and nested editing states with a clear parent use the shared 40px (44px on mobile)
 icon-only `BackControl`. At page level, `TopBar` places its left arrow inline
 immediately before the title so the control adds no header row. Its accessible
 name and hover hint identify the destination; navigation uses an explicit
@@ -346,7 +346,7 @@ Show menu control at the top left restores it without obscuring page actions.
 The sidebar owns primary navigation and local overflow; the
 content column must remain `min-width: 0`. Below that breakpoint, secondary
 navigation moves into a focus-managed drawer and the first four role-aware
-destinations become a fixed four-item bottom navigation. Mobile content keeps
+destinations become a fixed bottom navigation with four destinations and an icon-only menu control. Mobile content keeps
 bottom space for that navigation and never relies on hover.
 
 Training weeks always render Monday first. Home and Calendar compose around the
@@ -467,11 +467,15 @@ horizontal layout.
 `AppShell` and `AppSidebar` own authenticated navigation. Desktop uses a sticky
 228px sidebar with a near-black surface in dark mode and a white surface in
 light mode. Hide menu and Show menu use panel-direction icons and explicit
-labels; reserve back arrows for returning to a page. Hidden desktop navigation
+accessible names and hover hints; reserve back arrows for returning to a page. Hidden desktop navigation
 leaves no rail or focusable links. Its active tint and identity cue use cobalt. The sidebar theme switch saves a user's light or
 dark choice locally. Mobile uses a drawer with an overlay, Escape-to-close,
 focus containment, and a fixed bottom bar with four primary destinations.
-The sticky top-left Show menu control remains reachable when scrolling. Drawer
+Mobile uses the icon-only menu control in the bottom bar instead of a sticky
+top row. Right swipe from the interior left-edge band (20–48px) opens the drawer;
+left swipe inside closes it. Vertical scrolling, inputs and dialogs are excluded.
+The outer edge remains available for browser history. The desktop top-left
+Show menu control remains reachable when scrolling. Drawer
 dismissal restores focus, releases scroll lock, and retains the separate desktop
 preference. Route changes and crossing into desktop close the drawer; hidden
 page content is inert while it is open. Menu controls have 44px touch targets
@@ -645,3 +649,10 @@ time is a separate explicit choice, and Finish remains the persistence action.
 The Profile Account section stays outside its training form and save bar's
 meaning: session controls, sign-in capability, connection access and downloads
 are independently actionable. Export omissions must be visible before download.
+
+### Compact feedback
+
+Shell feedback uses a content-sized frame capped at 480px, centered within the
+available content column. Use 12px inline / 8px block padding, a 12px gap,
+and an icon-only dismiss control with a 44px mobile target. Feedback clears
+bottom navigation and Profile save actions; sync errors do not overlap notices.

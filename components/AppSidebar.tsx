@@ -98,8 +98,8 @@ export function AppSidebar(props: {
           props.mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-         <div className="flex min-h-full flex-col gap-7 p-4">
-           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--nav-border)] px-2 pb-5 pt-2">
+         <div className="flex min-h-full flex-col gap-6 p-4">
+           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--nav-border)] pb-4">
              <div className="flex items-center gap-3">
                 <div className="ink-brand-mark" aria-hidden="true">
                   <span />
@@ -121,13 +121,13 @@ export function AppSidebar(props: {
             <button
               id="tempo-hide-menu"
               type="button"
-              aria-controls="tempo-sidebar"
+              aria-label="Hide menu" title="Hide menu" aria-controls="tempo-sidebar"
               aria-expanded="true"
-              className={`hidden min-h-11 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[12px] font-semibold text-[var(--nav-muted)] hover:bg-[var(--nav-active)] hover:text-[var(--nav-text)] ${buttonFocusClassName} md:flex`}
+              className={`hidden h-8 w-8 shrink-0 items-center justify-center rounded-[9px] text-[var(--nav-muted)] hover:bg-[var(--nav-active)] hover:text-[var(--nav-text)] ${buttonFocusClassName} md:flex`}
               onClick={props.onHide}
             >
               <PanelLeftClose aria-hidden="true" size={18} strokeWidth={1.8} />
-              Hide menu
+
             </button>
           </div>
 

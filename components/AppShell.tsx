@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { Activity, CalendarDays, Dumbbell, House, LayoutTemplate, PanelLeftOpen } from 'lucide-react';
+import { Activity, CalendarDays, Dumbbell, House, LayoutTemplate, Menu, PanelLeftOpen } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { AppSidebar } from '@/components/AppSidebar';
 import { StravaActivityNotifications } from '@/components/StravaActivityNotifications';
-import { buttonFocusClassName, secondaryButtonClassName } from '@/components/ui';
+import { buttonFocusClassName, iconButtonClassName } from '@/components/ui';
 import { getMobileNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import type { SessionUser } from '@/lib/auth-session';
 
@@ -61,6 +61,7 @@ export function AppShell({
   const menuHidden = useSyncExternalStore(subscribeToMenu, getMenuHidden, getServerMenuHidden);
   const theme = useSyncExternalStore(subscribeToTheme, getClientTheme, getServerTheme);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const desktopMenuButtonRef = useRef<HTMLButtonElement>(null);
   const navItems = getMobileNavigation(user.role);
 
   // A browser history change also dismisses the drawer, without reopening it
@@ -88,7 +89,7 @@ export function AppShell({
       if (event) requestAnimationFrame(() => {
         // CSS may hide the focused control before the media-query event fires.
         if (!sidebarHadFocus && document.activeElement !== document.body) return;
-        if (mediaQuery.matches || getMenuHidden()) menuButtonRef.current?.focus();
+        if (mediaQuery.matches || getMenuHidden()) (window.matchMedia('(max-width: 767px)').matches ? menuButtonRef : desktopMenuButtonRef).current?.focus();
         else document.getElementById('tempo-hide-menu')?.focus();
       });
     };
@@ -106,7 +107,7 @@ export function AppShell({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setMobileOpenPath(null);
-        requestAnimationFrame(() => menuButtonRef.current?.focus());
+        requestAnimationFrame(() => (window.matchMedia('(max-width: 767px)').matches ? menuButtonRef : desktopMenuButtonRef).current?.focus());
       }
     };
 
@@ -120,9 +121,47 @@ export function AppShell({
     };
   }, [mobileOpen]);
 
+  useEffect(() => {
+    if (!isMobileViewport) return;
+    let start: { x: number; y: number; time: number } | null = null;
+    const onStart = (event: TouchEvent) => {
+      start = null;
+      const target = event.target as HTMLElement;
+      if (event.touches.length !== 1 || target.closest('input, textarea, select, [contenteditable], [role="slider"], dialog')) return;
+      const touch = event.touches[0];
+      // Leave the outer edge to native browser history gestures.
+      if (!mobileOpen && (touch.clientX < 20 || touch.clientX > 48)) return;
+      if (mobileOpen && !target.closest('#tempo-sidebar')) return;
+      start = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+    };
+    const onEnd = (event: TouchEvent) => {
+      if (!start || event.changedTouches.length !== 1) { start = null; return; }
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      const deliberate = Date.now() - start.time < 700 && Math.abs(dx) >= 64 && Math.abs(dx) > Math.abs(dy) * 2;
+      start = null;
+      if (!deliberate) return;
+      if (!mobileOpen && dx > 0) setMobileOpenPath(pathname);
+      if (mobileOpen && dx < 0) {
+        setMobileOpenPath(null);
+        requestAnimationFrame(() => (window.matchMedia('(max-width: 767px)').matches ? menuButtonRef : desktopMenuButtonRef).current?.focus());
+      }
+    };
+    const cancel = () => { start = null; };
+    document.addEventListener('touchstart', onStart, { passive: true });
+    document.addEventListener('touchend', onEnd, { passive: true });
+    document.addEventListener('touchcancel', cancel);
+    return () => {
+      document.removeEventListener('touchstart', onStart);
+      document.removeEventListener('touchend', onEnd);
+      document.removeEventListener('touchcancel', cancel);
+    };
+  }, [isMobileViewport, mobileOpen, pathname]);
+
   const closeMobileMenu = () => {
     setMobileOpenPath(null);
-    if (mobileOpen) requestAnimationFrame(() => menuButtonRef.current?.focus());
+    if (mobileOpen) requestAnimationFrame(() => (window.matchMedia('(max-width: 767px)').matches ? menuButtonRef : desktopMenuButtonRef).current?.focus());
   };
 
   const setDesktopMenuHidden = (hidden: boolean) => {
@@ -131,7 +170,7 @@ export function AppShell({
     catch { menuStorageUnavailable = true; }
     window.dispatchEvent(new Event('tempo-menu-changed'));
     requestAnimationFrame(() => {
-      if (hidden) menuButtonRef.current?.focus();
+      if (hidden) (window.matchMedia('(max-width: 767px)').matches ? menuButtonRef : desktopMenuButtonRef).current?.focus();
       else document.getElementById('tempo-hide-menu')?.focus();
     });
   };
@@ -162,12 +201,14 @@ export function AppShell({
             type="button"
             aria-controls="tempo-sidebar"
             aria-expanded={isMobileViewport ? mobileOpen : !menuHidden}
-            ref={menuButtonRef}
-            className={`${secondaryButtonClassName} min-h-11`}
-            onClick={() => isMobileViewport ? setMobileOpenPath(pathname) : setDesktopMenuHidden(false)}
+            ref={desktopMenuButtonRef}
+            aria-label="Show menu"
+            title="Show menu"
+            className={iconButtonClassName}
+            onClick={() => setDesktopMenuHidden(false)}
           >
             <PanelLeftOpen aria-hidden="true" size={18} strokeWidth={1.8} />
-            Show menu
+
           </button>
         </div>
         {children}
@@ -178,7 +219,13 @@ export function AppShell({
         inert={mobileOpen && isMobileViewport ? true : undefined}
         className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--nav-border)] bg-[var(--nav-surface)] pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden"
       >
-        <div className="grid grid-cols-4 gap-1 px-3 pt-2">
+        <div className="grid grid-cols-5 gap-1 px-3 pt-2">
+          <button type="button" ref={menuButtonRef} aria-label="Show menu" title="Show menu"
+            aria-controls="tempo-sidebar" aria-expanded={mobileOpen}
+            className={`flex min-h-14 items-center justify-center rounded-[10px] text-[var(--nav-muted)] hover:bg-[var(--nav-active)] ${buttonFocusClassName}`}
+            onClick={() => setMobileOpenPath(pathname)}>
+            <Menu aria-hidden="true" size={20} strokeWidth={1.8} />
+          </button>
           {navItems.map((item) => {
             const isActive = isNavigationItemActive(navigationPathname, item, navItems);
             const Icon = item.label === 'Home'

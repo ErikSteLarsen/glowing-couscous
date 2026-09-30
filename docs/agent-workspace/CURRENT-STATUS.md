@@ -4,6 +4,36 @@ Updated 2026-09-30. Current evidence snapshot, not implementation history.
 Latest checks cover truthful Home, workout/Profile/Live recovery and Account
 controls. Older provider/device results retain their recorded scope.
 
+## Shared spacing review, 2026-09-30
+
+- Shared page gutters now match top padding; desktop headers use a 64px minimum,
+  mobile headers size to content, and page groups use 24px separation. Library
+  cards use 16px padding. Back controls retain inline placement with 44px mobile
+  targets; centered headers reserve symmetric space around the title.
+- Desktop menu controls are icon-only. Mobile removes the sticky top menu row
+  and adds menu access to the existing bottom bar. Deliberate horizontal swipes
+  open from the interior left-edge band and close inside the drawer; native outer
+  edge, vertical scrolling, form fields and dialogs are excluded.
+- Strava feedback uses one compact, content-sized frame centered in the available
+  content column, with icon dismissal and consistent safe-area offsets. Sync
+  errors do not stack over notices. Profile save-bar offset now matches bottom
+  navigation height and releases the sidebar offset when desktop menu is hidden;
+  feedback clears those actions. Profile geometry was source-reviewed only.
+- Rendered shared-component fixture: desktop 1440px light/dark, mobile 390px dark
+  and 320px light; no horizontal overflow. Desktop hide/show and mobile menu
+  opening, Escape dismissal and focus return passed. Screenshots are under
+  `.impeccable/review/spacing/`. Fixture and development config were removed.
+  This is component evidence, not an authenticated route sweep. Physical swipe,
+  native history gestures, populated libraries and actual notification delivery
+  remain unverified; earlier authenticated route evidence predates this change.
+- Final `pnpm test`: 305/305; `pnpm lint`: pass; direct webpack build: pass,
+  including TypeScript and 80 pages in the combined local worktree. Layout detector and `git diff --check`: pass.
+  Standard `pnpm build` generated Prisma successfully but stopped at migration
+  deployment against an intentionally unavailable local review URL. The configured
+  database was not migrated. Temporary fixture type artifacts initially blocked
+  compilation; removing generated development types resolved it. Middleware
+  deprecation remains. Existing unrelated account/recovery edits were preserved.
+
 ## Latest recorded checks
 
 | Gate | Latest recorded result | Scope / limits |

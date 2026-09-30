@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { X } from 'lucide-react';
 import { format } from 'date-fns';
 import type { StravaNotifications } from '@/lib/strava-inbox-service';
 import { formatDuration } from '@/lib/format-duration';
@@ -173,10 +174,10 @@ export function StravaActivityNotifications({ paused = false }: { paused?: boole
   const backToList = () => { setReviewId(null); setError(null); requestAnimationFrame(() => closeRef.current?.focus()); };
 
   return <>
-    {notice && !hasActivities ? <div role="status" className="fixed bottom-24 left-4 right-4 z-40 mx-auto max-w-lg rounded-[16px] border border-[var(--border)] bg-[var(--surface)] p-4 text-[13px] md:bottom-4">
-      <p>{notice}</p><button className={`${secondaryButtonClassName} mt-3`} onClick={() => setNotice(null)}>Dismiss message</button>
+    {notice && !hasActivities ? <div role="status" className="tempo-toast">
+      <p className="min-w-0 flex-1">{notice}</p><button aria-label="Dismiss message" title="Dismiss message" className="tempo-toast__dismiss" onClick={() => setNotice(null)}><X aria-hidden="true" size={16} /></button>
     </div> : null}
-    {syncError && inbox?.connected && !hasActivities ? <p role="status" className="fixed bottom-24 left-4 right-4 z-40 rounded-[16px] border border-[var(--border)] bg-[var(--surface)] p-3 text-[13px] md:bottom-4">{syncError}</p> : null}
+    {syncError && !notice && inbox?.connected && !hasActivities ? <p role="status" className="tempo-toast">{syncError}</p> : null}
     <dialog ref={dialogRef} aria-labelledby="strava-new-title" aria-describedby="strava-new-description" aria-busy={busy}
       className="fixed inset-0 m-auto max-h-[calc(100dvh-2rem)] w-[min(40rem,calc(100%-2rem))] overflow-x-hidden overflow-y-auto rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-0 text-[var(--text)] shadow-[var(--shadow-overlay)] backdrop:bg-[var(--overlay)]"
       onCancel={(event) => { event.preventDefault(); if (!busy) later(); }}>

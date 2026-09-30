@@ -63,7 +63,9 @@ export function AuthPageShell({ children }: { children: ReactNode }) {
   return <main className="auth-page-layout">{children}</main>;
 }
 
-const backControlClassName = `inline-flex h-10 w-10 flex-none items-center justify-center rounded-[10px] text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] ${buttonFocusClassName}`;
+export const iconButtonClassName = `inline-flex h-10 w-10 max-md:h-11 max-md:w-11 flex-none items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] transition hover:bg-[var(--field-surface)] hover:text-[var(--text)] ${buttonFocusClassName}`;
+
+const backControlClassName = `inline-flex h-10 w-10 max-md:h-11 max-md:w-11 flex-none items-center justify-center rounded-[10px] text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] ${buttonFocusClassName}`;
 
 type BackControlProps =
   | { href: string; label: string; onClick?: never; disabled?: never }
@@ -124,7 +126,7 @@ export function TopBar({
   return (
     <div className={`page-header ink-topbar ${isCentered ? 'page-header--center' : ''}`}>
       {back ? (
-        <div className="flex min-w-0 items-start gap-3">
+        <div className="page-header__heading flex min-w-0 items-start gap-3">
           <BackControl href={back.href} label={back.label} />
           {heading}
         </div>
