@@ -30,9 +30,9 @@ means compatibility code, not the extension point for new work.
 
 ## Active work
 
-No implementation task is asserted active by this consolidation. Remaining
-integration/mobile/preview gates are in CURRENT-STATUS.md. Create a task when
-work resumes; do not keep stale agent assignments as active work.
+- [Publish Strava activity notifications](tasks/2026-09-30-publish-strava.md):
+  recheck, push the implementation to main, verify the production deployment.
+  Remaining integration/mobile/preview gates are in CURRENT-STATUS.md.
 
 ## Task lifecycle
 

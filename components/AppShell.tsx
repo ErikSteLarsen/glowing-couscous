@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Activity, CalendarDays, Dumbbell, House, LayoutTemplate, PanelLeftOpen } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { AppSidebar } from '@/components/AppSidebar';
+import { StravaActivityNotifications } from '@/components/StravaActivityNotifications';
 import { buttonFocusClassName, secondaryButtonClassName } from '@/components/ui';
 import { getMobileNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import type { SessionUser } from '@/lib/auth-session';
@@ -206,6 +207,7 @@ export function AppShell({
           })}
         </div>
       </nav>
+      <StravaActivityNotifications key={user.id} paused={mobileOpen} />
     </div>
   );
 }

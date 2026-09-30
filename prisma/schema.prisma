@@ -301,10 +301,13 @@ model StravaInboxActivity {
   elevationGainMeters  Float?
   metadataJson         String?
   fetchedAt            DateTime        @default(now())
+  notifiedAt           DateTime?
+  dismissedAt          DateTime?
   connection           StravaConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
 
   @@unique([connectionId, stravaActivityId])
   @@index([connectionId, startedAt])
+  @@index([connectionId, notifiedAt, dismissedAt])
 }
 
 model StravaWebhookEvent {
@@ -322,6 +325,8 @@ model StravaWebhookEvent {
   lastError         String?
   createdAt         DateTime  @default(now())
   processedAt       DateTime?
+  processingUntil   DateTime?
+  nextAttemptAt     DateTime  @default(now())
 
   @@index([status, createdAt])
   @@index([ownerAthleteId, objectId])

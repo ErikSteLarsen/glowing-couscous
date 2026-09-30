@@ -1,0 +1,58 @@
+[
+  {
+    "width": 1440,
+    "theme": "light",
+    "overflow": false,
+    "focus": "contained",
+    "matching": "pass",
+    "standalone": "pass",
+    "discardRestore": "pass",
+    "draftAfterFailure": "pass",
+    "periodicArrival": "pass",
+    "escapeAcknowledgement": "pass",
+    "reloadPersistence": "pass",
+    "pageErrors": []
+  },
+  {
+    "width": 1440,
+    "theme": "dark",
+    "overflow": false,
+    "focus": "contained",
+    "matching": "pass",
+    "standalone": "pass",
+    "discardRestore": "pass",
+    "draftAfterFailure": "pass",
+    "periodicArrival": "pass",
+    "escapeAcknowledgement": "pass",
+    "reloadPersistence": "pass",
+    "pageErrors": []
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "overflow": false,
+    "focus": "contained",
+    "matching": "pass",
+    "standalone": "pass",
+    "discardRestore": "pass",
+    "draftAfterFailure": "pass",
+    "periodicArrival": "pass",
+    "escapeAcknowledgement": "pass",
+    "reloadPersistence": "pass",
+    "pageErrors": []
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "overflow": false,
+    "focus": "contained",
+    "matching": "pass",
+    "standalone": "pass",
+    "discardRestore": "pass",
+    "draftAfterFailure": "pass",
+    "periodicArrival": "pass",
+    "escapeAcknowledgement": "pass",
+    "reloadPersistence": "pass",
+    "pageErrors": []
+  }
+]

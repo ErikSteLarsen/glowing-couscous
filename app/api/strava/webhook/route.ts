@@ -3,6 +3,7 @@ import { after, NextResponse } from 'next/server';
 import { stravaService } from '@/lib/strava-service';
 
 export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 function constantTimeEqual(left: string, right: string) {
   const a = Buffer.from(left);

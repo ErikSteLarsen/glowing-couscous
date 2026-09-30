@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { stravaService } from '@/lib/strava-service';
 
 export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   const expected = process.env.STRAVA_WEBHOOK_WORKER_SECRET ?? '';

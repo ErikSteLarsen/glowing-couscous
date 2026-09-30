@@ -12,7 +12,7 @@ const STREAM_KEYS = ['time', 'distance', 'altitude', 'heartrate', 'cadence', 've
 
 export type { StravaActivitySummary };
 
-export type StravaInboxActivitySummary = StravaActivitySummary & { imported: boolean };
+export type StravaInboxActivitySummary = StravaActivitySummary & { imported: boolean; dismissed?: boolean };
 
 export type StravaConnectionSummary = {
   connected: boolean;
@@ -25,7 +25,8 @@ export type StravaConnectionSummary = {
 export class StravaConfigurationError extends Error {}
 export class StravaConnectionConflictError extends Error {}
 export class StravaProviderError extends Error {
-  constructor(message: string, readonly status: number) { super(message); }
+  readonly status: number;
+  constructor(message: string, status: number) { super(message); this.status = status; }
 }
 
 function requiredEnvironment(name: string) {
@@ -302,12 +303,20 @@ export const stravaService = {
       }),
     ]);
     const importedIds = new Set(imported.flatMap((item) => item.externalActivityId ? [item.externalActivityId] : []));
+    // Keep recoverable inbox items reachable after they age out of the recent
+    // provider page. This is a read limit, never a retention/deletion policy.
+    const unimported = await prisma.stravaInboxActivity.findMany({
+      where: { connectionId: connection.id, stravaActivityId: { notIn: [...importedIds] } },
+      orderBy: { startedAt: 'desc' },
+    });
+    const reviewActivities = [...new Map([...activities, ...unimported].map((activity) => [activity.stravaActivityId, activity])).values()]
+      .sort((left, right) => right.startedAt.getTime() - left.startedAt.getTime());
     return {
       connected: true,
       canConnect,
       athleteName: connection.athleteName,
       webhookConfigured: webhooksConfigured(),
-      activities: activities.map((activity) => ({
+      activities: reviewActivities.map((activity) => ({
         id: activity.stravaActivityId,
         title: activity.title,
         sportType: activity.sportType,
@@ -318,6 +327,7 @@ export const stravaService = {
         elevationGainMeters: activity.elevationGainMeters,
         metadata: parseMetadata(activity.metadataJson),
         imported: importedIds.has(activity.stravaActivityId),
+        dismissed: activity.dismissedAt !== null,
       })),
     };
   },
@@ -462,29 +472,38 @@ export const stravaService = {
   },
 
   async processWebhookEvent(eventId: number) {
+    const now = new Date();
+    const claim = await prisma.stravaWebhookEvent.updateMany({
+      where: { id: eventId, OR: [
+        { status: 'pending', nextAttemptAt: { lte: now } },
+        { status: 'processing', processingUntil: { lte: now } },
+      ] },
+      data: { status: 'processing', processingUntil: new Date(now.getTime() + 120_000) },
+    });
+    if (claim.count === 0) return;
     const event = await prisma.stravaWebhookEvent.findUnique({ where: { id: eventId } });
     if (!event || event.status === 'processed') return;
-    const connection = await prisma.stravaConnection.findUnique({ where: { athleteId: event.ownerAthleteId } });
-    if (event.objectType === 'athlete') {
-      const updates = parseMetadata(event.updatesJson);
-      if (updates.authorized === false) {
-        if (connection && connection.authorizedAt.getTime() > event.eventTime * 1000) {
-          await markEventProcessed(event.id);
+    try {
+      const connection = await prisma.stravaConnection.findUnique({ where: { athleteId: event.ownerAthleteId } });
+      if (event.objectType === 'athlete') {
+        const updates = parseMetadata(event.updatesJson);
+        if (updates.authorized === false) {
+          if (connection && connection.authorizedAt.getTime() > event.eventTime * 1000) {
+            await markEventProcessed(event.id);
+            return;
+          }
+          if (connection) await removeLocalConnectionData(connection);
+          else await prisma.stravaWebhookEvent.deleteMany({ where: { ownerAthleteId: event.ownerAthleteId } });
           return;
         }
-        if (connection) await removeLocalConnectionData(connection);
-        else await prisma.stravaWebhookEvent.deleteMany({ where: { ownerAthleteId: event.ownerAthleteId } });
+        await markEventProcessed(event.id);
         return;
       }
-      await markEventProcessed(event.id);
-      return;
-    }
-    if (!connection || event.objectType !== 'activity') {
-      await prisma.stravaWebhookEvent.delete({ where: { id: event.id } });
-      return;
-    }
+      if (!connection || event.objectType !== 'activity') {
+        await prisma.stravaWebhookEvent.delete({ where: { id: event.id } });
+        return;
+      }
 
-    try {
       const privateUpdate = parseMetadata(event.updatesJson).private;
       const isPrivate = privateUpdate === true || privateUpdate === 'true';
       if (event.aspectType === 'delete' || isPrivate) {
@@ -508,7 +527,9 @@ export const stravaService = {
       await prisma.stravaWebhookEvent.update({
         where: { id: event.id },
         data: {
-          status: event.attemptCount >= 2 ? 'failed' : 'pending',
+          status: 'pending',
+          processingUntil: null,
+          nextAttemptAt: new Date(Date.now() + Math.min(3_600_000, 30_000 * 2 ** Math.min(event.attemptCount, 7))),
           attemptCount: { increment: 1 },
           lastError: error instanceof Error ? error.message.slice(0, 300) : 'Strava event processing failed.',
         },
@@ -544,15 +565,30 @@ export const stravaService = {
     return event.id;
   },
 
-  async processPendingWebhookEvents() {
+  async processPendingWebhookEvents(userId?: number) {
+    const connection = userId === undefined ? null : await getConnection(userId);
+    if (userId !== undefined && !connection) return 0;
+    const now = new Date();
     const events = await prisma.stravaWebhookEvent.findMany({
-      where: { status: 'pending' },
+      where: {
+        ...(connection ? { ownerAthleteId: connection.athleteId } : {}),
+        OR: [
+          { status: 'pending', nextAttemptAt: { lte: now } },
+          { status: 'processing', processingUntil: { lte: now } },
+        ],
+      },
       orderBy: { createdAt: 'asc' },
-      take: 20,
+      take: userId === undefined ? 20 : 3,
       select: { id: true },
     });
-    for (const event of events) await this.processWebhookEvent(event.id);
-    return events.length;
+    const startedAt = Date.now();
+    let processed = 0;
+    for (const event of events) {
+      if (Date.now() - startedAt > 40_000) break;
+      await this.processWebhookEvent(event.id);
+      processed += 1;
+    }
+    return processed;
   },
 };
 
@@ -577,7 +613,7 @@ async function removeLocalConnectionData(connection: { id: string; userId: numbe
 async function markEventProcessed(id: number) {
   await prisma.stravaWebhookEvent.update({
     where: { id },
-    data: { status: 'processed', processedAt: new Date(), updatesJson: null, lastError: null },
+    data: { status: 'processed', processedAt: new Date(), processingUntil: null, updatesJson: null, lastError: null },
   });
 }
 

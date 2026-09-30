@@ -71,13 +71,16 @@ That is user-reported evidence, not a fresh provider check by this cleanup.
 2. Configure HTTPS Strava callbacks/subscription and scheduled authenticated
    worker; verify live delivery, retry, update/privacy/delete/disconnect and
    deauthorization. Fixture inbox checks do not close live provider gates.
-   A read-only production challenge check on 2026-09-30 against
-   `https://glowing-couscous-delta.vercel.app/api/strava/webhook` using the local
-   `.env` verification token returned HTTP 403 with `Webhook verification
-   failed.` The production route exists, but its deployed verification token
-   is missing or differs from the local value. Align the Production environment
-   token and redeploy before retrying subscription creation. No subscription or
-   activity data was changed; the new notification changes remain local.
+   The user reports webhook registration completed. A read-only production
+   challenge check on 2026-09-30 against
+   `https://glowing-couscous-delta.vercel.app/api/strava/webhook` now returned
+   HTTP 200 with the exact challenge using the local `.env` verification token.
+   The previous token mismatch is resolved. Publication preflight reran all
+   284 tests, full lint and the direct webpack bundle/TypeScript build (76 pages)
+   successfully. `pnpm build` still stopped at the Windows Prisma DLL lock before
+   migrations. The user authorized publication; deployment verification is
+   tracked in [the active publication task](tasks/2026-09-30-publish-strava.md).
+   No subscription or activity data was changed by the read-only check.
 3. Verify guided creation with a server key and authenticated desktop/phone
    save/reopen, provider labels and fallback. No live model call recorded.
    Configure/test Resend delivery and optional Google OAuth independently.

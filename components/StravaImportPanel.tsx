@@ -92,6 +92,7 @@ export function StravaImportPanel({
       if (!response.ok) throw new Error(result.error || 'Strava activities could not be synced.');
       setNotice(`Checked Strava for recent activities${typeof result.synced === 'number' ? ` · ${result.synced} found` : ''}.`);
       router.refresh();
+      window.dispatchEvent(new Event('tempo-strava-inbox-changed'));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Strava activities could not be synced.');
     } finally {
@@ -166,6 +167,7 @@ export function StravaImportPanel({
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || 'Strava activity could not be imported.');
       setNotice(`${draft.title} was imported into Tempo.`);
+      window.dispatchEvent(new Event('tempo-strava-inbox-changed'));
       router.refresh();
       dialogRef.current?.close();
     } catch (reason) {
@@ -173,6 +175,28 @@ export function StravaImportPanel({
         ...current,
         [activityId]: reason instanceof Error ? reason.message : 'Strava activity could not be imported.',
       }));
+    } finally {
+      setImporting((current) => ({ ...current, [activityId]: false }));
+    }
+  }
+
+  async function reviewActivity(activityId: string, action: 'discard' | 'restore') {
+    setImporting((current) => ({ ...current, [activityId]: true }));
+    setImportErrors((current) => ({ ...current, [activityId]: '' }));
+    try {
+      const response = await fetch('/api/strava/inbox', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [activityId], action }),
+      });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error || 'Activity review could not be saved.');
+      setConnection((current) => ({ ...current, activities: current.activities.map((activity) => activity.id === activityId ? { ...activity, dismissed: action === 'discard' } : activity) }));
+      setNotice(action === 'discard' ? 'Discarded for now. You can still review and import this activity here.' : 'Restored to new-activity notifications.');
+      window.dispatchEvent(new Event('tempo-strava-inbox-changed'));
+      dialogRef.current?.close();
+      router.refresh();
+    } catch (reason) {
+      setImportErrors((current) => ({ ...current, [activityId]: reason instanceof Error ? reason.message : 'Activity review could not be saved.' }));
     } finally {
       setImporting((current) => ({ ...current, [activityId]: false }));
     }
@@ -253,7 +277,7 @@ export function StravaImportPanel({
                   {activity.elevationGainMeters !== null ? ` · ${Math.round(activity.elevationGainMeters)} m up` : ''}
                 </span>
               </span>
-              {activity.imported ? <Badge tone="success">Imported</Badge> : null}
+              {activity.imported ? <Badge tone="success">Imported</Badge> : activity.dismissed ? <Badge>Discarded for now</Badge> : null}
             </button>
           ))}
         </div>
@@ -347,6 +371,9 @@ export function StravaImportPanel({
                 <p className="text-[12px] text-[var(--text-secondary)]">
                   {activeDraft?.plannedSessionId ? 'The planned workout stays available for comparison.' : 'Tempo will create a completed session from the recorded activity.'}
                 </p>
+                {!activeActivity.imported ? <button type="button" className={secondaryButtonClassName} disabled={Boolean(importing[activeActivity.id])} onClick={() => void reviewActivity(activeActivity.id, activeActivity.dismissed ? 'restore' : 'discard')}>
+                  {activeActivity.dismissed ? 'Restore to notifications' : 'Discard for now'}
+                </button> : null}
                 <button type="button" className={primaryButtonClassName} disabled={Boolean(importing[activeActivity.id]) || activeActivity.imported || !activeDraft?.title.trim()} onClick={() => void importActivity(activeActivity.id)}>
                   {activeActivity.imported ? 'Already imported' : importing[activeActivity.id] ? 'Importing…' : 'Import activity'}
                 </button>
