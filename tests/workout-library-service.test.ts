@@ -97,7 +97,7 @@ test('workout library preserves relative zone precision beside the integer compa
   assert.equal(blockData?.targetHighDecimal, '75');
 });
 
-test('workout library rejects a template owned by another user', async () => {
+test('workout library rejects routine lineage when authoring standalone workouts', async () => {
   let created = false;
   const service = createWorkoutLibraryService({
     db: {
@@ -120,7 +120,7 @@ test('workout library rejects a template owned by another user', async () => {
     templateId: 99,
   });
 
-  assert.deepEqual(result, { ok: false, error: 'Template not found.', status: 404 });
+  assert.deepEqual(result, { ok: false, error: 'Training routines must be applied through Calendar.', status: 400 });
   assert.equal(created, false);
 });
 

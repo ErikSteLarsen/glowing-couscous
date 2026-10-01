@@ -12,7 +12,6 @@ import {
   EmptyState,
   formFieldClassName,
   formLabelClassName,
-  formSelectClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   dangerButtonClassName,
@@ -33,11 +32,8 @@ import {
   serializeSessionEditorDraft,
   validateSessionEditorDraft,
   type SessionEditorDraft,
+  type PersistedSessionBlock,
 } from '@/lib/session-editor';
-import {
-  createTemplateEditorDraftFromRecord,
-  type PlannerEditorTemplateRecord,
-} from '@/lib/session-editor-adapters';
 import { getSportLabel } from '@/lib/sport';
 import type { PerformanceProfile } from '@/lib/performance-profile';
 import { useDraftRecovery } from '@/components/useDraftRecovery';
@@ -54,13 +50,12 @@ type WorkoutRecord = {
   sportMetricsJson: string | null;
   date?: string | Date | null;
   updatedAt?: string | Date;
-  blocks: PlannerEditorTemplateRecord['blocks'];
+  blocks: PersistedSessionBlock[];
 };
 
 type PendingDraftAction =
   | { kind: 'new' }
   | { kind: 'workout'; workout: WorkoutRecord }
-  | { kind: 'template'; template: PlannerEditorTemplateRecord }
   | { kind: 'close' };
 
 const subscribeToNothing = () => () => {};
@@ -70,7 +65,6 @@ const serverSnapshot = () => false;
 export function WorkoutLibraryClient({
   role,
   workouts,
-  templates,
   endpoint,
   performanceProfile = null,
   initialWorkoutId = null,
@@ -80,7 +74,6 @@ export function WorkoutLibraryClient({
 }: {
   role: 'COACH' | 'ATHLETE';
   workouts: WorkoutRecord[];
-  templates: PlannerEditorTemplateRecord[];
   endpoint: string;
   performanceProfile?: PerformanceProfile | null;
   initialWorkoutId?: number | null;
@@ -152,10 +145,6 @@ export function WorkoutLibraryClient({
       setDraft(createSessionEditorDraftFromPersisted('create', { ...action.workout, date: null, scheduledDate: null }));
       setEditorOpen(true);
       if (initialWorkoutId !== null) router.replace(`/athlete/workouts?edit=${action.workout.id}`, { scroll: false });
-    } else if (action.kind === 'template') {
-      setSelectedWorkoutId(null);
-      setDraft(createTemplateEditorDraftFromRecord(action.template));
-      setEditorOpen(true);
     } else {
       setSelectedWorkoutId(null);
       setDraft(createNewDraft());
@@ -163,7 +152,7 @@ export function WorkoutLibraryClient({
       if (initialWorkoutId !== null) router.replace('/athlete/workouts', { scroll: false });
     }
     setIsDirty(false);
-    setBuilderDetailsVisible(action.kind === 'workout' || action.kind === 'template');
+    setBuilderDetailsVisible(action.kind === 'workout');
     setPendingDraftAction(null);
     setMessage('');
   }
@@ -175,22 +164,6 @@ export function WorkoutLibraryClient({
       return;
     }
     applyDraftAction(action);
-  }
-
-  function loadTemplate(templateId: string) {
-    if (!templateId) {
-      if (selectedWorkoutId !== null) {
-        setDraft((current) => ({ ...current, templateId: null }));
-        setIsDirty(true);
-        setMessage('');
-      } else {
-        requestDraftAction({ kind: 'new' });
-      }
-      return;
-    }
-    const template = templates.find((item) => item.id === Number(templateId));
-    if (!template) return;
-    requestDraftAction({ kind: 'template', template });
   }
 
   function saveWorkout() {
@@ -442,22 +415,8 @@ export function WorkoutLibraryClient({
           <p className="text-xs text-[var(--text-secondary)]">Review every block and target below. This workout has not been saved.</p>
         </div> : null}
 
-        {builderDetailsVisible && templates.length > 0 ? (
-          <details className="rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] px-3">
-            <summary className={`flex min-h-11 cursor-pointer list-none items-center text-[13px] font-medium text-[var(--text-secondary)] ${buttonFocusClassName}`}>
-              Start from a saved template (optional)
-            </summary>
-            <label className="block space-y-2 border-t border-[var(--border)] py-3">
-              <span className="sr-only">Saved template</span>
-              <select className={formSelectClassName} value={draft.templateId ?? ''} onChange={(event) => loadTemplate(event.target.value)}>
-                <option value="">No template (start blank)</option>
-                {templates.map((template) => <option key={template.id} value={template.id}>{template.name}</option>)}
-              </select>
-            </label>
-          </details>
-        ) : null}
         <WorkoutBuilder
-          key={`${draft.id ?? 'new'}:${draft.templateId ?? 'none'}`}
+          key={draft.id ?? 'new'}
           draft={draft}
           onChange={(next) => {
             setDraft((current) => ({ ...next, scheduledDate: null, planWeekday: null, mode: 'create', id: current.id }));

@@ -37,7 +37,7 @@ export function createCoachSessionLibraryService({ db = prisma }: { db?: typeof 
         title: serialized.title,
         summary: serialized.summary || null,
         sportMetricsJson: JSON.stringify(serialized.sportMetrics),
-        templateId: serialized.sourceTemplateId,
+        templateId: null,
         source: 'coach-library',
         status: 'planned',
         adjusted: false,

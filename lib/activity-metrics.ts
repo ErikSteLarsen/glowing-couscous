@@ -1,4 +1,5 @@
 import type { ActivitySeriesPoint } from './activity-series.ts';
+import { validateActivityLaps, type ActivityLap } from './activity-laps.ts';
 
 export type ActivitySegment = {
   key: string;
@@ -10,10 +11,11 @@ export type ActivitySegment = {
 };
 
 export type ActivityTelemetry = {
-  version: 1;
+  version: 1 | 2;
   distanceMeters: number | null;
   elevationGainMeters: number | null;
   points: ActivitySeriesPoint[];
+  laps?: ActivityLap[];
 };
 
 export function parseActivityTelemetry(value: unknown): ActivityTelemetry | null {
@@ -23,10 +25,13 @@ export function parseActivityTelemetry(value: unknown): ActivityTelemetry | null
     const parsed: unknown = JSON.parse(value);
     if (!parsed || typeof parsed !== 'object') return null;
     const record = parsed as Record<string, unknown>;
-    if (record.version !== 1 || !Array.isArray(record.points)) return null;
+    if ((record.version !== 1 && record.version !== 2) || !Array.isArray(record.points)) return null;
+    const laps = validateActivityLaps(record.laps, 36 * 3600);
+    if (!laps) return null;
 
     return {
-      version: 1,
+      version: record.version as 1 | 2,
+      laps,
       distanceMeters: finiteNumberOrNull(record.distanceMeters),
       elevationGainMeters: finiteNumberOrNull(record.elevationGainMeters),
       points: record.points.flatMap((value) => {

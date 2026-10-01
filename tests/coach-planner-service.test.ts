@@ -26,7 +26,7 @@ const block = {
   sortOrder: 0,
 };
 
-test('coach planner loads roster, templates, and a Monday-first visible week', async () => {
+test('coach planner loads roster and a Monday-first visible week', async () => {
   const service = createCoachPlannerService({
     db: {
       user: {
@@ -79,7 +79,6 @@ test('coach planner loads roster, templates, and a Monday-first visible week', a
   const view = await service.loadWorkspace(2, '2026-06-25');
 
   assert.equal(view.athletes[0].id, 5);
-  assert.equal(view.templates[0].id, 9);
   assert.equal(view.days.length, 7);
   assert.equal(view.days[0].isoDate, '2026-06-22');
   assert.equal(view.days[3].sessions[0].id, 12);
@@ -239,7 +238,6 @@ test('coach planner creates a direct coach session and assignment record', async
     sport: 'RUNNING',
     title: 'Endurance build',
     summary: 'Keep it smooth.',
-    sourceTemplateId: null,
     sportMetrics: { ftp: null, thresholdPaceSecPerKm: null, thresholdHr: null },
     blocks: [{ ...block, clientId: 'b1' }],
   });
@@ -307,7 +305,6 @@ test('coach planner updates only sessions owned by roster athletes', async () =>
       sport: 'RUNNING',
       title: 'Edited endurance',
       summary: '',
-      sourceTemplateId: null,
       sportMetrics: { ftp: null, thresholdPaceSecPerKm: null, thresholdHr: null },
       blocks: [{ ...block, clientId: 'b1', durationSec: 2400 }],
     },
@@ -371,7 +368,6 @@ test('coach planned edits clear adjusted state and move the current assignment d
       sport: 'RUNNING',
       title: 'Coach overwrite',
       summary: '',
-      sourceTemplateId: null,
       sportMetrics: { ftp: null, thresholdPaceSecPerKm: null, thresholdHr: null },
       blocks: [{ ...block, clientId: 'b1' }],
     },
@@ -412,7 +408,7 @@ test('planner API routes and navigation use the coach planner service', async ()
   const sessionRoute = await read('app/api/coach/planner/sessions/[sessionId]/route.ts');
   const navigation = await read('lib/app-navigation.ts');
   const oldBuilderPage = await read(['app/(app)/coach', 'builder', 'page.tsx'].join('/'));
-  const templatesClient = await read('app/(app)/coach/templates/CoachTemplatesClient.tsx');
+  const templatesClient = await read('components/TrainingTemplatesClient.tsx');
 
   assert.match(createRoute, /coachPlannerService\.saveSession/);
   assert.match(createRoute, /requireCoach/);
@@ -426,7 +422,7 @@ test('planner API routes and navigation use the coach planner service', async ()
   assert.doesNotMatch(desktopNavigation, /href: '\/coach\/planner'/);
   assert.match(navigation, /label: 'Plan', description: 'Assign training', href: '\/coach\/planner'/);
   assert.match(oldBuilderPage, /redirect\('\/coach\/planner/);
-  assert.match(templatesClient, /plannerHref = '\/coach\/planner'/);
+  assert.match(templatesClient, /athlete\/calendar\?add=1/);
   assert.doesNotMatch(templatesClient, /\$\{plannerHref\}\?templateId=/);
 });
 
@@ -440,8 +436,8 @@ test('planner page places defined sources without embedding workout creation', a
   assert.doesNotMatch(clientSource, /WorkoutBuilder|Create detailed session|Session canvas/);
   assert.match(clientSource, /PlannerDesk/);
   assert.match(plannerDeskSource, /Manage workouts/);
-  assert.match(plannerDeskSource, /Manage templates/);
-  assert.match(plannerDeskSource, /Assign .*template/);
+  assert.doesNotMatch(plannerDeskSource, /Manage templates/);
+  assert.match(plannerDeskSource, /Assign training plan/);
 });
 
 test('planner page loads all reusable coach source types for assignment', async () => {
@@ -455,7 +451,7 @@ test('planner page loads all reusable coach source types for assignment', async 
   assert.match(clientSource, /PlannerDesk/);
 });
 
-test('coach assignment transport accepts multiple workout or template dates', async () => {
+test('coach assignment transport accepts multiple workout dates and rejects retired templates', async () => {
   const routeSource = await read('app/api/coach/assignments/route.ts');
   const serviceSource = await read('lib/assignment-service.ts');
 
@@ -463,7 +459,7 @@ test('coach assignment transport accepts multiple workout or template dates', as
   assert.match(routeSource, /readAssignmentDates/);
   assert.match(routeSource, /assignSourcesToAthlete/);
   assert.match(serviceSource, /for \(const date of dates\)/);
-  assert.match(serviceSource, /validateTemplateDateRange/);
+  assert.doesNotMatch(serviceSource, /assignTemplateToAthlete/);
   assert.match(routeSource, /training-plan/);
 });
 

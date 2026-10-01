@@ -11,7 +11,7 @@ import { normalizeWorkoutTarget } from './workout-targets.ts';
 export const SHARED_WORKOUT_SNAPSHOT_VERSION = 1 as const;
 export const SHARE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43,128}$/;
 
-export type ShareLinkAction = 'planner' | 'template';
+export type ShareLinkAction = 'planner';
 
 export type SharedWorkoutBlock = {
   kind: 'warmup' | 'work' | 'recovery' | 'cooldown' | 'pause';
@@ -25,7 +25,7 @@ export type SharedWorkoutBlock = {
 
 export type SharedWorkoutProjection = {
   snapshotVersion: typeof SHARED_WORKOUT_SNAPSHOT_VERSION;
-  sourceKind: 'session' | 'template';
+  sourceKind: 'session';
   sport: string;
   title: string;
   summary: string;
@@ -41,13 +41,12 @@ export type SharedWorkoutSource = {
   sourceKind: SharedWorkoutProjection['sourceKind'];
   sport?: string | null;
   title?: string | null;
-  name?: string | null;
   summary?: string | null;
   blocks?: PersistedSessionBlock[] | null;
 };
 
 export function isShareAction(input: unknown): input is ShareLinkAction {
-  return input === 'planner' || input === 'template';
+  return input === 'planner';
 }
 
 export function isShareToken(input: unknown): input is string {
@@ -80,7 +79,7 @@ export function getSafeShareCallbackPath(input: unknown): string | null {
 export function createSharedWorkoutProjection(source: SharedWorkoutSource): SharedWorkoutProjection {
   const draft = createSessionEditorDraftFromPersisted('create', {
     sport: source.sport ?? 'RUNNING',
-    title: source.title ?? source.name ?? '',
+    title: source.title ?? '',
     summary: source.summary ?? '',
     blocks: source.blocks ?? [],
   });
@@ -126,7 +125,7 @@ export function isSharedWorkoutProjection(input: unknown): input is SharedWorkou
   const value = input as Record<string, unknown>;
   return (
     value.snapshotVersion === SHARED_WORKOUT_SNAPSHOT_VERSION &&
-    (value.sourceKind === 'session' || value.sourceKind === 'template') &&
+    value.sourceKind === 'session' &&
     typeof value.sport === 'string' &&
     typeof value.title === 'string' &&
     typeof value.summary === 'string' &&

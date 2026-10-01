@@ -39,7 +39,6 @@ async function retainSharedLinks(tx: Prisma.TransactionClient, userId: number) {
         ownerDeleted: true,
         createdById: link.createdById === userId ? null : link.createdById,
         sessionId: null,
-        templateId: null,
       },
     });
   }

@@ -2,11 +2,12 @@ import { intensityColor } from '@/lib/intensity-color';
 
 type Segment = {
   key: string;
-  zone: number;
+  zone: number | null;
   durationSec: number;
   label: string;
   color: string;
   intensityFraction?: number;
+  kind?: 'warmup' | 'work' | 'recovery' | 'cooldown' | 'pause' | 'unknown';
 };
 
 type SessionBlockBarSize = 'authoring' | 'full' | 'card' | 'compact' | 'calendar';
@@ -22,7 +23,7 @@ export function SessionBlockBar({
   compact?: boolean;
 }) {
   const resolvedSize = size ?? (compact ? 'compact' : 'full');
-  const summary = segments.map((segment) => `Zone ${segment.zone}: ${segment.label}, ${segment.durationSec} seconds`).join('; ');
+  const summary = segments.map((segment) => `${segment.zone === null ? 'Unknown intensity' : `Zone ${segment.zone}`}: ${segment.label}, ${segment.durationSec} seconds`).join('; ');
   const height = {
     authoring: 'h-40 px-1 pt-2',
     full: 'h-[26px]',
@@ -45,8 +46,8 @@ export function SessionBlockBar({
           className="transition-[height,background-color] duration-150 ease-out"
           style={{
             flexGrow: Math.max(segment.durationSec, 1),
-            height: segment.label === 'Pause' ? '14%' : `${30 + (Math.min(Math.max(segment.zone, 1), 5) - 1 + (segment.intensityFraction ?? 0.5)) * 14}%`,
-            backgroundColor: segment.label === 'Pause' ? 'var(--text-muted)' : intensityColor(segment.zone, segment.intensityFraction),
+            height: segment.kind === 'pause' || segment.label === 'Pause' ? '14%' : segment.zone === null ? '30%' : `${30 + (Math.min(Math.max(segment.zone, 1), 5) - 1 + (segment.intensityFraction ?? 0.5)) * 14}%`,
+            backgroundColor: segment.kind === 'pause' || segment.label === 'Pause' || segment.zone === null ? 'var(--text-muted)' : intensityColor(segment.zone, segment.intensityFraction),
           }}
         />
       ))}

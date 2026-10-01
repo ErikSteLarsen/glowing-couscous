@@ -35,7 +35,6 @@ export function anonymizeAssignedSnapshot(input: string | null, actual: boolean)
 export function accountShareScope(userId: number) {
   return { OR: [
     { createdById: userId },
-    { template: { is: { ownerId: userId } } },
     { session: { is: { OR: [{ athleteId: userId }, { coachOwnerId: userId, athleteId: null }] } } },
   ] };
 }

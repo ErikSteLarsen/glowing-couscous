@@ -24,7 +24,7 @@ Workout Planner joins reusable structured workout authoring, Monday-first person
 The first MVP is used as a recurring personal training workspace:
 
 1. Sign up and enter the personal Athlete workspace directly.
-2. Create, edit, save, and reuse a structured workout or template.
+2. Create, edit, save, and reuse a structured workout, then group saved workouts into a reusable routine.
 3. Schedule personal content on selected dates and review or remove planned sessions.
 4. Open and follow a session, then record completion, notes, and actual outcomes.
 5. Review persisted results in Activity and session detail after refreshing or signing in again.
@@ -46,8 +46,10 @@ Coach-only authoring, roster management, requests, and multi-athlete planning ar
 - Short pause blocks sit between efforts or repeated sets. They count toward elapsed time but do not contribute training load.
 - Duration, training load, zones, and timelines are derived from structured blocks.
 - `Workouts` stores private reusable definitions without dates or assignments.
-- Personal `Calendar` combines week/month review with inline scheduling of independent copies. Coach `Planner` places content onto athlete dates or training-plan weekdays. Workouts can target multiple dates; day, week, and month templates use exact cadence-length date ranges.
-- `Templates` stores owner-scoped reusable personal and coach day, week, or month cadence structures whose assignment span is validated by the scheduling service.
+- Personal `Calendar` combines week/month review with inline scheduling of independent copies. Coach `Planner` places content onto athlete dates or training-plan weekdays. Workouts can target multiple dates; routines apply their weekday pattern to a complete week or calendar month.
+- Personal `Templates` groups saved workouts into a Monday–Sunday routine, with a name and optional purpose/notes. Multiple workouts may be ordered on a weekday; empty weekdays add nothing. Apply one routine to a Monday-starting week or repeat it through a whole calendar month. Template composition cannot author workout blocks.
+- Routine saves capture server-owned library workout snapshots. Later library edits/deletions do not change saved routines; saving the routine again captures the selected library versions. Scheduled sessions are independent copies. Relative targets resolve against the person's Profile; absolute targets remain fixed.
+- Templates only contain saved-workout routines. Block-backed templates, cadence settings, workout-editor template loading, coach template assignment and public template intake are removed. Public routine sharing and curated standard routines remain future work; public sharing supports individual workouts only.
 - Completion stores performed metrics, notes, and the latest actual snapshot in `Activity`.
 - Home separates scheduled structure by Session date from completed outcomes by
   Activity date. Standalone imports contribute only to completed totals; matched
@@ -64,12 +66,12 @@ Coach-only authoring, roster management, requests, and multi-athlete planning ar
 - Credentials authentication, direct personal signup, compatibility role setup for accounts without a role, and optional Google OAuth.
 - Dormant coach roster, athlete detail, discovery and request services; current coach/discovery pages redirect to the personal workspace.
 - Coach and athlete workout libraries with a shared visual editor.
-- Coach planner, reusable training plans, templates, source-copy assignment, and unified personal Calendar scheduling.
+- Coach planner, reusable training plans, source-copy assignment, and unified personal Calendar scheduling.
 - Athlete Home, Calendar, Workouts, Session, Live, Activity, Profile, and Settings surfaces.
 - Personal maximum-heart-rate and race-based pace zones that resolve in workout creation.
 - Planned session adjustments, actual outcome editing, baseline and actual comparison, and completion.
 - Explicit FIT, TCX, and GPX activity-file review and import, including optional matching to an unfinished planned session and recorded metric bars in the imported-activity workspace.
-- Public sanitized workout and template snapshots with explicit authenticated intake.
+- Public sanitized workout snapshots with explicit authenticated intake.
 - Athlete guided workout drafts from sport, length, effort, and interval choices, informed by the athlete's recent completed training. A configured model can author a complete validated workout; the standard pattern creator remains available when AI is unavailable or its output fails validation. The source is shown, and drafts are reviewed in the normal workout editor before saving.
 
 ## Capabilities and Constraints
@@ -77,7 +79,7 @@ Coach-only authoring, roster management, requests, and multi-athlete planning ar
 - Live execution is a local block stepper; it does not collect device or sensor telemetry.
 - Activity recording imports support both user-selected files and a Strava OAuth/webhook review flow. Users choose whether to import a Strava activity and may match it to an unfinished planned session.
 - Messaging, multi-coach collaboration, shared business accounts, custom sports, and deep analytics are not implemented.
-- Flexible recurring-session rules and month-level plan editing are outside the current product model; Calendar scheduling supports exact day, week, and month cadence spans.
+- Routine application repeats one weekly pattern over a chosen calendar month. Different patterns for successive weeks, open-ended recurrence, automatic progression and public routine distribution remain outside the current model. Application adds sessions alongside existing calendar content; it does not replace a plan.
 - Public sharing exposes only a sanitized workout definition; it never exposes ownership, relationship, private notes, or actual data.
 
 ## Brand Commitments
@@ -130,3 +132,15 @@ overwrite another tab's work. Failed saves retain changes, new-workout retries
 reuse their request identity, and stale edits must not silently replace newer
 server content. Public privacy/support remains a release gate until operator
 facts and retention policies are established. Email verification is deferred.
+
+## Imported workout interpretation
+
+People can explicitly request background interpretation for independently supplied
+running files at import or from recorded session review. Show detected efforts and
+recoveries, pooled average interval pace, likely intended structure, estimated
+steady target and cautious training emphasis. Reuse colorful scheduled-workout
+blocks with actual durations and visible intensity basis. Evidence remains
+inspectable, missing measurements remain explicit, and user-confirmed intention
+is separate from recorded performance and saved plans. Strava API imports are
+excluded pending source permission. Initial segmentation is implemented;
+accuracy optimization follows rather than blocking the complete workflow.

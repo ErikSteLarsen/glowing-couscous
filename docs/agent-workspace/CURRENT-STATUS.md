@@ -1,9 +1,111 @@
 # Current status
 
-Updated 2026-09-30. Current evidence snapshot, not implementation history.
-Latest checks cover the planner/persistence architecture cleanup and safe
-account deletion/recovery regressions. Older browser/provider/device results
+Updated 2026-10-01. Current evidence snapshot, not implementation history.
+Latest checks cover saved-workout routines, shared UI polish, calendar refinement and service regressions.
+Older browser/provider/device results
 retain their recorded scope.
+
+## Saved-workout training routines, 2026-10-01
+
+- Templates has one model: Monday–Sunday routines composed solely from saved,
+  owner-scoped workouts, with name/purpose, multi-weekday additions, ordered
+  sessions and removal. Week/month application previews actual dated sessions;
+  empty weekdays leave the calendar untouched. Relative references, decimal
+  targets, repetition and skip state survive independent copies and replay.
+- Removed old block-template storage, sport/cadence fields, block-template
+  adapters, coach template page/APIs/assignment, workout-editor template loading,
+  public template sharing/intake and obsolete planner preview routes/components.
+  Sharing individual workouts and coach workout/training-plan assignment remain.
+  Demo seeding creates saved workouts and an actual weekly routine.
+- Routine saves capture server-owned workout snapshots. Library changes/deletion
+  do not alter routines or scheduled copies. Saving again captures current
+  library versions; unavailable workouts require replacements. Deleting a routine
+  preserves scheduled sessions. Multi-week progression and curated/public routine
+  distribution remain future capabilities; relative references provide the
+  basis for each recipient's Profile targets without copying profile values.
+- `pnpm test`: 311/311 pass; `pnpm lint`: pass. `pnpm build --webpack`: pass,
+  all ten migrations current on disposable PostgreSQL, production TypeScript
+  and route compilation complete. A first build overlapped tests loading Prisma
+  and hit a Windows DLL lock; generation and build passed after tests ended.
+  Existing Next.js middleware deprecation remains.
+- Disposable PostgreSQL migration acceptance passed: old definitions/blocks and
+  both attached/detached template shares removed, valid routine retained,
+  completed calendar session/blocks and Activity content preserved. Routine
+  acceptance passed for ownership, snapshots, duplication, source deletion,
+  week/month expansion, replay, partial-range refusal, rollback and deletion.
+  Six account-deletion integration checks passed after the share schema change;
+  updated demo seed passed on the disposable DB only.
+- Authenticated HTTP acceptance passed against the local production build:
+  credentials sign-in, workout/routine POSTs, Templates/Calendar reload,
+  five-session placement and replay, old-format/input/public/coach route refusal,
+  and template deletion retaining scheduled copies. This verifies authenticated
+  routes and rendered page data, not browser interactions or physical phones.
+- Both new migrations were successfully deployed to the configured Neon
+  `neondb` database. Old template definitions and their share links are deleted;
+  no demo seed or synthetic acceptance ran there. Application code is updated in
+  this worktree; no Git push or hosted application deployment was performed.
+- Earlier actual-component browser evidence: 1440px light library/editor,
+  390px dark editing/light month preview and 320px dark editing; weekday additions,
+  reordering, preview and failed-save draft retention inspected with no narrow
+  horizontal overflow. Remaining gates: authenticated browser interactions and
+  physical phones, curated distribution and successive-week progression.
+  Local test server and disposable PostgreSQL container removed after checks.
+  Existing unrelated worktree changes preserved.
+
+## Shared controls and personal surface polish, 2026-10-01
+
+- Preferences now uses the shared Surface and section heading with open,
+  separated rows. Toggle thumbs use theme-aware contrasting ink and retain
+  their width beside wrapping descriptions. History uses shared rounded icon
+  buttons; shared segmented choices have 44px mobile targets. Mobile library
+  tabs use sentence case, hover feedback and explicit keyboard focus.
+- Actual component previews reviewed Home, empty Workouts/Templates, populated
+  History, empty Import, Profile and Preferences at desktop/mobile sizes.
+  Changed Preferences and History were confirmed in light/dark previews;
+  320px History and 390px Preferences had no horizontal overflow. Preferences
+  also passed the 768px overflow check. History previous/next, empty-period
+  recovery and sport filtering worked; library keyboard focus was visible.
+  Screenshots and detector output are in the chat's local visualization folder.
+- These are synthetic component checks, not authenticated route, persistence,
+  full-state, physical-device or production acceptance. Initial local sign-in
+  could not reach the database; a subsequent sign-in was stopped by automatic
+  approval review pending explicit test-account authorization. No account data
+  or saved preferences were changed. Temporary preview source/process removed.
+- Tests passed 314/314; lint passed. Migration-bearing build generated Prisma,
+  then failed against an intentionally unavailable localhost review database;
+  the configured database was not migrated. Bundle-only webpack build passed,
+  including TypeScript and all 80 pages. The first bundle attempt found stale dev
+  types for the removed fixture; those generated types were cleaned.
+  Detector findings were advisory incumbent type-scale drift. No global
+  design-system drift repair or unrelated Calendar edit was made. Final
+  git diff --check passed. Middleware deprecation remains.
+
+## Calendar spacing, compact month and day selection, 2026-10-01
+
+- Personal Calendar uses stable cell padding and subtle selected borders.
+  Today has a small text label and neutral plane, with no full-cell outline.
+  Month cells preview one session plus an additional count; wide browsing
+  puts month totals and the selected-day agenda in a 280px right rail.
+  Narrow calendars retain counts and details below the date grid.
+- Select days exposes multi-date selection before opening scheduling, with
+  selected count, clear/cancel and a batch Add action. Selected dates carry
+  into the existing composer. Template choice retains exact cadence ranges.
+  Source-copy ownership, request identities and scheduling services are unchanged.
+- Actual TrainingCalendar/PageShell synthetic fixture: 1440px week/month in
+  both themes, 390px light month/composer/week and 320px dark month inspected.
+  No horizontal overflow at 390/320px. Three-date handoff, mocked save failure
+  retaining all dates, same-key successful retry, keyboard day selection,
+  seven-day template range, Escape and close focus return passed. Fixture
+  and preview process removed. This is component evidence; authenticated
+  placement/reload, live navigation and physical-device acceptance remain open.
+- Final tests: 314/314; lint: pass. Migration-bearing build generated Prisma,
+  then failed against the intentionally unavailable localhost review database;
+  the configured database was not migrated. Bundle-only webpack build passed,
+  including TypeScript and all 80 pages; middleware deprecation remains.
+  The initial bundle attempt compiled but
+  found leftover generated types for the removed fixture; those were cleaned.
+  Detector reported advisory design-scale drift, including incumbent styles;
+  unrelated global design rules were preserved. Final git diff --check passed.
 
 ## Planner and persistence architecture cleanup, 2026-09-30
 
@@ -140,14 +242,14 @@ retain their recorded scope.
 
 | Gate | Latest recorded result | Scope / limits |
 |---|---|---|
-| `pnpm test` | 314/314 pass, 2026-09-30 | Planner contracts, decimal/repeated/pause metrics, independent block persistence, plus existing training setup/Home/recovery/account/deletion/save safety coverage |
-| `pnpm lint` | Pass, 2026-09-30 | Full repository |
+| `pnpm test` | 319/319 pass, 2026-10-01 | Routine ownership/placement/rollback plus existing planner, persistence, training setup, Home, recovery, account and deletion coverage |
+| `pnpm lint` | Pass, 2026-10-01 | Full repository |
 | Direct TypeScript | Pass, 2026-09-30 | Existing generated client |
-| Direct `next build --webpack` | Pass, 2026-09-30 | TypeScript and 80 pages; middleware deprecation remains |
-| `pnpm build` | `pnpm build --webpack` pass, 2026-09-30; default Turbopack compilation interrupted | Generation, all eight migrations, TypeScript and 80 pages passed on disposable PostgreSQL; configured database was not migrated |
+| Direct `next build --webpack` | Pass, 2026-10-01 | Bundle only, TypeScript and 80 pages; middleware deprecation remains |
+| `pnpm build --webpack` | Pass, 2026-10-01 | Prisma generation, nine migrations and production bundle/TypeScript on new disposable PostgreSQL; configured database was not migrated |
 | PostgreSQL acceptance | 7/7 pass after architecture cleanup, 2026-09-30 | Recovery acceptance plus six deletion scenarios: owned data/provider/webhook removal, retained anonymized shares, unshare scope, recipient history, durable throttle, Google proof expiry, provider outage, rollback and concurrent deletion |
 | HTTP deletion acceptance | Pass, 2026-09-30 | Local production server/disposable DB: credentials cookie, cross-site rejection, wrong password, actual deletion, retained public [deleted] preview, expired old cookie, export 404 |
-| Migration status | Workout-save and safe-account-deletion migrations applied only to disposable PostgreSQL | Deploy migrations with code before using the new behavior elsewhere; configured database was not changed by these checks |
+| Migration status | Nine migrations, including template routines, applied only to disposable PostgreSQL | Deploy migrations with code before using the new behavior elsewhere; configured database was not changed by these checks |
 
 Latest checks reused installed dependencies with
 `pnpm_config_verify_deps_before_run=false`. Prisma generation, migration deploy
@@ -277,6 +379,13 @@ rules; global design files were preserved.
 
 ## Open gates and risks
 
+- Imported workout interpretation has a [source-reviewed proposal](../IMPORTED-WORKOUT-ANALYSIS.md),
+  dated 2026-10-01; no behavior, schema or model call changed. Strava's current
+  API policy blocks the proposed API-data analysis path pending permitted scope.
+  Separately review existing Strava-derived guided-AI history and retention;
+  this planning pass did not audit or remediate their policy compatibility.
+  Proposed first implementation uses independently supplied device files.
+
 1. Verify remaining migrations in the intended target, including provider
    health; the Strava notification migration is confirmed in the configured
    database. The latest local Prisma generation passed against the current schema.
@@ -343,3 +452,83 @@ no references to removed reviews remain. `pnpm test` passed 284/284 and `pnpm
 lint` passed on 2026-09-30 with installed dependencies reused. `git diff --check`
 passed after line-ending cleanup. No build, migration, browser or provider check
 was performed for this documentation-only change.
+
+## Imported running workout interpretation, 2026-10-01
+
+- Implemented opted-in independent running file analysis with TCX/FIT lap
+  preservation, telemetry v1/v2 compatibility, initial stream/lap segmentation,
+  code-calculated pooled interval pace, profile-backed intensity and steady-target
+  estimates. Human-duration candidates use a soft tolerance; genuine 53-second
+  repetitions are preserved. Coverage, insufficient measurements and uncertainty
+  remain explicit. Advanced segmentation/calibration follows implementation.
+- Atomic import enqueue and one current ActivityAnalysis job/result per activity;
+  separate confirmed intention, profile/input version snapshots, owned API,
+  duplicate-safe manual requests, bounded retries, leases and concurrency, and
+  publication guards against changed/deleted inputs and stale workers. A secret
+  worker provides browser-independent processing; after() improves import latency.
+  Strava sources are excluded from this pipeline and guided model history.
+- Optional model selects validated candidate IDs and adds bounded explanation;
+  code owns measurements/emphasis and supplies a fallback on missing/invalid
+  provider output. Reuses existing provider configuration. No live model call was
+  made. No raw location, identity, private notes or unrelated history in prompts.
+- Session review uses shared colorful duration-proportional blocks, measured
+  average effort pace, likely intended workout, estimated target, evidence table
+  and separate editable intention. Saved plans and telemetry remain untouched.
+  Impeccable finish review: ship, scoped to supplied screenshots/component code;
+  ordinary extension documentation review preserves existing visual contracts.
+  Reports and reviewed screenshots are under .impeccable/review/activity-analysis/.
+- pnpm test: 316/316 pass; pnpm lint and TypeScript check: pass. pnpm build --webpack:
+  pass with all eleven migrations current on disposable PostgreSQL and 69 pages
+  compiled. Existing middleware deprecation warning remains.
+- Disposable PostgreSQL acceptance: atomic import/rollback, duplicate/concurrent
+  jobs, owner/source refusal, corrections, cooldown, stale leases/exhausted attempts,
+  matched-plan preservation, in-flight deletion and account cascade passed.
+  Authenticated production-build HTTP acceptance passed for import/request/read,
+  correction, worker secret, owner/source refusal and rendered session access.
+  Secret worker processed the synthetic import before visiting its session.
+- Actual-component browser evidence: desktop light/dark, 390px and 320px narrow
+  layouts; evidence expansion and correction save/reload inspected. Confirmed
+  intention survived reload while measured pooled pace remained unchanged. This
+  does not certify physical phones, assistive technology or every result state.
+- Rollout gates: deploy 20261001150000_activity_analysis and application code,
+  configure worker secret/scheduler, verify live provider and scheduled delivery,
+  benchmark independent real files, and complete physical-device/accessibility
+  coverage. No configured database migration, hosted deployment or live-provider
+  verification was performed for this feature. Strava source permission remains
+  unresolved. Initial import enqueue lacks the manual queue cap; daily model
+  budgets are deferred. See ../IMPORTED-WORKOUT-ANALYSIS.md and OPERATIONS.md.
+
+- Temporary local server, browser tab and disposable PostgreSQL container were
+  removed after verification. git diff --check passes; unrelated worktree changes
+  are preserved.
+
+## Imported interpretation review and release checks, 2026-10-01
+
+- Corrected HR integration when an interval boundary clips a sensor span; only
+  the overlapping portion now contributes. Analyzer identity is intervals-v2;
+  obsolete queued jobs request reanalysis with a specific version-change message.
+- Varied effort durations no longer imply a uniform repetition time. The optional
+  model schema restricts candidate IDs to the actual supplied list; concrete JSON
+  examples, a preferred-candidate tie rule and uncertainty guidance prevent
+  unsupported within-effort variation claims from segment-only input.
+- Evidence shows separate pace/HR zones, flags substantial disagreement and
+  labels unclassified segments accurately. The table has named keyboard focus,
+  column scopes and local horizontal scrolling. Existing Monolith tokens/layout
+  remain. Inspected actual component at 1440px desktop in both themes, 390px light
+  and 320px dark; arrow-key table scrolling works with no page-width overflow.
+  Screenshots are in .impeccable/review/activity-analysis-review/.
+- pnpm test: 319/319 pass; pnpm lint: pass; pnpm build --webpack: pass, including
+  production TypeScript, 69 pages and all eleven migrations on a new disposable
+  PostgreSQL database. git diff --check passes. Added regression checks for clipped
+  sensor integration, irregular repetitions and bounded model input/invalid output.
+  No live provider call or physical-device check was made.
+- User explicitly authorized pushing all current worktree changes to main,
+  including earlier routine-template, calendar and shared UI work. Remote main
+  matched local c005c0387ab05d589de5c3125ce192e738b802b7 before release. Vercel
+  dashboard access is signed out; public production verification will follow
+  publication. Worker secret/scheduler and live-model readiness are not confirmed.
+
+- Release command now pins the verified webpack bundler. Standard pnpm build
+  passes on disposable PostgreSQL (69 pages); the leased-analysis PostgreSQL
+  acceptance also passed again after the review changes. No production data
+  was used by these checks.

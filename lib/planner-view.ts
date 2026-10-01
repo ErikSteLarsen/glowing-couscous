@@ -1,4 +1,3 @@
-import type { TemplateCadence } from './template-cadence.ts';
 
 export type PlannerRole = 'coach' | 'athlete';
 export type PlannerSourceKind = 'workout' | 'template' | 'training-plan';
@@ -11,12 +10,16 @@ export type PlannerSource = {
   sport: string;
   summary: string | null;
   durationSec?: number;
-  cadence?: TemplateCadence;
   sessionCount?: number;
+  routineEntries?: Array<{ weekday: number; title: string }>;
 };
 
 export type PersonalPlannerSource = PlannerSource & {
   kind: 'workout' | 'template';
+};
+
+export type CoachPlannerSource = Omit<PlannerSource, 'kind'> & {
+  kind: 'workout' | 'training-plan';
 };
 
 export type PlannerSession = {

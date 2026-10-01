@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { OVERVIEW_CARD_IDS, type OverviewCardId } from '@/lib/overview-preferences';
 import { Toggle } from '@/components/tempo/Toggle';
+import { Surface, sectionHeadingClassName } from '@/components/ui';
 
 const personalOverviewCardIds = ['lastActivity', 'weekLoad', 'trend'] as const satisfies readonly OverviewCardId[];
 
@@ -67,11 +68,11 @@ export function SettingsClient({
 
   return (
     <div className="page-content--compact settings-preferences grid gap-6">
-      <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
+      <Surface>
+          <h2 className={sectionHeadingClassName}>
             Overview
-          </p>
-          <div className="mt-4 space-y-3">
+          </h2>
+          <div className="mt-4 divide-y divide-[var(--border)]">
             {personalOverviewCardIds.map((cardId) => {
               const meta = overviewLabels[cardId];
               const checked = overviewCards.includes(cardId);
@@ -79,9 +80,9 @@ export function SettingsClient({
               return (
                 <div
                   key={cardId}
-                  className="flex min-h-11 items-center justify-between gap-4 rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] px-4 py-2.5"
+                  className="flex min-h-11 items-center justify-between gap-4 py-4 first:pt-0 last:pb-0"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[13.5px] font-semibold text-[var(--text)]">{meta.title}</p>
                     <p className="mt-1 text-[13px] leading-[1.5] text-[var(--text-secondary)]">
                       {meta.description}
@@ -97,7 +98,7 @@ export function SettingsClient({
               );
             })}
           </div>
-        </section>
+        </Surface>
       {message ? (
         <p className={`text-sm ${messageTone === 'success' ? 'text-[var(--status-success)]' : 'text-[var(--status-danger)]'}`} role="status">
           {message}

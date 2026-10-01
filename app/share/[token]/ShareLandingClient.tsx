@@ -8,7 +8,6 @@ import { formatWorkoutTarget } from '@/lib/workout-target-resolution';
 import {
   BackControl,
   Badge,
-  compactSecondaryButtonClassName,
   dangerTextClassName,
   formFieldClassName,
   primaryButtonClassName,
@@ -20,7 +19,6 @@ import {
 import { formatDuration } from '@/lib/format-duration';
 import {
   createPlannerEditorDraftFromSharedProjection,
-  createTemplateEditorDraftFromSharedProjection,
 } from '@/lib/session-editor-adapters';
 import {
   serializeSessionEditorDraft,
@@ -56,7 +54,7 @@ export function ShareLandingClient({
   const router = useRouter();
   const availableInitialAction = initialAction && isSignedIn && userRole ? initialAction : null;
   const [action, setAction] = useState<ShareLinkAction | null>(availableInitialAction);
-  const [draft, setDraft] = useState<SessionEditorDraft>(() => createInitialDraft(projection, userRole, availableInitialAction));
+  const [draft, setDraft] = useState<SessionEditorDraft>(() => createInitialDraft(projection, userRole));
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
   const [isPending, startTransition] = useTransition();
@@ -73,7 +71,7 @@ export function ShareLandingClient({
     }
 
     setAction(nextAction);
-    setDraft(createInitialDraft(projection, userRole, nextAction));
+    setDraft(createInitialDraft(projection, userRole));
     setMessage('');
   }
 
@@ -100,10 +98,8 @@ export function ShareLandingClient({
       }
 
       setMessageTone('success');
-      setMessage(action === 'template' ? 'Private template saved.' : 'Session saved to your planner.');
-      router.push(action === 'template'
-        ? userRole === 'COACH' ? '/coach/templates' : '/athlete/templates'
-        : userRole === 'COACH' ? '/coach/planner' : '/athlete/planner');
+      setMessage('Session saved to your planner.');
+      router.push(userRole === 'COACH' ? '/coach/planner' : '/athlete/calendar');
     });
   }
 
@@ -162,9 +158,6 @@ export function ShareLandingClient({
                 <button type="button" className={primaryButtonClassName} onClick={() => beginAction('planner')}>
                   Use in Planner
                 </button>
-                <button type="button" className={compactSecondaryButtonClassName} onClick={() => beginAction('template')}>
-                  Save as Template
-                </button>
               </div>
             </Surface>
           </div>
@@ -176,10 +169,10 @@ export function ShareLandingClient({
               <BackControl onClick={() => setAction(null)} label="Back to preview" disabled={isPending} />
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                  {action === 'planner' ? 'Planner intake' : 'Template intake'}
+                  Planner intake
                 </p>
                 <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">
-                  {action === 'planner' ? 'Edit before saving to Planner' : 'Edit before saving as Template'}
+                  Edit before saving to Planner
                 </h2>
               </div>
             </div>
@@ -199,7 +192,7 @@ export function ShareLandingClient({
           ) : null}
           <div className="flex flex-wrap gap-3">
             <button type="button" className={primaryButtonClassName} onClick={save} disabled={isPending}>
-              {isPending ? 'Saving…' : action === 'planner' ? 'Save to Planner' : 'Save as Template'}
+              {isPending ? 'Saving…' : 'Save to Planner'}
             </button>
             {message ? <p className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
           </div>
@@ -216,9 +209,7 @@ export function ShareLandingClient({
 function createInitialDraft(
   projection: SharedWorkoutProjection,
   userRole: AppRole | null,
-  action: ShareLinkAction | null,
 ) {
-  if (action === 'template') return createTemplateEditorDraftFromSharedProjection(projection);
   return createPlannerEditorDraftFromSharedProjection(projection, {
     ownershipMode: userRole === 'COACH' ? 'coach-library' : 'athlete',
   });

@@ -43,8 +43,8 @@ export function ghostButtonClassName(size: 'default' | 'compact') {
 export function getSegmentedChoiceClassName(selected: boolean, size: 'default' | 'compact' = 'default') {
   const sizeClassName =
     size === 'compact'
-      ? 'min-h-8 rounded-[9px] px-2.5 py-1.5 text-xs font-medium'
-      : 'min-h-10 rounded-[10px] px-4 py-2 text-[13px] font-semibold';
+      ? 'min-h-8 max-md:min-h-11 rounded-[9px] px-2.5 py-1.5 text-xs font-medium'
+      : 'min-h-10 max-md:min-h-11 rounded-[10px] px-4 py-2 text-[13px] font-semibold';
 
   return `flex min-w-0 flex-1 items-center justify-center border transition ${sizeClassName} ${buttonFocusClassName} ${
     selected

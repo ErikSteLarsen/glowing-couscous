@@ -329,7 +329,7 @@ the same control beside their local heading and preserve any draft safeguards.
 
 Personal Calendar owns browsing and scheduling in one Monday-first week or
 month surface. Keep the page-level Add session action above the compact period
-toolbar, with previous/next, Today, and Week/Month controls. The seven-column
+toolbar, with previous/next, Today, Select days, and Week/Month controls. The seven-column
 grid uses fluid columns without a fixed minimum width. At viewport widths of
 1200px and above, inline scheduling occupies a 320px right rail with a 24px
 gap. Below 1200px, the date grid precedes the composer and selected-day agenda
@@ -337,9 +337,15 @@ in natural page flow; the composer is capped at 640px. Week sessions move from
 day columns to a date strip and selected-day agenda below that viewport
 breakpoint or at 1000px or less of calendar container width. Month cells show
 counts in place of previews below 640px viewport width or at 600px or less of
-calendar container width. Phone date buttons retain 72px height, and the
-toolbar wraps without clipping controls. Month view always provides a
-selected-day agenda below the grid. Preserve page scrolling and bottom
+month grid width. Phone date buttons retain 72px height, and the
+toolbar wraps without clipping controls. Month cells preview one session and
+an additional count, with a 96px minimum height on wide calendars. Month browsing
+places its summary and selected-day agenda in a 280px right rail above 1200px;
+on narrower screens these follow the grid. Today uses a quiet neutral plane and
+a small text label beside the date, without a full-cell outline. Selection uses
+a subtle field border with stable padding. Select days exposes a count and clear/cancel
+controls, then carries the dates into scheduling; routines preview a full week or month.
+Preserve page scrolling and bottom
 navigation clearance rather than fitting all dates and scheduling controls
 into a fixed viewport.
 
@@ -347,7 +353,7 @@ The coach Planner retains the shared `PlannerDesk` composition. It adapts to the
 and selection panels stack; from 900px the source and selection share a 240px
 rail alongside the calendar; from 1400px they flank it in three columns. The
 seven-day grid has no fixed minimum width. Month height responds to viewport
-height, including room for template-range controls, and always shows every week.
+height and always shows every week.
 Day cells preview one session and an additional count; the selection panel owns
 full details. Narrow calendars show counts instead of session titles. Source
 results may scroll independently on desktop once their list exceeds 320px;
@@ -368,7 +374,7 @@ bottom space for that navigation and never relies on hover.
 Training weeks always render Monday first. Home composes around the week,
 Calendar joins week/month browsing with contextual scheduling, Workouts and
 Session retain scheduled context, and coach Planner uses a month-first
-assignment desk with selected dates and exact template ranges.
+assignment desk with selected workout dates and Monday-starting training plans.
 Home uses a content-sized Today panel and compact optional readouts alongside
 a complete week ledger. The ledger has no fixed height or internal scrollbar;
 session titles wrap above their duration and state. Below 880px available
@@ -503,6 +509,14 @@ for contextual return and execution controls.
 
 ### Workout / Session Language
 
+Imported running-file interpretation reuses `SessionBlockBar` for detected
+effort structure: width represents actual duration, height and color represent
+estimated intensity, and unknown intensity remains neutral. Keep the intensity
+basis and actual-duration label visible. Present likely intent separately from
+recorded measurements and user-confirmed intent; supporting repetitions belong
+in a disclosure with a locally scrolling table on narrow screens. Reuse shared
+actions and fields for confirmation.
+
 - Home uses `HomeTrainingReadouts` for separate Scheduled and Completed summaries
   and the latest four activity loads. Show estimated TSS numerically and use
   proportional bar heights; unavailable values use an em dash and explanatory
@@ -578,7 +592,7 @@ at 280px; date review and Schedule remain outside that scroll area.
 
 Workout dates toggle through calendar buttons and can also be added through an
 explicit date field or removed through labelled date chips. Template selection
-uses one reference date: show its full day, Monday-first week, or calendar-month
+uses one reference date: show its full Monday-first week or calendar-month
 range in both the calendar selection and a dated range summary before Schedule.
 The selected-day agenda follows the reference date, while the range identifies
 the entire placement. Explain that scheduled sessions are independent copies
@@ -610,7 +624,7 @@ created from the selected chart pattern rather than a per-block repetition
 field. Every `SessionBlockBar` maps continuous intensity to segment height and time to width,
 including the full-size authoring timeline. The basics step uses a
 centered reading-width panel and presents Continue as its only forward action;
-template and save controls appear with the detailed authoring workspace.
+save controls appear with the detailed authoring workspace.
 After details are unlocked, Edit basics changes the existing summary row into
 inline name and sport fields without hiding or resetting the authoring workspace.
 The chart remains the primary authoring surface. Block details follow the chart
@@ -723,3 +737,23 @@ entries on failure, distinguish unsaved edits, and offer Continue later with a
 discard safeguard. Unknown values may remain blank and keep setup incomplete;
 never require guesses. Once the selected sports' targets and maximum heart rate
 are saved, hide the setup section and leave subsequent editing in Profile.
+
+
+### Personal training templates
+
+Use the established Monolith surfaces and shared controls. Personal Templates
+is a routine composer, using existing library workouts rather than the block
+editor. Keep name and optional purpose together, followed by one saved-workout
+picker with multi-weekday selection and an ordered Monday–Sunday outline.
+Days without entries say No workout. Multiple entries expose accessible reorder
+and remove controls; at narrow widths their actions wrap below the workout
+selector. Show save failures beside Save and retain the draft. Cancelling or
+leaving the browser requires an unsaved-change safeguard.
+
+The library previews weekday workout names, session count and week/month reuse.
+Apply to Calendar carries the chosen template into scheduling. Routine application
+offers One week or Whole month, an explicit full date range and the actual dated
+workout list/count before saving. Explain that existing sessions remain, empty
+days add nothing, relative targets use Profile and fixed targets remain fixed.
+Templates have one routine model. Do not expose cadence controls, workout block
+authoring, single-workout template loading or public Save as Template intake.

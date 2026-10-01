@@ -9,7 +9,6 @@ import {
   parseSportMetricsJson,
   plannerDraftToTempoBlocks,
   serializePlannerDraftForSave,
-  templateToPlannerDraft,
   updatePlannerBlock,
   validatePlannerSessionDraft,
 } from '../lib/planner-draft.ts';
@@ -51,38 +50,6 @@ test('planner block helpers add, update, duplicate, and reorder immutable drafts
   assert.equal(duplicated.blocks.length, 5);
   assert.notEqual(duplicated.blocks.at(-1)?.clientId, updated.blocks.at(-1)?.clientId);
   assert.equal(moved.blocks[1].note, 'Float recovery');
-});
-
-test('templateToPlannerDraft preloads template blocks for a chosen athlete and date', () => {
-  const draft = templateToPlannerDraft(
-    {
-      id: 8,
-      sport: 'BIKING',
-      name: 'Over-unders',
-      summary: 'Controlled aerobic pressure.',
-      blocks: [
-        {
-          id: 80,
-          kind: 'work',
-          zone: 4,
-          durationSec: 720,
-          reps: 3,
-          targetType: 'power',
-          targetLow: 250,
-          targetHigh: 270,
-          note: 'Three rounds',
-          sortOrder: 0,
-        },
-      ],
-    },
-    { athleteId: 5, scheduledDate: '2026-06-25' },
-  );
-
-  assert.equal(draft.sourceTemplateId, 8);
-  assert.equal(draft.title, 'Over-unders');
-  assert.equal(draft.sport, 'BIKING');
-  assert.equal(draft.blocks[0].targetType, 'power');
-  assert.equal(draft.blocks[0].targetLow, 250);
 });
 
 test('validatePlannerSessionDraft catches missing title and invalid targets', () => {

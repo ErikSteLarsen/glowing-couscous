@@ -3,7 +3,7 @@
 import { addDays, addMonths, endOfMonth, endOfWeek, format, isSameMonth, startOfMonth, startOfWeek } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { ActionLink, EmptyState, formSelectClassName, getSegmentedChoiceClassName } from '@/components/ui';
+import { ActionLink, EmptyState, formSelectClassName, getSegmentedChoiceClassName, iconButtonClassName } from '@/components/ui';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
 
@@ -105,7 +105,7 @@ export function ActivityHistoryOverview({
     <div className="space-y-8">
       <section aria-label="Activity filters" className="space-y-4 border-b border-[var(--border)] pb-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div role="group" aria-label="Summary period" className="flex min-w-0">
+          <div role="group" aria-label="Summary period" className="flex min-w-0 gap-1">
             {(['week', 'month'] as const).map((option) => (
               <button
                 key={option}
@@ -122,7 +122,7 @@ export function ActivityHistoryOverview({
             <button
               type="button"
               aria-label={`Previous ${period}`}
-              className="inline-flex h-10 w-10 max-md:h-11 max-md:w-11 items-center justify-center rounded-[3px] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--brand-tint)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+              className={iconButtonClassName}
               onClick={() => movePeriod(-1)}
             >
               <ChevronLeft aria-hidden="true" size={17} />
@@ -134,7 +134,7 @@ export function ActivityHistoryOverview({
               type="button"
               aria-label={`Next ${period}`}
               disabled={!canAdvance}
-              className="inline-flex h-10 w-10 max-md:h-11 max-md:w-11 items-center justify-center rounded-[3px] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--brand-tint)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-40"
+              className={`${iconButtonClassName} disabled:cursor-not-allowed disabled:opacity-50`}
               onClick={() => movePeriod(1)}
             >
               <ChevronRight aria-hidden="true" size={17} />

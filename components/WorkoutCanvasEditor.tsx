@@ -136,7 +136,7 @@ export function WorkoutCanvasEditor({ draft, onChange, performanceProfile, profi
     commit({ ...draft, blocks: [...blocks.slice(0, index), block, ...blocks.slice(index)] });
     setSelectedIds([block.clientId]);
     setRepeatCount(1);
-    setNotice(`Zone ${zone} ${names[zone]} added at position ${index + 1}. Save the ${draft.templateId ? 'template' : 'workout'} when ready.`);
+    setNotice(`Zone ${zone} ${names[zone]} added at position ${index + 1}. Save the workout when ready.`);
   }
   function select(id: string, additive: boolean, range: boolean) {
     const index = blocks.findIndex((block) => block.clientId === id);

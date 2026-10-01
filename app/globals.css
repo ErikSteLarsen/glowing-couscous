@@ -1679,25 +1679,34 @@ body[data-workspace-theme="dark"] .profile-savebar {
 .training-calendar__layout { display: grid; align-items: start; gap: 24px; min-width: 0; }
 .training-calendar__main { min-width: 0; }
 .training-calendar__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
-.training-calendar__day { min-width: 0; border-top: 1px solid var(--border); padding-top: 8px; }
-.training-calendar__day[data-selected="true"] { border-color: var(--selected-border); background: var(--field-surface); border-radius: 10px; }
+.training-calendar__day { min-width: 0; border: 1px solid transparent; border-top-color: var(--border); padding: 8px; }
+.training-calendar__day[data-selected="true"] { border-color: var(--field-border); background: var(--field-surface); border-radius: 10px; }
 .training-calendar__date { position: relative; display: flex; width: 100%; min-height: 64px; align-items: flex-start; flex-direction: column; gap: 3px; padding: 8px; border-radius: 10px; text-align: left; color: var(--text); }
 .training-calendar__date > span:first-child { font-size: 11px; color: var(--text-muted); }
 .training-calendar__date strong { font-size: 22px; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .training-calendar__date:hover { background: var(--field-surface); }
-.training-calendar__today { font-size: 10px; color: var(--nav-signal); }
+.training-calendar__date-number { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.training-calendar__today { font-size: 10px; font-weight: 600; color: var(--nav-signal); }
 .training-calendar__count { position: absolute; right: 6px; top: 8px; font-size: 10px; color: var(--text-muted); }
-.training-calendar__day-content { padding: 8px 4px; }
+.training-calendar__day-content { padding: 8px 0; }
+.training-calendar__empty { padding: 12px 8px; font-size: 13px; color: var(--text-muted); }
+.training-calendar__more { display: block; padding: 2px 4px; font-size: 11px; color: var(--text-secondary); border-radius: 4px; }
+.training-calendar__more:hover { background: var(--field-surface); color: var(--text); }
+.training-calendar__selection { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
 .training-calendar__sessions { display: grid; gap: 10px; }
 .training-calendar__session { min-width: 0; position: relative; }
 .training-calendar__remove { position: absolute; right: 4px; bottom: 4px; min-height: 32px; width: 32px; padding: 4px; background: var(--surface); }
 .training-calendar__session > a { padding-bottom: 36px; }
-.training-calendar__grid--month .training-calendar__day { min-height: 156px; }
-.training-calendar__grid--month .training-calendar__date { min-height: 52px; }
+.training-calendar__grid--month { gap: 4px; container: calendar-month / inline-size; }
+.training-calendar__grid--month .training-calendar__day { min-height: 96px; padding: 4px; }
+.training-calendar__grid--month .training-calendar__date { min-height: 48px; padding: 4px; }
+.training-calendar__grid--month .training-calendar__day-content { padding: 4px 0 0; }
 .training-calendar__grid--month .training-calendar__date strong { font-size: 17px; }
 .training-calendar__day--outside { opacity: .65; }
 .training-calendar__agenda { display: none; margin-top: 24px; }
 .training-calendar__agenda--month { display: block; max-width: 640px; }
+.training-calendar__summary { padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+.training-calendar__summary p { margin-top: 8px; font-size: 13px; color: var(--text-secondary); }
 .training-calendar__composer { display: grid; gap: 16px; min-width: 0; background: var(--field-surface); border-radius: 16px; padding: 20px; }
 .training-calendar__sources { display: grid; gap: 4px; max-height: 280px; overflow-y: auto; overscroll-behavior: contain; }
 .training-calendar__source { display: grid; gap: 4px; padding: 12px; text-align: left; border-radius: 10px; border: 1px solid transparent; color: var(--text); }
@@ -1706,6 +1715,8 @@ body[data-workspace-theme="dark"] .profile-savebar {
 .training-calendar__source strong { font-size: 14px; overflow-wrap: anywhere; }
 .training-calendar__source span { font-size: 12px; color: var(--text-secondary); }
 @media (min-width: 1200px) {
+  .training-calendar__main--month { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 24px; align-items: start; }
+  .training-calendar__main--month .training-calendar__agenda { margin-top: 0; }
   .training-calendar__layout--adding { grid-template-columns: minmax(0, 1fr) 320px; }
   .training-calendar__composer { grid-column: 2; grid-row: 1; }
   .training-calendar__main { grid-column: 1; grid-row: 1; }
@@ -1726,7 +1737,9 @@ body[data-workspace-theme="dark"] .profile-savebar {
   .training-calendar__toolbar { gap: 12px; }
   .training-calendar__toolbar h2 { font-size: 16px; }
   .training-calendar__grid { gap: 3px; }
+  .training-calendar__day { padding: 4px 2px; }
   .training-calendar__date { min-height: 72px; padding: 6px 3px; }
+  .training-calendar__date-number { flex-direction: column; align-items: flex-start; gap: 4px; }
   .training-calendar__date strong { font-size: 20px; }
   .training-calendar__count { top: auto; bottom: 5px; right: 4px; }
   .training-calendar__grid--month .training-calendar__day { min-height: 72px; }
@@ -1740,11 +1753,11 @@ body[data-workspace-theme="dark"] .profile-savebar {
   .training-calendar__grid--week .training-calendar__day-content { display: none; }
   .training-calendar__agenda { display: block; }
 }
-@container training-calendar (max-width: 600px) {
+@container calendar-month (max-width: 600px) {
   .training-calendar__grid--month .training-calendar__day-content { display: none; }
   .training-calendar__grid--month .training-calendar__day { min-height: 72px; }
 }
-.training-calendar__day.calendar-day--today { background: var(--brand-tint); border-radius: 10px; }
+.training-calendar__day--today { background: var(--brand-tint); border-radius: 10px; }
 @media (max-width: 639px) {
   .training-calendar__grid--month .training-calendar__date { min-height: 72px; }
 }

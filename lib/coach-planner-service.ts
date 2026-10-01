@@ -39,16 +39,11 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
       const weekEnd = endOfWeek(referenceDate, { weekStartsOn: 1 });
       const calendarStart = startOfWeek(startOfMonth(referenceDate), { weekStartsOn: 1 });
       const calendarEnd = endOfWeek(endOfMonth(referenceDate), { weekStartsOn: 1 });
-      const [athletes, templates, librarySessions, trainingPlans, sessions, calendarSessions] = await Promise.all([
+      const [athletes, librarySessions, trainingPlans, sessions, calendarSessions] = await Promise.all([
         db.user.findMany({
           where: { coachId, role: 'ATHLETE' },
           orderBy: { name: 'asc' },
           select: { id: true, name: true, email: true, performanceProfileJson: true },
-        }),
-        db.template.findMany({
-          where: { ownerId: coachId },
-          include: { blocks: { orderBy: { sortOrder: 'asc' } } },
-          orderBy: [{ sport: 'asc' }, { name: 'asc' }],
         }),
         db.session.findMany({
           where: { coachOwnerId: coachId, athleteId: null, trainingPlanId: null },
@@ -147,7 +142,6 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
           label: format(referenceDate, 'MMMM yyyy'),
         },
          athletes: athletes.map((athlete) => ({ ...athlete, name: athlete.name ?? '' })),
-        templates,
         librarySessions: librarySessions.map((session) => ({
           ...session,
           date: session.date ? formatISO(session.date, { representation: 'date' }) : null,
@@ -236,7 +230,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
       const sessionData = {
         athleteId: draft.athleteId,
         planId: plan.id,
-        templateId: draft.sourceTemplateId,
+        templateId: null,
         assignedById: coachId,
         date: scheduledDate,
         timeLabel: null,
@@ -244,12 +238,12 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
         title: draft.title.trim(),
         summary: draft.summary.trim() || null,
         status: 'planned',
-        source: draft.sourceTemplateId ? 'template' : 'coach',
+        source: 'coach',
         adjusted: false,
         coachBaselineJson: createSessionSnapshotJson({
           athleteId: draft.athleteId,
           planId: plan.id,
-          templateId: draft.sourceTemplateId,
+          templateId: null,
           assignedById: coachId,
           scheduledDate: draft.scheduledDate,
           sport: draft.sport,
@@ -257,7 +251,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
           summary: draft.summary,
           sportMetrics: draft.sportMetrics,
           status: 'planned',
-          source: draft.sourceTemplateId ? 'template' : 'coach',
+          source: 'coach',
           blocks: serialized.blocks,
         }),
         coachNotes: null,

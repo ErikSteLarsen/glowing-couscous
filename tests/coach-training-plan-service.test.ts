@@ -36,7 +36,6 @@ test('coach training plans create a reusable plan and weekday session', async ()
     sport: 'RUNNING',
     title: 'Wednesday tempo',
     summary: '',
-    sourceTemplateId: null,
     sportMetrics: { ftp: null, thresholdPaceSecPerKm: 255, thresholdHr: 168 },
     blocks: [
       {
@@ -182,7 +181,6 @@ test('coach training plan session save returns 404 when plan not owned by coach'
     sport: 'RUNNING',
     title: 'Session',
     summary: '',
-    sourceTemplateId: null,
     sportMetrics: { ftp: null, thresholdPaceSecPerKm: null, thresholdHr: null },
     blocks: [
       {
@@ -248,7 +246,6 @@ test('coach training plan session update uses $transaction and only { id } in wh
       sport: 'RUNNING',
       title: 'Updated tempo',
       summary: '',
-      sourceTemplateId: null,
       sportMetrics: { ftp: null, thresholdPaceSecPerKm: null, thresholdHr: null },
       blocks: [
         {

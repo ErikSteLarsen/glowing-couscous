@@ -4,7 +4,7 @@ import { requireSignedInUser } from '@/lib/api-auth';
 import { shareLinkService, type ShareLinkSourceKind } from '@/lib/share-link-service';
 import { parsePositiveInteger, readJsonObject } from '@/lib/route-params';
 
-const sourceKinds: readonly ShareLinkSourceKind[] = ['session', 'template'];
+const sourceKinds: readonly ShareLinkSourceKind[] = ['session'];
 
 export async function POST(request: NextRequest) {
   const { user, error } = await requireSignedInUser();

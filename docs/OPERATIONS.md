@@ -16,7 +16,7 @@ The repository does not yet enforce an engines range. Use pnpm pinned by
 | `pnpm dev` | Generate Prisma Client and start Next.js |
 | `pnpm test` | Run Node source/service and architecture tests |
 | `pnpm lint` | Run full ESLint |
-| `pnpm build` | Ensure Prisma Client, **deploy database migrations**, build Next.js |
+| `pnpm build` | Ensure Prisma Client, **deploy database migrations**, build Next.js with the verified webpack bundler |
 | `pnpm start` | Serve existing production output |
 | `pnpm db:migrate` | Apply committed PostgreSQL migrations |
 | `pnpm db:push` | Prototype local schema without creating migrations |
@@ -174,3 +174,41 @@ request; normal workout creation uses one model request per generated draft.
 
 Use [verification](VERIFICATION.md) for acceptance and
 [current status](agent-workspace/CURRENT-STATUS.md) for evidence/open gates.
+
+## Routine-only templates
+
+Deploy this code with `20261001120000_template_routines` and
+`20261001130000_retire_workout_templates`. The latter deliberately deletes old
+block-backed template definitions, their blocks and share links, including
+detached old template snapshots, and removes their schema fields. Calendar
+copies and outcomes remain independent and are retained. Do not run the demo
+seed on an existing account database. The seed now creates library workouts and
+a weekday routine. No new environment variables or provider setup is required.
+
+The cleanup was applied to the configured Neon database on 2026-10-01 after
+disposable PostgreSQL acceptance. Old application builds referencing the removed
+columns must be replaced with this code; database migration is not an app deploy.
+
+## Imported workout analysis worker
+
+Deploy migration 20261001150000_activity_analysis with this application version.
+It adds the ActivityAnalysis table; it does not backfill or automatically analyze
+existing activities. Analysis requires explicit opt-in on a running file import
+or an owned session request. Strava sources remain excluded.
+
+Set ACTIVITY_ANALYSIS_WORKER_SECRET to a dedicated random server secret. Configure
+the hosting scheduler to call POST (GET is also supported) /api/activity-analysis/worker
+with Authorization: Bearer <secret>, for example once per minute. Requests consider
+at most two due jobs, each with a bounded model call; the route permits a sixty-second
+runtime. Schedule overlap is safe under leases and global concurrency control.
+Do not put the secret in a URL or client configuration. Monitor queue age and
+failed jobs using ActivityAnalysis; responses count considered jobs, not completed
+analyses. after() on imports/owned pending reads improves latency but is not a
+replacement for the scheduler. The worker is not automatically provisioned here.
+
+The existing WORKOUT_LLM_* / OPENAI provider configuration is reused. Missing keys
+or invalid/provider-failed responses yield a calculated interpretation. No new
+provider key is required. Manual requests have a ten-active-job owner cap and a
+one-minute repeat cooldown; initial imports do not apply the manual cap. Global
+live processing is capped at four with three attempts. Daily model budgets are
+not implemented; configure provider spending limits before enabling broad use.

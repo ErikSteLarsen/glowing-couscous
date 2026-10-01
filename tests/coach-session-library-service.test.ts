@@ -75,7 +75,6 @@ test('coach session library saves standalone sessions with coach ownership only'
     sport: 'RUNNING',
     title: 'Coach session',
     summary: '',
-    sourceTemplateId: null,
     sportMetrics: { ftp: null, thresholdPaceSecPerKm: 255, thresholdHr: 168 },
     blocks: [block],
   });
@@ -137,7 +136,6 @@ test('coach session library returns 404 when updating a session not owned by coa
       sport: 'RUNNING',
       title: 'Coach session',
       summary: '',
-      sourceTemplateId: null,
       sportMetrics: { ftp: null, thresholdPaceSecPerKm: 255, thresholdHr: 168 },
       blocks: [block],
     },
@@ -180,7 +178,6 @@ test('coach session library updates by session id only without coachOwnerId in w
       sport: 'RUNNING',
       title: 'Coach session',
       summary: '',
-      sourceTemplateId: null,
       sportMetrics: { ftp: null, thresholdPaceSecPerKm: 255, thresholdHr: 168 },
       blocks: [block],
     },
@@ -221,7 +218,6 @@ test('coach session library rejects save when no blocks are provided', async () 
     sport: 'RUNNING',
     title: 'Session without blocks',
     summary: '',
-    sourceTemplateId: null,
     sportMetrics: { ftp: null, thresholdPaceSecPerKm: null, thresholdHr: null },
     blocks: [],
   });

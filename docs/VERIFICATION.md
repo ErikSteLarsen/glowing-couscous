@@ -67,9 +67,21 @@ interaction/persistence checks; they do not replace them.
    undo/redo, failure draft retention and explicit save feedback.
 3. Schedule multiple dates in Calendar; check week/month views after reload. Edit and
    cross-week reschedule personal work without requiring Assignment lineage.
-4. Reuse templates: day = one date, week = seven consecutive days starting
-   Monday, month = a whole calendar month. Reject partial/gapped/invalid ranges
-   without writes; clear hidden selection when switching to empty source tabs.
+4. Compose saved workouts on weekdays in Templates, apply one complete week or
+   whole month, preview the actual dated sessions, preserve within-day order,
+   and leave empty weekdays untouched. Refuse old block-template input and
+   retired public/coach template paths. Verify snapshots after source deletion,
+   owner isolation, relative targets, replay and rollback with
+   `tests/postgres-template-routines.acceptance.ts` on the guarded disposable DB.
+   For migration acceptance, first apply migrations through template_routines
+   only to a fresh disposable database, then run
+   `tests/postgres-template-cleanup.acceptance.ts` alone: it creates old-format
+   fixtures, deploys the cleanup migration and verifies retained sessions/outcomes.
+   Run routine acceptance after cleanup, not concurrently with it. Start a local
+   production server against this DB on port 3106 and run
+   `tests/http-template-routines.acceptance.ts` for authenticated API saves,
+   page reload, assignment/replay, old-path refusal and template deletion.
+   These integration files remain outside the default unit-test glob.
 5. Follow Live: start, pause, previous, next, skip, restart, final zero and
    explicit completion. Live does not collect device/sensor telemetry.
 6. Complete, correct actuals, compare Planned/Actual and reopen History after
@@ -88,7 +100,7 @@ interaction/persistence checks; they do not replace them.
 | Files | FIT/TCX/GPX parsing/errors, duplicates, matching/standalone import, measurements, removal restoring planned work |
 | Strava | HTTPS challenge/OAuth return, live webhook, leased retry/recovery, updates/privacy/delete/deauthorization, duplicate-safe explicit import |
 | Notifications | Entry/periodic arrival, Review later, discard/restore beyond provider recent page, matching/standalone, failure draft retention, dialog keyboard/Escape |
-| Sharing | Public workout/template previews, sanitization, long content, explicit authenticated intake and unauthorized mutation rejection |
+| Sharing | Public workout previews, sanitization, long content, explicit authenticated intake and unauthorized mutation rejection |
 | Auth | Configured recovery email delivery, expiry/single use/session invalidation and optional Google OAuth |
 
 ## Responsive and accessibility acceptance
@@ -109,3 +121,28 @@ safe areas/browser chrome, keyboard/autofill/file picking, one-handed reach,
 Live sleep/lock/resume, VoiceOver/TalkBack, and maximum supported imports on a
 representative lower-memory phone. Desktop emulation does not close those gates.
 Developer `/design/*` comparisons are outside MVP acceptance unless promoted.
+
+## Imported workout analysis acceptance
+
+Unit acceptance: variable-duration repeated efforts, genuine 53-second efforts,
+continuous/no-data results, missing spans and measurable stops, lap validation,
+source eligibility and malformed model output. Verify pooled covered work time
+and distance, not an average of per-repetition pace values or recovery-inclusive
+pace. Existing parser and provider tests remain relevant.
+
+On the disposable PostgreSQL database described above (127.0.0.1:55432,
+tempo_acceptance), run tests/postgres-activity-analysis.acceptance.ts with pnpm exec
+node --test --experimental-strip-types. It refuses other database targets and
+checks atomic enqueue/rollback, ownership, duplicate/concurrent requests,
+corrections, stale leases, exhausted attempts, matched-plan preservation,
+in-flight deletion and account cascade. Run tests/http-activity-analysis.acceptance.ts
+with the same command against a production local server at localhost:3100 and
+ACTIVITY_ANALYSIS_WORKER_SECRET=disposable-analysis-worker; it exercises authenticated
+import/request/read/correction and source/owner/worker refusal. These tests create
+and remove synthetic accounts. Disable live model keys for deterministic acceptance.
+
+Browser acceptance covers eligible opt-in and explicit Analyze, pending/result,
+pooled pace and proportional blocks, evidence expansion, correction save/reload,
+unknown zones and both themes on desktop and narrow viewports. Full keyboard,
+assistive technology, physical-device, independent real-file segmentation,
+live-provider and scheduled production worker acceptance are separate gates.

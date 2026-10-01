@@ -58,17 +58,18 @@ function schema() {
   };
 }
 
-async function callProvider(fetcher: typeof fetch, config: ProviderConfig, prompt: string, healthCheck: boolean): Promise<string | null> {
+async function callProvider(fetcher: typeof fetch, config: ProviderConfig, prompt: string, healthCheck: boolean,
+  outputSchema: Record<string, unknown> = schema(), system = 'Create a complete endurance workout as JSON. Follow every requested constraint. Never include medical claims or imply the athlete is ready for hard effort.'): Promise<string | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), healthCheck ? 6_000 : 25_000);
   try {
     const body = config.format === 'responses' ? {
       model: config.model, store: false, max_output_tokens: healthCheck ? 24 : 2_000,
-      input: healthCheck ? 'Reply with OK.' : [{ role: 'system', content: 'Create a complete endurance workout as JSON. Follow every requested constraint. Never include medical claims or imply the athlete is ready for hard effort.' }, { role: 'user', content: prompt }],
-      ...(healthCheck ? {} : { text: { format: { type: 'json_schema', name: 'guided_workout', strict: true, schema: schema() } } }),
+      input: healthCheck ? 'Reply with OK.' : [{ role: 'system', content: system }, { role: 'user', content: prompt }],
+      ...(healthCheck ? {} : { text: { format: { type: 'json_schema', name: 'workout_evidence', strict: true, schema: outputSchema } } }),
     } : {
       model: config.model, max_tokens: healthCheck ? 24 : 2_000,
-      messages: healthCheck ? [{ role: 'user', content: 'Reply with OK.' }] : [{ role: 'system', content: 'Create a complete endurance workout as JSON. Follow every requested constraint. Never include medical claims or imply the athlete is ready for hard effort.' }, { role: 'user', content: prompt }],
+      messages: healthCheck ? [{ role: 'user', content: 'Reply with OK.' }] : [{ role: 'system', content: system }, { role: 'user', content: prompt }],
       ...(healthCheck ? {} : { response_format: { type: 'json_object' } }),
     };
     const response = await fetcher(config.url, { method: 'POST', headers: { Authorization: `Bearer ${config.key}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: controller.signal });
@@ -79,6 +80,20 @@ async function callProvider(fetcher: typeof fetch, config: ProviderConfig, promp
   } finally {
     clearTimeout(timeout);
   }
+}
+
+/** Shared bounded transport. Domain adapters own their schema, prompts and validation. */
+export async function generateStructuredWorkoutEvidence(prompt: string, outputSchema: Record<string, unknown>, system: string,
+  options: { fetcher?: typeof fetch; apiKey?: string; model?: string; apiUrl?: string; apiFormat?: string } = {}) {
+  const apiUrl = options.apiUrl ?? process.env.WORKOUT_LLM_API_URL ?? DEFAULT_URL;
+  const config = providerConfig({
+    apiKey: options.apiKey ?? (apiUrl === DEFAULT_URL ? process.env.OPENAI_API_KEY : process.env.WORKOUT_LLM_API_KEY),
+    model: options.model ?? process.env.WORKOUT_LLM_MODEL ?? process.env.OPENAI_WORKOUT_MODEL ?? 'gpt-4o-mini',
+    apiUrl, apiFormat: options.apiFormat ?? process.env.WORKOUT_LLM_API_FORMAT ?? 'responses',
+  });
+  if (!config) return null;
+  const value = await callProvider(options.fetcher ?? fetch, config, prompt, false, outputSchema, system);
+  return value ? { text: value, model: config.model } : null;
 }
 
 export function createWorkoutLlm({ db = prisma, fetcher = fetch, now = () => new Date(), apiKey, model = process.env.WORKOUT_LLM_MODEL ?? process.env.OPENAI_WORKOUT_MODEL ?? 'gpt-4o-mini', apiUrl = process.env.WORKOUT_LLM_API_URL ?? DEFAULT_URL, apiFormat = process.env.WORKOUT_LLM_API_FORMAT ?? 'responses' }: {

@@ -23,11 +23,10 @@ export default async function CoachPlannerPage({
     <PageShell>
       <TopBar
         title="Planner"
-        description="Schedule workouts, templates, and plans for your athletes."
+        description="Schedule workouts and plans for your athletes."
       />
       <PlannerClient
         athletes={workspace.athletes}
-        templates={workspace.templates}
         librarySessions={workspace.librarySessions}
         trainingPlans={workspace.trainingPlans}
         calendarDays={workspace.calendarDays}

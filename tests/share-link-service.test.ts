@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 
 import {
   createPlannerEditorDraftFromSharedProjection,
-  createTemplateEditorDraftFromSharedProjection,
 } from '../lib/session-editor-adapters.ts';
 import {
   createSharePath,
@@ -77,8 +76,8 @@ test('shared projection keeps workout definition content and drops private sessi
 
 test('shared projection excludes skipped blocks from derived metrics', () => {
   const projection = createSharedWorkoutProjection({
-    sourceKind: 'template',
-    name: 'Mixed session',
+    sourceKind: 'session',
+    title: 'Mixed session',
     sport: 'BIKING',
     blocks: [
       { kind: 'work', zone: 4, durationSec: 1200, skipped: true, sortOrder: 0 },
@@ -93,14 +92,13 @@ test('shared projection excludes skipped blocks from derived metrics', () => {
 
 test('shared import creates independent canonical drafts with no source identity or schedule', () => {
   const projection = createSharedWorkoutProjection({
-    sourceKind: 'template',
-    name: 'Shared workout',
+    sourceKind: 'session',
+    title: 'Shared workout',
     sport: 'SWIMMING',
     summary: 'Public summary',
     blocks: [{ kind: 'work', zone: 3, durationSec: 600, sortOrder: 0 }],
   });
 
-  const templateDraft = createTemplateEditorDraftFromSharedProjection(projection);
   const athleteDraft = createPlannerEditorDraftFromSharedProjection(projection, {
     ownershipMode: 'athlete',
     athleteId: 12,
@@ -111,7 +109,7 @@ test('shared import creates independent canonical drafts with no source identity
     scheduledDate: '2026-09-04',
   });
 
-  for (const draft of [templateDraft, athleteDraft, coachDraft]) {
+  for (const draft of [athleteDraft, coachDraft]) {
     assert.equal(draft.mode, 'create');
     assert.equal(draft.id, null);
     assert.equal(draft.templateId, null);
@@ -125,7 +123,6 @@ test('shared import creates independent canonical drafts with no source identity
     assert.equal(draft.athleteNotes, '');
     assert.equal(draft.rpe, null);
   }
-  assert.equal(templateDraft.scheduledDate, null);
   assert.equal(athleteDraft.athleteId, 12);
   assert.equal(athleteDraft.scheduledDate, '2026-09-04');
   assert.equal(coachDraft.scheduledDate, '2026-09-04');
@@ -137,7 +134,7 @@ test('shared projection parser rejects malformed snapshots', () => {
   assert.equal(parseSharedWorkoutProjection('{"snapshotVersion":1}'), null);
 
   const valid = createSharedWorkoutProjection({
-    sourceKind: 'template',
+    sourceKind: 'session',
     title: 'Valid snapshot',
     sport: 'RUNNING',
     blocks: [{ kind: 'work', zone: 3, durationSec: 600, sortOrder: 0 }],
@@ -166,12 +163,12 @@ test('share link creation hashes an opaque token and stores exactly one sanitize
   const service = createShareLinkService({
     createToken: () => token,
     db: {
-      template: {
+      session: {
         async findUnique() {
           return {
             id: 17,
-            ownerId: 2,
-            name: 'Private template',
+            athleteId: 2, coachOwnerId: null, trainingPlanId: null, coachBaselineJson: null, status: 'planned', athlete: null,
+            title: 'Private workout',
             sport: 'RUNNING',
             summary: 'Public summary',
             blocks: [{ kind: 'work', zone: 3, durationSec: 600, note: 'Cue', sortOrder: 0 }],
@@ -187,20 +184,20 @@ test('share link creation hashes an opaque token and stores exactly one sanitize
     } as never,
   });
 
-  const result = await service.createForUser(2, 'template', 17);
+  const result = await service.createForUser(2, 'session', 17);
 
   assert.deepEqual(result, {
     ok: true,
     url: `/share/${token}`,
-    sourceKind: 'template',
+    sourceKind: 'session',
     sourceId: 17,
   });
   assert.equal(createArgs?.data.tokenHash, hashShareToken(token));
   assert.notEqual(createArgs?.data.tokenHash, token);
-  assert.equal(createArgs?.data.sessionId, null);
-  assert.equal(createArgs?.data.templateId, 17);
+  assert.equal(createArgs?.data.sessionId, 17);
+  assert.equal('templateId' in createArgs!.data, false);
   const snapshot = JSON.parse(String(createArgs?.data.snapshotJson)) as Record<string, unknown>;
-  assert.equal(snapshot.title, 'Private template');
+  assert.equal(snapshot.title, 'Private workout');
   assert.equal('ownerId' in snapshot, false);
   assert.equal('createdById' in snapshot, false);
 });
@@ -390,7 +387,7 @@ test('public preview uses the stored snapshot and rejects malformed or mixed lin
         async findUnique(args: { where: { tokenHash: string } }) {
           lookups += 1;
           assert.equal(args.where.tokenHash, hashShareToken(token));
-          return { sessionId: 22, templateId: null, snapshotJson: snapshot };
+          return { sessionId: 22, snapshotJson: snapshot };
         },
       },
     } as never,
@@ -405,7 +402,7 @@ test('public preview uses the stored snapshot and rejects malformed or mixed lin
 test('share continuation paths are local, token-bound, and action-bound', () => {
   const token = 'd'.repeat(43);
   assert.equal(createSharePath(token, 'planner'), `/share/${token}?action=planner`);
-  assert.equal(getSafeShareCallbackPath(`/share/${token}?action=template`), `/share/${token}?action=template`);
+  assert.equal(getSafeShareCallbackPath(`/share/${token}?action=template`), null);
   assert.equal(getSafeShareCallbackPath('https://evil.example/share/anything?action=planner'), null);
   assert.equal(getSafeShareCallbackPath(`/share/${token}?next=https://evil.example`), null);
   assert.equal(getSafeShareCallbackPath('/coach'), null);
@@ -420,24 +417,17 @@ test('recipient copy commands sanitize ownership and delegate only after explici
     sport: 'RUNNING',
     blocks: [{ kind: 'work', zone: 3, durationSec: 600, sortOrder: 0 }],
   }));
-  let templateInput: Record<string, unknown> | undefined;
   let athleteInput: Record<string, unknown> | undefined;
   let coachInput: Record<string, unknown> | undefined;
   const db = {
     shareLink: {
       async findUnique() {
-        return { sessionId: 22, templateId: null, snapshotJson: snapshot };
+        return { sessionId: 22, snapshotJson: snapshot };
       },
     },
   };
   const service = createShareLinkService({
     db: db as never,
-    templatePersistence: {
-      async saveForOwner(_ownerId: number, input: Record<string, unknown>) {
-        templateInput = input;
-        return { error: null };
-      },
-    } as never,
     athletePlannerPersistence: {
       async saveSession(_ownerId: number, input: Record<string, unknown>) {
         athleteInput = input;
@@ -468,12 +458,9 @@ test('recipient copy commands sanitize ownership and delegate only after explici
     blocks: [{ kind: 'work', zone: 3, durationSec: 900, sortOrder: 0 }],
   };
 
-  assert.deepEqual(await service.saveTemplateCopy(50, token, draft), { ok: true });
   assert.deepEqual(await service.savePlannerCopy(50, 'ATHLETE', token, draft), { ok: true, sessionIds: [31] });
   assert.deepEqual(await service.savePlannerCopy(51, 'COACH', token, draft), { ok: true, sessionIds: [32] });
-  assert.equal(templateInput?.name, 'Edited imported workout');
   assert.equal((athleteInput?.templateId ?? null), null);
   assert.equal((athleteInput?.coachOwnerId ?? null), null);
-  assert.equal((coachInput?.sourceTemplateId ?? null), null);
   assert.equal((coachInput?.athleteId ?? null), null);
 });

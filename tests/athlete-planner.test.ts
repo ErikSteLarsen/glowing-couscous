@@ -11,7 +11,7 @@ const sourceBlocks = [{
   targetLowDecimal: null, targetHighDecimal: null, note: 'Main set', skipped: false, sortOrder: 0,
 }];
 
-function createPlacementHarness({ failAtSession }: { failAtSession?: number } = {}) {
+function createPlacementHarness({ failAtSession, routineJson }: { failAtSession?: number; routineJson?: string } = {}) {
   let nextSessionId = 30;
   let nextPlanId = 40;
   let createAttempts = 0;
@@ -59,6 +59,7 @@ function createPlacementHarness({ failAtSession }: { failAtSession?: number } = 
             sport: 'CYCLING',
             name: 'Build week',
             cadence: 'week',
+            routineJson: routineJson ?? JSON.stringify({ version: 1, entries: [{ weekday: 0, workoutId: 4, title: 'Saved workout', sport: 'RUNNING', summary: null, sportMetricsJson: null, blocks: sourceBlocks }] }),
             summary: null,
             blocks: sourceBlocks,
           }
@@ -259,4 +260,42 @@ test('athlete placement API and UI carry a stable retry key', async () => {
   assert.match(planner, /crypto\.randomUUID\(\)/);
   assert.match(planner, /placementRequest\.current\?\.signature !== signature/);
   assert.match(planner, /if \(role === 'athlete'\) placementRequest\.current = null/);
+});
+
+
+test('routine placement expands only selected weekdays, preserves source targets and replays safely', async () => {
+  const entries = [0, 2, 4].map(weekday => ({ weekday, workoutId: 4, title: 'Easy run', sport: 'RUNNING', summary: null, sportMetricsJson: null,
+    blocks: sourceBlocks.map(block => ({ ...block, targetType: 'pace', targetMode: 'relative', targetReference: 'profile-pace-zone-1', targetLow: 1, targetHigh: 1, targetLowDecimal: '1.00', targetHighDecimal: '1.00' })) }));
+  entries.push(...[1, 3].map(weekday => ({ ...entries[0], weekday, title: 'Intervals' })));
+  const { service, state } = createPlacementHarness({ routineJson: JSON.stringify({ version: 1, entries }) });
+  const input = { sourceKind: 'template', sourceId: 9, requestKey: 'routine-week', dates: ['2026-10-05', '2026-10-06', '2026-10-07', '2026-10-08', '2026-10-09', '2026-10-10', '2026-10-11'] };
+  const result = await service.assignSource(7, input);
+  assert.equal(result.ok, true);
+  assert.deepEqual(state.sessions.map(session => session.title), ['Easy run', 'Intervals', 'Easy run', 'Intervals', 'Easy run']);
+  assert.equal(state.sessions.length, 5);
+  assert.equal((state.sessions[0].blocks as any).create[0].targetReference, 'profile-pace-zone-1');
+  assert.deepEqual(await service.assignSource(7, input), result);
+  assert.equal(state.sessions.length, 5);
+});
+
+test('routine placement uses actual month weekdays and rolls back all sessions on failure', async () => {
+  const routineJson = JSON.stringify({ version: 1, entries: [{ weekday: 0, workoutId: 4, title: 'Monday run', sport: 'RUNNING', summary: null, sportMetricsJson: null, blocks: sourceBlocks }] });
+  const dates = Array.from({ length: 31 }, (_, index) => `2026-10-${String(index + 1).padStart(2, '0')}`);
+  const { service, state } = createPlacementHarness({ routineJson });
+  assert.equal((await service.assignSource(7, { sourceKind: 'template', sourceId: 9, requestKey: 'routine-month', dates })).ok, true);
+  assert.deepEqual(state.sessions.map(session => (session.date as Date).toISOString().slice(0, 10)), ['2026-10-05', '2026-10-12', '2026-10-19', '2026-10-26']);
+  const failing = createPlacementHarness({ routineJson, failAtSession: 2 });
+  await assert.rejects(() => failing.service.assignSource(7, { sourceKind: 'template', sourceId: 9, requestKey: 'routine-failure', dates }));
+  assert.equal(failing.state.sessions.length, 0);
+  assert.equal(failing.state.requests.size, 0);
+});
+
+test('routine placement rejects malformed routines and incomplete periods without writes', async () => {
+  const routineJson = JSON.stringify({ version: 1, entries: [{ weekday: 0, workoutId: 4, title: 'Monday', sport: 'RUNNING', blocks: sourceBlocks }] });
+  const harness = createPlacementHarness({ routineJson });
+  assert.equal((await harness.service.assignSource(7, { sourceKind: 'template', sourceId: 9, requestKey: 'partial', dates: ['2026-10-05'] })).ok, false);
+  assert.equal(harness.state.sessions.length, 0);
+  const broken = createPlacementHarness({ routineJson: '{broken' });
+  assert.equal((await broken.service.assignSource(7, { sourceKind: 'template', sourceId: 9, requestKey: 'broken', dates: ['2026-10-05'] })).ok, false);
+  assert.equal(broken.state.sessions.length, 0);
 });

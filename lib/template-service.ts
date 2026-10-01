@@ -1,263 +1,59 @@
+import { type RoutineEntry, parseTemplateRoutine } from './template-routine.ts';
 import { prisma } from './prisma.ts';
-import { SPORT_OPTIONS } from './sport.ts';
-import { getTemplateCadence, isTemplateCadence } from './template-cadence.ts';
-import { normalizeWorkoutTarget, serializeDecimal, type WorkoutTargetReference } from './workout-targets.ts';
+import { createSessionEditorDraftFromPersisted, serializeSessionEditorDraft, createSessionEditorBlockData } from './session-editor.ts';
 
-type TemplateServiceDeps = {
-  db?: typeof prisma;
-};
-
-type NormalizedBlock = {
-  kind: 'warmup' | 'work' | 'recovery' | 'cooldown' | 'pause';
-  zone: 1 | 2 | 3 | 4 | 5;
-  durationSec: number;
-  reps: number | null;
-  targetType: 'power' | 'pace' | 'hr' | 'rpe' | null;
-  targetMode: 'absolute' | 'relative';
-  targetReference: WorkoutTargetReference | null;
-  targetLow: number | null;
-  targetHigh: number | null;
-  targetLowDecimal: string | null;
-  targetHighDecimal: string | null;
-  note: string | null;
-  skipped: boolean;
-};
-
-function mapLegacyBlockType(input: string) {
-  switch (input) {
-    case 'WARMUP':
-      return 'warmup';
-    case 'COOLDOWN':
-      return 'cooldown';
-    case 'REST':
-      return 'recovery';
-    default:
-      return 'work';
-  }
-}
-
-function normalizeBlocks(input: unknown): NormalizedBlock[] {
-  if (!Array.isArray(input) || input.length === 0) {
-    return [];
-  }
-
-  return input.map((block) => {
-    const item = (block ?? {}) as Record<string, unknown>;
-    const kindSource = typeof item.kind === 'string' ? item.kind : typeof item.blockType === 'string' ? mapLegacyBlockType(item.blockType) : 'work';
-    const normalizedKind =
-      kindSource === 'warmup' || kindSource === 'work' || kindSource === 'recovery' || kindSource === 'cooldown' || kindSource === 'pause'
-        ? kindSource
-        : 'work';
-    const zone = Number(item.zone);
-    const rawDurationSec =
-      item.durationSec ?? (item.durationMinutes != null ? Number(item.durationMinutes) * 60 : 0);
-    const durationSec = Number(rawDurationSec);
-
-    const target = normalizeWorkoutTarget(item.target ?? {
-      metric: item.targetType,
-      mode: item.targetMode,
-      reference: item.targetReference,
-      low: item.targetLowDecimal ?? item.targetLow,
-      high: item.targetHighDecimal ?? item.targetHigh,
-    });
-    return {
-      kind: normalizedKind,
-      zone: zone >= 1 && zone <= 5 ? (zone as 1 | 2 | 3 | 4 | 5) : 2,
-      durationSec: Number.isFinite(durationSec) && durationSec > 0 ? Math.round(durationSec) : 600,
-      reps: typeof item.reps === 'number' ? Math.round(item.reps) : null,
-      targetType: target?.metric ?? null,
-      targetMode: target?.mode ?? 'absolute',
-      targetReference: target?.reference ?? null,
-      targetLow: target ? Math.round(target.low) : null,
-      targetHigh: target ? Math.round(target.high) : null,
-      targetLowDecimal: target ? serializeDecimal(target.low) : null,
-      targetHighDecimal: target ? serializeDecimal(target.high) : null,
-      note:
-        typeof item.note === 'string'
-          ? item.note.trim() || null
-          : typeof item.instructions === 'string'
-            ? item.instructions.trim() || null
-              : typeof item.title === 'string'
-                ? item.title.trim() || null
-                : null,
-      skipped: item.skipped === true,
-    };
-  });
-}
-
-function normalizeTemplateDraft(input: unknown) {
-  const draft = (input ?? {}) as Record<string, unknown>;
-  const sport = typeof draft.sport === 'string' ? draft.sport : typeof draft.sportType === 'string' ? draft.sportType : '';
-  const name = typeof draft.name === 'string' ? draft.name.trim() : '';
-  const rawCadence = draft.cadence;
-  if (rawCadence !== undefined && rawCadence !== null && rawCadence !== '' && !isTemplateCadence(rawCadence)) {
-    return { error: 'Template cadence is invalid.' as const };
-  }
-  const cadence = getTemplateCadence(draft.cadence);
-  const summary = typeof draft.summary === 'string' ? draft.summary.trim() : '';
-  const blocks = normalizeBlocks(draft.blocks);
-
-  if (!name) {
-    return { error: 'Template name is required.' as const };
-  }
-
-  if (!sport || !SPORT_OPTIONS.includes(sport as (typeof SPORT_OPTIONS)[number])) {
-    return { error: 'Sport is required.' as const };
-  }
-
-  if (blocks.length === 0) {
-    return { error: 'At least one block is required.' as const };
-  }
-
+export function createTemplateService({ db = prisma }: { db?: typeof prisma } = {}) {
   return {
-    error: null,
-    draft: {
-      name,
-      sport,
-      cadence,
-      summary: summary || null,
-      blocks,
-    },
-  };
-}
-
-export function createTemplateService({ db = prisma }: TemplateServiceDeps = {}) {
-  const service = {
     async listForOwner(ownerId: number) {
-      return db.template.findMany({
-        where: { ownerId },
-        include: {
-          blocks: {
-            orderBy: { sortOrder: 'asc' },
-          },
-        },
-        orderBy: [{ sport: 'asc' }, { name: 'asc' }],
+      return db.template.findMany({ where: { ownerId }, orderBy: [{ name: 'asc' }, { id: 'asc' }] });
+    },
+    async saveForOwner(ownerId: number, input: unknown, templateId?: number) {
+      const draft = (input ?? {}) as Record<string, unknown>;
+      const name = typeof draft.name === 'string' ? draft.name.trim() : '';
+      const summary = typeof draft.summary === 'string' ? draft.summary.trim() : '';
+      if (!name || name.length > 160 || summary.length > 2000) return { error: 'Enter a name (up to 160 characters) and a description up to 2,000 characters.' };
+      if (!Array.isArray(draft.entries) || !draft.entries.length || draft.entries.length > 70) return { error: 'Add between 1 and 70 saved workouts.' };
+      const selections = draft.entries as Array<{ weekday: number; workoutId: number }>;
+      if (selections.some(entry => !entry || !Number.isInteger(entry.weekday) || entry.weekday < 0 || entry.weekday > 6 || !Number.isSafeInteger(entry.workoutId) || entry.workoutId <= 0)) return { error: 'Choose a saved workout and weekday for every session.' };
+      if (templateId !== undefined && (!Number.isSafeInteger(templateId) || templateId <= 0)) return { error: 'Template id is invalid.' };
+      return db.$transaction(async tx => {
+        if (templateId !== undefined && !await tx.template.findFirst({ where: { id: templateId, ownerId } })) return { error: 'Template not found.' };
+        const workouts = await tx.session.findMany({
+          where: { id: { in: selections.map(entry => entry.workoutId) }, athleteId: ownerId, coachOwnerId: null, date: null, planId: null, trainingPlanId: null },
+          include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+        });
+        const entries: RoutineEntry[] = [];
+        for (const selection of selections) {
+          const workout = workouts.find(item => item.id === selection.workoutId);
+          if (!workout || !workout.blocks.length) return { error: 'A selected workout is unavailable. Choose a workout from your library.' };
+          entries.push({ weekday: selection.weekday, workoutId: selection.workoutId, title: workout.title, sport: workout.sport, summary: workout.summary,
+            sportMetricsJson: workout.sportMetricsJson,
+            blocks: createSessionEditorBlockData(serializeSessionEditorDraft(createSessionEditorDraftFromPersisted('create', workout)).blocks),
+          });
+        }
+        const data = { name, summary: summary || null, routineJson: JSON.stringify({ version: 1, entries }) };
+        if (templateId === undefined) await tx.template.create({ data: { ...data, ownerId } });
+        else {
+          await tx.template.update({ where: { id: templateId }, data });
+        }
+        return { error: null };
       });
     },
 
-    async saveForOwner(ownerId: number, draftInput: unknown, templateId?: number) {
-      const normalized = normalizeTemplateDraft(draftInput);
-      if (normalized.error) {
-        return { error: normalized.error };
-      }
-
-      const templateData = {
-        ownerId,
-        name: normalized.draft.name,
-        sport: normalized.draft.sport,
-        cadence: normalized.draft.cadence,
-        summary: normalized.draft.summary,
-      };
-
-      if (templateId === undefined) {
-        await db.template.create({
-          data: {
-            ...templateData,
-            blocks: {
-              create: normalized.draft.blocks.map((block, index) => ({
-                ...block,
-                sortOrder: index,
-              })),
-            },
-          },
-        });
-
-        return { error: null };
-      }
-
-      if (!Number.isInteger(templateId) || templateId <= 0) {
-        return { error: 'Template id is invalid.' };
-      }
-
-      const existing = await db.template.findUnique({ where: { id: templateId } });
-      if (!existing || existing.ownerId !== ownerId) {
-        return { error: 'Template not found.' };
-      }
-
-      await db.$transaction([
-        db.block.deleteMany({ where: { templateId } }),
-        db.template.update({
-          where: { id: templateId },
-          data: {
-            name: normalized.draft.name,
-            sport: normalized.draft.sport,
-            cadence: normalized.draft.cadence,
-            summary: normalized.draft.summary,
-            blocks: {
-              create: normalized.draft.blocks.map((block, index) => ({
-                ...block,
-                sortOrder: index,
-              })),
-            },
-          },
-        }),
-      ]);
-
-      return { error: null };
-    },
 
     async deleteForOwner(ownerId: number, templateId: number) {
-      const template = await db.template.findUnique({ where: { id: templateId } });
-      if (!template || template.ownerId !== ownerId) {
-        return { error: 'Template not found.' };
-      }
-
+      const template = await db.template.findFirst({ where: { id: templateId, ownerId } });
+      if (!template) return { error: 'Template not found.' };
       await db.template.delete({ where: { id: templateId } });
       return { error: null };
     },
-
     async duplicateForOwner(ownerId: number, templateId: number) {
-      const template = await db.template.findUnique({
-        where: { id: templateId },
-        include: {
-          blocks: {
-            orderBy: { sortOrder: 'asc' },
-          },
-        },
-      });
-      if (!template || template.ownerId !== ownerId) {
-        return { error: 'Template not found.' };
-      }
-
-      await db.template.create({
-        data: {
-          ownerId,
-          name: `${template.name} (Copy)`,
-          sport: template.sport,
-          cadence: template.cadence,
-          summary: template.summary,
-          blocks: {
-            create: template.blocks.map((block) => ({
-              kind: block.kind,
-              zone: block.zone,
-              durationSec: block.durationSec,
-              reps: block.reps,
-              targetType: block.targetType,
-              targetMode: block.targetMode,
-              targetReference: block.targetReference,
-              targetLow: block.targetLow,
-              targetHigh: block.targetHigh,
-              targetLowDecimal: block.targetLowDecimal,
-              targetHighDecimal: block.targetHighDecimal,
-              note: block.note,
-              skipped: block.skipped,
-              sortOrder: block.sortOrder,
-            })),
-          },
-        },
-      });
-
+      const template = await db.template.findFirst({ where: { id: templateId, ownerId } });
+      if (!template) return { error: 'Template not found.' };
+      if (!parseTemplateRoutine(template.routineJson)) return { error: 'Template routine is invalid.' };
+      await db.template.create({ data: { ownerId, name: `${template.name} (Copy)`, summary: template.summary, routineJson: template.routineJson } });
       return { error: null };
     },
   };
-
-  return {
-    ...service,
-    listForCoach: service.listForOwner,
-    saveForCoach: service.saveForOwner,
-    deleteForCoach: service.deleteForOwner,
-    duplicateForCoach: service.duplicateForOwner,
-  };
 }
-
 export const templateService = createTemplateService();

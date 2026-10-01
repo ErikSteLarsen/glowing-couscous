@@ -20,6 +20,7 @@ type ImportDraft = {
   plannedSessionId: number | null;
   error: string | null;
   importing: boolean;
+  analyzeWorkout?: boolean;
 };
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
@@ -114,7 +115,7 @@ export function ActivityImportClient({
       const response = await fetch('/api/activity-imports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...draft.activity, plannedSessionId: draft.plannedSessionId }),
+        body: JSON.stringify({ ...draft.activity, plannedSessionId: draft.plannedSessionId, analyzeWorkout: draft.analyzeWorkout === true }),
       });
       const result = await response.json() as { error?: string; activityId?: number; sessionId?: number };
       if (!response.ok) throw new Error(result.error || 'The activity could not be imported.');
@@ -246,6 +247,10 @@ export function ActivityImportClient({
                     ) : null}
                   </label>
                   <ActivityMetricPreview points={draft.activity.points} durationSec={draft.activity.durationSec} distanceMeters={draft.activity.distanceMeters} sport={draft.activity.sport} />
+                  {draft.activity.sport === 'RUNNING' ? <label className="flex min-h-11 items-start gap-3 text-sm text-[var(--text)]">
+                    <input type="checkbox" className="mt-1 size-5 shrink-0 accent-[var(--brand)]" checked={draft.analyzeWorkout === true} onChange={event => updateDraft(draft.key, { analyzeWorkout: event.target.checked })} />
+                    <span><span className="block font-medium">Interpret intervals after import</span><span className="mt-1 block text-xs leading-relaxed text-[var(--text-secondary)]">Use a device-original file you have permission to analyze. Calculated interval metrics may be sent to the configured AI provider; location and private notes are excluded.</span></span>
+                  </label> : null}
                   <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
                     <p className="text-[12px] text-[var(--text-secondary)]">
                       {draft.plannedSessionId ? 'The selected session’s planned workout stays available for comparison.' : 'Tempo will create a completed session with this activity data.'}

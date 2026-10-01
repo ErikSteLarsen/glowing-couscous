@@ -90,7 +90,7 @@ test('repetition expansion drives duration, zones, TSS, and timeline segments', 
 
 test('sanitized shares preserve generic relative targets and never carry profile values', () => {
   const projection = createSharedWorkoutProjection({
-    sourceKind: 'template', sport: 'BIKING', title: 'FTP set', blocks: [{ kind: 'work', zone: 4, durationSec: 600, targetType: 'power', targetMode: 'relative', targetReference: 'ftp', targetLow: 88, targetHigh: 92, targetLowDecimal: '88', targetHighDecimal: '92', sortOrder: 0 }],
+    sourceKind: 'session', sport: 'BIKING', title: 'FTP set', blocks: [{ kind: 'work', zone: 4, durationSec: 600, targetType: 'power', targetMode: 'relative', targetReference: 'ftp', targetLow: 88, targetHigh: 92, targetLowDecimal: '88', targetHighDecimal: '92', sortOrder: 0 }],
   });
   assert.deepEqual(projection.blocks[0].target, { metric: 'power', mode: 'relative', reference: 'ftp', low: 88, high: 92 });
   assert.equal(JSON.stringify(projection).includes('ftpWatts'), false);

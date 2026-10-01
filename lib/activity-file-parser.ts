@@ -1,4 +1,5 @@
 import type { ActivitySeriesPoint } from './activity-series.ts';
+import type { ActivityLap } from './activity-laps.ts';
 
 export type ImportedActivityFile = {
   title: string;
@@ -8,9 +9,11 @@ export type ImportedActivityFile = {
   distanceMeters: number | null;
   elevationGainMeters: number | null;
   points: ActivitySeriesPoint[];
+  laps?: ActivityLap[];
 };
 
 type RawPoint = ActivitySeriesPoint & { timestampMs: number };
+type RawLap = { startMs: number; endMs: number; timerSec: number | null };
 type FitField = { number: number; size: number; baseType: number };
 type FitDefinition = { globalMessage: number; bigEndian: boolean; fields: FitField[] };
 
@@ -62,6 +65,12 @@ export function parseActivityFile(filename: string, input: ArrayBuffer | string)
     distanceMeters,
     elevationGainMeters: positiveOrNull(parsed.elevationGainMeters),
     points,
+    laps: ('laps' in parsed ? parsed.laps as RawLap[] : []).flatMap((lap) => {
+      const startSec = Math.round((lap.startMs - startedAtMs) / 1000);
+      const endSec = Math.round((lap.endMs - startedAtMs) / 1000);
+      return startSec >= 0 && endSec > startSec && endSec <= durationSec
+        ? [{ startSec, endSec, timerSec: lap.timerSec, origin: 'device' as const }] : [];
+    }).sort((a, b) => a.startSec - b.startSec),
   };
 }
 
@@ -103,6 +112,12 @@ function parseTcx(xml: string) {
   const lapDuration = [...elements(activity, 'Lap')]
     .map((lap) => readNumber(lap, 'TotalTimeSeconds') ?? 0)
     .reduce((sum, duration) => sum + duration, 0);
+  const laps: RawLap[] = [...elements(activity, 'Lap')].flatMap((lap) => {
+    const startMs = Date.parse(getAttribute(lap, 'StartTime') || '');
+    const seconds = readNumber(lap, 'TotalTimeSeconds');
+    return Number.isFinite(startMs) && seconds !== null && seconds > 0
+      ? [{ startMs, endMs: startMs + seconds * 1000, timerSec: null }] : [];
+  });
   return {
     title,
     sport,
@@ -111,6 +126,7 @@ function parseTcx(xml: string) {
     distanceMeters: maxNumber(records.map((point) => point.distanceMeters)),
     elevationGainMeters: cumulativeElevationGain(records),
     points: addPositionDistances(records),
+    laps,
   };
 }
 
@@ -178,6 +194,7 @@ function parseFit(view: DataView) {
 
   const definitions = new Map<number, FitDefinition>();
   const records: RawPoint[] = [];
+  const laps: RawLap[] = [];
   let cursor = dataStart;
   let lastFitTimestamp: number | null = null;
   let sport = 'Other';
@@ -239,11 +256,16 @@ function parseFit(view: DataView) {
 
     if (definition.globalMessage === 18) {
       sport = fitSport(message[5]) || sport;
-      const sessionTimestamp = message[253];
+      const sessionTimestamp = message[2];
       if (typeof sessionTimestamp === 'number') startedAtMs = fitTime(sessionTimestamp);
-      durationSec = numberOr(durationSec, message[8] === null || message[8] === undefined ? null : message[8]! / 1000);
+      durationSec = numberOr(durationSec, scaled(message[7] ?? message[8], 1000));
       if (message[9] !== null && message[9] !== undefined && message[9] > 0) distanceMeters = message[9] / 100;
       if (message[22] !== null && message[22] !== undefined && message[22] > 0) elevationGainMeters = message[22];
+    } else if (definition.globalMessage === 19) {
+      if (typeof message[2] === 'number' && typeof message[7] === 'number' && message[7] > 0 && laps.length < 500) {
+        const startMs = fitTime(message[2]);
+        laps.push({ startMs, endMs: startMs + message[7], timerSec: scaled(message[8], 1000) });
+      }
     } else if (definition.globalMessage === 34) {
       const activityTimestamp = message[253];
       if (typeof activityTimestamp === 'number' && startedAtMs === null) startedAtMs = fitTime(activityTimestamp);
@@ -281,6 +303,7 @@ function parseFit(view: DataView) {
     distanceMeters: distanceMeters ?? maxNumber(withDerived.map((point) => point.distanceMeters)),
     elevationGainMeters: elevationGainMeters ?? cumulativeElevationGain(withDerived),
     points: withDerived,
+    laps,
   };
 }
 

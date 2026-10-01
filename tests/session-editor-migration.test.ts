@@ -5,9 +5,7 @@ import path from 'node:path';
 
 import {
   createEmptyPlannerEditorDraft,
-  createTemplateEditorDraftFromRecord,
   serializePlannerEditorDraftForSave,
-  serializeTemplateEditorDraftForSave,
   updatePlannerEditorBlock,
 } from '../lib/session-editor-adapters.ts';
 
@@ -48,69 +46,18 @@ test('planner editor adapter preserves ownership modes while using canonical blo
   });
 });
 
-test('template editor adapter initializes and serializes the canonical session draft', () => {
-  const draft = createTemplateEditorDraftFromRecord({
-    id: 8,
-    sport: 'BIKING',
-    name: 'Over-unders',
-    summary: 'Controlled pressure.',
-    blocks: [
-      {
-        id: 80,
-        kind: 'work',
-        zone: 4,
-        durationSec: 720,
-        reps: 3,
-        targetType: 'power',
-        targetLow: 250,
-        targetHigh: 270,
-        note: 'Three rounds',
-        sortOrder: 0,
-      },
-    ],
-  });
-
-  assert.equal(draft.mode, 'create');
-  assert.equal(draft.title, 'Over-unders');
-  assert.equal(draft.blocks[0].target?.metric, 'power');
-  assert.deepEqual(serializeTemplateEditorDraftForSave(draft), {
-    name: 'Over-unders',
-    sport: 'BIKING',
-    summary: 'Controlled pressure.',
-    blocks: [
-      {
-        id: 80,
-        kind: 'work',
-        zone: 4,
-        durationSec: 720,
-        reps: 3,
-        targetType: 'power',
-        targetMode: 'absolute',
-        targetReference: null,
-        targetLow: 250,
-        targetHigh: 270,
-        targetLowDecimal: '250',
-        targetHighDecimal: '270',
-        note: 'Three rounds',
-        skipped: false,
-        sortOrder: 0,
-      },
-    ],
-  });
-});
-
 test('libraries and session detail own editing while planners place sources', async () => {
   const [coachPlannerSource, athletePlannerSource, templatesSource, composerSource, canvasSource] = await Promise.all([
     read('app/(app)/coach/planner/PlannerClient.tsx'),
     read('app/(app)/athlete/calendar/TrainingCalendar.tsx'),
-    read('app/(app)/coach/templates/CoachTemplatesClient.tsx'),
+    read('components/TrainingTemplatesClient.tsx'),
     read('components/WorkoutBuilder.tsx'),
     read('components/WorkoutCanvasEditor.tsx'),
   ]);
 
   assert.doesNotMatch(coachPlannerSource, /WorkoutBuilder/);
   assert.doesNotMatch(athletePlannerSource, /WorkoutBuilder/);
-  assert.match(templatesSource, /WorkoutBuilder/);
+  assert.doesNotMatch(templatesSource, /WorkoutBuilder/);
   assert.match(composerSource, /WorkoutCanvasEditor/);
   assert.match(canvasSource, /@dnd-kit/);
   assert.doesNotMatch(coachPlannerSource, /from ['"]@\/lib\/planner-draft['"]/);

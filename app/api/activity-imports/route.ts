@@ -1,6 +1,9 @@
-import { NextResponse } from 'next/server';
+import { after, NextResponse } from 'next/server';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { activityImportService } from '@/lib/activity-import-service';
+import { activityAnalysisService } from '@/lib/activity-analysis-service';
+
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -15,6 +18,7 @@ export async function POST(request: Request) {
   }
 
   const result = await activityImportService.importForUser(user.id, input);
+  if (result.ok) after(() => activityAnalysisService.processOne(result.activityId, user.id));
   return result.ok
     ? NextResponse.json(result, { status: 201 })
     : NextResponse.json({ error: result.error }, { status: result.status });

@@ -42,28 +42,6 @@ function activitySegments(blocks) {
   });
 }
 
-async function createTemplateWithBlocks(data) {
-  return prisma.template.create({
-    data: {
-      ownerId: data.ownerId,
-      name: data.name,
-      sport: data.sport,
-      summary: data.summary,
-      blocks: {
-        create: data.blocks.map((block, index) => ({
-          ...block,
-          sortOrder: index,
-        })),
-      },
-    },
-    include: {
-      blocks: {
-        orderBy: { sortOrder: 'asc' },
-      },
-    },
-  });
-}
-
 async function createSessionWithBlocks(data) {
   return prisma.session.create({
     data: {
@@ -203,9 +181,11 @@ async function main() {
     }),
   ]);
 
-  const thresholdTemplate = await createTemplateWithBlocks({
-    ownerId: coachErik.id,
-    name: 'Threshold 4×8′',
+  const thresholdWorkout = await createSessionWithBlocks({
+    athleteId: sofie.id,
+    date: null,
+    source: 'athlete-library',
+    title: 'Threshold 4×8′',
     sport: 'RUNNING',
     summary: 'Controlled threshold intervals with easy recovery.',
     blocks: [
@@ -217,9 +197,11 @@ async function main() {
     ],
   });
 
-  const enduranceTemplate = await createTemplateWithBlocks({
-    ownerId: coachErik.id,
-    name: 'Endurance 90′',
+  const enduranceWorkout = await createSessionWithBlocks({
+    athleteId: sofie.id,
+    date: null,
+    source: 'athlete-library',
+    title: 'Endurance 90′',
     sport: 'BIKING',
     summary: 'Long aerobic endurance session.',
     blocks: [
@@ -229,7 +211,17 @@ async function main() {
     ],
   });
 
-  const maraThresholdBlocks = thresholdTemplate.blocks.map(({ kind, zone, durationSec, reps, targetType, targetLow, targetHigh, note }) => ({
+  await prisma.template.create({ data: {
+    ownerId: sofie.id, name: 'Endurance and intervals', summary: 'A weekly routine made from saved workouts.',
+    routineJson: JSON.stringify({ version: 1, entries: [0, 1, 2, 3, 4].map(weekday => {
+      const workout = weekday % 2 === 0 ? enduranceWorkout : thresholdWorkout;
+      return { weekday, workoutId: workout.id, title: workout.title, sport: workout.sport,
+        summary: workout.summary, sportMetricsJson: workout.sportMetricsJson,
+        blocks: workout.blocks.map(({ id, sessionId, ...block }) => block) };
+    }) }),
+  } });
+
+  const maraThresholdBlocks = thresholdWorkout.blocks.map(({ kind, zone, durationSec, reps, targetType, targetLow, targetHigh, note }) => ({
     kind,
     zone,
     durationSec,
@@ -243,7 +235,6 @@ async function main() {
   const maraToday = await createSessionWithBlocks({
     athleteId: mara.id,
     planId: maraPlan.id,
-    templateId: thresholdTemplate.id,
     assignedById: coachErik.id,
     date: addHours(addDays(weekStart, 0), 6),
     timeLabel: '06:30',
@@ -257,7 +248,6 @@ async function main() {
   const maraEvening = await createSessionWithBlocks({
     athleteId: mara.id,
     planId: maraPlan.id,
-    templateId: enduranceTemplate.id,
     assignedById: coachErik.id,
     date: addHours(addDays(weekStart, 0), 17),
     timeLabel: '17:00',
@@ -291,7 +281,6 @@ async function main() {
   const jonasSession = await createSessionWithBlocks({
     athleteId: jonas.id,
     planId: jonasPlan.id,
-    templateId: enduranceTemplate.id,
     assignedById: coachErik.id,
     date: addHours(addDays(weekStart, 1), 7),
     timeLabel: '07:00',
@@ -299,7 +288,7 @@ async function main() {
     title: 'Endurance 90′',
     summary: 'Comfortable aerobic work with smooth cadence.',
     source: 'coach',
-    blocks: enduranceTemplate.blocks.map(({ kind, zone, durationSec, reps, targetType, targetLow, targetHigh, note }) => ({
+    blocks: enduranceWorkout.blocks.map(({ kind, zone, durationSec, reps, targetType, targetLow, targetHigh, note }) => ({
       kind,
       zone,
       durationSec,
@@ -360,12 +349,12 @@ async function main() {
         tss: 72,
         compliancePct: 100,
         zoneDistributionJson: zoneDistribution(
-          enduranceTemplate.blocks.map((block) => ({
+          enduranceWorkout.blocks.map((block) => ({
             zone: block.zone,
             durationSec: block.durationSec,
           })),
         ),
-        segmentsJson: JSON.stringify(activitySegments(enduranceTemplate.blocks)),
+        segmentsJson: JSON.stringify(activitySegments(enduranceWorkout.blocks)),
         metricsSource: 'recorded',
         notes: 'Smooth ride, HR stayed where planned.',
       },

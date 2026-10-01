@@ -5,7 +5,7 @@ import { createSharedWorkoutProjection, parseSharedWorkoutProjection } from '../
 import { createSessionSnapshotJson, deserializeSessionSnapshot } from '../lib/session-snapshot-service.ts';
 
 test('retained share removes free text and unknown fields while preserving workout structure and targets', () => {
-  const original = createSharedWorkoutProjection({ sourceKind: 'template', sport: 'RUNNING', title: 'Personal name', summary: 'email@example.test', blocks: [{ kind: 'work', zone: 4, durationSec: 300, reps: 4, targetType: 'pace', targetLow: 240, targetHigh: 250, note: 'Private address' }] });
+  const original = createSharedWorkoutProjection({ sourceKind: 'session', sport: 'RUNNING', title: 'Personal name', summary: 'email@example.test', blocks: [{ kind: 'work', zone: 4, durationSec: 300, reps: 4, targetType: 'pace', targetLow: 240, targetHigh: 250, note: 'Private address' }] });
   const json = anonymizeSharedWorkout(JSON.stringify({ ...original, ownerEmail: 'email@example.test' }));
   const retained = parseSharedWorkoutProjection(json)!;
   assert.equal(retained.title, 'Shared workout'); assert.equal(retained.summary, '');

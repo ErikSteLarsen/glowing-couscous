@@ -66,31 +66,18 @@ async function saveSession({
   const scheduledWeekStart = startOfWeek(scheduledDate, { weekStartsOn: 1 });
   const weekPlan = await ensureWeekPlan(db, athleteId, scheduledWeekStart);
 
-  if (draft.sourceTemplateId) {
-    const athlete = await db.user.findUnique({
-      where: { id: athleteId },
-      select: { coachId: true },
-    });
-    const template = athlete?.coachId
-      ? await db.template.findFirst({
-          where: { id: draft.sourceTemplateId, ownerId: athlete.coachId },
-          select: { id: true },
-        })
-      : null;
-    if (!template) return { ok: false, error: 'Template not found.', status: 404 };
-  }
   const blockCreates = mapDraftBlocksToTempoBlocks(draft.blocks, draft.durationMinutes);
   const data = {
     athleteId,
     planId: weekPlan.id,
-    templateId: draft.sourceTemplateId,
+    templateId: null,
     date: scheduledDate,
     timeLabel: null as string | null,
     sport: draft.sportType,
     title: draft.title,
     summary: draft.summary || null,
     status: 'planned',
-    source: draft.sourceTemplateId ? 'template' : 'coach',
+    source: 'coach',
   };
 
   if (!command.sessionId) {

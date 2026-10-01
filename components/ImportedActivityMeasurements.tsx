@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { dangerTextClassName } from '@/components/ui';
 import type { ActivitySeriesPoint } from '@/lib/activity-series';
+import { ImportedWorkoutAnalysis } from '@/components/ImportedWorkoutAnalysis';
 
 type Telemetry = { version: 1; distanceMeters: number | null; elevationGainMeters: number | null; points: ActivitySeriesPoint[] };
 
@@ -32,6 +33,7 @@ export function ImportedActivityMeasurements({ activityId, durationSec, sport }:
 
   return (
     <div className="space-y-5">
+      <ImportedWorkoutAnalysis key={activityId} activityId={activityId} />
       <div className="flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-[var(--text-secondary)]">
         {telemetry.distanceMeters !== null ? <span>Distance · {(telemetry.distanceMeters / 1000).toFixed(2)} km</span> : null}
         {telemetry.elevationGainMeters !== null ? <span>Elevation gain · {Math.round(telemetry.elevationGainMeters)} m</span> : null}

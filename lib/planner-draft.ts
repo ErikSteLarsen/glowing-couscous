@@ -39,32 +39,8 @@ export type PlannerSessionDraft = {
   sport: string;
   title: string;
   summary: string;
-  sourceTemplateId: number | null;
   sportMetrics: PlannerSportMetrics;
   blocks: PlannerBlockDraft[];
-};
-
-export type PlannerTemplateRecord = {
-  id: number;
-  sport: string;
-  name: string;
-  summary: string | null;
-  blocks: Array<{
-    id: number;
-    kind: string;
-    zone: number;
-    durationSec: number;
-    reps: number | null;
-    targetType: string | null;
-    targetMode?: string | null;
-    targetReference?: string | null;
-    targetLow: number | null;
-    targetHigh: number | null;
-    targetLowDecimal?: string | null;
-    targetHighDecimal?: string | null;
-    note: string | null;
-    sortOrder: number;
-  }>;
 };
 
 let nextClientId = 0;
@@ -124,7 +100,6 @@ export function createEmptyPlannerSessionDraft(input: {
     sport: input.sport ?? 'RUNNING',
     title: '',
     summary: '',
-    sourceTemplateId: null,
     sportMetrics: {
       ftp: null,
       thresholdPaceSecPerKm: null,
@@ -135,47 +110,6 @@ export function createEmptyPlannerSessionDraft(input: {
       createPlannerBlockDraft({ kind: 'work', zone: 3, durationSec: 1800, note: 'Main work' }),
       createPlannerBlockDraft({ kind: 'cooldown', zone: 1, durationSec: 600, note: 'Cooldown' }),
     ],
-  };
-}
-
-export function templateToPlannerDraft(
-  template: PlannerTemplateRecord,
-  input: { ownershipMode?: SessionOwnershipMode; athleteId?: number | null; scheduledDate: string | null },
-): PlannerSessionDraft {
-  return {
-    ownershipMode: input.ownershipMode ?? 'athlete',
-    athleteId: input.athleteId ?? null,
-    scheduledDate: input.scheduledDate,
-    planWeekday: null,
-    sport: template.sport,
-    title: template.name,
-    summary: template.summary ?? '',
-    sourceTemplateId: template.id,
-    sportMetrics: {
-      ftp: null,
-      thresholdPaceSecPerKm: null,
-      thresholdHr: null,
-    },
-    blocks: template.blocks
-      .slice()
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((block) =>
-        createPlannerBlockDraft({
-          id: block.id,
-          kind: normalizeKind(block.kind),
-          zone: normalizeZone(block.zone),
-          durationSec: block.durationSec,
-          reps: block.reps,
-          targetType: normalizeTargetType(block.targetType),
-          targetMode: block.targetMode === 'relative' ? 'relative' : 'absolute',
-          targetReference: normalizeTargetReference(block.targetReference),
-          targetLow: block.targetLow,
-          targetHigh: block.targetHigh,
-          targetLowDecimal: block.targetLowDecimal ?? null,
-          targetHighDecimal: block.targetHighDecimal ?? null,
-          note: block.note ?? '',
-        }),
-      ),
   };
 }
 
@@ -255,7 +189,6 @@ export function serializePlannerDraftForSave(draft: PlannerSessionDraft) {
     sport: draft.sport,
     title: draft.title.trim(),
     summary: draft.summary.trim(),
-    sourceTemplateId: draft.sourceTemplateId,
     sportMetrics: draft.sportMetrics,
     blocks: draft.blocks.map((block, index) => ({
       id: block.id,

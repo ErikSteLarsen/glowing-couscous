@@ -14,6 +14,7 @@ test('parses TCX activity metadata and sensor samples with namespaces', () => {
   assert.equal(parsed.points[1].speedMetersPerSecond, 3.4);
   assert.equal(parsed.points[1].powerWatts, 240);
   assert.equal(parsed.elevationGainMeters, 4);
+  assert.deepEqual(parsed.laps, [{ startSec: 0, endSec: 120, timerSec: null, origin: 'device' }]);
   assert.equal('latitude' in parsed.points[0], false);
   assert.equal('longitude' in parsed.points[0], false);
 });

@@ -1,7 +1,8 @@
+import { parseTemplateRoutine, expandTemplateRoutine, validateRoutineDates, type TemplateRoutine } from './template-routine.ts';
 import { createHash } from 'node:crypto';
 
 import { Prisma } from '@prisma/client';
-import { getTemplateCadence, isAssignmentDate, validateTemplateDateRange } from './template-cadence.ts';
+import { isAssignmentDate } from './template-period.ts';
 import { addDays, differenceInCalendarDays, endOfMonth, endOfWeek, format, formatISO, isValid, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 
 import { prisma } from './prisma.ts';
@@ -33,8 +34,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
         }),
         db.template.findMany({
           where: { ownerId: athleteId },
-          include: { blocks: { orderBy: { sortOrder: 'asc' } } },
-          orderBy: [{ sport: 'asc' }, { name: 'asc' }],
+          orderBy: [{ name: 'asc' }, { id: 'asc' }],
         }),
         db.session.findMany({
           where: { athleteId, date: { gte: calendarStart, lte: calendarEnd } },
@@ -171,23 +171,25 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
                 blocks: Parameters<typeof createSourceCopyData>[0]['blocks'];
               };
 
+          let routine: TemplateRoutine | null = null;
           if (sourceKind === 'template') {
             const template = await tx.template.findFirst({
               where: { id: sourceId, ownerId: athleteId },
-              include: { blocks: { orderBy: { sortOrder: 'asc' } } },
             });
             if (!template) throw new PlacementError('Template not found.', 404);
-            const rangeError = validateTemplateDateRange(requestedDates, getTemplateCadence(template.cadence));
+            routine = parseTemplateRoutine(template.routineJson);
+            if (!routine) throw new PlacementError('Template routine is invalid. Edit and save it again.', 400);
+            const rangeError = validateRoutineDates(requestedDates);
             if (rangeError) throw new PlacementError(rangeError, 400);
             source = {
               kind: 'template',
               id: template.id,
-              sport: template.sport,
+              sport: routine.entries[0].sport,
               title: template.name,
               summary: template.summary,
               sportMetricsJson: null,
               timeLabel: null,
-              blocks: template.blocks,
+              blocks: routine.entries[0].blocks,
             };
           } else {
             const workout = await tx.session.findFirst({
@@ -219,7 +221,8 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
           });
 
           const createdSessionIds: number[] = [];
-          for (const date of requestedDates) {
+          const placements = routine ? expandTemplateRoutine(routine, requestedDates) : requestedDates.map(date => ({ date, entry: source }));
+          for (const { date, entry } of placements) {
             const plan = await findOrCreatePlan(tx, athleteId, date);
             const created = await tx.session.create({
               data: createSourceCopyData({
@@ -228,12 +231,12 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
                 date,
                 templateId: source.kind === 'template' ? source.id : null,
                 source: source.kind === 'template' ? 'athlete-template' : 'athlete-library-copy',
-                sport: source.sport,
-                title: source.title,
-                summary: source.summary,
-                sportMetricsJson: source.sportMetricsJson,
+                sport: entry.sport,
+                title: entry.title,
+                summary: entry.summary,
+                sportMetricsJson: entry.sportMetricsJson,
                 timeLabel: source.timeLabel,
-                blocks: source.blocks,
+                blocks: entry.blocks,
               }),
             });
             createdSessionIds.push(created.id);

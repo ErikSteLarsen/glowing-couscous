@@ -16,7 +16,7 @@ test('athlete pages and coach-request routes do not access prisma directly', asy
       'app/(app)/athlete/find-coach/page.tsx',
     'app/(app)/athlete/profile/page.tsx',
     'app/(app)/coach/page.tsx',
-    'app/(app)/coach/templates/page.tsx',
+    'app/(app)/athlete/templates/page.tsx',
     'app/api/coaches/route.ts',
     'app/api/athlete/coach-requests/route.ts',
     'app/api/coach/requests/route.ts',
@@ -182,20 +182,20 @@ test('athlete home uses the selected Monolith composition and explicit session a
 
 test('template workflow supports duplication and library filtering', async () => {
   const templateServiceSource = await read('lib/template-service.ts');
-  const duplicateRouteSource = await read('app/api/coach/templates/[templateId]/duplicate/route.ts');
-  const templatesClientSource = await read('app/(app)/coach/templates/CoachTemplatesClient.tsx');
+  const duplicateRouteSource = await read('app/api/athlete/templates/[templateId]/duplicate/route.ts');
+  const templatesClientSource = await read('components/TrainingTemplatesClient.tsx');
 
-  assert.match(templateServiceSource, /duplicateForCoach/);
-  assert.match(duplicateRouteSource, /templateService\.duplicateForCoach/);
-  assert.match(templatesClientSource, /setMessage/);
-  assert.match(templatesClientSource, /filterText/);
+  assert.match(templateServiceSource, /duplicateForOwner/);
+  assert.match(duplicateRouteSource, /templateService\.duplicateForOwner/);
+  assert.match(templatesClientSource, /setNotice/);
+  assert.match(templatesClientSource, /setFilter/);
   assert.match(templatesClientSource, /Duplicate/);
 });
 
 test('planner places sources while libraries own live editing', async () => {
   const plannerSource = await read('app/(app)/coach/planner/PlannerClient.tsx');
   const plannerDeskSource = await read('components/PlannerDesk.tsx');
-  const templatesClientSource = await read('app/(app)/coach/templates/CoachTemplatesClient.tsx');
+  const templatesClientSource = await read('components/TrainingTemplatesClient.tsx');
 
   assert.match(plannerSource, /PlannerDesk/);
   assert.match(plannerDeskSource, /selectedDates/);
@@ -204,9 +204,9 @@ test('planner places sources while libraries own live editing', async () => {
   assert.doesNotMatch(plannerSource, /WorkoutBuilder|Switching workspace will reset/);
   assert.match(plannerDeskSource, /training-plan/);
   assert.match(plannerDeskSource, /Monday/);
-  assert.match(templatesClientSource, /openEditor/);
-  assert.match(templatesClientSource, /saveEditor/);
-  assert.match(templatesClientSource, /openEditor\(template\)/);
+  assert.match(templatesClientSource, /function edit/);
+  assert.match(templatesClientSource, /Save template/);
+  assert.match(templatesClientSource, /edit\(template\)/);
 });
 
 test('live route delegates execution state to an accessible client', async () => {
@@ -267,11 +267,10 @@ test('completion writes planned status through the completion service', async ()
   assert.doesNotMatch(completionRouteSource, /session\.adjusted \? 'planned' : 'planned'/);
 });
 
-test('compatibility planner reassigns cross-week edits and protects template ownership', async () => {
+test('compatibility planner reassigns cross-week edits and does not load retired templates', async () => {
   const plannerServiceSource = await read('lib/planner-service.ts');
 
   assert.match(plannerServiceSource, /scheduledWeekStart = startOfWeek\(scheduledDate/);
-  assert.match(plannerServiceSource, /ownerId: athlete\.coachId/);
-  assert.match(plannerServiceSource, /Template not found/);
+  assert.doesNotMatch(plannerServiceSource, /db\.template/);
   assert.match(plannerServiceSource, /Completed sessions are immutable/);
 });

@@ -45,7 +45,6 @@ and ownership guards; page visibility is not API authorization.
 - `/coach/workouts` - owner-scoped unscheduled workout library
 - `/coach/planner` - month-first Planning Desk for dated source assignment
 - `/coach/builder` - compatibility redirect to the active planner
-- `/coach/templates` - private template library
 
 ### Athlete
 
@@ -53,7 +52,7 @@ and ownership guards; page visibility is not API authorization.
 - `/athlete/calendar` - unified week/month calendar with inline workout/template scheduling
 - `/athlete/workouts` - owner-scoped unscheduled workout library
 - `/athlete/planner` - compatibility redirect to Calendar scheduling, preserving the date
-- `/athlete/templates` - private reusable day, week, and month training templates
+- `/athlete/templates` - private weekly routines composed from saved workouts
 - `/athlete/session/[sessionId]` - read-only scheduled-session score and outcome review
 - `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion
 - `/athlete/activity` - History for completed sessions and imported activities
@@ -73,7 +72,7 @@ navigation.
 - `/api/coach/requests/*` - coach request decisions
 - `/api/coach/planner/*`, `/api/coach/assignments`, `/api/coach/sessions/*` - coach planning
 - `/api/coach/workouts/*`, `/api/athlete/workouts/*` - standalone libraries
-- `/api/coach/templates/*`, `/api/athlete/templates/*` - reusable templates
+- `/api/athlete/templates/*` - saved-workout routines
 - `/api/athlete/planner/*`, `/api/athlete/sessions/*` - athlete planning and outcomes
 - `/api/athlete/workouts/generate` - private guided workout draft generation from bounded choices and recent completed training
 - `/api/athlete/workouts/ai-status` - private read of cached, app-wide model availability
@@ -95,7 +94,7 @@ navigation.
 | Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |
 | Guided workout creation | `lib/guided-workout.ts`, `lib/guided-workout-service.ts`, `lib/workout-llm.ts`, `components/GuidedWorkoutForm.tsx` | Owner-scoped recent-training summary, validated full model-authored workouts, app-wide provider health cache, standard fallback patterns, and unsaved draft handoff to the shared builder |
 | Training plans | `lib/coach-training-plan-service.ts` | Reusable weekday-based coach plans |
-| Templates | `lib/template-service.ts` | Owner-scoped personal and coach templates and cadence |
+| Templates | `lib/template-service.ts`, `lib/template-routine.ts`, `components/TrainingTemplatesClient.tsx` | Owner-scoped saved-workout routine composition, snapshot validation and weekday expansion; `lib/template-period.ts` validates week/month application |
 | Assignment | `lib/assignment-service.ts` | Snapshot copies, lineage, deduplication, and training-plan assignment |
 | Session compatibility | `lib/planner-service.ts` | Older coach session mutation adapter; transitional only |
 | Workout content | `lib/session-editor.ts`, `lib/session-editor-adapters.ts`, `lib/workout-editor.ts`, `lib/workout-blocks.ts`, `lib/workout-pattern.ts` | Canonical drafts, editor modes, block normalization, pattern and pause insertion, and persistence shaping |
@@ -126,7 +125,7 @@ navigation.
 - File imports store normalized recorded samples and import provenance on the owner's `Activity`. The uploaded original file is parsed in the browser and is never persisted. `Activity.importFingerprint` prevents importing the same normalized file twice for one account. Users can delete an import: matched sessions restore their prior status and keep their planned blocks; standalone imported sessions are removed.
 - Strava connections belong to one Tempo `User.id` and one Strava athlete ID. OAuth tokens are AES-GCM encrypted with a server-only key. The recent-activity inbox and webhook receipt queue are separate from Tempo sessions; a user must explicitly review and import an activity. Imported Strava sessions carry source identity so activity updates, privacy changes, disconnect, and deauthorization can be reflected in Tempo and matched planned sessions restored.
 - `StravaInboxActivity.notifiedAt` acknowledges a notification batch; `dismissedAt` records recoverable discard. Neither deletes data, and provider upserts preserve both. Import excludes already imported IDs from notification reads before batching. All unimported inbox items remain reachable on Import, including older discarded items. `StravaWebhookEvent.processingUntil` leases concurrent work and `nextAttemptAt` controls bounded backoff. The signed-in shell reads `/api/strava/inbox` every 15 seconds while visible; the route schedules only that owner's due recovery work. The authenticated worker handles retries while users are away. No storage-retention deletion was added.
-- `ShareLink` stores a token hash and one sanitized snapshot tied to either a `Session` or `Template`; the raw token is never persisted.
+- `ShareLink` stores a token hash and one sanitized snapshot tied to a `Session`; the raw token is never persisted.
 - `PasswordResetToken` stores one hashed, 30-minute reset token per credentials account, plus a per-account email cooldown and hourly send limit. Resend delivery requires `RESEND_API_KEY`, a verified `PASSWORD_RESET_FROM_EMAIL`, and an HTTPS `AUTH_URL` in production; raw reset tokens are sent by email and never stored. Password reset increments the account session version so older JWTs are rejected.
 
 ## Safe Extension Rules
@@ -211,3 +210,61 @@ transactions with UI-only guards.
 
 See [operations](docs/OPERATIONS.md) for setup/deployment and
 [current status](docs/agent-workspace/CURRENT-STATUS.md) for unresolved gates.
+
+## Personal training routines
+
+`Template.routineJson` holds a versioned weekly pattern of weekday entries and
+server-captured library workout snapshots. It is required; Template has no sport,
+cadence, Block relation or public ShareLink relation. Session.templateId retains
+routine lineage with on-delete SET NULL, preserving independent calendar copies.
+Personal template POST/PATCH uses `template-service.saveForOwner`, accepting
+only library workout IDs, weekdays, name and summary. It checks ownership and
+standalone-library scope within the save transaction; submitted blocks, titles,
+targets and arbitrary snapshot data are never trusted. Duplication retains the
+snapshots. Deleted or edited source workouts do not alter a saved routine;
+saving again requires available library workouts and captures current versions.
+
+`template-routine` owns parsing and deterministic date/weekday expansion.
+`athlete-planner-service.assignSource` validates a complete Monday-starting week
+or calendar month, then creates each dated workout copy and placement identity
+in one transaction. Empty weekdays leave existing calendar content unchanged.
+Within-day entry order is preserved in creation order, which Calendar reads by
+session ID after date. Relative references and decimal targets survive copying.
+Workouts never loads a template as one workout; standalone saves refuse template
+lineage. Coach assignment supports library sessions and training plans only.
+Sharing and public intake support session definitions only; a routine public
+projection is future work. No new coach authorization or public content access
+is added. The cleanup migration deletes old definitions, old template blocks
+and template share links (including detached owner-deleted snapshots), then
+drops their schema fields. Applied sessions and outcomes survive. Historical
+migrations remain immutable so existing databases can upgrade safely.
+
+## Imported running workout interpretation
+
+ActivityAnalysis has one current job/result per Activity, with cascading deletion
+and separate correctionJson. lib/activity-import-service atomically enqueues an
+opted-in eligible file import; lib/activity-analysis-service owns manual requests,
+owned reads/corrections and bounded leased processing. lib/activity-analysis-job
+owns source allowlisting, version and input hash. Thin analysis routes authenticate
+and delegate; the worker route additionally requires its dedicated bearer secret.
+
+lib/activity-analysis is pure: original telemetry and optional lap boundaries
+produce measured segments, pooled effort pace, profile-backed zones and candidate
+intention. lib/activity-analysis-llm only selects a supplied candidate and explains
+bounded evidence through the existing workout-llm transport. Measured metrics and
+training emphasis stay code-owned. Invalid/unavailable provider output falls back
+to the calculated result. No raw GPS, identity, notes or Strava-derived data enters
+this adapter. Guided workout history also excludes Strava sources before model use.
+
+The service serializes short claims using a PostgreSQL advisory transaction lock,
+caps concurrent unexpired leases at four, retries at most three times and checks
+lease token, source, input hash and Activity existence before publication. Model
+calls happen outside transactions. after() is opportunistic delivery; the secret
+worker must be scheduled for browser-independent delivery/retry recovery. Profile
+is snapshotted, reanalysis replaces the current result, and user confirmation
+survives it. Inferred intent never mutates the saved session baseline or telemetry.
+
+Presentation adapts analysis through lib/activity-analysis-view into the existing
+SessionBlockBar. Telemetry v1 remains readable; v2 optionally stores validated
+TCX/FIT laps. FIT elapsed chronology and timer duration are distinct. Timer events,
+advanced segmentation and historical result versions are deferred.

@@ -73,7 +73,7 @@ export function createCoachTrainingPlanService({ db = prisma }: { db?: typeof pr
         title: serialized.title,
         summary: serialized.summary || null,
         sportMetricsJson: JSON.stringify(serialized.sportMetrics),
-        templateId: serialized.sourceTemplateId,
+        templateId: null,
         source: 'training-plan',
         status: 'planned',
         adjusted: false,

@@ -29,10 +29,8 @@ test('share schema encodes named ownership relations and source deletion cascade
   assert.match(schema, /model ShareLink/);
   assert.match(schema, /tokenHash\s+String\s+@unique/);
   assert.match(schema, /session\s+Session\?\s+@relation\("SessionShareLinks"[^\n]*onDelete: Cascade/);
-  assert.match(schema, /template\s+Template\?\s+@relation\("TemplateShareLinks"[^\n]*onDelete: Cascade/);
   assert.match(schema, /createdBy\s+User\?\s+@relation\("ShareLinkCreator"[^\n]*onDelete: SetNull/);
   assert.match(schema, /shareLinks\s+ShareLink\[\]\s+@relation\("SessionShareLinks"\)/);
-  assert.match(schema, /shareLinks\s+ShareLink\[\]\s+@relation\("TemplateShareLinks"\)/);
 });
 
 test('public share route is outside the signed-in shell and hardens metadata', async () => {
@@ -46,7 +44,7 @@ test('public share route is outside the signed-in shell and hardens metadata', a
   assert.doesNotMatch(page, /AppShell/);
   assert.doesNotMatch(page, /prisma\./);
   assert.match(client, /Use in Planner/);
-  assert.match(client, /Save as Template/);
+  assert.doesNotMatch(client, /Save as Template/);
   assert.match(client, /Nothing is saved or scheduled until/);
   assert.match(client, /api\/share-links\/intake/);
   assert.match(appLayout, /AppShell/);
@@ -67,7 +65,7 @@ test('auth continuation preserves only local share token and action paths', asyn
 
 test('supported source surfaces expose share controls with copy and failure states', async () => {
   const button = await read('components/ShareLinkButton.tsx');
-  const templateClient = await read('app/(app)/coach/templates/CoachTemplatesClient.tsx');
+  const templateClient = await read('components/TrainingTemplatesClient.tsx');
   const athleteSession = await read('app/(app)/athlete/session/[sessionId]/page.tsx');
   const coachDetail = await read('app/(app)/coach/athletes/[athleteId]/page.tsx');
   const planner = await read('app/(app)/coach/planner/PlannerClient.tsx');
@@ -76,7 +74,7 @@ test('supported source surfaces expose share controls with copy and failure stat
   assert.match(button, /Creating share link/);
   assert.match(button, /Copy link/);
   assert.match(button, /Link created\. Copy it from the field/);
-  assert.match(templateClient, /ShareLinkButton/);
+  assert.doesNotMatch(templateClient, /ShareLinkButton/);
   assert.match(athleteSession, /ShareLinkButton/);
   assert.match(coachDetail, /ShareLinkButton/);
   assert.doesNotMatch(planner, /ShareLinkButton/);

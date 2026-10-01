@@ -49,7 +49,7 @@ export function createGuidedWorkoutService({ db = prisma, llm = workoutLlm, now 
       const [user, activities] = await Promise.all([
         db.user.findUnique({ where: { id: userId }, select: { performanceProfileJson: true } }),
         db.activity.findMany({
-          where: { athleteId: userId, completedAt: { gte: new Date(started.getTime() - 28 * 86_400_000), lte: started } },
+          where: { athleteId: userId, metricsSource: { not: 'strava-import' }, OR: [{ externalSource: null }, { externalSource: { not: 'STRAVA' } }], completedAt: { gte: new Date(started.getTime() - 28 * 86_400_000), lte: started } },
           select: { completedAt: true, durationSec: true, rpe: true, metricsSource: true, session: { select: { sport: true } } },
           orderBy: { completedAt: 'desc' },
           take: 120,

@@ -43,7 +43,6 @@ export function createSessionDraftFromWorkoutContent(input: {
   durationMinutes?: number | null;
   distanceKm?: number | null;
   intensity?: string | null;
-  sourceTemplateId?: number | null;
   content: WorkoutContentDraft;
 }) {
   return {
@@ -52,19 +51,6 @@ export function createSessionDraftFromWorkoutContent(input: {
     durationMinutes: input.durationMinutes ?? null,
     distanceKm: input.distanceKm ?? null,
     intensity: input.intensity ?? '',
-    sourceTemplateId: input.sourceTemplateId ?? null,
-    sportType: input.content.sportType,
-    summary: input.content.summary,
-    blocks: input.content.blocks,
-  };
-}
-
-export function createTemplateDraftFromWorkoutContent(input: {
-  name: string;
-  content: WorkoutContentDraft;
-}) {
-  return {
-    name: input.name,
     sportType: input.content.sportType,
     summary: input.content.summary,
     blocks: input.content.blocks,

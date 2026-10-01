@@ -31,6 +31,10 @@ function standaloneWhere(owner: WorkoutLibraryOwner, ownerId: number) {
 function normalizeWorkoutDraft(input: unknown) {
   const draft = normalizeSessionEditorDraft(input);
 
+  if (draft.templateId !== null) {
+    return { draft, error: 'Training routines must be applied through Calendar.' };
+  }
+
   if (draft.scheduledDate !== null) {
     return { draft, error: 'Standalone workouts cannot be assigned to a date.' };
   }
@@ -63,15 +67,6 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
 
       const draft = normalized.draft;
       const serialized = serializeSessionEditorDraft(draft);
-      if (serialized.templateId !== null) {
-        const template = await db.template.findFirst({
-          where: { id: serialized.templateId, ownerId },
-          select: { id: true },
-        });
-        if (!template) {
-          return { ok: false as const, error: 'Template not found.', status: 404 };
-        }
-      }
       const existing = sessionId
         ? await db.session.findFirst({
             where: { id: sessionId, ...standaloneWhere(owner, ownerId) },
@@ -94,7 +89,7 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
         planId: null,
         date: null,
         timeLabel: null,
-        templateId: serialized.templateId,
+        templateId: null,
         assignedById: null,
         sport: serialized.sport,
         title: serialized.title,

@@ -6,6 +6,9 @@ import { calculateOlympiatoppenHeartRateZones } from './profile-training-zones.t
 import { parseActivityTelemetry } from './activity-metrics.ts';
 import { parsePerformanceProfileJson } from './performance-profile.ts';
 import type { ActivitySeriesPoint } from './activity-series.ts';
+import { validateActivityLaps, type ActivityLap } from './activity-laps.ts';
+import { newActivityAnalysisJob } from './activity-analysis-job.ts';
+import type { ActivityTelemetry } from './activity-metrics.ts';
 
 const MAX_TITLE_LENGTH = 140;
 const MAX_POINTS = 20000;
@@ -20,6 +23,8 @@ export type ActivityImportInput = {
   elevationGainMeters: number | null;
   points: ActivitySeriesPoint[];
   plannedSessionId?: number | null;
+  laps?: ActivityLap[];
+  analyzeWorkout?: boolean;
 };
 
 export type ImportedActivityHistory = {
@@ -35,7 +40,7 @@ export type ImportedActivityHistory = {
   elevationGainMeters: number | null;
   source: 'file' | 'strava';
   sourceMetadata: Record<string, unknown> | null;
-  telemetry: { version: 1; distanceMeters: number | null; elevationGainMeters: number | null; points: ActivitySeriesPoint[] } | null;
+  telemetry: ActivityTelemetry | null;
 };
 
 export type ImportableSession = { id: number; title: string; sport: string; date: string | null };
@@ -130,6 +135,9 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
       ? value.plannedSessionId as number
       : 'invalid';
   if (plannedSessionId === 'invalid') return { ok: false, error: 'Choose a valid planned session.' };
+  const laps = validateActivityLaps(value.laps, durationSec as number);
+  if (!laps) return { ok: false, error: 'Activity lap boundaries are invalid.' };
+  if (value.analyzeWorkout !== undefined && typeof value.analyzeWorkout !== 'boolean') return { ok: false, error: 'Choose whether to interpret this workout.' };
   return {
     ok: true,
     value: {
@@ -137,6 +145,8 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
       sport,
       startedAt: startedAtDate.toISOString(),
       durationSec: durationSec as number,
+      laps,
+      analyzeWorkout: value.analyzeWorkout === true,
       distanceMeters,
       elevationGainMeters,
       points: cleanPoints,
@@ -266,7 +276,8 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
         distanceMeters: value.distanceMeters,
         elevationGainMeters: value.elevationGainMeters,
         telemetryJson: JSON.stringify({
-          version: 1,
+          version: value.laps?.length ? 2 : 1,
+          ...(value.laps?.length ? { laps: value.laps } : {}),
           distanceMeters: value.distanceMeters,
           elevationGainMeters: value.elevationGainMeters,
         points: value.points,
@@ -276,6 +287,9 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
         externalActivityId: provenance.sourceProvider === 'STRAVA' ? provenance.externalActivityId ?? null : null,
         sourceMetadataJson: provenance.sourceProvider === 'STRAVA' ? JSON.stringify(sanitizeSourceMetadata(provenance.metadata)) : null,
       };
+      if (value.analyzeWorkout && provenance.sourceProvider !== 'STRAVA' && value.sport === 'RUNNING') {
+        Object.assign(activityData, { analysis: { create: newActivityAnalysisJob(activityData.telemetryJson, value.durationSec, user.performanceProfileJson ?? '{}') } });
+      }
 
       try {
         const result = await db.$transaction(async (transaction) => {

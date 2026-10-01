@@ -49,7 +49,6 @@ export function getMobileNavigation(role: AppRole): NavItem[] {
       { label: 'Home', description: 'Coach overview', href: '/coach', matchPrefix: '/coach' },
       { label: 'Plan', description: 'Assign training', href: '/coach/planner', matchPrefix: '/coach/planner' },
       { label: 'Workouts', description: 'Manage workouts', href: '/coach/workouts', matchPrefix: '/coach/workouts' },
-      { label: 'Templates', description: 'Reuse training', href: '/coach/templates', matchPrefix: '/coach/templates' },
     ];
   }
 

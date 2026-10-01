@@ -69,9 +69,7 @@ test('mobile navigation maps task routes by role without leaking athlete destina
   assert.equal(isNavigationItemActive('/athlete/workouts', athleteItems[0], athleteItems), false);
 
   const coachItems = getMobileNavigation('COACH');
-  assert.deepEqual(coachItems.map((item) => item.href), ['/coach', '/coach/planner', '/coach/workouts', '/coach/templates']);
-  assert.equal(isNavigationItemActive('/coach/templates', coachItems[2], coachItems), false);
-  assert.equal(isNavigationItemActive('/coach/templates', coachItems[3], coachItems), true);
+  assert.deepEqual(coachItems.map((item) => item.href), ['/coach', '/coach/planner', '/coach/workouts']);
   assert.equal(coachItems.some((item) => item.href.startsWith('/athlete')), false);
 });
 
@@ -115,7 +113,8 @@ test('athlete planner only places defined sources on selected dates', async () =
   assert.match(plannerClientSource, /selectedDates/);
   assert.match(plannerClientSource, /workout/);
   assert.match(plannerClientSource, /template/);
-  assert.match(templatesPageSource, /apiBasePath="\/api\/athlete\/templates"/);
+  assert.match(templatesPageSource, /TrainingTemplatesClient/);
+  assert.match(templatesPageSource, /workoutLibraryService\.listForOwner/);
 });
 
 test('desktop sidebar stays within the viewport and owns its overflow', async () => {
@@ -130,7 +129,7 @@ test('desktop sidebar stays within the viewport and owns its overflow', async ()
 
 test('coach pages rely on shared shell and keep only contextual local actions', async () => {
   const coachPageSource = await read('app/(app)/coach/page.tsx');
-  const templatesPageSource = await read('app/(app)/coach/templates/page.tsx');
+  const templatesPageSource = await read('app/(app)/athlete/templates/page.tsx');
   const plannerPageSource = await read('app/(app)/coach/athletes/[athleteId]/page.tsx');
 
   assert.doesNotMatch(coachPageSource, /SignOutButton/);
@@ -149,7 +148,7 @@ test('workspace pages do not repeat sibling destinations in their headers', asyn
     'app/(app)/coach/page.tsx',
     'app/(app)/coach/athletes/[athleteId]/page.tsx',
     'app/(app)/coach/planner/page.tsx',
-    'app/(app)/coach/templates/page.tsx',
+    'app/(app)/athlete/templates/page.tsx',
     'app/(app)/coach/workouts/page.tsx',
   ].map(read));
 
@@ -268,7 +267,7 @@ test('coach session routes verify the target athlete belongs to the signed-in co
 });
 
 test('template and detail entry points validate dynamic ids before loading data', async () => {
-  const templateRouteSource = await read('app/api/coach/templates/[templateId]/route.ts');
+  const templateRouteSource = await read('app/api/athlete/templates/[templateId]/route.ts');
   const athleteSessionPageSource = await read('app/(app)/athlete/session/[sessionId]/page.tsx');
   const athleteLivePageSource = await read('app/(app)/athlete/live/[sessionId]/page.tsx');
   const coachAthletePageSource = await read('app/(app)/coach/athletes/[athleteId]/page.tsx');

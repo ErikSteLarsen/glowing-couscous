@@ -18,22 +18,17 @@ export async function POST(request: NextRequest) {
 
     let source: AssignmentSource;
     if (isJsonObject(body.value.source)) {
-      const sourceId = body.value.source.kind === 'template'
-        ? parsePositiveInteger(body.value.source.templateId)
-        : body.value.source.kind === 'library-session'
+      const sourceId = body.value.source.kind === 'library-session'
           ? parsePositiveInteger(body.value.source.sessionId)
           : body.value.source.kind === 'training-plan'
             ? parsePositiveInteger(body.value.source.trainingPlanId)
             : null;
       if (sourceId === null) return NextResponse.json({ error: 'Invalid source' }, { status: 400 });
-      if (body.value.source.kind === 'template') source = { kind: 'template', templateId: sourceId };
-      else if (body.value.source.kind === 'library-session') source = { kind: 'library-session', sessionId: sourceId };
+      if (body.value.source.kind === 'library-session') source = { kind: 'library-session', sessionId: sourceId };
       else if (body.value.source.kind === 'training-plan') source = { kind: 'training-plan', trainingPlanId: sourceId };
       else return NextResponse.json({ error: 'Invalid source' }, { status: 400 });
     } else {
-      const parsedTemplateId = parsePositiveInteger(body.value.templateId);
-      if (parsedTemplateId === null) return NextResponse.json({ error: 'Invalid templateId' }, { status: 400 });
-      source = { kind: 'template', templateId: parsedTemplateId };
+      return NextResponse.json({ error: 'Invalid source' }, { status: 400 });
     }
 
     const scheduledDate = typeof body.value.scheduledDate === 'string' ? body.value.scheduledDate : '';

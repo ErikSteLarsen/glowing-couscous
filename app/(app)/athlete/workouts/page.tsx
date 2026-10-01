@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
-import { templateService } from '@/lib/template-service';
 import { workoutLibraryService } from '@/lib/workout-library-service';
 import { accountService } from '@/lib/account-service';
 import { FocusWorkouts } from '@/components/FocusWorkouts';
@@ -17,9 +16,8 @@ export default async function AthleteWorkoutsPage({
   const { edit } = await searchParams;
   const parsedWorkoutId = edit && /^[1-9]\d*$/.test(edit) ? Number(edit) : null;
   const initialWorkoutId = parsedWorkoutId !== null && Number.isSafeInteger(parsedWorkoutId) ? parsedWorkoutId : null;
-  const [workouts, templates, account] = await Promise.all([
+  const [workouts, account] = await Promise.all([
     workoutLibraryService.listForOwner('athlete', user.id),
-    templateService.listForOwner(user.id),
     accountService.getAccount(user.id),
   ]);
 
@@ -27,7 +25,6 @@ export default async function AthleteWorkoutsPage({
     ownerId={user.id}
     role="ATHLETE"
     workouts={workouts}
-    templates={templates}
     endpoint="/api/athlete/workouts"
     performanceProfile={account?.performanceProfile}
     initialWorkoutId={initialWorkoutId}

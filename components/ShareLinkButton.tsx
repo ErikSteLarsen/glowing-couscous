@@ -15,7 +15,7 @@ export function ShareLinkButton({
   sourceId,
   ariaLabel,
 }: {
-  sourceKind: 'session' | 'template';
+  sourceKind: 'session';
   sourceId: number;
   ariaLabel?: string;
 }) {
@@ -23,7 +23,7 @@ export function ShareLinkButton({
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
   const [isPending, startTransition] = useTransition();
-  const sharedResourceLabel = sourceKind === 'template' ? 'template' : 'workout';
+  const sharedResourceLabel = 'workout';
 
   function createLink() {
     setMessage('');
