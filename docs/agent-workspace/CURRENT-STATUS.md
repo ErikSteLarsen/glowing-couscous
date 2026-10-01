@@ -547,3 +547,47 @@ was performed for this documentation-only change.
   temporary scripts were removed. Main includes the earlier routine, calendar and
   shared UI changes, as explicitly requested. Worker scheduling, secret/provider
   configuration and physical-device/real-file acceptance remain open gates.
+
+## Strava read-only health check, 2026-10-01
+
+- Strava subscription inspection returned 200, subscription 374668 points to the
+  production /api/strava/webhook callback. Production challenge returned 200 with
+  the exact challenge; invalid empty event returned the expected format 400 rather
+  than the unconfigured-subscription 503. No webhook event was created by the check.
+- Configured database has six pending, due webhook events from 2026-09-30, each
+  with four or five attempts; last errors are Unsupported state or unable to
+  authenticate data. No processed event rows are currently present. Existing
+  inbox/import rows do not certify successful current webhook processing.
+- A local read-only AES-GCM check failed to authenticate the saved connection's
+  tokens with the current local STRAVA_TOKEN_ENCRYPTION_KEY. Key mismatch or
+  encrypted-token damage is the likely cause; production key equality is not
+  verified because Vercel dashboard access is unavailable. Restore the correct
+  matching key or carefully reauthorize credentials after key configuration;
+  do not use Disconnect as a repair because it removes imported Strava outcomes.
+- Verify scheduled retry delivery and one real upload-to-review/import after fixing
+  credentials. These checks used only subscription/configuration and queue metadata,
+  never exposed tokens/keys and did not import, delete, refresh or process activities.
+
+## Strava Import inbox, 2026-10-01
+
+- Implemented locally: removed the shell's 15-second local-inbox checks and
+  automatic arrival dialogs. Import is the explicit newest-first review surface,
+  with Needs review count, All activities, Refresh inbox and provider Sync now.
+  Dismiss/restore, planned matching and standalone imports retain existing service
+  ownership. Reviewed rows leave Needs review immediately after successful writes;
+  keyboard focus returns to the filter if their trigger disappears.
+- Visiting Import schedules that owner's due webhook recovery after the response;
+  background delivery and the secret worker remain unchanged. Refresh inbox can
+  reveal arrivals processed after the page response. No timer was added to Import.
+- Verification: pnpm test 319/319, pnpm lint, and standard pnpm build passed.
+  Build applied all 11 migrations only to disposable PostgreSQL tempo_acceptance
+  on 127.0.0.1:55432. Initial localhost connection failed; IPv4 resolved it.
+  Removed stale generated development fixture types before the final clean build.
+- Synthetic AppShell/StravaImportPanel browser review passed desktop light/dark
+  and 390/320px dark mobile, including filters, dismiss/restore, explicit refresh
+  completion and keyboard focus; no horizontal overflow. This is component
+  evidence, not live webhook or authenticated persistence acceptance. Preview:
+  [.impeccable inbox screenshot](../../../.impeccable/review/strava-inbox/desktop-light.png).
+  Temporary fixture/server and disposable database container were removed.
+- Not pushed or deployed in this task. The preceding production token-authentication
+  failure remains unresolved; this UI change does not certify provider health.

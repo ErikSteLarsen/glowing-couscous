@@ -99,7 +99,7 @@ interaction/persistence checks; they do not replace them.
 | Guided creator | Keyless fallback, live model validation/source labels, invalid response, authenticated desktop/phone save/reopen, provider-health migration |
 | Files | FIT/TCX/GPX parsing/errors, duplicates, matching/standalone import, measurements, removal restoring planned work |
 | Strava | HTTPS challenge/OAuth return, live webhook, leased retry/recovery, updates/privacy/delete/deauthorization, duplicate-safe explicit import |
-| Notifications | Entry/periodic arrival, Review later, discard/restore beyond provider recent page, matching/standalone, failure draft retention, dialog keyboard/Escape |
+| Strava inbox | Visit/explicit refresh arrival, newest-first Needs review/All activities, discard/restore beyond provider recent page, matching/standalone, failure draft retention, dialog keyboard/Escape; no shell polling or automatic arrival dialog |
 | Sharing | Public workout previews, sanitization, long content, explicit authenticated intake and unauthorized mutation rejection |
 | Auth | Configured recovery email delivery, expiry/single use/session invalidation and optional Google OAuth |
 

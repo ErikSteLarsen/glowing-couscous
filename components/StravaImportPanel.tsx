@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
-import { Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, getSegmentedChoiceClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import type { ImportableSession } from '@/lib/activity-import-service';
 import type { ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { StravaConnectionSummary, StravaInboxActivitySummary } from '@/lib/strava-service';
@@ -39,8 +39,11 @@ export function StravaImportPanel({
   const [providerRevocationFailed, setProviderRevocationFailed] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
+  const [showAllActivities, setShowAllActivities] = useState(false);
+  const [refreshing, startRefresh] = useTransition();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const inboxFilterRef = useRef<HTMLButtonElement>(null);
   const activityButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const oauthNotice = oauthResult === 'connected'
@@ -70,6 +73,7 @@ export function StravaImportPanel({
     const dialog = dialogRef.current;
     if (!dialog || dialog.open) return;
     const trigger = activityButtonRefs.current[activeActivityId];
+    const inboxFilter = inboxFilterRef.current;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     dialog.showModal();
@@ -78,7 +82,8 @@ export function StravaImportPanel({
     return () => {
       document.body.style.overflow = previousOverflow;
       if (dialog.open) dialog.close();
-      trigger?.focus();
+      if (trigger?.isConnected) trigger.focus();
+      else inboxFilter?.focus();
     };
   }, [activeActivityId]);
 
@@ -92,7 +97,6 @@ export function StravaImportPanel({
       if (!response.ok) throw new Error(result.error || 'Strava activities could not be synced.');
       setNotice(`Checked Strava for recent activities${typeof result.synced === 'number' ? ` · ${result.synced} found` : ''}.`);
       router.refresh();
-      window.dispatchEvent(new Event('tempo-strava-inbox-changed'));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Strava activities could not be synced.');
     } finally {
@@ -167,7 +171,7 @@ export function StravaImportPanel({
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || 'Strava activity could not be imported.');
       setNotice(`${draft.title} was imported into Tempo.`);
-      window.dispatchEvent(new Event('tempo-strava-inbox-changed'));
+      setConnection((current) => ({ ...current, activities: current.activities.map((activity) => activity.id === activityId ? { ...activity, imported: true } : activity) }));
       router.refresh();
       dialogRef.current?.close();
     } catch (reason) {
@@ -191,8 +195,7 @@ export function StravaImportPanel({
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || 'Activity review could not be saved.');
       setConnection((current) => ({ ...current, activities: current.activities.map((activity) => activity.id === activityId ? { ...activity, dismissed: action === 'discard' } : activity) }));
-      setNotice(action === 'discard' ? 'Dismissed for now. You can still review and import this activity here.' : 'Restored to new-activity notifications.');
-      window.dispatchEvent(new Event('tempo-strava-inbox-changed'));
+      setNotice(action === 'discard' ? 'Dismissed for now. Find this activity under All activities to restore or import it.' : 'Restored to Needs review.');
       dialogRef.current?.close();
       router.refresh();
     } catch (reason) {
@@ -203,6 +206,8 @@ export function StravaImportPanel({
   }
 
   const activeActivity = connection.activities.find((activity) => activity.id === activeActivityId) ?? null;
+  const pendingActivities = connection.activities.filter((activity) => !activity.imported && !activity.dismissed);
+  const visibleActivities = showAllActivities ? connection.activities : pendingActivities;
   const activeDetail = activeActivityId ? details[activeActivityId] : null;
   const activeDraft = activeActivityId ? drafts[activeActivityId] : null;
   const activeMatchingSessions = activeActivity
@@ -213,11 +218,11 @@ export function StravaImportPanel({
     <Surface id="strava" className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Sync from Strava</h2>
+          <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Strava inbox</h2>
           <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
             {connection.connected
               ? connection.webhookConfigured
-                ? `Connected${connection.athleteName ? ` as ${connection.athleteName}` : ''} · new activity changes sync automatically.`
+                ? `Connected${connection.athleteName ? ` as ${connection.athleteName}` : ''} · visit Import to review synced activities.`
                 : `Connected${connection.athleteName ? ` as ${connection.athleteName}` : ''} · webhooks are not configured, so use Sync now to check for activities.`
               : 'Connect your Strava account to review activities before adding them to Tempo.'}
           </p>
@@ -225,10 +230,13 @@ export function StravaImportPanel({
         <div className="flex flex-wrap gap-2">
           {connection.connected ? (
             <>
-              <button type="button" className={secondaryButtonClassName} disabled={syncing || disconnecting} onClick={() => void syncActivities()}>
+              <button type="button" className={secondaryButtonClassName} disabled={refreshing || syncing || disconnecting} onClick={() => startRefresh(() => router.refresh())}>
+                {refreshing ? 'Refreshing…' : 'Refresh inbox'}
+              </button>
+              <button type="button" className={secondaryButtonClassName} disabled={refreshing || syncing || disconnecting} onClick={() => void syncActivities()}>
                 {syncing ? 'Syncing…' : 'Sync now'}
               </button>
-              <button type="button" className={secondaryButtonClassName} disabled={syncing || disconnecting} onClick={() => void disconnect()}>
+              <button type="button" className={secondaryButtonClassName} disabled={refreshing || syncing || disconnecting} onClick={() => void disconnect()}>
                 {disconnecting ? 'Disconnecting…' : 'Disconnect Strava'}
               </button>
             </>
@@ -256,9 +264,19 @@ export function StravaImportPanel({
         </p>
       ) : null}
 
-      {connection.connected ? connection.activities.length ? (
+      {connection.connected ? (
+        <div className="space-y-3">
+          <p className="text-[13px] text-[var(--text-secondary)]">Newest first. Refresh inbox checks synced activities; Sync now checks Strava directly.</p>
+          <div role="group" aria-label="Strava inbox filter" className="flex w-full max-w-sm gap-2">
+            <button ref={inboxFilterRef} type="button" className={getSegmentedChoiceClassName(!showAllActivities)} aria-pressed={!showAllActivities} onClick={() => setShowAllActivities(false)}>Needs review ({pendingActivities.length})</button>
+            <button type="button" className={getSegmentedChoiceClassName(showAllActivities)} aria-pressed={showAllActivities} onClick={() => setShowAllActivities(true)}>All activities</button>
+          </div>
+        </div>
+      ) : null}
+
+      {connection.connected ? visibleActivities.length ? (
         <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
-          {connection.activities.map((activity) => (
+          {visibleActivities.map((activity) => (
             <button
               key={activity.id}
               ref={(element) => { activityButtonRefs.current[activity.id] = element; }}
@@ -283,7 +301,7 @@ export function StravaImportPanel({
         </div>
       ) : (
         <p className="border-y border-[var(--border)] py-4 text-[13px] text-[var(--text-secondary)]">
-          No recent Strava activities found. {connection.webhookConfigured ? 'New activities will appear here after the next webhook sync.' : 'Use Sync now to check again.'}
+          {showAllActivities ? 'No synced Strava activities yet.' : 'No activities need review.'} Use Refresh inbox if you are expecting an activity, or Sync now to check Strava.
         </p>
       ) : null}
 
@@ -372,7 +390,7 @@ export function StravaImportPanel({
                   {activeDraft?.plannedSessionId ? 'The planned workout stays available for comparison.' : 'Tempo will create a completed session from the recorded activity.'}
                 </p>
                 {!activeActivity.imported ? <button type="button" className={secondaryButtonClassName} disabled={Boolean(importing[activeActivity.id])} onClick={() => void reviewActivity(activeActivity.id, activeActivity.dismissed ? 'restore' : 'discard')}>
-                  {activeActivity.dismissed ? 'Restore to notifications' : 'Dismiss for now'}
+                  {activeActivity.dismissed ? 'Restore to inbox' : 'Dismiss for now'}
                 </button> : null}
                 <button type="button" className={primaryButtonClassName} disabled={Boolean(importing[activeActivity.id]) || activeActivity.imported || !activeDraft?.title.trim()} onClick={() => void importActivity(activeActivity.id)}>
                   {activeActivity.imported ? 'Already imported' : importing[activeActivity.id] ? 'Importing…' : 'Import activity'}

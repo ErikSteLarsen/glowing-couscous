@@ -72,26 +72,22 @@ random 32-byte key encoded as 64 hexadecimal characters and keep it server-only.
    work runs asynchronously. Workers claim a two-minute lease and retry failures
    with backoff from 30 seconds to one hour; interrupted work is recoverable.
 
-The signed-in shell checks the local Strava inbox on entry, every 15 seconds
-while visible, and on focus. This does not poll the Strava API. New activities
-open a review dialog where users can complete an unfinished planned session,
-add a standalone completed session, or **Dismiss for now**. Dismiss records
-inbox state only: it never deletes a recorded or imported activity. **Review
-later** acknowledges the current batch and leaves it available on Import.
-When more than two activities arrive, they open together in a selectable list.
-Users can add selected activities as standalone completed sessions, dismiss
-selected activities together, or choose **Review** to edit or match one activity.
-The list stays in place as the batch shrinks. Bulk imports show progress and stop
-on the first failure, leaving unsuccessful and unattempted items selected for retry.
-Dismissed items stay on Import with **Restore to notifications**, even when
-they age out of the recent 100-activity provider page. Manual sync and webhook
-updates preserve these choices. Imported activities are excluded from new
-notifications. Returning users also recover due queue work for their own
-connection; a worker schedule is still needed for retries while nobody is open.
+Users visit **Import → Strava inbox** to review synced activities, newest first.
+The shell does not poll or open arrival dialogs. **Needs review** shows
+unimported, undismissed activities; **All activities** includes imported and
+dismissed items. **Refresh inbox** reloads locally synced data; **Sync now**
+fetches recent activities from Strava. Opening an activity allows explicit
+planned-session matching or standalone import. **Dismiss for now** only changes
+inbox state; **Restore to inbox** makes it visible in Needs review again.
+Unimported items remain reachable after they age out of the provider's recent
+100-activity page. Manual sync and webhook updates preserve review choices.
+Visiting Import schedules recovery of that owner's due webhook work after the
+response; use Refresh inbox to see subsequently processed arrivals. A worker
+schedule is still needed for retries while nobody visits Import.
 
 Apply the notification migration before deploying this UI (`pnpm db:migrate`).
 Verify the public callback challenge, create an activity in a connected Strava
-account, then check the popup and planned-session/standalone outcomes. No new
+account, then visit Import and check the inbox and planned-session/standalone outcomes. No new
 storage allowance or retention deletion is implemented by this feature.
 
 Disconnecting in Tempo clears the connection and its imported Strava sessions,

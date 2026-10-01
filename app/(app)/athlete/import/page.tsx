@@ -1,9 +1,12 @@
 import { redirect } from 'next/navigation';
+import { after } from 'next/server';
 import { ActivityImportClient } from '@/components/ActivityImportClient';
 import { PageShell, TopBar } from '@/components/ui';
 import { activityImportService } from '@/lib/activity-import-service';
 import { stravaService } from '@/lib/strava-service';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
+
+export const maxDuration = 60;
 
 export default async function ImportPage({
   searchParams,
@@ -19,6 +22,9 @@ export default async function ImportPage({
     stravaService.connectionForUser(user.id),
     searchParams,
   ]);
+  // Visiting Import also recovers this owner's due webhook work. The worker
+  // remains responsible for retries while nobody is reviewing the inbox.
+  if (strava.connected) after(() => stravaService.processPendingWebhookEvents(user.id).then(() => undefined).catch(() => undefined));
   return (
     <PageShell>
       <TopBar
