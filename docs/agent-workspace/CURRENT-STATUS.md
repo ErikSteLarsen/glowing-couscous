@@ -589,5 +589,9 @@ was performed for this documentation-only change.
   evidence, not live webhook or authenticated persistence acceptance. Preview:
   [.impeccable inbox screenshot](../../../.impeccable/review/strava-inbox/desktop-light.png).
   Temporary fixture/server and disposable database container were removed.
-- Not pushed or deployed in this task. The preceding production token-authentication
-  failure remains unresolved; this UI change does not certify provider health.
+- Published commit 1aaac2a to origin/main. Production login returned 200 and
+  build identity changed from zrc25_bHd9264VoWy4EbG to n7SAm1E2_F8qqw_gyktjX.
+  Strava inbox GET and unauthenticated webhook-worker POST returned expected 401
+  JSON. This verifies public publication and guards, not authenticated inbox
+  review or live provider delivery. The production token-authentication failure
+  remains unresolved; this UI change does not certify provider health.
