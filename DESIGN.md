@@ -567,9 +567,17 @@ actions and fields for confirmation.
   chart. Faster pace intervals still use taller bars; the interval table keeps
   the accepted sample range. Each chart has average/range context and an
   expandable interval table so the graph is not the only way to read values.
-- Session detail keeps the scheduled score and ordered workout blocks visible.
-  For imported FIT and Strava sessions, recorded sensor charts follow the block
-  list so the athlete can compare planned structure with measured activity.
+- Session detail uses a compact structure overview. Fold identical consecutive
+  efforts/recoveries and repeated sets, retaining explicit warm-up/cool-down,
+  repeat counts and whether recovery follows the final effort. The diagram is
+  a structure schematic; it does not imply a duration-proportional full timeline.
+  Selecting an effort or pause reveals its target, duration and notes below.
+  Details start collapsed, keep keyboard/touch controls, and expose every
+  original block through the inspector selector. Different instructions and
+  skipped blocks must remain distinct. Resolve relative targets from Profile
+  and retain the reference alongside the resolved value.
+  For imported FIT and Strava sessions, recorded sensor charts follow the workout
+  overview so the athlete can compare planned structure with measured activity.
   An import without a matched workout uses a single-column activity overview
   with recorded duration and load, followed by its available measurements and
   any saved activity notes. It omits plan-only context and the empty plan

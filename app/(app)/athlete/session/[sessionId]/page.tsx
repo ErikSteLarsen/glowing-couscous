@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { format, startOfWeek } from 'date-fns';
 import { ActionLink, EmptyState, PageShell, Surface, TopBar, sectionHeadingClassName } from '@/components/ui';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
-import { getSessionBlockStyle, SessionPlanCanvas } from '@/components/SessionPlanCanvas';
+import { SessionWorkoutOverview } from '@/components/SessionWorkoutOverview';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDurationExact } from '@/lib/format-duration';
@@ -55,6 +55,32 @@ export default async function AthleteSessionPage({
       ? '#session-outcome'
       : `/athlete/live/${detail.session.id}?from=${sessionOrigin}`;
 
+  const overviewHeader = (
+    <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--border)] pb-4">
+      <div>
+        <h2 className={sectionHeadingClassName}>{importedWithoutWorkout ? 'Activity overview' : 'Workout overview'}</h2>
+        <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
+          {importedWithoutWorkout
+            ? 'Imported activity · no planned workout matched'
+            : 'The structure of your scheduled workout.'}
+        </p>
+      </div>
+      <div className={importedWithoutWorkout
+        ? 'grid w-full grid-cols-2 divide-x divide-[var(--border)] border-y border-[var(--border)] sm:w-auto sm:min-w-[20rem]'
+        : 'flex flex-wrap gap-x-6 gap-y-2'}
+      >
+        <div className={importedWithoutWorkout ? 'py-3 pr-4 sm:pr-6' : ''}>
+          <p className="text-[11px] font-medium text-[var(--text-muted)]">{importedWithoutWorkout ? 'Duration' : 'Planned time'}</p>
+          <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{formatDurationExact(scoreDurationSec)}</p>
+        </div>
+        <div className={importedWithoutWorkout ? 'py-3 pl-4 sm:pl-6' : ''}>
+          <p className="text-[11px] font-medium text-[var(--text-muted)]">Training load</p>
+          <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{detail.session.loadAvailable === false ? 'Unavailable' : `${detail.session.tss} TSS`}</p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <PageShell>
       <TopBar
@@ -84,74 +110,8 @@ export default async function AthleteSessionPage({
 
         <div className={`grid items-start gap-5 ${importedWithoutWorkout ? '' : 'xl:grid-cols-[minmax(0,1fr)_304px]'}`}>
           <div className="min-w-0 space-y-5">
-            <Surface className="space-y-5">
-              <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--border)] pb-4">
-                <div>
-                  <h2 className={sectionHeadingClassName}>{importedWithoutWorkout ? 'Activity overview' : 'Session score'}</h2>
-                  <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
-                    {importedWithoutWorkout
-                      ? 'Imported activity · no planned workout matched'
-                      : 'The full workout in its planned order.'}
-                  </p>
-                </div>
-                <div className={importedWithoutWorkout
-                  ? 'grid w-full grid-cols-2 divide-x divide-[var(--border)] border-y border-[var(--border)] sm:w-auto sm:min-w-[20rem]'
-                  : 'flex flex-wrap gap-x-6 gap-y-2'}
-                >
-                  <div className={importedWithoutWorkout ? 'py-3 pr-4 sm:pr-6' : ''}>
-                    <p className="text-[11px] font-medium text-[var(--text-muted)]">{importedWithoutWorkout ? 'Duration' : 'Planned time'}</p>
-                    <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{formatDurationExact(scoreDurationSec)}</p>
-                  </div>
-                  <div className={importedWithoutWorkout ? 'py-3 pl-4 sm:pl-6' : ''}>
-                    <p className="text-[11px] font-medium text-[var(--text-muted)]">Training load</p>
-                    <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{detail.session.loadAvailable === false ? 'Unavailable' : `${detail.session.tss} TSS`}</p>
-                  </div>
-                </div>
-              </div>
-              {!importedWithoutWorkout ? <SessionPlanCanvas blocks={detail.session.blocks} /> : null}
-              {!importedWithoutWorkout ? (
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[var(--border)] pt-4 text-[12px] text-[var(--text-secondary)]">
-                  <span>Targets are shown with each block.</span>
-                  {detail.session.metricsSource === 'manual-planned' ? <span>Planned estimate</span> : null}
-                  <span>{detail.session.blocks.length} blocks in this session</span>
-                </div>
-              ) : null}
-            </Surface>
-
-            {!importedWithoutWorkout ? <Surface className="space-y-4">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className={sectionHeadingClassName}>Workout blocks</h2>
-                <span className="text-[12px] text-[var(--text-secondary)]">Read-only scheduled copy</span>
-              </div>
-              {detail.session.blocks.length ? (
-                <ol className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
-                  {detail.session.blocks.map((block, index) => (
-                    <li key={block.id} className={`flex min-w-0 gap-3 py-4 ${block.skipped ? 'opacity-70' : ''}`}>
-                      <span className="metric-text min-w-6 pt-1 text-[12px] text-[var(--text-muted)]">{index + 1}</span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                          <span
-                            className="inline-flex min-h-7 items-center rounded-full px-3 text-[12px] font-semibold"
-                            style={getSessionBlockStyle(block)}
-                          >
-                            {block.label}
-                          </span>
-                          <span className="metric-text text-[13px] font-semibold text-[var(--text)]">
-                            {formatDurationExact(block.durationSec * (block.reps ?? 1))}
-                          </span>
-                          {block.reps ? <span className="text-[12px] text-[var(--text-secondary)]">{formatDurationExact(block.durationSec)} × {block.reps} reps</span> : null}
-                          {block.skipped ? <span className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">Skipped in plan</span> : null}
-                        </div>
-                        {block.targetLabel ? <p className="mt-2 text-[13px] font-medium text-[var(--text-secondary)]">Target · {block.targetLabel}</p> : null}
-                        {block.note ? <p className="mt-2 max-w-[68ch] text-[13px] leading-[1.5] text-[var(--text)]">{block.note}</p> : null}
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <p className="border-y border-[var(--border)] py-5 text-[13px] text-[var(--text-secondary)]">This session has no workout blocks.</p>
-              )}
-            </Surface> : null}
+            {importedWithoutWorkout ? <Surface className="space-y-4">{overviewHeader}</Surface>
+              : <SessionWorkoutOverview blocks={detail.session.blocks} header={overviewHeader} />}
 
             {detail.session.importedActivityId ? (
               <Surface id="recorded-activity" className="space-y-4">

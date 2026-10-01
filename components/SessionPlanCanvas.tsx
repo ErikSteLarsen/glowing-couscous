@@ -9,6 +9,7 @@ export type SessionPlanBlock = {
   durationSec: number;
   reps: number | null;
   targetLabel: string | null;
+  targetBasis?: string | null;
   note: string | null;
   skipped: boolean;
   color: string;

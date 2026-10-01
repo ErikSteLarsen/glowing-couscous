@@ -226,8 +226,10 @@ test('athlete session detail is read-only and links to live execution and its re
 
   assert.doesNotMatch(client, /WorkoutBuilder|Adjust planned session|showSchedule|\/actual/);
   assert.match(client, /SessionComparisonDialog/);
-  assert.match(page, /SessionPlanCanvas/);
-  assert.match(page, /Read-only scheduled copy/);
+  assert.match(page, /SessionWorkoutOverview/);
+  const overview = await readFile(path.join(process.cwd(), 'components/SessionWorkoutOverview.tsx'), 'utf8');
+  assert.match(overview, /Read-only scheduled copy/);
+  assert.doesNotMatch(overview, /fetch\(|WorkoutBuilder/);
   assert.match(page, /Start live/);
   assert.match(page, /sourceWorkout/);
 });

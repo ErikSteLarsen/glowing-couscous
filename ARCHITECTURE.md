@@ -53,7 +53,7 @@ and ownership guards; page visibility is not API authorization.
 - `/athlete/workouts` - owner-scoped unscheduled workout library
 - `/athlete/planner` - compatibility redirect to Calendar scheduling, preserving the date
 - `/athlete/templates` - private weekly routines composed from saved workouts
-- `/athlete/session/[sessionId]` - read-only scheduled-session score and outcome review
+- `/athlete/session/[sessionId]` - compact read-only workout structure, block inspector and outcome review; `lib/session-structure.ts` groups identical instructions and `components/SessionWorkoutOverview.tsx` owns selection/disclosure
 - `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion
 - `/athlete/activity` - History for completed sessions and imported activities
 - `/athlete/import` - activity-file and Strava review/import; the previous `/athlete/imported-activities` path redirects here

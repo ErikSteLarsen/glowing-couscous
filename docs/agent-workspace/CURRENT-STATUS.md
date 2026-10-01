@@ -1,9 +1,34 @@
 # Current status
 
 Updated 2026-10-01. Current evidence snapshot, not implementation history.
-Latest checks cover saved-workout routines, shared UI polish, calendar refinement and service regressions.
+Latest checks cover compact session structure, saved-workout routines, shared UI polish, calendar refinement and service regressions.
 Older browser/provider/device results
 retain their recorded scope.
+
+## Compact session structure and inspector, 2026-10-01
+
+- Scheduled session detail replaces the exhaustive block list and tall timeline
+  with a compact structure schematic and interpreted text. Identical efforts
+  and pauses/recoveries fold into repeated sets; warm-up/cool-down and recovery
+  after the final effort remain explicit. Different targets, notes, repetitions,
+  reference systems and skipped instructions are preserved individually.
+- Effort/pause selection opens a collapsible inspector with duration, target,
+  notes and a selector for every original block. Details start collapsed.
+  Pace uses sport-specific units; relative targets resolve against the owner's
+  Profile with their original reference retained. No scheduled data is mutated.
+- Actual component fixture inspected at 1440px in light/dark and 320/390px
+  mobile; 768px overflow measurement passed. At 320px the common warm-up / repeat
+  set / cool-down fits one row, with >=44px visual controls and no page overflow.
+  Keyboard activation/collapse, pause selection and selecting the fourth effort
+  through the original-block selector passed. Screenshots are in this chat's
+  visualization folder. Temporary fixture/server removed. These are synthetic
+  component checks, not authenticated route, production or physical-phone checks.
+- Final tests: 325/325 pass; lint: pass. Bundle-only Next.js webpack build passed
+  including production TypeScript and routes. Standard pnpm build generated
+  Prisma then stopped at migrations against an intentionally unavailable local
+  review database; configured database was not migrated. pnpm exec's Next binary
+  could not resolve in this shell, so the bundle check used the local Next CLI
+  directly. Existing middleware deprecation remains. git diff --check passed.
 
 ## Saved-workout training routines, 2026-10-01
 
@@ -242,11 +267,11 @@ retain their recorded scope.
 
 | Gate | Latest recorded result | Scope / limits |
 |---|---|---|
-| `pnpm test` | 319/319 pass, 2026-10-01 | Routine ownership/placement/rollback plus existing planner, persistence, training setup, Home, recovery, account and deletion coverage |
+| `pnpm test` | 325/325 pass, 2026-10-01 | Session structure/target formatting, routine ownership/placement/rollback plus existing planner, persistence, training setup, Home, recovery, account and deletion coverage |
 | `pnpm lint` | Pass, 2026-10-01 | Full repository |
 | Direct TypeScript | Pass, 2026-09-30 | Existing generated client |
 | Direct `next build --webpack` | Pass, 2026-10-01 | Bundle only, TypeScript and 80 pages; middleware deprecation remains |
-| `pnpm build --webpack` | Pass, 2026-10-01 | Prisma generation, nine migrations and production bundle/TypeScript on new disposable PostgreSQL; configured database was not migrated |
+| `pnpm build` | Stopped at migrations, 2026-10-01 | Prisma generation passed; intentionally unavailable local review database. Separate webpack bundle passed; no configured database migration |
 | PostgreSQL acceptance | 7/7 pass after architecture cleanup, 2026-09-30 | Recovery acceptance plus six deletion scenarios: owned data/provider/webhook removal, retained anonymized shares, unshare scope, recipient history, durable throttle, Google proof expiry, provider outage, rollback and concurrent deletion |
 | HTTP deletion acceptance | Pass, 2026-09-30 | Local production server/disposable DB: credentials cookie, cross-site rejection, wrong password, actual deletion, retained public [deleted] preview, expired old cookie, export 404 |
 | Migration status | Nine migrations, including template routines, applied only to disposable PostgreSQL | Deploy migrations with code before using the new behavior elsewhere; configured database was not changed by these checks |

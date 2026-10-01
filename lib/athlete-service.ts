@@ -7,7 +7,8 @@ import { parseActivitySegments, parseActivityTelemetry } from './activity-metric
 import { bucketActivityMetric, type ActivityIntensityTimeline } from './activity-series.ts';
 import { parsePerformanceProfileJson } from './performance-profile.ts';
 import { zoneForHeartRateBpm } from './profile-training-zones.ts';
-import type { WorkoutTargetReference } from './workout-targets.ts';
+import { formatResolvedWorkoutTarget, formatWorkoutTarget } from './workout-target-resolution.ts';
+import type { WorkoutTarget, WorkoutTargetReference } from './workout-targets.ts';
 import { homeActivityLoadAvailable, homeActivityReadout, summarizeHomeActivities } from './home-summary.ts';
 
 type AthleteServiceDeps = {
@@ -199,6 +200,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         selfCoached: true,
         name: true,
         email: true,
+        performanceProfileJson: true,
       },
     });
   }
@@ -593,6 +595,10 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
           sourceWorkout: editableSourceWorkout,
           blocks: session.blocks.map((block) => {
             const meta = getTempoZoneMeta(block.zone as 1 | 2 | 3 | 4 | 5);
+            const target: WorkoutTarget | null = block.targetType && block.targetLow !== null && block.targetHigh !== null
+              ? { metric: block.targetType as WorkoutTarget['metric'], mode: block.targetMode === 'relative' ? 'relative' : 'absolute', reference: block.targetReference as WorkoutTargetReference | null, low: block.targetLow, high: block.targetHigh }
+              : null;
+            const profile = parsePerformanceProfileJson(athlete.performanceProfileJson);
             return {
               id: block.id,
               label: block.kind === 'pause' ? 'Pause' : `${meta.label} ${meta.name}`,
@@ -600,18 +606,10 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
               zone: block.zone,
               durationSec: block.durationSec,
               reps: block.reps,
-              targetLabel:
-                block.targetType && block.targetLow !== null && block.targetHigh !== null
-                  ? `${block.targetLow}-${block.targetHigh} ${
-                    block.targetType === 'power'
-                      ? 'W'
-                      : block.targetType === 'hr'
-                        ? 'bpm'
-                        : block.targetType === 'rpe'
-                          ? 'RPE'
-                          : 'pace'
-                  }`
-                  : null,
+              targetLabel: target
+                ? (target.mode === 'absolute' ? formatWorkoutTarget(target, session.sport) : formatResolvedWorkoutTarget(target, profile, session.sport) ?? formatWorkoutTarget(target, session.sport))
+                : null,
+              targetBasis: target?.mode === 'relative' ? formatWorkoutTarget(target, session.sport) : null,
               note: block.note,
               skipped: block.skipped,
               color: meta.solid,
