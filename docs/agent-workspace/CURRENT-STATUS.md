@@ -532,3 +532,18 @@ was performed for this documentation-only change.
   passes on disposable PostgreSQL (69 pages); the leased-analysis PostgreSQL
   acceptance also passed again after the review changes. No production data
   was used by these checks.
+
+- Full release 8006c5d was pushed to origin/main. Production publication verified:
+  https://glowing-couscous-delta.vercel.app/login returns 200 and its build identity
+  changed from obtmG_LM8ITBJCNflxj70 to wp8qmr6l7hc2wV0ljWGci. The new
+  /api/activity-analysis/worker returns 401 Unauthorized JSON and owned analysis
+  /api/activity-imports/1/analysis returns its expected sign-in 401 JSON (both were
+  404 before publication). This verifies publication/guards, not an authenticated
+  production activity review or a live model request.
+- Read-only configured Neon migration metadata confirms template routine/retirement
+  migrations and 20261001150000_activity_analysis finished without rollback. The
+  analysis migration completed during release delivery; no seed, synthetic account,
+  or activity mutation was run in that database. Disposable DB/container and
+  temporary scripts were removed. Main includes the earlier routine, calendar and
+  shared UI changes, as explicitly requested. Worker scheduling, secret/provider
+  configuration and physical-device/real-file acceptance remain open gates.
