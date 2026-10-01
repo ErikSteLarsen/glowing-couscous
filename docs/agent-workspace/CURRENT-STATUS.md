@@ -570,7 +570,7 @@ was performed for this documentation-only change.
 
 ## Strava Import inbox, 2026-10-01
 
-- Implemented locally: removed the shell's 15-second local-inbox checks and
+- Published to production: removed the shell's 15-second local-inbox checks and
   automatic arrival dialogs. Import is the explicit newest-first review surface,
   with Needs review count, All activities, Refresh inbox and provider Sync now.
   Dismiss/restore, planned matching and standalone imports retain existing service
