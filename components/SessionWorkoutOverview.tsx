@@ -45,7 +45,7 @@ export function SessionWorkoutOverview({ blocks, header }: { blocks: SessionPlan
                   aria-label={`${structureBlockLabel(block)}${group.repeats > 1 ? `, repeated set of ${group.repeats}` : ''}${block.targetLabel ? `, ${block.targetLabel}` : ''}. Show block details`}
                   className={`group relative flex h-full min-w-11 flex-1 items-end rounded-t-[6px] px-1 pb-1 hover:bg-[var(--field-surface)] ${buttonFocusClassName}`}
                   style={{ flexGrow: Math.max(1, block.durationSec * (block.reps ?? 1)) }}>
-                  <span className={`block w-full rounded-t-[4px] border-2 ${active ? 'border-[var(--text)]' : 'border-transparent'} ${block.kind === 'pause' ? 'bg-[var(--text-muted)]' : `ink-zone-${Math.min(5, Math.max(1, block.zone))}`} ${block.skipped ? 'opacity-40' : ''}`}
+                  <span className={`training-chart-bar block w-full border-2 ${active ? 'border-[var(--text)]' : 'border-transparent'} ${block.kind === 'pause' ? 'bg-[var(--text-muted)]' : `ink-zone-${Math.min(5, Math.max(1, block.zone))}`} ${block.skipped ? 'opacity-40' : ''}`}
                     style={{ height: block.kind === 'pause' ? 12 : `${Math.max(24, Math.min(5, Math.max(1, block.zone)) * 18)}%` }} />
                 </button>;
               })}

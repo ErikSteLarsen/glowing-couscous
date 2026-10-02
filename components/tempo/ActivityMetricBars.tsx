@@ -53,7 +53,7 @@ export function ActivityMetricBars({
               key={bucket.index}
               aria-hidden="true"
               title={title}
-              className="min-w-[2px] flex-1 rounded-t-[2px] bg-[var(--color-signal)]"
+              className="training-chart-bar min-w-[2px] flex-1 bg-[var(--color-signal)]"
               style={{ height: `${bucket.heightPercent}%` }}
             />
           );

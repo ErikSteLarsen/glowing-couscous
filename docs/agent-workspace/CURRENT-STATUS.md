@@ -1,9 +1,34 @@
 # Current status
 
-Updated 2026-10-01. Current evidence snapshot, not implementation history.
+Updated 2026-10-02. Current evidence snapshot, not implementation history.
 Latest checks cover compact session structure, saved-workout routines, shared UI polish, calendar refinement and service regressions.
 Older browser/provider/device results
 retain their recorded scope.
+
+## Subtle chart and editor rounding, 2026-10-02
+
+- Shared workout previews, production authoring, Live bars, session structure,
+  recorded heart-rate/metric charts and Home recent load use 4px top corners
+  with flat baselines. Calendar intensity swatches use 2px corners; editor
+  selection controls use the established 9px compact geometry and target/pause
+  fields use 10px. Duration, intensity, gaps, selection and skipped markers
+  retain their existing behavior. DESIGN.md records the chart token contract.
+- Actual components rendered in synthetic browser fixtures at 1440px light/dark,
+  390px light and 320px dark. Rounded tops, flat baselines, active/skipped Live
+  markers, missing recorded samples and zero Home load inspected; no horizontal
+  overflow. Screenshots remain in this chat's visualization directory. This is
+  static component evidence, not authenticated interaction, production or
+  physical-phone acceptance. Temporary fixture removed.
+- Tests: 325/325 pass; lint: pass; production bundle-only webpack build passed,
+  including TypeScript and route generation. Standard pnpm build generated
+  Prisma but stopped at migrations against the intentionally unavailable local
+  tempo_review database; configured database unchanged. Docker unavailable in
+  the sandbox. pnpm 11's automatic dependency reinstall was disabled for checks
+  without changing repository configuration/dependencies; pnpm exec could not
+  resolve Next, so the bundle check used its local Node CLI directly. Existing
+  middleware deprecation remains. git diff --check passed.
+- Mechanical design scan ran once; existing advisory findings cover old preview
+  styles and stale Impeccable metadata. No design metadata repair was included.
 
 ## Compact session structure and inspector, 2026-10-01
 

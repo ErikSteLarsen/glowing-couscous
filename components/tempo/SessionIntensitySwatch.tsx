@@ -8,7 +8,7 @@ export function SessionIntensitySwatch({ zone }: { zone: number }) {
     <span
       aria-hidden="true"
       title={`Average intensity: ${zoneMeta.label} ${zoneMeta.name}`}
-      className={`ink-zone-${safeZone} mt-0.5 h-3 w-1 shrink-0`}
+      className={`ink-zone-${safeZone} mt-0.5 h-3 w-1 shrink-0 rounded-[2px]`}
     />
   );
 }

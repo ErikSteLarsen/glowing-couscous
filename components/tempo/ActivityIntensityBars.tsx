@@ -38,7 +38,7 @@ export function ActivityIntensityBars({ timeline, compact = false }: { timeline:
               key={bin.index}
               aria-hidden="true"
               title={title}
-              className={`min-w-[2px] flex-1 ${bin.averageBpm === null ? 'bg-transparent' : bin.zone ? '' : 'bg-[var(--color-signal)]'}`}
+              className={`training-chart-bar min-w-[2px] flex-1 ${bin.averageBpm === null ? 'bg-transparent' : bin.zone ? '' : 'bg-[var(--color-signal)]'}`}
               style={{ height: `${bin.heightPercent ?? 0}%`, backgroundColor: bin.zone ? intensityColor(bin.zone, fraction) : undefined }}
             />
           );

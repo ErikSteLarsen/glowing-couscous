@@ -43,7 +43,7 @@ export function SessionBlockBar({
         <div
           key={segment.key}
           aria-hidden="true"
-          className="transition-[height,background-color] duration-150 ease-out"
+          className="training-chart-bar transition-[height,background-color] duration-150 ease-out"
           style={{
             flexGrow: Math.max(segment.durationSec, 1),
             height: segment.kind === 'pause' || segment.label === 'Pause' ? '14%' : segment.zone === null ? '30%' : `${30 + (Math.min(Math.max(segment.zone, 1), 5) - 1 + (segment.intensityFraction ?? 0.5)) * 14}%`,

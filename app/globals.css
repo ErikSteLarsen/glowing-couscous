@@ -48,6 +48,7 @@
 }
 
 :root {
+  --radius-chart-bar: 4px;
   --background: #F5F6F5;
   --paper: var(--color-paper);
   --surface: var(--color-surface);
@@ -103,6 +104,11 @@
   --focus-highlight: #111412;
   --focus-highlight-ink: #fff;
   --focus-rule: #cfd8d0;
+}
+
+/* Rounded caps preserve the flat baseline and proportional chart geometry. */
+.training-chart-bar {
+  border-radius: var(--radius-chart-bar) var(--radius-chart-bar) 0 0;
 }
 
 :root[data-workspace-theme="dark"] {

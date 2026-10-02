@@ -68,16 +68,16 @@ export function SessionPlanCanvas({
               style={{ flexGrow: blockSeconds, flexBasis: 0 }}
             >
               <div
-                className={`relative w-full border-r border-[var(--surface)] ${block.kind === 'pause' ? 'h-[15px] bg-[var(--text-muted)]' : `ink-zone-${zone}`} ${done ? 'opacity-65' : ''}`}
+                className={`training-chart-bar relative w-full border-r border-[var(--surface)] ${block.kind === 'pause' ? 'h-[15px] bg-[var(--text-muted)]' : `ink-zone-${zone}`} ${done ? 'opacity-65' : ''}`}
                 style={block.kind === 'pause' ? undefined : { height: zoneHeight }}
               >
                 {wasSkipped ? (
                   <span
-                    className="absolute inset-0"
+                    className="training-chart-bar absolute inset-0"
                     style={{ backgroundImage: 'repeating-linear-gradient(135deg, transparent 0 8px, var(--surface) 8px 10px)', opacity: 0.55 }}
                   />
                 ) : null}
-                {active ? <span className="absolute inset-0 border-2 border-[var(--brand)]" /> : null}
+                {active ? <span className="training-chart-bar absolute inset-0 border-2 border-[var(--brand)]" /> : null}
               </div>
             </div>
           );

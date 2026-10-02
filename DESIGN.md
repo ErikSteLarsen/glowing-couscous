@@ -419,6 +419,12 @@ The form language uses rounded but disciplined geometry. Compact controls use
 and focused Home or Workouts panels 20–24px. Status indicators use pill
 geometry. Borders remain semantic one-pixel rules.
 
+Training chart bars use the shared `--radius-chart-bar` token (4px) on their
+top corners and keep a flat baseline. Apply this cap to workout timelines,
+authoring bars, session structure, recorded metrics and recent load; preserve
+duration widths, intensity heights and missing/zero-value gaps. Calendar
+intensity swatches use subtle 2px corners.
+
 Avoid mixing unrelated radius values within one control group. Keep the 40px
 minimum control height for ordinary actions and fields; compact actions use 32px
 in dense toolbars where the surrounding context already provides sufficient room.

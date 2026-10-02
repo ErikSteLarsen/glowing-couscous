@@ -93,7 +93,7 @@
 .home-recent-load a:hover { background: var(--field-surface); }
 .home-recent-load a > span:last-child { color: var(--text-secondary); font-size: 12px; }
 .home-recent-load__track { display: flex; align-items: end; height: 80px; width: 100%; border-bottom: 1px solid var(--border); }
-.home-recent-load__track > span { display: block; width: 100%; background: var(--brand); }
+.home-recent-load__track > span { display: block; width: 100%; background: var(--brand); border-radius: var(--radius-chart-bar) var(--radius-chart-bar) 0 0; }
 
 .study-workouts__header-count { display: flex; align-items: center; gap: 9px; color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
 .study-workouts__header-count strong { color: var(--text); font-size: 25px; line-height: 1; }
