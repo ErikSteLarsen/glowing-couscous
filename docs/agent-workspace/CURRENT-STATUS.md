@@ -49,7 +49,10 @@ The dashboard recheck found no actionable remaining issue.
 Calendar now has URL-addressable week/month navigation, keyboard shortcuts,
 weekly planned/completed summaries, and drag or explicit-date moves for open
 self-planned sessions. Mutation authorization and completion checks are atomic;
-content and local wall time are preserved. Real SQLite tests cover ownership,
+content and local wall time are preserved. Browser checks verified explicit-date
+moves and keyboard drag moves survive a reload, plus month view at 390px with
+no horizontal overflow. Calendar review found omitted scheduled times; these
+are restored on week/detail cards and in their accessible names. Real SQLite tests cover ownership,
 completed sessions, invalid dates, plan membership, and Oslo/New York DST.
 
 ## Verified Gates
