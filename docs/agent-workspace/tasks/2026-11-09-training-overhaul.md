@@ -27,7 +27,10 @@ pushed before advancing.
 - Dashboard review and calendar inspection underway; existing changes preserved.
 - Dashboard review fixes `14282f7` and calendar `0de31d6`/`3004ef5` are pushed.
 - Calendar explicit-date, keyboard, and pointer moves passed in Chromium; week axe scan has no violations.
-- Session/live fixes are underway. Next is recovery from failed first-run and settings requests.
+- Session/live and first-run/settings recovery fixes are verified and pushed.
+- Mobile workout actions verified above navigation, reviewed without findings,
+  and ready to push. Template draft protection, pending-state safety, profile
+  previews, and complete outcome history are the next iterations.
 - Current product priority and dark visual contract remain authoritative.
 
 ## Completion

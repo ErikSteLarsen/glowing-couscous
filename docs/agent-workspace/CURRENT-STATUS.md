@@ -17,7 +17,8 @@ sanitized snapshots and requires an explicit recipient save.
 
 - Mobile sticky workout actions reserve the bottom navigation and device safe
   area through one shared clearance token. Desktop actions use the viewport
-  bottom. Browser verification of the corrected Save position is in progress.
+  bottom. Chromium verified Save above navigation at 390px and the desktop
+  bottom offset at 1440px; neither settled layout has horizontal overflow.
 - The shared shell and controls use the dark Night Instrument system in
   `DESIGN.md`: cyan action, hairline rules, tabular measurements, and semantic
   training colors. `app/globals.css` implements the tokens. Design experiments
@@ -60,6 +61,7 @@ sanitized snapshots and requires an explicit recipient save.
 | Tests | Pass, 231 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build`; middleware deprecation warning removed |
+| Mobile workout actions | Pass | 390px Chromium: action bar bottom 780px, navigation top 783px; desktop offset 0px; both review axes found no actionable issue |
 | Dashboard | Pass | Desktop and 390px Chromium: pointer at final plotted day, Home/End readings, no horizontal overflow or browser errors; coach-note service regressions pass |
 | Session execution and corrections | Pass | Chromium repeated/skipped execution, relative labels, completion, immediate actual correction, notes, reopening, planned adjustment, and reload persistence; session detail axe reports no violations |
 | Calendar persistence | Pass | Chromium explicit-date, keyboard-drag, and pointer-drag moves persisted after navigation/reload |
