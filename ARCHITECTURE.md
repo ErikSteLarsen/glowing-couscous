@@ -76,7 +76,7 @@ navigation.
 
 | Area | Owner | Responsibility |
 |---|---|---|
-| Authentication | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | Session shaping, redirects, current-user access, and API role guards |
+| Authentication | `auth.ts`, `proxy.ts`, `lib/auth-session.ts`, `lib/api-auth.ts` | Session shaping, redirects, current-user access, and API role guards |
 | Account | `lib/account-service.ts` | Profile, performance profile, and overview preference reads/writes |
 | Coach reads | `lib/coach-service.ts` | Roster and athlete-detail read models |
 | Coach requests | `lib/coach-request-service.ts` | Search, request creation, approval, rejection, and pending uniqueness |
@@ -123,7 +123,7 @@ navigation.
 
 - Browser acceptance for public sharing and some session mutation flows still needs a fresh pass.
 - Auth.js external OAuth integration is optional and not covered by local credentials tests.
-- The middleware convention emits a Next.js deprecation warning; it is not currently a build failure.
+- The authentication proxy runs in Node.js so roleless JWT refreshes can query Prisma. Its redirects are secondary to the service/API authorization checks.
 
 ## Calendar scheduling
 

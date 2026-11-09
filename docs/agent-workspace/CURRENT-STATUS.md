@@ -42,7 +42,9 @@ sanitized snapshots and requires an explicit recipient save.
   distinguishes a created account from failed automatic sign-in. Setup retries
   the same saved role without permitting role changes. Settings restores failed
   toggles and prevents overlapping writes. Personal training is the first
-  onboarding choice. Browser failure/retry acceptance is in progress.
+  onboarding choice. Chromium verified failed signup/login requests, preserved
+  input, a created account with failed automatic sign-in, successful retries,
+  and settings rollback followed by persisted retry.
 - Session outcomes, actual corrections, comparison, completion history, and
   sanitized sharing remain implemented. The older coach session adapter in
   `lib/planner-service.ts` remains transitional.
@@ -53,31 +55,40 @@ sanitized snapshots and requires an explicit recipient save.
 |---|---|---|
 | Tests | Pass, 231 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
-| Production build | Pass | `pnpm build`; middleware deprecation warning remains |
+| Production build | Pass | `pnpm build`; middleware deprecation warning removed |
 | Dashboard | Pass | Desktop and 390px Chromium: pointer at final plotted day, Home/End readings, no horizontal overflow or browser errors; coach-note service regressions pass |
 | Session execution and corrections | Pass | Chromium repeated/skipped execution, relative labels, completion, immediate actual correction, notes, reopening, planned adjustment, and reload persistence; session detail axe reports no violations |
 | Calendar persistence | Pass | Chromium explicit-date, keyboard-drag, and pointer-drag moves persisted after navigation/reload |
 | Calendar dates and ownership | Pass | Isolated SQLite tests cover foreign athletes, coach ownership, completed sessions, impossible dates, plan membership, content preservation, and Oslo/New York DST |
 | Calendar accessibility | Pass in scanned week view | Chromium axe 4.12.1: no violations; 390px month view has no horizontal overflow |
+| Roleless production authentication | Pass | `node --env-file=.env scripts/verify-roleless-setup.mjs` against a local production server; failed before the proxy migration and passed afterward |
 | Design detector | Pass for changed calendar | No findings; dashboard chart labels have advisory typography findings |
 
 The calendar review identified missing scheduled times on cards. The correction
 restores those times in visible metadata and accessible names. Session review
 identified cross-sport heart-rate resolution; both Live and WorkoutBuilder now
 require the current sport, with distinct-sport and missing-value regressions.
+Roleless JWT refresh previously called Prisma in Edge middleware and cleared
+the session. `proxy.ts` now runs that guard in Node.js; the runtime regression
+checks the real cookie/session flow and deletes its temporary account.
 Dashboard review
 findings are corrected, and its recheck found no actionable remaining issue.
 
 ## Remaining limits and unverified behavior
 
-- First-run and settings request recovery is the active next part.
+- Auth.js still redirects to its error page if provider discovery fails, even
+  when credentials sign-in requested an inline response. Credential-callback
+  failures are recovered inline; provider-discovery outages remain a dependency
+  limitation.
 - Per-athlete time zones are not implemented. Calendar days use the server's
   local time zone; rescheduling preserves wall time within that zone.
 - Live execution is a local guidance stepper without device or sensor telemetry.
 - External Google OAuth, physical-device touch, and production deployment have
   not been verified in this run.
-- Public sharing and the alternate workout/planner design previews have not had
-  browser acceptance rerun. Earlier template-editor accessibility findings
-  need a new scan before they can be considered resolved.
+- An anonymous share preview passed browser checks for relative targets, private
+  note exclusion, and sign-in return paths. Recipient intake and alternate
+  workout/planner design previews have not had browser acceptance rerun.
+  Workouts, Templates, and Activity list accessibility scans found no violations;
+  template-editor accessibility still needs a new scan.
 - The specialized Next.js dev-loop skill requires Next.js 16.3 or later; this
   app uses 16.2.4. Current evidence uses project checks and direct Chromium tests.

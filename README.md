@@ -76,3 +76,23 @@ pnpm db:seed
 
 `pnpm db:push` may reset local SQLite data. Run `pnpm db:seed` afterward when
 you need demo data again.
+
+## Authentication runtime check
+
+The production authentication proxy runs in Node.js so a roleless account can
+refresh its JWT through Prisma. To check this path against the local database:
+
+```bash
+pnpm build
+AUTH_TRUST_HOST=true pnpm start --port 3100
+```
+
+In another terminal:
+
+```bash
+node --env-file=.env scripts/verify-roleless-setup.mjs
+```
+
+The check creates and deletes a temporary account. It covers credentials
+sign-in, setup navigation, same-role retries, JWT refresh, and role redirects.
+`AUTH_TRUST_HOST=true` here enables the localhost verification server.

@@ -118,7 +118,7 @@ test('auth role setup keeps the adapter and account-linking contracts explicit',
   const schema = await read('prisma/schema.prisma');
   const auth = await read('auth.ts');
   const route = await read('app/api/auth/setup/route.ts');
-  const middleware = await read('middleware.ts');
+  const middleware = await read('proxy.ts');
 
   assert.match(schema, /name\s+String\?/);
   assert.match(schema, /role\s+String\?/);

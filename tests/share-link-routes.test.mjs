@@ -56,7 +56,7 @@ test('auth continuation preserves only local share token and action paths', asyn
   const login = await read('app/(auth)/login/page.tsx');
   const signup = await read('app/(auth)/signup/page.tsx');
   const setup = await read('app/(auth)/setup/page.tsx');
-  const middleware = await read('middleware.ts');
+  const middleware = await read('proxy.ts');
 
   for (const source of [login, signup, setup]) {
     assert.match(source, /getSafeShareCallbackPath/);
