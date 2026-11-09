@@ -35,6 +35,7 @@ export function createAuthRoleService({ db }: { db: RoleDatabase }) {
       });
 
       if (!user) return { ok: false, status: 404, error: 'User not found' };
+      if (user.role === role) return { ok: true, role };
       return { ok: false, status: 409, error: 'Role is already set' };
     },
   };

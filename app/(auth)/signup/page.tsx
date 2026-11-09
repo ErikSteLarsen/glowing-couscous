@@ -21,7 +21,9 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'COACH' | 'ATHLETE'>('ATHLETE');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'creating' | 'signing-in' | 'created'>('idle');
+  const loading = status === 'creating' || status === 'signing-in';
+  const accountCreated = status === 'created';
   const [googleEnabled, setGoogleEnabled] = useState(false);
   const router = useRouter();
 
@@ -40,45 +42,73 @@ export default function SignupPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading || accountCreated) return;
     const callbackUrl = readCallbackUrl();
-    setLoading(true);
+    setStatus('creating');
     setError('');
-    const res = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password, role }),
-    });
-    if (!res.ok) {
-      const data = await res.json();
-      setError(data.error ?? 'Something went wrong');
-      setLoading(false);
-      return;
-    }
-    const result = await signIn('credentials', { email, password, redirect: false });
-    setLoading(false);
-    if (result?.error) {
-      setError('Account created — please sign in.');
-      router.push(callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : '/login');
-    } else {
+    let created = false;
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, role }),
+      });
+      if (!res.ok) {
+        const data: unknown = await res.json().catch(() => null);
+        setError(data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+          ? data.error
+          : 'Could not create your account. Try again.');
+        return;
+      }
+      created = true;
+      setStatus('signing-in');
+      const result = await signIn('credentials', { email, password, redirect: false });
+      if (!result?.ok || result.error) {
+        setError('Your account is ready. Sign in to continue.');
+        return;
+      }
       router.push(callbackUrl ?? '/');
+    } catch {
+      setError(created
+        ? 'Your account is ready, but automatic sign-in failed. Sign in to continue.'
+        : 'Could not create your account. Check your connection and try again.');
+    } finally {
+      setStatus(created ? 'created' : 'idle');
     }
   }
+
+  async function continueWithGoogle() {
+    if (loading || accountCreated) return;
+    setStatus('signing-in');
+    setError('');
+    try {
+      await signIn('google', { callbackUrl: readCallbackUrl() ?? '/' });
+    } catch {
+      setError('Could not start Google sign-in. Check your connection and try again.');
+    } finally {
+      setStatus('idle');
+    }
+  }
+
+  const callbackUrl = accountCreated ? readCallbackUrl() : null;
+  const signInHref = callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : '/login';
 
   return (
     <PageShell size="narrow" className="mx-auto min-h-[calc(100vh-7rem)] justify-center">
       <TopBar title="Create account" align="center" />
       <Surface className="mx-auto w-full max-w-md">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <fieldset className="flex gap-3">
+          <fieldset disabled={loading || accountCreated} className="flex gap-3">
             <legend className={`${formLabelClassName} w-full`}>Account type</legend>
-            {(['COACH', 'ATHLETE'] as const).map((r) => (
+            {(['ATHLETE', 'COACH'] as const).map((r) => (
               <button
                 key={r}
                 type="button"
                 onClick={() => setRole(r)}
+                aria-pressed={role === r}
                 className={getSegmentedChoiceClassName(role === r)}
               >
-                {r === 'COACH' ? 'I am a coach' : 'I am an athlete'}
+                {r === 'COACH' ? 'I am a coach' : 'I plan my training'}
               </button>
             ))}
           </fieldset>
@@ -87,6 +117,8 @@ export default function SignupPage() {
             <input
               id="signup-name"
               type="text"
+              autoComplete="name"
+              disabled={loading || accountCreated}
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Your full name"
@@ -99,6 +131,8 @@ export default function SignupPage() {
             <input
               id="signup-email"
               type="email"
+              autoComplete="username"
+              disabled={loading || accountCreated}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
@@ -111,6 +145,8 @@ export default function SignupPage() {
             <input
               id="signup-password"
               type="password"
+              autoComplete="new-password"
+              disabled={loading || accountCreated}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 8 characters"
@@ -120,15 +156,24 @@ export default function SignupPage() {
             />
           </div>
           {error && <p className={dangerTextClassName} role="alert">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className={`${primaryButtonClassName} w-full`}
-          >
-            {loading ? 'Creating account…' : 'Create account'}
-          </button>
+          {accountCreated ? (
+            <a
+              href={signInHref}
+              className={`${primaryButtonClassName} w-full`}
+            >
+              Sign in
+            </a>
+          ) : (
+            <button
+              type="submit"
+              disabled={loading}
+              className={`${primaryButtonClassName} w-full`}
+            >
+              {status === 'signing-in' ? 'Signing in…' : loading ? 'Creating account…' : 'Create account'}
+            </button>
+          )}
         </form>
-        {googleEnabled && (
+        {googleEnabled && !accountCreated && (
           <>
             <div className="my-5 flex items-center gap-3">
               <div className="h-px flex-1 bg-[var(--border)]" />
@@ -136,7 +181,8 @@ export default function SignupPage() {
               <div className="h-px flex-1 bg-[var(--border)]" />
             </div>
             <button
-              onClick={() => signIn('google', { callbackUrl: readCallbackUrl() ?? '/' })}
+              onClick={() => void continueWithGoogle()}
+              disabled={loading}
               className={`${secondaryButtonClassName} w-full`}
             >
               Continue with Google

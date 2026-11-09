@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState } from 'react';
 import { OVERVIEW_CARD_IDS, type OverviewCardId } from '@/lib/overview-preferences';
 import { Toggle } from '@/components/tempo/Toggle';
 
@@ -33,41 +33,49 @@ export function SettingsClient({
   const [overviewCards, setOverviewCards] = useState(initialOverviewCards);
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
+  const saving = useRef(false);
 
-  function updateCard(cardId: OverviewCardId, enabled: boolean) {
+  async function updateCard(cardId: OverviewCardId, enabled: boolean) {
+    if (saving.current) return;
+    saving.current = true;
+    const previousCards = overviewCards;
     const nextCards = enabled
       ? OVERVIEW_CARD_IDS.filter((id) => id === cardId || overviewCards.includes(id))
       : overviewCards.filter((id) => id !== cardId);
 
     setOverviewCards(nextCards);
+    setIsPending(true);
     setMessage('');
-    startTransition(async () => {
+    try {
       const response = await fetch('/api/account/profile', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ overviewCards: nextCards }),
       });
-
       if (!response.ok) {
-        setOverviewCards(overviewCards);
+        setOverviewCards(previousCards);
         setMessageTone('danger');
-        setMessage('Could not save overview settings.');
+        setMessage('Could not save overview settings. Try again.');
         return;
       }
-
       setMessageTone('success');
       setMessage('Overview settings updated.');
-    });
+    } catch {
+      setOverviewCards(previousCards);
+      setMessageTone('danger');
+      setMessage('Could not save overview settings. Check your connection and try again.');
+    } finally {
+      saving.current = false;
+      setIsPending(false);
+    }
   }
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
       {role === 'ATHLETE' ? (
         <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
+          <p className="text-xs font-medium text-[var(--text-muted)]">
             Overview
           </p>
           <div className="mt-4 space-y-3">
@@ -89,13 +97,18 @@ export function SettingsClient({
                   <Toggle
                     checked={checked}
                     label={`${meta.title} on Home`}
-                    onChange={(enabled) => updateCard(cardId, enabled)}
+                    onChange={(enabled) => void updateCard(cardId, enabled)}
                     disabled={isPending}
                   />
                 </div>
               );
             })}
           </div>
+          {message ? (
+            <p className={`mt-4 text-sm ${messageTone === 'success' ? 'text-[var(--status-success)]' : 'text-[var(--status-danger)]'}`} role={messageTone === 'success' ? 'status' : 'alert'}>
+              {message}
+            </p>
+          ) : null}
         </section>
       ) : null}
 
@@ -109,14 +122,10 @@ export function SettingsClient({
         <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
           <p className="text-[15px] font-semibold text-[var(--text)]">Notifications</p>
           <p className="mt-2 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
-            Notification delivery preferences stay intentionally minimal until the athlete and coach mobile flows are fully migrated.
+            Email and push notifications are not available yet.
           </p>
         </section>
-        {message ? (
-          <p className={`text-sm ${messageTone === 'success' ? 'text-[var(--status-success)]' : 'text-[var(--status-danger)]'}`} role="status">
-            {message}
-          </p>
-        ) : null}
+
       </div>
     </div>
   );

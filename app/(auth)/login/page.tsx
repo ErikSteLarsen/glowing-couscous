@@ -37,15 +37,36 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     const callbackUrl = readCallbackUrl();
     setLoading(true);
     setError('');
-    const result = await signIn('credentials', { email, password, redirect: false });
-    setLoading(false);
-    if (result?.error) {
-      setError('Invalid email or password');
-    } else {
+    try {
+      const result = await signIn('credentials', { email, password, redirect: false });
+      if (!result?.ok || result.error) {
+        setError(result?.error === 'CredentialsSignin'
+          ? 'Invalid email or password. Try again.'
+          : 'Could not sign in. Try again.');
+        return;
+      }
       router.push(callbackUrl ?? '/');
+    } catch {
+      setError('Could not reach the sign-in service. Check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function continueWithGoogle() {
+    if (loading) return;
+    setLoading(true);
+    setError('');
+    try {
+      await signIn('google', { callbackUrl: readCallbackUrl() ?? '/' });
+    } catch {
+      setError('Could not start Google sign-in. Check your connection and try again.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -63,6 +84,7 @@ export default function LoginPage() {
             <input
               id="login-email"
               type="email"
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
@@ -75,6 +97,7 @@ export default function LoginPage() {
             <input
               id="login-password"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -98,7 +121,8 @@ export default function LoginPage() {
               <div className="h-px flex-1 bg-[var(--border)]" />
             </div>
             <button
-              onClick={() => signIn('google', { callbackUrl: readCallbackUrl() ?? '/' })}
+              onClick={() => void continueWithGoogle()}
+              disabled={loading}
               className={`${secondaryButtonClassName} w-full`}
             >
               Continue with Google

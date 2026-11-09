@@ -38,6 +38,11 @@ sanitized snapshots and requires an explicit recipient save.
   and uses canonical relative and profile-aware target labels. The same generic
   labels appear in shared session summaries. Session detail uses refreshed
   completion/editor modes and preserves notes through corrections.
+- Login, signup, setup, and settings recover from failed requests. Signup
+  distinguishes a created account from failed automatic sign-in. Setup retries
+  the same saved role without permitting role changes. Settings restores failed
+  toggles and prevents overlapping writes. Personal training is the first
+  onboarding choice. Browser failure/retry acceptance is in progress.
 - Session outcomes, actual corrections, comparison, completion history, and
   sanitized sharing remain implemented. The older coach session adapter in
   `lib/planner-service.ts` remains transitional.
@@ -46,7 +51,7 @@ sanitized snapshots and requires an explicit recipient save.
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass, 229 tests | `pnpm test` |
+| Tests | Pass, 231 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build`; middleware deprecation warning remains |
 | Dashboard | Pass | Desktop and 390px Chromium: pointer at final plotted day, Home/End readings, no horizontal overflow or browser errors; coach-note service regressions pass |

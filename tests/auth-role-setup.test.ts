@@ -39,6 +39,42 @@ test('role setup assigns only a roleless user', async () => {
   assert.equal(role, 'ATHLETE');
 });
 
+test('same-role setup retries succeed without rewriting an assigned role', async () => {
+  let writes = 0;
+  const service = createAuthRoleService({
+    db: {
+      user: {
+        async updateMany(args) {
+          assert.deepEqual(args.where, { id: 7, role: null });
+          writes += 1;
+          return { count: 0 };
+        },
+        async findUnique() {
+          return { role: 'ATHLETE' };
+        },
+      },
+    },
+  });
+
+  assert.deepEqual(await service.assignRole(7, 'ATHLETE'), { ok: true, role: 'ATHLETE' });
+  assert.deepEqual(await service.assignRole(7, 'ATHLETE'), { ok: true, role: 'ATHLETE' });
+  assert.deepEqual(await service.assignRole(7, 'COACH'), { ok: false, status: 409, error: 'Role is already set' });
+  assert.equal(writes, 3, 'every write remains conditional on the account having no role');
+});
+
+test('role setup returns not found when the account no longer exists', async () => {
+  const service = createAuthRoleService({
+    db: {
+      user: {
+        async updateMany() { return { count: 0 }; },
+        async findUnique() { return null; },
+      },
+    },
+  });
+
+  assert.deepEqual(await service.assignRole(7, 'ATHLETE'), { ok: false, status: 404, error: 'User not found' });
+});
+
 test('competing role setup requests resolve to one winner', async () => {
   let role: string | null = null;
   const service = createAuthRoleService({
