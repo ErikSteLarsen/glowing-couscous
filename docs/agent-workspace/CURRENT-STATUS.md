@@ -44,7 +44,8 @@ sanitized snapshots and requires an explicit recipient save.
   toggles and prevents overlapping writes. Personal training is the first
   onboarding choice. Chromium verified failed signup/login requests, preserved
   input, a created account with failed automatic sign-in, successful retries,
-  and settings rollback followed by persisted retry.
+  and settings rollback followed by persisted retry. A role save followed by
+  a blocked session refresh also recovered on retry.
 - Session outcomes, actual corrections, comparison, completion history, and
   sanitized sharing remain implemented. The older coach session adapter in
   `lib/planner-service.ts` remains transitional.
