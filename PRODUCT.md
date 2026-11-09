@@ -45,7 +45,7 @@ expansion until personal use is complete or explicitly requested.
 - Duration, training load, zones, and timelines are derived from structured blocks.
 - `Workouts` stores private reusable definitions without dates or assignments.
 - `Planner` places independent copies of reusable content onto selected athlete dates or training-plan weekdays. Workouts can target multiple dates; day, week, and month templates use exact cadence-length date ranges.
-- `Templates` stores reusable coach-owned day, week, or month cadence structures whose assignment span is validated by Planner.
+- `Templates` stores owner-scoped personal or coach day, week, or month cadence content whose assignment span is validated by Planner.
 - Completion stores performed metrics, notes, and the latest actual snapshot in `Activity`.
 
 ## Current Capabilities

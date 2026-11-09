@@ -38,6 +38,10 @@ sanitized snapshots and requires an explicit recipient save.
 - WorkoutBuilder owns structured authoring, skipped blocks, repetitions,
   relative targets, profile-aware previews, presets, explicit reorder controls,
   and undo/redo. Generic prescriptions do not store personal profile values.
+- Template authoring uses the shared editor with profile previews, explicit
+  discard confirmation, failed-save draft retention, and locked controls while
+  saving. The library and editor appear separately; mobile Save clears the
+  bottom navigation. Template durations remain editable in seconds.
 - Live expands repetitions into unique execution steps, omits skipped blocks,
   and uses canonical relative and profile-aware target labels. The same generic
   labels appear in shared session summaries. Session detail uses refreshed
@@ -62,6 +66,7 @@ sanitized snapshots and requires an explicit recipient save.
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build`; middleware deprecation warning removed |
 | Mobile workout actions | Pass | 390px Chromium: action bar bottom 780px, navigation top 783px; desktop offset 0px; both review axes found no actionable issue |
+| Template authoring | Pass | Chromium discard/keep, blocked fetch, delayed save locks, retry/reload, and 20-second interval persistence; editor and list axe scans have no violations; 390px and 1440px have no overflow; design detector has no findings |
 | Dashboard | Pass | Desktop and 390px Chromium: pointer at final plotted day, Home/End readings, no horizontal overflow or browser errors; coach-note service regressions pass |
 | Session execution and corrections | Pass | Chromium repeated/skipped execution, relative labels, completion, immediate actual correction, notes, reopening, planned adjustment, and reload persistence; session detail axe reports no violations |
 | Calendar persistence | Pass | Chromium explicit-date, keyboard-drag, and pointer-drag moves persisted after navigation/reload |
@@ -95,6 +100,6 @@ findings are corrected, and its recheck found no actionable remaining issue.
   note exclusion, and sign-in return paths. Recipient intake and alternate
   workout/planner design previews have not had browser acceptance rerun.
   Workouts, Templates, and Activity list accessibility scans found no violations;
-  template-editor accessibility still needs a new scan.
+  template editor and list now also pass fresh scans.
 - The specialized Next.js dev-loop skill requires Next.js 16.3 or later; this
   app uses 16.2.4. Current evidence uses project checks and direct Chromium tests.

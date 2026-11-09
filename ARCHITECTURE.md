@@ -85,7 +85,7 @@ navigation.
 | Coach planning | `lib/coach-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, dated sessions, source search, and roster-scoped planner writes |
 | Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |
 | Training plans | `lib/coach-training-plan-service.ts` | Reusable weekday-based coach plans |
-| Templates | `lib/template-service.ts` | Coach-owned reusable templates and cadence |
+| Templates | `lib/template-service.ts`, `CoachTemplatesClient` | Owner-scoped personal and coach templates, cadence, and shared authoring |
 | Assignment | `lib/assignment-service.ts` | Snapshot copies, lineage, deduplication, and training-plan assignment |
 | Session compatibility | `lib/planner-service.ts` | Older coach session mutation adapter; transitional only |
 | Workout content | `lib/session-editor.ts`, `lib/session-editor-adapters.ts`, `lib/workout-editor.ts`, `lib/workout-blocks.ts` | Canonical drafts, editor modes, block normalization, and persistence shaping |

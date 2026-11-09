@@ -233,7 +233,6 @@ export function CoachTemplatesClient({
             summaryLabel="Template summary"
             summaryPlaceholder="What is this template for?"
             performanceProfile={performanceProfile}
-            durationUnit="minutes"
           />
           <label className="block space-y-2">
             <span className={formLabelClassName}>Template cadence</span>

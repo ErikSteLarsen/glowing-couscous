@@ -31,6 +31,9 @@ pushed before advancing.
 - Mobile workout actions verified above navigation, reviewed without findings,
   and ready to push. Template draft protection, pending-state safety, profile
   previews, and complete outcome history are the next iterations.
+- Template draft/pending/profile improvements pass checks and browser
+  verification. Review caught minute rounding for short blocks; removed the
+  new minutes mode and verified a 20-second interval through save/reload.
 - Current product priority and dark visual contract remain authoritative.
 
 ## Completion
