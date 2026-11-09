@@ -1,8 +1,10 @@
 import Link from 'next/link';
+import { ComplianceMark } from '@/components/tempo/ComplianceMark';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
+import { complianceLabels, type ComplianceState } from '@/lib/training-load';
 
 type SessionStatus = 'planned' | 'completed' | 'adjusted' | 'missed';
 
@@ -16,6 +18,7 @@ export type SessionRowData = {
   durationSec: number;
   tss: number;
   targetLabel?: string | null;
+  compliance?: ComplianceState;
   segments: Array<{
     key: string;
     zone: number;
@@ -93,14 +96,14 @@ export function SessionRow({
     formatDuration(session.durationSec),
     `${session.tss} TSS`,
     session.targetLabel,
-    session.status,
+    session.compliance ? complianceLabels[session.compliance] : session.status,
   ].filter(Boolean).join(', ');
 
   return (
     <Link
       href={href}
       aria-label={accessibleName}
-      className={`group block min-w-0 border border-[var(--border)] transition hover:border-[var(--field-focus)] hover:bg-[var(--field-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] ${styles.root}`}
+      className={`group block min-w-0 border border-[var(--border)] transition hover:border-[var(--border-strong)] hover:bg-[var(--raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] ${styles.root}`}
     >
       <div className={muted ? 'opacity-70' : undefined}>
         <div className="flex min-w-0 items-start gap-3">
@@ -110,6 +113,7 @@ export function SessionRow({
               {[visibleDateLabel, showTime ? session.timeLabel : null, getSportLabel(session.sport)].filter(Boolean).join(' · ')}
             </p>
           </div>
+          {session.compliance ? <ComplianceMark state={session.compliance} className="mt-1" /> : null}
         </div>
         {styles.showBar ? <SessionBlockBar segments={session.segments} size={styles.barSize} /> : null}
         {styles.metrics ? (

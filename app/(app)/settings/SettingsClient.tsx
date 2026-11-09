@@ -6,20 +6,20 @@ import { Toggle } from '@/components/tempo/Toggle';
 
 const overviewLabels: Record<OverviewCardId, { title: string; description: string }> = {
   coachNote: {
-    title: 'Coach note',
-    description: 'Show the right-rail coaching note on Home when a coach is connected.',
+    title: 'Coach notes',
+    description: "Show your coach's note for today's session on Home.",
   },
   lastActivity: {
     title: 'Last activity',
     description: 'Keep the most recent completed session visible on Home.',
   },
   weekLoad: {
-    title: 'Weekly load',
-    description: 'Show total planned duration and TSS for the current week.',
+    title: 'Weekly volume',
+    description: 'Compare planned and completed work this week and over recent weeks.',
   },
   trend: {
-    title: 'Fitness trend',
-    description: 'Display recent TSS bars in the Home side rail.',
+    title: 'Fitness and form',
+    description: 'Chart fitness, fatigue, and form with a two-week projection from your plan.',
   },
 };
 

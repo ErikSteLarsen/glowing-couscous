@@ -149,13 +149,14 @@ test('athlete home page uses the week wall and explicit session actions', async 
   const sessionRowSource = await read('components/tempo/SessionRow.tsx');
   const statusBadgeSource = await read('components/tempo/StatusBadge.tsx');
 
-  assert.match(athletePageSource, /Good morning/);
+  assert.match(athletePageSource, /greetingFor/);
   assert.match(athletePageSource, /Today/);
-  assert.match(athletePageSource, /Week at a glance/);
-  assert.match(athletePageSource, /Next session/);
+  assert.match(athletePageSource, /This week/);
+  assert.match(athletePageSource, /Start session/);
   assert.doesNotMatch(athletePageSource, /actions=\{/);
   assert.doesNotMatch(athletePageSource, /Open full calendar/);
-  assert.match(athletePageSource, /No session scheduled today/);
+  assert.match(athletePageSource, /Rest day/);
+  assert.match(athletePageSource, /trainingLoadService\.loadOverview/);
   assert.doesNotMatch(athletePageSource, /Customise overview in Settings/);
   assert.match(athletePageSource, /athlete\/session/);
   assert.match(athletePageSource, /SessionRow/);

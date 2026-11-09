@@ -1,10 +1,12 @@
-import { addDays, addMonths, differenceInCalendarDays, endOfMonth, endOfWeek, format, isSameDay, startOfMonth, startOfWeek } from 'date-fns';
+import { addDays, addMonths, differenceInCalendarDays, endOfDay, endOfMonth, endOfWeek, format, isSameDay, startOfMonth, startOfWeek } from 'date-fns';
 import { readOverviewCardsFromPrefsJson } from './overview-preferences.ts';
 import { prisma } from './prisma.ts';
 import { deriveSessionMetrics } from './session-math.ts';
 import { getTempoZoneMeta } from './tempo-blocks.ts';
 import { parseActivitySegments } from './activity-metrics.ts';
 import { createSessionEditorDraftFromPersisted } from './session-editor.ts';
+import { plannedMetrics } from './training-load-service.ts';
+import { classifyCompliance, toDayKey } from './training-load.ts';
 
 type AthleteServiceDeps = {
   db?: typeof prisma;
@@ -24,6 +26,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
     timeLabel: string | null;
     status: string;
     adjusted: boolean;
+    coachBaselineJson?: string | null;
     blocks: Array<{
       id: number;
       kind: string;
@@ -41,6 +44,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
     }>;
     activity?: {
       tss: number;
+      durationSec?: number;
       compliancePct?: number | null;
       segmentsJson?: string | null;
       metricsSource?: string;
@@ -70,6 +74,30 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         block.targetType !== null && block.targetLow !== null && block.targetHigh !== null,
     );
 
+    const status = (
+      session.activity
+        ? 'completed'
+        : session.status === 'missed'
+          ? 'missed'
+          : session.adjusted
+            ? 'adjusted'
+            : 'planned'
+    ) as 'planned' | 'completed' | 'adjusted' | 'missed';
+    const planned = plannedMetrics(
+      { coachBaselineJson: session.coachBaselineJson ?? null, blocks: session.blocks.map((block) => ({ ...block, skipped: Boolean(block.skipped) })) },
+      { completed: status === 'completed', metricsSource: session.activity?.metricsSource },
+    );
+    const compliance = classifyCompliance({
+      status,
+      day: toDayKey(session.date),
+      today: toDayKey(new Date()),
+      plannedDurationSec: planned.durationSec,
+      plannedTss: planned.tss,
+      actualDurationSec: session.activity?.durationSec ?? null,
+      actualTss: session.activity?.tss ?? null,
+      compliancePct: session.activity?.compliancePct ?? null,
+    });
+
     return {
       id: session.id,
       title: session.title,
@@ -77,15 +105,10 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       sport: session.sport,
       date: session.date,
       timeLabel: session.timeLabel ?? format(session.date, 'HH:mm'),
-      status: (
-        session.activity
-          ? 'completed'
-          : session.status === 'missed'
-            ? 'missed'
-            : session.adjusted
-              ? 'adjusted'
-              : 'planned'
-      ) as 'planned' | 'completed' | 'adjusted' | 'missed',
+      status,
+      compliance,
+      plannedDurationSec: planned.durationSec,
+      plannedTss: planned.tss,
       targetLabel:
         targetBlock && targetBlock.targetType
           ? `${targetBlock.targetLow}-${targetBlock.targetHigh} ${
@@ -163,6 +186,10 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
     },
 
     async loadHomeDashboard(userId: number) {
+      const now = new Date();
+      const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+      // Late in the week, the next few days reach into next week.
+      const lookaheadEnd = endOfDay(addDays(now, 4));
       const athlete = await db.user.findUnique({
         where: { id: userId },
         include: {
@@ -172,8 +199,8 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
           sessions: {
             where: {
               date: {
-                gte: startOfWeek(new Date(), { weekStartsOn: 1 }),
-                lte: endOfWeek(new Date(), { weekStartsOn: 1 }),
+                gte: startOfWeek(now, { weekStartsOn: 1 }),
+                lte: lookaheadEnd > weekEnd ? lookaheadEnd : weekEnd,
               },
             },
             include: {
@@ -186,7 +213,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
           },
           activities: {
             orderBy: { completedAt: 'desc' },
-            take: 4,
+            take: 1,
             include: {
               session: true,
             },
@@ -200,16 +227,18 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
 
       const overviewCards = readOverviewCardsFromPrefsJson(athlete.prefsJson);
 
-      const sessions = athlete.sessions
-        .filter((s): s is typeof s & { date: Date } => s.date !== null)
-        .map(mapSessionSummary);
-      const today = new Date();
+      const datedSessions = athlete.sessions.filter((s): s is typeof s & { date: Date } => s.date !== null);
+      const sessions = datedSessions.map(mapSessionSummary);
+      const today = now;
       const todaySessions = sessions.filter((session) => isSameDay(session.date, today));
+      const todayCoachNote = datedSessions.find(
+        (session) => isSameDay(session.date, today) && session.coachNotes && session.coachNotes.trim(),
+      );
       const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
       const weekDays = Array.from({ length: 7 }, (_, index) => {
         const day = addDays(currentWeekStart, index);
         return {
-          label: format(day, 'EEE').toUpperCase(),
+          label: format(day, 'EEE'),
           dateLabel: format(day, 'd'),
           isoDate: format(day, 'yyyy-MM-dd'),
           isToday: isSameDay(day, today),
@@ -220,13 +249,14 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         const day = addDays(today, index + 1);
         const daySessions = sessions.filter((session) => isSameDay(session.date, day));
         return {
-          label: format(day, 'EEE').toUpperCase(),
+          label: format(day, 'EEE'),
           dateLabel: format(day, 'd'),
+          isoDate: format(day, 'yyyy-MM-dd'),
           sessions: daySessions,
         };
       });
 
-      const weekTotals = sessions.reduce(
+      const weekTotals = sessions.filter((session) => session.date <= weekEnd).reduce(
         (accumulator, session) => {
           accumulator.durationSec += session.durationSec;
           accumulator.tss += session.tss;
@@ -249,23 +279,20 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         nextDays,
         lastActivity: athlete.activities[0]
           ? {
+              sessionId: athlete.activities[0].sessionId,
               title: athlete.activities[0].session.title,
+              sport: athlete.activities[0].session.sport,
+              rpe: athlete.activities[0].rpe,
+              notes: athlete.activities[0].notes,
               completedAt: athlete.activities[0].completedAt,
               durationSec: athlete.activities[0].durationSec,
               tss: athlete.activities[0].tss,
             }
           : null,
-        trend: athlete.activities
-          .slice()
-          .reverse()
-          .map((activity) => ({
-            label: format(activity.completedAt, 'd MMM'),
-            tss: activity.tss,
-          })),
         weekTotals,
         coachNote:
-          athlete.coach && todaySessions[0]
-            ? `Keep ${todaySessions[0].title.toLowerCase()} controlled and smooth.`
+          athlete.coach && todayCoachNote?.coachNotes
+            ? { sessionTitle: todayCoachNote.title, text: todayCoachNote.coachNotes.trim() }
             : null,
       };
     },

@@ -481,7 +481,7 @@ async function main() {
       selfCoached: false,
       coachId: coachErik.id,
       passwordHash,
-      prefsJson: overviewCards('coachNote', 'lastActivity', 'weekLoad'),
+      prefsJson: overviewCards('coachNote', 'lastActivity', 'weekLoad', 'trend'),
     },
   });
 

@@ -23,7 +23,7 @@ import {
 
 type TrainingLoadDeps = { db?: typeof prisma };
 
-type MetricBlock = { kind: string; zone: number; durationSec: number; reps: number | null; skipped: boolean };
+export type MetricBlock = { kind: string; zone: number; durationSec: number; reps: number | null; skipped: boolean };
 
 export type SessionLoad = {
   sessionId: number;
@@ -80,15 +80,22 @@ function sessionStatus(session: { status: string; adjusted: boolean; activity: u
 const NO_PLAN = { durationSec: 0, tss: 0 };
 
 /**
- * What was planned: the saved baseline once a session is completed, otherwise
- * its current blocks. Completed blocks hold the actual work, so without a
- * baseline there is no plan to compare against.
+ * What was planned. Completing a session with actuals replaces its blocks
+ * with the work done, so the plan is the saved baseline; earlier completions
+ * kept the planned blocks. Without either, there is no plan to compare with.
  */
-function plannedMetrics(session: { coachBaselineJson: string | null; blocks: MetricBlock[] }, completed: boolean) {
-  if (!completed) return metricsForBlocks(session.blocks);
+export function plannedMetrics(
+  session: { coachBaselineJson: string | null; blocks: MetricBlock[] },
+  completion: { completed: boolean; metricsSource?: string | null },
+) {
+  if (!completion.completed) return metricsForBlocks(session.blocks);
   const baseline = deserializeSessionSnapshot('planned', session.coachBaselineJson);
-  return baseline ? deriveSessionEditorMetrics(baseline) : NO_PLAN;
+  if (baseline) return deriveSessionEditorMetrics(baseline);
+  return completion.metricsSource === ACTUAL_BLOCKS_SOURCE ? NO_PLAN : metricsForBlocks(session.blocks);
 }
+
+/** Activity source written when the athlete records actual blocks over the plan. */
+const ACTUAL_BLOCKS_SOURCE = 'manual-actual';
 
 export function createTrainingLoadService({ db = prisma }: TrainingLoadDeps = {}) {
   return {
@@ -120,7 +127,7 @@ export function createTrainingLoadService({ db = prisma }: TrainingLoadDeps = {}
           adjusted: true,
           coachBaselineJson: true,
           blocks: { select: { kind: true, zone: true, durationSec: true, reps: true, skipped: true }, orderBy: { sortOrder: 'asc' } },
-          activity: { select: { completedAt: true, durationSec: true, tss: true, compliancePct: true } },
+          activity: { select: { completedAt: true, durationSec: true, tss: true, compliancePct: true, metricsSource: true } },
         },
         orderBy: [{ date: 'asc' }, { id: 'asc' }],
       });
@@ -128,7 +135,7 @@ export function createTrainingLoadService({ db = prisma }: TrainingLoadDeps = {}
       const sessions: SessionLoad[] = records.flatMap((record) => {
         if (!record.date) return [];
         const status = sessionStatus(record);
-        const planned = plannedMetrics(record, status === 'completed');
+        const planned = plannedMetrics(record, { completed: status === 'completed', metricsSource: record.activity?.metricsSource });
         const day = toDayKey(record.date);
 
         return [

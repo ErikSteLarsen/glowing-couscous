@@ -64,7 +64,8 @@ test('athlete Home uses the shared header scale and section heading scale', asyn
 
   assert.match(uiSource, /<h1 className=\{pageHeadingClassName\}>\{title\}<\/h1>/);
   assert.match(athletePageSource, /className=\{sectionHeadingClassName\}>Today/);
-  assert.match(athletePageSource, /className=\{sectionHeadingClassName\}>Week at a glance/);
+  assert.match(athletePageSource, /className=\{sectionHeadingClassName\}>This week/);
+  assert.match(athletePageSource, /PerformanceChart/);
   assert.doesNotMatch(uiSource, /ink-topbar__title/);
   assert.doesNotMatch(athletePageSource, /className="text-base font-medium tracking-\[-0\.01em\]/);
   assert.doesNotMatch(athletePageSource, /week-glance-heading" className="[^"]*border-b/);
