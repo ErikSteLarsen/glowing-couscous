@@ -6,11 +6,17 @@ import { getTempoZoneMeta } from './tempo-blocks.ts';
 import { parseActivitySegments } from './activity-metrics.ts';
 import { createSessionEditorDraftFromPersisted } from './session-editor.ts';
 import { plannedMetrics } from './training-load-service.ts';
-import { classifyCompliance, toDayKey } from './training-load.ts';
+import { addDayKeys, classifyCompliance, fromDayKey, summarizeWeeks, toDayKey, type WeekSession } from './training-load.ts';
+import { parseCalendarDay } from './calendar-navigation.ts';
 
 type AthleteServiceDeps = {
   db?: typeof prisma;
 };
+
+/** Sessions the athlete placed themselves; coach-owned work keeps its coach's schedule. */
+export function isSelfPlanned(session: { coachOwnerId?: number | null; assignedById?: number | null; trainingPlanId?: number | null }) {
+  return !session.coachOwnerId && !session.assignedById && !session.trainingPlanId;
+}
 
 function selectPrimaryRequest<T extends { status: string }>(requests: T[]) {
   return requests.find((request) => request.status === 'PENDING') ?? requests[0] ?? null;
@@ -125,6 +131,8 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         ? parseActivitySegments(session.activity.segmentsJson)
         : metrics.segments,
       compliancePct: session.activity?.compliancePct ?? null,
+      actualDurationSec: session.activity ? (session.activity.durationSec ?? null) : null,
+      actualTss: session.activity ? session.activity.tss : null,
       metricsSource: session.activity?.metricsSource ?? null,
       blockCount: session.blocks.length,
     };
@@ -325,7 +333,10 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
     },
 
     async loadCalendarView(userId: number, dateRef: Date | string, view: 'week' | 'month' = 'week') {
-      const referenceDate = new Date(dateRef);
+      // A yyyy-MM-dd reference is a local calendar day, never a UTC instant.
+      const dayRef = parseCalendarDay(dateRef);
+      const parsedReference = dayRef ? fromDayKey(dayRef) : new Date(dateRef);
+      const referenceDate = Number.isNaN(parsedReference.getTime()) ? new Date() : parsedReference;
       const resolvedView = view === 'month' ? 'month' : 'week';
       const periodStart =
         resolvedView === 'month'
@@ -370,7 +381,11 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
 
       const sessions = athlete.sessions
         .filter((s): s is typeof s & { date: Date } => s.date !== null)
-        .map(mapSessionSummary);
+        .map((session) => ({
+          ...mapSessionSummary(session),
+          // Only the athlete's own open sessions can be moved from the calendar.
+          canReschedule: !session.activity && session.status !== 'completed' && isSelfPlanned(session),
+        }));
       const buildDay = (date: Date) => ({
         label: format(date, 'EEE'),
         dateLabel: format(date, 'd'),
@@ -394,6 +409,21 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
             )
           : [];
 
+      const weekStarts: string[] = [];
+      for (let weekStart = toDayKey(queryStart); weekStart <= toDayKey(queryEnd); weekStart = addDayKeys(weekStart, 7)) {
+        weekStarts.push(weekStart);
+      }
+      const weekSessions: WeekSession[] = sessions.map((session) => ({
+        day: toDayKey(session.date),
+        sport: session.sport,
+        plannedDurationSec: session.plannedDurationSec,
+        plannedTss: session.plannedTss,
+        actualDurationSec: session.actualDurationSec,
+        actualTss: session.actualTss,
+        compliance: session.compliance,
+      }));
+      const weekSummaries = summarizeWeeks(weekSessions, weekStarts);
+
       return {
         athlete: {
           id: athlete.id,
@@ -401,6 +431,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         },
         coachName: athlete.coach?.name ?? null,
         view: resolvedView,
+        weekSummaries,
         period: {
           start: periodStart,
           previousStart: resolvedView === 'month' ? addMonths(periodStart, -1) : addDays(periodStart, -7),

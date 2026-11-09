@@ -48,7 +48,7 @@ test('Workouts is a standalone library destination and session detail keeps its 
   const workoutsPageSource = await read('app/(app)/athlete/workouts/page.tsx');
   const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
   const sessionPageSource = await read('app/(app)/athlete/session/[sessionId]/page.tsx');
-  const calendarPageSource = await read('app/(app)/athlete/calendar/page.tsx');
+  const calendarSource = await read('app/(app)/athlete/calendar/AthleteCalendar.tsx');
   const profileMenuSource = await read('components/AppProfileMenu.tsx');
 
   const navigationSource = await read('lib/app-navigation.ts');
@@ -58,7 +58,7 @@ test('Workouts is a standalone library destination and session detail keeps its 
   assert.doesNotMatch(navigationSource, /activeMatchPrefixes: \['\/athlete\/session', '\/athlete\/live'\]/);
   assert.match(sessionPageSource, /getSessionReturnTarget/);
   assert.match(sessionPageSource, /searchParams/);
-  assert.match(calendarPageSource, /from=calendar/);
+  assert.match(calendarSource, /from=calendar/);
   assert.match(profileMenuSource, /isProfileActionActive/);
   assert.match(profileMenuSource, /aria-current=\{isActive \? 'page' : undefined\}/);
   assert.match(workoutsClientSource, /const \[editorOpen, setEditorOpen\] = useState\(false\)/);

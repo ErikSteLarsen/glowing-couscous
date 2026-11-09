@@ -46,7 +46,7 @@ one-time account creation flow directly.
 ### Athlete
 
 - `/athlete` - Home week overview
-- `/athlete/calendar` - week and month calendar
+- `/athlete/calendar` - URL-addressable week/month calendar, summaries, and personal session rescheduling
 - `/athlete/workouts` - owner-scoped unscheduled workout library
 - `/athlete/planner` - private month-first multi-date Planning Desk
 - `/athlete/templates` - athlete reusable content surface
@@ -124,3 +124,12 @@ navigation.
 - Browser acceptance for public sharing and some session mutation flows still needs a fresh pass.
 - Auth.js external OAuth integration is optional and not covered by local credentials tests.
 - The middleware convention emits a Next.js deprecation warning; it is not currently a build failure.
+
+## Calendar scheduling
+
+`lib/calendar-navigation.ts` owns validated local calendar-day URL navigation.
+`AthleteCalendar` renders week/month views and submits drag or explicit-date
+moves to `/api/athlete/planner/sessions/[sessionId]/schedule`.
+`athletePlannerService.rescheduleSession` atomically checks athlete ownership,
+completion, and coach assignment, preserves local time/content, and updates the
+Monday-based plan. Calendar content and summaries refresh from server data.

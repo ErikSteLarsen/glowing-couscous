@@ -26,6 +26,7 @@ secondary; preserve their behavior and shared ownership boundaries.
 | `SHELL-001` | App shell and navigation | `shipped` | `components/AppShell.tsx`, `components/AppSidebar.tsx`, `lib/app-navigation.ts` | Authenticated `(app)` layout |
 | `COACH-001` | Coach roster and requests | `shipped` | `lib/coach-service.ts`, `lib/coach-request-service.ts` | `/coach`, `/coach/athletes/*`, request APIs |
 | PLAN-001 | Personal planning and secondary coach planning | shipped | components/PlannerDesk.tsx, lib/coach-planner-service.ts, lib/athlete-planner-service.ts, lib/assignment-service.ts | /coach/planner, /athlete/planner |
+| `CALENDAR-001` | Personal calendar and safe rescheduling | `shipped` | `lib/athlete-service.ts`, `lib/athlete-planner-service.ts`, `lib/calendar-navigation.ts`, `app/(app)/athlete/calendar/AthleteCalendar.tsx` | `/athlete/calendar`, `/api/athlete/planner/sessions/*/schedule` |
 | `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | `/coach/workouts`, `/athlete/workouts` |
 | `TEMPLATE-001` | Templates and training plans | `in-progress` | `lib/template-service.ts`, `lib/coach-training-plan-service.ts` | `/coach/templates`, `/athlete/templates` |
 | SESSION-001 | Canonical editor and outcomes | shipped | lib/session-editor.ts, lib/session-snapshot-service.ts, lib/athlete-completion-service.ts | Session detail, WorkoutBuilder, outcome APIs |

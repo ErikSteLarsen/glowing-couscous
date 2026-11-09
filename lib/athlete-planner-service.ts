@@ -5,6 +5,7 @@ import { getTemplateCadence, isAssignmentDate, validateTemplateDateRange } from 
 import { addDays, differenceInCalendarDays, endOfMonth, endOfWeek, format, formatISO, isValid, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 
 import { prisma } from './prisma.ts';
+import { parseCalendarDay } from './calendar-navigation.ts';
 import { deriveSessionMetrics } from './session-math.ts';
 import {
   normalizeSessionEditorDraft,
@@ -361,6 +362,64 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       return { ok: true as const, sessionIds };
     },
 
+    /**
+     * Moves one of the athlete's own open sessions to another day without
+     * touching its content. Completed and coach-owned sessions stay put.
+     */
+    async rescheduleSession(athleteId: number, sessionId: number, input: unknown) {
+      const date = parseCalendarDay(asRecord(input).date);
+      if (!date) return { ok: false as const, error: 'Choose a valid day.', status: 400 };
+
+      try {
+        return await db.$transaction(async (tx) => {
+          const existing = await tx.session.findFirst({
+            where: { id: sessionId, athleteId },
+            select: {
+              date: true,
+              status: true,
+              coachOwnerId: true,
+              assignedById: true,
+              trainingPlanId: true,
+              activity: { select: { id: true } },
+            },
+          });
+          if (!existing?.date) throw new PlacementError('Session not found.', 404);
+          if (existing.activity || existing.status === 'completed') {
+            throw new PlacementError('Completed sessions are immutable.', 409);
+          }
+          if (existing.coachOwnerId || existing.assignedById || existing.trainingPlanId) {
+            throw new PlacementError("Coach-assigned sessions keep the day your coach chose.", 409);
+          }
+
+          const plan = await findOrCreatePlan(tx, athleteId, date);
+          const nextDate = parseISO(date);
+          nextDate.setHours(existing.date.getHours(), existing.date.getMinutes(), existing.date.getSeconds(), existing.date.getMilliseconds());
+          const moved = await tx.session.updateMany({
+            where: {
+              id: sessionId,
+              athleteId,
+              date: existing.date,
+              status: existing.status,
+              coachOwnerId: null,
+              assignedById: null,
+              trainingPlanId: null,
+              activity: { is: null },
+            },
+            data: {
+              date: nextDate,
+              planId: plan.id,
+              ...(existing.status === 'missed' ? { status: 'planned' } : {}),
+            },
+          });
+          if (moved.count !== 1) throw new PlacementError('The session changed. Refresh the calendar and try again.', 409);
+          return { ok: true as const, sessionId, date };
+        });
+      } catch (error) {
+        if (error instanceof PlacementError) return { ok: false as const, error: error.message, status: error.status };
+        throw error;
+      }
+    },
+
     async deleteSession(athleteId: number, sessionId: number) {
       const existing = await db.session.findFirst({
         where: { id: sessionId, athleteId },
@@ -409,8 +468,8 @@ function isPlacementRaceError(error: unknown) {
     && (error.code === 'P2002' || error.code === 'P1008' || error.code === 'P2028');
 }
 
-async function findOrCreatePlan(db: typeof prisma, athleteId: number, dateInput: string) {
-  const date = parseISO(`${dateInput}T00:00:00.000Z`);
+async function findOrCreatePlan(db: Pick<Prisma.TransactionClient, 'plan'>, athleteId: number, dateInput: string) {
+  const date = parseISO(dateInput);
   const startDate = startOfWeek(date, { weekStartsOn: 1 });
   const endDate = endOfWeek(date, { weekStartsOn: 1 });
   return (

@@ -43,9 +43,14 @@ retain history for returning athletes, and correct chart pointer coordinates,
 vertical touch scrolling, and keyboard/screen-reader readings. Desktop and
 390px Chromium checks passed for pointer and Home/End selection, with no
 horizontal overflow or browser errors. Two service regressions cover coach-note
-selection; production build and lint pass for the follow-up. The full suite
-currently has one calendar fixture failure (220/221), being corrected in the
-active calendar part. The dashboard recheck found no actionable remaining issue.
+selection; production build and lint pass for the follow-up. The calendar fixture issue is resolved: 222/222 tests and lint pass.
+The dashboard recheck found no actionable remaining issue.
+
+Calendar now has URL-addressable week/month navigation, keyboard shortcuts,
+weekly planned/completed summaries, and drag or explicit-date moves for open
+self-planned sessions. Mutation authorization and completion checks are atomic;
+content and local wall time are preserved. Real SQLite tests cover ownership,
+completed sessions, invalid dates, plan membership, and Oslo/New York DST.
 
 ## Verified Gates
 

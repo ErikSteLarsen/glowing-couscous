@@ -57,6 +57,7 @@ test('protected API routes declare a role guard', async () => {
     'app/api/athlete/planner/sessions/route.ts',
     'app/api/athlete/planner/assignments/route.ts',
     'app/api/athlete/planner/sessions/[sessionId]/route.ts',
+    'app/api/athlete/planner/sessions/[sessionId]/schedule/route.ts',
     'app/api/athlete/sessions/[sessionId]/completion/route.ts',
     'app/api/athlete/templates/route.ts',
     'app/api/athlete/templates/[templateId]/route.ts',
@@ -88,6 +89,7 @@ test('dynamic API routes use strict positive-integer parsing', async () => {
   const dynamicRoutes = [
     ['app/api/athlete/sessions/[sessionId]/completion/route.ts', 2],
     ['app/api/athlete/planner/sessions/[sessionId]/route.ts', 3],
+    ['app/api/athlete/planner/sessions/[sessionId]/schedule/route.ts', 2],
     ['app/api/athlete/templates/[templateId]/route.ts', 3],
     ['app/api/athlete/templates/[templateId]/duplicate/route.ts', 2],
     ['app/api/coach/planner/library-sessions/[sessionId]/route.ts', 3],
