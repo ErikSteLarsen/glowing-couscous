@@ -326,7 +326,6 @@ export function WorkoutLibraryClient({
           showSportMetrics
           summaryLabel="Notes (optional)"
           summaryPlaceholder="What is this workout for?"
-          durationUnit="minutes"
           performanceProfile={performanceProfile}
           />
         {templates.length > 0 ? (
