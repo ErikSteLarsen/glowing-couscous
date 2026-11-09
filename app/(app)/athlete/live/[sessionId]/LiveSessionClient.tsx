@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -15,12 +15,20 @@ import {
   advanceExecution,
   createExecutionState,
   isExecutionComplete,
+  parseExecutionProgress,
   previousExecution,
   restartExecution,
+  serializeExecutionProgress,
   type ExecutionState,
   type ExecutionStep,
 } from '@/lib/athlete-execution';
 import { formatDuration } from '@/lib/format-duration';
+import {
+  clearExecutionProgress,
+  getExecutionProgress,
+  saveExecutionProgress,
+  subscribeToExecutionProgress,
+} from '@/lib/athlete-execution-progress-store';
 
 export function LiveSessionClient({ sessionId, blocks, isDone }: {
   sessionId: number;
@@ -28,13 +36,28 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
   isDone: boolean;
 }) {
   const router = useRouter();
-  const [state, setState] = useState<ExecutionState>(() => createExecutionState(blocks.length));
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const saved = isDone || message !== '';
   const hasBlocks = blocks.length > 0;
+  const progressKey = `tempo:live-progress:v1:${sessionId}`;
+  const savedProgress = useSyncExternalStore(
+    (callback) => subscribeToExecutionProgress(progressKey, callback),
+    () => getExecutionProgress(progressKey),
+    () => null,
+  );
+  const state: ExecutionState = isDone ? createExecutionState(blocks.length) : parseExecutionProgress(savedProgress, blocks) ?? createExecutionState(blocks.length);
   const complete = hasBlocks && isExecutionComplete(state);
+
+  function updateExecutionState(nextState: ExecutionState): void {
+    if (!hasBlocks || isDone) return;
+    if (nextState.currentIndex === 0 && nextState.completed.every((value) => !value)) {
+      clearExecutionProgress(progressKey);
+      return;
+    }
+    saveExecutionProgress(progressKey, serializeExecutionProgress(blocks, nextState));
+  }
 
   async function completeSession() {
     setPending(true);
@@ -50,6 +73,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
         setError(payload.error ?? 'Failed to complete session.');
         return;
       }
+      clearExecutionProgress(progressKey);
       setMessage('Session marked complete.');
       router.refresh();
     } catch {
@@ -76,9 +100,9 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
           <button
             type="button"
             aria-label="Previous block"
-             className={compactSecondaryButtonClassName}
+            className={compactSecondaryButtonClassName}
             disabled={pending || saved || state.currentIndex === 0}
-            onClick={() => setState(previousExecution)}
+            onClick={() => updateExecutionState(previousExecution(state))}
           >
             Previous
           </button>
@@ -86,9 +110,9 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
             <button
               type="button"
               aria-label="Next block"
-               className={compactPrimaryButtonClassName}
+              className={compactPrimaryButtonClassName}
               disabled={pending || saved}
-              onClick={() => setState(advanceExecution)}
+              onClick={() => updateExecutionState(advanceExecution(state))}
             >
               Next block
             </button>
@@ -96,9 +120,9 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
           <button
             type="button"
             aria-label="Restart workout"
-             className={compactSecondaryButtonClassName}
+            className={compactSecondaryButtonClassName}
             disabled={pending || saved || state.completed.every((value) => !value) && state.currentIndex === 0}
-            onClick={() => setState(restartExecution)}
+            onClick={() => updateExecutionState(restartExecution(state))}
           >
             Restart
           </button>
@@ -113,7 +137,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
         </button>
       ) : null}
       {isDone ? <p role="status" className={successTextClassName}>Session saved. Review or correct the outcome in session details.</p> : null}
-      <p className="text-[12px] text-[var(--text-secondary)]">Progress is local to this device and restarts if you refresh.</p>
+      <p className="text-[12px] text-[var(--text-secondary)]">Progress is saved in this browser and resumes when you return. Restart begins again at the first step.</p>
       {message && !isDone ? <p role="status" aria-live="polite" className={successTextClassName}>{message}</p> : null}
       {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
     </div>

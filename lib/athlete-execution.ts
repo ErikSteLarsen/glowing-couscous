@@ -33,6 +33,57 @@ export type ExecutionState = {
   completed: boolean[];
 };
 
+type SavedExecutionProgress = {
+  version: 1;
+  steps: string;
+  state: ExecutionState;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function executionStepsSignature(steps: ExecutionStep[]): string {
+  return JSON.stringify(steps.map(({ id, durationSec }) => [id, durationSec]));
+}
+
+/** Serialize only resumable guidance state; it never represents saved completion. */
+export function serializeExecutionProgress(steps: ExecutionStep[], state: ExecutionState): string {
+  const progress: SavedExecutionProgress = { version: 1, steps: executionStepsSignature(steps), state };
+  return JSON.stringify(progress);
+}
+
+/** Restore progress only when it is valid for the exact current executable workout. */
+export function parseExecutionProgress(serialized: string | null, steps: ExecutionStep[]): ExecutionState | null {
+  if (!serialized || steps.length === 0) return null;
+
+  let value: unknown;
+  try {
+    value = JSON.parse(serialized);
+  } catch {
+    return null;
+  }
+
+  if (!isRecord(value) || value.version !== 1 || value.steps !== executionStepsSignature(steps) || !isRecord(value.state)) {
+    return null;
+  }
+
+  const { currentIndex, completed } = value.state;
+  if (
+    typeof currentIndex !== 'number' ||
+    !Number.isInteger(currentIndex) ||
+    currentIndex < 0 ||
+    currentIndex >= steps.length ||
+    !Array.isArray(completed) ||
+    completed.length !== steps.length ||
+    !completed.every((item: unknown) => typeof item === 'boolean')
+  ) {
+    return null;
+  }
+
+  return { currentIndex, completed };
+}
+
 export function createExecutionState(blockCount: number): ExecutionState {
   const count = Math.max(0, Math.floor(blockCount));
   return { currentIndex: 0, completed: Array.from({ length: count }, () => false) };

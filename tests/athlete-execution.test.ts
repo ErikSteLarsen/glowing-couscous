@@ -7,8 +7,10 @@ import {
   createExecutionState,
   createExecutionSteps,
   isExecutionComplete,
+  parseExecutionProgress,
   previousExecution,
   restartExecution,
+  serializeExecutionProgress,
 } from '../lib/athlete-execution.ts';
 import { createSessionEditorBlock, createEmptySessionEditorDraft, deriveSessionEditorMetrics } from '../lib/session-editor.ts';
 import { createEmptyPerformanceProfile } from '../lib/performance-profile.ts';
@@ -37,6 +39,25 @@ test('complete current and restart transitions are immutable', () => {
   assert.deepEqual(state, { currentIndex: 0, completed: [false, false] });
   assert.deepEqual(completed, { currentIndex: 0, completed: [true, false] });
   assert.deepEqual(restartExecution(advanceExecution(completed)), { currentIndex: 0, completed: [false, false] });
+});
+
+test('saved live progress resumes only for the same ordered workout steps', () => {
+  const blocks = [
+    createSessionEditorBlock({ clientId: 'warmup', kind: 'warmup', zone: 1, durationSec: 600 }),
+    createSessionEditorBlock({ clientId: 'work', kind: 'work', zone: 4, durationSec: 300, reps: 2 }),
+  ];
+  const steps = createExecutionSteps(blocks, 'BIKING');
+  const halfway = advanceExecution(createExecutionState(steps.length));
+  const saved = serializeExecutionProgress(steps, halfway);
+
+  assert.deepEqual(parseExecutionProgress(saved, steps), halfway, 'returning to the workout resumes completed markers and current step');
+  assert.equal(parseExecutionProgress(saved, createExecutionSteps(blocks.slice(0, 1), 'BIKING')), null, 'removed or reordered executable steps invalidate old progress');
+  assert.equal(parseExecutionProgress(saved, createExecutionSteps([...blocks].reverse(), 'BIKING')), null, 'reordered executable steps invalidate old progress');
+  const changedWorkout = createExecutionSteps(blocks.map((block) => block.clientId === 'warmup' ? { ...block, durationSec: 660 } : block), 'BIKING');
+  assert.equal(parseExecutionProgress(saved, changedWorkout), null, 'changed prescriptions invalidate old progress');
+  assert.equal(parseExecutionProgress('{not json', steps), null, 'corrupt browser data starts a fresh stepper');
+  assert.equal(parseExecutionProgress(JSON.stringify({ version: 1, steps: 'current', state: { currentIndex: 99, completed: [false, false, false] } }), steps), null, 'out-of-range browser state is rejected');
+  assert.deepEqual(restartExecution(halfway), createExecutionState(steps.length), 'explicit restart clears all guidance progress');
 });
 
 
