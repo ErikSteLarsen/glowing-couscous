@@ -2,11 +2,12 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Badge,
   compactDangerButtonClassName,
-  compactPrimaryButtonClassName,
   compactSecondaryButtonClassName,
+  dangerButtonClassName,
   EmptyState,
   dangerTextClassName,
   formFieldClassName,
@@ -21,51 +22,34 @@ import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { MetricText } from '@/components/tempo/MetricText';
 import { WorkoutBuilder } from '@/components/WorkoutBuilder';
 import { ShareLinkButton } from '@/components/ShareLinkButton';
-import { deriveSessionEditorMetrics, type SessionEditorDraft } from '@/lib/session-editor';
+import { deriveSessionEditorMetrics, validateSessionEditorDraft, type SessionEditorDraft } from '@/lib/session-editor';
 import {
   createEmptyTemplateEditorDraft,
   createTemplateEditorDraftFromRecord,
   serializeTemplateEditorDraftForSave,
+  type PlannerEditorTemplateRecord,
 } from '@/lib/session-editor-adapters';
+import { formatDuration } from '@/lib/format-duration';
+import type { PerformanceProfile } from '@/lib/performance-profile';
 import { getSportLabel } from '@/lib/sport';
 import { getTemplateCadence, TEMPLATE_CADENCES, templateCadenceMeta, type TemplateCadence } from '@/lib/template-cadence';
 
-type TemplateRecord = {
-  id: number;
-  sport: string;
-  name: string;
-  summary: string | null;
+type TemplateRecord = PlannerEditorTemplateRecord & {
   cadence?: string | null;
-  blocks: Array<{
-    id: number;
-    kind: string;
-    zone: number;
-    durationSec: number;
-    reps: number | null;
-    targetType: string | null;
-    targetLow: number | null;
-    targetHigh: number | null;
-    note: string | null;
-    sortOrder: number;
-  }>;
 };
-
-function formatDuration(durationSec: number) {
-  const hours = Math.floor(durationSec / 3600);
-  const minutes = Math.round((durationSec % 3600) / 60);
-  return hours > 0 ? `${hours}h ${String(minutes).padStart(2, '0')}m` : `${minutes}m`;
-}
 
 export function CoachTemplatesClient({
   templates,
   apiBasePath = '/api/coach/templates',
   plannerHref = '/coach/planner',
   role = 'COACH',
+  performanceProfile = null,
 }: {
   templates: TemplateRecord[];
   apiBasePath?: string;
   plannerHref?: string;
   role?: 'COACH' | 'ATHLETE';
+  performanceProfile?: PerformanceProfile | null;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -73,10 +57,11 @@ export function CoachTemplatesClient({
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
   const [editorOpen, setEditorOpen] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [editingTemplateId, setEditingTemplateId] = useState<number | null>(null);
   const [editorCadence, setEditorCadence] = useState<TemplateCadence>('day');
   const [editorDraft, setEditorDraft] = useState<SessionEditorDraft>(() => createEmptyTemplateEditorDraft());
-  const workoutsHref = plannerHref.startsWith('/athlete') ? '/athlete/workouts' : '/coach/workouts';
   const isAthlete = role === 'ATHLETE';
 
   const visibleTemplates = useMemo(() => {
@@ -138,14 +123,36 @@ export function CoachTemplatesClient({
   }
 
   function openEditor(template?: TemplateRecord) {
+    if (isPending) return;
     setEditingTemplateId(template?.id ?? null);
     setEditorCadence(getTemplateCadence(template?.cadence));
     setEditorDraft(template ? createTemplateEditorDraftFromRecord(template) : createEmptyTemplateEditorDraft());
     setEditorOpen(true);
+    setIsDirty(false);
+    setConfirmDiscard(false);
+    setMessage('');
+  }
+
+  function closeEditor() {
+    if (isPending) return;
+    if (isDirty) {
+      setConfirmDiscard(true);
+      return;
+    }
+    setEditorOpen(false);
     setMessage('');
   }
 
   function saveEditor() {
+    if (isPending) return;
+    const validationError = !editorDraft.title.trim()
+      ? 'Template name is required.'
+      : validateSessionEditorDraft(editorDraft);
+    if (validationError) {
+      setMessageTone('danger');
+      setMessage(validationError);
+      return;
+    }
     startTransition(async () => {
       try {
         const response = await fetch(
@@ -163,6 +170,9 @@ export function CoachTemplatesClient({
           return;
         }
         setEditorOpen(false);
+        setIsDirty(false);
+        setConfirmDiscard(false);
+        setFilterText('');
         setMessageTone('success');
         setMessage(editingTemplateId ? 'Template updated.' : 'Template created.');
         router.refresh();
@@ -174,90 +184,87 @@ export function CoachTemplatesClient({
   }
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-[12px] border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-5">
-        <div className="max-w-2xl">
-           <h2 className="text-lg font-semibold text-[var(--text)]">{isAthlete ? 'Build a private template' : 'Build reusable training structure'}</h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-             {isAthlete ? 'Save a private starting point, then reuse it when you shape your training week.' : 'Create reusable structure here, choose how often it should repeat, then use Planner to place the finished template on a date, week, or month.'}
-          </p>
-          <a href={workoutsHref} className={`${compactSecondaryButtonClassName} mt-4`}>
-            Open Workouts
-          </a>
-        </div>
-        <div className="mt-4 grid gap-2 md:grid-cols-3">
-          {TEMPLATE_CADENCES.map((cadence) => (
-            <div key={cadence} className="rounded-[10px] border border-[var(--field-selected-border)] bg-[var(--surface)] px-3 py-3">
-              <p className="text-[13px] font-semibold text-[var(--text)]">{templateCadenceMeta[cadence].label}</p>
-              <p className="mt-1 text-[12px] leading-5 text-[var(--text-secondary)]">{templateCadenceMeta[cadence].description}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <input
-          value={filterText}
-          onChange={(event) => setFilterText(event.target.value)}
-          className={formFieldClassName}
-          placeholder="Filter templates"
-          aria-label="Filter templates"
-        />
+    <div className="min-w-0 space-y-5">
+      {!editorOpen ? (
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <label className="min-w-0 flex-1 space-y-2">
+          <span className={formLabelClassName}>Find a template</span>
+          <input
+            type="search"
+            value={filterText}
+            onChange={(event) => setFilterText(event.target.value)}
+            className={formFieldClassName}
+            placeholder="Search by name or summary"
+          />
+        </label>
         <button
           type="button"
           onClick={() => openEditor()}
           className={primaryButtonClassName}
+          disabled={isPending}
         >
           New template
         </button>
       </div>
+      ) : null}
 
       {message ? <p role={messageTone === 'danger' ? 'alert' : 'status'} aria-live="polite" className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
 
       {editorOpen ? (
-        <Surface className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Tempo editor</p>
-              <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">{editingTemplateId ? 'Edit template' : 'Create template'}</h2>
-            </div>
-            <button type="button" className={secondaryButtonClassName} onClick={() => setEditorOpen(false)}>Cancel</button>
+        <Surface className="min-w-0 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-3">
+            <h2 className="text-lg font-medium text-[var(--text)]">{editingTemplateId ? 'Edit template' : 'Create template'}</h2>
+            <button type="button" className={compactSecondaryButtonClassName} onClick={closeEditor} disabled={isPending}>Back to templates</button>
           </div>
+          {confirmDiscard ? (
+            <div role="alert" className="space-y-3 rounded-lg border border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] p-4">
+              <p className="text-sm text-[var(--text)]">Discard unsaved changes to this template?</p>
+              <div className="flex flex-wrap gap-3">
+                <button type="button" className={secondaryButtonClassName} disabled={isPending} onClick={() => setConfirmDiscard(false)}>Keep editing</button>
+                <button type="button" className={dangerButtonClassName} disabled={isPending} onClick={() => { setEditorOpen(false); setConfirmDiscard(false); setIsDirty(false); setMessage(''); }}>Discard changes</button>
+              </div>
+            </div>
+          ) : null}
+          <fieldset disabled={isPending} className="min-w-0 space-y-4">
           <WorkoutBuilder
             draft={editorDraft}
-            onChange={setEditorDraft}
+            onChange={(next) => { setEditorDraft(next); setIsDirty(true); setMessage(''); }}
             titleLabel="Template name"
             summaryLabel="Template summary"
             summaryPlaceholder="What is this template for?"
+            performanceProfile={performanceProfile}
+            durationUnit="minutes"
           />
           <label className="block space-y-2">
             <span className={formLabelClassName}>Template cadence</span>
-            <select className={formSelectClassName} value={editorCadence} onChange={(event) => setEditorCadence(getTemplateCadence(event.target.value))}>
+            <select className={formSelectClassName} value={editorCadence} onChange={(event) => { setEditorCadence(getTemplateCadence(event.target.value)); setIsDirty(true); setMessage(''); }}>
               {TEMPLATE_CADENCES.map((cadence) => <option key={cadence} value={cadence}>{templateCadenceMeta[cadence].label}</option>)}
             </select>
             <span className="block text-[12px] text-[var(--text-secondary)]">{templateCadenceMeta[editorCadence].assignment}</span>
           </label>
-          <div className="flex flex-wrap gap-3">
-            <button type="button" className={primaryButtonClassName} disabled={isPending} onClick={saveEditor}>{isPending ? 'Saving…' : 'Save template'}</button>
+          </fieldset>
+          <div className="sticky bottom-[var(--mobile-nav-clearance)] z-10 -mx-5 flex flex-wrap gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3 md:bottom-0">
+            <button type="button" className={primaryButtonClassName} disabled={isPending || confirmDiscard} onClick={saveEditor}>{isPending ? 'Saving…' : 'Save template'}</button>
           </div>
         </Surface>
       ) : null}
 
-       {visibleTemplates.length === 0 ? (
-        <EmptyState title={templates.length === 0 ? 'No templates yet' : 'No templates found'} description={templates.length === 0 ? (isAthlete ? 'Create a private template to reuse in your week.' : 'Create a template to reuse structured training.') : 'Try another filter or create a template.'} />
+       {!editorOpen ? visibleTemplates.length === 0 ? (
+        <EmptyState title={templates.length === 0 ? 'No templates yet' : 'No templates found'} description={templates.length === 0 ? 'Create a reusable workout and choose its placement span in Planner.' : 'Try another name or summary.'} action={templates.length > 0 ? <button type="button" className={secondaryButtonClassName} onClick={() => setFilterText('')}>Clear search</button> : undefined} />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {visibleTemplates.map((template) => {
             const metrics = deriveSessionEditorMetrics(createTemplateEditorDraftFromRecord(template));
 
             return (
-              <Surface key={template.id} className="space-y-4">
+              <Surface key={template.id} className="min-w-0 space-y-4">
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold text-[var(--text)]">{template.name}</p>
+                  <h2 className="break-words text-base font-medium text-[var(--text)] [overflow-wrap:anywhere]">{template.name}</h2>
                   <p className="text-[13px] text-[var(--text-secondary)]">
                     {getSportLabel(template.sport)}
                   </p>
-                  <Badge tone="brand">{templateCadenceMeta[getTemplateCadence(template.cadence)].shortLabel}</Badge>
-                  <p className="text-sm text-[var(--text-secondary)]">
+                  <Badge>{templateCadenceMeta[getTemplateCadence(template.cadence)].shortLabel}</Badge>
+                  <p className="break-words text-sm text-[var(--text-secondary)] [overflow-wrap:anywhere]">
                     {template.summary || 'No summary yet.'}
                   </p>
                 </div>
@@ -267,12 +274,12 @@ export function CoachTemplatesClient({
                   <MetricText>{metrics.tss} TSS</MetricText>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  <a
+                  <Link
                     href={plannerHref}
-                    className={compactPrimaryButtonClassName}
+                    className={compactSecondaryButtonClassName}
                   >
                      {isAthlete ? 'Reuse in Planner' : 'Use in Planner'}
-                  </a>
+                  </Link>
                   <details className="relative">
                     <summary className={`${compactSecondaryButtonClassName} list-none`}>More actions</summary>
                     <div className="absolute right-0 top-full z-10 mt-2 grid min-w-40 gap-1 rounded-[8px] border border-[var(--border)] bg-[var(--surface)] p-2 shadow-[var(--shadow-overlay)]">
@@ -287,7 +294,7 @@ export function CoachTemplatesClient({
             );
           })}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
