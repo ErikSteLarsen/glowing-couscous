@@ -12,6 +12,8 @@ import { SessionDetailClient } from './SessionDetailClient';
 import { ShareLinkButton } from '@/components/ShareLinkButton';
 import { accountService } from '@/lib/account-service';
 import { formatSessionWhen } from '@/lib/session-display';
+import { toDayKey } from '@/lib/training-load';
+import { SessionRescheduleAction } from '@/components/SessionRescheduleAction';
 
 export default async function AthleteSessionPage({
   params,
@@ -41,8 +43,10 @@ export default async function AthleteSessionPage({
 
   const sessionOrigin = getSessionOrigin(from);
   const returnTarget = getSessionReturnTarget(sessionOrigin);
-  const sessionAction = detail.session.status === 'completed' ? 'Review outcome' : detail.session.status === 'missed' ? 'Review session' : 'Start live';
-  const sessionActionHref = detail.session.status === 'completed' || detail.session.status === 'missed'
+  const isOverdue = detail.session.isOverdue;
+  const displayStatus = isOverdue ? 'missed' : detail.session.status;
+  const sessionAction = detail.session.status === 'completed' ? 'Review outcome' : 'Start live';
+  const sessionActionHref = detail.session.status === 'completed'
     ? '#session-outcome'
     : `/athlete/live/${detail.session.id}?from=${sessionOrigin}`;
 
@@ -57,6 +61,15 @@ export default async function AthleteSessionPage({
               {returnTarget.label}
             </ActionLink>
             <ActionLink href={sessionActionHref}>{sessionAction}</ActionLink>
+            {isOverdue ? (
+              <SessionRescheduleAction
+                mode="dialog"
+                sessionId={detail.session.id}
+                title={detail.session.title}
+                currentDay={toDayKey(detail.session.date)}
+                today={toDayKey(new Date())}
+              />
+            ) : null}
             <ShareLinkButton sourceKind="session" sourceId={detail.session.id} />
           </>
         }
@@ -66,14 +79,14 @@ export default async function AthleteSessionPage({
         <span>Week of {format(startOfWeek(detail.session.date, { weekStartsOn: 1 }), 'd MMM')}</span>
         <span aria-hidden="true">·</span>
         <span>{formatSessionWhen(detail.session.date, detail.session.timeLabel)}</span>
-        <StatusBadge status={detail.session.status} />
+        <StatusBadge status={displayStatus} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
           <Surface className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
-              <StatusBadge status={detail.session.status} />
+              <StatusBadge status={displayStatus} />
               <MetricText>{formatDuration(detail.session.durationSec)}</MetricText>
               <MetricText>{detail.session.tss} TSS</MetricText>
               {detail.session.metricsSource === 'manual-planned' ? (

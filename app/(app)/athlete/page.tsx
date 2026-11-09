@@ -8,6 +8,7 @@ import { WeeklyVolumeChart, type VolumeWeek } from '@/components/charts/WeeklyVo
 import { ComplianceMark } from '@/components/tempo/ComplianceMark';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { SessionRow } from '@/components/tempo/SessionRow';
+import { OverdueSessions } from '@/components/OverdueSessions';
 import {
   ActionLink,
   ghostButtonClassName,
@@ -218,6 +219,8 @@ export default async function AthletePage() {
           </section>
         ) : null}
       </div>
+
+      <OverdueSessions sessions={dashboard.overdue} today={dashboard.todayKey} />
 
       <section aria-labelledby="week-heading" className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-2">

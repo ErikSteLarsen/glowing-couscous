@@ -1,18 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { addDays, startOfDay } from 'date-fns';
 import { createAthleteService } from '../lib/athlete-service.ts';
 
-function service(activityNotes: string | null = null, timeLabel: string | null = '08:00') {
+function service(
+  activityNotes: string | null = null,
+  timeLabel: string | null = '08:00',
+  date = new Date('2026-11-10T08:00:00'),
+  ownership: { coachOwnerId?: number; assignedById?: number; trainingPlanId?: number } = {},
+) {
   return createAthleteService({ db: {
     user: { async findUnique() { return { id: 7, role: 'ATHLETE', selfCoached: true, coachId: null }; } },
     session: { async findUnique() { return {
-      id: 42, athleteId: 7, date: new Date('2026-11-10T08:00:00'), title: 'Personal repeats', sport: 'BIKING',
+      id: 42, athleteId: 7, date, title: 'Personal repeats', sport: 'BIKING',
       summary: null, status: 'planned', adjusted: false, timeLabel, athleteNotes: 'Bring water',
       athlete: { id: 7, name: 'Mara', coach: null },
       activity: activityNotes === null ? null : { notes: activityNotes, tss: 30, durationSec: 1200, metricsSource: 'manual-planned' },
       blocks: [{ id: 3, kind: 'work', zone: 3, durationSec: 300, reps: 4, targetType: 'power',
         targetMode: 'relative', targetReference: 'ftp', targetLow: 90, targetHigh: 100,
         targetLowDecimal: '90.5', targetHighDecimal: null, note: null, skipped: false, sortOrder: 0 }],
+      ...ownership,
     }; } },
   } as never });
 }
@@ -33,6 +40,34 @@ test('personal session detail preserves a missing scheduled time', async () => {
   const detail = await service(null, null).loadSessionDetail(7, 42);
   assert.ok(detail);
   assert.equal(detail.session.timeLabel, null);
+});
+
+test('past self-planned detail reports missed status while remaining startable', async () => {
+  const date = addDays(startOfDay(new Date()), -1);
+  const detail = await service(null, '08:00', date).loadSessionDetail(7, 42);
+
+  assert.ok(detail);
+  assert.equal(detail.session.status, 'planned');
+  assert.equal(detail.session.isOverdue, true);
+  assert.equal(detail.session.compliance, 'missed');
+});
+
+test('past coach-assigned detail is not marked overdue for personal recovery', async () => {
+  const date = addDays(startOfDay(new Date()), -1);
+  const detail = await service(null, '08:00', date, { coachOwnerId: 2 }).loadSessionDetail(7, 42);
+
+  assert.ok(detail);
+  assert.equal(detail.session.isOverdue, false);
+});
+
+test('completing a past session removes its overdue state and missed compliance', async () => {
+  const date = addDays(startOfDay(new Date()), -1);
+  const detail = await service('Completed late', '08:00', date).loadSessionDetail(7, 42);
+
+  assert.ok(detail);
+  assert.equal(detail.session.status, 'completed');
+  assert.equal(detail.session.isOverdue, false);
+  assert.notEqual(detail.session.compliance, 'missed');
 });
 
 test('completed notes take precedence, including an explicitly cleared note', async () => {

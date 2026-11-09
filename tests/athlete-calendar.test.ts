@@ -106,6 +106,7 @@ test('athlete Home keeps every session assigned to an upcoming day', async () =>
           };
         },
       },
+      session: { async findMany() { return []; } },
     } as never,
   });
 

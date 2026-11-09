@@ -66,6 +66,10 @@ sanitized snapshots and requires an explicit recipient save.
   and Live. Unset times remain absent instead of being inferred from the
   timestamp; explicit times still appear in labels and calendar API data. This
   session-time clarity stage scores 8/10 after covering each athlete view.
+- Home surfaces the three most recent overdue self-planned sessions with
+  Start now and Move to today. Session detail uses the same overdue state,
+  keeps Start live available, and offers a date picker. Live completion keeps
+  the original schedule date; this recovery stage scores 8/10.
 - Activity searches completed names literally, filters by sport, and pages
   through all saved outcomes. Counts, duration, and load cover the matching
   history. A read transaction keeps totals and rows consistent, with stable
@@ -79,9 +83,9 @@ sanitized snapshots and requires an explicit recipient save.
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass, 242 tests | `pnpm test` |
+| Tests | Pass, 246 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
-| Production build | Pass | `pnpm build`; middleware deprecation warning removed |
+| Production build | Pass | `pnpm build`; Node emits `DEP0205` for `module.register()` |
 | Mobile workout actions | Pass | 390px Chromium: action bar bottom 780px, navigation top 783px; desktop offset 0px; both review axes found no actionable issue |
 | Template authoring | Pass | Chromium discard/keep, blocked fetch, delayed save locks, retry/reload, and 20-second interval persistence; editor and list axe scans have no violations; 390px and 1440px have no overflow; design detector has no findings |
 | Activity history | Pass | SQLite pagination across 26 outcomes, filtered totals, timestamp ties, ownership, stale pages, and literal `%`/`_`/backslash searches; Chromium recorded completion notes, older/newer pages, filters, reload, empty recovery, no overflow, and zero axe violations |
@@ -91,6 +95,7 @@ sanitized snapshots and requires an explicit recipient save.
 | Session execution and corrections | Pass | Chromium repeated/skipped execution, relative labels, completion, immediate actual correction, notes, reopening, planned adjustment, and reload persistence; session detail axe reports no violations |
 | Personal session removal | Pass | SQLite verifies owner scope, completed/activity/coach-assigned refusal, and block cascade; Chromium desktop and 390px confirms the in-app dialog, Escape cancel, Calendar removal, refresh feedback, and no horizontal overflow |
 | Untimed session display | Pass | Focused checks cover null and explicit times through Home, Calendar, detail, and the shared date formatter; `pnpm test`, `pnpm lint`, and `pnpm build` pass |
+| Overdue session recovery | Pass | Home and detail service regressions cover recent ordering, coach/plan/completion exclusions, matching Missed state, late completion, and retained schedule date; existing SQLite tests cover safe rescheduling and unchanged content |
 | Calendar persistence | Pass | Chromium explicit-date, keyboard-drag, and pointer-drag moves persisted after navigation/reload |
 | Calendar dates and ownership | Pass | Isolated SQLite tests cover foreign athletes, coach ownership, completed sessions, impossible dates, plan membership, content preservation, and Oslo/New York DST |
 | Calendar accessibility | Pass in scanned week view | Chromium axe 4.12.1: no violations; 390px month view has no horizontal overflow |
@@ -102,6 +107,9 @@ times appear in visible metadata and accessible names, while unset times remain
 absent across athlete views and the calendar API. Session review identified
 cross-sport heart-rate resolution; both Live and WorkoutBuilder now require the
 current sport, with distinct-sport and missing-value regressions.
+Overdue personal sessions now have a direct recovery path from Home and detail;
+the state is derived from the scheduled date and ownership, and rescheduling
+reuses the conditional schedule mutation.
 Roleless JWT refresh previously called Prisma in Edge middleware and cleared
 the session. `proxy.ts` now runs that guard in Node.js; the runtime regression
 checks the real cookie/session flow and deletes its temporary account.

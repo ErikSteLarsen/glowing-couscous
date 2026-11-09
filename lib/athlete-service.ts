@@ -1,4 +1,4 @@
-import { addDays, addMonths, differenceInCalendarDays, endOfDay, endOfMonth, endOfWeek, format, isSameDay, startOfMonth, startOfWeek } from 'date-fns';
+import { addDays, addMonths, differenceInCalendarDays, endOfDay, endOfMonth, endOfWeek, format, isSameDay, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
 import { Prisma } from '@prisma/client';
 import { readOverviewCardsFromPrefsJson } from './overview-preferences.ts';
 import { prisma } from './prisma.ts';
@@ -17,6 +17,8 @@ type AthleteServiceDeps = {
   db?: typeof prisma;
 };
 
+const HOME_OVERDUE_SESSION_LIMIT = 3;
+
 /** Sessions the athlete placed themselves; coach-owned work keeps its coach's schedule. */
 export function isSelfPlanned(session: { coachOwnerId?: number | null; assignedById?: number | null; trainingPlanId?: number | null }) {
   return !session.coachOwnerId && !session.assignedById && !session.trainingPlanId;
@@ -24,6 +26,23 @@ export function isSelfPlanned(session: { coachOwnerId?: number | null; assignedB
 
 function selectPrimaryRequest<T extends { status: string }>(requests: T[]) {
   return requests.find((request) => request.status === 'PENDING') ?? requests[0] ?? null;
+}
+
+function isOverdueSession(session: {
+  date: Date | null;
+  status: string;
+  coachOwnerId?: number | null;
+  assignedById?: number | null;
+  trainingPlanId?: number | null;
+  activity?: unknown;
+}, today: Date) {
+  return Boolean(
+    session.date &&
+      !session.activity &&
+      session.status !== 'completed' &&
+      isSelfPlanned(session) &&
+      toDayKey(session.date) < toDayKey(today),
+  );
 }
 
 export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
@@ -36,6 +55,9 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
     timeLabel: string | null;
     status: string;
     adjusted: boolean;
+    coachOwnerId?: number | null;
+    assignedById?: number | null;
+    trainingPlanId?: number | null;
     coachBaselineJson?: string | null;
     blocks: Array<{
       id: number;
@@ -61,7 +83,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       segmentsJson?: string | null;
       metricsSource?: string;
     } | null;
-  }) {
+  }, today = new Date()) {
     const metrics = deriveSessionMetrics(
       session.blocks.filter((block) => !block.skipped).map((block) => ({
         kind: block.kind as 'warmup' | 'work' | 'recovery' | 'cooldown',
@@ -105,10 +127,12 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       { coachBaselineJson: session.coachBaselineJson ?? null, blocks: session.blocks.map((block) => ({ ...block, skipped: Boolean(block.skipped) })) },
       { completed: status === 'completed', metricsSource: session.activity?.metricsSource },
     );
+    const todayKey = toDayKey(today);
+    const isOverdue = isOverdueSession(session, today);
     const compliance = classifyCompliance({
       status,
       day: toDayKey(session.date),
-      today: toDayKey(new Date()),
+      today: todayKey,
       plannedDurationSec: planned.durationSec,
       plannedTss: planned.tss,
       actualDurationSec: session.activity?.durationSec ?? null,
@@ -124,6 +148,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       date: session.date,
       timeLabel: session.timeLabel,
       status,
+      isOverdue,
       compliance,
       plannedDurationSec: planned.durationSec,
       plannedTss: planned.tss,
@@ -236,11 +261,34 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         return null;
       }
 
+      const overdueRecords = await db.session.findMany({
+        where: {
+          athleteId: userId,
+          date: { lt: startOfDay(now) },
+          status: { not: 'completed' },
+          coachOwnerId: null,
+          assignedById: null,
+          trainingPlanId: null,
+          activity: { is: null },
+        },
+        include: {
+          blocks: { orderBy: { sortOrder: 'asc' } },
+          activity: true,
+        },
+        orderBy: [{ date: 'desc' }, { id: 'desc' }],
+        take: HOME_OVERDUE_SESSION_LIMIT,
+      });
+      const overdue = overdueRecords
+        .filter((session): session is typeof session & { date: Date } => session.date !== null)
+        .map((session) => mapSessionSummary(session, now))
+        .filter((session) => session.isOverdue);
+
       const overviewCards = readOverviewCardsFromPrefsJson(athlete.prefsJson);
 
       const datedSessions = athlete.sessions.filter((s): s is typeof s & { date: Date } => s.date !== null);
-      const sessions = datedSessions.map(mapSessionSummary);
+      const sessions = datedSessions.map((session) => mapSessionSummary(session, now));
       const today = now;
+      const todayKey = toDayKey(today);
       const todaySessions = sessions.filter((session) => isSameDay(session.date, today));
       const nextSession = todaySessions.find((session) => session.status !== 'completed');
       const todayCoachNote = datedSessions.find((session) => session.id === nextSession?.id);
@@ -284,6 +332,8 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
           ? { ...athlete.coach, name: athlete.coach.name ?? '' }
           : null,
         overviewCards,
+        todayKey,
+        overdue,
         todaySessions,
         weekDays,
         nextDays,
@@ -336,10 +386,11 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
     },
 
     async loadCalendarView(userId: number, dateRef: Date | string, view: 'week' | 'month' = 'week') {
+      const now = new Date();
       // A yyyy-MM-dd reference is a local calendar day, never a UTC instant.
       const dayRef = parseCalendarDay(dateRef);
       const parsedReference = dayRef ? fromDayKey(dayRef) : new Date(dateRef);
-      const referenceDate = Number.isNaN(parsedReference.getTime()) ? new Date() : parsedReference;
+      const referenceDate = Number.isNaN(parsedReference.getTime()) ? now : parsedReference;
       const resolvedView = view === 'month' ? 'month' : 'week';
       const periodStart =
         resolvedView === 'month'
@@ -385,7 +436,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       const sessions = athlete.sessions
         .filter((s): s is typeof s & { date: Date } => s.date !== null)
         .map((session) => ({
-          ...mapSessionSummary(session),
+          ...mapSessionSummary(session, now),
           // Only the athlete's own open sessions can be moved from the calendar.
           canReschedule: !session.activity && session.status !== 'completed' && isSelfPlanned(session),
         }));
@@ -396,7 +447,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         isCurrentMonth:
           date.getMonth() === periodStart.getMonth() &&
           date.getFullYear() === periodStart.getFullYear(),
-        isToday: isSameDay(date, new Date()),
+        isToday: isSameDay(date, now),
         sessions: sessions.filter((session) => isSameDay(session.date, date)),
       });
       const days =
