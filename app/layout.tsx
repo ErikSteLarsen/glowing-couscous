@@ -1,13 +1,16 @@
 import type { Metadata, Viewport } from 'next';
-import { Instrument_Sans } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import { SessionProviderWrapper } from '@/components/SessionProviderWrapper';
 import { SIDEBAR_STORAGE_KEY } from '@/lib/sidebar-state';
 
-const instrumentSans = Instrument_Sans({
-  subsets: ['latin'],
+// Self-hosted so builds never depend on reaching Google Fonts (SIL Open Font License).
+const instrumentSans = localFont({
+  src: './fonts/InstrumentSans-latin-variable.woff2',
   variable: '--font-body',
-  weight: ['400', '500', '600'],
+  weight: '400 600',
+  display: 'swap',
+  fallback: ['ui-sans-serif', 'system-ui', 'sans-serif'],
 });
 
 export const metadata: Metadata = {
