@@ -38,7 +38,7 @@ export default async function AthleteLivePage({
   }
 
   const sessionOrigin = getSessionOrigin(from);
-  const steps = createExecutionSteps(detail.session.editor.blocks, account?.performanceProfile);
+  const steps = createExecutionSteps(detail.session.editor.blocks, detail.session.sport, account?.performanceProfile);
 
   return (
     <PageShell size="wide">

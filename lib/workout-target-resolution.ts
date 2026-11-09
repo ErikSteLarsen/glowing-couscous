@@ -3,13 +3,15 @@ import type { WorkoutTarget } from './workout-targets.ts';
 
 export type ResolvedWorkoutTarget = { low: number; high: number; unit: 'W' | 'bpm' | 'pace' };
 
-export function resolveWorkoutTarget(target: WorkoutTarget, profile: PerformanceProfile | null | undefined): ResolvedWorkoutTarget | null {
+export function resolveWorkoutTarget(target: WorkoutTarget, profile: PerformanceProfile | null | undefined, sport: string): ResolvedWorkoutTarget | null {
   if (target.metric === 'rpe') return null;
   if (target.mode === 'absolute') return { low: target.low, high: target.high, unit: target.metric === 'power' ? 'W' : target.metric === 'hr' ? 'bpm' : 'pace' };
   if (!profile) return null;
   if (target.reference === 'ftp' && profile.cycling.ftpWatts) return scaled(target, profile.cycling.ftpWatts, 'W');
   if (target.reference === 'threshold-hr') {
-    const value = profile.cycling.thresholdHrBpm ?? profile.running.thresholdHrBpm ?? profile.swimming.thresholdHrBpm;
+    const value = sport === 'BIKING' ? profile.cycling.thresholdHrBpm
+      : sport === 'RUNNING' ? profile.running.thresholdHrBpm
+        : sport === 'SWIMMING' ? profile.swimming.thresholdHrBpm : null;
     return value ? scaled(target, value, 'bpm') : null;
   }
   if (target.reference === 'threshold-pace' && profile.running.thresholdPaceSecPerKm) return paceScaled(target, profile.running.thresholdPaceSecPerKm);
@@ -27,8 +29,8 @@ export function formatWorkoutTarget(target: WorkoutTarget): string {
   return `${range} ${target.metric === 'power' ? 'W' : target.metric === 'hr' ? 'bpm' : 'pace'}`;
 }
 
-export function formatResolvedWorkoutTarget(target: WorkoutTarget, profile: PerformanceProfile | null | undefined): string | null {
-  const resolved = resolveWorkoutTarget(target, profile);
+export function formatResolvedWorkoutTarget(target: WorkoutTarget, profile: PerformanceProfile | null | undefined, sport: string): string | null {
+  const resolved = resolveWorkoutTarget(target, profile, sport);
   if (!resolved) return null;
   if (resolved.unit === 'pace') return `${formatPace(resolved.low)}-${formatPace(resolved.high)}${target.reference === 'css' ? ' /100 m' : ' /km'}`;
   return `${formatNumber(resolved.low)}-${formatNumber(resolved.high)} ${resolved.unit}`;

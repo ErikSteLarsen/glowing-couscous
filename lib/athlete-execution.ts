@@ -13,11 +13,11 @@ export type ExecutionStep = {
 };
 
 /** The same ordered repetitions as the workout timeline, omitting skipped work. */
-export function createExecutionSteps(blocks: SessionEditorBlock[], profile?: PerformanceProfile | null): ExecutionStep[] {
+export function createExecutionSteps(blocks: SessionEditorBlock[], sport: string, profile?: PerformanceProfile | null): ExecutionStep[] {
   return expandRepeatedBlocks(blocks.filter((block) => !block.skipped).map((block) => ({ ...block, repetitionCount: block.reps ?? 1 }))).map((block) => {
     const meta = getTempoZoneMeta(block.zone);
     const genericTarget = block.target ? formatWorkoutTarget(block.target) : null;
-    const resolvedTarget = block.target?.mode === 'relative' ? formatResolvedWorkoutTarget(block.target, profile) : null;
+    const resolvedTarget = block.target?.mode === 'relative' ? formatResolvedWorkoutTarget(block.target, profile, sport) : null;
     return {
       id: `${block.clientId}:${block.occurrence}`,
       label: `${meta.label} ${meta.name}${block.repetitionCount > 1 ? ` · Rep ${block.occurrence + 1} of ${block.repetitionCount}` : ''}`,

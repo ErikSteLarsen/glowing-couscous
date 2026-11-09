@@ -47,7 +47,7 @@ test('live steps follow repeated, non-skipped workout content with unique ordere
     createSessionEditorBlock({ clientId: 'omitted', kind: 'recovery', zone: 1, durationSec: 90, reps: 2, skipped: true }),
     createSessionEditorBlock({ clientId: 'cooldown', kind: 'cooldown', zone: 1, durationSec: 300 }),
   ];
-  const steps = createExecutionSteps(blocks);
+  const steps = createExecutionSteps(blocks, 'BIKING');
   assert.deepEqual(steps.map((step) => step.id), ['warmup:0', 'interval:0', 'interval:1', 'interval:2', 'interval:3', 'cooldown:0']);
   assert.match(steps[1].label, /Rep 1 of 4/);
   assert.match(steps[4].label, /Rep 4 of 4/);
@@ -55,7 +55,7 @@ test('live steps follow repeated, non-skipped workout content with unique ordere
   assert.equal(steps.reduce((sum, step) => sum + step.durationSec, 0), 2100);
   assert.equal(steps.reduce((sum, step) => sum + step.durationSec, 0), deriveSessionEditorMetrics({ ...createEmptySessionEditorDraft(), blocks }).durationSec);
   assert.equal(blocks[1].reps, 4, 'the prescription is unchanged');
-  assert.deepEqual(createExecutionSteps(blocks.map((block) => ({ ...block, skipped: true }))), []);
+  assert.deepEqual(createExecutionSteps(blocks.map((block) => ({ ...block, skipped: true })), 'BIKING'), []);
 });
 
 test('live targets preserve relative decimal prescriptions and optionally resolve a personal reference', () => {
@@ -63,9 +63,22 @@ test('live targets preserve relative decimal prescriptions and optionally resolv
     clientId: 'work', durationSec: 300,
     target: { metric: 'power', mode: 'relative', reference: 'ftp', low: 90.5, high: 100 },
   })];
-  assert.equal(createExecutionSteps(blocks)[0].targetLabel, '90.5-100% FTP');
+  assert.equal(createExecutionSteps(blocks, 'BIKING')[0].targetLabel, '90.5-100% FTP');
   const profile = createEmptyPerformanceProfile();
   profile.cycling.ftpWatts = 250;
-  assert.equal(createExecutionSteps(blocks, profile)[0].targetLabel, '90.5-100% FTP · 226-250 W');
+  assert.equal(createExecutionSteps(blocks, 'BIKING', profile)[0].targetLabel, '90.5-100% FTP · 226-250 W');
   assert.equal(blocks[0].target?.low, 90.5);
+});
+
+test('live heart-rate previews use the session sport and never borrow another threshold', () => {
+  const blocks = [createSessionEditorBlock({ target: { metric: 'hr', mode: 'relative', reference: 'threshold-hr', low: 90, high: 100 } })];
+  const profile = createEmptyPerformanceProfile();
+  profile.cycling.thresholdHrBpm = 170;
+  profile.running.thresholdHrBpm = 180;
+  profile.swimming.thresholdHrBpm = 160;
+  assert.equal(createExecutionSteps(blocks, 'RUNNING', profile)[0].targetLabel, '90-100% threshold HR · 162-180 bpm');
+  assert.equal(createExecutionSteps(blocks, 'BIKING', profile)[0].targetLabel, '90-100% threshold HR · 153-170 bpm');
+  assert.equal(createExecutionSteps(blocks, 'SWIMMING', profile)[0].targetLabel, '90-100% threshold HR · 144-160 bpm');
+  profile.running.thresholdHrBpm = null;
+  assert.equal(createExecutionSteps(blocks, 'RUNNING', profile)[0].targetLabel, '90-100% threshold HR');
 });

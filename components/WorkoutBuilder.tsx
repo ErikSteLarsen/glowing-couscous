@@ -386,7 +386,7 @@ export function WorkoutBuilder({
             </div>
             <CanvasDropZone>
               <SortableContext items={draft.blocks.map((block) => block.clientId)} strategy={verticalListSortingStrategy}>
-                {draft.blocks.length ? <div className="space-y-2">{draft.blocks.map((block, index) => <SortableBlock key={block.clientId} landing={landing?.id === block.clientId ? landing : null} insertionBefore={dropIndex === index} block={block} index={index} selected={selection.includes(index)} profile={performanceProfile} profileLabel={profileLabel} onSelect={select} />)}</div> : <p className="py-6 text-center text-sm text-[var(--text-secondary)]">Choose a preset in the block library to start the sequence.</p>}
+                {draft.blocks.length ? <div className="space-y-2">{draft.blocks.map((block, index) => <SortableBlock key={block.clientId} landing={landing?.id === block.clientId ? landing : null} insertionBefore={dropIndex === index} block={block} sport={draft.sport} index={index} selected={selection.includes(index)} profile={performanceProfile} profileLabel={profileLabel} onSelect={select} />)}</div> : <p className="py-6 text-center text-sm text-[var(--text-secondary)]">Choose a preset in the block library to start the sequence.</p>}
                 {dropIndex === draft.blocks.length ? <p className="border-t-2 border-[var(--brand)] pt-2 text-xs text-[var(--brand)]">Drop at end of sequence</p> : null}
             </SortableContext>
             <p role="status" className="mt-2 text-xs text-[var(--text-secondary)]">{landing && draft.blocks.some((block) => block.clientId === landing.id) ? landing.message : 'Changes stay in this draft until you save.'}</p>
@@ -488,7 +488,7 @@ function findPreset(id: string) {
   return null;
 }
 
-function SortableBlock({ block, index, selected, profile, profileLabel, onSelect, landing, insertionBefore }: { landing: { left: number; top: number; message: string } | null; insertionBefore: boolean; block: SessionEditorBlock; index: number; selected: boolean; profile: PerformanceProfile | null; profileLabel: string; onSelect: (index: number, event?: React.MouseEvent | React.KeyboardEvent) => void }) {
+function SortableBlock({ block, sport, index, selected, profile, profileLabel, onSelect, landing, insertionBefore }: { landing: { left: number; top: number; message: string } | null; insertionBefore: boolean; block: SessionEditorBlock; sport: string; index: number; selected: boolean; profile: PerformanceProfile | null; profileLabel: string; onSelect: (index: number, event?: React.MouseEvent | React.KeyboardEvent) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.clientId });
   const articleRef = useRef<HTMLElement | null>(null);
   useLayoutEffect(() => {
@@ -507,7 +507,7 @@ function SortableBlock({ block, index, selected, profile, profileLabel, onSelect
     return () => animation?.cancel();
   }, [landing]);
   const target = block.target ? formatWorkoutTarget(block.target) : 'No target';
-  const preview = block.target ? formatResolvedWorkoutTarget(block.target, profile) : null;
+  const preview = block.target ? formatResolvedWorkoutTarget(block.target, profile, sport) : null;
   const missing = block.target ? missingProfileAction(block.target) : null;
   const zone = TEMPO_ZONE_META[block.zone];
   return (

@@ -46,23 +46,26 @@ sanitized snapshots and requires an explicit recipient save.
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass, 228 tests | `pnpm test` |
+| Tests | Pass, 229 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build`; middleware deprecation warning remains |
 | Dashboard | Pass | Desktop and 390px Chromium: pointer at final plotted day, Home/End readings, no horizontal overflow or browser errors; coach-note service regressions pass |
+| Session execution and corrections | Pass | Chromium repeated/skipped execution, relative labels, completion, immediate actual correction, notes, reopening, planned adjustment, and reload persistence; session detail axe reports no violations |
 | Calendar persistence | Pass | Chromium explicit-date, keyboard-drag, and pointer-drag moves persisted after navigation/reload |
 | Calendar dates and ownership | Pass | Isolated SQLite tests cover foreign athletes, coach ownership, completed sessions, impossible dates, plan membership, content preservation, and Oslo/New York DST |
 | Calendar accessibility | Pass in scanned week view | Chromium axe 4.12.1: no violations; 390px month view has no horizontal overflow |
 | Design detector | Pass for changed calendar | No findings; dashboard chart labels have advisory typography findings |
 
 The calendar review identified missing scheduled times on cards. The correction
-restores those times in visible metadata and accessible names. Dashboard review
+restores those times in visible metadata and accessible names. Session review
+identified cross-sport heart-rate resolution; both Live and WorkoutBuilder now
+require the current sport, with distinct-sport and missing-value regressions.
+Dashboard review
 findings are corrected, and its recheck found no actionable remaining issue.
 
 ## Remaining limits and unverified behavior
 
-- Session/live browser acceptance and review are active; the 228-test suite and
-  lint pass. First-run and settings request recovery is the next part.
+- First-run and settings request recovery is the active next part.
 - Per-athlete time zones are not implemented. Calendar days use the server's
   local time zone; rescheduling preserves wall time within that zone.
 - Live execution is a local guidance stepper without device or sensor telemetry.
