@@ -61,17 +61,22 @@ sanitized snapshots and requires an explicit recipient save.
   through all saved outcomes. Counts, duration, and load cover the matching
   history. A read transaction keeps totals and rows consistent, with stable
   completion-date/id ordering and bounded page reads.
+- Athletes can share workouts directly from their library. Recipient saves
+  retain failed drafts, require explicit discard, and lock editing while
+  pending. Athlete copies go to Planner; coach copies are unscheduled and
+  visible in Workouts through the current library service.
 
 ## Verified gates
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass, 237 tests | `pnpm test` |
+| Tests | Pass, 238 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build`; middleware deprecation warning removed |
 | Mobile workout actions | Pass | 390px Chromium: action bar bottom 780px, navigation top 783px; desktop offset 0px; both review axes found no actionable issue |
 | Template authoring | Pass | Chromium discard/keep, blocked fetch, delayed save locks, retry/reload, and 20-second interval persistence; editor and list axe scans have no violations; 390px and 1440px have no overflow; design detector has no findings |
 | Activity history | Pass | SQLite pagination across 26 outcomes, filtered totals, timestamp ties, ownership, stale pages, and literal `%`/`_`/backslash searches; Chromium recorded completion notes, older/newer pages, filters, reload, empty recovery, no overflow, and zero axe violations |
+| Shared recipient copies | Pass | SQLite checks athlete/coach/template destinations, privacy, independent copies, and 20-second blocks; Chromium anonymous preview, sign-in return, failure/retry, discard/keep, pending locks, template/calendar persistence, and zero share-editor or workout-library axe violations; both review axes found no actionable issue |
 | Dashboard | Pass | Desktop and 390px Chromium: pointer at final plotted day, Home/End readings, no horizontal overflow or browser errors; coach-note service regressions pass |
 | Session execution and corrections | Pass | Chromium repeated/skipped execution, relative labels, completion, immediate actual correction, notes, reopening, planned adjustment, and reload persistence; session detail axe reports no violations |
 | Calendar persistence | Pass | Chromium explicit-date, keyboard-drag, and pointer-drag moves persisted after navigation/reload |
@@ -101,8 +106,7 @@ findings are corrected, and its recheck found no actionable remaining issue.
 - Live execution is a local guidance stepper without device or sensor telemetry.
 - External Google OAuth, physical-device touch, and production deployment have
   not been verified in this run.
-- An anonymous share preview passed browser checks for relative targets, private
-  note exclusion, and sign-in return paths. Recipient intake and alternate
+- Shared previews and recipient intake passed fresh Chromium checks. Alternate
   workout/planner design previews have not had browser acceptance rerun.
   Workouts, Templates, and Activity list accessibility scans found no violations;
   template editor and list now also pass fresh scans.

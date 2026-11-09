@@ -122,7 +122,7 @@ navigation.
 
 ## Known Gaps
 
-- Browser acceptance for public sharing and some session mutation flows still needs a fresh pass.
+- Public sharing, recipient intake, and session outcome mutations have local Chromium verification. Production deployment remains unverified.
 - Auth.js external OAuth integration is optional and not covered by local credentials tests.
 - The authentication proxy runs in Node.js so roleless JWT refreshes can query Prisma. Its redirects are secondary to the service/API authorization checks.
 
