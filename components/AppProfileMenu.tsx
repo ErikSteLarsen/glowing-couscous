@@ -48,7 +48,6 @@ export function AppProfileMenu({
               href={action.href}
               onClick={onNavigate}
               aria-current={isActive ? 'page' : undefined}
-              aria-label={compact ? action.label : undefined}
               title={compact ? action.label : undefined}
               className={`rail:justify-center flex min-h-11 items-center gap-3 rounded-lg px-2.5 text-sm transition-colors md:min-h-9 ${buttonFocusClassName} ${
                 isActive
@@ -57,7 +56,7 @@ export function AppProfileMenu({
               }`}
             >
               <Icon aria-hidden="true" size={16} strokeWidth={1.5} className={`shrink-0 ${isActive ? 'text-[var(--nav-signal)]' : ''}`} />
-              <span className="rail:hidden">{action.label}</span>
+              <span className="rail:sr-only">{action.label}</span>
             </Link>
           );
         })}

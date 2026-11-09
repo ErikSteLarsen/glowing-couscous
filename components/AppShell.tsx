@@ -27,7 +27,11 @@ export function AppShell({
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 767px)');
-    const updateViewport = () => setIsMobileViewport(mediaQuery.matches);
+    const updateViewport = () => {
+      setIsMobileViewport(mediaQuery.matches);
+      // A drawer left open while widening to desktop would keep the page scroll-locked.
+      if (!mediaQuery.matches) setMobileOpen(false);
+    };
     updateViewport();
     mediaQuery.addEventListener('change', updateViewport);
 
@@ -62,6 +66,13 @@ export function AppShell({
     requestAnimationFrame(() => menuButtonRef.current?.focus());
   };
 
+  // After choosing a destination, focus belongs to the new page rather than the menu button.
+  const closeAfterNavigation = () => {
+    if (!mobileOpen) return;
+    setMobileOpen(false);
+    requestAnimationFrame(() => document.getElementById('main')?.focus());
+  };
+
   return (
     <div className="relative min-h-screen bg-[var(--background)] text-[var(--text-secondary)]">
       <a
@@ -77,6 +88,7 @@ export function AppShell({
         mobileOpen={mobileOpen}
         isMobileViewport={isMobileViewport}
         onClose={closeMobileMenu}
+        onNavigate={closeAfterNavigation}
       />
       <div className="with-sidebar min-w-0 pb-20 md:pb-0">
         <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/90 px-4 backdrop-blur-md md:hidden">

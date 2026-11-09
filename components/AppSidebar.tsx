@@ -45,6 +45,7 @@ export function AppSidebar(props: {
   mobileOpen: boolean;
   isMobileViewport: boolean;
   onClose: () => void;
+  onNavigate: () => void;
 }) {
   const navItems = getPrimaryNavigation(props.user.role, { hasActiveCoach: props.hasActiveCoach });
   const sidebarRef = useRef<HTMLElement>(null);
@@ -99,15 +100,15 @@ export function AppSidebar(props: {
         aria-modal={props.isMobileViewport && props.mobileOpen ? true : undefined}
         inert={props.isMobileViewport && !props.mobileOpen ? true : undefined}
         ref={sidebarRef}
-        className={`app-sidebar fixed inset-y-0 left-0 z-40 w-64 overflow-y-auto overflow-x-hidden border-r border-[var(--nav-border)] bg-[var(--nav-surface)] text-[var(--nav-text)] md:translate-x-0 ${
-          props.mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`app-sidebar fixed inset-y-0 left-0 z-40 w-64 overflow-y-auto overflow-x-hidden border-r border-[var(--nav-border)] bg-[var(--nav-surface)] text-[var(--nav-text)] md:visible md:translate-x-0 ${
+          props.mobileOpen ? 'translate-x-0' : 'invisible -translate-x-full'
         }`}
       >
         <div className="flex min-h-full flex-col gap-6 px-3 py-4">
           <div className="flex min-h-9 items-center justify-between gap-2 px-1">
             <Link
               href={navItems[0]?.href ?? '/'}
-              onClick={props.onClose}
+              onClick={props.onNavigate}
               className={`flex min-w-0 items-center gap-2.5 rounded-lg ${buttonFocusClassName}`}
               aria-label="Tempo home"
             >
@@ -139,9 +140,8 @@ export function AppSidebar(props: {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={props.onClose}
+                  onClick={props.onNavigate}
                   aria-current={isActive ? 'page' : undefined}
-                  aria-label={isRail ? item.label : undefined}
                   title={isRail ? item.label : undefined}
                   className={`rail:justify-center flex min-h-11 items-center gap-3 whitespace-nowrap rounded-lg px-2.5 text-sm transition-colors md:min-h-9 ${buttonFocusClassName} ${
                     isActive
@@ -155,18 +155,17 @@ export function AppSidebar(props: {
                     strokeWidth={1.5}
                     className={`shrink-0 ${isActive ? 'text-[var(--nav-signal)]' : ''}`}
                   />
-                  <span className="rail:hidden">{item.label}</span>
+                  <span className="rail:sr-only">{item.label}</span>
                 </Link>
               );
             })}
           </nav>
 
           <div className="mt-auto space-y-3">
-            <AppProfileMenu user={props.user} pathname={props.pathname} onNavigate={props.onClose} compact={isRail} />
+            <AppProfileMenu user={props.user} pathname={props.pathname} onNavigate={props.onNavigate} compact={isRail} />
             <button
               type="button"
               onClick={() => writeSidebarMode(isRail ? 'full' : 'rail')}
-              aria-label={isRail ? 'Expand sidebar' : 'Collapse sidebar'}
               title={isRail ? 'Expand sidebar' : 'Collapse sidebar'}
               className={`rail:justify-center hidden min-h-9 w-full items-center gap-3 rounded-lg px-2.5 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--nav-active)] hover:text-[var(--text)] md:flex ${buttonFocusClassName}`}
             >
@@ -175,7 +174,7 @@ export function AppSidebar(props: {
               ) : (
                 <ChevronsLeft aria-hidden="true" size={16} strokeWidth={1.5} />
               )}
-              <span className="rail:hidden">Collapse</span>
+              <span className="rail:sr-only">{isRail ? 'Expand sidebar' : 'Collapse sidebar'}</span>
             </button>
           </div>
         </div>
