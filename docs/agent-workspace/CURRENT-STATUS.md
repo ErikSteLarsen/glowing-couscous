@@ -38,6 +38,8 @@ sanitized snapshots and requires an explicit recipient save.
 - WorkoutBuilder owns structured authoring, skipped blocks, repetitions,
   relative targets, profile-aware previews, presets, explicit reorder controls,
   and undo/redo. Generic prescriptions do not store personal profile values.
+  Workout, template, and share authoring retain seconds. Shared duration labels
+  show short intervals and second remainders instead of rounding them away.
 - Template authoring uses the shared editor with profile previews, explicit
   discard confirmation, failed-save draft retention, and locked controls while
   saving. The library and editor appear separately; mobile Save clears the
@@ -70,13 +72,14 @@ sanitized snapshots and requires an explicit recipient save.
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass, 238 tests | `pnpm test` |
+| Tests | Pass, 239 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build`; middleware deprecation warning removed |
 | Mobile workout actions | Pass | 390px Chromium: action bar bottom 780px, navigation top 783px; desktop offset 0px; both review axes found no actionable issue |
 | Template authoring | Pass | Chromium discard/keep, blocked fetch, delayed save locks, retry/reload, and 20-second interval persistence; editor and list axe scans have no violations; 390px and 1440px have no overflow; design detector has no findings |
 | Activity history | Pass | SQLite pagination across 26 outcomes, filtered totals, timestamp ties, ownership, stale pages, and literal `%`/`_`/backslash searches; Chromium recorded completion notes, older/newer pages, filters, reload, empty recovery, no overflow, and zero axe violations |
 | Shared recipient copies | Pass | SQLite checks athlete/coach/template destinations, privacy, independent copies, and 20-second blocks; Chromium anonymous preview, sign-in return, failure/retry, discard/keep, pending locks, template/calendar persistence, and zero share-editor or workout-library axe violations; both review axes found no actionable issue |
+| Short interval precision | Pass | Duration regression covers seconds, remainders, and hour boundaries; 390px Chromium saved/reloaded a 20-second workout block and showed `20s x 3` with a 20-second input; both review axes found no actionable issue |
 | Dashboard | Pass | Desktop and 390px Chromium: pointer at final plotted day, Home/End readings, no horizontal overflow or browser errors; coach-note service regressions pass |
 | Session execution and corrections | Pass | Chromium repeated/skipped execution, relative labels, completion, immediate actual correction, notes, reopening, planned adjustment, and reload persistence; session detail axe reports no violations |
 | Calendar persistence | Pass | Chromium explicit-date, keyboard-drag, and pointer-drag moves persisted after navigation/reload |
@@ -94,6 +97,10 @@ the session. `proxy.ts` now runs that guard in Node.js; the runtime regression
 checks the real cookie/session flow and deletes its temporary account.
 Dashboard review
 findings are corrected, and its recheck found no actionable remaining issue.
+The continuation closed mobile, template, Activity, sharing, and duration
+iterations. Each was committed, reviewed on standards and product behavior,
+corrected where needed, and pushed. Disposable history fixtures and the fresh
+recipient account were removed after verification.
 
 ## Remaining limits and unverified behavior
 
