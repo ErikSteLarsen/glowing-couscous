@@ -122,7 +122,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       summary: session.summary,
       sport: session.sport,
       date: session.date,
-      timeLabel: session.timeLabel ?? format(session.date, 'HH:mm'),
+      timeLabel: session.timeLabel,
       status,
       compliance,
       plannedDurationSec: planned.durationSec,

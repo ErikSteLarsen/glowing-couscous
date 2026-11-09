@@ -12,7 +12,7 @@ export type SessionRowData = {
   id: number;
   title: string;
   sport: string;
-  timeLabel: string;
+  timeLabel: string | null;
   dateLabel?: string;
   status: SessionStatus;
   durationSec: number;

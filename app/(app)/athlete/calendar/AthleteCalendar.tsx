@@ -54,7 +54,7 @@ export type CalendarSession = {
   id: number;
   title: string;
   sport: string;
-  timeLabel: string;
+  timeLabel: string | null;
   durationSec: number;
   tss: number;
   compliance: ComplianceState;
@@ -429,7 +429,7 @@ function useSessionDrag(session: CalendarSession, pending: boolean, draggable = 
 }
 
 function sessionLabel(session: CalendarSession, day: string) {
-  return [session.title, formatDay(day), session.timeLabel, getSportLabel(session.sport), formatDuration(session.durationSec), `${session.tss} TSS`, complianceLabels[session.compliance]].join(', ');
+  return [session.title, formatDay(day), session.timeLabel, getSportLabel(session.sport), formatDuration(session.durationSec), `${session.tss} TSS`, complianceLabels[session.compliance]].filter(Boolean).join(', ');
 }
 
 function SessionCard({
@@ -464,7 +464,7 @@ function SessionCard({
       >
         <p className="break-words text-[13px] font-medium leading-snug text-[var(--text)]">{session.title}</p>
         <p className="data text-xs text-[var(--text-secondary)]">
-          {session.timeLabel} · {getSportLabel(session.sport)} · {formatDuration(session.durationSec)} · {session.tss} TSS
+          {[session.timeLabel, getSportLabel(session.sport), formatDuration(session.durationSec), `${session.tss} TSS`].filter(Boolean).join(' · ')}
         </p>
         <ComplianceMark state={session.compliance} showLabel />
         <SessionBlockBar segments={session.segments} size="compact" />

@@ -11,6 +11,7 @@ import { getSessionOrigin, getSessionReturnTarget } from '@/lib/app-navigation';
 import { SessionDetailClient } from './SessionDetailClient';
 import { ShareLinkButton } from '@/components/ShareLinkButton';
 import { accountService } from '@/lib/account-service';
+import { formatSessionWhen } from '@/lib/session-display';
 
 export default async function AthleteSessionPage({
   params,
@@ -64,7 +65,7 @@ export default async function AthleteSessionPage({
       <div className="flex flex-wrap items-center gap-3 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">
         <span>Week of {format(startOfWeek(detail.session.date, { weekStartsOn: 1 }), 'd MMM')}</span>
         <span aria-hidden="true">·</span>
-        <span>{format(detail.session.date, 'EEE d MMM · HH:mm')}</span>
+        <span>{formatSessionWhen(detail.session.date, detail.session.timeLabel)}</span>
         <StatusBadge status={detail.session.status} />
       </div>
 

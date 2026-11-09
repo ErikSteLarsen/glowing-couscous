@@ -25,5 +25,6 @@ for (const nextNote of ['Evening instructions', '']) {
     const dashboard = await service.loadHomeDashboard(7);
     assert.ok(dashboard);
     assert.deepEqual(dashboard.coachNote, nextNote ? { sessionTitle: 'Session 2', text: nextNote } : null);
+    assert.equal(dashboard.todaySessions.find((item) => item.id === 2)?.timeLabel, null, 'sessions without a scheduled time remain untimed on Home');
   });
 }

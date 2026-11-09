@@ -81,6 +81,7 @@ test('athlete calendar week view shapes the selected week and keeps session days
   assert.equal(format(sessionQueries[0].date?.lte ?? new Date('1900-01-01'), 'yyyy-MM-dd'), '2026-06-28');
   assert.equal(calendar.days.length, 7);
   assert.equal(calendar.days.find((day) => day.isoDate === '2026-06-24')?.sessions[0]?.id, 12);
+  assert.equal(calendar.days.find((day) => day.isoDate === '2026-06-24')?.sessions[0]?.timeLabel, null);
   assert.equal(format(calendar.period.start, 'yyyy-MM-dd'), '2026-06-22');
 });
 
@@ -190,6 +191,7 @@ test('athlete calendar week view summarizes planned and completed work and flags
   assert.equal(sessions.get(41)?.canReschedule, false, 'completed sessions stay put');
   assert.equal(sessions.get(42)?.canReschedule, false, 'coach-assigned sessions stay put');
   assert.equal(sessions.get(43)?.canReschedule, true);
+  assert.equal(sessions.get(43)?.timeLabel, null, 'untimed sessions remain untimed in the calendar payload');
 });
 
 test('athlete calendar month view returns one Monday-first summary per grid row', async () => {

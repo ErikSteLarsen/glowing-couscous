@@ -9,6 +9,7 @@ import { formatDuration } from '@/lib/format-duration';
 import { getSessionOrigin } from '@/lib/app-navigation';
 import { accountService } from '@/lib/account-service';
 import { createExecutionSteps } from '@/lib/athlete-execution';
+import { formatSessionWhen } from '@/lib/session-display';
 import { LiveSessionClient } from './LiveSessionClient';
 
 export default async function AthleteLivePage({
@@ -50,7 +51,7 @@ export default async function AthleteLivePage({
       <div className="flex flex-wrap items-center gap-3 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">
         <span>Week of {format(startOfWeek(detail.session.date, { weekStartsOn: 1 }), 'd MMM')}</span>
         <span aria-hidden="true">·</span>
-        <span>{format(detail.session.date, 'EEE d MMM · HH:mm')}</span>
+        <span>{formatSessionWhen(detail.session.date, detail.session.timeLabel)}</span>
         <StatusBadge status={detail.session.status} />
       </div>
 

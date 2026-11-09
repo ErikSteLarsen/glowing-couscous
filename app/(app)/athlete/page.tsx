@@ -120,7 +120,7 @@ export default async function AthletePage() {
             <div className="mt-4 flex flex-1 flex-col gap-4">
               <div>
                 <p className="data text-[13px] text-[var(--text-muted)]">
-                  {nextAction.timeLabel} · {getSportLabel(nextAction.sport)}
+                  {[nextAction.timeLabel, getSportLabel(nextAction.sport)].filter(Boolean).join(' · ')}
                 </p>
                 <p className="mt-1 text-2xl font-medium tracking-[-0.02em] text-[var(--text)]">{nextAction.title}</p>
                 {nextAction.summary ? <p className="mt-1.5 line-clamp-2 text-sm text-[var(--text-secondary)]">{nextAction.summary}</p> : null}

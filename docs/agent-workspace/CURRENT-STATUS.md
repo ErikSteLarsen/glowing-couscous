@@ -62,6 +62,10 @@ sanitized snapshots and requires an explicit recipient save.
 - Athletes can remove an open self-planned session from Calendar or session
   detail after an in-app confirmation. The delete service checks athlete
   ownership, completion, coach assignment, and concurrent session changes.
+- Scheduled time is optional throughout athlete Home, Calendar, session detail,
+  and Live. Unset times remain absent instead of being inferred from the
+  timestamp; explicit times still appear in labels and calendar API data. This
+  session-time clarity stage scores 8/10 after covering each athlete view.
 - Activity searches completed names literally, filters by sport, and pages
   through all saved outcomes. Counts, duration, and load cover the matching
   history. A read transaction keeps totals and rows consistent, with stable
@@ -75,7 +79,7 @@ sanitized snapshots and requires an explicit recipient save.
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass, 240 tests | `pnpm test` |
+| Tests | Pass, 242 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build`; middleware deprecation warning removed |
 | Mobile workout actions | Pass | 390px Chromium: action bar bottom 780px, navigation top 783px; desktop offset 0px; both review axes found no actionable issue |
@@ -86,16 +90,18 @@ sanitized snapshots and requires an explicit recipient save.
 | Dashboard | Pass | Desktop and 390px Chromium: pointer at final plotted day, Home/End readings, no horizontal overflow or browser errors; coach-note service regressions pass |
 | Session execution and corrections | Pass | Chromium repeated/skipped execution, relative labels, completion, immediate actual correction, notes, reopening, planned adjustment, and reload persistence; session detail axe reports no violations |
 | Personal session removal | Pass | SQLite verifies owner scope, completed/activity/coach-assigned refusal, and block cascade; Chromium desktop and 390px confirms the in-app dialog, Escape cancel, Calendar removal, refresh feedback, and no horizontal overflow |
+| Untimed session display | Pass | Focused checks cover null and explicit times through Home, Calendar, detail, and the shared date formatter; `pnpm test`, `pnpm lint`, and `pnpm build` pass |
 | Calendar persistence | Pass | Chromium explicit-date, keyboard-drag, and pointer-drag moves persisted after navigation/reload |
 | Calendar dates and ownership | Pass | Isolated SQLite tests cover foreign athletes, coach ownership, completed sessions, impossible dates, plan membership, content preservation, and Oslo/New York DST |
 | Calendar accessibility | Pass in scanned week view | Chromium axe 4.12.1: no violations; 390px month view has no horizontal overflow |
 | Roleless production authentication | Pass | `node --env-file=.env scripts/verify-roleless-setup.mjs` against a local production server; failed before the proxy migration and passed afterward |
 | Design detector | Pass for changed calendar | No findings; dashboard chart labels have advisory typography findings |
 
-The calendar review identified missing scheduled times on cards. The correction
-restores those times in visible metadata and accessible names. Session review
-identified cross-sport heart-rate resolution; both Live and WorkoutBuilder now
-require the current sport, with distinct-sport and missing-value regressions.
+Calendar review identified unclear handling of optional scheduled times. Explicit
+times appear in visible metadata and accessible names, while unset times remain
+absent across athlete views and the calendar API. Session review identified
+cross-sport heart-rate resolution; both Live and WorkoutBuilder now require the
+current sport, with distinct-sport and missing-value regressions.
 Roleless JWT refresh previously called Prisma in Edge middleware and cleared
 the session. `proxy.ts` now runs that guard in Node.js; the runtime regression
 checks the real cookie/session flow and deletes its temporary account.

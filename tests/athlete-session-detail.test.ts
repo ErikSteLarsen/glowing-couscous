@@ -2,12 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAthleteService } from '../lib/athlete-service.ts';
 
-function service(activityNotes: string | null = null) {
+function service(activityNotes: string | null = null, timeLabel: string | null = '08:00') {
   return createAthleteService({ db: {
     user: { async findUnique() { return { id: 7, role: 'ATHLETE', selfCoached: true, coachId: null }; } },
     session: { async findUnique() { return {
       id: 42, athleteId: 7, date: new Date('2026-11-10T08:00:00'), title: 'Personal repeats', sport: 'BIKING',
-      summary: null, status: 'planned', adjusted: false, timeLabel: '08:00', athleteNotes: 'Bring water',
+      summary: null, status: 'planned', adjusted: false, timeLabel, athleteNotes: 'Bring water',
       athlete: { id: 7, name: 'Mara', coach: null },
       activity: activityNotes === null ? null : { notes: activityNotes, tss: 30, durationSec: 1200, metricsSource: 'manual-planned' },
       blocks: [{ id: 3, kind: 'work', zone: 3, durationSec: 300, reps: 4, targetType: 'power',
@@ -22,10 +22,17 @@ test('personal session detail preserves planned notes and uses canonical target 
   assert.ok(detail);
   assert.equal(detail.session.notes, 'Bring water');
   assert.equal(detail.session.targetLabel, '90.5-100% FTP');
+  assert.equal(detail.session.timeLabel, '08:00');
   assert.equal(detail.session.blocks[0].targetLabel, '90.5-100% FTP');
   assert.equal(detail.session.editor.mode, 'planned');
   assert.equal(detail.session.durationSec, 1200);
   assert.equal(detail.session.canDelete, true);
+});
+
+test('personal session detail preserves a missing scheduled time', async () => {
+  const detail = await service(null, null).loadSessionDetail(7, 42);
+  assert.ok(detail);
+  assert.equal(detail.session.timeLabel, null);
 });
 
 test('completed notes take precedence, including an explicitly cleared note', async () => {
