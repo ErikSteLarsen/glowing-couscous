@@ -10,6 +10,7 @@ import { addDayKeys, classifyCompliance, fromDayKey, summarizeWeeks, toDayKey, t
 import { parseCalendarDay } from './calendar-navigation.ts';
 import { formatWorkoutTarget } from './workout-target-resolution.ts';
 import { normalizeWorkoutTarget } from './workout-targets.ts';
+import { ACTIVITY_PAGE_SIZE, parseActivityFilters, type ActivityFilters } from './activity-navigation.ts';
 
 type AthleteServiceDeps = {
   db?: typeof prisma;
@@ -444,59 +445,59 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       };
     },
 
-    async loadActivityFeed(userId: number) {
-      const athlete = await db.user.findUnique({
-        where: { id: userId },
-        include: {
-          activities: {
-            orderBy: { completedAt: 'desc' },
-            take: 12,
-            include: {
-              session: {
-                include: {
-                  blocks: {
-                    orderBy: { sortOrder: 'asc' },
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
-
+    async loadActivityFeed(userId: number, filters: ActivityFilters = parseActivityFilters({})) {
+      const athlete = await loadAthleteIdentity(userId);
       if (!athlete || athlete.role !== 'ATHLETE') {
         return null;
       }
-
-      const totals = athlete.activities.reduce(
-        (summary, activity) => {
-          summary.durationSec += activity.durationSec;
-          summary.tss += activity.tss;
-          return summary;
+      const where = {
+        athleteId: userId,
+        session: {
+          athleteId: userId,
+          ...(filters.sport ? { sport: filters.sport } : {}),
+          ...(filters.query ? { title: { contains: filters.query } } : {}),
         },
-        { durationSec: 0, tss: 0 },
-      );
-
-      return {
-        athlete: {
-          id: athlete.id,
-          name: athlete.name ?? '',
-        },
-        totals,
-        activities: athlete.activities.map((activity) => ({
-          id: activity.id,
-          sessionId: activity.sessionId,
-          title: activity.session.title,
-          sport: activity.session.sport,
-          completedAt: activity.completedAt,
-          durationSec: activity.durationSec,
-          tss: activity.tss,
-          compliancePct: activity.compliancePct,
-          metricsSource: activity.metricsSource,
-          notes: activity.notes,
-          segments: parseActivitySegments(activity.segmentsJson),
-        })),
       };
+      return db.$transaction(async (tx) => {
+        const summary = await tx.activity.aggregate({
+          where,
+          _count: { _all: true },
+          _sum: { durationSec: true, tss: true },
+        });
+        const count = summary._count._all;
+        const totalPages = Math.max(1, Math.ceil(count / ACTIVITY_PAGE_SIZE));
+        const page = Math.min(filters.page, totalPages);
+        const activities = await tx.activity.findMany({
+          where,
+          orderBy: [{ completedAt: 'desc' }, { id: 'desc' }],
+          skip: (page - 1) * ACTIVITY_PAGE_SIZE,
+          take: ACTIVITY_PAGE_SIZE,
+          include: { session: { select: { id: true, title: true, sport: true } } },
+        });
+        return {
+          athlete: {
+            id: athlete.id,
+            name: athlete.name ?? '',
+          },
+          count,
+          page,
+          totalPages,
+          totals: { durationSec: summary._sum.durationSec ?? 0, tss: summary._sum.tss ?? 0 },
+          activities: activities.map((activity) => ({
+            id: activity.id,
+            sessionId: activity.sessionId,
+            title: activity.session.title,
+            sport: activity.session.sport,
+            completedAt: activity.completedAt,
+            durationSec: activity.durationSec,
+            tss: activity.tss,
+            compliancePct: activity.compliancePct,
+            metricsSource: activity.metricsSource,
+            notes: activity.notes,
+            segments: parseActivitySegments(activity.segmentsJson),
+          })),
+        };
+      });
     },
 
     async loadSessionDetail(userId: number, sessionId: number) {

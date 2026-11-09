@@ -1,80 +1,115 @@
 import { format } from 'date-fns';
 import { redirect } from 'next/navigation';
-import { ActionLink, EmptyState, PageShell, Surface, StatTile, TopBar } from '@/components/ui';
+import { ActionLink, EmptyState, PageShell, StatTile, TopBar, formFieldClassName, formLabelClassName, formSelectClassName, secondaryButtonClassName } from '@/components/ui';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
-import { getSportLabel } from '@/lib/sport';
+import { getSportLabel, SPORT_OPTIONS } from '@/lib/sport';
+import { ACTIVITY_PAGE_SIZE, getActivityHref, parseActivityFilters } from '@/lib/activity-navigation';
 import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
 
-export default async function AthleteActivityPage() {
+export default async function AthleteActivityPage({ searchParams }: {
+  searchParams: Promise<{ q?: string | string[]; sport?: string | string[]; page?: string | string[] }>;
+}) {
   const user = await getCurrentUser();
   if (!user || user.role !== 'ATHLETE') redirect('/login');
 
-  const activityFeed = await athleteService.loadActivityFeed(user.id);
-  if (!activityFeed) redirect('/athlete/find-coach');
+  const filters = parseActivityFilters(await searchParams);
+  const activityFeed = await athleteService.loadActivityFeed(user.id, filters);
+  if (!activityFeed) redirect('/login');
+  const isFiltered = Boolean(filters.query || filters.sport);
+  const totalsLabel = isFiltered ? 'Matching history' : 'All completed work';
+  const firstResult = (activityFeed.page - 1) * ACTIVITY_PAGE_SIZE + 1;
+  const lastResult = firstResult + activityFeed.activities.length - 1;
 
   return (
     <PageShell size="wide">
       <TopBar
         title="Completed work"
-        description="Review your latest 12 completed sessions and compare each with the planned work."
+        description="Find past sessions, review saved outcomes, and compare each with its plan."
       />
 
+      <form action="/athlete/activity" className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <label className="min-w-0 flex-1 space-y-2">
+          <span className={formLabelClassName}>Find a completed session</span>
+          <input key={filters.query} type="search" name="q" defaultValue={filters.query} maxLength={100} placeholder="Search by workout name" className={formFieldClassName} />
+        </label>
+        <label className="space-y-2 sm:w-44">
+          <span className={formLabelClassName}>Sport</span>
+          <select key={filters.sport ?? ''} name="sport" defaultValue={filters.sport ?? ''} className={formSelectClassName}>
+            <option value="">All sports</option>
+            {SPORT_OPTIONS.map((sport) => <option key={sport} value={sport}>{getSportLabel(sport)}</option>)}
+          </select>
+        </label>
+        <button type="submit" className={secondaryButtonClassName}>Apply filters</button>
+        {isFiltered ? <ActionLink href="/athlete/activity" tone="ghost">Clear filters</ActionLink> : null}
+      </form>
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <StatTile label="Completed sessions" value={String(activityFeed.activities.length)} detail="Latest 12" />
-        <StatTile label="Duration" value={formatDuration(activityFeed.totals.durationSec)} detail="Latest 12 sessions" />
-        <StatTile label="Load" value={`${activityFeed.totals.tss}`} detail="Latest 12 sessions" />
+        <StatTile label="Completed sessions" value={String(activityFeed.count)} detail={totalsLabel} />
+        <StatTile label="Duration" value={formatDuration(activityFeed.totals.durationSec)} detail={totalsLabel} />
+        <StatTile label="Load" value={`${activityFeed.totals.tss}`} detail={totalsLabel} />
       </div>
 
       {activityFeed.activities.length === 0 ? (
         <EmptyState
-          title="No completed sessions yet"
-          description="Complete a session to see it here."
+          title={isFiltered ? 'No matching completed sessions' : 'No completed sessions yet'}
+          description={isFiltered ? 'Try a different workout name or sport.' : 'Open a planned session and record its outcome to see it here.'}
+          action={<ActionLink href={isFiltered ? '/athlete/activity' : '/athlete/calendar'} tone="secondary">{isFiltered ? 'Clear filters' : 'Open Calendar'}</ActionLink>}
         />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {activityFeed.activities.map((activity) => (
-            <Surface key={activity.id} className="space-y-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[15px] font-semibold text-[var(--text)]">{activity.title}</p>
-                  <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
-                    {format(activity.completedAt, 'EEE d MMM')} · {getSportLabel(activity.sport)}
-                   </p>
+        <>
+          <p className="data text-sm text-[var(--text-secondary)]">Showing {firstResult}–{lastResult} of {activityFeed.count} completed sessions</p>
+          <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
+            {activityFeed.activities.map((activity) => (
+              <article key={activity.id} className="min-w-0 space-y-3 py-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <h2 className="break-words text-base font-medium text-[var(--text)] [overflow-wrap:anywhere]">{activity.title}</h2>
+                    <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
+                      {format(activity.completedAt, 'EEE d MMM yyyy')} · {getSportLabel(activity.sport)}
+                    </p>
+                    </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-3">
+                      <ActionLink href={`/athlete/session/${activity.sessionId}?from=activity`} tone="ghost">
+                    Review outcome
+                    </ActionLink>
+                    <SessionComparisonDialog
+                      sessionId={activity.sessionId}
+                      endpoint={`/api/athlete/sessions/${activity.sessionId}/comparison`}
+                      label="Compare"
+                    />
                   </div>
-                   <div className="flex flex-wrap items-center gap-3">
-                    <ActionLink href={`/athlete/session/${activity.sessionId}?from=activity`} tone="ghost">
-                     Review outcome
-                  </ActionLink>
-                  <SessionComparisonDialog
-                    sessionId={activity.sessionId}
-                    endpoint={`/api/athlete/sessions/${activity.sessionId}/comparison`}
-                    label="Compare"
-                  />
                 </div>
-              </div>
-              <SessionBlockBar segments={activity.segments} />
-              <div className="flex flex-wrap gap-4 text-[13px] text-[var(--text-secondary)]">
-                <MetricText>{formatDuration(activity.durationSec)}</MetricText>
-                <MetricText>{activity.tss} TSS</MetricText>
-                <MetricText>
-                  {activity.compliancePct === null ? 'Compliance unavailable' : `${activity.compliancePct}% compliance`}
-                </MetricText>
-              </div>
-              {activity.metricsSource === 'manual-planned' || activity.metricsSource === 'manual-actual' ? (
-                <p className="text-[13px] text-[var(--text-secondary)]">Manual outcome; no performed sensor metrics recorded.</p>
-              ) : null}
-              {activity.notes ? (
-                <div className="rounded-[10px] bg-[var(--brand-tint)] px-4 py-3 text-[13px] text-[var(--text)]">
-                  {activity.notes}
+                <SessionBlockBar segments={activity.segments} />
+                <div className="flex flex-wrap gap-4 text-[13px] text-[var(--text-secondary)]">
+                  <MetricText>{formatDuration(activity.durationSec)}</MetricText>
+                  <MetricText>{activity.tss} TSS</MetricText>
+                  <MetricText>
+                    {activity.compliancePct === null ? 'Compliance unavailable' : `${activity.compliancePct}% compliance`}
+                  </MetricText>
                 </div>
-              ) : null}
-            </Surface>
-          ))}
-        </div>
+                {activity.metricsSource === 'manual-planned' || activity.metricsSource === 'manual-actual' ? (
+                  <p className="text-[13px] text-[var(--text-secondary)]">Manual outcome; no performed sensor metrics recorded.</p>
+                ) : null}
+                {activity.notes ? (
+                  <p className="whitespace-pre-wrap break-words text-sm text-[var(--text-secondary)] [overflow-wrap:anywhere]">
+                    {activity.notes}
+                  </p>
+                ) : null}
+              </article>
+            ))}
+          </div>
+          {activityFeed.totalPages > 1 ? (
+            <nav aria-label="Activity pages" className="flex flex-wrap items-center justify-between gap-3">
+              {activityFeed.page > 1 ? <ActionLink href={getActivityHref(filters, activityFeed.page - 1)} tone="secondary">Newer sessions</ActionLink> : <span />}
+              <span className="data text-sm text-[var(--text-secondary)]">Page {activityFeed.page} of {activityFeed.totalPages}</span>
+              {activityFeed.page < activityFeed.totalPages ? <ActionLink href={getActivityHref(filters, activityFeed.page + 1)} tone="secondary">Older sessions</ActionLink> : <span />}
+            </nav>
+          ) : null}
+        </>
       )}
     </PageShell>
   );
