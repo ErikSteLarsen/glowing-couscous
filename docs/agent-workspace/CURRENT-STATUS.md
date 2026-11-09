@@ -1,6 +1,6 @@
 # Current Status
 
-Implementation verification last recorded on **2026-09-18**. The functional repair plan is complete and verified locally. Source and tests are the authority; this file is a short operational snapshot, not a changelog.
+Implementation verification last recorded on **2026-11-09**. The functional repair plan is complete and verified locally. Source and tests are the authority; this file is a short operational snapshot, not a changelog.
 
 ## Product
 
@@ -31,13 +31,21 @@ The personal Planning Desk, session completion, and Activity path now pass the f
 The current visual contract is documented in `DESIGN.md` and verified against
 `app/globals.css`, `components/ui.tsx`, `components/AppShell.tsx`,
 `components/AppSidebar.tsx`, `components/tempo/*`, and `components/WorkoutBuilder.tsx`.
-The canonical direction is the light, editorial, Monday-first **Ink Is Movement**
-studio, translated from the user's supplied ink-flow reference.
-Routes under `/design/*` remain alternate visual previews and are not production
-design sources. Indigo owns forward action and active context while blue-gray
-linework carries focus and flow. The comparison dialog uses the defined overlay
-shadow token. The installed Impeccable launcher has no `document` command, so the
-sidecar is kept synchronized manually from the canonical contract and tokens.
+The canonical direction is the dark **Night Instrument** system, inspired by
+Garmin Explorer: cyan action, tabular measurements, hairline rules, semantic
+training colors, and restrained SVG charts. `DESIGN.md` and the implemented
+tokens are authoritative. Design previews remain separate from production.
+
+Home includes fitness/fatigue/form/ramp measurements, plan projections, weekly
+planned/completed volume, session compliance, and the next unfinished session.
+The 2026-11-09 dashboard review fixes bind coach instructions to that session,
+retain history for returning athletes, and correct chart pointer coordinates,
+vertical touch scrolling, and keyboard/screen-reader readings. Desktop and
+390px Chromium checks passed for pointer and Home/End selection, with no
+horizontal overflow or browser errors. Two service regressions cover coach-note
+selection; production build and lint pass for the follow-up. The full suite
+currently has one calendar fixture failure (220/221), being corrected in the
+active calendar part. The dashboard recheck found no actionable remaining issue.
 
 ## Verified Gates
 

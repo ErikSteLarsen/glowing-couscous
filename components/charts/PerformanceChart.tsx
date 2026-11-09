@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useMemo, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { formatDayLong, formatDayShort, niceCeiling, signed } from '@/lib/chart-format';
 import type { LoadPoint } from '@/lib/training-load';
 
@@ -41,9 +41,11 @@ function LegendValue({ color, label, value, dashed = false }: { color: string; l
  * keys move the reading; the legend always shows the selected day.
  */
 export function PerformanceChart({ series, today }: Props) {
-  const todayIndex = Math.max(0, series.findIndex((point) => point.day === today));
+  const todayIndex = series.findIndex((point) => point.day === today);
+  const anchorIndex = todayIndex < 0 ? series.length - 1 : todayIndex;
+  const plotRef = useRef<SVGSVGElement>(null);
   const [active, setActive] = useState<number | null>(null);
-  const shown = active ?? todayIndex;
+  const shown = Math.min(active ?? anchorIndex, series.length - 1);
   const point = series[shown];
   const clipId = useId();
 
@@ -68,16 +70,16 @@ export function PerformanceChart({ series, today }: Props) {
   const fatigue = series.map((entry) => entry.fatigue);
   const form = series.map((entry) => entry.form);
   const lastIndex = series.length - 1;
-  const hasProjection = todayIndex < lastIndex;
+  const hasProjection = todayIndex >= 0 && todayIndex < lastIndex;
   const percent = (index: number) => `${(index / lastIndex) * 100}%`;
   const ticks = [scales.lineMax, scales.lineMax / 2, 0];
   const labelEvery = Math.max(1, Math.round(series.length / 6 / 7)) * 7;
   const dateLabels = series
     .map((entry, index) => ({ entry, index }))
-    .filter(({ entry, index }) => (index - todayIndex) % labelEvery === 0 && index !== lastIndex && entry.day !== today);
+    .filter(({ entry, index }) => (index - anchorIndex) % labelEvery === 0 && index !== lastIndex && entry.day !== today);
 
   function indexFromPointer(event: PointerEvent<HTMLDivElement>) {
-    const rect = event.currentTarget.getBoundingClientRect();
+    const rect = plotRef.current?.getBoundingClientRect() ?? event.currentTarget.getBoundingClientRect();
     const ratio = (event.clientX - rect.left) / rect.width;
     return Math.max(0, Math.min(lastIndex, Math.round(ratio * lastIndex)));
   }
@@ -101,7 +103,7 @@ export function PerformanceChart({ series, today }: Props) {
   return (
     <figure className="flex flex-col gap-3">
       <figcaption className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 text-[13px]">
-        <span className="data text-[var(--text-secondary)]" aria-live="polite">
+        <span className="data text-[var(--text-secondary)]">
           {formatDayLong(point.day)}
           {point.day === today ? ' · today' : point.projected ? ' · if you follow the plan' : ''}
         </span>
@@ -114,10 +116,14 @@ export function PerformanceChart({ series, today }: Props) {
       </figcaption>
 
       <div
-        role="img"
+        role="slider"
+        aria-valuemin={0}
+        aria-valuemax={lastIndex}
+        aria-valuenow={shown}
+        aria-valuetext={`${formatDayLong(point.day)}: fitness ${Math.round(point.fitness)}, fatigue ${Math.round(point.fatigue)}, form ${signed(point.form)}, stress ${stressLabel}`}
         tabIndex={0}
-        aria-label={`Fitness ${Math.round(point.fitness)}, fatigue ${Math.round(point.fatigue)}, form ${signed(point.form)} on ${formatDayLong(point.day)}. Use arrow keys to move between days.`}
-        className="relative cursor-crosshair touch-none select-none rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--background)]"
+        aria-label="Training load by day. Use arrow keys to move between days."
+        className="relative cursor-crosshair touch-pan-y select-none rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--background)]"
         onPointerMove={(event) => setActive(indexFromPointer(event))}
         onPointerDown={(event) => setActive(indexFromPointer(event))}
         onPointerLeave={(event) => {
@@ -127,20 +133,20 @@ export function PerformanceChart({ series, today }: Props) {
         onBlur={() => setActive(null)}
       >
         <div className="relative pr-9">
-          <svg viewBox={`0 0 ${WIDTH} ${LOAD_HEIGHT}`} preserveAspectRatio="none" className="chart-reveal block h-[clamp(160px,24vh,220px)] w-full overflow-visible" aria-hidden="true">
+          <svg ref={plotRef} viewBox={`0 0 ${WIDTH} ${LOAD_HEIGHT}`} preserveAspectRatio="none" className="chart-reveal block h-[clamp(160px,24vh,220px)] w-full overflow-visible" aria-hidden="true">
             <defs>
               <clipPath id={`${clipId}-past`}>
-                <rect x={0} y={-4} width={x(todayIndex)} height={LOAD_HEIGHT + 8} />
+                <rect x={0} y={-4} width={x(anchorIndex)} height={LOAD_HEIGHT + 8} />
               </clipPath>
               <clipPath id={`${clipId}-future`}>
-                <rect x={x(todayIndex)} y={-4} width={WIDTH - x(todayIndex)} height={LOAD_HEIGHT + 8} />
+                <rect x={x(anchorIndex)} y={-4} width={WIDTH - x(anchorIndex)} height={LOAD_HEIGHT + 8} />
               </clipPath>
             </defs>
             {ticks.map((tick) => (
               <line key={tick} x1={0} x2={WIDTH} y1={yLoad(tick)} y2={yLoad(tick)} stroke="var(--border)" strokeWidth={1} vectorEffect="non-scaling-stroke" />
             ))}
             {hasProjection ? (
-              <rect x={x(todayIndex)} y={0} width={WIDTH - x(todayIndex)} height={LOAD_HEIGHT} fill="var(--raised)" opacity={0.45} />
+              <rect x={x(anchorIndex)} y={0} width={WIDTH - x(anchorIndex)} height={LOAD_HEIGHT} fill="var(--raised)" opacity={0.45} />
             ) : null}
             {series.map((entry, index) => {
               const stress = entry.actualTss || entry.plannedTss;
@@ -172,7 +178,7 @@ export function PerformanceChart({ series, today }: Props) {
                 <path d={linePath(fitness, x, yLoad)} fill="none" stroke="var(--metric-fitness)" strokeWidth={2} vectorEffect="non-scaling-stroke" opacity={0.75} />
               </g>
             ) : null}
-            <line x1={x(todayIndex)} x2={x(todayIndex)} y1={0} y2={LOAD_HEIGHT} stroke="var(--brand)" strokeWidth={1} strokeDasharray="2 3" vectorEffect="non-scaling-stroke" opacity={0.7} />
+            {todayIndex >= 0 ? <line x1={x(todayIndex)} x2={x(todayIndex)} y1={0} y2={LOAD_HEIGHT} stroke="var(--brand)" strokeWidth={1} strokeDasharray="2 3" vectorEffect="non-scaling-stroke" opacity={0.7} /> : null}
             {active !== null ? (
               <line x1={x(shown)} x2={x(shown)} y1={0} y2={LOAD_HEIGHT} stroke="var(--text)" strokeWidth={1} vectorEffect="non-scaling-stroke" opacity={0.5} />
             ) : null}
@@ -203,11 +209,11 @@ export function PerformanceChart({ series, today }: Props) {
           <svg viewBox={`0 0 ${WIDTH} ${FORM_HEIGHT}`} preserveAspectRatio="none" className="block h-[4.5rem] w-full" aria-hidden="true">
             <rect x={0} y={yForm(5)} width={WIDTH} height={yForm(-10) - yForm(5)} fill="var(--band)" opacity={0.6} />
             <line x1={0} x2={WIDTH} y1={yForm(0)} y2={yForm(0)} stroke="var(--border-strong)" strokeWidth={1} vectorEffect="non-scaling-stroke" />
-            <path d={linePath(form, x, yForm, 0, todayIndex)} fill="none" stroke="var(--metric-form)" strokeWidth={1.75} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+            <path d={linePath(form, x, yForm, 0, anchorIndex)} fill="none" stroke="var(--metric-form)" strokeWidth={1.75} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
             {hasProjection ? (
-              <path d={linePath(form, x, yForm, todayIndex, lastIndex)} fill="none" stroke="var(--metric-form)" strokeWidth={1.75} strokeDasharray="4 4" vectorEffect="non-scaling-stroke" opacity={0.7} />
+              <path d={linePath(form, x, yForm, anchorIndex, lastIndex)} fill="none" stroke="var(--metric-form)" strokeWidth={1.75} strokeDasharray="4 4" vectorEffect="non-scaling-stroke" opacity={0.7} />
             ) : null}
-            <line x1={x(todayIndex)} x2={x(todayIndex)} y1={0} y2={FORM_HEIGHT} stroke="var(--brand)" strokeWidth={1} strokeDasharray="2 3" vectorEffect="non-scaling-stroke" opacity={0.7} />
+            {todayIndex >= 0 ? <line x1={x(todayIndex)} x2={x(todayIndex)} y1={0} y2={FORM_HEIGHT} stroke="var(--brand)" strokeWidth={1} strokeDasharray="2 3" vectorEffect="non-scaling-stroke" opacity={0.7} /> : null}
             {active !== null ? (
               <line x1={x(shown)} x2={x(shown)} y1={0} y2={FORM_HEIGHT} stroke="var(--text)" strokeWidth={1} vectorEffect="non-scaling-stroke" opacity={0.5} />
             ) : null}
@@ -221,15 +227,15 @@ export function PerformanceChart({ series, today }: Props) {
           {dateLabels.map(({ entry, index }, position) => (
             <span
               key={entry.day}
-              className={`data absolute -translate-x-1/2 whitespace-nowrap ${(dateLabels.length - position) % 2 === 0 ? 'max-sm:hidden' : ''}`}
+              className={`data absolute whitespace-nowrap ${index === 0 ? '' : '-translate-x-1/2'} ${(dateLabels.length - position) % 2 === 0 ? 'max-sm:hidden' : ''}`}
               style={{ left: percent(index) }}
             >
               {formatDayShort(entry.day)}
             </span>
           ))}
-          <span className="absolute -translate-x-1/2 whitespace-nowrap font-medium text-[var(--brand)]" style={{ left: percent(todayIndex) }}>
+          {todayIndex >= 0 ? <span className="absolute -translate-x-1/2 whitespace-nowrap font-medium text-[var(--brand)]" style={{ left: percent(todayIndex) }}>
             Today
-          </span>
+          </span> : null}
         </div>
       </div>
       <p className="text-xs text-[var(--text-muted)]">

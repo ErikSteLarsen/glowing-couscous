@@ -231,9 +231,8 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       const sessions = datedSessions.map(mapSessionSummary);
       const today = now;
       const todaySessions = sessions.filter((session) => isSameDay(session.date, today));
-      const todayCoachNote = datedSessions.find(
-        (session) => isSameDay(session.date, today) && session.coachNotes && session.coachNotes.trim(),
-      );
+      const nextSession = todaySessions.find((session) => session.status !== 'completed');
+      const todayCoachNote = datedSessions.find((session) => session.id === nextSession?.id);
       const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
       const weekDays = Array.from({ length: 7 }, (_, index) => {
         const day = addDays(currentWeekStart, index);

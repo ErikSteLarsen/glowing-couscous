@@ -32,6 +32,8 @@ export function WeeklyVolumeChart({ weeks }: { weeks: VolumeWeek[] }) {
   function handleKey(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === 'ArrowLeft') setActive(Math.max(0, shown - 1));
     else if (event.key === 'ArrowRight') setActive(Math.min(weeks.length - 1, shown + 1));
+    else if (event.key === 'Home') setActive(0);
+    else if (event.key === 'End') setActive(weeks.length - 1);
     else if (event.key === 'Escape') setActive(null);
     else return;
     event.preventDefault();
@@ -45,7 +47,7 @@ export function WeeklyVolumeChart({ weeks }: { weeks: VolumeWeek[] }) {
 
   return (
     <figure className="flex flex-col gap-3">
-      <figcaption className="flex flex-wrap items-baseline justify-between gap-2 text-[13px]" aria-live="polite">
+      <figcaption className="flex flex-wrap items-baseline justify-between gap-2 text-[13px]">
         <span className="data text-[var(--text-secondary)]">
           Week of {formatDayShort(week.weekStart)}
           {week.isCurrent ? ' · this week' : ''}
@@ -53,7 +55,11 @@ export function WeeklyVolumeChart({ weeks }: { weeks: VolumeWeek[] }) {
         <span className="data text-[var(--text)]">{detail}</span>
       </figcaption>
       <div
-        role="img"
+        role="slider"
+        aria-valuemin={0}
+        aria-valuemax={weeks.length - 1}
+        aria-valuenow={shown}
+        aria-valuetext={`Week of ${formatDayShort(week.weekStart)}: ${detail}`}
         tabIndex={0}
         aria-label={`Week of ${formatDayShort(week.weekStart)}: ${detail}. Use arrow keys to move between weeks.`}
         className="relative rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--background)]"

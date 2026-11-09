@@ -62,7 +62,7 @@ export default async function AthletePage() {
   const fitnessChange = load.current.fitness28DaysAgo === null ? null : load.current.fitness - load.current.fitness28DaysAgo;
   const formTone = load.current.formZone === 'overreaching' ? 'watch' : load.current.formZone === 'fresh' ? 'good' : 'neutral';
   const rampTone = load.current.rampRate !== null && load.current.rampRate > 8 ? 'watch' : 'neutral';
-  const hasHistory = load.series.some((point) => point.actualTss > 0);
+  const hasHistory = dashboard.lastActivity !== null || load.series.some((point) => point.actualTss > 0);
   const volumeWeeks: VolumeWeek[] = load.weeks.map((week) => ({
     weekStart: week.weekStart,
     plannedSec: week.planned.durationSec,
