@@ -54,9 +54,58 @@ test('template service preserves explicit durationSec when saving tempo blocks',
     ],
   });
 
-  assert.deepEqual(result, { error: null });
+  assert.deepEqual(result, { error: null, templateId: 19 });
   assert.equal(createArgs?.data.blocks.create[0].durationSec, 1800);
   assert.equal(createArgs?.data.blocks.create[0].sortOrder, 0);
+});
+
+test('athlete template creation returns the created id for the Planner handoff', async () => {
+  const templateService = createTemplateService({
+    db: {
+      template: {
+        async create(args: TemplateCreateArgs) {
+          assert.equal(args.data.ownerId, 7);
+          return { id: 53 };
+        },
+      },
+    } as never,
+  });
+
+  const result = await templateService.saveForOwner(7, {
+    name: 'Easy week',
+    sport: 'RUNNING',
+    cadence: 'week',
+    blocks: [{ kind: 'work', zone: 2, durationSec: 1800 }],
+  });
+
+  assert.deepEqual(result, { error: null, templateId: 53 });
+});
+
+test('template update does not return another owner’s template id', async () => {
+  let transactionStarted = false;
+  const templateService = createTemplateService({
+    db: {
+      template: {
+        async findUnique() {
+          return { id: 41, ownerId: 99 };
+        },
+      },
+      $transaction() {
+        transactionStarted = true;
+        throw new Error('unexpected transaction');
+      },
+    } as never,
+  });
+
+  const result = await templateService.saveForOwner(7, {
+    name: 'Private week',
+    sport: 'RUNNING',
+    cadence: 'week',
+    blocks: [{ kind: 'work', zone: 2, durationSec: 1800 }],
+  }, 41);
+
+  assert.deepEqual(result, { error: 'Template not found.' });
+  assert.equal(transactionStarted, false);
 });
 
 test('template service rejects unsupported sport values', async () => {

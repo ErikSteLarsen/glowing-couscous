@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -38,6 +39,7 @@ import {
 } from '@/lib/session-editor-adapters';
 import { getSportLabel } from '@/lib/sport';
 import type { PerformanceProfile } from '@/lib/performance-profile';
+import { readApiErrorMessage, readCreatedSourceId } from '@/lib/api-response';
 
 type WorkoutRecord = {
   id: number;
@@ -78,6 +80,7 @@ export function WorkoutLibraryClient({
   const [pendingDraftAction, setPendingDraftAction] = useState<PendingDraftAction | null>(null);
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
+  const [savedWorkoutId, setSavedWorkoutId] = useState<number | null>(null);
   const [draft, setDraft] = useState<SessionEditorDraft>(() => createNewDraft());
 
   const visibleWorkouts = useMemo(() => {
@@ -89,6 +92,7 @@ export function WorkoutLibraryClient({
   }, [filterText, workouts]);
 
   function applyDraftAction(action: PendingDraftAction) {
+    setSavedWorkoutId(null);
     if (action.kind === 'new') {
       setSelectedWorkoutId(null);
       setDraft(createNewDraft());
@@ -156,12 +160,13 @@ export function WorkoutLibraryClient({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        const payloadResponse = await response.json().catch(() => ({})) as { error?: string };
+        const payloadResponse: unknown = await response.json().catch(() => null);
         if (!response.ok) {
           setMessageTone('danger');
-          setMessage(payloadResponse.error ?? 'Could not save this workout. Check the fields and try again.');
+          setMessage(readApiErrorMessage(payloadResponse, 'Could not save this workout. Check the fields and try again.'));
           return;
         }
+        setSavedWorkoutId(role === 'ATHLETE' && !selectedWorkoutId ? readCreatedSourceId(payloadResponse, 'sessionId') : null);
         setMessageTone('success');
         setMessage(selectedWorkoutId ? 'Workout updated in your library.' : 'Workout created in your library. You can now add a copy in Planner.');
         setIsDirty(false);
@@ -181,10 +186,10 @@ export function WorkoutLibraryClient({
     startTransition(async () => {
       try {
         const response = await fetch(`${endpoint}/${selectedWorkoutId}`, { method: 'DELETE' });
-        const payload = await response.json().catch(() => ({})) as { error?: string };
+        const payload: unknown = await response.json().catch(() => null);
         if (!response.ok) {
           setMessageTone('danger');
-          setMessage(payload.error ?? 'Could not delete this workout. Try again.');
+          setMessage(readApiErrorMessage(payload, 'Could not delete this workout. Try again.'));
           return;
         }
         applyDraftAction({ kind: 'close' });
@@ -229,9 +234,14 @@ export function WorkoutLibraryClient({
           />
         </label>
         {message ? (
-          <p role={messageTone === 'danger' ? 'alert' : 'status'} className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>
-            {message}
-          </p>
+          <div role={messageTone === 'danger' ? 'alert' : 'status'} className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>
+            <p>{message}</p>
+            {role === 'ATHLETE' && savedWorkoutId ? (
+              <Link href={`/athlete/planner?source=workout:${savedWorkoutId}`} className={`${compactSecondaryButtonClassName} mt-2 min-h-11`}>
+                Plan this workout
+              </Link>
+            ) : null}
+          </div>
         ) : null}
         {visibleWorkouts.length === 0 ? workouts.length === 0 ? (
           <EmptyState
@@ -274,7 +284,14 @@ export function WorkoutLibraryClient({
                       </div>
                     </div>
                   </button>
-                  <div className="mt-2 px-2"><ShareLinkButton sourceKind="session" sourceId={workout.id} ariaLabel={`Create a share link for ${workout.title}`} /></div>
+                  <div className="mt-2 flex flex-wrap items-center gap-3 px-2">
+                    {role === 'ATHLETE' ? (
+                      <Link href={`/athlete/planner?source=workout:${workout.id}`} className={`${compactSecondaryButtonClassName} min-h-11`}>
+                        Plan this
+                      </Link>
+                    ) : null}
+                    <ShareLinkButton sourceKind="session" sourceId={workout.id} ariaLabel={`Create a share link for ${workout.title}`} />
+                  </div>
                 </div>
               );
             })}

@@ -2,7 +2,7 @@
 
 import { derivePlannerSourceDurationSec, type PlannerSourceMetricBlock } from '@/lib/planner-source-metrics';
 import { getTemplateCadence } from '@/lib/template-cadence';
-import { PlannerDesk, type PlannerDeskCalendarDay, type PlannerDeskSource } from '@/components/PlannerDesk';
+import { PlannerDesk, type PlannerDeskCalendarDay, type PlannerDeskSource, type PlannerDeskSourceKind } from '@/components/PlannerDesk';
 
 type AthletePlannerWorkout = {
   id: number;
@@ -26,12 +26,18 @@ export function AthletePlannerClient({
   calendarDays,
   calendarLabel,
   initialDate,
+  initialSourceKey,
+  initialSourceTab,
+  initialMessage,
 }: {
   templates: AthletePlannerTemplate[];
   workouts: AthletePlannerWorkout[];
   calendarDays: PlannerDeskCalendarDay[];
   calendarLabel: string;
   initialDate: string;
+  initialSourceKey: string;
+  initialSourceTab: PlannerDeskSourceKind;
+  initialMessage: string;
 }) {
   const sources: PlannerDeskSource[] = [
     ...workouts.map((workout) => ({
@@ -56,12 +62,15 @@ export function AthletePlannerClient({
 
   return (
     <PlannerDesk
-      key={initialDate}
+      key={`${initialDate}:${initialSourceKey}`}
       role="athlete"
       initialDate={initialDate}
       calendarLabel={calendarLabel}
       calendarDays={calendarDays}
       sources={sources}
+      initialSourceKey={initialSourceKey}
+      initialSourceTab={initialSourceTab}
+      initialMessage={initialMessage}
     />
   );
 }

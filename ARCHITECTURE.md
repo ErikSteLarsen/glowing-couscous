@@ -82,11 +82,11 @@ navigation.
 | Coach requests | `lib/coach-request-service.ts` | Search, request creation, approval, rejection, and pending uniqueness |
 | Athlete reads | `lib/athlete-service.ts` | Home, Calendar, Activity, profile, discovery, and session reads |
 | Activity navigation | `lib/activity-navigation.ts` | Validated history filters, page size, and pagination URLs |
-| Athlete planning | `lib/athlete-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, private dated copies, source search, and athlete planner mutations |
+| Athlete planning | `lib/athlete-planner-service.ts`, `lib/planner-source-selection.ts`, `components/PlannerDesk.tsx`, `app/(app)/athlete/planner/page.tsx` | Month-grid workspace, owner-validated source links, private dated copies, source search, and athlete planner mutations |
 | Coach planning | `lib/coach-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, dated sessions, source search, and roster-scoped planner writes |
-| Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |
+| Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts`, `components/WorkoutLibraryClient.tsx` | Unscheduled owner-scoped workout definitions and athlete Planner handoff |
 | Training plans | `lib/coach-training-plan-service.ts` | Reusable weekday-based coach plans |
-| Templates | `lib/template-service.ts`, `CoachTemplatesClient` | Owner-scoped personal and coach templates, cadence, and shared authoring |
+| Templates | `lib/template-service.ts`, `app/(app)/coach/templates/CoachTemplatesClient.tsx` | Owner-scoped personal and coach templates, cadence, Planner handoff, and shared authoring |
 | Assignment | `lib/assignment-service.ts` | Snapshot copies, lineage, deduplication, and training-plan assignment |
 | Session compatibility | `lib/planner-service.ts` | Older coach session mutation adapter; transitional only |
 | Workout content | `lib/session-editor.ts`, `lib/session-editor-adapters.ts`, `lib/workout-editor.ts`, `lib/workout-blocks.ts` | Canonical drafts, editor modes, block normalization, and persistence shaping |

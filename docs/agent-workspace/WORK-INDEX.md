@@ -25,10 +25,10 @@ secondary; preserve their behavior and shared ownership boundaries.
 | `AUTH-001` | Authentication and role setup | `shipped` | `auth.ts`, `proxy.ts`, `lib/auth-session.ts`, `lib/api-auth.ts`, `lib/auth-role-service.ts` | `/login`, `/signup`, `/setup`, `/api/auth/*` |
 | `SHELL-001` | App shell and navigation | `shipped` | `components/AppShell.tsx`, `components/AppSidebar.tsx`, `lib/app-navigation.ts` | Authenticated `(app)` layout |
 | `COACH-001` | Coach roster and requests | `shipped` | `lib/coach-service.ts`, `lib/coach-request-service.ts` | `/coach`, `/coach/athletes/*`, request APIs |
-| PLAN-001 | Personal planning and secondary coach planning | shipped | components/PlannerDesk.tsx, lib/coach-planner-service.ts, lib/athlete-planner-service.ts, lib/assignment-service.ts | /coach/planner, /athlete/planner |
+| PLAN-001 | Personal planning and secondary coach planning | shipped | components/PlannerDesk.tsx, lib/coach-planner-service.ts, lib/athlete-planner-service.ts, lib/assignment-service.ts, lib/planner-source-selection.ts, app/(app)/athlete/planner/page.tsx, app/(app)/athlete/planner/AthletePlannerClient.tsx | /coach/planner, /athlete/planner |
 | `CALENDAR-001` | Personal calendar and safe rescheduling | `shipped` | `lib/athlete-service.ts`, `lib/athlete-planner-service.ts`, `components/OverdueSessions.tsx`, `components/SessionRescheduleAction.tsx`, `lib/calendar-navigation.ts`, `app/(app)/athlete/calendar/AthleteCalendar.tsx`, `app/(app)/athlete/page.tsx` | `/athlete/calendar`, `/api/athlete/planner/sessions/*/schedule` |
-| `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | `/coach/workouts`, `/athlete/workouts` |
-| `TEMPLATE-001` | Personal and coach templates; secondary training plans | `shipped` | `lib/template-service.ts`, `app/(app)/coach/templates/CoachTemplatesClient.tsx`, `lib/coach-training-plan-service.ts` | `/coach/templates`, `/athlete/templates` |
+| `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts`, `components/WorkoutLibraryClient.tsx`, `lib/api-response.ts` | `/coach/workouts`, `/athlete/workouts` |
+| `TEMPLATE-001` | Personal and coach templates; secondary training plans | `shipped` | `lib/template-service.ts`, `app/(app)/coach/templates/CoachTemplatesClient.tsx`, `app/api/athlete/templates/route.ts`, `lib/coach-training-plan-service.ts` | `/coach/templates`, `/athlete/templates` |
 | SESSION-001 | Canonical editor and outcomes | shipped | lib/session-editor.ts, lib/session-snapshot-service.ts, lib/athlete-completion-service.ts, lib/athlete-execution.ts, app/(app)/athlete/session/[sessionId]/page.tsx | Session detail, Live, WorkoutBuilder, outcome APIs |
 | `ACTIVITY-001` | Searchable completed training history | `shipped` | `lib/athlete-service.ts`, `lib/activity-navigation.ts`, `app/(app)/athlete/activity/page.tsx` | `/athlete/activity` |
 | `SHARE-001` | Sanitized workout sharing and private recipient copies | `shipped` | `lib/share-link.ts`, `lib/share-link-service.ts`, `lib/workout-library-service.ts`, `app/share/[token]/ShareLandingClient.tsx` | `/share/[token]`, share APIs |
@@ -55,6 +55,7 @@ styles:
 
 ## Active Tasks
 
+- `2026-11-09-personal-planner-handoff.md` - library and template source handoff into the athlete Planner.
 - `2026-09-15-workout-flow-previews.md` - three interactive workout authoring direction previews; routes live under `/design/workout-flow/*`.
 - `2026-09-15-workbench-middle-experiments.md` - three Workbench middle-surface experiments; routes live under `/design/workout-flow/workbench/{terrain,ribbon,staging}`.
 

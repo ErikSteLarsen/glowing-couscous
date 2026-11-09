@@ -32,6 +32,7 @@ import {
 import { formatDuration } from '@/lib/format-duration';
 import type { PerformanceProfile } from '@/lib/performance-profile';
 import { getSportLabel } from '@/lib/sport';
+import { readApiErrorMessage, readCreatedSourceId } from '@/lib/api-response';
 import { getTemplateCadence, TEMPLATE_CADENCES, templateCadenceMeta, type TemplateCadence } from '@/lib/template-cadence';
 
 type TemplateRecord = PlannerEditorTemplateRecord & {
@@ -56,6 +57,7 @@ export function CoachTemplatesClient({
   const [filterText, setFilterText] = useState('');
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
+  const [savedTemplateId, setSavedTemplateId] = useState<number | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
@@ -78,6 +80,7 @@ export function CoachTemplatesClient({
   function duplicateTemplate(templateId: number) {
     setMessage('');
     setMessageTone('success');
+    setSavedTemplateId(null);
     startTransition(async () => {
       try {
         const response = await fetch(`${apiBasePath}/${templateId}/duplicate`, { method: 'POST' });
@@ -102,6 +105,7 @@ export function CoachTemplatesClient({
     setMessage('');
     setMessageTone('success');
     if (!window.confirm('Delete this template? This cannot be undone.')) return;
+    setSavedTemplateId(null);
     startTransition(async () => {
       try {
         const response = await fetch(`${apiBasePath}/${templateId}`, { method: 'DELETE' });
@@ -124,6 +128,7 @@ export function CoachTemplatesClient({
 
   function openEditor(template?: TemplateRecord) {
     if (isPending) return;
+    setSavedTemplateId(null);
     setEditingTemplateId(template?.id ?? null);
     setEditorCadence(getTemplateCadence(template?.cadence));
     setEditorDraft(template ? createTemplateEditorDraftFromRecord(template) : createEmptyTemplateEditorDraft());
@@ -163,12 +168,13 @@ export function CoachTemplatesClient({
             body: JSON.stringify({ ...serializeTemplateEditorDraftForSave(editorDraft), cadence: editorCadence }),
           },
         );
-        const payload = await response.json().catch(() => ({})) as { error?: string };
+        const payload: unknown = await response.json().catch(() => null);
         if (!response.ok) {
           setMessageTone('danger');
-          setMessage(payload.error ?? 'Failed to save template.');
+          setMessage(readApiErrorMessage(payload, 'Failed to save template.'));
           return;
         }
+        setSavedTemplateId(isAthlete && !editingTemplateId ? readCreatedSourceId(payload, 'templateId') : null);
         setEditorOpen(false);
         setIsDirty(false);
         setConfirmDiscard(false);
@@ -208,7 +214,16 @@ export function CoachTemplatesClient({
       </div>
       ) : null}
 
-      {message ? <p role={messageTone === 'danger' ? 'alert' : 'status'} aria-live="polite" className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
+      {message ? (
+        <div role={messageTone === 'danger' ? 'alert' : 'status'} aria-live="polite" className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>
+          <p>{message}</p>
+          {isAthlete && savedTemplateId ? (
+            <Link href={`${plannerHref}?source=template:${savedTemplateId}`} className={`${compactSecondaryButtonClassName} mt-2 min-h-11`}>
+              Plan this template
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
 
       {editorOpen ? (
         <Surface className="min-w-0 space-y-4">
@@ -274,10 +289,10 @@ export function CoachTemplatesClient({
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <Link
-                    href={plannerHref}
-                    className={compactSecondaryButtonClassName}
+                    href={isAthlete ? `${plannerHref}?source=template:${template.id}` : plannerHref}
+                    className={`${compactSecondaryButtonClassName} min-h-11`}
                   >
-                     {isAthlete ? 'Reuse in Planner' : 'Use in Planner'}
+                     {isAthlete ? 'Plan this' : 'Use in Planner'}
                   </Link>
                   <details className="relative">
                     <summary className={`${compactSecondaryButtonClassName} list-none`}>More actions</summary>

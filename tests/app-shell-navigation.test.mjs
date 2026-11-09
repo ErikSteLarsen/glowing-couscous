@@ -73,15 +73,30 @@ test('Workouts is a standalone library destination and session detail keeps its 
 test('athlete planner only places defined sources on selected dates', async () => {
   const plannerPageSource = await read('app/(app)/athlete/planner/page.tsx');
   const plannerClientSource = await read('app/(app)/athlete/planner/AthletePlannerClient.tsx');
+  const plannerDeskSource = await read('components/PlannerDesk.tsx');
+  const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
+  const templatesClientSource = await read('app/(app)/coach/templates/CoachTemplatesClient.tsx');
   const templatesPageSource = await read('app/(app)/athlete/templates/page.tsx');
+  const athleteTemplateApiSource = await read('app/api/athlete/templates/route.ts');
 
   assert.match(plannerPageSource, /athletePlannerService\.loadWorkspace/);
+  assert.match(plannerPageSource, /workoutLibraryService\.listForOwner\('athlete', user\.id\)/);
+  assert.match(plannerPageSource, /resolvePlannerSourceSelection\(source/);
   assert.match(plannerPageSource, /AthletePlannerClient/);
   assert.doesNotMatch(plannerClientSource, /WorkoutBuilder|Start from scratch|Create session/);
   assert.match(plannerClientSource, /PlannerDesk/);
+  assert.match(plannerClientSource, /initialSourceKey=\{initialSourceKey\}/);
+  assert.match(plannerClientSource, /initialSourceTab=\{initialSourceTab\}/);
   assert.match(plannerClientSource, /calendarDays/);
   assert.match(plannerClientSource, /workout/);
   assert.match(plannerClientSource, /template/);
+  assert.match(plannerDeskSource, /initialSourceTab === 'template' \? initialDate : null/);
+  assert.match(plannerDeskSource, /params\.set\('source', selectedSource\.key\)/);
+  assert.match(workoutsClientSource, /source=workout:\$\{workout\.id\}/);
+  assert.match(workoutsClientSource, /readCreatedSourceId\(payloadResponse, 'sessionId'\)/);
+  assert.match(templatesClientSource, /source=template:\$\{template\.id\}/);
+  assert.match(templatesClientSource, /readCreatedSourceId\(payload, 'templateId'\)/);
+  assert.match(athleteTemplateApiSource, /templateId: result\.templateId/);
   assert.match(templatesPageSource, /apiBasePath="\/api\/athlete\/templates"/);
 });
 

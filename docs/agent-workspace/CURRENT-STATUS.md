@@ -78,14 +78,22 @@ sanitized snapshots and requires an explicit recipient save.
   retain failed drafts, require explicit discard, and lock editing while
   pending. Athlete copies go to Planner; coach copies are unscheduled and
   visible in Workouts through the current library service.
+- Athlete workout and template cards open Planner with that owned source
+  selected. Successful saves link directly to the new source; the Planner
+  validates source IDs against the signed-in athlete's libraries, initializes
+  template date-range selection, and retains a selected source during month
+  navigation. Invalid or removed source links show an explanation.
+- The library-to-Planner handoff scores 8/10: source selection, ownership,
+  creation feedback, and navigation are covered; direct browser and accessibility
+  checks remain unverified.
 
 ## Verified gates
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass, 246 tests | `pnpm test` |
-| Lint | Pass | `pnpm lint` |
-| Production build | Pass | `pnpm build`; Node emits `DEP0205` for `module.register()` |
+| Tests | Pass, 251 tests | `pnpm test` on 2026-11-09 after the library-to-Planner handoff changes |
+| Lint | Pass | `pnpm lint` on 2026-11-09 after the library-to-Planner handoff changes |
+| Production build | Pass | `pnpm build` on 2026-11-09; Node emits `DEP0205` for `module.register()` |
 | Mobile workout actions | Pass | 390px Chromium: action bar bottom 780px, navigation top 783px; desktop offset 0px; both review axes found no actionable issue |
 | Template authoring | Pass | Chromium discard/keep, blocked fetch, delayed save locks, retry/reload, and 20-second interval persistence; editor and list axe scans have no violations; 390px and 1440px have no overflow; design detector has no findings |
 | Activity history | Pass | SQLite pagination across 26 outcomes, filtered totals, timestamp ties, ownership, stale pages, and literal `%`/`_`/backslash searches; Chromium recorded completion notes, older/newer pages, filters, reload, empty recovery, no overflow, and zero axe violations |
@@ -96,6 +104,7 @@ sanitized snapshots and requires an explicit recipient save.
 | Personal session removal | Pass | SQLite verifies owner scope, completed/activity/coach-assigned refusal, and block cascade; Chromium desktop and 390px confirms the in-app dialog, Escape cancel, Calendar removal, refresh feedback, and no horizontal overflow |
 | Untimed session display | Pass | Focused checks cover null and explicit times through Home, Calendar, detail, and the shared date formatter; `pnpm test`, `pnpm lint`, and `pnpm build` pass |
 | Overdue session recovery | Pass | Home and detail service regressions cover recent ordering, coach/plan/completion exclusions, matching Missed state, late completion, and retained schedule date; existing SQLite tests cover safe rescheduling and unchanged content |
+| Library-to-Planner handoff | Pass, 251 tests | Resolver and response tests cover owned, malformed, cross-kind, and unsafe IDs; route and UI assertions cover save/card links, template range setup, and source retention on month navigation; `pnpm test`, `pnpm lint`, and `pnpm build` pass |
 | Calendar persistence | Pass | Chromium explicit-date, keyboard-drag, and pointer-drag moves persisted after navigation/reload |
 | Calendar dates and ownership | Pass | Isolated SQLite tests cover foreign athletes, coach ownership, completed sessions, impossible dates, plan membership, content preservation, and Oslo/New York DST |
 | Calendar accessibility | Pass in scanned week view | Chromium axe 4.12.1: no violations; 390px month view has no horizontal overflow |
@@ -135,5 +144,7 @@ recipient account were removed after verification.
   workout/planner design previews have not had browser acceptance rerun.
   Workouts, Templates, and Activity list accessibility scans found no violations;
   template editor and list now also pass fresh scans.
+- Direct library-to-Planner source selection, month navigation, and template
+  range interactions have not had a browser or accessibility run.
 - The specialized Next.js dev-loop skill requires Next.js 16.3 or later; this
   app uses 16.2.4. Current evidence uses project checks and direct Chromium tests.

@@ -87,6 +87,9 @@ export function PlannerDesk({
   sources,
   athletes = [],
   initialAthleteId = null,
+  initialSourceKey = '',
+  initialSourceTab = 'workout',
+  initialMessage = '',
 }: {
   role: PlannerDeskRole;
   initialDate: string;
@@ -95,17 +98,20 @@ export function PlannerDesk({
   sources: PlannerDeskSource[];
   athletes?: PlannerDeskAthlete[];
   initialAthleteId?: number | null;
+  initialSourceKey?: string;
+  initialSourceTab?: PlannerDeskSourceKind;
+  initialMessage?: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedAthleteId, setSelectedAthleteId] = useState<number | null>(initialAthleteId);
-  const [sourceTab, setSourceTab] = useState<SourceTab>('workout');
+  const [sourceTab, setSourceTab] = useState<SourceTab>(initialSourceTab);
   const [query, setQuery] = useState('');
-  const [selectedSourceKey, setSelectedSourceKey] = useState('');
+  const [selectedSourceKey, setSelectedSourceKey] = useState(initialSourceKey);
   const [selectedDates, setSelectedDates] = useState([initialDate]);
-  const [rangeStart, setRangeStart] = useState<string | null>(null);
+  const [rangeStart, setRangeStart] = useState<string | null>(initialSourceTab === 'template' ? initialDate : null);
   const [rangeEnd, setRangeEnd] = useState<string | null>(null);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(initialMessage);
   const [messageTone, setMessageTone] = useState<'success' | 'danger' | 'neutral'>('neutral');
   const [pendingAction, setPendingAction] = useState<'assign' | number | null>(null);
   const [placement, setPlacement] = useState<PlacementFeedback | null>(null);
@@ -231,6 +237,7 @@ export function PlannerDesk({
     const nextDate = format(startOfMonth(nextMonth), 'yyyy-MM-dd');
     const params = new URLSearchParams({ date: nextDate });
     if (role === 'coach' && selectedAthleteId) params.set('athleteId', String(selectedAthleteId));
+    if (role === 'athlete' && selectedSource) params.set('source', selectedSource.key);
     router.push(`${role === 'coach' ? '/coach/planner' : '/athlete/planner'}?${params.toString()}`);
   }
 

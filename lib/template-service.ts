@@ -150,7 +150,7 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
       };
 
       if (templateId === undefined) {
-        await db.template.create({
+        const created = await db.template.create({
           data: {
             ...templateData,
             blocks: {
@@ -162,7 +162,7 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
           },
         });
 
-        return { error: null };
+        return { error: null, templateId: created.id };
       }
 
       if (!Number.isInteger(templateId) || templateId <= 0) {
@@ -193,7 +193,7 @@ export function createTemplateService({ db = prisma }: TemplateServiceDeps = {})
         }),
       ]);
 
-      return { error: null };
+      return { error: null, templateId };
     },
 
     async deleteForOwner(ownerId: number, templateId: number) {
