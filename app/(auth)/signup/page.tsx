@@ -65,7 +65,7 @@ export default function SignupPage() {
   }
 
   return (
-    <PageShell size="narrow" className="min-h-[calc(100vh-3rem)] justify-center">
+    <PageShell size="narrow" className="mx-auto min-h-[calc(100vh-7rem)] justify-center">
       <TopBar title="Create account" align="center" />
       <Surface className="mx-auto w-full max-w-md">
         <form onSubmit={handleSubmit} className="space-y-4">

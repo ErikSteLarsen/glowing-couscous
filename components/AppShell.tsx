@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AppSidebar } from '@/components/AppSidebar';
-import { InkFlow } from '@/components/InkFlow';
-import { buttonFocusClassName, secondaryButtonClassName } from '@/components/ui';
+import { Menu } from 'lucide-react';
+import { AppSidebar, navIconFor } from '@/components/AppSidebar';
+import { BrandMark } from '@/components/BrandMark';
+import { buttonFocusClassName } from '@/components/ui';
 import { getMobileNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import type { SessionUser } from '@/lib/auth-session';
 
@@ -55,15 +57,19 @@ export function AppShell({
   }, [mobileOpen]);
 
   const closeMobileMenu = () => {
+    if (!mobileOpen) return;
     setMobileOpen(false);
     requestAnimationFrame(() => menuButtonRef.current?.focus());
   };
 
   return (
-    <div className="ink-studio-app relative min-h-screen bg-[var(--background)] text-[var(--text)] md:grid md:grid-cols-[216px_minmax(0,1fr)]">
-      <div className="ink-flow-backdrop">
-        <InkFlow />
-      </div>
+    <div className="relative min-h-screen bg-[var(--background)] text-[var(--text-secondary)]">
+      <a
+        href="#main"
+        className="sr-only z-50 rounded-lg bg-[var(--brand)] px-3 py-2 text-sm font-medium text-[var(--signal-ink)] focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
+      >
+        Skip to content
+      </a>
       <AppSidebar
         user={user}
         pathname={pathname}
@@ -72,37 +78,49 @@ export function AppShell({
         isMobileViewport={isMobileViewport}
         onClose={closeMobileMenu}
       />
-      <div className="relative z-10 min-w-0 pb-20 md:pb-0">
-        <div className="border-b border-[var(--border)] bg-[var(--background)] px-5 py-4 md:hidden">
+      <div className="with-sidebar min-w-0 pb-20 md:pb-0">
+        <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/90 px-4 backdrop-blur-md md:hidden">
+          <Link href={navItems[0]?.href ?? '/'} className={`flex items-center gap-2.5 rounded-lg ${buttonFocusClassName}`}>
+            <BrandMark />
+            <span className="text-[15px] font-semibold text-[var(--text)]">Tempo</span>
+          </Link>
           <button
             type="button"
             aria-controls="tempo-sidebar"
             aria-expanded={mobileOpen}
+            aria-label="Open menu"
             ref={menuButtonRef}
-            className={secondaryButtonClassName}
+            className={`inline-flex size-11 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--raised)] hover:text-[var(--text)] ${buttonFocusClassName}`}
             onClick={() => setMobileOpen(true)}
           >
-            Open menu
+            <Menu aria-hidden="true" size={18} strokeWidth={1.6} />
           </button>
-        </div>
-        {children}
+        </header>
+        <main id="main" tabIndex={-1} className="outline-none">
+          {children}
+        </main>
       </div>
-      <nav aria-label="Primary navigation" className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--nav-border)] bg-[var(--nav-surface)] pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden">
-        <div className="grid grid-cols-4 gap-1 px-3 pt-2">
-          {navItems.slice(0, 4).map((item) => {
+      <nav
+        aria-label="Quick navigation"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--nav-border)] bg-[var(--background)]/95 pb-[max(0.375rem,env(safe-area-inset-bottom))] backdrop-blur-md md:hidden"
+      >
+        <div className="grid px-2 pt-1.5" style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}>
+          {navItems.map((item) => {
             const isActive = isNavigationItemActive(pathname, item, navItems);
+            const Icon = navIconFor(item.label);
 
             return (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
-                  className={`flex min-h-11 items-center justify-center rounded-[3px] px-3 text-[11px] font-semibold uppercase tracking-[0.06em] ${buttonFocusClassName} ${
-                  isActive ? 'bg-[var(--nav-active)] text-[var(--nav-signal)]' : 'text-[var(--nav-muted)]'
+                className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-medium transition-colors ${buttonFocusClassName} ${
+                  isActive ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
                 }`}
               >
+                <Icon aria-hidden="true" size={18} strokeWidth={1.5} className={isActive ? 'text-[var(--brand)]' : ''} />
                 {item.label}
-              </a>
+              </Link>
             );
           })}
         </div>

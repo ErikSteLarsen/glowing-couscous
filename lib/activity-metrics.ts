@@ -1,3 +1,5 @@
+import { getTempoZoneMeta } from './tempo-blocks.ts';
+
 export type ActivitySegment = {
   key: string;
   zone: number;
@@ -13,7 +15,11 @@ export function parseActivitySegments(value: string | null | undefined): Activit
   try {
     const parsed: unknown = JSON.parse(value);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isActivitySegment);
+    // Colors are presentation, not history: always paint stored segments with the current zone palette.
+    return parsed.filter(isActivitySegment).map((segment) => {
+      const meta = getTempoZoneMeta(segment.zone);
+      return { ...segment, color: meta.solid, tint: meta.tint };
+    });
   } catch {
     return [];
   }

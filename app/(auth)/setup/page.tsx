@@ -40,7 +40,7 @@ export default function SetupPage() {
   }
 
   return (
-    <PageShell size="narrow" className="min-h-[calc(100vh-3rem)] justify-center">
+    <PageShell size="narrow" className="mx-auto min-h-[calc(100vh-7rem)] justify-center">
       <TopBar
         title="Choose your role"
         description="This sets how you use the app."

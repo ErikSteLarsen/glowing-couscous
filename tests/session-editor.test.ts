@@ -233,8 +233,8 @@ test('session editor represents skipped blocks and excludes them from Tempo metr
         zone: 1,
         durationSec: 300,
         label: 'Z1 Recovery',
-        color: '#3B82F6',
-        tint: '#E8F0FE',
+        color: '#7F9BB5',
+        tint: '#7F9BB529',
       },
     ],
   });

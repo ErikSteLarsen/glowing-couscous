@@ -255,7 +255,7 @@ export function WorkoutBuilder({
     <section className="min-w-0 space-y-4" aria-label="Visual workout builder">
       {basicsOpen || !basicsReady ? (
         <div
-          className="space-y-3 rounded-[3px] border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-3"
+          className="space-y-3 rounded-lg border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-3"
           onBlur={closeBasicsOnBlur}
           aria-labelledby="workout-basics-heading"
         >
@@ -320,7 +320,7 @@ export function WorkoutBuilder({
         } }}
       >
         <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(13rem,0.72fr)_minmax(0,1.45fr)_minmax(15rem,0.8fr)]">
-          <aside className="space-y-4 rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] p-4" aria-label="Block preset palette">
+          <aside className="space-y-4 rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-4" aria-label="Block preset palette">
             <div>
               <h2 className="text-sm font-semibold text-[var(--text)]">Block library</h2>
               <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">Drag a preset into the sequence, or click to add it.</p>
@@ -336,7 +336,7 @@ export function WorkoutBuilder({
                     aria-pressed={selectedZone}
                     aria-label={`${meta.label} ${meta.name}`}
                     title={`${meta.label} ${meta.name}`}
-                    className={`min-h-11 min-w-0 rounded-[3px] border px-1 py-1.5 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${selectedZone ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)] text-[var(--field-selected-text)]' : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--field-focus)]'}`}
+                    className={`min-h-11 min-w-0 rounded-lg border px-1 py-1.5 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${selectedZone ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)] text-[var(--field-selected-text)]' : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--field-focus)]'}`}
                     onClick={() => setPaletteZone(zone)}
                   >
                     <span className={`mx-auto mb-1 block h-1.5 w-7 ink-zone-${zone}`} aria-hidden="true" />
@@ -365,7 +365,7 @@ export function WorkoutBuilder({
               <MetricText>{formatDuration(metrics.durationSec)} / {metrics.tss} TSS</MetricText>
             </div>
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1.35fr)_minmax(10rem,0.65fr)]">
-              <div className="rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] p-3"><SessionBlockBar segments={metrics.segments} /><p className="mt-2 text-xs text-[var(--text-secondary)]">Timeline: width is time, height is zone.</p></div>
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-3"><SessionBlockBar segments={metrics.segments} /><p className="mt-2 text-xs text-[var(--text-secondary)]">Timeline: width is time, height is zone.</p></div>
               <IntensityZoneChart segments={metrics.segments} />
             </div>
             <div className="flex flex-wrap items-center gap-2" aria-label="Canvas commands">
@@ -393,7 +393,7 @@ export function WorkoutBuilder({
             </CanvasDropZone>
           </div>
 
-          <aside className="ink-form-inspector space-y-4 rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] p-4" aria-live="polite">
+          <aside className="ink-form-inspector space-y-4 rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-4" aria-live="polite">
             <div><h2 className="text-base font-semibold text-[var(--text)]">{selected.length > 1 ? `Edit ${selected.length} blocks` : 'Block details'}</h2><p className="mt-1 text-xs text-[var(--text-secondary)]">{selected.length > 1 ? 'Changes apply to the selected sequence.' : 'Edit the selected block.'}</p></div>
             {selectedBlock ? <><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Training zone</span><select className={formSelectClassName} value={selectedBlock.zone} onChange={(event) => applyBlockPatch({ zone: Number(event.target.value) as TempoZone })}>{Object.entries(TEMPO_ZONE_META).map(([zone, meta]) => <option key={zone} value={zone}>{meta.label} {meta.name}</option>)}</select></label><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Duration ({durationUnit})</span><input className={formFieldClassName} type="number" min="1" value={durationUnit === 'minutes' ? Math.round(selectedBlock.durationSec / 60) : selectedBlock.durationSec} onChange={(event) => applyBlockPatch({ durationSec: Number(event.target.value) * (durationUnit === 'minutes' ? 60 : 1) })} /></label><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Repeats</span><input className={formFieldClassName} type="number" min="1" value={selectedBlock.reps ?? ''} onChange={(event) => applyBlockPatch({ reps: event.target.value ? Number(event.target.value) : null })} /></label><TargetEditor sport={draft.sport} target={selectedBlock.target} onChange={(target) => applyBlockPatch({ target })} /><label className="block space-y-2"><span className="text-xs text-[var(--text-secondary)]">Coaching note</span><textarea className={formTextareaClassName} value={selectedBlock.note} onChange={(event) => applyBlockPatch({ note: event.target.value })} /></label><div className="flex flex-wrap gap-2"><button type="button" className={compactSecondaryButtonClassName} onClick={() => applyBlockPatch({ target: null })}>Clear target</button><button type="button" className={compactSecondaryButtonClassName} onClick={() => applyBlockPatch({ note: '', reps: null })}>Clear note and repeats</button><button type="button" className={compactDangerButtonClassName} onClick={removeSelection}>{selected.length > 1 ? 'Remove blocks' : 'Remove block'}</button></div></> : <p className="text-sm text-[var(--text-secondary)]">Select a block in the workout sequence.</p>}
           </aside>
@@ -413,7 +413,7 @@ function PalettePreset({ preset, onAdd }: { preset: BlockPreset; onAdd: () => vo
     <button
       ref={setNodeRef}
       type="button"
-      className="flex min-h-16 w-full cursor-grab items-start gap-2 rounded-[3px] border border-[var(--border)] bg-[var(--surface)] p-2.5 text-left transition hover:border-[var(--field-focus)] hover:bg-[var(--brand-tint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] active:cursor-grabbing"
+      className="flex min-h-16 w-full cursor-grab items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2.5 text-left transition hover:border-[var(--field-focus)] hover:bg-[var(--brand-tint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] active:cursor-grabbing"
       style={{ opacity: isDragging ? 0.35 : 1 }}
       onClick={onAdd}
       {...attributes}
@@ -431,7 +431,7 @@ function PalettePreset({ preset, onAdd }: { preset: BlockPreset; onAdd: () => vo
 
 function PresetDragPreview({ preset }: { preset: BlockPreset }) {
   return (
-    <div className="flex w-56 items-center gap-2 rounded-[3px] border border-[var(--field-selected-border)] bg-[var(--surface)] p-2.5 shadow-[var(--shadow-overlay)]">
+    <div className="flex w-56 items-center gap-2 rounded-lg border border-[var(--field-selected-border)] bg-[var(--surface)] p-2.5 shadow-[var(--shadow-overlay)]">
       <span className={`h-8 w-1 shrink-0 ink-zone-${preset.block.zone ?? 1}`} aria-hidden="true" />
       <span className="min-w-0">
         <span className="block truncate text-[13px] font-semibold text-[var(--text)]">{preset.name}</span>
@@ -444,7 +444,7 @@ function PresetDragPreview({ preset }: { preset: BlockPreset }) {
 function CanvasDropZone({ children }: { children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'workout-canvas' });
 
-  return <div ref={setNodeRef} className={`min-h-24 rounded-[3px] border border-dashed p-3 transition-colors ${isOver ? 'border-[var(--brand)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--field-surface)]'}`}>{children}</div>;
+  return <div ref={setNodeRef} className={`min-h-24 rounded-lg border border-dashed p-3 transition-colors ${isOver ? 'border-[var(--brand)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--field-surface)]'}`}>{children}</div>;
 }
 
 function IntensityZoneChart({ segments }: { segments: Array<{ zone: number; durationSec: number }> }) {
@@ -457,7 +457,7 @@ function IntensityZoneChart({ segments }: { segments: Array<{ zone: number; dura
   const summary = totals.map((item) => `${TEMPO_ZONE_META[item.zone].label} ${formatDuration(item.durationSec)}`).join(', ');
 
   return (
-    <div role="img" aria-label={`Time by intensity zone: ${summary}`} className="rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] p-3">
+    <div role="img" aria-label={`Time by intensity zone: ${summary}`} className="rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-3">
       <div className="flex items-start justify-between gap-2">
         <div>
           <h3 className="text-sm font-semibold text-[var(--text)]">Time by zone</h3>
@@ -513,10 +513,10 @@ function SortableBlock({ block, index, selected, profile, profileLabel, onSelect
   return (
     <div className="relative space-y-1">
       {insertionBefore ? <span className="pointer-events-none absolute -top-2 left-0 right-0 z-10 border-t-2 border-[var(--brand)] text-xs text-[var(--brand)]"><span className="bg-[var(--surface)] px-1">Insert here</span></span> : null}
-      <article data-block-id={block.clientId} ref={(node) => { setNodeRef(node); articleRef.current = node; }} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.55 : 1 }} className={`rounded-[3px] border p-3 ${selected ? 'border-[var(--brand)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
+      <article data-block-id={block.clientId} ref={(node) => { setNodeRef(node); articleRef.current = node; }} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.55 : 1 }} className={`rounded-lg border p-3 ${selected ? 'border-[var(--brand)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
         <div className="flex items-start gap-3">
-          <button type="button" className={`mt-1 min-h-11 shrink-0 cursor-grab rounded-[3px] px-2 text-xs text-[var(--text-muted)] ${buttonFocusClassName}`} aria-label={`Drag block ${index + 1}`} {...attributes} {...listeners}>Drag</button>
-          <button type="button" className={`min-h-11 min-w-0 flex-1 rounded-[3px] text-left ${buttonFocusClassName}`} aria-pressed={selected} onClick={(event) => onSelect(index, event)} onKeyDown={(event) => { if (event.code === 'Space') { event.preventDefault(); onSelect(index, event); } }}>
+          <button type="button" className={`mt-1 min-h-11 shrink-0 cursor-grab rounded-lg px-2 text-xs text-[var(--text-muted)] ${buttonFocusClassName}`} aria-label={`Drag block ${index + 1}`} {...attributes} {...listeners}>Drag</button>
+          <button type="button" className={`min-h-11 min-w-0 flex-1 rounded-lg text-left ${buttonFocusClassName}`} aria-pressed={selected} onClick={(event) => onSelect(index, event)} onKeyDown={(event) => { if (event.code === 'Space') { event.preventDefault(); onSelect(index, event); } }}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-semibold capitalize text-[var(--text)]">{index + 1}. {formatBlockKind(block.kind)}</span>
               <span className="flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)]"><span className={`h-2 w-2 ink-zone-${block.zone}`} aria-hidden="true" />{zone.label} {zone.name}</span>

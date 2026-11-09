@@ -19,9 +19,9 @@ test('shared layout primitives define centered width tiers', async () => {
   assert.match(uiSource, /wide:\s*'max-w-\[1140px\]'/);
   assert.match(uiSource, /wall:\s*'max-w-\[1440px\]'/);
   assert.match(uiSource, /mx-auto w-full max-w-\[1440px\] px-5 sm:px-7 lg:px-10/);
-  assert.match(uiSource, /pageHeadingClassName = 'text-\[40px\] font-normal leading-none tracking-\[-0\.045em\] text-\[var\(--text\)\] max-md:text-\[34px\]'/);
-  assert.match(uiSource, /sectionHeadingClassName = 'text-\[20px\] font-semibold tracking-\[-0\.02em\] text-\[var\(--text\)\]'/);
-  assert.match(uiSource, /ink-topbar min-h-\[72px\]/);
+  assert.match(uiSource, /pageHeadingClassName = 'text-\[1\.75rem\] font-medium leading-tight tracking-\[-0\.02em\] text-balance text-\[var\(--text\)\] sm:text-3xl'/);
+  assert.match(uiSource, /sectionHeadingClassName = 'text-base font-medium tracking-\[-0\.01em\] text-\[var\(--text\)\]'/);
+  assert.match(uiSource, /<header className=\{`min-h-\[64px\]/);
   assert.match(uiSource, /align\s*=\s*'left'/);
   assert.match(uiSource, /text-center/);
   assert.doesNotMatch(layoutSource, /max-w-screen-2xl/);
@@ -66,7 +66,7 @@ test('athlete Home uses the shared header scale and section heading scale', asyn
   assert.match(athletePageSource, /className=\{sectionHeadingClassName\}>Today/);
   assert.match(athletePageSource, /className=\{sectionHeadingClassName\}>Week at a glance/);
   assert.doesNotMatch(uiSource, /ink-topbar__title/);
-  assert.doesNotMatch(athletePageSource, /className="text-\[20px\] font-semibold tracking-\[-0\.02em\]/);
+  assert.doesNotMatch(athletePageSource, /className="text-base font-medium tracking-\[-0\.01em\]/);
   assert.doesNotMatch(athletePageSource, /week-glance-heading" className="[^"]*border-b/);
 });
 
@@ -94,7 +94,9 @@ test('signed-in routes use grouped app shell while auth pages stay centered', as
 
   assert.match(shellSource, /useState\(false\)/);
   assert.match(shellSource, /AppSidebar/);
-  assert.match(shellSource, /md:grid-cols-\[/);
+  assert.match(shellSource, /with-sidebar/);
+  assert.match(shellSource, /<main id="main"/);
+  assert.match(shellSource, /Skip to content/);
   assert.match(sidebarSource, /getPrimaryNavigation/);
   assert.match(sidebarSource, /props\.mobileOpen/);
   assert.match(sidebarSource, /onClick=\{props\.onClose\}|onClick=\{onNavigate\}/);

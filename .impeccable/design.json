@@ -1,67 +1,398 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-09-14T15:00:00.000Z",
-  "title": "Design System: Tempo Ink Is Movement",
+  "title": "Design System: Tempo Night Instrument",
   "extensions": {
     "colorMeta": {
-      "signal": { "role": "primary", "displayName": "Indigo Action", "canonical": "#102F51", "tonalRamp": ["#071829", "#0B2139", "#102F51", "#1D456D", "#536B83", "#8AA0B5", "#E8EDF2", "#F5F4EF"] },
-      "signal-hover": { "role": "primary", "displayName": "Indigo Hover", "canonical": "#1D456D", "tonalRamp": ["#071829", "#0B2139", "#102F51", "#1D456D", "#536B83", "#8AA0B5", "#E8EDF2", "#F5F4EF"] },
-      "signal-ink": { "role": "neutral", "displayName": "Signal White", "canonical": "#FFFFFF", "tonalRamp": ["#112842", "#304762", "#53606B", "#7F8588", "#BFC2C0", "#D4D3CD", "#F5F4EF", "#FFFFFF"] },
-      "liquid": { "role": "secondary", "displayName": "Blue Gray Linework", "canonical": "#71879A", "tonalRamp": ["#263A4B", "#455C70", "#71879A", "#8AA0B5", "#B0BDC6", "#D4DDE3", "#E7ECEF", "#F5F4EF"] },
-      "liquid-tint": { "role": "secondary", "displayName": "Current Tint", "canonical": "#E7ECEF", "tonalRamp": ["#263A4B", "#455C70", "#71879A", "#8AA0B5", "#B0BDC6", "#D4DDE3", "#E7ECEF", "#F5F4EF"] },
-      "paper": { "role": "neutral", "displayName": "Warm Paper", "canonical": "#F5F4EF", "tonalRamp": ["#112842", "#53606B", "#7F8588", "#BFC2C0", "#D4D3CD", "#ECEAE4", "#F5F4EF", "#FBFAF7"] },
-      "surface": { "role": "neutral", "displayName": "Study Surface", "canonical": "#FBFAF7", "tonalRamp": ["#112842", "#53606B", "#7F8588", "#BFC2C0", "#D4D3CD", "#ECEAE4", "#F5F4EF", "#FBFAF7"] },
-      "field-surface": { "role": "neutral", "displayName": "Field Surface", "canonical": "#F8F7F2", "tonalRamp": ["#112842", "#53606B", "#7F8588", "#BFC2C0", "#D4D3CD", "#ECEAE4", "#F8F7F2", "#FBFAF7"] },
-      "sunken": { "role": "neutral", "displayName": "Recessed Paper", "canonical": "#ECEAE4", "tonalRamp": ["#112842", "#53606B", "#7F8588", "#BFC2C0", "#D4D3CD", "#ECEAE4", "#F5F4EF", "#FBFAF7"] },
-      "border": { "role": "neutral", "displayName": "Fine Rule", "canonical": "#D4D3CD", "tonalRamp": ["#53606B", "#7F8588", "#BFC2C0", "#D4D3CD", "#ECEAE4", "#F5F4EF", "#FBFAF7", "#FFFFFF"] },
-      "ink": { "role": "neutral", "displayName": "Indigo Ink", "canonical": "#112842", "tonalRamp": ["#071829", "#112842", "#304762", "#53606B", "#71879A", "#8AA0B5", "#D4DDE3", "#F5F4EF"] },
-      "ink-secondary": { "role": "neutral", "displayName": "Supporting Ink", "canonical": "#53606B", "tonalRamp": ["#112842", "#304762", "#53606B", "#71879A", "#8AA0B5", "#BFC2C0", "#D4D3CD", "#F5F4EF"] },
-      "ink-muted": { "role": "neutral", "displayName": "Muted Ink", "canonical": "#7F8588", "tonalRamp": ["#112842", "#53606B", "#7F8588", "#BFC2C0", "#D4D3CD", "#ECEAE4", "#F5F4EF", "#FBFAF7"] },
-      "selection": { "role": "secondary", "displayName": "Paper Selection", "canonical": "#DCE4EB", "tonalRamp": ["#112842", "#53606B", "#71879A", "#8AA0B5", "#BFC2C0", "#DCE4EB", "#E8EDF2", "#F5F4EF"] },
-      "scrollbar-thumb": { "role": "neutral", "displayName": "Scroll Thumb", "canonical": "#AAB3B8", "tonalRamp": ["#53606B", "#71879A", "#7F8588", "#AAB3B8", "#BFC2C0", "#D4D3CD", "#ECEAE4", "#F5F4EF"] },
-      "scrollbar-thumb-hover": { "role": "neutral", "displayName": "Scroll Thumb Hover", "canonical": "#7C8D99", "tonalRamp": ["#304762", "#53606B", "#71879A", "#7C8D99", "#AAB3B8", "#BFC2C0", "#D4D3CD", "#ECEAE4"] },
-      "success": { "role": "secondary", "displayName": "Completed Green", "canonical": "#2E6D53", "tonalRamp": ["#163B2B", "#22533F", "#2E6D53", "#658A7A", "#A7C6B6", "#D4E5DC", "#E6EFEA", "#F5F4EF"] },
-      "warning": { "role": "tertiary", "displayName": "Adjusted Ochre", "canonical": "#8B681F", "tonalRamp": ["#4A360D", "#6A4F17", "#8B681F", "#A48658", "#CABA8E", "#E5DAC0", "#F1EBDD", "#F5F4EF"] },
-      "danger": { "role": "tertiary", "displayName": "Danger Clay", "canonical": "#A84D45", "tonalRamp": ["#56251F", "#7D3932", "#A84D45", "#B36F5B", "#D4A59B", "#EBD3CC", "#F2E5E0", "#F5F4EF"] },
-      "missed": { "role": "tertiary", "displayName": "Missed Violet", "canonical": "#725C76", "tonalRamp": ["#3E2E42", "#55445A", "#725C76", "#8B708A", "#B9A9BA", "#D8CDD9", "#EEE7EE", "#F5F4EF"] },
-      "nav-surface": { "role": "neutral", "displayName": "Studio Rail", "canonical": "#F1F0EB", "tonalRamp": ["#112842", "#53606B", "#7F8588", "#BFC2C0", "#D2D1CB", "#ECEAE4", "#F1F0EB", "#FBFAF7"] },
-      "nav-active": { "role": "secondary", "displayName": "Active Index", "canonical": "#E0E6EB", "tonalRamp": ["#112842", "#53606B", "#71879A", "#8AA0B5", "#BFC2C0", "#D4DDE3", "#E0E6EB", "#F5F4EF"] }
+      "trace": {
+        "role": "primary",
+        "displayName": "Cyan Trace",
+        "canonical": "#5EB6D8",
+        "tonalRamp": [
+          "#06121A",
+          "#12303D",
+          "#2D4A5A",
+          "#3F7F99",
+          "#5EB6D8",
+          "#82C9E4",
+          "#B5E0F0",
+          "#EEF2F6"
+        ]
+      },
+      "trace-hover": {
+        "role": "primary",
+        "displayName": "Trace Hover",
+        "canonical": "#82C9E4",
+        "tonalRamp": [
+          "#06121A",
+          "#2D4A5A",
+          "#5EB6D8",
+          "#82C9E4",
+          "#B5E0F0",
+          "#EEF2F6"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Night Ground",
+        "canonical": "#0B0F15",
+        "tonalRamp": [
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
+        ]
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "Raised Layer",
+        "canonical": "#151B24",
+        "tonalRamp": [
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Tile Surface",
+        "canonical": "#10151C",
+        "tonalRamp": [
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
+        ]
+      },
+      "field-surface": {
+        "role": "neutral",
+        "displayName": "Field Surface",
+        "canonical": "#0E131A",
+        "tonalRamp": [
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Hairline Rule",
+        "canonical": "#1F2732",
+        "tonalRamp": [
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
+        ]
+      },
+      "rule-strong": {
+        "role": "neutral",
+        "displayName": "Strong Rule",
+        "canonical": "#323C4A",
+        "tonalRamp": [
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
+        ]
+      },
+      "ink-1": {
+        "role": "neutral",
+        "displayName": "Primary Ink",
+        "canonical": "#EEF2F6",
+        "tonalRamp": [
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Supporting Ink",
+        "canonical": "#A9B4C1",
+        "tonalRamp": [
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Quiet Ink",
+        "canonical": "#8592A1",
+        "tonalRamp": [
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
+        ]
+      },
+      "selection": {
+        "role": "secondary",
+        "displayName": "Selection",
+        "canonical": "#2C6078",
+        "tonalRamp": [
+          "#0B0F15",
+          "#12303D",
+          "#2C6078",
+          "#3F7F99",
+          "#5EB6D8",
+          "#EEF2F6"
+        ]
+      },
+      "success": {
+        "role": "secondary",
+        "displayName": "On Plan Green",
+        "canonical": "#5FCFA2",
+        "tonalRamp": [
+          "#0F2B22",
+          "#1E5C47",
+          "#3F9F7C",
+          "#5FCFA2",
+          "#9AE3C6",
+          "#D2F3E5"
+        ]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Attention Amber",
+        "canonical": "#F0A84A",
+        "tonalRamp": [
+          "#33220B",
+          "#6B4A18",
+          "#B07A2E",
+          "#F0A84A",
+          "#F6C98A",
+          "#FBE6C4"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Danger Coral",
+        "canonical": "#F3877A",
+        "tonalRamp": [
+          "#3A1814",
+          "#7A3A32",
+          "#B85F54",
+          "#F3877A",
+          "#F7B0A7",
+          "#FBD8D3"
+        ]
+      },
+      "missed": {
+        "role": "tertiary",
+        "displayName": "Missed Rose",
+        "canonical": "#E3818F",
+        "tonalRamp": [
+          "#3A1A20",
+          "#74404A",
+          "#B0606E",
+          "#E3818F",
+          "#EEAEB8",
+          "#F7D6DB"
+        ]
+      },
+      "metric-fatigue": {
+        "role": "tertiary",
+        "displayName": "Fatigue Violet",
+        "canonical": "#C08AE8",
+        "tonalRamp": [
+          "#2A1840",
+          "#5A3A7A",
+          "#8F62B8",
+          "#C08AE8",
+          "#D8B4F0",
+          "#EEDDF9"
+        ]
+      }
     },
     "motion": [
-      { "name": "standard", "value": "transition 180ms ease-out", "purpose": "Quiet hover, focus, and active-index changes." },
-      { "name": "reduced-motion", "value": "remove transform movement while preserving color and state feedback", "purpose": "Respect reduced-motion preferences without hiding state feedback." }
+      {
+        "name": "standard",
+        "value": "transition 150-200ms ease-out",
+        "purpose": "Quiet hover, focus, and active-state changes."
+      },
+      {
+        "name": "reveal",
+        "value": "200-500ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Sidebar width and the chart sweep."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "durations collapse to near zero; state stays conveyed by color, text, and position",
+        "purpose": "Respect reduced-motion preferences without hiding state feedback."
+      }
     ],
     "breakpoints": [
-      { "name": "sm", "value": "640px" },
-      { "name": "md", "value": "768px" },
-      { "name": "xl", "value": "1280px" },
-      { "name": "2xl", "value": "1536px" }
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      },
+      {
+        "name": "2xl",
+        "value": "1536px"
+      }
     ],
     "shadows": [
-      { "name": "inset", "value": "0 1px 0 rgba(255, 255, 255, 0.72) inset, 0 -1px 0 rgba(17, 40, 66, 0.04) inset", "purpose": "Quiet paper depth inside study surfaces and controls." },
-      { "name": "raised", "value": "0 8px 18px -14px rgba(17, 40, 66, 0.24), 0 1px 1px rgba(17, 40, 66, 0.06)", "purpose": "Small lift for the forward action and selected utility surfaces." },
-      { "name": "overlay", "value": "0 20px 42px -20px rgba(17, 40, 66, 0.3)", "purpose": "Menus, dialogs, drawers, and temporary layers." }
+      {
+        "name": "inset",
+        "value": "inset 0 1px 0 rgb(255 255 255 / 0.025)",
+        "purpose": "A faint top highlight on tiles."
+      },
+      {
+        "name": "raised",
+        "value": "0 12px 32px rgb(0 0 0 / 0.4)",
+        "purpose": "Hover lift for interactive tiles."
+      },
+      {
+        "name": "overlay",
+        "value": "0 16px 48px rgb(0 0 0 / 0.55)",
+        "purpose": "Menus, dialogs, drawers, and temporary layers."
+      }
     ]
   },
   "components": [
-    { "name": "Primary Button", "kind": "button", "refersTo": "button-primary", "description": "The single indigo forward action in a square editorial control." },
-    { "name": "Secondary Button", "kind": "button", "refersTo": "button-secondary", "description": "A paper-toned reversible action with a fine rule." },
-    { "name": "Field", "kind": "input", "refersTo": "field", "description": "A labeled paper field with a blue-gray focus line." },
-    { "name": "Navigation", "kind": "nav", "refersTo": "nav-item", "description": "The studio index with small line icons and an indigo active rail." },
-    { "name": "Session Row", "kind": "custom", "refersTo": "session-row", "description": "A study tile with workout context, metrics, and ink-flow hover state." },
-    { "name": "Status Chip", "kind": "chip", "refersTo": "status-chip", "description": "A visible text state for planned, adjusted, or missed work." },
-    { "name": "Intensity Timeline", "kind": "custom", "refersTo": "session-block-bar", "description": "Duration-proportional workout structure with quiet zone color." }
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single cyan forward action, 40px, rounded-lg."
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A transparent, strong-ruled reversible action."
+    },
+    {
+      "name": "Icon Step Button",
+      "kind": "button",
+      "refersTo": "icon-step-button",
+      "description": "A round 40px outlined button for period navigation."
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "A labeled dark field with a trace focus border and ring."
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "A collapsible sidebar with an icon rail and a trace-marked active item."
+    },
+    {
+      "name": "Tile",
+      "kind": "custom",
+      "refersTo": "tile",
+      "description": "A square of reading: label, large tabular value with a quiet unit, optional detail."
+    },
+    {
+      "name": "Segmented Switch",
+      "kind": "custom",
+      "refersTo": "switch-track",
+      "description": "A raised track with a lifted active option."
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "refersTo": "status-chip",
+      "description": "A visible text state for planned, adjusted, or missed work."
+    },
+    {
+      "name": "Intensity Timeline",
+      "kind": "custom",
+      "refersTo": "session-block-bar",
+      "description": "Duration-proportional workout structure in zone colors."
+    }
   ],
   "narrative": {
-    "northStar": "Ink Is Movement",
-    "overview": "Tempo is a Monday-first endurance studio rendered on warm paper. Indigo owns actions and active context, blue-gray linework carries the flow, and structured sessions become study tiles without changing the product's operational behavior.",
-    "keyCharacteristics": ["Monday-first week hierarchy", "Oversized thin route titles", "Quiet icon-led studio rail", "Organic ink-flow linework", "Study tiles with text-visible states"],
-    "rules": [
-      { "name": "The Ink Roles Rule", "body": "Indigo owns forward action and active context. Blue-gray linework owns focus and flow. Status colors explain what happened; they do not compete with the next action.", "section": "colors" },
-      { "name": "The Measurement Rule", "body": "Duration, TSS, RPE, dates, and counts are data. Keep their numerals stable and aligned with MetricText.", "section": "typography" },
-      { "name": "The Paper Depth Rule", "body": "Inset depth belongs to the paper material. Outer elevation is reserved for overlays and stateful utility surfaces.", "section": "elevation" }
+    "northStar": "Night Instrument",
+    "overview": "Tempo is a Monday-first endurance training instrument on a dark ground. Hairline rules replace heavy cards, numbers are large and tabular, and one cyan trace marks the primary action, active state, focus, and now.",
+    "keyCharacteristics": [
+      "Dark only",
+      "Hairline rules over heavy cards",
+      "One cyan trace",
+      "Tabular numbers with quiet units",
+      "Collapsible icon-rail sidebar",
+      "Hand-written SVG charts"
     ],
-    "dos": ["Reuse PageShell, TopBar, shared button and field classes, Surface, SessionRow, StatusBadge, MetricText, and SessionBlockBar.", "Pair every color state with text, structure, or an accessible label.", "Preserve keyboard focus, reduced-motion behavior, explicit labels, readable contrast, and 44px touch targets."],
-    "donts": ["Do not add route-local primary navigation.", "Do not make every bordered region a floating dashboard card.", "Do not use color alone for state.", "Do not add gradients or extra accent roles to ordinary authenticated product screens."]
+    "rules": [
+      {
+        "name": "The Signal Rule",
+        "body": "Amber means worse than usual or needs attention; green means better or on plan. Neutral metrics show no signal color.",
+        "section": "colors"
+      },
+      {
+        "name": "The Reading Rule",
+        "body": "A value is label, large tabular figure, quiet 0.5em unit, then optional detail. Use StatTile and the .data class.",
+        "section": "typography"
+      },
+      {
+        "name": "Tonal Depth",
+        "body": "Depth is tonal layers and hairlines; outer shadow is reserved for hover lift on interactive tiles and overlays.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Reuse PageShell, TopBar, Surface, StatTile, Badge, EmptyState, SessionRow, and the shared button, switch, and field classes.",
+      "Pair every color state with text, structure, or an accessible label.",
+      "Preserve visible trace focus, reduced-motion behavior, explicit labels, AA contrast, and 44px mobile touch targets."
+    ],
+    "donts": [
+      "Do not reintroduce a light theme or uppercase tracked labels.",
+      "Do not make every region a floating card.",
+      "Do not use color alone for state.",
+      "Do not add gradients, charting libraries, or extra accent roles."
+    ]
   }
 }

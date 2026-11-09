@@ -35,15 +35,15 @@ export function getPrimaryNavigation(
 
   return [
     { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete' },
+    { label: 'Calendar', description: 'See scheduled work', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
+    { label: 'Planner', description: 'Place on dates', href: '/athlete/planner', matchPrefix: '/athlete/planner' },
     {
       label: 'Workouts',
       description: 'Create & manage',
       href: '/athlete/workouts',
       matchPrefix: '/athlete/workouts',
     },
-    { label: 'Planner', description: 'Place on dates', href: '/athlete/planner', matchPrefix: '/athlete/planner' },
     { label: 'Templates', description: 'Reuse & assign', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
-    { label: 'Calendar', description: 'See scheduled work', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
     { label: 'Activity', description: 'Review completed', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
     ...(hasActiveCoach ? [] : [{ label: 'Coach', description: 'Find or manage', href: '/athlete/find-coach', matchPrefix: '/athlete/find-coach' }]),
   ];
@@ -54,7 +54,7 @@ export function getMobileNavigation(
   options: { hasActiveCoach?: boolean } = {},
 ): NavItem[] {
   const items = getPrimaryNavigation(role, options);
-  const priorityLabels = role === 'ATHLETE' ? ['Home', 'Calendar', 'Workouts', 'Activity'] : ['Athletes', 'Planner', 'Workouts', 'Templates'];
+  const priorityLabels = role === 'ATHLETE' ? ['Home', 'Calendar', 'Planner', 'Workouts', 'Activity'] : ['Athletes', 'Planner', 'Workouts', 'Templates'];
 
   return priorityLabels
     .map((label) => items.find((item) => item.label === label))

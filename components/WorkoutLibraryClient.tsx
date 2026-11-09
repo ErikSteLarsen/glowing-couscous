@@ -257,7 +257,7 @@ export function WorkoutLibraryClient({
                     type="button"
                     aria-current={selected ? 'true' : undefined}
                     onClick={() => requestDraftAction({ kind: 'workout', workout })}
-                    className={`w-full rounded-[3px] px-2 text-left ${buttonFocusClassName} focus-visible:ring-inset`}
+                    className={`w-full rounded-lg px-2 text-left ${buttonFocusClassName} focus-visible:ring-inset`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -330,7 +330,7 @@ export function WorkoutLibraryClient({
           performanceProfile={performanceProfile}
           />
         {templates.length > 0 ? (
-          <details className="rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] px-3">
+          <details className="rounded-lg border border-[var(--border)] bg-[var(--field-surface)] px-3">
             <summary className={`flex min-h-11 cursor-pointer list-none items-center text-[13px] font-medium text-[var(--text-secondary)] ${buttonFocusClassName}`}>
               Start from a saved template (optional)
             </summary>

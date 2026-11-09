@@ -36,7 +36,7 @@ const variantStyles: Record<SessionRowVariant, {
   barSize: 'card' | 'compact';
 }> = {
   default: {
-    root: 'ink-session-row space-y-3 rounded-[3px] bg-[var(--surface)] p-4',
+    root: 'ink-session-row space-y-3 rounded-lg bg-[var(--surface)] p-4',
     title: 'break-words text-[18px] font-medium leading-[1.2]',
     metadata: 'mt-1 text-[14px]',
     metrics: 'gap-x-4 gap-y-1 text-[14px]',
@@ -44,7 +44,7 @@ const variantStyles: Record<SessionRowVariant, {
     barSize: 'card',
   },
   compact: {
-    root: 'ink-session-row space-y-2 rounded-[3px] bg-[var(--surface)] px-3 py-2.5',
+    root: 'ink-session-row space-y-2 rounded-lg bg-[var(--surface)] px-3 py-2.5',
     title: 'break-words text-[13px] font-semibold',
     metadata: 'mt-1 text-[12px]',
     metrics: 'gap-x-3 gap-y-1 text-[12px]',
@@ -52,7 +52,7 @@ const variantStyles: Record<SessionRowVariant, {
     barSize: 'compact',
   },
   month: {
-    root: 'ink-session-row space-y-1 rounded-[3px] bg-[var(--field-surface)] px-2.5 py-2',
+    root: 'ink-session-row space-y-1 rounded-lg bg-[var(--field-surface)] px-2.5 py-2',
     title: 'break-words text-[12px] font-medium leading-[1.25]',
     metadata: 'mt-0.5 text-[11px]',
     metrics: '',

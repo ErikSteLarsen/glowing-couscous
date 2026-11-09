@@ -207,7 +207,7 @@ export function AthleteCalendarWeekScroller({
                     type="button"
                     aria-current={isFocused ? 'date' : undefined}
                     aria-label={`Focus ${day.label} ${day.dateLabel}`}
-                    className={`inline-flex min-h-11 min-w-11 flex-col justify-center rounded-[3px] px-2 py-1 text-left ${buttonFocusClassName}`}
+                    className={`inline-flex min-h-11 min-w-11 flex-col justify-center rounded-lg px-2 py-1 text-left ${buttonFocusClassName}`}
                     onClick={() => setActiveDateIso(day.isoDate)}
                   >
                     <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--text-muted)]">{day.label}</p>
