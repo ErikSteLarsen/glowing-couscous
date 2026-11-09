@@ -52,7 +52,7 @@ one-time account creation flow directly.
 - `/athlete/templates` - athlete reusable content surface
 - `/athlete/session/[sessionId]` - session detail and planned/actual editing
 - `/athlete/live/[sessionId]` - local block execution stepper
-- `/athlete/activity` - completion history
+- `/athlete/activity` - paginated completion history with URL name/sport filters and matching totals
 - `/athlete/find-coach` - coach discovery and requests
 - `/athlete/profile`, `/profile` - profile surfaces and compatibility alias
 - `/settings` - account and overview preferences
@@ -81,6 +81,7 @@ navigation.
 | Coach reads | `lib/coach-service.ts` | Roster and athlete-detail read models |
 | Coach requests | `lib/coach-request-service.ts` | Search, request creation, approval, rejection, and pending uniqueness |
 | Athlete reads | `lib/athlete-service.ts` | Home, Calendar, Activity, profile, discovery, and session reads |
+| Activity navigation | `lib/activity-navigation.ts` | Validated history filters, page size, and pagination URLs |
 | Athlete planning | `lib/athlete-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, private dated copies, source search, and athlete planner mutations |
 | Coach planning | `lib/coach-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, dated sessions, source search, and roster-scoped planner writes |
 | Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |

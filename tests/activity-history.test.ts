@@ -95,6 +95,17 @@ test('activity history pages and filtered totals retain outcomes and athlete iso
       assert.equal(await service.loadActivityFeed(coach.id), null);
       assert.equal(await service.loadActivityFeed(9999), null);
     });
+
+    await t.test('workout name searches treat percent, underscore, and backslash literally', async () => {
+      await db.session.updateMany({ where: { athleteId: athlete.id, title: 'Endurance 0' }, data: { title: '90% FTP_under\\hill' } });
+      for (const query of ['%', '_', '90% ftp_', '\\hill']) {
+        const feed = await service.loadActivityFeed(athlete.id, parseActivityFilters({ q: query }));
+        assert.ok(feed);
+        assert.equal(feed.count, 1);
+        assert.equal(feed.activities[0].title, '90% FTP_under\\hill');
+        assert.deepEqual(feed.totals, { durationSec: 600, tss: 10 });
+      }
+    });
   } finally {
     await db.$disconnect();
     await rm(directory, { recursive: true, force: true });

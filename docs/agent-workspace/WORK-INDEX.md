@@ -30,6 +30,7 @@ secondary; preserve their behavior and shared ownership boundaries.
 | `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | `/coach/workouts`, `/athlete/workouts` |
 | `TEMPLATE-001` | Personal and coach templates; secondary training plans | `shipped` | `lib/template-service.ts`, `app/(app)/coach/templates/CoachTemplatesClient.tsx`, `lib/coach-training-plan-service.ts` | `/coach/templates`, `/athlete/templates` |
 | SESSION-001 | Canonical editor and outcomes | shipped | lib/session-editor.ts, lib/session-snapshot-service.ts, lib/athlete-completion-service.ts, lib/athlete-execution.ts | Session detail, WorkoutBuilder, outcome APIs |
+| `ACTIVITY-001` | Searchable completed training history | `shipped` | `lib/athlete-service.ts`, `lib/activity-navigation.ts`, `app/(app)/athlete/activity/page.tsx` | `/athlete/activity` |
 | `SHARE-001` | Sanitized workout sharing | `in-progress` | `lib/share-link.ts`, `lib/share-link-service.ts` | `/share/[token]`, share APIs |
 | `COMPAT-001` | Older coach session adapter | `transitional` | `lib/planner-service.ts` | `/api/coach/sessions/[sessionId]` |
 

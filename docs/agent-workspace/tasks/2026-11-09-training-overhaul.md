@@ -34,6 +34,9 @@ pushed before advancing.
 - Template draft/pending/profile improvements pass checks and browser
   verification. Review caught minute rounding for short blocks; removed the
   new minutes mode and verified a 20-second interval through save/reload.
+- Activity now exposes full searchable/filterable history with bounded pages.
+  SQLite and Chromium checks pass. Review caught SQLite wildcard semantics;
+  parameterized literal substring queries and regressions fix the finding.
 - Current product priority and dark visual contract remain authoritative.
 
 ## Completion

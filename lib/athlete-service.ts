@@ -1,4 +1,5 @@
 import { addDays, addMonths, differenceInCalendarDays, endOfDay, endOfMonth, endOfWeek, format, isSameDay, startOfMonth, startOfWeek } from 'date-fns';
+import { Prisma } from '@prisma/client';
 import { readOverviewCardsFromPrefsJson } from './overview-preferences.ts';
 import { prisma } from './prisma.ts';
 import { deriveSessionMetrics } from './session-math.ts';
@@ -450,28 +451,27 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       if (!athlete || athlete.role !== 'ATHLETE') {
         return null;
       }
-      const where = {
-        athleteId: userId,
-        session: {
-          athleteId: userId,
-          ...(filters.sport ? { sport: filters.sport } : {}),
-          ...(filters.query ? { title: { contains: filters.query } } : {}),
-        },
-      };
+      const scope = Prisma.sql`
+        FROM Activity a JOIN Session s ON s.id = a.sessionId
+        WHERE a.athleteId = ${userId} AND s.athleteId = ${userId}
+          AND (${filters.sport} IS NULL OR s.sport = ${filters.sport})
+          AND instr(lower(s.title), lower(${filters.query})) > 0
+      `;
       return db.$transaction(async (tx) => {
-        const summary = await tx.activity.aggregate({
-          where,
-          _count: { _all: true },
-          _sum: { durationSec: true, tss: true },
-        });
-        const count = summary._count._all;
+        const [summary] = await tx.$queryRaw<Array<{ count: bigint; durationSec: bigint; tss: bigint }>>(Prisma.sql`
+          SELECT COUNT(*) AS count, COALESCE(SUM(a.durationSec), 0) AS durationSec,
+            COALESCE(SUM(a.tss), 0) AS tss ${scope}
+        `);
+        const count = Number(summary.count);
         const totalPages = Math.max(1, Math.ceil(count / ACTIVITY_PAGE_SIZE));
         const page = Math.min(filters.page, totalPages);
+        const matches = await tx.$queryRaw<Array<{ id: number }>>(Prisma.sql`
+          SELECT a.id ${scope} ORDER BY a.completedAt DESC, a.id DESC
+          LIMIT ${ACTIVITY_PAGE_SIZE} OFFSET ${(page - 1) * ACTIVITY_PAGE_SIZE}
+        `);
         const activities = await tx.activity.findMany({
-          where,
+          where: { id: { in: matches.map((match) => match.id) }, athleteId: userId },
           orderBy: [{ completedAt: 'desc' }, { id: 'desc' }],
-          skip: (page - 1) * ACTIVITY_PAGE_SIZE,
-          take: ACTIVITY_PAGE_SIZE,
           include: { session: { select: { id: true, title: true, sport: true } } },
         });
         return {
@@ -482,7 +482,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
           count,
           page,
           totalPages,
-          totals: { durationSec: summary._sum.durationSec ?? 0, tss: summary._sum.tss ?? 0 },
+          totals: { durationSec: Number(summary.durationSec), tss: Number(summary.tss) },
           activities: activities.map((activity) => ({
             id: activity.id,
             sessionId: activity.sessionId,

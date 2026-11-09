@@ -57,16 +57,21 @@ sanitized snapshots and requires an explicit recipient save.
 - Session outcomes, actual corrections, comparison, completion history, and
   sanitized sharing remain implemented. The older coach session adapter in
   `lib/planner-service.ts` remains transitional.
+- Activity searches completed names literally, filters by sport, and pages
+  through all saved outcomes. Counts, duration, and load cover the matching
+  history. A read transaction keeps totals and rows consistent, with stable
+  completion-date/id ordering and bounded page reads.
 
 ## Verified gates
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass, 231 tests | `pnpm test` |
+| Tests | Pass, 237 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build`; middleware deprecation warning removed |
 | Mobile workout actions | Pass | 390px Chromium: action bar bottom 780px, navigation top 783px; desktop offset 0px; both review axes found no actionable issue |
 | Template authoring | Pass | Chromium discard/keep, blocked fetch, delayed save locks, retry/reload, and 20-second interval persistence; editor and list axe scans have no violations; 390px and 1440px have no overflow; design detector has no findings |
+| Activity history | Pass | SQLite pagination across 26 outcomes, filtered totals, timestamp ties, ownership, stale pages, and literal `%`/`_`/backslash searches; Chromium recorded completion notes, older/newer pages, filters, reload, empty recovery, no overflow, and zero axe violations |
 | Dashboard | Pass | Desktop and 390px Chromium: pointer at final plotted day, Home/End readings, no horizontal overflow or browser errors; coach-note service regressions pass |
 | Session execution and corrections | Pass | Chromium repeated/skipped execution, relative labels, completion, immediate actual correction, notes, reopening, planned adjustment, and reload persistence; session detail axe reports no violations |
 | Calendar persistence | Pass | Chromium explicit-date, keyboard-drag, and pointer-drag moves persisted after navigation/reload |
