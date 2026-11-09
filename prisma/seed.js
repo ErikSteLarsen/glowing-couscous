@@ -321,14 +321,17 @@ function buildSessionPlan(k, slot, weekStartDate) {
   return { ...shape, sport: slot.sport, date, timeLabel: slot.time, shapeKey: slot.shape };
 }
 
+// Long enough for 42-day fitness to settle before the 12 weeks the dashboard shows.
+const HISTORY_WEEKS = 24;
+
 async function seedMaraTrainingHistory(mara) {
   const rand = mulberry32(20240607);
-  const forcedPlanned = new Set(['10:2', '8:1']); // "weekIndex:slotIndex" planned-but-past, no activity
+  const forcedPlanned = new Set([`${HISTORY_WEEKS - 2}:2`, `${HISTORY_WEEKS - 4}:1`]); // "weekIndex:slotIndex" planned-but-past, no activity
   let missedCount = 0;
 
-  for (let weekOffset = -12; weekOffset <= 2; weekOffset += 1) {
+  for (let weekOffset = -HISTORY_WEEKS; weekOffset <= 2; weekOffset += 1) {
     if (weekOffset === 0) continue; // current week is seeded above
-    const k = weekOffset + 12;
+    const k = weekOffset + HISTORY_WEEKS;
     const weekStartDate = addDays(weekStart, weekOffset * 7);
     const slots = weekSlots(k);
 

@@ -27,7 +27,10 @@ type MetricBlock = { kind: string; zone: number; durationSec: number; reps: numb
 
 export type SessionLoad = {
   sessionId: number;
+  /** Planned calendar day. */
   day: DayKey;
+  /** Day the work was actually done, when completed. */
+  actualDay: DayKey | null;
   sport: string;
   title: string;
   status: 'planned' | 'completed' | 'adjusted' | 'missed';
@@ -74,13 +77,17 @@ function sessionStatus(session: { status: string; adjusted: boolean; activity: u
   return session.adjusted ? 'adjusted' : 'planned';
 }
 
-/** What was planned: the saved baseline once a session is completed, otherwise its current blocks. */
-function plannedMetrics(session: { status: string; coachBaselineJson: string | null; blocks: MetricBlock[] }, completed: boolean) {
-  if (completed) {
-    const baseline = deserializeSessionSnapshot('planned', session.coachBaselineJson);
-    if (baseline) return deriveSessionEditorMetrics(baseline);
-  }
-  return metricsForBlocks(session.blocks);
+const NO_PLAN = { durationSec: 0, tss: 0 };
+
+/**
+ * What was planned: the saved baseline once a session is completed, otherwise
+ * its current blocks. Completed blocks hold the actual work, so without a
+ * baseline there is no plan to compare against.
+ */
+function plannedMetrics(session: { coachBaselineJson: string | null; blocks: MetricBlock[] }, completed: boolean) {
+  if (!completed) return metricsForBlocks(session.blocks);
+  const baseline = deserializeSessionSnapshot('planned', session.coachBaselineJson);
+  return baseline ? deriveSessionEditorMetrics(baseline) : NO_PLAN;
 }
 
 export function createTrainingLoadService({ db = prisma }: TrainingLoadDeps = {}) {
@@ -122,12 +129,13 @@ export function createTrainingLoadService({ db = prisma }: TrainingLoadDeps = {}
         if (!record.date) return [];
         const status = sessionStatus(record);
         const planned = plannedMetrics(record, status === 'completed');
-        const day = toDayKey(record.activity?.completedAt ?? record.date);
+        const day = toDayKey(record.date);
 
         return [
           {
             sessionId: record.id,
             day,
+            actualDay: record.activity ? toDayKey(record.activity.completedAt) : null,
             sport: record.sport,
             title: record.title,
             status,
@@ -150,7 +158,9 @@ export function createTrainingLoadService({ db = prisma }: TrainingLoadDeps = {}
       });
 
       const series = buildLoadSeries({
-        actual: sessions.flatMap((session) => (session.actualTss === null ? [] : [{ day: session.day, tss: session.actualTss }])),
+        actual: sessions.flatMap((session) =>
+          session.actualTss === null ? [] : [{ day: session.actualDay ?? session.day, tss: session.actualTss }],
+        ),
         planned: sessions.flatMap((session) =>
           session.status === 'completed' || session.status === 'missed' ? [] : [{ day: session.day, tss: session.plannedTss }],
         ),

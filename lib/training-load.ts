@@ -8,6 +8,8 @@
  * today shows up in tomorrow's form, which is how it feels.
  *
  * Everything here is pure and works on local calendar day keys (yyyy-MM-dd).
+ * Day keys are derived in the server's time zone, which assumes the server and
+ * the athlete share one; there is no per-athlete time zone yet.
  */
 
 export const FITNESS_DAYS = 42;
@@ -103,25 +105,29 @@ export function buildLoadSeries({
     const day = addDayKeys(start, offset);
     const projected = day > today;
     const actualTss = projected ? 0 : (actualByDay.get(day) ?? 0);
-    // Today still counts what is planned but not done yet, as the plan for the rest of the day.
+    // Today still has its unfinished plan ahead of it; later days are all plan.
     const plannedTss = day >= today ? (plannedByDay.get(day) ?? 0) : 0;
-    const stress = projected ? plannedTss : actualTss;
     const form = fitness - fatigue;
-
-    fitness += (stress - fitness) / FITNESS_DAYS;
-    fatigue += (stress - fatigue) / FATIGUE_DAYS;
+    const shownStress = projected ? plannedTss : actualTss;
+    const shownFitness = fitness + (shownStress - fitness) / FITNESS_DAYS;
+    const shownFatigue = fatigue + (shownStress - fatigue) / FATIGUE_DAYS;
 
     if (day >= from) {
       points.push({
         day,
         actualTss: Math.round(actualTss),
         plannedTss: Math.round(plannedTss),
-        fitness: round1(fitness),
-        fatigue: round1(fatigue),
+        fitness: round1(shownFitness),
+        fatigue: round1(shownFatigue),
         form: round1(form),
         projected,
       });
     }
+
+    // Today's point shows what has happened, but the projection assumes today's plan gets done.
+    const carriedStress = day === today ? actualTss + plannedTss : shownStress;
+    fitness += (carriedStress - fitness) / FITNESS_DAYS;
+    fatigue += (carriedStress - fatigue) / FATIGUE_DAYS;
   }
 
   return points;
@@ -206,6 +212,7 @@ export const complianceLabels: Record<ComplianceState, string> = {
 };
 
 export type WeekSession = {
+  /** The planned day, so moved or late completions stay in the week they were planned for. */
   day: DayKey;
   sport: string;
   plannedDurationSec: number;
@@ -245,6 +252,7 @@ export function summarizeWeeks(sessions: WeekSession[], weekStarts: DayKey[]): W
       bySport: [],
       completionPct: null,
     };
+    let completedOfPlannedSec = 0;
 
     for (const session of inWeek) {
       if (session.compliance !== 'unplanned') {
@@ -256,6 +264,7 @@ export function summarizeWeeks(sessions: WeekSession[], weekStarts: DayKey[]): W
       if (session.actualDurationSec !== null || session.actualTss !== null) {
         const durationSec = session.actualDurationSec ?? 0;
         const tss = session.actualTss ?? 0;
+        if (session.compliance !== 'unplanned') completedOfPlannedSec += durationSec;
         summary.completed.durationSec += durationSec;
         summary.completed.tss += tss;
         summary.completed.sessions += 1;
@@ -269,10 +278,9 @@ export function summarizeWeeks(sessions: WeekSession[], weekStarts: DayKey[]): W
     summary.bySport = [...sports.entries()]
       .map(([sport, totals]) => ({ sport, ...totals }))
       .sort((left, right) => right.durationSec - left.durationSec);
+    // Extra unplanned work should not hide what was skipped from the plan.
     summary.completionPct =
-      summary.planned.durationSec > 0
-        ? Math.round((summary.completed.durationSec / summary.planned.durationSec) * 100)
-        : null;
+      summary.planned.durationSec > 0 ? Math.round((completedOfPlannedSec / summary.planned.durationSec) * 100) : null;
 
     return summary;
   });

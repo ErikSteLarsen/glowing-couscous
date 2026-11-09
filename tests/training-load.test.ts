@@ -146,3 +146,31 @@ test('weekly summaries total planned and completed work by sport', () => {
   assert.equal(nextWeek.completed.sessions, 0);
   assert.equal(emptyWeek.completionPct, null);
 });
+
+test("today's unfinished plan carries into the projection but not into today's point", () => {
+  const withPlanToday = buildLoadSeries({
+    actual: [],
+    planned: [{ day: '2026-11-09', tss: 100 }],
+    from: '2026-11-09',
+    to: '2026-11-10',
+    today: '2026-11-09',
+  });
+  const [today, tomorrow] = withPlanToday;
+
+  assert.equal(today.fatigue, 0, "today's point reflects only work already done");
+  assert.equal(today.plannedTss, 100);
+  assert.ok(tomorrow.form < -10, 'tomorrow expects today to be done');
+});
+
+test('completion share ignores unplanned extra work', () => {
+  const [week] = summarizeWeeks(
+    [
+      { day: '2026-11-02', sport: 'Running', plannedDurationSec: 3600, plannedTss: 60, actualDurationSec: null, actualTss: null, compliance: 'missed' },
+      { day: '2026-11-03', sport: 'Biking', plannedDurationSec: 0, plannedTss: 0, actualDurationSec: 7200, actualTss: 90, compliance: 'unplanned' },
+    ],
+    ['2026-11-02'],
+  );
+
+  assert.equal(week.completionPct, 0);
+  assert.equal(week.completed.durationSec, 7200, 'extra work still counts as volume');
+});
