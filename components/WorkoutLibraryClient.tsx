@@ -274,7 +274,7 @@ export function WorkoutLibraryClient({
                       </div>
                     </div>
                   </button>
-                  {role === 'COACH' ? <div className="mt-2 px-2"><ShareLinkButton sourceKind="session" sourceId={workout.id} /></div> : null}
+                  <div className="mt-2 px-2"><ShareLinkButton sourceKind="session" sourceId={workout.id} ariaLabel={`Create a share link for ${workout.title}`} /></div>
                 </div>
               );
             })}

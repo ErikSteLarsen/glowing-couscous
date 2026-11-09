@@ -8,9 +8,11 @@ import { formatWorkoutTarget } from '@/lib/workout-target-resolution';
 import {
   Badge,
   compactSecondaryButtonClassName,
+  dangerButtonClassName,
   dangerTextClassName,
   formFieldClassName,
   primaryButtonClassName,
+  secondaryButtonClassName,
   Surface,
   successTextClassName,
   PageShell,
@@ -57,8 +59,12 @@ export function ShareLandingClient({
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
   const [isPending, startTransition] = useTransition();
+  const [isDirty, setIsDirty] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const plannerDestination = userRole === 'COACH' ? 'Workouts' : 'Planner';
 
   function beginAction(nextAction: ShareLinkAction) {
+    if (isPending) return;
     const callbackPath = createSharePath(token, nextAction);
     if (!isSignedIn) {
       window.location.assign(`/login?callbackUrl=${encodeURIComponent(callbackPath)}`);
@@ -72,10 +78,22 @@ export function ShareLandingClient({
     setAction(nextAction);
     setDraft(createInitialDraft(projection, userRole, nextAction));
     setMessage('');
+    setIsDirty(false);
+    setConfirmDiscard(false);
+  }
+
+  function closeEditor() {
+    if (isPending) return;
+    if (isDirty) {
+      setConfirmDiscard(true);
+      return;
+    }
+    setAction(null);
+    setMessage('');
   }
 
   function save() {
-    if (!action) return;
+    if (!action || isPending) return;
     const validationError = validateSessionEditorDraft(draft);
     if (validationError) {
       setMessageTone('danger');
@@ -84,23 +102,30 @@ export function ShareLandingClient({
     }
 
     startTransition(async () => {
-      const response = await fetch('/api/share-links/intake', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, action, draft: serializeSessionEditorDraft(draft) }),
-      });
-      const payload = await response.json().catch(() => ({})) as { error?: string };
-      if (!response.ok) {
-        setMessageTone('danger');
-        setMessage(payload.error ?? 'Failed to save shared workout.');
-        return;
-      }
+      try {
+        setMessage('');
+        const response = await fetch('/api/share-links/intake', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, action, draft: serializeSessionEditorDraft(draft) }),
+        });
+        const payload = await response.json().catch(() => ({})) as { error?: string };
+        if (!response.ok) {
+          setMessageTone('danger');
+          setMessage(payload.error ?? 'Failed to save shared workout.');
+          return;
+        }
 
-      setMessageTone('success');
-      setMessage(action === 'template' ? 'Private template saved.' : 'Session saved to your planner.');
-      router.push(action === 'template'
-        ? userRole === 'COACH' ? '/coach/templates' : '/athlete/templates'
-        : userRole === 'COACH' ? '/coach/planner' : '/athlete/planner');
+        setMessageTone('success');
+        setMessage(action === 'template' ? 'Private template saved.' : `Workout saved to your ${plannerDestination}.`);
+        router.push(action === 'template'
+          ? userRole === 'COACH' ? '/coach/templates' : '/athlete/templates'
+          : userRole === 'COACH' ? '/coach/workouts' : '/athlete/planner');
+        router.refresh();
+      } catch {
+        setMessageTone('danger');
+        setMessage('Could not reach the server. Your changes are kept. Check your connection and save again.');
+      }
     });
   }
 
@@ -125,7 +150,7 @@ export function ShareLandingClient({
                   {projection.summary || 'Workout definition shared from Tempo.'}
                 </p>
                 <div className="space-y-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Workout blocks</p>
+                  <h2 className="text-base font-medium text-[var(--text)]">Workout blocks</h2>
                   {projection.blocks.map((block, index) => (
                     <div key={`${block.kind}-${index}`} className="rounded-[12px] border border-[var(--border)] bg-[var(--field-surface)] p-4">
                       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -151,17 +176,17 @@ export function ShareLandingClient({
 
               <Surface className="flex flex-col justify-between gap-6">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Choose what to do</p>
+                  <h2 className="text-base font-medium text-[var(--text)]">Save your own copy</h2>
                   <p className="mt-2 text-sm leading-[1.55] text-[var(--text-secondary)]">
                     Nothing is saved or scheduled until you edit and confirm one of these actions.
                   </p>
                 </div>
                 <div className="grid gap-3">
                   <button type="button" className={primaryButtonClassName} onClick={() => beginAction('planner')}>
-                    Use in Planner
+                    Use in {plannerDestination}
                   </button>
                   <button type="button" className={compactSecondaryButtonClassName} onClick={() => beginAction('template')}>
-                    Save as Template
+                    Save as template
                   </button>
                 </div>
               </Surface>
@@ -171,35 +196,43 @@ export function ShareLandingClient({
           <Surface className="space-y-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                  {action === 'planner' ? 'Planner intake' : 'Template intake'}
-                </p>
-                <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">
-                  {action === 'planner' ? 'Edit before saving to Planner' : 'Edit before saving as Template'}
+                <h2 className="text-lg font-medium text-[var(--text)]">
+                  {action === 'planner' ? `Edit before saving to ${plannerDestination}` : 'Edit before saving as a template'}
                 </h2>
               </div>
-              <button type="button" className={compactSecondaryButtonClassName} onClick={() => setAction(null)} disabled={isPending}>
+              <button type="button" className={compactSecondaryButtonClassName} onClick={closeEditor} disabled={isPending}>
                 Back to preview
               </button>
             </div>
-            <WorkoutBuilder
-              draft={draft}
-              onChange={setDraft}
-              showSchedule={action === 'planner'}
-              summaryPlaceholder="Workout summary"
-              durationUnit="minutes"
-              performanceProfile={performanceProfile}
-            />
+            {confirmDiscard ? (
+              <div role="alert" className="space-y-3 rounded-lg border border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] p-4">
+                <p className="text-sm text-[var(--text)]">Discard your changes to this copy?</p>
+                <div className="flex flex-wrap gap-3">
+                  <button type="button" className={secondaryButtonClassName} disabled={isPending} onClick={() => setConfirmDiscard(false)}>Keep editing</button>
+                  <button type="button" className={dangerButtonClassName} disabled={isPending} onClick={() => { setAction(null); setIsDirty(false); setConfirmDiscard(false); setMessage(''); }}>Discard changes</button>
+                </div>
+              </div>
+            ) : null}
+            <fieldset disabled={isPending} className="min-w-0">
+              <WorkoutBuilder
+                key={action}
+                draft={draft}
+                onChange={(next) => { setDraft(next); setIsDirty(true); setMessage(''); }}
+                showSchedule={action === 'planner' && userRole === 'ATHLETE'}
+                summaryPlaceholder="Workout summary"
+                performanceProfile={performanceProfile}
+              />
+            </fieldset>
             {action === 'planner' ? (
               <p className="text-sm text-[var(--text-secondary)]">
                 {userRole === 'COACH' ? 'This will save as a private standalone coach-library session.' : 'This will save as a private athlete Planner session.'}
               </p>
             ) : null}
-            <div className="flex flex-wrap gap-3">
-              <button type="button" className={primaryButtonClassName} onClick={save} disabled={isPending}>
-                {isPending ? 'Saving…' : action === 'planner' ? 'Save to Planner' : 'Save as Template'}
+            <div className="sticky bottom-0 z-10 -mx-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3">
+              <button type="button" className={primaryButtonClassName} onClick={save} disabled={isPending || confirmDiscard}>
+                {isPending ? 'Saving…' : action === 'planner' ? `Save to ${plannerDestination}` : 'Save as template'}
               </button>
-              {message ? <p className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
+              {message ? <p role={messageTone === 'success' ? 'status' : 'alert'} className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
             </div>
             <label className="block space-y-2">
               <span className="text-xs text-[var(--text-muted)]">Shared snapshot</span>

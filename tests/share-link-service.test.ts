@@ -444,8 +444,8 @@ test('recipient copy commands sanitize ownership and delegate only after explici
         return { ok: true, sessionIds: [31] };
       },
     } as never,
-    coachLibraryPersistence: {
-      async saveForCoach(_ownerId: number, input: Record<string, unknown>) {
+    workoutLibraryPersistence: {
+      async saveForOwner(_owner: string, _ownerId: number, input: Record<string, unknown>) {
         coachInput = input;
         return { ok: true, sessionId: 32 };
       },
@@ -474,6 +474,7 @@ test('recipient copy commands sanitize ownership and delegate only after explici
   assert.equal(templateInput?.name, 'Edited imported workout');
   assert.equal((athleteInput?.templateId ?? null), null);
   assert.equal((athleteInput?.coachOwnerId ?? null), null);
-  assert.equal((coachInput?.sourceTemplateId ?? null), null);
+  assert.equal(coachInput?.templateId, null);
+  assert.equal(coachInput?.scheduledDate, null);
   assert.equal((coachInput?.athleteId ?? null), null);
 });
