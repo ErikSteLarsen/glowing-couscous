@@ -59,6 +59,9 @@ sanitized snapshots and requires an explicit recipient save.
 - Session outcomes, actual corrections, comparison, completion history, and
   sanitized sharing remain implemented. The older coach session adapter in
   `lib/planner-service.ts` remains transitional.
+- Athletes can remove an open self-planned session from Calendar or session
+  detail after an in-app confirmation. The delete service checks athlete
+  ownership, completion, coach assignment, and concurrent session changes.
 - Activity searches completed names literally, filters by sport, and pages
   through all saved outcomes. Counts, duration, and load cover the matching
   history. A read transaction keeps totals and rows consistent, with stable
@@ -72,7 +75,7 @@ sanitized snapshots and requires an explicit recipient save.
 
 | Gate | Result | Evidence |
 |---|---|---|
-| Tests | Pass, 239 tests | `pnpm test` |
+| Tests | Pass, 240 tests | `pnpm test` |
 | Lint | Pass | `pnpm lint` |
 | Production build | Pass | `pnpm build`; middleware deprecation warning removed |
 | Mobile workout actions | Pass | 390px Chromium: action bar bottom 780px, navigation top 783px; desktop offset 0px; both review axes found no actionable issue |
@@ -82,6 +85,7 @@ sanitized snapshots and requires an explicit recipient save.
 | Short interval precision | Pass | Duration regression covers seconds, remainders, and hour boundaries; 390px Chromium saved/reloaded a 20-second workout block and showed `20s x 3` with a 20-second input; both review axes found no actionable issue |
 | Dashboard | Pass | Desktop and 390px Chromium: pointer at final plotted day, Home/End readings, no horizontal overflow or browser errors; coach-note service regressions pass |
 | Session execution and corrections | Pass | Chromium repeated/skipped execution, relative labels, completion, immediate actual correction, notes, reopening, planned adjustment, and reload persistence; session detail axe reports no violations |
+| Personal session removal | Pass | SQLite verifies owner scope, completed/activity/coach-assigned refusal, and block cascade; Chromium desktop and 390px confirms the in-app dialog, Escape cancel, Calendar removal, refresh feedback, and no horizontal overflow |
 | Calendar persistence | Pass | Chromium explicit-date, keyboard-drag, and pointer-drag moves persisted after navigation/reload |
 | Calendar dates and ownership | Pass | Isolated SQLite tests cover foreign athletes, coach ownership, completed sessions, impossible dates, plan membership, content preservation, and Oslo/New York DST |
 | Calendar accessibility | Pass in scanned week view | Chromium axe 4.12.1: no violations; 390px month view has no horizontal overflow |

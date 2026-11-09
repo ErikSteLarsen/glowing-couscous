@@ -25,6 +25,7 @@ import {
 } from '@dnd-kit/core';
 import { ComplianceMark, complianceColors } from '@/components/tempo/ComplianceMark';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { SessionDeleteAction } from '@/components/SessionDeleteAction';
 import {
   buttonFocusClassName,
   compactPrimaryButtonClassName,
@@ -58,6 +59,7 @@ export type CalendarSession = {
   tss: number;
   compliance: ComplianceState;
   canReschedule: boolean;
+  canDelete: boolean;
   segments: Array<{ key: string; zone: number; durationSec: number; label: string; color: string }>;
 };
 
@@ -259,7 +261,12 @@ export function AthleteCalendar({
   const activeSession = activeId === null ? null : sessionsById.get(activeId) ?? null;
   const selected = selectedDay ? allDays.find((entry) => entry.isoDate === selectedDay) ?? null : null;
   const periodNoun = view === 'week' ? 'week' : 'month';
-  const shared = { pendingIds: busyIds, onMove: moveSession };
+  function handleSessionDeleted(title: string) {
+    setFeedback({ tone: 'status', text: `${title} removed from your plan.` });
+    startTransition(() => router.refresh());
+  }
+
+  const shared = { pendingIds: busyIds, onMove: moveSession, onSessionDeleted: handleSessionDeleted };
 
   return (
     <div className="flex flex-col gap-6">
@@ -338,20 +345,24 @@ export function AthleteCalendar({
   );
 }
 
-type MoveProps = { pendingIds: number[]; onMove: (sessionId: number, toDay: string) => Promise<void> };
+type MoveProps = {
+  pendingIds: number[];
+  onMove: (sessionId: number, toDay: string) => Promise<void>;
+  onSessionDeleted: (title: string) => void;
+};
 
-function WeekBoard({ week, pendingIds, onMove }: { week: CalendarWeek } & MoveProps) {
+function WeekBoard({ week, pendingIds, onMove, onSessionDeleted }: { week: CalendarWeek } & MoveProps) {
   return (
     <section aria-label="Week" className="grid gap-3 xl:grid-cols-[repeat(7,minmax(0,1fr))_13rem]">
       <WeekSummaryPanel summary={week.summary} className="xl:order-last" />
       {week.days.map((entry) => (
-        <DayColumn key={entry.isoDate} day={entry} pendingIds={pendingIds} onMove={onMove} />
+        <DayColumn key={entry.isoDate} day={entry} pendingIds={pendingIds} onMove={onMove} onSessionDeleted={onSessionDeleted} />
       ))}
     </section>
   );
 }
 
-function DayColumn({ day, pendingIds, onMove }: { day: CalendarDay } & MoveProps) {
+function DayColumn({ day, pendingIds, onMove, onSessionDeleted }: { day: CalendarDay } & MoveProps) {
   const { setNodeRef, isOver } = useDroppable({ id: dayDropId(day.isoDate), data: { day: day.isoDate } });
   const headingId = `calendar-day-${day.isoDate}`;
 
@@ -385,7 +396,7 @@ function DayColumn({ day, pendingIds, onMove }: { day: CalendarDay } & MoveProps
       </div>
 
       {day.sessions.map((session) => (
-        <SessionCard key={session.id} session={session} day={day.isoDate} pending={pendingIds.includes(session.id)} onMove={onMove} />
+        <SessionCard key={session.id} session={session} day={day.isoDate} pending={pendingIds.includes(session.id)} onMove={onMove} onSessionDeleted={onSessionDeleted} />
       ))}
 
       {day.sessions.length === 0 ? (
@@ -426,12 +437,14 @@ function SessionCard({
   day,
   pending,
   onMove,
+  onSessionDeleted,
   draggable = true,
 }: {
   session: CalendarSession;
   day: string;
   pending: boolean;
   onMove: MoveProps['onMove'];
+  onSessionDeleted: MoveProps['onSessionDeleted'];
   draggable?: boolean;
 }) {
   const { setNodeRef, setActivatorNodeRef, dragProps, isDragging } = useSessionDrag(session, pending, draggable);
@@ -474,6 +487,11 @@ function SessionCard({
             Move to…
           </button>
         )
+      ) : null}
+      {session.canDelete ? (
+        <div className="mt-1">
+          <SessionDeleteAction sessionId={session.id} title={session.title} onDeleted={onSessionDeleted} disabled={pending} />
+        </div>
       ) : null}
     </div>
   );
@@ -668,7 +686,7 @@ function MonthChip({ session, day, pending }: { session: CalendarSession; day: s
   );
 }
 
-function DayDetail({ day, onClose, pendingIds, onMove }: { day: CalendarDay; onClose: () => void } & MoveProps) {
+function DayDetail({ day, onClose, pendingIds, onMove, onSessionDeleted }: { day: CalendarDay; onClose: () => void } & MoveProps) {
   return (
     <section aria-labelledby="calendar-day-detail" className="tile space-y-3 rounded-2xl p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -686,7 +704,7 @@ function DayDetail({ day, onClose, pendingIds, onMove }: { day: CalendarDay; onC
       {day.sessions.length > 0 ? (
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {day.sessions.map((session) => (
-            <SessionCard key={session.id} session={session} day={day.isoDate} pending={pendingIds.includes(session.id)} onMove={onMove} draggable={false} />
+            <SessionCard key={session.id} session={session} day={day.isoDate} pending={pendingIds.includes(session.id)} onMove={onMove} onSessionDeleted={onSessionDeleted} draggable={false} />
           ))}
         </div>
       ) : (

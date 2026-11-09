@@ -25,6 +25,7 @@ test('personal session detail preserves planned notes and uses canonical target 
   assert.equal(detail.session.blocks[0].targetLabel, '90.5-100% FTP');
   assert.equal(detail.session.editor.mode, 'planned');
   assert.equal(detail.session.durationSec, 1200);
+  assert.equal(detail.session.canDelete, true);
 });
 
 test('completed notes take precedence, including an explicitly cleared note', async () => {
@@ -33,6 +34,7 @@ test('completed notes take precedence, including an explicitly cleared note', as
     assert.ok(detail);
     assert.equal(detail.session.notes, notes);
     assert.equal(detail.session.editor.mode, 'actual');
+    assert.equal(detail.session.canDelete, false);
   }
 });
 
@@ -59,4 +61,5 @@ test('shared calendar summary skips omitted targets and preserves relative decim
   const calendar = await athlete.loadCalendarView(7, '2026-11-10', 'week');
   assert.ok(calendar);
   assert.equal(calendar.days.flatMap((day) => day.sessions)[0].targetLabel, '90.5-100% FTP');
+  assert.equal(calendar.days.flatMap((day) => day.sessions)[0].canReschedule, true);
 });

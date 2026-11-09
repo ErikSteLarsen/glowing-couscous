@@ -548,6 +548,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         coachName: session.athlete.coach?.name ?? null,
         session: {
           ...summary,
+          canDelete: isSelfPlanned(session) && !session.activity && session.status !== 'completed',
           notes: session.activity?.notes ?? session.athleteNotes ?? '',
           editor,
           blocks: session.blocks.map((block, index) => {

@@ -17,6 +17,7 @@ import {
 } from '@/components/ui';
 import { updateSessionEditorFields, type SessionEditorDraft } from '@/lib/session-editor';
 import type { PerformanceProfile } from '@/lib/performance-profile';
+import { SessionDeleteAction } from '@/components/SessionDeleteAction';
 
 export function SessionDetailClient({
   sessionId,
@@ -25,6 +26,8 @@ export function SessionDetailClient({
   initialDraft,
   id,
   performanceProfile = null,
+  canDelete = false,
+  returnHref,
 }: {
   sessionId: number;
   initialDone: boolean;
@@ -32,6 +35,8 @@ export function SessionDetailClient({
   initialDraft: SessionEditorDraft;
   id?: string;
   performanceProfile?: PerformanceProfile | null;
+  canDelete?: boolean;
+  returnHref?: string;
 }) {
   const router = useRouter();
   const [notes, setNotes] = useState(initialNotes);
@@ -128,6 +133,7 @@ export function SessionDetailClient({
             sessionId={sessionId}
             endpoint={`/api/athlete/sessions/${sessionId}/comparison`}
           />
+          {canDelete ? <SessionDeleteAction sessionId={sessionId} title={initialDraft.title} returnHref={returnHref} disabled={isPending} /> : null}
         </div>
       ) : null}
 

@@ -343,6 +343,47 @@ test('personal rescheduling persists calendar days, preserves content, and enfor
       assert.equal((await service.rescheduleSession(athlete.id, session.id, { date: '2026-04-06' })).ok, true);
       assert.equal((await db.session.findUniqueOrThrow({ where: { id: session.id } })).status, 'planned');
     });
+
+    await t.test('session deletion is owner-scoped and refuses completed or coach-assigned work', async () => {
+      const foreign = await service.deleteSession(other.id, session.id);
+      assert.deepEqual(foreign, { ok: false, error: 'Session not found.', status: 404 });
+
+      const source = await db.session.create({ data: {
+        athleteId: athlete.id, date: null, sport: 'RUNNING', title: 'Saved workout', source: 'athlete-library',
+      } });
+      const sourceRefused = await service.deleteSession(athlete.id, source.id);
+      assert.deepEqual(sourceRefused, {
+        ok: false, error: 'Only scheduled sessions can be removed from Planner.', status: 409,
+      });
+      assert.ok(await db.session.findUnique({ where: { id: source.id } }));
+      await db.session.delete({ where: { id: source.id } });
+
+      for (const patch of [{ status: 'completed' }, { coachOwnerId: coach.id }, { assignedById: coach.id }]) {
+        await db.session.update({ where: { id: session.id }, data: { status: 'planned', coachOwnerId: null, assignedById: null, ...patch } });
+        const before = await db.session.findUniqueOrThrow({ where: { id: session.id } });
+        const refused = await service.deleteSession(athlete.id, session.id);
+        assert.equal(refused.ok, false);
+        if (!refused.ok) assert.equal(refused.status, 409);
+        assert.deepEqual(await db.session.findUniqueOrThrow({ where: { id: session.id } }), before);
+      }
+
+      await db.session.update({ where: { id: session.id }, data: { status: 'planned', coachOwnerId: null, assignedById: null } });
+      await db.activity.create({ data: {
+        athleteId: athlete.id, sessionId: session.id,
+        completedAt: new Date('2026-04-06T06:15:00Z'), durationSec: 1800, tss: 40,
+        zoneDistributionJson: '[]', segmentsJson: '[]',
+      } });
+      const activityRefused = await service.deleteSession(athlete.id, session.id);
+      assert.equal(activityRefused.ok, false);
+      if (!activityRefused.ok) assert.equal(activityRefused.status, 409);
+      assert.ok(await db.session.findUnique({ where: { id: session.id } }));
+      await db.activity.deleteMany({ where: { sessionId: session.id } });
+
+      const deleted = await service.deleteSession(athlete.id, session.id);
+      assert.deepEqual(deleted, { ok: true, sessionId: session.id });
+      assert.equal(await db.session.findUnique({ where: { id: session.id } }), null);
+      assert.equal(await db.block.count({ where: { sessionId: session.id } }), 0);
+    });
   } finally {
     if (originalTimezone === undefined) delete process.env.TZ;
     else process.env.TZ = originalTimezone;

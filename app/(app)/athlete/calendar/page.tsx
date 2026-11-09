@@ -40,6 +40,7 @@ export default async function AthleteCalendarPage({
       tss: session.tss,
       compliance: session.compliance,
       canReschedule: session.canReschedule,
+      canDelete: session.canReschedule,
       segments: session.segments,
     })),
   });

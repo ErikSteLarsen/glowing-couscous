@@ -124,6 +124,8 @@ export default async function AthleteSessionPage({
             initialNotes={detail.session.notes}
             initialDraft={detail.session.editor}
             performanceProfile={account?.performanceProfile}
+            canDelete={detail.session.canDelete}
+            returnHref={returnTarget.href}
           />
         </div>
       </div>

@@ -421,17 +421,46 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
     },
 
     async deleteSession(athleteId: number, sessionId: number) {
-      const existing = await db.session.findFirst({
-        where: { id: sessionId, athleteId },
-        select: { id: true, activity: { select: { id: true } } },
-      });
-      if (!existing) return { ok: false as const, error: 'Session not found.', status: 404 };
-      if (existing.activity) {
-        return { ok: false as const, error: 'Completed sessions are immutable.', status: 409 };
-      }
+      return db.$transaction(async (tx) => {
+        const existing = await tx.session.findFirst({
+          where: { id: sessionId, athleteId },
+          select: {
+            date: true,
+            status: true,
+            coachOwnerId: true,
+            assignedById: true,
+            trainingPlanId: true,
+            activity: { select: { id: true } },
+          },
+        });
+        if (!existing) return { ok: false as const, error: 'Session not found.', status: 404 };
+        if (!existing.date) {
+          return { ok: false as const, error: 'Only scheduled sessions can be removed from Planner.', status: 409 };
+        }
+        if (existing.activity || existing.status === 'completed') {
+          return { ok: false as const, error: 'Completed sessions are immutable.', status: 409 };
+        }
+        if (existing.coachOwnerId || existing.assignedById || existing.trainingPlanId) {
+          return { ok: false as const, error: 'Coach-assigned sessions cannot be removed.', status: 409 };
+        }
 
-      await db.session.delete({ where: { id: sessionId } });
-      return { ok: true as const, sessionId };
+        const deleted = await tx.session.deleteMany({
+          where: {
+            id: sessionId,
+            athleteId,
+            date: { not: null },
+            status: existing.status,
+            coachOwnerId: null,
+            assignedById: null,
+            trainingPlanId: null,
+            activity: { is: null },
+          },
+        });
+        if (deleted.count !== 1) {
+          return { ok: false as const, error: 'The session changed. Refresh and try again.', status: 409 };
+        }
+        return { ok: true as const, sessionId };
+      });
     },
   };
 }
