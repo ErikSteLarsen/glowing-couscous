@@ -66,7 +66,8 @@ test('Workouts is a standalone library destination and session detail keeps its 
   assert.match(workoutsClientSource, /Discard unsaved changes\?/);
   assert.match(workoutsClientSource, /Keep editing/);
   assert.match(workoutsClientSource, /Discard changes/);
-  assert.match(workoutsClientSource, /sticky bottom-0/);
+  assert.match(workoutsClientSource, /sticky bottom-\[var\(--mobile-nav-clearance\)\]/);
+  assert.match(workoutsClientSource, /md:bottom-0/);
 });
 
 test('athlete planner only places defined sources on selected dates', async () => {

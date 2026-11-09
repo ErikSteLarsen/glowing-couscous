@@ -449,3 +449,10 @@ keeps a clear static cue. Local drafts are never presented as saved. Show
 operation-specific pending, success, and failure text at the affected block,
 session, or date; preserve drafts on failure, offer recovery, and confirm server
 persistence before claiming a save.
+
+### Mobile action clearance
+
+`--mobile-nav-clearance` reserves the bottom navigation and device safe area.
+Mobile sticky editor actions sit above that clearance. The shell reserves one
+additional rem of content padding, so the final field remains reachable.
+Desktop sticky actions use the viewport bottom.

@@ -15,6 +15,9 @@ sanitized snapshots and requires an explicit recipient save.
 
 ## Implemented behavior
 
+- Mobile sticky workout actions reserve the bottom navigation and device safe
+  area through one shared clearance token. Desktop actions use the viewport
+  bottom. Browser verification of the corrected Save position is in progress.
 - The shared shell and controls use the dark Night Instrument system in
   `DESIGN.md`: cyan action, hairline rules, tabular measurements, and semantic
   training colors. `app/globals.css` implements the tokens. Design experiments

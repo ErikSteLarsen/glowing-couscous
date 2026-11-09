@@ -90,7 +90,7 @@ export function AppShell({
         onClose={closeMobileMenu}
         onNavigate={closeAfterNavigation}
       />
-      <div className="with-sidebar min-w-0 pb-20 md:pb-0">
+      <div className="with-sidebar min-w-0 pb-[calc(var(--mobile-nav-clearance)+1rem)] md:pb-0">
         <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/90 px-4 backdrop-blur-md md:hidden">
           <Link href={navItems[0]?.href ?? '/'} className={`flex items-center gap-2.5 rounded-lg ${buttonFocusClassName}`}>
             <BrandMark />

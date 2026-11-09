@@ -343,7 +343,7 @@ export function WorkoutLibraryClient({
             </label>
           </details>
         ) : null}
-        <div className="sticky bottom-0 z-10 -mx-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3">
+        <div className="sticky bottom-[var(--mobile-nav-clearance)] z-10 md:bottom-0 -mx-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3">
           <button type="button" className={primaryButtonClassName} disabled={isPending || !draft.blocks.length} onClick={saveWorkout}>
             {isPending ? 'Saving…' : selectedWorkoutId ? 'Save changes' : 'Save workout'}
           </button>
