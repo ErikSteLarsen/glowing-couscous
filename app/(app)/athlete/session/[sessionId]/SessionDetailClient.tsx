@@ -35,7 +35,7 @@ export function SessionDetailClient({
 }) {
   const router = useRouter();
   const [notes, setNotes] = useState(initialNotes);
-  const [isDone, setIsDone] = useState(initialDone);
+  const isDone = initialDone;
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
   const [isEditing, setIsEditing] = useState(false);
@@ -65,7 +65,6 @@ export function SessionDetailClient({
           return;
         }
 
-        setIsDone(nextDone);
         setMessageTone('success');
         setMessage(nextDone ? 'Session marked complete.' : 'Session moved back to planned.');
         router.refresh();
@@ -94,6 +93,7 @@ export function SessionDetailClient({
           return;
         }
 
+        setNotes(draft.athleteNotes.trim());
         setIsEditing(false);
         setMessageTone('success');
         setMessage(isDone ? 'Actual correction saved.' : 'Planned session adjustment saved.');
@@ -108,7 +108,7 @@ export function SessionDetailClient({
   return (
     <Surface id={id} className="space-y-4">
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
+        <p className="text-xs font-medium text-[var(--text-muted)]">
           Completion
         </p>
         <p className="mt-2 text-[13px] text-[var(--text-secondary)]">
@@ -118,7 +118,10 @@ export function SessionDetailClient({
 
       {!isEditing ? (
         <div className="flex flex-wrap gap-3">
-          <button type="button" className={compactSecondaryButtonClassName} onClick={() => setIsEditing(true)}>
+          <button type="button" className={compactSecondaryButtonClassName} disabled={isPending} onClick={() => {
+            setDraft(updateSessionEditorFields(initialDraft, { athleteNotes: notes }));
+            setIsEditing(true);
+          }}>
             {isDone ? 'Correct completed outcome' : 'Adjust planned session'}
           </button>
           <SessionComparisonDialog
@@ -131,7 +134,7 @@ export function SessionDetailClient({
       {isEditing ? (
         <div className="space-y-4 border-t border-[var(--border)] pt-4">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{isDone ? 'Actual correction' : 'Planned adjustment'}</p>
+            <p className="text-xs font-medium text-[var(--text-muted)]">{isDone ? 'Actual correction' : 'Planned adjustment'}</p>
             <p className="mt-2 text-[13px] text-[var(--text-secondary)]">
               {isDone
                 ? 'Correct what was actually completed. The original plan and completed status stay intact.'
@@ -151,7 +154,7 @@ export function SessionDetailClient({
               value={draft.athleteNotes}
               onChange={(event) => setDraft(updateSessionEditorFields(draft, { athleteNotes: event.target.value }))}
               className={`${formTextareaClassName} min-h-24`}
-              placeholder="What should your coach know?"
+              placeholder="What changed, and how did it feel?"
             />
           </label>
           <label className="block space-y-2">

@@ -14,8 +14,8 @@ pushed before advancing.
 
 ## Plan
 
-- [ ] Close the Home dashboard review and verify chart interactions.
-- [ ] Complete week/month calendar navigation and safe personal rescheduling.
+- [x] Close the Home dashboard review and verify chart interactions.
+- [x] Complete week/month calendar navigation and safe personal rescheduling.
 - [ ] Inspect and improve remaining personal training workflow gaps.
 - [ ] Record current implementation, checks, and limitations in workspace docs.
 
@@ -25,6 +25,9 @@ pushed before advancing.
 
 - Recovered dashboard commit `87d0220` and incomplete calendar work.
 - Dashboard review and calendar inspection underway; existing changes preserved.
+- Dashboard review fixes `14282f7` and calendar `0de31d6`/`3004ef5` are pushed.
+- Calendar explicit-date, keyboard, and pointer moves passed in Chromium; week axe scan has no violations.
+- Session/live fixes are underway. Next is recovery from failed first-run and settings requests.
 - Current product priority and dark visual contract remain authoritative.
 
 ## Completion

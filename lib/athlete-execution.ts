@@ -1,3 +1,33 @@
+import type { SessionEditorBlock } from './session-editor.ts';
+import type { PerformanceProfile } from './performance-profile.ts';
+import { getTempoZoneMeta } from './tempo-blocks.ts';
+import { expandRepeatedBlocks } from './workout-blocks.ts';
+import { formatResolvedWorkoutTarget, formatWorkoutTarget } from './workout-target-resolution.ts';
+
+export type ExecutionStep = {
+  id: string;
+  label: string;
+  durationSec: number;
+  targetLabel: string | null;
+  note: string;
+};
+
+/** The same ordered repetitions as the workout timeline, omitting skipped work. */
+export function createExecutionSteps(blocks: SessionEditorBlock[], profile?: PerformanceProfile | null): ExecutionStep[] {
+  return expandRepeatedBlocks(blocks.filter((block) => !block.skipped).map((block) => ({ ...block, repetitionCount: block.reps ?? 1 }))).map((block) => {
+    const meta = getTempoZoneMeta(block.zone);
+    const genericTarget = block.target ? formatWorkoutTarget(block.target) : null;
+    const resolvedTarget = block.target?.mode === 'relative' ? formatResolvedWorkoutTarget(block.target, profile) : null;
+    return {
+      id: `${block.clientId}:${block.occurrence}`,
+      label: `${meta.label} ${meta.name}${block.repetitionCount > 1 ? ` · Rep ${block.occurrence + 1} of ${block.repetitionCount}` : ''}`,
+      durationSec: block.durationSec,
+      targetLabel: resolvedTarget ? `${genericTarget} · ${resolvedTarget}` : genericTarget,
+      note: block.note,
+    };
+  });
+}
+
 export type ExecutionState = {
   currentIndex: number;
   completed: boolean[];

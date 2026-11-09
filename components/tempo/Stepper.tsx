@@ -17,7 +17,7 @@ export function Stepper({ items }: { items: StepperItem[] }) {
             <div
               className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${
                 item.done
-                  ? 'bg-[var(--text)] text-white'
+                  ? 'bg-[var(--text)] text-[var(--background)]'
                   : item.active
                     ? 'bg-[var(--brand-tint)] text-[var(--field-selected-text)]'
                     : 'bg-[var(--sunken)] text-[var(--text-muted)]'

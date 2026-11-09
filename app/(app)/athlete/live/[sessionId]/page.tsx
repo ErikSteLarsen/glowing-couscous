@@ -7,6 +7,8 @@ import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
 import { getSessionOrigin } from '@/lib/app-navigation';
+import { accountService } from '@/lib/account-service';
+import { createExecutionSteps } from '@/lib/athlete-execution';
 import { LiveSessionClient } from './LiveSessionClient';
 
 export default async function AthleteLivePage({
@@ -26,7 +28,7 @@ export default async function AthleteLivePage({
     notFound();
   }
 
-  const detail = await athleteService.loadSessionDetail(user.id, parsedSessionId);
+  const [detail, account] = await Promise.all([athleteService.loadSessionDetail(user.id, parsedSessionId), accountService.getAccount(user.id)]);
   if (!detail) {
     return (
       <PageShell size="wide">
@@ -36,6 +38,7 @@ export default async function AthleteLivePage({
   }
 
   const sessionOrigin = getSessionOrigin(from);
+  const steps = createExecutionSteps(detail.session.editor.blocks, account?.performanceProfile);
 
   return (
     <PageShell size="wide">
@@ -54,17 +57,17 @@ export default async function AthleteLivePage({
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <Surface className="space-y-4">
           <SessionBlockBar segments={detail.session.segments} />
-          <LiveSessionClient sessionId={detail.session.id} blocks={detail.session.blocks} />
+          <LiveSessionClient sessionId={detail.session.id} blocks={steps} isDone={detail.session.status === 'completed'} />
         </Surface>
 
         <div className="space-y-4">
           <Surface>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Session total</p>
+            <p className="text-xs font-medium text-[var(--text-muted)]">Session total</p>
             <p className="mt-3 text-[20px] font-semibold text-[var(--text)]">{formatDuration(detail.session.durationSec)}</p>
-            <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{detail.session.blocks.length} blocks</p>
+            <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{steps.length} steps</p>
           </Surface>
           <Surface>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Coach cue</p>
+            <p className="text-xs font-medium text-[var(--text-muted)]">Coach cue</p>
             <p className="mt-3 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
               Follow targets and steps.
             </p>

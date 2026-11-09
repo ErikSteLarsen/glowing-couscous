@@ -84,7 +84,7 @@ export default async function AthleteSessionPage({
           </Surface>
 
           <Surface className="space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
+            <p className="text-xs font-medium text-[var(--text-muted)]">
               Blocks
             </p>
             {detail.session.blocks.map((block) => (
@@ -97,6 +97,7 @@ export default async function AthleteSessionPage({
                     {block.label}
                   </span>
                   <MetricText>{formatDuration(block.durationSec)}</MetricText>
+                  {block.skipped ? <span className="text-xs text-[var(--text-muted)]">Skipped</span> : null}
                   {block.reps ? <MetricText>{block.reps} reps</MetricText> : null}
                   {block.targetLabel ? <span className="text-[12px] text-[var(--text-secondary)]">{block.targetLabel}</span> : null}
                 </div>
@@ -108,7 +109,7 @@ export default async function AthleteSessionPage({
 
         <div className="space-y-4">
           <Surface>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
+            <p className="text-xs font-medium text-[var(--text-muted)]">
               Coach
             </p>
             <p className="mt-3 text-[15px] font-semibold text-[var(--text)]">

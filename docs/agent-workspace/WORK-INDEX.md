@@ -29,7 +29,7 @@ secondary; preserve their behavior and shared ownership boundaries.
 | `CALENDAR-001` | Personal calendar and safe rescheduling | `shipped` | `lib/athlete-service.ts`, `lib/athlete-planner-service.ts`, `lib/calendar-navigation.ts`, `app/(app)/athlete/calendar/AthleteCalendar.tsx` | `/athlete/calendar`, `/api/athlete/planner/sessions/*/schedule` |
 | `LIB-001` | Owner-scoped workout libraries | `shipped` | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | `/coach/workouts`, `/athlete/workouts` |
 | `TEMPLATE-001` | Templates and training plans | `in-progress` | `lib/template-service.ts`, `lib/coach-training-plan-service.ts` | `/coach/templates`, `/athlete/templates` |
-| SESSION-001 | Canonical editor and outcomes | shipped | lib/session-editor.ts, lib/session-snapshot-service.ts, lib/athlete-completion-service.ts | Session detail, WorkoutBuilder, outcome APIs |
+| SESSION-001 | Canonical editor and outcomes | shipped | lib/session-editor.ts, lib/session-snapshot-service.ts, lib/athlete-completion-service.ts, lib/athlete-execution.ts | Session detail, WorkoutBuilder, outcome APIs |
 | `SHARE-001` | Sanitized workout sharing | `in-progress` | `lib/share-link.ts`, `lib/share-link-service.ts` | `/share/[token]`, share APIs |
 | `COMPAT-001` | Older coach session adapter | `transitional` | `lib/planner-service.ts` | `/api/coach/sessions/[sessionId]` |
 

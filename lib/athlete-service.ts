@@ -8,6 +8,8 @@ import { createSessionEditorDraftFromPersisted } from './session-editor.ts';
 import { plannedMetrics } from './training-load-service.ts';
 import { addDayKeys, classifyCompliance, fromDayKey, summarizeWeeks, toDayKey, type WeekSession } from './training-load.ts';
 import { parseCalendarDay } from './calendar-navigation.ts';
+import { formatWorkoutTarget } from './workout-target-resolution.ts';
+import { normalizeWorkoutTarget } from './workout-targets.ts';
 
 type AthleteServiceDeps = {
   db?: typeof prisma;
@@ -44,6 +46,8 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       targetReference?: string | null;
       targetLow: number | null;
       targetHigh: number | null;
+      targetLowDecimal?: string | null;
+      targetHighDecimal?: string | null;
       note: string | null;
       skipped?: boolean;
       sortOrder: number;
@@ -75,10 +79,16 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       })),
     );
 
-    const targetBlock = session.blocks.find(
-      (block) =>
-        block.targetType !== null && block.targetLow !== null && block.targetHigh !== null,
-    );
+    const target = session.blocks
+      .filter((block) => !block.skipped)
+      .map((block) => normalizeWorkoutTarget({
+        metric: block.targetType,
+        mode: block.targetMode ?? 'absolute',
+        reference: block.targetReference ?? null,
+        low: block.targetLowDecimal ?? block.targetLow,
+        high: block.targetHighDecimal ?? block.targetHigh,
+      }))
+      .find((candidate) => candidate !== null);
 
     const status = (
       session.activity
@@ -115,16 +125,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       compliance,
       plannedDurationSec: planned.durationSec,
       plannedTss: planned.tss,
-      targetLabel:
-        targetBlock && targetBlock.targetType
-          ? `${targetBlock.targetLow}-${targetBlock.targetHigh} ${
-              targetBlock.targetType === 'power'
-                ? 'W'
-                : targetBlock.targetType === 'hr'
-                  ? 'bpm'
-                  : 'pace'
-            }`
-          : null,
+      targetLabel: target ? formatWorkoutTarget(target) : null,
       durationSec: metrics.durationSec,
       tss: session.activity?.tss ?? metrics.tss,
       segments: session.activity?.segmentsJson
@@ -532,6 +533,11 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
       }
 
       const summary = mapSessionSummary({ ...session, date: session.date });
+      const editor = createSessionEditorDraftFromPersisted(session.activity ? 'actual' : 'planned', {
+        ...session,
+        scheduledDate: session.date,
+        blocks: session.blocks,
+      });
 
       return {
         athlete: {
@@ -541,13 +547,9 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
         coachName: session.athlete.coach?.name ?? null,
         session: {
           ...summary,
-          notes: session.activity?.notes ?? '',
-          editor: createSessionEditorDraftFromPersisted(session.activity ? 'actual' : 'planned', {
-            ...session,
-            scheduledDate: session.date,
-            blocks: session.blocks,
-          }),
-          blocks: session.blocks.map((block) => {
+          notes: session.activity?.notes ?? session.athleteNotes ?? '',
+          editor,
+          blocks: session.blocks.map((block, index) => {
             const meta = getTempoZoneMeta(block.zone as 1 | 2 | 3 | 4 | 5);
             return {
               id: block.id,
@@ -556,16 +558,7 @@ export function createAthleteService({ db = prisma }: AthleteServiceDeps = {}) {
               zone: block.zone,
               durationSec: block.durationSec,
               reps: block.reps,
-              targetLabel:
-                block.targetType && block.targetLow !== null && block.targetHigh !== null
-                  ? `${block.targetLow}-${block.targetHigh} ${
-                      block.targetType === 'power'
-                        ? 'W'
-                        : block.targetType === 'hr'
-                          ? 'bpm'
-                          : 'pace'
-              }`
-                  : null,
+              targetLabel: editor.blocks[index]?.target ? formatWorkoutTarget(editor.blocks[index].target) : null,
               note: block.note,
               skipped: block.skipped,
               color: meta.solid,
