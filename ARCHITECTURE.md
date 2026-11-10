@@ -30,7 +30,7 @@ one-time account creation flow directly.
 
 ### Public and authentication
 
-- `/` - entry redirect
+- `/` - signed-out landing page; signed-in entry redirect
 - `/login`, `/signup`, `/setup` - authentication and first-login role setup
 - `/share/[token]` - public sanitized workout snapshot
 

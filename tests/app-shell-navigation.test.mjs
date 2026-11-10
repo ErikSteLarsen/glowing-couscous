@@ -15,7 +15,9 @@ test('root route and app navigation define signed-in entry points and role-aware
   const navSource = await read('lib/app-navigation.ts');
 
   assert.match(homeSource, /getCurrentUser/);
-  assert.match(homeSource, /redirect\('\/login'\)/);
+  assert.match(homeSource, /TrainingScene/);
+  assert.match(homeSource, /href="\/signup"/);
+  assert.match(homeSource, /href="\/login"/);
   assert.match(homeSource, /redirect\('\/setup'\)/);
   assert.match(homeSource, /redirect\(user\.role === 'COACH' \? '\/coach' : '\/athlete'\)/);
 
