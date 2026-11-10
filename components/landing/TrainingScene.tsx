@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import './training-scene.css';
 
 const TAU = Math.PI * 2;
@@ -23,23 +23,43 @@ function runLine(u: number) {
   return 0.815 + 0.022 * Math.sin(u * 7 + 1) + 0.012 * Math.sin(u * 15);
 }
 
-/** A brief rise and fall that repeats every `period` seconds: 0 on the ground, 1 at the top. */
-function hop(time: number, period: number, length: number) {
-  const phase = time % period;
-  return phase < length ? Math.sin((Math.PI * phase) / length) : 0;
-}
+type Cast = {
+  name: string;
+  line: 'ride' | 'run' | 'swim';
+  /** Starting point as a fraction of the scene width. */
+  start: number;
+  direction: 1 | -1;
+  /** Travel speed relative to the usual speed on this line. */
+  speed: number;
+  /** Limb cycle length relative to the usual cadence; lower is quicker. */
+  pace: number;
+  posture?: 'tempo' | 'relaxed';
+  lead?: boolean;
+};
 
-type Mover = {
+/** Everyone who moves, drawn back to front. Each has their own speed and cadence. */
+const CAST: Cast[] = [
+  { name: 'swimmer', line: 'swim', start: 0.45, direction: -1, speed: 1, pace: 0.9 },
+  { name: 'floater', line: 'swim', start: 0.8, direction: 1, speed: 0.6, pace: 1.45 },
+  { name: 'cruiser', line: 'ride', start: 0.92, direction: -1, speed: 0.68, pace: 1.35, posture: 'relaxed' },
+  { name: 'jogger', line: 'run', start: 0.58, direction: 1, speed: 0.7, pace: 1.22 },
+  { name: 'chaser', line: 'run', start: 0.95, direction: -1, speed: 1.28, pace: 0.84 },
+  { name: 'cyclist', line: 'ride', start: 0.3, direction: 1, speed: 1.08, pace: 0.8, posture: 'tempo', lead: true },
+  { name: 'runner', line: 'run', start: 0.2, direction: 1, speed: 1, pace: 1, lead: true },
+];
+
+const LAND_CAST = CAST.filter((member) => member.line !== 'swim');
+
+type Mover = Cast & {
   figure: SVGGElement;
   tail: SVGPathElement | null;
   gradient: SVGLinearGradientElement | null;
-  start: number;
   x: number;
 };
 
 /**
  * Decorative landing background. Stick figures ride, run, and swim across the
- * whole page on rolling terrain while one presses a barbell on a rise. Hidden
+ * whole page on rolling terrain, each at their own speed and cadence, while one presses a barbell on a rise. Hidden
  * from assistive tech; holds a still frame when motion is reduced.
  */
 export function TrainingScene() {
@@ -51,13 +71,13 @@ export function TrainingScene() {
     if (!scene || !svg) return;
 
     const part = <T extends SVGElement>(name: string) => svg.querySelector<T>(`[data-part="${name}"]`)!;
-    const mover = (name: string, start: number): Mover => ({
-      figure: part<SVGGElement>(name),
-      tail: svg.querySelector<SVGPathElement>(`[data-tail="${name}"]`),
-      gradient: svg.querySelector<SVGLinearGradientElement>(`#ts-tail-${name}`),
-      start,
+    const movers: Mover[] = CAST.map((member) => ({
+      ...member,
+      figure: part<SVGGElement>(member.name),
+      tail: svg.querySelector<SVGPathElement>(`[data-tail="${member.name}"]`),
+      gradient: svg.querySelector<SVGLinearGradientElement>(`#ts-tail-${member.name}`),
       x: 0,
-    });
+    }));
 
     const rideTrail = part<SVGPathElement>('ride-trail');
     const runTrail = part<SVGPathElement>('run-trail');
@@ -65,11 +85,6 @@ export function TrainingScene() {
     const surface = part<SVGPathElement>('surface');
     const deep = part<SVGPathElement>('deep');
     const lifter = part<SVGGElement>('lifter');
-    const cyclist = mover('cyclist', 0.5);
-    const runner = mover('runner', 0.22);
-    const chaser = mover('chaser', 0.72);
-    const swimmer = mover('swimmer', 0.45);
-    const movers = [cyclist, runner, chaser, swimmer];
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     let width = 0;
@@ -93,17 +108,17 @@ export function TrainingScene() {
       return `${d}L${to.toFixed(1)} ${line(to).toFixed(1)}`;
     }
 
-    function place(target: Mover, y: number, angle: number, direction: 1 | -1) {
+    function place(target: Mover, y: number, angle: number) {
       target.figure.setAttribute(
         'transform',
-        `translate(${target.x.toFixed(1)} ${y.toFixed(1)}) rotate(${angle.toFixed(1)}) scale(${direction * scale} ${scale})`,
+        `translate(${target.x.toFixed(1)} ${y.toFixed(1)}) rotate(${angle.toFixed(1)}) scale(${target.direction * scale} ${scale})`,
       );
     }
 
     /** The fading trace a mover leaves behind on its line. */
-    function trail(target: Mover, line: (x: number) => number, direction: 1 | -1) {
+    function trail(target: Mover, line: (x: number) => number) {
       if (!target.tail || !target.gradient) return;
-      const end = target.x - direction * 190 * scale;
+      const end = target.x - target.direction * 190 * scale;
       target.tail.setAttribute('d', trace(line, Math.min(end, target.x), Math.max(end, target.x)));
       target.gradient.setAttribute('x1', end.toFixed(1));
       target.gradient.setAttribute('x2', target.x.toFixed(1));
@@ -117,30 +132,25 @@ export function TrainingScene() {
     function draw(dt: number) {
       time += dt;
 
-      // The cyclist slows on the climb, speeds up downhill, and pops a small hop.
-      const rideSlope = slope(rideY, cyclist.x);
-      advance(cyclist, dt * (width * 0.1 + 70) * clamp(1 + 1.5 * rideSlope, 0.5, 1.8));
-      const bunny = hop(time, 6.4, 0.7);
-      place(cyclist, rideY(cyclist.x) - bunny * 26 * scale, degrees(rideSlope) - bunny * 14, 1);
-      trail(cyclist, rideY, 1);
-
-      advance(runner, dt * (width * 0.06 + 46));
-      const leap = hop(time + 2, 4.6, 0.62);
-      place(runner, runY(runner.x) - leap * 44 * scale, degrees(slope(runY, runner.x)) * 0.5 - leap * 8, 1);
-      trail(runner, runY, 1);
-
-      advance(chaser, -dt * (width * 0.085 + 60));
-      const skip = hop(time, 3.3, 0.5);
-      place(chaser, runY(chaser.x) - skip * 30 * scale, degrees(slope(runY, chaser.x)) * 0.5, -1);
-      trail(chaser, runY, -1);
-
-      // The swimmer rides the moving surface and ducks under it now and then.
-      advance(swimmer, -dt * (width * 0.03 + 20));
       const wave = (x: number) => waveY(x, time);
-      const divePhase = (time % 9) / 1.6;
-      const dive = divePhase < 1 ? Math.sin(Math.PI * divePhase) : 0;
-      const diveTilt = divePhase < 1 ? Math.cos(Math.PI * divePhase) * 32 : 0;
-      place(swimmer, wave(swimmer.x) + dive * 26 * scale, -degrees(slope(wave, swimmer.x)) + diveTilt, -1);
+
+      for (const target of movers) {
+        if (target.line === 'swim') {
+          advance(target, dt * target.direction * target.speed * (width * 0.03 + 20));
+          place(target, wave(target.x), degrees(slope(wave, target.x)) * 0.6);
+          continue;
+        }
+
+        // Riders slow clearly on a climb and pick up speed downhill; runners only a little.
+        const riding = target.line === 'ride';
+        const line = riding ? rideY : runY;
+        const climb = slope(line, target.x) * target.direction;
+        const effort = riding ? clamp(1 + 1.5 * climb, 0.5, 1.8) : clamp(1 + 0.6 * climb, 0.85, 1.15);
+        const usual = riding ? width * 0.1 + 70 : width * 0.065 + 48;
+        advance(target, dt * target.direction * target.speed * usual * effort);
+        place(target, line(target.x), degrees(slope(line, target.x)) * (riding ? 1 : 0.5));
+        trail(target, line);
+      }
 
       surface.setAttribute('d', trace(wave, -8, width + 8));
       deep.setAttribute('d', trace((x) => waveY(x + 60, time * 0.7 + 2) + 9 * scale, -8, width + 8));
@@ -204,7 +214,7 @@ export function TrainingScene() {
     <div className="ts-scene" ref={sceneRef} aria-hidden="true">
       <svg className="ts-canvas">
         <defs>
-          {['cyclist', 'runner', 'chaser'].map((name) => (
+          {LAND_CAST.map(({ name }) => (
             <linearGradient key={name} id={`ts-tail-${name}`} gradientUnits="userSpaceOnUse" y1="0" y2="0">
               <stop className="ts-tail-stop" offset="0" stopOpacity="0" />
               <stop className="ts-tail-stop" offset="1" stopOpacity="0.85" />
@@ -218,25 +228,25 @@ export function TrainingScene() {
         <path className="ts-water ts-water--deep" data-part="deep" />
         <path className="ts-water" data-part="surface" />
 
-        <path className="ts-tail" data-tail="cyclist" stroke="url(#ts-tail-cyclist)" />
-        <path className="ts-tail" data-tail="runner" stroke="url(#ts-tail-runner)" />
-        <path className="ts-tail" data-tail="chaser" stroke="url(#ts-tail-chaser)" />
+        {LAND_CAST.map(({ name }) => (
+          <path key={name} className="ts-tail" data-tail={name} stroke={`url(#ts-tail-${name})`} />
+        ))}
 
         <g className="ts-figure" data-part="lifter">
           <Lifter />
         </g>
-        <g className="ts-figure" data-part="swimmer">
-          <Swimmer />
-        </g>
-        <g className="ts-figure" data-part="chaser">
-          <Runner />
-        </g>
-        <g className="ts-figure ts-figure--lead" data-part="cyclist">
-          <Cyclist />
-        </g>
-        <g className="ts-figure ts-figure--lead" data-part="runner">
-          <Runner />
-        </g>
+        {CAST.map((member) => (
+          <g
+            key={member.name}
+            className={`ts-figure${member.lead ? ' ts-figure--lead' : ''}`}
+            data-part={member.name}
+            style={{ '--ts-pace': member.pace } as CSSProperties}
+          >
+            {member.line === 'swim' && <Swimmer />}
+            {member.line === 'run' && <Runner />}
+            {member.line === 'ride' && <Cyclist posture={member.posture} />}
+          </g>
+        ))}
       </svg>
     </div>
   );
@@ -304,16 +314,24 @@ function PedalLeg({ lead }: { lead?: boolean }) {
   );
 }
 
-function Cyclist() {
+/** Shoulder, hand, and head positions, from tucked over the bars to sitting up. */
+const POSTURES = {
+  tempo: { shoulder: '14 -43', hands: '23 -27', bars: 'M16 -24L20 -30L24 -26', head: [22, -48] },
+  neutral: { shoulder: '10 -48', hands: '20 -31', bars: 'M16 -24L20 -31', head: [16, -56] },
+  relaxed: { shoulder: '4 -51', hands: '17 -35', bars: 'M16 -24L17 -35', head: [8, -60] },
+};
+
+function Cyclist({ posture = 'neutral' }: { posture?: keyof typeof POSTURES }) {
+  const { shoulder, hands, bars, head } = POSTURES[posture];
   return (
     <g transform="translate(0 -17.5)">
       <PedalLeg />
       <Wheel x={-24} />
       <Wheel x={24} />
-      <path d="M-24 0L-8 -26L16 -24L0 0ZM-24 0H0M16 -24L24 0M16 -24L20 -31" strokeWidth="2" />
+      <path d={`M-24 0L-8 -26L16 -24L0 0ZM-24 0H0M16 -24L24 0${bars}`} strokeWidth="2" />
       <path className="ts-spin" d="M-7 0H7" />
-      <path d="M-8 -28L10 -48L20 -31" />
-      <circle cx="16" cy="-56" r="6.5" />
+      <path d={`M-8 -28L${shoulder}L${hands}`} />
+      <circle cx={head[0]} cy={head[1]} r="6.5" />
       <PedalLeg lead />
     </g>
   );

@@ -76,18 +76,18 @@
 .ts-half { animation-delay: var(--ts-half) !important; }
 
 /* Runner */
-.ts-run-bob { animation: ts-run-bob 0.35s ease-in-out infinite alternate; }
-.ts-run-thigh { --ts-half: -0.35s; transform: rotate(-40deg); animation: ts-run-thigh 0.7s ease-in-out infinite; }
+.ts-run-bob { animation: ts-run-bob calc(0.35s * var(--ts-pace, 1)) ease-in-out infinite alternate; }
+.ts-run-thigh { --ts-half: calc(-0.35s * var(--ts-pace, 1)); transform: rotate(-40deg); animation: ts-run-thigh calc(0.7s * var(--ts-pace, 1)) ease-in-out infinite; }
 .ts-run-thigh.ts-half { transform: rotate(25deg); }
-.ts-run-shin { --ts-half: -0.35s; transform: rotate(30deg); animation: ts-run-shin 0.7s linear infinite; }
-.ts-run-arm { --ts-half: -0.35s; transform: rotate(35deg); animation: ts-run-arm 0.7s ease-in-out infinite; }
+.ts-run-shin { --ts-half: calc(-0.35s * var(--ts-pace, 1)); transform: rotate(30deg); animation: ts-run-shin calc(0.7s * var(--ts-pace, 1)) linear infinite; }
+.ts-run-arm { --ts-half: calc(-0.35s * var(--ts-pace, 1)); transform: rotate(35deg); animation: ts-run-arm calc(0.7s * var(--ts-pace, 1)) ease-in-out infinite; }
 .ts-run-arm.ts-half { transform: rotate(-35deg); }
 
 /* Cyclist */
-.ts-spin { animation: ts-spin 1.1s linear infinite; }
-.ts-pedal-thigh { --ts-half: -0.55s; transform: rotate(-56.3deg); animation: ts-pedal-thigh 1.1s linear infinite; }
+.ts-spin { animation: ts-spin calc(1.1s * var(--ts-pace, 1)) linear infinite; }
+.ts-pedal-thigh { --ts-half: calc(-0.55s * var(--ts-pace, 1)); transform: rotate(-56.3deg); animation: ts-pedal-thigh calc(1.1s * var(--ts-pace, 1)) linear infinite; }
 .ts-pedal-thigh.ts-half { transform: rotate(-40.9deg); }
-.ts-pedal-shin { --ts-half: -0.55s; transform: rotate(56.1deg); animation: ts-pedal-shin 1.1s linear infinite; }
+.ts-pedal-shin { --ts-half: calc(-0.55s * var(--ts-pace, 1)); transform: rotate(56.1deg); animation: ts-pedal-shin calc(1.1s * var(--ts-pace, 1)) linear infinite; }
 .ts-pedal-shin.ts-half { transform: rotate(77.8deg); }
 
 /* Lifter */
@@ -96,9 +96,9 @@
 .ts-press-bar { transform: translateY(-50px); animation: ts-press-bar 2.8s linear infinite; }
 
 /* Swimmer */
-.ts-stroke { --ts-half: -0.9s; transform: rotate(20deg); animation: ts-stroke 1.8s linear infinite; }
+.ts-stroke { --ts-half: calc(-0.9s * var(--ts-pace, 1)); transform: rotate(20deg); animation: ts-stroke calc(1.8s * var(--ts-pace, 1)) linear infinite; }
 .ts-stroke.ts-half { transform: rotate(200deg); }
-.ts-kick { --ts-half: -0.25s; transform: rotate(-10deg); animation: ts-kick 0.5s ease-in-out infinite alternate; }
+.ts-kick { --ts-half: calc(-0.25s * var(--ts-pace, 1)); transform: rotate(-10deg); animation: ts-kick calc(0.5s * var(--ts-pace, 1)) ease-in-out infinite alternate; }
 .ts-kick.ts-half { transform: rotate(10deg); }
 
 @media (prefers-reduced-motion: reduce) {
