@@ -90,11 +90,6 @@
 .ts-pedal-shin { --ts-half: calc(-0.55s * var(--ts-pace, 1)); transform: rotate(56.1deg); animation: ts-pedal-shin calc(1.1s * var(--ts-pace, 1)) linear infinite; }
 .ts-pedal-shin.ts-half { transform: rotate(77.8deg); }
 
-/* Lifter */
-.ts-press-upper { transform: rotate(-12.6deg); animation: ts-press-upper 2.8s linear infinite; }
-.ts-press-fore { transform: rotate(-154.7deg); animation: ts-press-fore 2.8s linear infinite; }
-.ts-press-bar { transform: translateY(-50px); animation: ts-press-bar 2.8s linear infinite; }
-
 /* Swimmer */
 .ts-stroke { --ts-half: calc(-0.9s * var(--ts-pace, 1)); transform: rotate(20deg); animation: ts-stroke calc(1.8s * var(--ts-pace, 1)) linear infinite; }
 .ts-stroke.ts-half { transform: rotate(200deg); }
@@ -145,9 +140,6 @@
   to { transform: rotate(14deg); }
 }
 
-/* Sampled inverse kinematics: the foot follows the crank, the hands follow the bar. */
+/* Sampled inverse kinematics: the foot follows the crank. */
 @keyframes ts-pedal-thigh{0.00%{transform:rotate(-56.3deg)}8.33%{transform:rotate(-40.7deg)}16.67%{transform:rotate(-21.6deg)}25.00%{transform:rotate(-17.1deg)}33.33%{transform:rotate(-24.9deg)}41.67%{transform:rotate(-32.3deg)}50.00%{transform:rotate(-40.9deg)}58.33%{transform:rotate(-51.5deg)}66.67%{transform:rotate(-63.1deg)}75.00%{transform:rotate(-72.2deg)}83.33%{transform:rotate(-74.2deg)}91.67%{transform:rotate(-68.2deg)}100.00%{transform:rotate(-56.3deg)}}
 @keyframes ts-pedal-shin{0.00%{transform:rotate(56.1deg)}8.33%{transform:rotate(33.2deg)}16.67%{transform:rotate(6.0deg)}25.00%{transform:rotate(8.4deg)}33.33%{transform:rotate(34.7deg)}41.67%{transform:rotate(57.5deg)}50.00%{transform:rotate(77.8deg)}58.33%{transform:rotate(93.9deg)}66.67%{transform:rotate(103.1deg)}75.00%{transform:rotate(102.7deg)}83.33%{transform:rotate(93.1deg)}91.67%{transform:rotate(76.6deg)}100.00%{transform:rotate(56.1deg)}}
-@keyframes ts-press-upper{0.00%{transform:rotate(-12.6deg)}8.33%{transform:rotate(-29.2deg)}16.67%{transform:rotate(-65.7deg)}25.00%{transform:rotate(-96.1deg)}33.33%{transform:rotate(-120.1deg)}41.67%{transform:rotate(-140.3deg)}50.00%{transform:rotate(-151.2deg)}58.33%{transform:rotate(-140.3deg)}66.67%{transform:rotate(-120.1deg)}75.00%{transform:rotate(-96.1deg)}83.33%{transform:rotate(-65.7deg)}91.67%{transform:rotate(-29.2deg)}100.00%{transform:rotate(-12.6deg)}}
-@keyframes ts-press-fore{0.00%{transform:rotate(-154.7deg)}8.33%{transform:rotate(-153.7deg)}16.67%{transform:rotate(-142.6deg)}25.00%{transform:rotate(-117.7deg)}33.33%{transform:rotate(-85.2deg)}41.67%{transform:rotate(-51.3deg)}50.00%{transform:rotate(-31.4deg)}58.33%{transform:rotate(-51.3deg)}66.67%{transform:rotate(-85.2deg)}75.00%{transform:rotate(-117.7deg)}83.33%{transform:rotate(-142.6deg)}91.67%{transform:rotate(-153.7deg)}100.00%{transform:rotate(-154.7deg)}}
-@keyframes ts-press-bar{0.00%{transform:translateY(-50.0px)}8.33%{transform:translateY(-52.0px)}16.67%{transform:translateY(-57.5px)}25.00%{transform:translateY(-65.0px)}33.33%{transform:translateY(-72.5px)}41.67%{transform:translateY(-78.0px)}50.00%{transform:translateY(-80.0px)}58.33%{transform:translateY(-78.0px)}66.67%{transform:translateY(-72.5px)}75.00%{transform:translateY(-65.0px)}83.33%{transform:translateY(-57.5px)}91.67%{transform:translateY(-52.0px)}100.00%{transform:translateY(-50.0px)}}

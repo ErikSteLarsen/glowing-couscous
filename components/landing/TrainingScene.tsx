@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type CSSProperties } from 'react';
+import { useEffect, useRef } from 'react';
 import './training-scene.css';
 
 const TAU = Math.PI * 2;
@@ -29,37 +29,32 @@ type Cast = {
   /** Starting point as a fraction of the scene width. */
   start: number;
   direction: 1 | -1;
-  /** Travel speed relative to the usual speed on this line. */
-  speed: number;
-  /** Limb cycle length relative to the usual cadence; lower is quicker. */
-  pace: number;
-  posture?: 'tempo' | 'relaxed';
-  lead?: boolean;
 };
 
-/** Everyone who moves, drawn back to front. Each has their own speed and cadence. */
+/** Everyone who moves, drawn back to front. */
 const CAST: Cast[] = [
-  { name: 'swimmer', line: 'swim', start: 0.45, direction: -1, speed: 1, pace: 0.9 },
-  { name: 'floater', line: 'swim', start: 0.8, direction: 1, speed: 0.6, pace: 1.45 },
-  { name: 'cruiser', line: 'ride', start: 0.92, direction: -1, speed: 0.68, pace: 1.35, posture: 'relaxed' },
-  { name: 'jogger', line: 'run', start: 0.58, direction: 1, speed: 0.7, pace: 1.22 },
-  { name: 'chaser', line: 'run', start: 0.95, direction: -1, speed: 1.28, pace: 0.84 },
-  { name: 'cyclist', line: 'ride', start: 0.3, direction: 1, speed: 1.08, pace: 0.8, posture: 'tempo', lead: true },
-  { name: 'runner', line: 'run', start: 0.2, direction: 1, speed: 1, pace: 1, lead: true },
+  { name: 'swimmer', line: 'swim', start: 0.6, direction: -1 },
+  { name: 'cyclist', line: 'ride', start: 0.42, direction: 1 },
+  { name: 'runner', line: 'run', start: 0.18, direction: 1 },
 ];
 
 const LAND_CAST = CAST.filter((member) => member.line !== 'swim');
+
+const POSTURE_NAMES = ['tempo', 'neutral', 'relaxed'] as const;
 
 type Mover = Cast & {
   figure: SVGGElement;
   tail: SVGPathElement | null;
   gradient: SVGLinearGradientElement | null;
   x: number;
+  /** Travel speed relative to the usual speed on this line. */
+  speed: number;
 };
 
 /**
  * Decorative landing background. Stick figures ride, run, and swim across the
- * whole page on rolling terrain, each at their own speed and cadence, while one presses a barbell on a rise. Hidden
+ * whole page on rolling terrain. Each time one comes into view it has picked a
+ * new speed, cadence, and (on the bike) riding position. Hidden
  * from assistive tech; holds a still frame when motion is reduced.
  */
 export function TrainingScene() {
@@ -77,14 +72,13 @@ export function TrainingScene() {
       tail: svg.querySelector<SVGPathElement>(`[data-tail="${member.name}"]`),
       gradient: svg.querySelector<SVGLinearGradientElement>(`#ts-tail-${member.name}`),
       x: 0,
+      speed: 1,
     }));
 
     const rideTrail = part<SVGPathElement>('ride-trail');
     const runTrail = part<SVGPathElement>('run-trail');
-    const rise = part<SVGPathElement>('rise');
     const surface = part<SVGPathElement>('surface');
     const deep = part<SVGPathElement>('deep');
-    const lifter = part<SVGGElement>('lifter');
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     let width = 0;
@@ -124,9 +118,25 @@ export function TrainingScene() {
       target.gradient.setAttribute('x2', target.x.toFixed(1));
     }
 
+    /**
+     * Picks how this figure moves for its next pass. Quicker travel comes with a
+     * quicker cadence, and a fast rider tucks in while a slow one sits up.
+     */
+    function recast(target: Mover, speed: number) {
+      target.speed = speed;
+      target.figure.style.setProperty('--ts-pace', (1 / (0.35 + 0.65 * speed)).toFixed(2));
+      const posture = POSTURE_NAMES[speed > 1.12 ? 0 : speed > 0.86 ? 1 : 2];
+      for (const option of target.figure.querySelectorAll<SVGGElement>('[data-posture]')) {
+        option.style.display = option.dataset.posture === posture ? '' : 'none';
+      }
+    }
+
+    /** Moves along the line; once fully out of view, re-enters on the far side at a new speed. */
     function advance(target: Mover, distance: number) {
       const span = width + margin * 2;
-      target.x = ((((target.x + margin + distance) % span) + span) % span) - margin;
+      const travelled = target.x + margin + distance;
+      if (travelled < 0 || travelled >= span) recast(target, 0.6 + Math.random() * 0.8);
+      target.x = (((travelled % span) + span) % span) - margin;
     }
 
     function draw(dt: number) {
@@ -167,18 +177,13 @@ export function TrainingScene() {
       svg!.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
       for (const target of movers) {
+        if (!previousWidth) recast(target, 1);
         target.x = previousWidth ? (target.x / previousWidth) * width : target.start * width;
       }
 
       rideTrail.setAttribute('d', trace(rideY, -8, width + 8));
       runTrail.setAttribute('d', trace(runY, -8, width + 8));
 
-      const riseX = width * 0.86;
-      const riseY = height * 0.64;
-      const reach = 58 * scale;
-      const drop = 9 * scale;
-      rise.setAttribute('d', `M${riseX - reach} ${riseY + drop}Q${riseX} ${riseY - drop} ${riseX + reach} ${riseY + drop}`);
-      lifter.setAttribute('transform', `translate(${riseX} ${riseY}) scale(${scale})`);
 
       draw(0);
       svg!.dataset.ready = 'true';
@@ -224,7 +229,6 @@ export function TrainingScene() {
 
         <path className="ts-trail" data-part="ride-trail" />
         <path className="ts-trail" data-part="run-trail" />
-        <path className="ts-trail" data-part="rise" />
         <path className="ts-water ts-water--deep" data-part="deep" />
         <path className="ts-water" data-part="surface" />
 
@@ -232,19 +236,15 @@ export function TrainingScene() {
           <path key={name} className="ts-tail" data-tail={name} stroke={`url(#ts-tail-${name})`} />
         ))}
 
-        <g className="ts-figure" data-part="lifter">
-          <Lifter />
-        </g>
         {CAST.map((member) => (
           <g
             key={member.name}
-            className={`ts-figure${member.lead ? ' ts-figure--lead' : ''}`}
+            className={`ts-figure${member.line === 'swim' ? '' : ' ts-figure--lead'}`}
             data-part={member.name}
-            style={{ '--ts-pace': member.pace } as CSSProperties}
           >
             {member.line === 'swim' && <Swimmer />}
             {member.line === 'run' && <Runner />}
-            {member.line === 'ride' && <Cyclist posture={member.posture} />}
+            {member.line === 'ride' && <Cyclist />}
           </g>
         ))}
       </svg>
@@ -321,48 +321,26 @@ const POSTURES = {
   relaxed: { shoulder: '4 -51', hands: '17 -35', bars: 'M16 -24L17 -35', head: [8, -60] },
 };
 
-function Cyclist({ posture = 'neutral' }: { posture?: keyof typeof POSTURES }) {
-  const { shoulder, hands, bars, head } = POSTURES[posture];
+/** Draws every riding position; the scene shows one at a time. */
+function Cyclist() {
   return (
     <g transform="translate(0 -17.5)">
       <PedalLeg />
       <Wheel x={-24} />
       <Wheel x={24} />
-      <path d={`M-24 0L-8 -26L16 -24L0 0ZM-24 0H0M16 -24L24 0${bars}`} strokeWidth="2" />
+      <path d="M-24 0L-8 -26L16 -24L0 0ZM-24 0H0M16 -24L24 0" strokeWidth="2" />
       <path className="ts-spin" d="M-7 0H7" />
-      <path d={`M-8 -28L${shoulder}L${hands}`} />
-      <circle cx={head[0]} cy={head[1]} r="6.5" />
+      {POSTURE_NAMES.map((name) => {
+        const { shoulder, hands, bars, head } = POSTURES[name];
+        return (
+          <g key={name} data-posture={name}>
+            <path d={bars} strokeWidth="2" />
+            <path d={`M-8 -28L${shoulder}L${hands}`} />
+            <circle cx={head[0]} cy={head[1]} r="6.5" />
+          </g>
+        );
+      })}
       <PedalLeg lead />
-    </g>
-  );
-}
-
-function PressArm() {
-  return (
-    <g transform="translate(8 -50)">
-      <g className="ts-press-upper">
-        <path d="M0 0V16" />
-        <g transform="translate(0 16)">
-          <path className="ts-press-fore" d="M0 0V16" />
-        </g>
-      </g>
-    </g>
-  );
-}
-
-function Lifter() {
-  return (
-    <g transform="translate(0 -1.5)">
-      <circle cx="0" cy="-63" r="6.5" />
-      <path d="M-8 -50H8M0 -50V-26M0 -26L-9 0M0 -26L9 0" />
-      <PressArm />
-      <g transform="scale(-1 1)">
-        <PressArm />
-      </g>
-      <g className="ts-press-bar">
-        <path d="M-34 0H34" strokeWidth="2" />
-        <path d="M-27 -10V10M27 -10V10M-32 -7V7M32 -7V7" strokeWidth="4" />
-      </g>
     </g>
   );
 }
