@@ -185,7 +185,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
               </p>
             )}
           </div>
-          {currentStep.durationSec > 0 && !state.completed[state.currentIndex] && timer.kind !== 'elapsed' ? (
+          {now !== null && currentStep.durationSec > 0 && !state.completed[state.currentIndex] && timer.kind !== 'elapsed' ? (
             timer.kind === 'running' ? (
               <button type="button" className={compactSecondaryButtonClassName} disabled={pending} onClick={() => updateExecutionState(state, pauseExecutionTimer(timer, Date.now()))}>
                 Pause timer
@@ -196,7 +196,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
               </button>
             )
           ) : null}
-          {timer.kind === 'elapsed' && currentStep.durationSec > 0 && !state.completed[state.currentIndex] ? (
+          {now !== null && timer.kind === 'elapsed' && currentStep.durationSec > 0 && !state.completed[state.currentIndex] ? (
             <button type="button" className={compactSecondaryButtonClassName} disabled={pending} onClick={() => updateExecutionState(state, startExecutionTimer(idleExecutionTimer, currentStep.durationSec, Date.now()))}>
               Start again
             </button>
