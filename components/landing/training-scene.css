@@ -1,121 +1,77 @@
 /*
- * Landing background scene. Each figure is drawn around its joints so limbs
- * rotate about the SVG origin of their own group. Base transforms are the
- * resting pose shown when motion is reduced.
+ * Landing background scene. TrainingScene.tsx moves each figure along the
+ * terrain; this file styles the terrain and animates the limbs. Each limb is
+ * drawn around its joint so it rotates about the SVG origin of its own group.
+ * Base transforms are the resting pose shown when motion is reduced.
  */
 
 .ts-scene {
-  --ts-u: 0.9px;
   position: absolute;
-  inset: 56% 0 0 0;
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 40px;
+  inset: 50% 0 0 0;
   pointer-events: none;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .ts-scene {
-    --ts-u: 1.15px;
-    top: 44%;
+    top: 0;
   }
 }
 
-.ts-lane {
-  position: relative;
-  flex: 1 1 0;
-  min-height: 0;
-  border-bottom: 1px solid var(--color-rule);
+.ts-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  opacity: 0;
+  transition: opacity 900ms ease-out;
 }
 
-/* Distance ticks under each lane, like the axis of an instrument. */
-.ts-lane::after {
-  position: absolute;
-  inset: 100% 0 auto 0;
-  height: 5px;
-  background: repeating-linear-gradient(90deg, var(--color-rule) 0 1px, transparent 1px 80px);
-  content: '';
+.ts-canvas[data-ready='true'] {
+  opacity: 1;
 }
 
-.ts-lane--water {
-  border-bottom-color: transparent;
+.ts-trail,
+.ts-water,
+.ts-tail {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.ts-lane--water::after {
-  inset: auto 0 -4px 0;
-  height: 8px;
-  background: var(--color-trace-faint);
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='8'%3E%3Cpath d='M0 4q12-6 24 0t24 0' fill='none' stroke='%23000' stroke-width='1.2'/%3E%3C/svg%3E") repeat-x;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='8'%3E%3Cpath d='M0 4q12-6 24 0t24 0' fill='none' stroke='%23000' stroke-width='1.2'/%3E%3C/svg%3E") repeat-x;
-  animation: ts-wave 3.2s linear infinite;
+.ts-trail {
+  stroke: var(--color-rule-strong);
+  stroke-width: 1.25;
+  opacity: 0.75;
 }
 
-.ts-label {
-  position: absolute;
-  bottom: 8px;
-  left: 20px;
-  color: var(--color-ink-3);
-  font-size: 12px;
-  font-weight: 500;
-  opacity: 0.7;
+.ts-water {
+  stroke: var(--color-trace-faint);
+  stroke-width: 1.5;
 }
 
-@media (min-width: 640px) {
-  .ts-label {
-    left: 28px;
-  }
+.ts-water--deep {
+  opacity: 0.5;
 }
 
-@media (min-width: 1024px) {
-  .ts-label {
-    left: 40px;
-  }
+.ts-tail {
+  stroke-width: 2.5;
 }
 
-.ts-mover {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  display: flex;
-  transform: translateX(var(--ts-rest));
-  color: color-mix(in srgb, var(--color-trace) 55%, var(--color-ground));
-}
-
-.ts-mover--run {
-  --ts-rest: 22vw;
-  color: var(--color-trace);
-  animation: ts-cross 24s linear -7s infinite;
-}
-
-.ts-mover--bike {
-  --ts-rest: 58vw;
-  animation: ts-cross 14s linear -3s infinite;
-}
-
-.ts-mover--lift {
-  --ts-rest: 72vw;
-}
-
-.ts-mover--swim {
-  --ts-rest: 40vw;
-  bottom: calc(-26 * var(--ts-u));
-  animation: ts-cross 36s linear -14s infinite;
+.ts-tail-stop {
+  stop-color: var(--color-trace);
 }
 
 .ts-figure {
-  display: block;
-  overflow: visible;
   fill: none;
-  stroke: currentColor;
+  stroke: color-mix(in srgb, var(--color-trace) 60%, var(--color-ground));
   stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.ts-figure--run { width: calc(72 * var(--ts-u)); height: calc(104 * var(--ts-u)); }
-.ts-figure--bike { width: calc(84 * var(--ts-u)); height: calc(84 * var(--ts-u)); }
-.ts-figure--lift { width: calc(80 * var(--ts-u)); height: calc(96 * var(--ts-u)); }
-.ts-figure--swim { width: calc(92 * var(--ts-u)); height: calc(52 * var(--ts-u)); }
+.ts-figure--lead {
+  stroke: var(--color-trace);
+}
 
 .ts-half { animation-delay: var(--ts-half) !important; }
 
@@ -150,15 +106,6 @@
   .ts-scene *::after {
     animation: none !important;
   }
-}
-
-@keyframes ts-cross {
-  from { transform: translateX(-140px); }
-  to { transform: translateX(100vw); }
-}
-
-@keyframes ts-wave {
-  to { -webkit-mask-position: -48px 0; mask-position: -48px 0; }
 }
 
 @keyframes ts-spin {

@@ -14,13 +14,13 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="relative isolate flex min-h-dvh flex-col overflow-hidden bg-[var(--background)]">
+    <div className="relative isolate flex h-dvh flex-col overflow-hidden bg-[var(--background)]">
       <TrainingScene />
       <header className="relative mx-auto flex w-full max-w-[1440px] items-center gap-2.5 px-5 pt-6 sm:px-7 lg:px-10">
         <BrandMark />
         <span className="text-[15px] font-semibold text-[var(--text)]">Tempo</span>
       </header>
-      <main id="main" className="relative mx-auto w-full max-w-[1440px] px-5 pt-[9vh] sm:px-7 lg:px-10">
+      <main id="main" className="relative mx-auto w-full max-w-[1440px] px-5 pt-[clamp(1.5rem,8dvh,5rem)] sm:px-7 lg:px-10">
         <h1 className="max-w-[18ch] text-4xl font-medium leading-[1.1] tracking-[-0.02em] text-balance text-[var(--text)] sm:text-5xl">
           Plan, follow, and review your own training.
         </h1>
