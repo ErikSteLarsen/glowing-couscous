@@ -1,6 +1,6 @@
 # Current status
 
-Last verified locally on **2026-11-09**. Source code and tests are authoritative.
+Last verified locally on **2026-11-10**. Source code and tests are authoritative.
 
 ## Product and ownership
 
@@ -45,12 +45,15 @@ sanitized snapshots and requires an explicit recipient save.
   saving. The library and editor appear separately; mobile Save clears the
   bottom navigation. Template durations remain editable in seconds.
 - Live expands repetitions into unique execution steps, omits skipped blocks,
-  and uses canonical relative and profile-aware target labels. Current step and
-  completed-step guidance resumes from this browser after reload or navigation;
-  a changed ordered step/duration signature invalidates old progress. Explicit
-  restart clears it, and only the server completion flow saves an outcome. The
-  same generic labels appear in shared session summaries. Session detail uses
-  refreshed completion/editor modes and preserves notes through corrections.
+  and uses canonical relative and profile-aware target labels. Current step,
+  completed-step guidance, and a deliberate timed-step countdown resume from
+  this browser after reload or navigation; running countdowns use a saved
+  deadline and paused countdowns preserve their remaining time. Expiry does not
+  mark a step complete, and manual step navigation or restart resets timer
+  guidance. A changed ordered step/duration signature invalidates old progress.
+  Only the server completion flow saves an outcome. The same generic labels
+  appear in shared session summaries. Session detail uses refreshed
+  completion/editor modes and preserves notes through corrections.
 - Login, signup, setup, and settings recover from failed requests. Signup
   distinguishes a created account from failed automatic sign-in. Setup retries
   the same saved role without permitting role changes. Settings restores failed
@@ -104,7 +107,7 @@ sanitized snapshots and requires an explicit recipient save.
 | Short interval precision | Pass | Duration regression covers seconds, remainders, and hour boundaries; 390px Chromium saved/reloaded a 20-second workout block and showed `20s x 3` with a 20-second input; both review axes found no actionable issue |
 | Dashboard | Pass | Desktop and 390px Chromium: pointer at final plotted day, Home/End readings, no horizontal overflow or browser errors; coach-note service regressions pass |
 | Session execution and corrections | Pass | Chromium repeated/skipped execution, relative labels, completion, immediate actual correction, notes, reopening, planned adjustment, and reload persistence; session detail axe reports no violations |
-| Live progress resume | Pass, 252 tests | Execution tests verify resume data round-trip, workout-change invalidation, corrupt/out-of-range data recovery, and explicit restart; `pnpm test`, `pnpm lint`, and `pnpm build` pass. Browser interaction was not run for this stage. |
+| Live progress and step timer | Pass, 253 tests | Execution tests verify resume data round-trip, workout-change invalidation, corrupt/out-of-range data recovery, explicit restart, timestamp-based countdown, pause/resume, expiry, and timer reset for completed/manual-navigation states; `pnpm test`, `pnpm lint`, and `pnpm build` pass. Browser interaction was not run for this stage. |
 | Personal session removal | Pass | SQLite verifies owner scope, completed/activity/coach-assigned refusal, and block cascade; Chromium desktop and 390px confirms the in-app dialog, Escape cancel, Calendar removal, refresh feedback, and no horizontal overflow |
 | Untimed session display | Pass | Focused checks cover null and explicit times through Home, Calendar, detail, and the shared date formatter; `pnpm test`, `pnpm lint`, and `pnpm build` pass |
 | Overdue session recovery | Pass | Home and detail service regressions cover recent ordering, coach/plan/completion exclusions, matching Missed state, late completion, and retained schedule date; existing SQLite tests cover safe rescheduling and unchanged content |
@@ -141,9 +144,11 @@ recipient account were removed after verification.
   limitation.
 - Per-athlete time zones are not implemented. Calendar days use the server's
   local time zone; rescheduling preserves wall time within that zone.
-- Live execution is a local guidance stepper without device or sensor telemetry.
+- Live execution and its countdown are local guidance only; no device or sensor
+  telemetry is collected, and countdown expiry does not record actual work.
 - Live progress is stored per session in the current browser only; it does not
-  sync across browsers/devices and does not track elapsed work or sensor data.
+  sync across browsers/devices. Browser interaction for the new timer controls
+  remains unverified.
 - External Google OAuth, physical-device touch, and production deployment have
   not been verified in this run.
 - Shared previews and recipient intake passed fresh Chromium checks. Alternate

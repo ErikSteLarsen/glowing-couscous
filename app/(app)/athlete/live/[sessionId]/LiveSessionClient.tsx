@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -11,18 +11,25 @@ import {
   successTextClassName,
 } from '@/components/ui';
 import { Stepper } from '@/components/tempo/Stepper';
+import { formatDuration } from '@/lib/format-duration';
 import {
   advanceExecution,
   createExecutionState,
+  getExecutionTimerRemainingMs,
+  idleExecutionTimer,
   isExecutionComplete,
   parseExecutionProgress,
+  parseExecutionTimer,
+  pauseExecutionTimer,
   previousExecution,
+  resolveExecutionTimer,
   restartExecution,
   serializeExecutionProgress,
+  startExecutionTimer,
   type ExecutionState,
   type ExecutionStep,
+  type ExecutionTimer,
 } from '@/lib/athlete-execution';
-import { formatDuration } from '@/lib/format-duration';
 import {
   clearExecutionProgress,
   getExecutionProgress,
@@ -39,6 +46,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [now, setNow] = useState<number | null>(null);
   const saved = isDone || message !== '';
   const hasBlocks = blocks.length > 0;
   const progressKey = `tempo:live-progress:v1:${sessionId}`;
@@ -49,14 +57,42 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
   );
   const state: ExecutionState = isDone ? createExecutionState(blocks.length) : parseExecutionProgress(savedProgress, blocks) ?? createExecutionState(blocks.length);
   const complete = hasBlocks && isExecutionComplete(state);
+  const restoredTimer = isDone ? idleExecutionTimer : parseExecutionTimer(savedProgress, blocks, state);
+  const timer = now === null ? restoredTimer : resolveExecutionTimer(restoredTimer, now);
+  const currentStep = blocks[state.currentIndex];
+  const timerRemainingMs = currentStep && now !== null ? getExecutionTimerRemainingMs(timer, currentStep.durationSec, now) : 0;
+  const timerRunning = timer.kind === 'running' && !saved;
 
-  function updateExecutionState(nextState: ExecutionState): void {
+  useEffect(() => {
+    const initialRefresh = window.setTimeout(() => setNow(Date.now()), 0);
+    if (!timerRunning) return () => window.clearTimeout(initialRefresh);
+    const refresh = () => setNow(Date.now());
+    const interval = window.setInterval(refresh, 1000);
+    window.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.clearTimeout(initialRefresh);
+      window.clearInterval(interval);
+      window.removeEventListener('visibilitychange', refresh);
+    };
+  }, [timerRunning]);
+
+  function updateExecutionState(nextState: ExecutionState, nextTimer: ExecutionTimer = idleExecutionTimer): void {
     if (!hasBlocks || isDone) return;
-    if (nextState.currentIndex === 0 && nextState.completed.every((value) => !value)) {
+    if (nextState.currentIndex === 0 && nextState.completed.every((value) => !value) && nextTimer.kind === 'idle') {
       clearExecutionProgress(progressKey);
       return;
     }
-    saveExecutionProgress(progressKey, serializeExecutionProgress(blocks, nextState));
+    saveExecutionProgress(progressKey, serializeExecutionProgress(blocks, nextState, nextTimer));
+  }
+
+  function formatCountdown(milliseconds: number): string {
+    const totalSeconds = Math.ceil(milliseconds / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor(totalSeconds / 60) % 60;
+    const seconds = totalSeconds % 60;
+    return hours > 0
+      ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      : `${Math.floor(totalSeconds / 60)}:${String(seconds).padStart(2, '0')}`;
   }
 
   async function completeSession() {
@@ -127,6 +163,45 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
             Restart
           </button>
         </div>
+      ) : null}
+      {currentStep && !saved ? (
+        <section aria-label="Step timer" className="flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-4">
+          <div>
+            <p className="text-xs font-medium text-[var(--text-muted)]">Step timer</p>
+            {currentStep.durationSec <= 0 ? (
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">This step has no timed duration.</p>
+            ) : state.completed[state.currentIndex] ? (
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">This step is already marked complete.</p>
+            ) : timer.kind === 'elapsed' ? (
+              <p role="status" className="mt-1 text-sm font-medium text-[var(--text)]">Time is up. Step not marked complete.</p>
+            ) : now === null ? (
+              <p aria-label="Loading timer" className="data mt-1 text-2xl font-semibold text-[var(--text)]">--:--</p>
+            ) : (
+              <p aria-label={`Time remaining ${formatCountdown(timerRemainingMs)}`} className="data mt-1 text-2xl font-semibold text-[var(--text)]">
+                {formatCountdown(timerRemainingMs)}
+                <span className="ml-2 text-xs font-normal text-[var(--text-secondary)]">
+                  {timer.kind === 'running' ? 'Running' : timer.kind === 'paused' ? 'Paused' : 'Ready'}
+                </span>
+              </p>
+            )}
+          </div>
+          {currentStep.durationSec > 0 && !state.completed[state.currentIndex] && timer.kind !== 'elapsed' ? (
+            timer.kind === 'running' ? (
+              <button type="button" className={compactSecondaryButtonClassName} disabled={pending} onClick={() => updateExecutionState(state, pauseExecutionTimer(timer, Date.now()))}>
+                Pause timer
+              </button>
+            ) : (
+              <button type="button" className={compactSecondaryButtonClassName} disabled={pending} onClick={() => updateExecutionState(state, startExecutionTimer(timer, currentStep.durationSec, Date.now()))}>
+                {timer.kind === 'paused' ? 'Resume timer' : 'Start timer'}
+              </button>
+            )
+          ) : null}
+          {timer.kind === 'elapsed' && currentStep.durationSec > 0 && !state.completed[state.currentIndex] ? (
+            <button type="button" className={compactSecondaryButtonClassName} disabled={pending} onClick={() => updateExecutionState(state, startExecutionTimer(idleExecutionTimer, currentStep.durationSec, Date.now()))}>
+              Start again
+            </button>
+          ) : null}
+        </section>
       ) : null}
       {complete && !saved ? (
         <p role="status" className="text-sm font-semibold text-[var(--text)]">All blocks complete. Save the outcome to finish.</p>

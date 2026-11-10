@@ -6,11 +6,17 @@ import {
   completeCurrentExecution,
   createExecutionState,
   createExecutionSteps,
+  getExecutionTimerRemainingMs,
+  idleExecutionTimer,
   isExecutionComplete,
   parseExecutionProgress,
+  parseExecutionTimer,
+  pauseExecutionTimer,
   previousExecution,
+  resolveExecutionTimer,
   restartExecution,
   serializeExecutionProgress,
+  startExecutionTimer,
 } from '../lib/athlete-execution.ts';
 import { createSessionEditorBlock, createEmptySessionEditorDraft, deriveSessionEditorMetrics } from '../lib/session-editor.ts';
 import { createEmptyPerformanceProfile } from '../lib/performance-profile.ts';
@@ -58,6 +64,34 @@ test('saved live progress resumes only for the same ordered workout steps', () =
   assert.equal(parseExecutionProgress('{not json', steps), null, 'corrupt browser data starts a fresh stepper');
   assert.equal(parseExecutionProgress(JSON.stringify({ version: 1, steps: 'current', state: { currentIndex: 99, completed: [false, false, false] } }), steps), null, 'out-of-range browser state is rejected');
   assert.deepEqual(restartExecution(halfway), createExecutionState(steps.length), 'explicit restart clears all guidance progress');
+});
+
+test('timed steps use timestamps for start, pause, resume, and expiration', () => {
+  const steps = [
+    { id: 'interval:0', label: 'Work', durationSec: 5, targetLabel: null, note: '' },
+    { id: 'interval:1', label: 'Work', durationSec: 5, targetLabel: null, note: '' },
+  ];
+  const state = createExecutionState(steps.length);
+  const started = startExecutionTimer(idleExecutionTimer, steps[0].durationSec, 10_000);
+  assert.equal(getExecutionTimerRemainingMs(started, 5, 12_000), 3_000);
+
+  const paused = pauseExecutionTimer(started, 12_000);
+  assert.deepEqual(paused, { kind: 'paused', remainingMs: 3_000, durationSec: 5 });
+  assert.equal(getExecutionTimerRemainingMs(paused, 5, 50_000), 3_000, 'a paused timer does not lose time while away');
+  const resumed = startExecutionTimer(paused, 5, 50_000);
+  assert.equal(getExecutionTimerRemainingMs(resumed, 5, 52_999), 1);
+  assert.deepEqual(resolveExecutionTimer(resumed, 53_000), { kind: 'elapsed', durationSec: 5 });
+  assert.deepEqual(state.completed, [false, false], 'timer expiry alone does not mark work complete');
+  assert.deepEqual(pauseExecutionTimer(resumed, 53_000), { kind: 'elapsed', durationSec: 5 }, 'pausing at the deadline resolves to elapsed');
+  assert.deepEqual(startExecutionTimer(idleExecutionTimer, 0, 10_000), idleExecutionTimer, 'untimed steps cannot start a countdown');
+
+  const persisted = serializeExecutionProgress(steps, state, resumed);
+  const restored = parseExecutionTimer(persisted, steps, state);
+  assert.deepEqual(restored, resumed, 'reload resumes from the stored deadline instead of an accumulated tick count');
+  assert.deepEqual(resolveExecutionTimer(restored, 53_000), { kind: 'elapsed', durationSec: 5 }, 'time away still counts for an active countdown');
+  const afterManualAdvance = advanceExecution(state);
+  assert.deepEqual(parseExecutionTimer(serializeExecutionProgress(steps, afterManualAdvance), steps, afterManualAdvance), idleExecutionTimer, 'manual step changes reset the timer');
+  assert.deepEqual(parseExecutionTimer(persisted, steps, { ...state, completed: [true, false] }), idleExecutionTimer, 'completed steps do not restore an active timer');
 });
 
 
