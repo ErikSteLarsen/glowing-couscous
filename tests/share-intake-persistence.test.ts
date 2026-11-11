@@ -1,24 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import { PrismaClient } from '@prisma/client';
 import { createShareLinkService } from '../lib/share-link-service.ts';
 import { createWorkoutLibraryService } from '../lib/workout-library-service.ts';
 import { createAthletePlannerService } from '../lib/athlete-planner-service.ts';
 import { createTemplateService } from '../lib/template-service.ts';
+import { parseTemplateRoutine } from '../lib/template-routine.ts';
+import { disposableDatabaseSkip, withDisposableDatabase } from './disposable-postgres.ts';
 
-test('shared copies persist independently in the correct recipient workspace in SQLite', async () => {
-  const directory = await mkdtemp(path.join(tmpdir(), 'tempo-intake-'));
-  const databaseUrl = `file:${path.join(directory, 'test.db')}`;
-  const db = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
-  try {
-    execFileSync(process.execPath, [
-      path.join(process.cwd(), 'node_modules/prisma/build/index.js'),
-      'db', 'push', '--skip-generate', '--schema', path.join(process.cwd(), 'prisma/schema.prisma'),
-    ], { env: { ...process.env, DATABASE_URL: databaseUrl }, stdio: 'pipe' });
+test('shared copies persist independently in the correct recipient workspace in PostgreSQL', { skip: disposableDatabaseSkip }, async () => {
+  await withDisposableDatabase(async (db) => {
     const owner = await db.user.create({ data: { email: 'source@example.test', role: 'ATHLETE' } });
     const athlete = await db.user.create({ data: { email: 'recipient@example.test', role: 'ATHLETE' } });
     const coach = await db.user.create({ data: { email: 'coach@example.test', role: 'COACH' } });
@@ -73,12 +63,9 @@ test('shared copies persist independently in the correct recipient workspace in 
     const templates = await createTemplateService({ db }).listForOwner(athlete.id);
     assert.equal(templates.length, 1);
     assert.equal(templates[0].name, 'Recipient interval');
-    assert.equal(templates[0].blocks[0].durationSec, 20);
+    assert.equal(parseTemplateRoutine(templates[0].routineJson)?.entries[0]?.blocks[0]?.durationSec, 20);
     await db.session.update({ where: { id: source.id }, data: { title: 'Changed source', blocks: { updateMany: { where: {}, data: { durationSec: 600 } } } } });
     assert.equal((await service.loadPreview(token))?.title, 'Shared short interval');
     assert.equal((await db.block.findUniqueOrThrow({ where: { id: scheduled.blocks[0].id } })).durationSec, 20);
-  } finally {
-    await db.$disconnect();
-    await rm(directory, { recursive: true, force: true });
-  }
+  });
 });

@@ -24,7 +24,7 @@ function getMatchSpecificity(item: NavItem) {
 
 export function getPrimaryNavigation(): NavItem[] {
   return [
-    { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete' },
+    { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete', exact: true },
     {
       label: 'Workouts',
       description: 'Create & manage',

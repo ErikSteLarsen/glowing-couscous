@@ -795,7 +795,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
           blocks: session.blocks.map((block) => {
             const meta = getTempoZoneMeta(block.zone as 1 | 2 | 3 | 4 | 5);
             const target: WorkoutTarget | null = block.targetType && block.targetLow !== null && block.targetHigh !== null
-              ? { metric: block.targetType as WorkoutTarget['metric'], mode: block.targetMode === 'relative' ? 'relative' : 'absolute', reference: block.targetReference as WorkoutTargetReference | null, low: block.targetLow, high: block.targetHigh }
+              ? { metric: block.targetType as WorkoutTarget['metric'], mode: block.targetMode === 'relative' ? 'relative' : 'absolute', reference: block.targetReference as WorkoutTargetReference | null, low: Number(block.targetLowDecimal ?? block.targetLow), high: Number(block.targetHighDecimal ?? block.targetHigh) }
               : null;
             const profile = parsePerformanceProfileJson(athlete.performanceProfileJson);
             return {

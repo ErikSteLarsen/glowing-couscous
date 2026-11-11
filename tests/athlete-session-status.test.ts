@@ -308,6 +308,11 @@ test('Home weekly load and the next action ignore skipped sessions', async () =>
           return [];
         },
       },
+      activity: {
+        async findMany() {
+          return [];
+        },
+      },
     } as never,
   });
 
@@ -419,7 +424,7 @@ test('session detail offers Skip for an open personal session and Plan again for
             id: 42, athleteId: 7, coachOwnerId: null, trainingPlanId: null, assignedById: null,
             date: new Date(2026, 10, 12, 8), title: 'Easy run', sport: 'RUNNING', summary: null,
             status, adjusted: false, timeLabel: null, athleteNotes: null, coachNotes: null,
-            athlete: { id: 7, name: 'Mara', coach: null }, activity: null,
+            athlete: { id: 7, name: 'Mara', coach: null }, activity: null, assignments: [],
             blocks: [{ id: 3, kind: 'work', zone: 2, durationSec: 600, reps: 1, targetType: null, targetMode: 'absolute', targetReference: null,
               targetLow: null, targetHigh: null, targetLowDecimal: null, targetHighDecimal: null, note: null, skipped: false, sortOrder: 0 }],
           };

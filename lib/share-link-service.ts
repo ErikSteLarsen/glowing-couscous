@@ -16,7 +16,8 @@ import {
 } from './session-editor.ts';
 import { deserializeSessionSnapshot } from './session-snapshot-service.ts';
 import { athletePlannerService } from './athlete-planner-service.ts';
-import { coachSessionLibraryService } from './coach-session-library-service.ts';
+import { templateService } from './template-service.ts';
+import { workoutLibraryService } from './workout-library-service.ts';
 
 export type ShareLinkSourceKind = 'session';
 export type ShareLinkRole = 'COACH' | 'ATHLETE';
@@ -27,7 +28,8 @@ type ShareLinkServiceDeps = {
   db?: ShareLinkDatabase;
   createToken?: () => string;
   athletePlannerPersistence?: Pick<typeof athletePlannerService, 'saveSession'>;
-  coachLibraryPersistence?: Pick<typeof coachSessionLibraryService, 'saveForCoach'>;
+  templatePersistence?: Pick<typeof templateService, 'saveForOwner'>;
+  workoutLibraryPersistence?: Pick<typeof workoutLibraryService, 'saveForOwner'>;
 };
 
 type SessionShareSource = {
@@ -50,7 +52,8 @@ export function createShareLinkService({
   db = prisma,
   createToken = () => randomBytes(32).toString('base64url'),
   athletePlannerPersistence = athletePlannerService,
-  coachLibraryPersistence = coachSessionLibraryService,
+  templatePersistence = templateService,
+  workoutLibraryPersistence = workoutLibraryService,
 }: ShareLinkServiceDeps = {}) {
   const service = {
     async createForUser(userId: number, sourceKind: ShareLinkSourceKind, sourceId: number) {
@@ -94,10 +97,34 @@ export function createShareLinkService({
       return projection && link.ownerDeleted ? { ...projection, ownerDeleted: true } : projection;
     },
 
+    async saveTemplateCopy(userId: number, token: string, input: unknown) {
+      const projection = await service.loadPreview(token);
+      if (!projection) return { ok: false as const, error: NOT_FOUND, status: 404 };
+      const draftResult = createImportedDraft(projection, input, null);
+      if (!draftResult.ok) return draftResult;
+
+      // Routines compose saved library workouts, so the shared definition is
+      // first copied into the recipient's library and the routine references it.
+      const serialized = serializeSessionEditorDraft(draftResult.draft);
+      const workout = await workoutLibraryPersistence.saveForOwner('athlete', userId, {
+        ...serialized,
+        scheduledDate: null,
+        templateId: null,
+      });
+      if (!workout.ok) return workout;
+      const template = await templatePersistence.saveForOwner(userId, {
+        name: serialized.title,
+        summary: serialized.summary ?? '',
+        entries: [{ weekday: 0, workoutId: workout.sessionId }],
+      });
+      if (template.error) return { ok: false as const, error: template.error, status: 400 };
+      return { ok: true as const };
+    },
+
     async savePlannerCopy(userId: number, role: ShareLinkRole, token: string, input: unknown) {
       const projection = await service.loadPreview(token);
       if (!projection) return { ok: false as const, error: NOT_FOUND, status: 404 };
-      const draftResult = createImportedDraft(projection, input);
+      const draftResult = createImportedDraft(projection, input, role === 'ATHLETE' ? 'planner' : null);
       if (!draftResult.ok) return draftResult;
 
       const serialized = serializeSessionEditorDraft(draftResult.draft);
@@ -111,21 +138,10 @@ export function createShareLinkService({
         return { ok: true as const, sessionIds: result.sessionIds };
       }
 
-      const result = await coachLibraryPersistence.saveForCoach(userId, {
-        ownershipMode: 'coach-library',
-        athleteId: null,
-        scheduledDate: serialized.scheduledDate,
-        planWeekday: null,
-        sport: serialized.sport,
-        title: serialized.title,
-        summary: serialized.summary ?? '',
-        sportMetrics: serialized.sportMetrics,
-        blocks: serialized.blocks.map((block, index) => ({
-          ...block,
-          id: block.id ?? undefined,
-          clientId: `share-block-${index}`,
-          note: block.note ?? '',
-        })),
+      const result = await workoutLibraryPersistence.saveForOwner('coach', userId, {
+        ...serialized,
+        scheduledDate: null,
+        templateId: null,
       });
       if (!result.ok) return result;
       return { ok: true as const, sessionIds: [result.sessionId] };
@@ -146,6 +162,7 @@ export function isShareToken(token: unknown): token is string {
 function createImportedDraft(
   projection: SharedWorkoutProjection,
   input: unknown,
+  action: 'planner' | null,
 ): { ok: true; draft: SessionEditorDraft } | { ok: false; error: string; status: 400 } {
   const sourceDraft = createSessionEditorDraftFromSharedProjection(projection);
   const raw = input && typeof input === 'object' && !Array.isArray(input) ? input : {};
@@ -171,7 +188,7 @@ function createImportedDraft(
     coachNotes: '',
     athleteNotes: '',
     rpe: null,
-    scheduledDate: rawRecord.scheduledDate ?? null,
+    scheduledDate: action === 'planner' ? rawRecord.scheduledDate ?? null : null,
   });
   const validationError = validateSessionEditorDraft(draft);
   if (validationError) return { ok: false, error: validationError, status: 400 };

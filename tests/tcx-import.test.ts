@@ -1,16 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import { PrismaClient } from '@prisma/client';
 import { createAthleteService } from '../lib/athlete-service.ts';
 import { createAthleteTcxImportService } from '../lib/athlete-tcx-import-service.ts';
 import { createTrainingLoadService } from '../lib/training-load-service.ts';
 import { MAX_TCX_BYTES, parseTcxActivity } from '../lib/tcx-activity.ts';
 import { formatTcxDateTime } from '../lib/tcx-time.ts';
 import { readTcxUpload } from '../lib/tcx-upload.ts';
+import { disposableDatabaseSkip, withDisposableDatabase } from './disposable-postgres.ts';
 
 const tcx = `<?xml version="1.0"?>
 <TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:ext="http://www.garmin.com/xmlschemas/ActivityExtension/v2">
@@ -80,15 +76,8 @@ test('TCX upload reader enforces actual streamed bytes without trusting Content-
   if (!result.ok) assert.match(result.error, /5 MB/);
 });
 
-test('TCX import requires confirmation, scopes fingerprints per athlete, survives concurrent retry, and appears across history views', async (t) => {
-  const directory = await mkdtemp(path.join(tmpdir(), 'tempo-tcx-import-'));
-  const databaseUrl = `file:${path.join(directory, 'test.db')}`;
-  const db = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
-  try {
-    execFileSync(process.execPath, [
-      path.join(process.cwd(), 'node_modules/prisma/build/index.js'),
-      'db', 'push', '--skip-generate', '--schema', path.join(process.cwd(), 'prisma/schema.prisma'),
-    ], { env: { ...process.env, DATABASE_URL: databaseUrl }, stdio: 'pipe' });
+test('TCX import requires confirmation, scopes fingerprints per athlete, survives concurrent retry, and appears across history views', { skip: disposableDatabaseSkip }, async (t) => {
+  await withDisposableDatabase(async (db) => {
     const athlete = await db.user.create({ data: { email: 'tcx-athlete@example.test', role: 'ATHLETE' } });
     const otherAthlete = await db.user.create({ data: { email: 'tcx-other@example.test', role: 'ATHLETE' } });
     const coach = await db.user.create({ data: { email: 'tcx-coach@example.test', role: 'COACH' } });
@@ -312,8 +301,5 @@ test('TCX import requires confirmation, scopes fingerprints per athlete, survive
       assert.equal(loadedSession?.day, '2026-11-08');
       assert.equal(loadedSession?.actualDay, '2026-11-08');
     });
-  } finally {
-    await db.$disconnect();
-    await rm(directory, { recursive: true, force: true });
-  }
+  });
 });

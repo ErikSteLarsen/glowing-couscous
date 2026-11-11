@@ -48,11 +48,9 @@ function getServerMenuHidden() { return false; }
 
 export function AppShell({
   user,
-  hasActiveCoach = false,
   children,
 }: {
   user: SessionUser & { role: 'COACH' | 'ATHLETE' };
-  hasActiveCoach?: boolean;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -64,7 +62,7 @@ export function AppShell({
   const theme = useSyncExternalStore(subscribeToTheme, getClientTheme, getServerTheme);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const desktopMenuButtonRef = useRef<HTMLButtonElement>(null);
-  const navItems = getMobileNavigation(user.role, { hasActiveCoach });
+  const navItems = getMobileNavigation(user.role);
 
   // A browser history change also dismisses the drawer, without reopening it
   // when the user returns to the route on which it was originally opened.
@@ -189,16 +187,15 @@ export function AppShell({
       className="ink-studio-app tempo-shell relative min-h-screen bg-[var(--background)] text-[var(--text-secondary)]"
       data-menu-hidden={menuHidden}
     >
-      <a
+      <Link
         href="#main"
         className="sr-only z-50 rounded-lg bg-[var(--brand)] px-3 py-2 text-sm font-medium text-[var(--signal-ink)] focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
       >
         Skip to content
-      </a>
+      </Link>
       <AppSidebar
         user={user}
         pathname={navigationPathname}
-        hasActiveCoach={hasActiveCoach}
         mobileOpen={mobileOpen}
         isMobileViewport={isMobileViewport}
         onClose={closeMobileMenu}
@@ -245,7 +242,9 @@ export function AppShell({
             <PanelLeftOpen aria-hidden="true" size={18} strokeWidth={1.8} />
           </button>
         </div>
-        {children}
+        <div id="main" tabIndex={-1} className="outline-none">
+          {children}
+        </div>
       </div>
       <nav
         aria-label="Primary navigation"

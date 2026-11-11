@@ -29,6 +29,7 @@ export function SessionDetailClient({
   performanceProfile = null,
   canDelete = false,
   returnHref,
+  compliancePct = null,
 }: {
   sessionId: number;
   initialDone: boolean;
@@ -39,6 +40,7 @@ export function SessionDetailClient({
   performanceProfile?: PerformanceProfile | null;
   canDelete?: boolean;
   returnHref?: string;
+  compliancePct?: number | null;
 }) {
   const router = useRouter();
   const [notes, setNotes] = useState(initialNotes);
@@ -134,6 +136,7 @@ export function SessionDetailClient({
         </p>
         <p className="mt-2 text-[13px] text-[var(--text-secondary)]">
           {isDone ? 'Review the outcome or correct what was recorded.' : 'Add a note, then complete the session.'}
+          {isDone && compliancePct !== null ? ` Plan compliance: ${Math.round(compliancePct)}%.` : ''}
         </p>
       </div>
 

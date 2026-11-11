@@ -267,11 +267,19 @@ test('actual outcome routes keep role guards while session detail stays read-onl
     path.join(process.cwd(), 'app/(app)/athlete/session/[sessionId]/SessionDetailClient.tsx'),
     'utf8',
   );
+  const detailPage = await readFile(
+    path.join(process.cwd(), 'app/(app)/athlete/session/[sessionId]/page.tsx'),
+    'utf8',
+  );
 
   assert.match(athleteRoute, /requireAthlete/);
   assert.match(athleteRoute, /saveActualOutcome/);
   assert.match(coachRoute, /requireCoach/);
   assert.match(coachRoute, /saveActualOutcome/);
   assert.match(detailClient, /SessionComparisonDialog/);
-  assert.doesNotMatch(detailClient, /Correct completed outcome|\/actual|WorkoutBuilder/);
+  // Planned completions keep the actual-correction editor; activity-derived outcomes
+  // are read-only here and are corrected through their own forms.
+  assert.match(detailClient, /isDone \? '\/actual' : ''/);
+  assert.doesNotMatch(detailClient, /ManualActivityCorrectionForm/);
+  assert.match(detailPage, /\['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'\]\.includes\(detail\.session\.metricsSource/);
 });

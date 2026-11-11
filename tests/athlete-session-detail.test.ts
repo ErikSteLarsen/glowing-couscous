@@ -90,6 +90,7 @@ test('session inspector formats pace with sport units and relative HR with the a
   assert.equal(heartRate?.session.blocks[0].targetBasis, '82-87% Olympiatoppen HRmax');
   const missing = await createDetailService({}, relative).loadSessionDetail(7, 42);
   assert.equal(missing?.session.blocks[0].targetLabel, '82-87% Olympiatoppen HRmax');
+});
 
 function service(
   activityNotes: string | null = null,

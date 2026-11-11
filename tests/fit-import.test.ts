@@ -1,11 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
 import { Encoder, Profile } from '@garmin/fitsdk';
-import { PrismaClient } from '@prisma/client';
 import { createAthleteService } from '../lib/athlete-service.ts';
 import { createAthleteFitImportService } from '../lib/athlete-fit-import-service.ts';
 import { createTrainingLoadService } from '../lib/training-load-service.ts';
@@ -14,6 +9,7 @@ import { formatActivityDateTime } from '../lib/tcx-time.ts';
 import { readActivityUpload } from '../lib/tcx-upload.ts';
 import { addSessionEditorBlock, createEmptySessionEditorDraft } from '../lib/session-editor.ts';
 import { serializeSessionSnapshot } from '../lib/session-snapshot-service.ts';
+import { disposableDatabaseSkip, withDisposableDatabase } from './disposable-postgres.ts';
 
 const fitEpoch = Date.UTC(1989, 11, 31);
 const fitSeconds = (value: string) => (Date.parse(value) - fitEpoch) / 1000;
@@ -33,7 +29,11 @@ function makeFit(options: {
   const startDate = new Date(fitEpoch + start * 1000);
   const finishDate = new Date(fitEpoch + finish * 1000);
   const encoder = new Encoder();
-  encoder.onMesg(Profile.MesgNum.FILE_ID, {
+  // The SDK types messages as a bare Mesg; the encoder accepts named fields at runtime.
+  const onMesg = (mesgNum: number, fields: Record<string, unknown>) => {
+    encoder.onMesg(mesgNum, fields as Parameters<Encoder['onMesg']>[1]);
+  };
+  onMesg(Profile.MesgNum.FILE_ID, {
     type: options.fileType ?? 'activity', manufacturer: 'garmin', product: 1,
     timeCreated: startDate,
   });
@@ -45,15 +45,15 @@ function makeFit(options: {
     totalTimerTime: 2500,
     totalDistance: options.distance ?? 8500.2,
   };
-  encoder.onMesg(Profile.MesgNum.SESSION, session);
-  if (options.extraSession) encoder.onMesg(Profile.MesgNum.SESSION, { ...session, sport: 'cycling' });
-  encoder.onMesg(Profile.MesgNum.ACTIVITY, {
+  onMesg(Profile.MesgNum.SESSION, session);
+  if (options.extraSession) onMesg(Profile.MesgNum.SESSION, { ...session, sport: 'cycling' });
+  onMesg(Profile.MesgNum.ACTIVITY, {
     timestamp: finish,
     ...(options.localOffsetSeconds === null ? {} : { localTimestamp: finish + (options.localOffsetSeconds ?? -5 * 3600) }),
     numSessions: options.numSessions ?? (options.extraSession ? 2 : 1),
     type: options.activityType ?? 'manual',
   });
-  encoder.onMesg(Profile.MesgNum.RECORD, {
+  onMesg(Profile.MesgNum.RECORD, {
     timestamp: new Date('2026-11-07T23:30:01.000Z'),
     positionLat: 59.9,
     positionLong: 10.7,
@@ -105,7 +105,7 @@ test('FIT parser validates Activity shape, timestamps, local timezone, sport and
 test('activity upload accepts bounded FIT files and reports their format', async () => {
   const bytes = makeFit();
   const form = new FormData();
-  form.set('file', new Blob([bytes]), 'activity.fit');
+  form.set('file', new Blob([new Uint8Array(bytes)]), 'activity.fit');
   const result = await readActivityUpload(new Request('http://localhost/api/import', { method: 'POST', body: form }));
   assert.equal(result.ok, true);
   if (result.ok) {
@@ -114,20 +114,13 @@ test('activity upload accepts bounded FIT files and reports their format', async
   }
 
   const wrongExtension = new FormData();
-  wrongExtension.set('file', new Blob([bytes]), 'activity.bin');
+  wrongExtension.set('file', new Blob([new Uint8Array(bytes)]), 'activity.bin');
   const rejected = await readActivityUpload(new Request('http://localhost/api/import', { method: 'POST', body: wrongExtension }));
   assert.equal(rejected.ok, false);
 });
 
-test('FIT import previews without writes, persists safe summary, deduplicates by athlete, and preserves local date', async (t) => {
-  const directory = await mkdtemp(path.join(tmpdir(), 'tempo-fit-import-'));
-  const databaseUrl = `file:${path.join(directory, 'test.db')}`;
-  const db = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
-  try {
-    execFileSync(process.execPath, [
-      path.join(process.cwd(), 'node_modules/prisma/build/index.js'),
-      'db', 'push', '--skip-generate', '--schema', path.join(process.cwd(), 'prisma/schema.prisma'),
-    ], { env: { ...process.env, DATABASE_URL: databaseUrl }, stdio: 'pipe' });
+test('FIT import previews without writes, persists safe summary, deduplicates by athlete, and preserves local date', { skip: disposableDatabaseSkip }, async (t) => {
+  await withDisposableDatabase(async (db) => {
     const athlete = await db.user.create({ data: { email: 'fit-athlete@example.test', role: 'ATHLETE' } });
     const otherAthlete = await db.user.create({ data: { email: 'fit-other@example.test', role: 'ATHLETE' } });
     const coach = await db.user.create({ data: { email: 'fit-coach@example.test', role: 'COACH' } });
@@ -267,8 +260,5 @@ test('FIT import previews without writes, persists safe summary, deduplicates by
       const load = await createTrainingLoadService({ db }).loadOverview(athlete.id, { now: new Date('2026-11-10T12:00:00.000Z') });
       assert.equal(load.sessions.find((session) => session.sessionId === planned.id)?.compliance, 'duration-only');
     });
-  } finally {
-    await db.$disconnect();
-    await rm(directory, { recursive: true, force: true });
-  }
+  });
 });

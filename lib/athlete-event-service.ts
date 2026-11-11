@@ -1,4 +1,5 @@
 import { format, isValid } from 'date-fns';
+import type { AthleteEvent } from '@prisma/client';
 import { prisma } from './prisma.ts';
 import { getTcxCalendarDay } from './tcx-time.ts';
 
@@ -51,13 +52,13 @@ export function createAthleteEventService({ db = prisma }: { db?: EventDb } = {}
       const events = await db.athleteEvent.findMany({ where: { athleteId }, include: { activities: { where: { athleteId, session: { athleteId, status: 'completed' } }, select: { id: true, completedAt: true, sourceTimezoneOffsetMinutes: true, durationSec: true, distanceMeters: true, session: { select: { title: true, sport: true } } }, orderBy: [{ completedAt: 'desc' }, { id: 'desc' }] } }, orderBy: [{ eventDate: 'asc' }, { id: 'asc' }] });
       return events.map((event) => ({ ...event, activities: event.activities.map(activityReviewValue) }));
     },
-    async create(athleteId: number, input: EventInput): Promise<EventError | EventSuccess<unknown>> {
+    async create(athleteId: number, input: EventInput): Promise<EventError | EventSuccess<AthleteEvent>> {
       const parsed = parseEvent(input);
       if ('error' in parsed) return { ok: false, status: 400, error: parsed.error };
       if (!await athleteExists(athleteId)) return { ok: false, status: 404, error: 'Athlete not found.' };
       return { ok: true, value: await db.athleteEvent.create({ data: { athleteId, ...parsed.value } }) };
     },
-    async update(athleteId: number, eventId: number, input: EventInput): Promise<EventError | EventSuccess<unknown>> {
+    async update(athleteId: number, eventId: number, input: EventInput): Promise<EventError | EventSuccess<AthleteEvent>> {
       const parsed = parseEvent(input);
       if ('error' in parsed) return { ok: false, status: 400, error: parsed.error };
       const current = await ownedEvent(athleteId, eventId);
@@ -65,7 +66,7 @@ export function createAthleteEventService({ db = prisma }: { db?: EventDb } = {}
       if (current.resultFinishSec !== null && dateKey(parsed.value.eventDate) > dateKey(new Date())) return { ok: false, status: 400, error: 'An event with a recorded result cannot be moved into the future.' };
       return { ok: true, value: await db.athleteEvent.update({ where: { id: current.id }, data: parsed.value }) };
     },
-    async recordResult(athleteId: number, eventId: number, input: ResultInput): Promise<EventError | EventSuccess<unknown>> {
+    async recordResult(athleteId: number, eventId: number, input: ResultInput): Promise<EventError | EventSuccess<AthleteEvent>> {
       const current = await ownedEvent(athleteId, eventId);
       if (!current) return { ok: false, status: 404, error: 'Event not found.' };
       if (dateKey(current.eventDate) > dateKey(new Date())) return { ok: false, status: 400, error: 'Results can be recorded on or after the event date.' };

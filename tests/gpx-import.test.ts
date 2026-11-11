@@ -1,10 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import { PrismaClient } from '@prisma/client';
 import { createAthleteGpxImportService } from '../lib/athlete-gpx-import-service.ts';
 import { createAthleteService } from '../lib/athlete-service.ts';
 import { createTrainingLoadService } from '../lib/training-load-service.ts';
@@ -12,6 +7,7 @@ import { MAX_GPX_TRACK_POINTS, parseGpxActivity } from '../lib/gpx-activity.ts';
 import { readActivityUpload } from '../lib/tcx-upload.ts';
 import { addSessionEditorBlock, createEmptySessionEditorDraft } from '../lib/session-editor.ts';
 import { serializeSessionSnapshot } from '../lib/session-snapshot-service.ts';
+import { disposableDatabaseSkip, withDisposableDatabase } from './disposable-postgres.ts';
 
 const gpx = `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="Tempo test" xmlns="http://www.topografix.com/GPX/1/1">
@@ -128,15 +124,8 @@ test('activity upload reader requires one selected sport for GPX only', async ()
   if (!multiple.ok) assert.match(multiple.error, /one activity file/);
 });
 
-test('GPX import persists summary-only activity, deduplicates by athlete, and can attach to a planned session', async (t) => {
-  const directory = await mkdtemp(path.join(tmpdir(), 'tempo-gpx-import-'));
-  const databaseUrl = `file:${path.join(directory, 'test.db')}`;
-  const db = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
-  try {
-    execFileSync(process.execPath, [
-      path.join(process.cwd(), 'node_modules/prisma/build/index.js'),
-      'db', 'push', '--skip-generate', '--schema', path.join(process.cwd(), 'prisma/schema.prisma'),
-    ], { env: { ...process.env, DATABASE_URL: databaseUrl }, stdio: 'pipe' });
+test('GPX import persists summary-only activity, deduplicates by athlete, and can attach to a planned session', { skip: disposableDatabaseSkip }, async (t) => {
+  await withDisposableDatabase(async (db) => {
     const athlete = await db.user.create({ data: { email: 'gpx-athlete@example.test', role: 'ATHLETE' } });
     const otherAthlete = await db.user.create({ data: { email: 'gpx-other@example.test', role: 'ATHLETE' } });
     const coach = await db.user.create({ data: { email: 'gpx-coach@example.test', role: 'COACH' } });
@@ -252,8 +241,5 @@ test('GPX import persists summary-only activity, deduplicates by athlete, and ca
       const feed = await createAthleteService({ db }).loadActivityFeed(athlete.id);
       assert.equal(feed?.activities.find((activity) => activity.sessionId === planned.id)?.plannedDurationSec, 1200);
     });
-  } finally {
-    await db.$disconnect();
-    await rm(directory, { recursive: true, force: true });
-  }
+  });
 });

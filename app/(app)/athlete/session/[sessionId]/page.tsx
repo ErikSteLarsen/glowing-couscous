@@ -1,12 +1,12 @@
 import { notFound, redirect } from 'next/navigation';
 import { format, startOfWeek } from 'date-fns';
-import { ActionLink, EmptyState, PageShell, Surface, TopBar } from '@/components/ui';
+import { ActionLink, EmptyState, PageShell, Surface, TopBar, sectionHeadingClassName } from '@/components/ui';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
-import { formatDuration } from '@/lib/format-duration';
+import { formatDuration, formatDurationExact } from '@/lib/format-duration';
 import { formatDistance } from '@/lib/format-distance';
 import { formatTcxDateTime } from '@/lib/tcx-time';
 import { getSessionOrigin, getSessionReturnTarget } from '@/lib/app-navigation';
@@ -19,6 +19,7 @@ import { formatSessionWhen } from '@/lib/session-display';
 import { toDayKey } from '@/lib/training-load';
 import { SessionRescheduleAction } from '@/components/SessionRescheduleAction';
 import { ImportedActivityMeasurements } from '@/components/ImportedActivityMeasurements';
+import { SessionWorkoutOverview } from '@/components/SessionWorkoutOverview';
 
 export default async function AthleteSessionPage({
   params,
@@ -51,10 +52,19 @@ export default async function AthleteSessionPage({
   const isOverdue = detail.session.isOverdue;
   const displayStatus = isOverdue ? 'missed' : detail.session.status;
   const isSkipped = detail.session.status === 'skipped';
-  const sessionAction = detail.session.status === 'completed' ? 'Review outcome' : 'Start live';
-  const sessionActionHref = detail.session.status === 'completed'
-    ? '#session-outcome'
-    : `/athlete/live/${detail.session.id}?from=${sessionOrigin}`;
+  // Imported activities with no matched workout show their recorded data instead of a plan.
+  const importedWithoutWorkout = detail.session.importedActivityId !== null && detail.session.blocks.length === 0;
+  const scoreDurationSec = importedWithoutWorkout
+    ? detail.session.recordedDurationSec ?? detail.session.durationSec
+    : detail.session.durationSec;
+  const sessionAction = importedWithoutWorkout
+    ? 'View activity data'
+    : detail.session.status === 'completed' ? 'Review outcome' : 'Start live';
+  const sessionActionHref = importedWithoutWorkout
+    ? '#recorded-activity'
+    : detail.session.status === 'completed'
+      ? '#session-outcome'
+      : `/athlete/live/${detail.session.id}?from=${sessionOrigin}`;
   const manualCorrectionDraft: ManualActivityCorrectionDraft | null = detail.session.metricsSource === 'manual-unplanned'
     ? {
         kind: 'manual-unplanned',
@@ -78,11 +88,37 @@ export default async function AthleteSessionPage({
         }
       : null;
 
+  const overviewHeader = (
+    <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[var(--border)] pb-4">
+      <div>
+        <h2 className={sectionHeadingClassName}>{importedWithoutWorkout ? 'Activity overview' : 'Workout overview'}</h2>
+        <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
+          {importedWithoutWorkout
+            ? 'Imported activity · no planned workout matched'
+            : 'The structure of your scheduled workout.'}
+        </p>
+      </div>
+      <div className={importedWithoutWorkout
+        ? 'grid w-full grid-cols-2 divide-x divide-[var(--border)] border-y border-[var(--border)] sm:w-auto sm:min-w-[20rem]'
+        : 'flex flex-wrap gap-x-6 gap-y-2'}
+      >
+        <div className={importedWithoutWorkout ? 'py-3 pr-4 sm:pr-6' : ''}>
+          <p className="text-[11px] font-medium text-[var(--text-muted)]">{importedWithoutWorkout ? 'Duration' : 'Planned time'}</p>
+          <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{formatDurationExact(scoreDurationSec)}</p>
+        </div>
+        <div className={importedWithoutWorkout ? 'py-3 pl-4 sm:pl-6' : ''}>
+          <p className="text-[11px] font-medium text-[var(--text-muted)]">Training load</p>
+          <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{detail.session.loadAvailable === false ? 'Unavailable' : `${detail.session.tss} TSS`}</p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <PageShell size="wide">
       <TopBar
         title={detail.session.title}
-        description={detail.session.summary ?? 'Session details.'}
+        description={detail.session.summary ?? (importedWithoutWorkout ? 'Imported activity.' : 'Session details.')}
         actions={
           <>
             <ActionLink href={returnTarget.href} tone="secondary">
@@ -126,6 +162,16 @@ export default async function AthleteSessionPage({
             <SessionBlockBar segments={detail.session.segments} />
           </Surface>
 
+          {['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'].includes(detail.session.metricsSource ?? '') && detail.session.blocks.length === 0 ? (
+            <Surface className="space-y-3">
+              <p className="text-sm text-[var(--text-muted)]">Summary-only activity has no recorded workout blocks.</p>
+            </Surface>
+          ) : importedWithoutWorkout ? (
+            <Surface className="space-y-4">{overviewHeader}</Surface>
+          ) : (
+            <SessionWorkoutOverview blocks={detail.session.blocks} header={overviewHeader} />
+          )}
+
           {['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'].includes(detail.session.metricsSource ?? '') ? (
             <Surface id="session-outcome" className="space-y-3">
               <h2 className="text-base font-medium text-[var(--text)]">Recorded outcome</h2>
@@ -167,8 +213,12 @@ export default async function AthleteSessionPage({
           {detail.session.importedActivityId ? (
             <Surface id="recorded-activity" className="space-y-4">
               <div>
-                <h2 className="text-base font-medium text-[var(--text)]">Recorded activity</h2>
-                <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Compare recorded measurements with the scheduled workout blocks below.</p>
+                <h2 className={sectionHeadingClassName}>{importedWithoutWorkout ? 'Activity data' : 'Recorded activity'}</h2>
+                <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
+                  {importedWithoutWorkout
+                    ? 'Charts show the measurements saved with this activity.'
+                    : 'Compare recorded measurements with the scheduled workout blocks above.'}
+                </p>
               </div>
               <ImportedActivityMeasurements
                 activityId={detail.session.importedActivityId}
@@ -177,35 +227,23 @@ export default async function AthleteSessionPage({
               />
             </Surface>
           ) : null}
-
-          <Surface className="space-y-3">
-            <p className="text-xs font-medium text-[var(--text-muted)]">
-              {['manual-paired', 'tcx-import', 'fit-import', 'gpx-import'].includes(detail.session.metricsSource ?? '') ? 'Planned workout blocks' : 'Blocks'}
-            </p>
-            {['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'].includes(detail.session.metricsSource ?? '') && detail.session.blocks.length === 0 ? (
-              <p className="text-sm text-[var(--text-muted)]">Summary-only activity has no recorded workout blocks.</p>
-            ) : null}
-            {detail.session.blocks.map((block) => (
-              <div key={block.id} className="rounded-[10px] border border-[var(--border)] bg-[var(--field-surface)] p-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span
-                    className="inline-flex min-h-7 items-center rounded-full px-3 text-[12px] font-semibold"
-                    style={{ backgroundColor: block.tint, color: block.color }}
-                  >
-                    {block.label}
-                  </span>
-                  <MetricText>{formatDuration(block.durationSec)}</MetricText>
-                  {block.skipped ? <span className="text-xs text-[var(--text-muted)]">Skipped</span> : null}
-                  {block.reps ? <MetricText>{block.reps} reps</MetricText> : null}
-                  {block.targetLabel ? <span className="text-[12px] text-[var(--text-secondary)]">{block.targetLabel}</span> : null}
-                </div>
-                {block.note ? <p className="mt-3 text-[13px] leading-[1.5] text-[var(--text)]">{block.note}</p> : null}
-              </div>
-            ))}
-          </Surface>
         </div>
 
         <div className="space-y-4">
+          {detail.session.sourceWorkout ? (
+            <Surface className="space-y-3">
+              <div>
+                <h2 className={sectionHeadingClassName}>Reusable workout</h2>
+                <p className="mt-1 break-words text-[13px] font-medium text-[var(--text)]">{detail.session.sourceWorkout.title}</p>
+              </div>
+              <p className="text-[12px] leading-[1.5] text-[var(--text-secondary)]">
+                Editing the source will not change this scheduled copy.
+              </p>
+              <ActionLink href={`/athlete/workouts?edit=${detail.session.sourceWorkout.id}`} tone="secondary">
+                Edit source workout
+              </ActionLink>
+            </Surface>
+          ) : null}
           <Surface>
             <p className="text-xs font-medium text-[var(--text-muted)]">
               Coach
@@ -218,7 +256,13 @@ export default async function AthleteSessionPage({
       </div>
 
       {/* Full width so the correction editor is not squeezed into the summary aside. */}
-      {['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'].includes(detail.session.metricsSource ?? '') ? null : <SessionDetailClient
+      {importedWithoutWorkout && detail.session.notes.trim() ? (
+        <Surface id="session-outcome" className="space-y-3">
+          <h2 className={sectionHeadingClassName}>Activity notes</h2>
+          <p className="border-t border-[var(--border)] pt-4 whitespace-pre-wrap break-words text-[13px] leading-[1.55] text-[var(--text)]">{detail.session.notes.trim()}</p>
+        </Surface>
+      ) : null}
+      {importedWithoutWorkout ? null : ['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'].includes(detail.session.metricsSource ?? '') ? null : <SessionDetailClient
         id="session-outcome"
         sessionId={detail.session.id}
         initialDone={detail.session.status === 'completed'}
@@ -228,6 +272,7 @@ export default async function AthleteSessionPage({
         performanceProfile={account?.performanceProfile}
         canDelete={detail.session.canDelete}
         returnHref={returnTarget.href}
+        compliancePct={detail.session.compliancePct}
       />}
     </PageShell>
   );

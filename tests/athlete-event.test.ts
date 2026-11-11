@@ -1,24 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { addDays, format } from 'date-fns';
-import { PrismaClient } from '@prisma/client';
 import { createAthleteEventService } from '../lib/athlete-event-service.ts';
 import { createAthleteService } from '../lib/athlete-service.ts';
-import { getSportLabel } from '../lib/sport.ts';
+import { disposableDatabaseSkip, withDisposableDatabase } from './disposable-postgres.ts';
 
 const day = (offset: number) => format(addDays(new Date(), offset), 'yyyy-MM-dd');
 
-test('athlete events validate and persist owner-scoped goals and post-event results without training side effects', async (t) => {
-  assert.equal(getSportLabel('TRIATHLON'), 'Triathlon');
-  const directory = await mkdtemp(path.join(tmpdir(), 'tempo-athlete-events-'));
-  const databaseUrl = `file:${path.join(directory, 'test.db')}`;
-  const db = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
-  try {
-    execFileSync(process.execPath, [path.join(process.cwd(), 'node_modules/prisma/build/index.js'), 'db', 'push', '--skip-generate', '--schema', path.join(process.cwd(), 'prisma/schema.prisma')], { env: { ...process.env, DATABASE_URL: databaseUrl }, stdio: 'pipe' });
+test('athlete events validate and persist owner-scoped goals and post-event results without training side effects', { skip: disposableDatabaseSkip }, async (t) => {
+  await withDisposableDatabase(async (db) => {
     const athlete = await db.user.create({ data: { email: 'event-athlete@example.test', role: 'ATHLETE' } });
     const other = await db.user.create({ data: { email: 'event-other@example.test', role: 'ATHLETE' } });
     const coach = await db.user.create({ data: { email: 'event-coach@example.test', role: 'COACH' } });
@@ -155,8 +147,5 @@ test('athlete events validate and persist owner-scoped goals and post-event resu
       assert.match(calendar, /day\.events\.map/); assert.match(calendar, /day\.events\.length.*event/);
       assert.match(calendar, /EventCalendarLink/);
     });
-  } finally {
-    await db.$disconnect();
-    await rm(directory, { recursive: true, force: true });
-  }
+  });
 });

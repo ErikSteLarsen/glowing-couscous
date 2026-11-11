@@ -43,7 +43,8 @@ test('public share route is outside the signed-in shell and hardens metadata', a
   assert.match(page, /shareLinkService\.loadPreview/);
   assert.doesNotMatch(page, /AppShell/);
   assert.doesNotMatch(page, /prisma\./);
-  assert.match(client, /Use in Planner/);
+  assert.match(client, /Use in \{plannerDestination\}/);
+  assert.match(client, /const plannerDestination = userRole === 'COACH' \? 'Workouts' : 'Planner'/);
   assert.doesNotMatch(client, /Save as Template/);
   assert.match(client, /Nothing is saved or scheduled until/);
   assert.match(client, /api\/share-links\/intake/);

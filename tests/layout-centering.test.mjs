@@ -12,8 +12,10 @@ async function read(relativePath) {
 test('workspace geometry has one shared owner and authentication has a separate frame', async () => {
   const uiSource = await read('components/ui.tsx');
   const css = await read('app/globals.css');
-  assert.doesNotMatch(uiSource, /pageShellWidthClasses|size\?: keyof/);
-  assert.match(uiSource, /<main className=\{`page-layout/);
+  // The merged overhaul gives PageShell named width tiers; it remains the only width owner.
+  assert.match(uiSource, /const pageShellWidthClasses = \{/);
+  assert.match(uiSource, /export function PageShell\(/);
+  assert.match(uiSource, /mx-auto w-full max-w-\[1440px\] px-5 sm:px-7 lg:px-10/);
   assert.match(css, /max-width: var\(--page-max-width\)/);
   assert.match(css, /min-height: var\(--page-header-height\)/);
   assert.match(uiSource, /export function AuthPageShell/);
@@ -29,7 +31,8 @@ test('production routes do not override page width and auth uses its own frame',
   for (const file of await readdir(path.join(root, 'app/(app)'), { recursive: true })) {
     if (!file.endsWith('.tsx')) continue;
     const source = await read(`app/(app)/${file}`);
-    assert.doesNotMatch(source, /<PageShell[^>]*(?:size=|className="[^"]*(?:max-w|px-|py-|gap-))/);
+    // Pages choose a named width tier; they must not override width or padding through className.
+    assert.doesNotMatch(source, /<PageShell[^>]*className="[^"]*(?:max-w|px-|py-|gap-)/);
   }
 });
 
@@ -60,12 +63,17 @@ test('workout authoring gates details behind basics and exposes direct block con
   const builderSource = await read('components/WorkoutBuilder.tsx');
   const canvasSource = await read('components/WorkoutCanvasEditor.tsx');
 
-  assert.match(builderSource, /Continue to workout details/);
-  assert.match(builderSource, /max-w-\[46rem\]/);
-  assert.match(builderSource, /onDetailsVisibilityChange/);
-  assert.match(builderSource, /aria-label=\{basicsEditing \? 'Finish editing workout name'/);
-  assert.match(builderSource, /setBasicsEditing\(!basicsEditing\)/);
-  assert.match(builderSource, /<WorkoutCanvasEditor/);
+  // The rendered builder is the local dnd-kit editor: basics gate the details, and block controls sit in the sequence.
+  assert.match(builderSource, /Start with the basics/);
+  assert.match(builderSource, /basicsReady/);
+  assert.match(builderSource, /Edit basics/);
+  assert.match(builderSource, /Workout sequence/);
+  assert.match(builderSource, /aria-label="Canvas commands"/);
+  assert.match(builderSource, /Duplicate/);
+  assert.match(builderSource, /Repeat once/);
+  assert.match(builderSource, /aria-label=\{`Drag block \$\{index \+ 1\}`\}/);
+  assert.match(builderSource, /<DragOverlay dropAnimation=\{null\}>/);
+  // The remote canvas module is kept for its own consumers and keeps its direct block controls.
   assert.match(canvasSource, /createSessionEditorBlock/);
   assert.match(canvasSource, /updateSessionEditorBlock/);
   assert.match(canvasSource, /canvas-preview__session--score/);
@@ -106,8 +114,10 @@ test('signed-in routes use grouped app shell while auth pages stay centered', as
   assert.match(shellSource, /AppSidebar/);
   const shellCss = await read('app/globals.css');
   assert.match(shellSource, /tempo-shell/);
-  assert.match(shellCss, /grid-template-columns: 228px minmax\(0, 1fr\)/);
-  assert.match(shellCss, /data-menu-hidden="true"\]\s*\{ grid-template-columns: minmax\(0, 1fr\)/);
+  // The merged rail sizes the fixed sidebar and the content offset with one variable.
+  assert.match(shellCss, /--sidebar: 14rem;/);
+  assert.match(shellCss, /\.with-sidebar \{/);
+  assert.match(shellCss, /data-menu-hidden="true"\] \.with-sidebar \{ padding-left: 0; \}/);
   assert.match(sidebarSource, /getPrimaryNavigation/);
   assert.match(sidebarSource, /props\.mobileOpen/);
   assert.match(sidebarSource, /onClick=\{props\.onClose\}|onClick=\{onNavigate\}/);

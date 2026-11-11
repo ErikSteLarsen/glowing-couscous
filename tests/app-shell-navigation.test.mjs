@@ -123,10 +123,8 @@ test('athlete planner only places defined sources on selected dates', async () =
 test('desktop sidebar stays within the viewport and owns its overflow', async () => {
   const sidebarSource = await read('components/AppSidebar.tsx');
 
-  assert.match(
-    sidebarSource,
-    /overflow-y-auto.*md:sticky md:top-0.*md:h-screen md:max-h-screen md:self-start/,
-  );
+  // The merged rail keeps the sidebar fixed to the viewport height and lets it scroll internally.
+  assert.match(sidebarSource, /fixed inset-y-0 .*overflow-y-auto/);
   assert.match(sidebarSource, /flex min-h-full flex-col/);
 });
 

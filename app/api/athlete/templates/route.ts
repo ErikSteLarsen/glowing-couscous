@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     const result = await templateService.saveForOwner(user.id, body.value);
     if (result.error) return NextResponse.json({ error: result.error }, { status: 400 });
-    return NextResponse.json({ ok: true, templateId: result.templateId }, { status: 201 });
+    return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Failed to create template' }, { status: 500 });

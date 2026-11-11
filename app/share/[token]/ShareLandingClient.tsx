@@ -19,16 +19,14 @@ import {
   TopBar,
 } from '@/components/ui';
 import { formatDuration } from '@/lib/format-duration';
-import {
-  createPlannerEditorDraftFromSharedProjection,
-  createTemplateEditorDraftFromSharedProjection,
-} from '@/lib/session-editor-adapters';
+import { createPlannerEditorDraftFromSharedProjection } from '@/lib/session-editor-adapters';
 import {
   serializeSessionEditorDraft,
   validateSessionEditorDraft,
   type SessionEditorDraft,
 } from '@/lib/session-editor';
 import {
+  createSessionEditorDraftFromSharedProjection,
   createSharePath,
   type SharedWorkoutProjection,
   type ShareLinkAction,
@@ -36,6 +34,10 @@ import {
 import type { AppRole } from '@/lib/app-navigation';
 import { getSportLabel } from '@/lib/sport';
 import type { PerformanceProfile } from '@/lib/performance-profile';
+
+// Recipients can copy a shared workout to their Planner or save it as a private
+// template. Only Planner is a continuable sign-in action (see lib/share-link.ts).
+type ShareCopyAction = ShareLinkAction | 'template';
 
 export function ShareLandingClient({
   token,
@@ -55,8 +57,8 @@ export function ShareLandingClient({
   ownerDeleted?: boolean;
 }) {
   const router = useRouter();
-  const availableInitialAction = initialAction && isSignedIn && userRole ? initialAction : null;
-  const [action, setAction] = useState<ShareLinkAction | null>(availableInitialAction);
+  const availableInitialAction: ShareCopyAction | null = initialAction && isSignedIn && userRole ? initialAction : null;
+  const [action, setAction] = useState<ShareCopyAction | null>(availableInitialAction);
   const [draft, setDraft] = useState<SessionEditorDraft>(() => createInitialDraft(projection, userRole, availableInitialAction));
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
@@ -65,9 +67,9 @@ export function ShareLandingClient({
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const plannerDestination = userRole === 'COACH' ? 'Workouts' : 'Planner';
 
-  function beginAction(nextAction: ShareLinkAction) {
+  function beginAction(nextAction: ShareCopyAction) {
     if (isPending) return;
-    const callbackPath = createSharePath(token, nextAction);
+    const callbackPath = createSharePath(token, nextAction === 'template' ? undefined : nextAction);
     if (!isSignedIn) {
       window.location.assign(`/login?callbackUrl=${encodeURIComponent(callbackPath)}`);
       return;
@@ -187,9 +189,11 @@ export function ShareLandingClient({
                   <button type="button" className={primaryButtonClassName} onClick={() => beginAction('planner')}>
                     Use in {plannerDestination}
                   </button>
-                  <button type="button" className={compactSecondaryButtonClassName} onClick={() => beginAction('template')}>
-                    Save as template
-                  </button>
+                  {userRole === 'ATHLETE' ? (
+                    <button type="button" className={compactSecondaryButtonClassName} onClick={() => beginAction('template')}>
+                      Save as template
+                    </button>
+                  ) : null}
                 </div>
               </Surface>
             </div>
@@ -250,9 +254,9 @@ export function ShareLandingClient({
 function createInitialDraft(
   projection: SharedWorkoutProjection,
   userRole: AppRole | null,
-  action: ShareLinkAction | null,
+  action: ShareCopyAction | null,
 ) {
-  if (action === 'template') return createTemplateEditorDraftFromSharedProjection(projection);
+  if (action === 'template') return createSessionEditorDraftFromSharedProjection(projection);
   return createPlannerEditorDraftFromSharedProjection(projection, {
     ownershipMode: userRole === 'COACH' ? 'coach-library' : 'athlete',
   });

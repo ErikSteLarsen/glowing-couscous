@@ -48,7 +48,6 @@ export function navIconFor(label: string) {
 export function AppSidebar(props: {
   user: { name: string; email: string; role: 'COACH' | 'ATHLETE' };
   pathname: string;
-  hasActiveCoach?: boolean;
   mobileOpen: boolean;
   isMobileViewport: boolean;
   onClose: () => void;
@@ -59,7 +58,7 @@ export function AppSidebar(props: {
   theme?: 'dark' | 'light';
   onToggleTheme?: () => void;
 }) {
-  const navItems = getPrimaryNavigation(props.user.role, { hasActiveCoach: props.hasActiveCoach ?? false });
+  const navItems = getPrimaryNavigation();
   const sidebarRef = useRef<HTMLElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const mode = useSyncExternalStore(subscribeSidebarMode, readSidebarMode, () => 'full' as const);

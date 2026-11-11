@@ -28,7 +28,7 @@ for (const nextNote of ['Evening instructions', '']) {
           coach: { id: 2, name: 'Coach', email: 'coach@example.com' }, activities: [],
           sessions: [session(1, 'Completed morning instructions', true), session(2, nextNote)],
         };
-      } }, session: { async findMany() { return []; } } } as never,
+      } }, session: { async findMany() { return []; } }, activity: { async findMany() { return []; } } } as never,
     });
     const dashboard = await service.loadHomeDashboard(7);
     assert.ok(dashboard);
@@ -44,7 +44,7 @@ test('Home surfaces only overdue self-planned sessions and keeps today as the ne
   const coachSession = session(12, '', false, addDays(today, -1), { coachOwnerId: 2 });
   const planSession = session(13, '', false, addDays(today, -7), { trainingPlanId: 4 });
   const completedSession = session(14, '', true, addDays(today, -7));
-  let overdueQuery: { where: Record<string, unknown>; take: number } | null = null;
+  const overdueQueries: Array<{ where: Record<string, unknown>; take: number }> = [];
 
   const service = createAthleteService({
     db: {
@@ -55,9 +55,10 @@ test('Home surfaces only overdue self-planned sessions and keeps today as the ne
         };
       } },
       session: { async findMany(args: { where: Record<string, unknown>; take: number }) {
-        overdueQuery = args;
+        overdueQueries.push(args);
         return [overdueSession, coachSession, planSession, completedSession];
       } },
+      activity: { async findMany() { return []; } },
     } as never,
   });
 
@@ -68,7 +69,8 @@ test('Home surfaces only overdue self-planned sessions and keeps today as the ne
   assert.equal(dashboard.overdue[0].isOverdue, true);
   assert.deepEqual(dashboard.todaySessions.map((item) => item.id), [10]);
   assert.equal(dashboard.todaySessions[0].isOverdue, false);
-  assert.ok(overdueQuery);
+  assert.equal(overdueQueries.length, 1);
+  const [overdueQuery] = overdueQueries;
   assert.equal(overdueQuery.take, 3);
   assert.deepEqual(overdueQuery.where, {
     athleteId: 7,

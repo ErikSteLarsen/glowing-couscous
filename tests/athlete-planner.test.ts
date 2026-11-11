@@ -368,6 +368,7 @@ test('routine placement rejects malformed routines and incomplete periods withou
   const broken = createPlacementHarness({ routineJson: '{broken' });
   assert.equal((await broken.service.assignSource(7, { sourceKind: 'template', sourceId: 9, requestKey: 'broken', dates: ['2026-10-05'] })).ok, false);
   assert.equal(broken.state.sessions.length, 0);
+});
 
 test('personal rescheduling persists calendar days, preserves content, and enforces boundaries in SQLite', async (t) => {
   const { PrismaClient } = await import('@prisma/client');

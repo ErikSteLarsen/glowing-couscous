@@ -58,7 +58,8 @@ test('libraries and session detail own editing while planners place sources', as
   assert.doesNotMatch(coachPlannerSource, /WorkoutBuilder/);
   assert.doesNotMatch(athletePlannerSource, /WorkoutBuilder/);
   assert.doesNotMatch(templatesSource, /WorkoutBuilder/);
-  assert.match(composerSource, /WorkoutCanvasEditor/);
+  // The merged composer is the local dnd-kit editor, not the remote canvas wrapper.
+  assert.match(composerSource, /@dnd-kit/);
   assert.match(canvasSource, /@dnd-kit/);
   assert.doesNotMatch(coachPlannerSource, /from ['"]@\/lib\/planner-draft['"]/);
   assert.doesNotMatch(templatesSource, /type TemplateDraftBlock/);

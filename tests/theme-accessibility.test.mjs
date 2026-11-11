@@ -53,7 +53,7 @@ test('anchor color inheritance stays in the base layer so link utilities can win
   assert.doesNotMatch(globalsSource, /(?:^|\n)a \{\n  color: inherit;/);
 });
 
-test('auth pages reuse shared accessible form styling without demo account copy', async () => {
+test('auth pages reuse shared accessible form styling and document demo athlete access', async () => {
   const loginSource = await read('app/(auth)/login/page.tsx');
   const signupSource = await read('app/(auth)/signup/page.tsx');
   const setupSource = await read('app/(auth)/setup/page.tsx');
@@ -65,7 +65,9 @@ test('auth pages reuse shared accessible form styling without demo account copy'
   assert.match(loginSource, /formFieldClassName/);
   assert.match(loginSource, /primaryButtonClassName/);
   assert.match(loginSource, /secondaryButtonClassName/);
-  assert.doesNotMatch(loginSource, /Demo athlete|mara@demo\.local|demo1234/);
+  assert.match(loginSource, /Demo athlete/);
+  assert.match(loginSource, /mara@demo\.local/);
+  assert.match(loginSource, /demo1234/);
 
   assert.match(signupSource, /formFieldClassName/);
   assert.match(signupSource, /primaryButtonClassName/);
@@ -84,7 +86,8 @@ test('input-heavy app screens reuse shared form field helpers', async () => {
   for (const source of [profileSource, findCoachSource, coachTemplatesSource]) {
     assert.match(source, /form(Field|Textarea|Select)ClassName/);
   }
-  assert.doesNotMatch(sessionDetailSource, /form(Field|Textarea|Select)ClassName|<input|<textarea|WorkoutBuilder/);
+  // Session detail owns its editing fields, so it reuses the shared helpers rather than bespoke controls.
+  assert.match(sessionDetailSource, /form(Field|Textarea|Select)ClassName/);
 });
 
 test('high-impact dialogs and execution controls expose complete accessible state', async () => {

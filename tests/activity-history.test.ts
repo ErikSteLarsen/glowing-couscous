@@ -1,16 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import { PrismaClient } from '@prisma/client';
 import { createAthleteService } from '../lib/athlete-service.ts';
 import { createAthleteManualActivityService } from '../lib/athlete-manual-activity-service.ts';
 import { createAthletePlannerService } from '../lib/athlete-planner-service.ts';
 import { createTrainingLoadService } from '../lib/training-load-service.ts';
 import { createCoachService } from '../lib/coach-service.ts';
 import { getActivityHref, parseActivityFilters } from '../lib/activity-navigation.ts';
+import { disposableDatabaseSkip, withDisposableDatabase } from './disposable-postgres.ts';
 
 test('activity navigation validates query values and preserves filters between pages', () => {
   assert.deepEqual(parseActivityFilters({ page: ['2'], q: ['run'], sport: 'CYCLING' }), { page: 1, query: '', sport: null });
@@ -25,15 +21,8 @@ test('activity navigation validates query values and preserves filters between p
   assert.equal(getActivityHref(parseActivityFilters({})), '/athlete/activity');
 });
 
-test('activity history pages and filtered totals retain outcomes and athlete isolation in SQLite', async (t) => {
-  const directory = await mkdtemp(path.join(tmpdir(), 'tempo-history-'));
-  const databaseUrl = `file:${path.join(directory, 'test.db')}`;
-  const db = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
-  try {
-    execFileSync(process.execPath, [
-      path.join(process.cwd(), 'node_modules/prisma/build/index.js'),
-      'db', 'push', '--skip-generate', '--schema', path.join(process.cwd(), 'prisma/schema.prisma'),
-    ], { env: { ...process.env, DATABASE_URL: databaseUrl }, stdio: 'pipe' });
+test('activity history pages and filtered totals retain outcomes and athlete isolation in PostgreSQL', { skip: disposableDatabaseSkip }, async (t) => {
+  await withDisposableDatabase(async (db) => {
     const athlete = await db.user.create({ data: { email: 'history@example.test', role: 'ATHLETE' } });
     const other = await db.user.create({ data: { email: 'foreign@example.test', role: 'ATHLETE' } });
     const coach = await db.user.create({ data: { email: 'coach@example.test', role: 'COACH' } });
@@ -204,7 +193,7 @@ test('activity history pages and filtered totals retain outcomes and athlete iso
       const manualService = createAthleteManualActivityService({ db });
       const base = {
         sport: 'RUNNING', title: 'Rejected', completedOn: '2026-11-07', durationMinutes: 20,
-        rpe: null, notes: null, requestKey: '4a47249a-b12b-49c9-8d8e-e3d43c3c11ee', pairingChoice: 'separate',
+        distanceKm: null, rpe: null, notes: null, requestKey: '4a47249a-b12b-49c9-8d8e-e3d43c3c11ee', pairingChoice: 'separate',
       };
       for (const input of [
         { ...base, title: ' '.repeat(1) }, { ...base, title: 'x'.repeat(121) },
@@ -395,8 +384,5 @@ test('activity history pages and filtered totals retain outcomes and athlete iso
       assert.equal(pairedAfterCorrection.activity.tss, null);
       assert.equal(pairedAfterCorrection.activity.actualSnapshotJson, null);
     });
-  } finally {
-    await db.$disconnect();
-    await rm(directory, { recursive: true, force: true });
-  }
+  });
 });
