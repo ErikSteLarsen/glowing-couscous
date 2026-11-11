@@ -1,6 +1,24 @@
 # Current status
 
-Last verified locally on **2026-11-10**. Source code and tests are authoritative.
+Last verified locally on **2026-11-11**. Source code and tests are authoritative.
+
+## Release closeout
+
+- Template Apply to Calendar now opens Planner with the owned template selected.
+  Both navigation regression assertions use the current source-selection URL.
+- Final local checks: `pnpm test` passed all 439 tests with the disposable
+  PostgreSQL acceptance database (zero skips), `pnpm lint` passed, and
+  `pnpm build` passed against local `tempo_dev`, with no pending migrations.
+  The existing Node DEP0205 warning remains.
+- Local production HTTP smoke verified auth redirects, login/signup and session
+  endpoints, and the unauthenticated Calendar API guard without runtime errors.
+  The repaired template CTA still needs an authenticated end-to-end browser check.
+- GitHub/Vercel reported successful Production deployment of `fd4fff4` before
+  this closeout. Anonymous production requests reached Vercel SSO protection,
+  so application behavior in production is not verified. Deployment protection
+  and live-provider acceptance remain explicit gates.
+- WorkoutBuilder is the mounted editor. The unused canvas editor is retained;
+  it does not expose a second editor in the running interface.
 
 ## Product and ownership
 
