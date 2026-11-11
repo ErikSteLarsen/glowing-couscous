@@ -2,6 +2,7 @@ const statusClasses = {
   planned: 'border-[var(--status-planned-border)] bg-[var(--status-planned-tint)] text-[var(--status-planned)]',
   adjusted: 'border-[var(--status-adjusted-border)] bg-[var(--status-adjusted-tint)] text-[var(--status-adjusted)]',
   missed: 'border-[var(--status-missed-border)] bg-[var(--status-missed-tint)] text-[var(--status-missed)]',
+  skipped: 'border-[var(--border-strong)] bg-[var(--raised)] text-[var(--text-secondary)]',
 } as const;
 
 type Status = keyof typeof statusClasses | 'completed';

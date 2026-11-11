@@ -5,6 +5,7 @@ out
 dist
 tsconfig.tsbuildinfo
 .claude/settings.local.json
+.claude/worktrees/
 
 .env
 .env.local

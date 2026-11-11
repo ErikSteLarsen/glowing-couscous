@@ -2,6 +2,13 @@
 
 <!-- impeccable:product-schema 1 -->
 
+Tempo is a self-directed endurance training planner. It helps people
+create, schedule, follow, complete, and review their own training. The first MVP
+must be useful to an individual without a coach, roster, or assigned plan.
+
+The product brand is `Tempo` across runtime metadata, the sidebar mark,
+documentation, and the package name.
+
 ## Platform
 
 web
@@ -35,7 +42,103 @@ Training weeks begin on Monday. Desktop, mobile, and keyboard workflows are all 
 
 Prioritize correctness, persistence, understandable empty and error states, and usable desktop, mobile, and keyboard interactions across the personal training loop. Verify shared Planner source selection, date ranges, month navigation, and session state handling before expanding scope. These are acceptance targets, not a claim that every browser check has passed.
 
-Coach-only authoring, roster management, requests, and multi-athlete planning are secondary work and do not define first-MVP completeness. Preserve existing coach behavior and access boundaries when changing shared code. Fix shared regressions and data or security issues regardless of role, but defer coach feature expansion until personal use is complete or explicitly requested.
+1. Sign up and reach a useful personal workspace.
+2. Create, edit, save, and reuse a structured workout or template.
+3. Schedule personal content on selected dates and reliably review or remove planned sessions.
+4. Open and follow a session, record completion, notes, and actual outcomes.
+5. Review saved results in Activity and session detail after refreshing or signing in again.
+6. Log completed training directly in Activity, with sport, duration, and optional distance, effort, and notes, even when no Tempo session was planned; find it on the completion date in history and Calendar.
+7. Import a recorded activity file through an explicit preview, preserve its source and completion time, and prevent duplicate imports without requiring a connected account.
+8. Create personal race or event milestones, keep upcoming dates visible while planning, and review a result after the event.
+9. Explicitly pair an imported activity with an eligible self-planned session on its source-local completion date, or keep it separate, and review actual versus planned duration.
+10. Log a simple manual summary against an eligible self-planned session, or keep the activity separate, without building structured actual intervals.
+11. Correct a saved manual activity from its outcome review; keep paired workout details fixed and keep imported file outcomes source-preserving.
+
+When a saved template opens in Planner, preselect a cadence-valid range: a
+Monday-to-Sunday week or the full calendar month. Show that range before
+assignment and let the athlete choose a different start date.
+
+The training log covers all completed work, whether it was planned in Tempo or
+recorded manually afterward. Structured planned-versus-actual compliance
+requires a real planned baseline and actual structured outcome; unplanned
+entries never manufacture either. Imported summary metrics support duration-only
+comparison when explicitly paired. Load is unavailable when no defensible TSS
+was recorded, and load summaries must identify omissions instead of treating
+them as measured zero. This follows
+the established athlete training-log pattern ([Strava manual entry](https://support.strava.com/en-us/articles/15402188-how-do-i-upload-a-manual-activity-to-strava), [TrainingPeaks athlete features](https://www.trainingpeaks.com/athlete-features/)).
+
+Manual distance is an optional athlete-entered value stored in meters and shown
+in Activity and session review. Tempo never derives it from time, pace, or
+another incomplete source. This complements the current duration-first logging
+flow with the sport, time, and distance fields Strava provides in manual entry
+([Strava manual activity entry](https://support.strava.com/en-us/articles/15402188-how-do-i-upload-a-manual-activity-to-strava)).
+
+Activity file import should preserve a clear review step before saving and keep
+source provenance and the recorded completion time. Supported inputs are TCX,
+FIT, and GPX activity files. FIT files require Garmin's Activity file type, one
+supported sport session, valid absolute start and finish timestamps, consistent
+Activity and Session finish times, and a valid Activity local timestamp so the
+source timezone and Calendar day are explicit. When FIT local time is absent or
+invalid, reject the preview instead of guessing from the server timezone.
+GPX files must contain one GPX 1.1 track with at least two valid, timed
+trackpoints. The athlete chooses the sport because GPX does not provide a
+dependable standard activity type. Require timestamps with an explicit time
+zone (`Z` or a signed UTC offset), one consistent offset, and increasing times;
+reject route-only files, multiple tracks, untimed points, and mixed offsets.
+Derive duration from the first and last trackpoint times and
+distance from consecutive points within each track segment. Keep only summary
+metrics and provenance; discard raw file bytes, GPS coordinates, sensor time
+series, and unknown fields after parsing. Imported summary metrics do not imply
+training load or full planned compliance. This scope follows Strava accepting
+GPX, TCX, and FIT and TrainingPeaks documenting completed device-file uploads
+([Strava file formats](https://support.strava.com/en-us/articles/15402066-how-do-i-get-my-activities-to-strava), [TrainingPeaks upload](https://help.trainingpeaks.com/hc/en-us/articles/204072994-How-do-I-manually-upload-a-workout-file-into-TrainingPeaks), [TrainingPeaks compatible files](https://help.trainingpeaks.com/hc/en-us/articles/204070354-Compatible-Device-Files), [GPX 1.1 schema](https://www.topografix.com/GPX/1/1/), [Garmin FIT Activity decoding](https://developer.garmin.com/fit/articles/cookbook/decoding_activity_files.html)).
+
+Preview may offer open, same-sport, same-source-local-date sessions owned by the
+athlete when they are self-planned and have no Activity. The athlete explicitly
+chooses one candidate or keeps the import separate; never infer a match. Pairing
+completes the scheduled session atomically while preserving its title, date,
+planned blocks, and existing baseline snapshot. If no baseline exists, capture
+the plan before completion. Imported summary metrics do not create actual
+intervals, compliance, or TSS. Paired review compares duration only; structured
+actual comparison stays unavailable without an actual snapshot. Weekly ratios
+that include imported summaries must be labeled as planned duration recorded,
+not full workout compliance.
+
+Manual logging may also attach to an eligible same-sport, same-date open
+self-planned session by explicit athlete choice. Keep the separate-activity
+option available and do not offer coach-assigned sessions. Save the entered
+duration, optional distance, effort, and note atomically with completion while
+preserving the planned workout and its baseline. A manual summary does not
+create actual intervals or infer TSS; paired review reports duration only.
+
+Athletes may correct a saved standalone manual activity's sport, title, date,
+duration, distance, effort, and note. For a paired manual summary, corrections
+apply only to the performed summary; the planned workout and its date remain
+unchanged. Activity, session review, Calendar, and load history must reflect the
+same saved values. Keep imported TCX/FIT/GPX outcomes tied to their source
+records.
+
+Personal event milestones are athlete-owned calendar records, separate from
+planned workouts. Athletes may set an optional goal finish time and record
+their actual finish time and note after the event. Show the next event on Home
+and mark its date in Calendar. An athlete may explicitly link one or more of
+their completed activities to an event; never infer a link. Keep event result
+time and note independent of the linked Activity metrics, and allow either
+record to remain or be removed on its own. Do not generate a training plan.
+This scope follows TrainingPeaks event goals/results and explicit workout/event
+association ([TrainingPeaks events](https://help.trainingpeaks.com/hc/en-us/articles/205076770-Events), [TrainingPeaks activity pairing](https://help.trainingpeaks.com/hc/en-us/articles/115002250311-How-can-I-pair-and-unpair-my-planned-and-completed-workouts), [Strava goals](https://support.strava.com/en-us/articles/15401694-goals-on-the-strava-app)).
+
+Prioritize correctness, persistence, understandable empty/error states, and
+usable desktop, mobile, and keyboard interactions across this loop. Verify
+shared Planner source selection, date ranges, month navigation, and session
+state handling before expanding scope. These are acceptance targets, not a
+claim that all browser checks have passed.
+
+Coach-only authoring, roster management, requests, and multi-athlete planning
+are secondary work and do not define first-MVP completeness. Preserve existing
+coach behavior and access boundaries when changing shared code. Fix shared
+regressions and data/security issues regardless of role, but defer coach feature
+expansion until personal use is complete or explicitly requested.
 
 ## Product Model
 
@@ -60,6 +163,8 @@ Coach-only authoring, roster management, requests, and multi-athlete planning ar
   change. Unknown imported load is distinct from a valid rounded zero, and partial
   totals identify unavailable load. Empty calendar dates mean nothing scheduled,
   not an explicitly planned rest day.
+- Manually logged completed work is an athlete-owned, already-completed Session plus Activity. `Session.source` is `athlete-manual`; `Activity.metricsSource` is `manual-unplanned`. It has no workout blocks or planned baseline, and TSS is unknown unless load can be calculated from recorded facts.
+- A device-file import is athlete-owned, previewed before save, and deduplicated per athlete by a stable file fingerprint. Keep only parsed metrics and provenance needed for training history; do not retain route coordinates by default.
 
 ## Current Capabilities
 

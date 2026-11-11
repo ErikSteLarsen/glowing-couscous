@@ -67,7 +67,7 @@ export function SettingsClient({
   }
 
   return (
-    <div className="page-content--compact settings-preferences grid gap-6">
+    <div className="page-content--compact settings-preferences grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
       <Surface>
           <h2 className={sectionHeadingClassName}>
             Overview
@@ -104,6 +104,20 @@ export function SettingsClient({
           {message}
         </p>
       ) : null}
+      <div className="space-y-6">
+        <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
+          <p className="text-[15px] font-semibold text-[var(--text)]">Units</p>
+          <p className="mt-2 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
+            Metric remains the active default for distance and pace across Tempo screens.
+          </p>
+        </section>
+        <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
+          <p className="text-[15px] font-semibold text-[var(--text)]">Notifications</p>
+          <p className="mt-2 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
+            Email and push notifications are not available yet.
+          </p>
+        </section>
+      </div>
     </div>
   );
 }

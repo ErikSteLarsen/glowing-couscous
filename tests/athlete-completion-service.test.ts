@@ -115,7 +115,7 @@ function actualDraft() {
   );
 }
 
-test('manual completion stores an estimate without fabricated compliance', async () => {
+test('manual completion preserves the scheduled date and stores an estimate without fabricated compliance', async () => {
   const { service, calls } = createService(plannedSession());
 
   const result = await service.completeSession(7, 11, { notes: 'Controlled effort' });
@@ -128,6 +128,7 @@ test('manual completion stores an estimate without fabricated compliance', async
   assert.equal((calls.activityUpsert as any).create.rpe, null);
   assert.equal((calls.sessionUpdate as any).where.id, 11);
   assert.equal((calls.sessionUpdate as any).data.status, 'completed');
+  assert.equal((calls.sessionUpdate as any).data.date.toISOString(), '2026-08-24T00:00:00.000Z');
   assert.equal((calls.sessionUpdate as any).data.athleteNotes, 'Controlled effort');
   const baseline = JSON.parse((calls.sessionUpdate as any).data.coachBaselineJson);
   assert.equal(baseline.title, 'Planned session');

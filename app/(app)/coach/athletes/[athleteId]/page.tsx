@@ -12,6 +12,10 @@ import { getSportLabel } from '@/lib/sport';
 import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
 import { ShareLinkButton } from '@/components/ShareLinkButton';
 
+function hasNoPlannedBaseline(metricsSource: string | null | undefined) {
+  return ['manual-unplanned', 'tcx-import', 'fit-import', 'gpx-import'].includes(metricsSource ?? '');
+}
+
 export default async function CoachAthleteDetailPage({
   params,
   searchParams,
@@ -102,23 +106,23 @@ export default async function CoachAthleteDetailPage({
                             </div>
                              <div className="flex flex-wrap items-center justify-end gap-2">
                                <StatusBadge status={session.status} />
-                                <SessionComparisonDialog
+                                {hasNoPlannedBaseline(session.metricsSource) ? null : <SessionComparisonDialog
                                   sessionId={session.id}
                                   endpoint={`/api/coach/sessions/${session.id}/comparison`}
-                           perspective="coach"
+                                  perspective="coach"
                                    label={`Compare ${session.title}`}
-                                 />
-                                  <ShareLinkButton sourceKind="session" sourceId={session.id} ariaLabel={`Create a share link for ${session.title}`} />
+                                 />}
+                                  {hasNoPlannedBaseline(session.metricsSource) ? null : <ShareLinkButton sourceKind="session" sourceId={session.id} ariaLabel={`Create a share link for ${session.title}`} />}
                              </div>
                           </div>
                           <div className="mt-3">
                             <SessionBlockBar segments={session.segments} compact />
                           </div>
                           <div className="mt-3 flex flex-wrap gap-4 text-sm text-[var(--text-secondary)]">
-                            <MetricText>{formatDuration(session.durationSec)}</MetricText>
-                            <MetricText>{session.tss} TSS</MetricText>
+                            <MetricText>{formatDuration(hasNoPlannedBaseline(session.metricsSource) ? session.actualDurationSec ?? session.durationSec : session.durationSec)}</MetricText>
+                            <MetricText>{session.tss === null ? 'Load unavailable' : `${session.tss} TSS`}</MetricText>
                             <MetricText>
-                              {session.completionPct === null ? 'Compliance unavailable' : `${session.completionPct}% compliance`}
+                              {hasNoPlannedBaseline(session.metricsSource) ? 'No planned comparison' : session.completionPct === null ? 'Compliance unavailable' : `${session.completionPct}% compliance`}
                             </MetricText>
                           </div>
                         </article>
@@ -158,13 +162,13 @@ export default async function CoachAthleteDetailPage({
                     </div>
                      <div className="flex flex-wrap items-center justify-end gap-2">
                        <StatusBadge status={session.status} />
-                         <SessionComparisonDialog
+                         {hasNoPlannedBaseline(session.metricsSource) ? null : <SessionComparisonDialog
                            sessionId={session.id}
                            endpoint={`/api/coach/sessions/${session.id}/comparison`}
                            perspective="coach"
                            label={`Compare ${session.title}`}
-                         />
-                          <ShareLinkButton sourceKind="session" sourceId={session.id} ariaLabel={`Create a share link for ${session.title}`} />
+                         />}
+                          {hasNoPlannedBaseline(session.metricsSource) ? null : <ShareLinkButton sourceKind="session" sourceId={session.id} ariaLabel={`Create a share link for ${session.title}`} />}
                      </div>
                   </div>
 
@@ -175,7 +179,7 @@ export default async function CoachAthleteDetailPage({
                   <dl className="mt-3 grid gap-3 sm:grid-cols-3">
                     <div>
                       <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Planned</dt>
-                      <dd className="mt-1 text-sm text-[var(--text)]">{formatDuration(session.durationSec)}</dd>
+                      <dd className="mt-1 text-sm text-[var(--text)]">{hasNoPlannedBaseline(session.metricsSource) ? 'No planned baseline' : formatDuration(session.durationSec)}</dd>
                     </div>
                     <div>
                       <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Done</dt>
@@ -186,7 +190,7 @@ export default async function CoachAthleteDetailPage({
                     <div>
                       <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Compliance</dt>
                       <dd className="mt-1 text-sm text-[var(--text)]">
-                        {session.completionPct === null ? 'Unavailable' : `${session.completionPct}%`}
+                        {hasNoPlannedBaseline(session.metricsSource) ? 'No planned comparison' : session.completionPct === null ? 'Unavailable' : `${session.completionPct}%`}
                       </dd>
                     </div>
                   </dl>

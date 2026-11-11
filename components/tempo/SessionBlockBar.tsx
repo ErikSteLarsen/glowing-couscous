@@ -22,6 +22,8 @@ export function SessionBlockBar({
   /** @deprecated Use `size="compact"` instead. */
   compact?: boolean;
 }) {
+  if (segments.length === 0) return null;
+
   const resolvedSize = size ?? (compact ? 'compact' : 'full');
   const summary = segments.map((segment) => `${segment.zone === null ? 'Unknown intensity' : `Zone ${segment.zone}`}: ${segment.label}, ${segment.durationSec} seconds`).join('; ');
   const height = {

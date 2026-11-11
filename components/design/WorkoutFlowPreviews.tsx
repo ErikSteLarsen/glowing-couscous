@@ -422,7 +422,7 @@ export function WorkoutFlowPreviews({ direction, workbenchVariant = 'classic' }:
     }
     const next = [...blocks];
     const [moving] = next.splice(fromIndex, 1);
-    const insertionIndex = overId === SEQUENCE_END_ID ? next.length : fromIndex < overIndex ? overIndex - 1 : overIndex;
+    const insertionIndex = overId === SEQUENCE_END_ID ? next.length : overIndex;
     next.splice(insertionIndex, 0, moving);
     commit(next);
     setSelectedIds([activeId]);
@@ -488,6 +488,7 @@ export function WorkoutFlowPreviews({ direction, workbenchVariant = 'classic' }:
         </header>
 
         <DndContext
+          id="workout-flow-preview"
           sensors={sensors}
           onDragStart={onDragStart}
           onDragCancel={onDragCancel}
@@ -646,7 +647,7 @@ function TerrainWorkbench(props: EditorViewProps & { variant: WorkbenchVariant }
         <WorkbenchToolbar label="Intensity terrain" title={props.workoutName} copy="Block width follows time. Block height follows intensity." metrics={props.metrics} />
         <div className="workout-preview__terrain-legend"><span>Height = training intensity</span><span><i className="ink-zone-1" /> Z1 easy <i className="ink-zone-5" /> Z5 hardest</span></div>
         <div className="workout-preview__terrain-timeline"><SessionBlockBar segments={props.metrics.segments} /></div>
-        <div className="workout-preview__terrain-canvas" aria-label="Workout intensity terrain">
+        <div className="workout-preview__terrain-canvas" role="group" aria-label="Workout intensity terrain">
           <div className="workout-preview__terrain-axis"><span>Z5</span><span>Z3</span><span>Z1</span></div>
           <SortableContext items={props.blocks.map((block) => block.id)} strategy={rectSortingStrategy}>
             <div className="workout-preview__terrain-sequence">
@@ -671,7 +672,7 @@ function RibbonWorkbench(props: EditorViewProps & { variant: WorkbenchVariant })
       <section className="workout-preview__workbench-main" aria-label="Full-width ribbon workout sequence">
         <WorkbenchToolbar label="Full-width ribbon" title={props.workoutName} copy="The session fills the field. Select one or several parts to work below." metrics={props.metrics} />
         <div className="workout-preview__ribbon-intro"><span className="workout-preview__label">Session from start to finish</span><span>Every block stays visible, even when the session is short.</span></div>
-        <div className="workout-preview__ribbon-track" aria-label="Selectable full-width session ribbon">
+        <div className="workout-preview__ribbon-track" role="group" aria-label="Selectable full-width session ribbon">
           <SortableContext items={props.blocks.map((block) => block.id)} strategy={rectSortingStrategy}>
             {props.blocks.map((block, index) => <SortableRibbonSegment key={block.id} block={block} index={index} selected={props.selectedIds.includes(block.id)} onSelect={props.onToggleSelect} />)}
           </SortableContext>
@@ -728,7 +729,7 @@ function StagingShelf(props: EditorViewProps) {
 
 function SortableTerrainBlock({ block, index, selected, onSelect }: { block: PreviewBlock; index: number; selected: boolean; onSelect: (id: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
-  return <article ref={setNodeRef} style={{ '--terrain-height': `${30 + block.zone * 13}%`, flexGrow: block.duration * block.reps, transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.45 : 1 } as CSSProperties} className={`workout-preview__terrain-block ${selected ? 'is-selected' : ''}`}><div className="workout-preview__terrain-block-inner"><button type="button" className="workout-preview__drag-handle" aria-label={`Drag block ${index + 1}, ${block.label}`} {...attributes} {...listeners}><GripVertical size={16} aria-hidden="true" /></button><button type="button" className="workout-preview__terrain-content" aria-pressed={selected} onClick={() => onSelect(block.id)}><span>Z{block.zone}</span><strong>{block.label}</strong><small>{formatBlockDuration(block)}</small></button></div></article>;
+  return <article ref={setNodeRef} style={{ '--terrain-height': `${30 + block.zone * 13}%`, flexGrow: block.duration * block.reps, transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.45 : 1 } as CSSProperties} className={`workout-preview__terrain-block ${selected ? 'is-selected' : ''}`}><div className="workout-preview__terrain-block-inner"><button type="button" className="workout-preview__drag-handle" aria-label={`Drag block ${index + 1}, ${block.label}`} {...attributes} {...listeners}><GripVertical size={16} aria-hidden="true" /></button><button type="button" className="workout-preview__terrain-content" aria-pressed={selected} onClick={() => onSelect(block.id)}><span className={`ink-zone-${block.zone}`}>Z{block.zone}</span><strong>{block.label}</strong><small>{formatBlockDuration(block)}</small></button></div></article>;
 }
 
 function SortableRibbonSegment({ block, index, selected, onSelect }: { block: PreviewBlock; index: number; selected: boolean; onSelect: (id: string) => void }) {

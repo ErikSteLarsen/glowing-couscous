@@ -30,13 +30,14 @@ import {
   successTextClassName,
 } from '@/components/ui';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { SessionIntensitySwatch } from '@/components/tempo/SessionIntensitySwatch';
 import { formatDuration } from '@/lib/format-duration';
+import { parsePlannedTime } from '@/lib/planned-time';
 import { getSportLabel } from '@/lib/sport';
 import { getTempoZoneMeta } from '@/lib/tempo-blocks';
 import { getAverageSessionZone } from '@/lib/session-intensity';
-import { SessionIntensitySwatch } from '@/components/tempo/SessionIntensitySwatch';
 
-import type { PlannerRole, PlannerSourceKind, PlannerSource as BasePlannerSource, PlannerSession, PlannerCalendarDay, PlannerAthlete } from '@/lib/planner-view';
+import type { PlannerAthlete, PlannerCalendarDay, PlannerRole, PlannerSession, PlannerSource as BasePlannerSource, PlannerSourceKind } from '@/lib/planner-view';
 
 type SourceTab = Exclude<PlannerSourceKind, 'template'>;
 type PlannerSource = Omit<BasePlannerSource, 'kind'> & { kind: SourceTab };
@@ -50,6 +51,9 @@ export function PlannerDesk({
   sources,
   athletes = [],
   initialAthleteId = null,
+  initialSourceKey = '',
+  initialSourceTab = 'workout',
+  initialMessage = '',
 }: {
   role: PlannerRole;
   initialDate: string;
@@ -58,15 +62,19 @@ export function PlannerDesk({
   sources: PlannerSource[];
   athletes?: PlannerAthlete[];
   initialAthleteId?: number | null;
+  initialSourceKey?: string;
+  initialSourceTab?: SourceTab;
+  initialMessage?: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedAthleteId, setSelectedAthleteId] = useState<number | null>(initialAthleteId);
-  const [sourceTab, setSourceTab] = useState<SourceTab>('workout');
+  const [sourceTab, setSourceTab] = useState<SourceTab>(initialSourceTab);
   const [query, setQuery] = useState('');
-  const [selectedSourceKey, setSelectedSourceKey] = useState('');
+  const [selectedSourceKey, setSelectedSourceKey] = useState(initialSourceKey);
   const [selectedDates, setSelectedDates] = useState([initialDate]);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(initialMessage);
+  const [startTime, setStartTime] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger' | 'neutral'>('neutral');
   const [pendingAction, setPendingAction] = useState<'assign' | number | null>(null);
   const [placement, setPlacement] = useState<PlacementFeedback | null>(null);
@@ -85,7 +93,16 @@ export function PlannerDesk({
 
   const visibleSessions = calendarDays.flatMap((day) => day.sessions).filter((session) => role === 'athlete' || session.athleteId === selectedAthleteId);
   const selectedDate = selectedDates[0] ?? initialDate;
-  const canAssign = Boolean(selectedSource && selectedDates.length && (role === 'athlete' || selectedAthleteId));
+  const plannedTime = parsePlannedTime(startTime.trim());
+  const timeError = plannedTime.ok ? null : plannedTime.error;
+  const scopedCalendarDays = calendarDays.map((day) => ({ ...day, sessions: day.sessions.filter((session) => role === 'athlete' || session.athleteId === selectedAthleteId) }));
+  const duplicateSourceDates = selectedSource
+    ? selectedDates.filter((date) => scopedCalendarDays.some((day) => day.isoDate === date
+        && day.sessions.some((session) => session.title === selectedSource.title && session.sport === selectedSource.sport)))
+    : [];
+  const sourceNoun = selectedSource?.kind === 'training-plan' ? 'plan' : 'workout';
+  const duplicateWarning = duplicateSourceDates.length ? `Some selected days already have this ${sourceNoun}.` : null;
+  const canAssign = Boolean(selectedSource && selectedDates.length && !timeError && (role === 'athlete' || selectedAthleteId));
 
   function selectSource(source: PlannerSource) {
     setSelectedSourceKey(source.key);
@@ -136,6 +153,7 @@ export function PlannerDesk({
     const nextDate = format(startOfMonth(nextMonth), 'yyyy-MM-dd');
     const params = new URLSearchParams({ date: nextDate });
     if (role === 'coach' && selectedAthleteId) params.set('athleteId', String(selectedAthleteId));
+    if (role === 'athlete' && selectedSource) params.set('source', selectedSource.key);
     router.push(`${role === 'coach' ? '/coach/planner' : '/athlete/planner'}?${params.toString()}`);
   }
 
@@ -165,6 +183,13 @@ export function PlannerDesk({
       setMessage('Choose an athlete before assigning source content.');
       return;
     }
+    if (!plannedTime.ok) {
+      setMessageTone('danger');
+      setMessage(plannedTime.error);
+      return;
+    }
+    const timeLabel = plannedTime.timeLabel;
+
     mutationInFlight.current = true;
     setPendingAction('assign');
     const feedback = { dates: [...selectedDates], title: selectedSource.title, athleteId: selectedAthleteId };
@@ -175,6 +200,7 @@ export function PlannerDesk({
           sourceKind: selectedSource.kind,
           sourceId: selectedSource.id,
           dates: [...selectedDates].sort(),
+          timeLabel,
         });
         if (role === 'athlete' && placementRequest.current?.signature !== signature) {
           placementRequest.current = { signature, requestKey: crypto.randomUUID() };
@@ -184,6 +210,7 @@ export function PlannerDesk({
               sourceKind: selectedSource.kind,
               sourceId: selectedSource.id,
               dates: selectedDates,
+              timeLabel,
               requestKey: placementRequest.current?.requestKey,
             }
           : { athleteId: selectedAthleteId, source: coachSource(selectedSource), dates: selectedDates };
@@ -202,7 +229,10 @@ export function PlannerDesk({
         setMessageTone('success');
         if (role === 'athlete') placementRequest.current = null;
         setPlacement({ ...feedback, state: 'saved' });
-        setMessage(`${selectedSource.title} assigned to ${payload.sessionIds?.length ?? selectedDates.length} day${(payload.sessionIds?.length ?? selectedDates.length) === 1 ? '' : 's'}.`);
+        const placedCount = payload.sessionIds?.length ?? selectedDates.length;
+        // Clear the selection so the assign button cannot place the same dates twice.
+        setSelectedDates([]);
+        setMessage(`${selectedSource.title} assigned to ${placedCount} day${placedCount === 1 ? '' : 's'}. Review them in Calendar.`);
         router.refresh();
       } catch {
         setMessageTone('danger');
@@ -251,8 +281,9 @@ export function PlannerDesk({
   }
 
   return (
-    <div className="planner-desk">
+    <div className="space-y-4">
       <AssignmentSummary
+        role={role}
         source={selectedSource}
         selectedDates={selectedDates}
         isPending={isPending}
@@ -260,10 +291,15 @@ export function PlannerDesk({
         message={message}
         messageTone={messageTone}
         canAssign={canAssign}
+        startTime={startTime}
+        timeError={timeError}
+        duplicateWarning={duplicateWarning}
+        onStartTimeChange={setStartTime}
         onAssign={assignSource}
       />
 
-      <div className="planner-desk__layout">
+      <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[290px_minmax(0,1fr)]">
+        <div className="min-w-0 xl:row-span-2">
         <SourceDock
           role={role}
           sources={sources}
@@ -279,11 +315,13 @@ export function PlannerDesk({
           onTabChange={changeSourceTab}
           onSelectSource={selectSource}
         />
+        </div>
+        <div className="min-w-0">
         <MonthCalendar
           label={calendarLabel}
           initialDate={initialDate}
           selectedDate={selectedDate}
-          days={calendarDays.map((day) => ({ ...day, sessions: day.sessions.filter((session) => role === 'athlete' || session.athleteId === selectedAthleteId) }))}
+          days={scopedCalendarDays}
           placement={role === 'athlete' || placement?.athleteId === selectedAthleteId ? placement : null}
           selectedDates={selectedDates}
           selectedSource={selectedSource}
@@ -291,6 +329,8 @@ export function PlannerDesk({
           onNavigateWeek={navigateWeek}
           onSelectDate={selectDate}
         />
+        </div>
+        <div className="min-w-0">
         <SelectionPanel
           role={role}
           sessions={visibleSessions}
@@ -300,12 +340,13 @@ export function PlannerDesk({
           onSelectOnlyDate={selectOnlyDate}
           onRemoveSession={removeSession}
         />
+        </div>
       </div>
     </div>
   );
 }
 
-function AssignmentSummary({ source, selectedDates, isPending, isAssigning, message, messageTone, canAssign, onAssign }: { source: PlannerSource | null; selectedDates: string[]; isPending: boolean; isAssigning: boolean; message: string; messageTone: 'success' | 'danger' | 'neutral'; canAssign: boolean; onAssign: () => void }) {
+function AssignmentSummary({ role, source, selectedDates, isPending, isAssigning, message, messageTone, canAssign, startTime, timeError, duplicateWarning, onStartTimeChange, onAssign }: { role: PlannerRole; source: PlannerSource | null; selectedDates: string[]; isPending: boolean; isAssigning: boolean; message: string; messageTone: 'success' | 'danger' | 'neutral'; canAssign: boolean; startTime: string; timeError: string | null; duplicateWarning: string | null; onStartTimeChange: (value: string) => void; onAssign: () => void }) {
   const selectedCount = selectedDates.length;
   const buttonLabel = !source
     ? 'Choose a source'
@@ -313,7 +354,7 @@ function AssignmentSummary({ source, selectedDates, isPending, isAssigning, mess
       ? 'Assign training plan'
       : `Assign workout to ${selectedCount} day${selectedCount === 1 ? '' : 's'}`;
   return (
-    <section className={`planner-desk__assignment ${source ? 'planner-desk__assignment--active' : 'planner-desk__assignment--idle'} border-y border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-[var(--shadow-inset)] sm:px-5`}>
+    <section className={`max-md:sticky max-md:top-0 max-md:z-20 border-y border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-[var(--shadow-inset)] sm:px-5 ${source ? 'planner-desk__assignment--active' : 'planner-desk__assignment--idle'}`}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-[var(--text)]">{source ? source.title : 'No source selected'}{source ? <span className="font-normal text-[var(--text-secondary)]"> · {getSportLabel(source.sport)} · {sourceMeta(source)}</span> : null}</p>
@@ -321,15 +362,45 @@ function AssignmentSummary({ source, selectedDates, isPending, isAssigning, mess
             {`${selectedCount} ${selectedCount === 1 ? 'day' : 'days'} selected`}
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <p className={`text-xs text-[var(--text-muted)]`}>
-            {!source ? 'Choose a workout or plan below to start planning.' : 'Click dates to toggle the selection.'}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <p className="text-xs text-[var(--text-muted)] sm:max-w-[200px]">
+            {source ? 'Click dates to toggle the selection.' : 'Choose a workout or plan below to start planning.'}
           </p>
-          {source ? <button type="button" aria-label={isAssigning ? 'Placing workout' : buttonLabel} disabled={isPending || !canAssign} onClick={onAssign} className={`${primaryButtonClassName} planner-desk__assignment-action`}>
-            <Check aria-hidden="true" className="mr-2 h-4 w-4" />
-            <span className="md:hidden">{isAssigning ? 'Placing…' : 'Assign'}</span>
-            <span className="hidden md:inline">{isAssigning ? 'Placing...' : buttonLabel}</span>
-          </button> : null}
+          {role === 'athlete' ? (
+            <div className="min-w-0 sm:w-40">
+              <label className="block">
+                <span className={formLabelClassName}>Start time</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  maxLength={5}
+                  placeholder="HH:mm"
+                  value={startTime}
+                  onChange={(event) => onStartTimeChange(event.target.value)}
+                  aria-invalid={timeError ? true : undefined}
+                  aria-describedby="planner-start-time-hint"
+                  className={formFieldClassName}
+                />
+              </label>
+              <p id="planner-start-time-hint" className={`mt-1 text-xs ${timeError ? 'text-[var(--status-danger)]' : 'text-[var(--text-muted)]'}`}>
+                {timeError ?? 'Optional. Leave empty for an untimed session.'}
+              </p>
+            </div>
+          ) : null}
+          <div className="flex flex-col gap-2 sm:items-end">
+            {duplicateWarning ? (
+              <p className="inline-flex items-start gap-1.5 text-xs font-medium text-[var(--status-warning)]">
+                <CircleAlert aria-hidden="true" className="mt-px h-3.5 w-3.5 shrink-0" />
+                <span>{duplicateWarning}</span>
+              </p>
+            ) : null}
+            {source ? <button type="button" aria-label={isAssigning ? 'Placing workout' : buttonLabel} disabled={isPending || !canAssign} onClick={onAssign} className={`${primaryButtonClassName} planner-desk__assignment-action`}>
+              <Check aria-hidden="true" className="mr-2 h-4 w-4" />
+              <span className="md:hidden">{isAssigning ? 'Placing…' : 'Assign'}</span>
+              <span className="hidden md:inline">{isAssigning ? 'Placing...' : buttonLabel}</span>
+            </button> : null}
+          </div>
         </div>
       </div>
       {message ? <p role={messageTone === 'danger' ? 'alert' : 'status'} aria-live="polite" className={`mt-2 border-t border-[var(--border)] pt-2 ${messageTone === 'danger' ? dangerTextClassName : messageTone === 'success' ? successTextClassName : 'text-sm text-[var(--text-secondary)]'}`}>{message}</p> : null}
@@ -342,7 +413,7 @@ function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSo
   const tabSources = sources.filter((source) => source.kind === sourceTab);
   const hasSearch = query.trim().length > 0;
   return (
-    <aside className="planner-desk__sources min-w-0 border border-[var(--border)] bg-[var(--nav-surface)] p-3 shadow-[var(--shadow-inset)]">
+    <aside className="planner-desk__sources min-w-0 border border-[var(--border)] bg-[var(--nav-surface)] p-3 shadow-[var(--shadow-inset)] xl:sticky xl:top-4 xl:self-start">
       {role === 'coach' ? (
         <label className="block border-b border-[var(--nav-border)] pb-3">
           <span className={formLabelClassName}>Athlete</span>
@@ -363,10 +434,10 @@ function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSo
         <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
         <input type="search" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Search by name or sport" className={`${formFieldClassName} pl-9`} />
       </label>
-      <div role="group" aria-label="Filter sources by type" className="mt-3 flex overflow-x-auto border-b border-[var(--nav-border)]">
+      <div role="tablist" aria-label="Planner source type" className="mt-3 flex overflow-x-auto border-b border-[var(--nav-border)]">
         {tabs.map((tab) => {
           const count = sources.filter((source) => source.kind === tab).length;
-          return <button key={tab} type="button" aria-pressed={sourceTab === tab} onClick={() => onTabChange(tab)} className={`min-h-9 shrink-0 border-b-2 px-2.5 text-xs font-semibold capitalize transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${sourceTab === tab ? 'border-[var(--brand)] text-[var(--brand)]' : 'border-transparent text-[var(--nav-muted)] hover:text-[var(--nav-text)]'}`}>{tab === 'training-plan' ? 'Plans' : `${tab}s`} <span className="font-normal">{count}</span></button>;
+          return <button key={tab} type="button" role="tab" aria-selected={sourceTab === tab} onClick={() => onTabChange(tab)} className={`min-h-9 shrink-0 border-b-2 px-2.5 text-xs font-semibold capitalize transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${sourceTab === tab ? 'border-[var(--brand)] text-[var(--brand)]' : 'border-transparent text-[var(--nav-muted)] hover:text-[var(--nav-text)]'}`}>{tab === 'training-plan' ? 'Plans' : `${tab}s`} <span className="font-normal">{count}</span></button>;
         })}
       </div>
       <div className="planner-desk__source-results mt-3 space-y-2">
@@ -397,7 +468,7 @@ function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSo
 
 function SourceResult({ source, selected, selectedDate, onSelect }: { source: PlannerSource; selected: boolean; selectedDate: string; onSelect: (source: PlannerSource) => void }) {
   return (
-    <button type="button" aria-pressed={selected} onClick={() => onSelect(source)} className={`flex w-full min-w-0 items-start gap-3 rounded-[3px] border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${selected ? 'border-[var(--field-selected-border)] bg-[var(--surface)] shadow-[var(--shadow-inset)]' : 'border-[var(--nav-border)] bg-[var(--field-surface)] hover:border-[var(--field-selected-border)] hover:bg-[var(--surface)]'}`}>
+    <button type="button" aria-pressed={selected} onClick={() => onSelect(source)} className={`flex w-full min-w-0 items-start gap-3 rounded-lg border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${selected ? 'border-[var(--field-selected-border)] bg-[var(--surface)] shadow-[var(--shadow-inset)]' : 'border-[var(--nav-border)] bg-[var(--field-surface)] hover:border-[var(--field-selected-border)] hover:bg-[var(--surface)]'}`}>
       <span className={`mt-1 h-8 w-1 shrink-0 rounded-full ${source.kind === 'training-plan' ? 'bg-[var(--color-zone-5)]' : 'bg-[var(--color-zone-2)]'}`} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center justify-between gap-2"><span className="truncate text-[13px] font-semibold text-[var(--text)]">{source.title}</span>{selected ? <Check aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[var(--brand)]" /> : null}</span>
@@ -438,27 +509,27 @@ function MonthCalendar({ placement, label, initialDate, selectedDate, days, sele
     else if (dayLeft < stripLeft) strip.scrollLeft = dayLeft;
   }, [selectedDate]);
   return (
-    <section className={`planner-desk__calendar min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-inset)]`}>
+    <section className="min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-inset)] sm:p-5">
       <div className="flex flex-col gap-3 border-b border-[var(--border)] pb-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold tracking-[-0.02em]">{label}</h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">{calendarInstruction(selectedSource)}</p>
         </div>
-        <div className="flex items-center gap-1" aria-label="Month navigation">
-          <button type="button" aria-label="Previous month" onClick={() => onNavigate(-1)} className="planner-desk__month-nav rounded-[3px] text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ChevronLeft aria-hidden="true" className="h-4 w-4" /></button>
-          <button type="button" onClick={() => onNavigate(0)} className="planner-desk__month-current rounded-[3px] px-2.5 text-xs font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">This month</button>
-          <button type="button" aria-label="Next month" onClick={() => onNavigate(1)} className="planner-desk__month-nav rounded-[3px] text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ChevronRight aria-hidden="true" className="h-4 w-4" /></button>
+        <div className="flex items-center gap-1" role="group" aria-label="Month navigation">
+          <button type="button" aria-label="Previous month" onClick={() => onNavigate(-1)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] max-md:h-11 max-md:w-11"><ChevronLeft aria-hidden="true" className="h-4 w-4" /></button>
+          <button type="button" onClick={() => onNavigate(0)} className="min-h-8 rounded-lg px-2.5 text-xs font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] max-md:min-h-11">This month</button>
+          <button type="button" aria-label="Next month" onClick={() => onNavigate(1)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] max-md:h-11 max-md:w-11"><ChevronRight aria-hidden="true" className="h-4 w-4" /></button>
         </div>
       </div>
       <div className="mt-3">
-        <div className="planner-desk__week-picker mb-4 border-b border-[var(--border)] pb-3 md:hidden">
+        <div className="mb-4 border-b border-[var(--border)] pb-3 md:hidden">
           <div className="mb-2 flex items-center justify-between gap-2">
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-[var(--text)]">Choose a day</h3>
               <p className="mt-0.5 truncate text-xs text-[var(--text-secondary)]">{format(parseISO(`${selectedDate}T00:00:00`), 'EEEE d MMMM yyyy')}</p>
             </div>
             <div className="flex shrink-0 gap-1">
-              <button type="button" aria-label="Previous week" onClick={() => onNavigateWeek(-1)} className="planner-desk__week-nav" ><ChevronLeft aria-hidden="true" className="h-4 w-4" /></button>
+              <button type="button" aria-label="Previous week" onClick={() => onNavigateWeek(-1)} className="planner-desk__week-nav"><ChevronLeft aria-hidden="true" className="h-4 w-4" /></button>
               <button type="button" aria-label="Next week" onClick={() => onNavigateWeek(1)} className="planner-desk__week-nav"><ChevronRight aria-hidden="true" className="h-4 w-4" /></button>
             </div>
           </div>
@@ -484,15 +555,15 @@ function MonthCalendar({ placement, label, initialDate, selectedDate, days, sele
         </div>
         <div className="min-w-0">
           <div className="grid grid-cols-7 border-y border-[var(--border)] bg-[var(--sunken)]">
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => <div key={day} className="planner-desk__month-heading px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day}</div>)}
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => <div key={day} className="px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)] max-md:px-0.5 max-md:text-[9px]">{day}</div>)}
           </div>
-          <div className="planner-desk__month grid grid-cols-7 divide-x divide-y divide-[var(--border)] border-b border-[var(--border)]" style={{ gridTemplateRows: `repeat(${Math.ceil(days.length / 7)}, minmax(0, 1fr))` }}>
+          <div className="grid grid-cols-7 divide-x divide-y divide-[var(--border)] border-b border-[var(--border)]">
             {days.map((day) => <CalendarCell key={day.isoDate} feedback={placement?.dates.includes(day.isoDate) ? placement : null} day={day} today={day.isoDate === todayIso} selected={selectedDates.includes(day.isoDate)} onSelect={() => onSelectDate(day.isoDate)} />)}
           </div>
         </div>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-muted)]">
-        <span className="inline-flex items-center gap-2"><span className="h-3 w-3 border border-[var(--brand)] bg-[var(--brand-tint)]" /> Selected</span>
+        <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[var(--brand)]" /> Selected</span>
         <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[var(--status-success)]" /> Completed</span>
         <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[var(--status-warning)]" /> Adjusted</span>
         <span className="ml-auto inline-flex items-center gap-2"><CalendarDays aria-hidden="true" className="h-3.5 w-3.5" /> {selectedDates.length} selected</span>
@@ -511,11 +582,10 @@ function CalendarCell({ feedback, day, today, selected, onSelect }: { feedback: 
     ? 'No sessions planned.'
     : `${day.sessions.length} planned: ${sessionNames}${extraSessionCount ? `, and ${extraSessionCount} more` : ''}.${previewAverageZoneName ? ` First session averages in the ${previewAverageZoneName} zone; pause time is excluded.` : ''}`;
   return (
-    <button type="button" aria-pressed={selected} aria-current={today ? 'date' : undefined} aria-label={`${day.label} ${day.dateLabel}${today ? ', today' : ''}. ${scheduleDescription} Toggle date.`} onClick={onSelect} className={`planner-desk__day flex min-w-0 flex-col p-2 text-left transition focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] ${day.inMonth ? 'bg-[var(--field-surface)]' : 'bg-[var(--sunken)]'} ${!selected ? 'hover:bg-[var(--selection)]' : ''}`}>
-      <span className="flex items-center justify-between gap-2"><span className={`metric-text text-sm font-semibold ${day.inMonth ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'} ${today ? 'calendar-day-date--today' : ''}`}>{day.dateLabel.split(' ')[0]}</span></span>
-      {feedback ? <span className={`planner-desk__feedback mt-1 block truncate text-xs ${feedback.state === 'failed' ? 'text-[var(--status-danger)]' : feedback.state === 'saved' ? 'text-[var(--status-success)]' : 'text-[var(--text-secondary)]'}`}>{feedback.state === 'placing' ? 'Placing' : feedback.state === 'saved' ? 'Placed' : 'Not confirmed'}: {feedback.title}</span> : null}
-      <span className="planner-desk__sessions mt-1 w-full min-w-0">{previewSession ? <span key={previewSession.id} className="flex min-w-0 items-center gap-1.5 bg-[var(--surface)] px-1.5 py-1">{previewAverageZone ? <SessionIntensitySwatch zone={previewAverageZone} /> : null}<span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[var(--text)]">{previewSession.title}</span></span> : null}{day.sessions.length > 1 ? <span className="block px-1.5 text-[11px] text-[var(--text-muted)]">+{day.sessions.length - 1} more</span> : null}</span>
-      <span className="planner-desk__count text-[11px] text-[var(--text-secondary)]">{day.sessions.length ? `${day.sessions.length} planned` : ''}</span>
+    <button type="button" aria-pressed={selected} aria-current={today ? 'date' : undefined} aria-label={`${day.label} ${day.dateLabel}${today ? ', today' : ''}. ${scheduleDescription} Toggle date.`} onClick={onSelect} className={`flex min-h-[104px] min-w-0 flex-col p-2 text-left transition focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] ${day.inMonth ? 'bg-[var(--field-surface)]' : 'bg-[var(--sunken)]'} ${selected ? 'bg-[var(--brand-tint)]' : ''} ${!selected ? 'hover:bg-[var(--selection)]' : ''}`}>
+      <span className="flex items-center justify-between gap-2"><span className={`metric-text text-sm font-semibold ${day.inMonth ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'} ${today ? 'calendar-day-date--today' : ''}`}>{day.dateLabel.split(' ')[0]}</span>{today ? <span className="rounded-full bg-[var(--brand)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--signal-ink)]">Today</span> : selected ? <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--signal-ink)]"><Check aria-hidden="true" className="h-3 w-3" /></span> : null}</span>
+      {feedback ? <span className={`mt-1 block truncate text-xs ${feedback.state === 'failed' ? 'text-[var(--status-danger)]' : feedback.state === 'saved' ? 'text-[var(--status-success)]' : 'text-[var(--text-secondary)]'}`}>{feedback.state === 'placing' ? 'Placing' : feedback.state === 'saved' ? 'Placed' : 'Not confirmed'}: {feedback.title}</span> : null}
+      <span className="mt-2 min-w-0 space-y-1">{previewSession ? <span key={previewSession.id} className="flex min-w-0 items-center gap-1.5 border-l-2 border-[var(--brand)] bg-[var(--surface)] px-1.5 py-1">{previewAverageZone ? <SessionIntensitySwatch zone={previewAverageZone} /> : null}<span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[var(--text)]">{previewSession.title}</span></span> : null}{day.sessions.length > 1 ? <span className="block px-1.5 text-[11px] text-[var(--text-muted)]">+{day.sessions.length - 1} more</span> : null}</span>
     </button>
   );
 }
@@ -523,7 +593,7 @@ function CalendarCell({ feedback, day, today, selected, onSelect }: { feedback: 
 function SelectionPanel({ role, sessions, selectedDates, isPending, removingId, onSelectOnlyDate, onRemoveSession }: { role: PlannerRole; sessions: PlannerSession[]; selectedDates: string[]; isPending: boolean; removingId: number | null; onSelectOnlyDate: (date: string) => void; onRemoveSession: (session: PlannerSession) => void }) {
   const multiple = selectedDates.length > 1;
   return (
-    <section className="planner-desk__selection min-w-0 border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-4 shadow-[var(--shadow-inset)]">
+    <section className="min-w-0 border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-4 shadow-[var(--shadow-inset)] xl:sticky xl:top-4 xl:self-start">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold tracking-[-0.03em]">{multiple ? 'Selected days' : 'Selected day'}</h2>
@@ -553,7 +623,7 @@ function SessionDetail({ role, session, isPending, removingId, onRemoveSession }
   return (
     <div className="border border-[var(--field-selected-border)] bg-[var(--surface)] p-3">
       <div className="flex items-start justify-between gap-2">
-        <Link href={sessionHref} className="min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><span className="flex items-center gap-2"><span className="truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</span><ArrowRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[var(--brand)]" /></span><span className="mt-1 block text-[11px] text-[var(--text-secondary)]">{getSportLabel(session.sport)} · {formatDuration(session.durationSec)} · {session.tss} TSS</span></Link>
+        <Link href={sessionHref} className="min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><span className="flex items-center gap-2"><span className="truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</span><ArrowRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[var(--brand)]" /></span><span className="mt-1 block text-[11px] text-[var(--text-secondary)]">{getSportLabel(session.sport)} · {formatDuration(session.durationSec)} · {session.tss === null ? 'Load unavailable' : `${session.tss} TSS`}</span></Link>
         <button type="button" aria-label={`Remove ${session.title}`} disabled={isPending || session.status === 'completed'} title={session.status === 'completed' ? 'Completed sessions cannot be removed from Planner.' : undefined} onClick={() => onRemoveSession(session)} className={`${dangerButtonClassName} min-h-8 px-2.5 py-1.5 text-xs`}>{removingId === session.id ? 'Removing...' : <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />}</button>
       </div>
       <div className="mt-3"><SessionBlockBar segments={session.segments} compact /></div>
@@ -575,7 +645,7 @@ function coachSource(source: PlannerSource) {
 
 function sourceMeta(source: PlannerSource) {
   if (source.kind === 'workout') return source.durationSec ? formatDuration(source.durationSec) : 'Workout';
-  if (source.kind === 'training-plan') return `${source.sessionCount ?? 0} sessions`;
+  return `${source.sessionCount ?? 0} sessions`;
 }
 
 function sourceDescription(source: PlannerSource) {

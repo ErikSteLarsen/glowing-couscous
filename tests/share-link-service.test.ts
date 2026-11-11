@@ -434,8 +434,8 @@ test('recipient copy commands sanitize ownership and delegate only after explici
         return { ok: true, sessionIds: [31] };
       },
     } as never,
-    coachLibraryPersistence: {
-      async saveForCoach(_ownerId: number, input: Record<string, unknown>) {
+    workoutLibraryPersistence: {
+      async saveForOwner(_owner: string, _ownerId: number, input: Record<string, unknown>) {
         coachInput = input;
         return { ok: true, sessionId: 32 };
       },

@@ -7,6 +7,7 @@ import {
   type SessionEditorDraft,
 } from './session-editor.ts';
 import { validateSessionSnapshotDraft } from './session-snapshot-service.ts';
+import { SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
 
 type AdjustmentSession = {
   id: number;
@@ -166,7 +167,8 @@ export function createAthleteSessionAdjustmentService({
             source: session.source,
             sportMetricsJson: JSON.stringify(serialized.sportMetrics),
             rpe: serialized.rpe,
-            status: 'planned',
+            // Editing a skipped session keeps it skipped; "Plan again" is the only way back.
+            status: session.status === SKIPPED_SESSION_STATUS ? SKIPPED_SESSION_STATUS : 'planned',
             adjusted: true,
             coachBaselineJson: baselineJson,
             blocks: { create: blocks },

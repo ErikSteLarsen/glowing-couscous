@@ -1,647 +1,332 @@
 # Current status
 
-Updated 2026-10-02. Current evidence snapshot, not implementation history.
-Latest checks cover compact session structure, saved-workout routines, shared UI polish, calendar refinement and service regressions.
-Older browser/provider/device results
-retain their recorded scope.
+Last verified locally on **2026-11-10**. Source code and tests are authoritative.
 
-## Subtle chart and editor rounding, 2026-10-02
+## Product and ownership
 
-- Shared workout previews, production authoring, Live bars, session structure,
-  recorded heart-rate/metric charts and Home recent load use 4px top corners
-  with flat baselines. Calendar intensity swatches use 2px corners; editor
-  selection controls use the established 9px compact geometry and target/pause
-  fields use 10px. Duration, intensity, gaps, selection and skipped markers
-  retain their existing behavior. DESIGN.md records the chart token contract.
-- Actual components rendered in synthetic browser fixtures at 1440px light/dark,
-  390px light and 320px dark. Rounded tops, flat baselines, active/skipped Live
-  markers, missing recorded samples and zero Home load inspected; no horizontal
-  overflow. Screenshots remain in this chat's visualization directory. This is
-  static component evidence, not authenticated interaction, production or
-  physical-phone acceptance. Temporary fixture removed.
-- Tests: 325/325 pass; lint: pass; production bundle-only webpack build passed,
-  including TypeScript and route generation. Standard pnpm build generated
-  Prisma but stopped at migrations against the intentionally unavailable local
-  tempo_review database; configured database unchanged. Docker unavailable in
-  the sandbox. pnpm 11's automatic dependency reinstall was disabled for checks
-  without changing repository configuration/dependencies; pnpm exec could not
-  resolve Next, so the bundle check used its local Node CLI directly. Existing
-  middleware deprecation remains. git diff --check passed.
-- Mechanical design scan ran once; existing advisory findings cover old preview
-  styles and stale Impeccable metadata. No design metadata repair was included.
+Tempo supports self-directed personal training without a coach. The Athlete
+workspace owns workout creation, reusable templates, source-copy scheduling,
+session execution, completion, correction, and Activity review. Coach
+collaboration remains supported and secondary to this personal workflow.
 
-## Compact session structure and inspector, 2026-10-01
-
-- Scheduled session detail replaces the exhaustive block list and tall timeline
-  with a compact structure schematic and interpreted text. Identical efforts
-  and pauses/recoveries fold into repeated sets; warm-up/cool-down and recovery
-  after the final effort remain explicit. Different targets, notes, repetitions,
-  reference systems and skipped instructions are preserved individually.
-- Effort/pause selection opens a collapsible inspector with duration, target,
-  notes and a selector for every original block. Details start collapsed.
-  Pace uses sport-specific units; relative targets resolve against the owner's
-  Profile with their original reference retained. No scheduled data is mutated.
-- Actual component fixture inspected at 1440px in light/dark and 320/390px
-  mobile; 768px overflow measurement passed. At 320px the common warm-up / repeat
-  set / cool-down fits one row, with >=44px visual controls and no page overflow.
-  Keyboard activation/collapse, pause selection and selecting the fourth effort
-  through the original-block selector passed. Screenshots are in this chat's
-  visualization folder. Temporary fixture/server removed. These are synthetic
-  component checks, not authenticated route, production or physical-phone checks.
-- Final tests: 325/325 pass; lint: pass. Bundle-only Next.js webpack build passed
-  including production TypeScript and routes. Standard pnpm build generated
-  Prisma then stopped at migrations against an intentionally unavailable local
-  review database; configured database was not migrated. pnpm exec's Next binary
-  could not resolve in this shell, so the bundle check used the local Next CLI
-  directly. Existing middleware deprecation remains. git diff --check passed.
-
-## Saved-workout training routines, 2026-10-01
-
-- Templates has one model: Monday–Sunday routines composed solely from saved,
-  owner-scoped workouts, with name/purpose, multi-weekday additions, ordered
-  sessions and removal. Week/month application previews actual dated sessions;
-  empty weekdays leave the calendar untouched. Relative references, decimal
-  targets, repetition and skip state survive independent copies and replay.
-- Removed old block-template storage, sport/cadence fields, block-template
-  adapters, coach template page/APIs/assignment, workout-editor template loading,
-  public template sharing/intake and obsolete planner preview routes/components.
-  Sharing individual workouts and coach workout/training-plan assignment remain.
-  Demo seeding creates saved workouts and an actual weekly routine.
-- Routine saves capture server-owned workout snapshots. Library changes/deletion
-  do not alter routines or scheduled copies. Saving again captures current
-  library versions; unavailable workouts require replacements. Deleting a routine
-  preserves scheduled sessions. Multi-week progression and curated/public routine
-  distribution remain future capabilities; relative references provide the
-  basis for each recipient's Profile targets without copying profile values.
-- `pnpm test`: 311/311 pass; `pnpm lint`: pass. `pnpm build --webpack`: pass,
-  all ten migrations current on disposable PostgreSQL, production TypeScript
-  and route compilation complete. A first build overlapped tests loading Prisma
-  and hit a Windows DLL lock; generation and build passed after tests ended.
-  Existing Next.js middleware deprecation remains.
-- Disposable PostgreSQL migration acceptance passed: old definitions/blocks and
-  both attached/detached template shares removed, valid routine retained,
-  completed calendar session/blocks and Activity content preserved. Routine
-  acceptance passed for ownership, snapshots, duplication, source deletion,
-  week/month expansion, replay, partial-range refusal, rollback and deletion.
-  Six account-deletion integration checks passed after the share schema change;
-  updated demo seed passed on the disposable DB only.
-- Authenticated HTTP acceptance passed against the local production build:
-  credentials sign-in, workout/routine POSTs, Templates/Calendar reload,
-  five-session placement and replay, old-format/input/public/coach route refusal,
-  and template deletion retaining scheduled copies. This verifies authenticated
-  routes and rendered page data, not browser interactions or physical phones.
-- Both new migrations were successfully deployed to the configured Neon
-  `neondb` database. Old template definitions and their share links are deleted;
-  no demo seed or synthetic acceptance ran there. Application code is updated in
-  this worktree; no Git push or hosted application deployment was performed.
-- Earlier actual-component browser evidence: 1440px light library/editor,
-  390px dark editing/light month preview and 320px dark editing; weekday additions,
-  reordering, preview and failed-save draft retention inspected with no narrow
-  horizontal overflow. Remaining gates: authenticated browser interactions and
-  physical phones, curated distribution and successive-week progression.
-  Local test server and disposable PostgreSQL container removed after checks.
-  Existing unrelated worktree changes preserved.
-
-## Shared controls and personal surface polish, 2026-10-01
-
-- Preferences now uses the shared Surface and section heading with open,
-  separated rows. Toggle thumbs use theme-aware contrasting ink and retain
-  their width beside wrapping descriptions. History uses shared rounded icon
-  buttons; shared segmented choices have 44px mobile targets. Mobile library
-  tabs use sentence case, hover feedback and explicit keyboard focus.
-- Actual component previews reviewed Home, empty Workouts/Templates, populated
-  History, empty Import, Profile and Preferences at desktop/mobile sizes.
-  Changed Preferences and History were confirmed in light/dark previews;
-  320px History and 390px Preferences had no horizontal overflow. Preferences
-  also passed the 768px overflow check. History previous/next, empty-period
-  recovery and sport filtering worked; library keyboard focus was visible.
-  Screenshots and detector output are in the chat's local visualization folder.
-- These are synthetic component checks, not authenticated route, persistence,
-  full-state, physical-device or production acceptance. Initial local sign-in
-  could not reach the database; a subsequent sign-in was stopped by automatic
-  approval review pending explicit test-account authorization. No account data
-  or saved preferences were changed. Temporary preview source/process removed.
-- Tests passed 314/314; lint passed. Migration-bearing build generated Prisma,
-  then failed against an intentionally unavailable localhost review database;
-  the configured database was not migrated. Bundle-only webpack build passed,
-  including TypeScript and all 80 pages. The first bundle attempt found stale dev
-  types for the removed fixture; those generated types were cleaned.
-  Detector findings were advisory incumbent type-scale drift. No global
-  design-system drift repair or unrelated Calendar edit was made. Final
-  git diff --check passed. Middleware deprecation remains.
-
-## Calendar spacing, compact month and day selection, 2026-10-01
-
-- Personal Calendar uses stable cell padding and subtle selected borders.
-  Today has a small text label and neutral plane, with no full-cell outline.
-  Month cells preview one session plus an additional count; wide browsing
-  puts month totals and the selected-day agenda in a 280px right rail.
-  Narrow calendars retain counts and details below the date grid.
-- Select days exposes multi-date selection before opening scheduling, with
-  selected count, clear/cancel and a batch Add action. Selected dates carry
-  into the existing composer. Template choice retains exact cadence ranges.
-  Source-copy ownership, request identities and scheduling services are unchanged.
-- Actual TrainingCalendar/PageShell synthetic fixture: 1440px week/month in
-  both themes, 390px light month/composer/week and 320px dark month inspected.
-  No horizontal overflow at 390/320px. Three-date handoff, mocked save failure
-  retaining all dates, same-key successful retry, keyboard day selection,
-  seven-day template range, Escape and close focus return passed. Fixture
-  and preview process removed. This is component evidence; authenticated
-  placement/reload, live navigation and physical-device acceptance remain open.
-- Final tests: 314/314; lint: pass. Migration-bearing build generated Prisma,
-  then failed against the intentionally unavailable localhost review database;
-  the configured database was not migrated. Bundle-only webpack build passed,
-  including TypeScript and all 80 pages; middleware deprecation remains.
-  The initial bundle attempt compiled but
-  found leftover generated types for the removed fixture; those were cleaned.
-  Detector reported advisory design-scale drift, including incumbent styles;
-  unrelated global design rules were preserved. Final git diff --check passed.
-
-## Planner and persistence architecture cleanup, 2026-09-30
-
-- Pre-existing Calendar, training setup and deletion work was committed as
-  `3e634da` and pushed to `origin/main` before cleanup. Push success is recorded;
-  this round did not verify production deployment.
-- Planner source/session/day contracts now belong to `lib/planner-view.ts`.
-  Personal Calendar sources are restricted to workouts/templates and no longer
-  import their contract from coach UI. Both planner services use the shared
-  persisted-block metric adapter. Personal session and workout-library writes
-  share canonical block data shaping, preserving decimal precision and omitting
-  source block IDs. Account deletion exposes preparation and erasure phases;
-  retention/detachment remain inside the final serializable transaction.
-- `pnpm test`: 314/314; `pnpm lint`: pass; direct TypeScript: pass;
-  `pnpm build --webpack`: pass, including Prisma generation, all eight migrations,
-  TypeScript and 80 pages. Migrations and seven PostgreSQL acceptance tests ran
-  only against a new disposable local `tempo_acceptance` database. Deletion
-  rollback/concurrency, identity/throttle checks, anonymized shares, recipient
-  history and recovery conflicts passed. The configured database was not used.
-- The first full test run overlapped Prisma regeneration and hit a transient
-  missing PrismaClient export; after generation finished all 314 passed.
-  Default `pnpm build` successfully generated/migrated, then remained at Turbopack
-  compilation without further output and was interrupted. The migration-bearing
-  webpack build passed. Middleware deprecation remains. No browser, physical
-  device or live-provider acceptance was performed for this refactor.
-
-## Guided training targets on Home, 2026-09-30
-
-- Home shows a restrained outlined setup section above Today when training
-  targets are incomplete. Inline steps choose sports, HRmax, then the selected
-  running/cycling/swimming targets. Running supports race-derived previews and
-  manual bounds; cycling uses FTP and swimming uses m:ss CSS. Sport threshold
-  HR is optional. Completed selected targets hide the section; blank values
-  retain a reminder and resume at the first missing step. Existing complete
-  three-sport profiles do not require setup.
-- Each step uses the Profile API/account service with revision protection,
-  preserving existing metrics and unrelated preferences. Sport selection is
-  stored separately in preferences. Validation now rejects malformed sport
-  metrics and reversed/out-of-range manual pace bounds instead of silently
-  normalizing them away. Failures retain entries; unsaved changes are explicit,
-  with navigation/close safeguards. Colon-formatted fields use a text keyboard.
-- Actual component fixture at 1440px dark/light, 390px dark/light and 320px
-  light: runner and all-sport progression/completion, save failure/retry,
-  completed-runner hiding, HR/race previews, manual-only completion and
-  incomplete manual-bound validation passed. No horizontal overflow at 390/320px.
-  Screenshots: `.impeccable/review/home-training-setup/`. Temporary fixture and
-  development process were removed. These are mocked-save component checks,
-  not authenticated database persistence or physical-device acceptance.
-- Independent design review found one mobile keyboard mismatch; the source
-  correction was scored resolved with scoped ship disposition. Detector ran
-  once: advisory typography/global design-scale drift was retained, matching
-  incumbent shared styling; no new design tokens were introduced. Existing
-  sidecar drift was preserved. Unrelated worktree changes were preserved.
-- Final `pnpm test`: 310/310; `pnpm lint`: pass; direct webpack bundle build:
-  pass, TypeScript and 80 pages; `git diff --check`: pass. Standard `pnpm build`
-  initially hit the preview's Prisma DLL lock; after stopping that process,
-  generation passed and migration deployment stopped against an intentionally
-  unavailable localhost review database. No configured database was migrated.
-  Generated fixture types were removed before the successful bundle build.
-  Authenticated save/reload, actual revision conflict UI and physical phone
-  keyboard entry remain open; middleware deprecation persists.
-
-## Unified personal Calendar, 2026-09-30
-
-- Calendar now owns week/month browsing and inline scheduling. Date-specific
-  Add session seeds the composer; saved workouts support multiple dates and
-  templates show full day/week/month ranges before scheduling. Existing
-  service-owned copies, cadence validation and retry identities remain in use.
-  Unfinished sessions can be removed with confirmation; completed rows stay
-  review links. Today remains distinct from selected scheduling dates.
-- Desktop uses a contextual right rail; narrow layouts retain the date grid
-  above the composer and a selected-day agenda. Navigation exposes one Calendar
-  destination. Legacy `/athlete/planner` redirects with its date; obsolete
-  personal Planner and week-scroller components were removed. Coach Planner
-  and API ownership boundaries remain unchanged.
-- Synthetic AppShell/PageShell fixture checked 1440px dark week/composer and
-  light month, 390px dark composer/light month, and 320px light month. Multi-date
-  selection, seven-day template highlighting, cross-week reference-field sync,
-  failure selection retention, same-key successful retry, Escape dismissal and
-  close focus return passed. No horizontal overflow at 390/320px. Independent
-  review scored all three fixes resolved: count/date separation, reference date
-  synchronization and persistent Today styling. Screenshots are under
-  `.impeccable/review/unified-calendar/`; fixture and preview processes removed.
-- Final `pnpm test`: 305/305; `pnpm lint`: pass; direct `next build --webpack`:
-  pass, including TypeScript and 80 pages. Detector on the calendar client and
-  `git diff --check`: pass. Standard `pnpm build` generated Prisma, then stopped
-  at migrations against an intentionally unavailable localhost review database.
-  No configured database was migrated. Temporary fixture type artifacts were
-  removed before the successful bundle build. Middleware deprecation persists.
-- Authenticated placement/removal and reload, actual week/month/history
-  navigation, imported timeline coverage and physical-device acceptance remain
-  open; mocked browser success does not establish database persistence. Existing
-  `.impeccable/design.json` identity/token drift was reported and preserved.
-  The unrelated account/recovery worktree changes were preserved.
-
-## Shared spacing review, 2026-09-30
-
-- Shared page gutters now match top padding; desktop headers use a 64px minimum,
-  mobile headers size to content, and page groups use 24px separation. Library
-  cards use 16px padding. Back controls retain inline placement with 44px mobile
-  targets; centered headers reserve symmetric space around the title.
-- Desktop menu controls are icon-only. Mobile removes the sticky top menu row
-  and adds menu access to the existing bottom bar. Deliberate horizontal swipes
-  open from the interior left-edge band and close inside the drawer; native outer
-  edge, vertical scrolling, form fields and dialogs are excluded.
-- Strava feedback uses one compact, content-sized frame centered in the available
-  content column, with icon dismissal and consistent safe-area offsets. Sync
-  errors do not stack over notices. Profile save-bar offset now matches bottom
-  navigation height and releases the sidebar offset when desktop menu is hidden;
-  feedback clears those actions. Profile geometry was source-reviewed only.
-- Rendered shared-component fixture: desktop 1440px light/dark, mobile 390px dark
-  and 320px light; no horizontal overflow. Desktop hide/show and mobile menu
-  opening, Escape dismissal and focus return passed. Screenshots are under
-  `.impeccable/review/spacing/`. Fixture and development config were removed.
-  This is component evidence, not an authenticated route sweep. Physical swipe,
-  native history gestures, populated libraries and actual notification delivery
-  remain unverified; earlier authenticated route evidence predates this change.
-- Final `pnpm test`: 305/305; `pnpm lint`: pass; direct webpack build: pass,
-  including TypeScript and 80 pages. Layout detector and `git diff --check`: pass.
-  Standard `pnpm build` generated Prisma successfully but stopped at migration
-  deployment against an intentionally unavailable local review URL. The configured
-  database was not migrated. Temporary fixture type artifacts initially blocked
-  compilation; removing generated development types resolved it. Middleware
-  deprecation remains. Existing unrelated account/recovery edits were preserved.
-
-- Publication: UI commit `964b58f` pushed to `origin/main` on 2026-09-30.
-  Production `/login` returned HTTP 200 and its CSS changed from
-  `01i-t978vz812.css` to `0vm3c6awhf476.css`. The live asset contains the new
-  toast dismiss rules, 64px header and 24px group gap. This confirms UI
-  publication, not an authenticated production journey or physical swipe test.
-  Unrelated uncommitted account-deletion work was excluded from this push.
-
-## Latest recorded checks
-
-| Gate | Latest recorded result | Scope / limits |
-|---|---|---|
-| `pnpm test` | 325/325 pass, 2026-10-01 | Session structure/target formatting, routine ownership/placement/rollback plus existing planner, persistence, training setup, Home, recovery, account and deletion coverage |
-| `pnpm lint` | Pass, 2026-10-01 | Full repository |
-| Direct TypeScript | Pass, 2026-09-30 | Existing generated client |
-| Direct `next build --webpack` | Pass, 2026-10-01 | Bundle only, TypeScript and 80 pages; middleware deprecation remains |
-| `pnpm build` | Stopped at migrations, 2026-10-01 | Prisma generation passed; intentionally unavailable local review database. Separate webpack bundle passed; no configured database migration |
-| PostgreSQL acceptance | 7/7 pass after architecture cleanup, 2026-09-30 | Recovery acceptance plus six deletion scenarios: owned data/provider/webhook removal, retained anonymized shares, unshare scope, recipient history, durable throttle, Google proof expiry, provider outage, rollback and concurrent deletion |
-| HTTP deletion acceptance | Pass, 2026-09-30 | Local production server/disposable DB: credentials cookie, cross-site rejection, wrong password, actual deletion, retained public [deleted] preview, expired old cookie, export 404 |
-| Migration status | Nine migrations, including template routines, applied only to disposable PostgreSQL | Deploy migrations with code before using the new behavior elsewhere; configured database was not changed by these checks |
-
-Latest checks reused installed dependencies with
-`pnpm_config_verify_deps_before_run=false`. Prisma generation, migration deploy
-and bundle compilation are distinct gates.
+Workouts are undated private definitions. Planner creates independent dated
+copies. Calendar and session detail own scheduled context. Public sharing uses
+sanitized snapshots and requires an explicit recipient save.
 
 ## Implemented behavior
 
-- Home separates scheduled block structure from completion-date Activity
-  outcomes, including standalone imports. Recent load is proportional and
-  numerically labelled, with unknown/partial load distinguished from valid
-  zero. Last outcome links include date/source; empty days say Nothing scheduled.
-- Workout/Profile drafts use seven-day browser recovery, independent tab
-  writers, explicit Restore/Discard, malformed/expiry/size checks and unavailable
-  storage navigation guards. Profile updates validate before a single revision
-  claim/write. New workout identities commit with their session and replay
-  without duplicates; edit conflicts preserve drafts/blocks. Sign-out clears
-  this browser's account drafts. Live checkpoints restore paused within 24 hours;
-  accounting for elapsed time is explicit and completion remains server-owned.
-- Profile has a separate Account section: safe sign-in capability readout,
-  credential recovery, Strava access/consequences, current-device sign-out and
-  sign-out everywhere. Fresh logins read the current sessionVersion. Downloads
-  and their API/service were removed at the user's request.
-- Account deletion requires current password or signed Google callback metadata
-  within five minutes, with typed DELETE confirmation and durable password
-  attempt throttling. Profile shows consequences/link count and owner-scoped
-  Unshare all before deletion. Shared structure persists under [deleted] after
-  free-text/source/creator removal; no tombstone User retains personal identity.
-  Recipient sessions/outcomes survive coach deletion with coach-authored text
-  and lineage removed. Independent recipient-owned copies remain theirs.
-- Personal profile, owned training/outcomes, credentials/reset/request identities
-  and connected provider/inbox/webhook records are removed atomically. Webhooks
-  cannot enqueue without a locked live connection. Strava revocation runs after
-  commit; outages do not retain tokens or block erasure and show manual provider
-  revocation guidance. Other-device drafts and backups remain outside this action.
-- Deletion review was inspected on the local production build with a synthetic
-  account, desktop light and 390px light/dark. Public-link count, typed-confirmation
-  gating and open/cancel focus passed. Mobile checks exposed footer overlap;
-  Profile bottom spacing now encloses both training and Account controls, and
-  final deletion/cancel buttons were verified visible above the fixed controls.
-  Final UI deletion was not clicked; actual deletion was exercised through HTTP
-  and PostgreSQL acceptance with disposable accounts. Live providers remain open.
-- Authenticated browser acceptance used a synthetic account exclusively on
-  disposable local PostgreSQL: Profile reload/restore retained unfinished pace
-  input, save/reload cleared recovery; workout edit reload/restore/save passed;
-  Live reload offered a checkpoint and restored paused. Home was inspected with
-  synthetic planned/actual/unknown-load outcomes in desktop dark/light and 390px
-  light; Account controls were inspected at 390px dark. Physical devices, quota
-  guards and full multi-tab/failure UI acceptance remain open. Initial browser
-  timeouts were superseded by this successful isolated run.
-  Sign-out-everywhere
-  confirmation hit a browser focus timeout, so UI revocation remains open even
-  though the database service was verified. Temporary app processes and the
-  disposable PostgreSQL container were removed; screenshot artifacts use only
-  synthetic data. No configured account or provider data was changed.
+- Mobile sticky workout actions reserve the bottom navigation and device safe
+  area through one shared clearance token. Desktop actions use the viewport
+  bottom. Chromium verified Save above navigation at 390px and the desktop
+  bottom offset at 1440px; neither settled layout has horizontal overflow.
+- The shared shell and controls use the dark Night Instrument system in
+  `DESIGN.md`: cyan action, hairline rules, tabular measurements, and semantic
+  training colors. `app/globals.css` implements the tokens. Design experiments
+  have separate preview styles.
+- Home displays fitness, fatigue, form, ramp rate, plan projections, weekly
+  planned/completed volume, compliance, and the next unfinished session.
+  Coach instructions belong to that session. Returning athletes retain their
+  history view. Charts support pointer, keyboard, and vertical touch scrolling.
+- Calendar has URL-addressable Monday-first week/month views, period navigation,
+  keyboard shortcuts, and weekly summaries. Open self-planned sessions support
+  drag or explicit-date moves. A transaction checks athlete ownership,
+  completion, and coach assignment, preserves content and local wall time,
+  and updates plan membership. Content and summaries refresh from server data.
+- The shared Planning Desk assigns saved workouts to multiple dates and validates
+  exact template cadence ranges. Placement batches are atomic and use request
+  identities for retries. Completed sessions retain their planned baseline.
+- WorkoutBuilder owns structured authoring, skipped blocks, repetitions,
+  relative targets, profile-aware previews, presets, explicit reorder controls,
+  and undo/redo. Generic prescriptions do not store personal profile values.
+  Workout, template, and share authoring retain seconds. Shared duration labels
+  show short intervals and second remainders instead of rounding them away.
+- Template authoring uses the shared editor with profile previews, explicit
+  discard confirmation, failed-save draft retention, and locked controls while
+  saving. The library and editor appear separately; mobile Save clears the
+  bottom navigation. Template durations remain editable in seconds.
+- Live expands repetitions into unique execution steps, omits skipped blocks,
+  and uses canonical relative and profile-aware target labels. Current step,
+  completed-step guidance, and a deliberate timed-step countdown resume from
+  this browser after reload or navigation; running countdowns use a saved
+  deadline and paused countdowns preserve their remaining time. Expiry does not
+  mark a step complete, and manual step navigation or restart resets timer
+  guidance. A changed ordered step/duration signature invalidates old progress.
+  Only the server completion flow saves an outcome. The same generic labels
+  appear in shared session summaries. Session detail uses refreshed
+  completion/editor modes and preserves notes through corrections.
+- Login, signup, setup, and settings recover from failed requests. Signup
+  distinguishes a created account from failed automatic sign-in. Setup retries
+  the same saved role without permitting role changes. Settings restores failed
+  toggles and prevents overlapping writes. Personal training is the first
+  onboarding choice. Chromium verified failed signup/login requests, preserved
+  input, a created account with failed automatic sign-in, successful retries,
+  and settings rollback followed by persisted retry. A role save followed by
+  a blocked session refresh also recovered on retry.
+- Session outcomes, actual corrections, comparison, completion history, and
+  sanitized sharing remain implemented. The older coach session adapter in
+  `lib/planner-service.ts` remains transitional.
+- Athletes can remove an open self-planned session from Calendar or session
+  detail after an in-app confirmation. The delete service checks athlete
+  ownership, completion, coach assignment, and concurrent session changes.
+- Scheduled time is optional throughout athlete Home, Calendar, session detail,
+  and Live. Unset times remain absent instead of being inferred from the
+  timestamp; explicit times still appear in labels and calendar API data. This
+  session-time clarity stage scores 8/10 after covering each athlete view.
+- Home surfaces the three most recent overdue self-planned sessions with
+  Start now and Move to today. Session detail uses the same overdue state,
+  keeps Start live available, and offers a date picker. Live completion keeps
+  the original schedule date; this recovery stage scores 8/10.
+- Activity searches completed names literally, filters by sport, and pages
+  through all saved outcomes. Counts, duration, and load cover the matching
+  history. A read transaction keeps totals and rows consistent, with stable
+  completion-date/id ordering and bounded page reads.
+- Athletes can log completed work directly in Activity without creating or
+  scheduling a plan. These entries persist as athlete-owned completed sessions
+  and activities, show up on their completion date in Activity and Calendar,
+  and preserve duration, RPE, and notes for review. Optional metric distance is
+  stored as integer meters and shown in Activity and session detail; it can be
+  omitted. Standalone entries carry no workout blocks or planned baseline.
+  Unknown TSS stays unavailable and is disclosed in history, weekly summaries,
+  and load estimates; coach views retain existing athlete visibility while
+  hiding plan comparison and workout sharing for unplanned entries. Manual
+  logging with optional distance scores **8.5/10**.
+- Athletes can import one completed TCX or FIT file up to 5 MB after a
+  read-only preview and explicit confirmation. TCX uses the strict streaming
+  XML parser and estimates finish from start plus lap duration. FIT uses
+  Garmin's FIT JavaScript SDK, requires an Activity file with valid integrity,
+  exactly one supported sport Session, consistent start/finish summaries, and
+  a valid Activity local timestamp. Files without a usable local timestamp and
+  multi-session files are rejected so sport and local date are not guessed.
+  FIT finish comes from the Session summary; TCX finish is labeled estimated.
+  Both retain UTC instants, source offset, duration, optional distance, and
+  athlete-scoped SHA-256 fingerprints. Only summary metrics and source
+  provenance persist; preview writes nothing, and standalone imports have no
+  blocks or plan baseline. Imports do not store compliance, raw file, GPS,
+  sensor time series, unknown fields, or inferred TSS. FIT parsing rejects relative timestamp values as well as
+  missing or invalid local-time provenance. FIT import scores **8/10**: the
+  browser review confirmed explicit save, saved outcome times, duplicate
+  recognition, and local-day Calendar placement. The bounded importer supports
+  one running, cycling, or swimming Session and does not import route, sensor,
+  or load data.
+- Athletes can also import one GPX 1.1 activity up to 5 MB after choosing
+  Running, Cycling, or Swimming and reviewing the parsed summary. The parser
+  accepts one track with at least two valid trackpoints, explicit increasing
+  timestamps, and one consistent UTC offset. It rejects routes without timed
+  tracks, multiple tracks, invalid coordinates or times, and mixed offsets.
+  Duration uses the first and last trackpoint times; distance is summed between
+  consecutive points within each segment, without bridging segment gaps. Only
+  summary metrics, source offset, and athlete-scoped SHA-256 fingerprint persist;
+  raw files, GPS coordinates, sensor series, TSS, and planned structure do not.
+  GPX files can be explicitly paired to an eligible session or kept separate.
+  Duplicate previews use the saved activity sport. SQLite coverage verifies
+  parser boundaries, read-only preview, ownership, source-local day, concurrent
+  duplicate safety, summary-only persistence, and planned-session pairing.
+  Production-build Chromium verified sport selection, preview, save, duplicate
+  recognition, Activity/session review, and Calendar placement. At 390px, the
+  preview and saved Activity had no horizontal overflow. This import stage
+  scores **8.5/10**.
+- Athletes can explicitly pair a TCX/FIT/GPX preview with an open, same-sport,
+  same-source-local-date self-planned session they own, or choose to keep it as
+  a separate activity. Only planned or adjusted sessions are eligible; missed
+  sessions are excluded. No candidate is preselected. Confirmation revalidates
+  eligibility and atomically creates the summary Activity and completes the
+  session. Planned title, date, blocks, and existing baseline are preserved; a
+  missing baseline is captured before completion. Paired review compares actual
+  and planned duration only. Imported summary metrics never create actual
+  blocks, TSS, or full compliance; Home, Calendar, Activity, and weekly read
+  models label paired results as duration-only and keep standalone imports
+  unplanned. Weekly percentages describe planned duration recorded, not full
+  workout compliance. TCX, FIT, and GPX duplicate retries remain athlete-scoped.
+  This pairing stage scores **8.5/10** after service tests and a 390px Chromium
+  review of explicit candidate choice, paired and standalone outcomes, and
+  Calendar duration labels.
+- Athletes can also explicitly pair a manual summary with an open, same-sport,
+  same-completion-date self-planned session they own, or keep it separate.
+  Coach-assigned and stale/ineligible sessions are rejected. The transaction
+  preserves the planned title, blocks, and existing baseline (capturing one if
+  absent), then saves duration, optional distance, effort, and note with
+  completion. Activity and session review show actual versus planned duration;
+  no actual intervals, TSS, or full compliance are inferred. At 390px,
+  Chromium verified the unselected-candidate state, disabled save until an
+  explicit choice, paired review, and the separate-activity path with no
+  horizontal overflow. Axe found no WCAG 2 A/AA violations; the session scan
+  had one incomplete contrast check on an obscured navigation link. Manual
+  summary pairing scores **8.5/10**.
+- Athletes can correct saved manual activities from session outcome review.
+  Standalone entries allow title, sport, completion date, duration, distance,
+  RPE, and notes; paired entries allow only performed summary fields, preserving
+  the planned session, its date, blocks, and baseline. Owner checks, version
+  checks, and transactional writes keep Activity, Calendar, session review, and
+  load history in sync. Imports remain source-preserving. SQLite coverage
+  verifies both correction paths, validation, ownership, stale-write handling,
+  read-model consistency, and unknown load. Production-build Chromium verified
+  standalone correction and the paired correction form. A paired summary
+  saved as 42m, 9.25 km, RPE 7, and updated notes; the outcome survived reload,
+  appeared in filtered Activity and Calendar, and retained its planned title,
+  date, blocks, and duration baseline. At 390px and 1440px, the session page had
+  no horizontal overflow. Summary-only entries do not show the structured
+  workout editor. Axe found no WCAG 2 A/AA violations or incomplete checks for
+  the paired correction form at 390px. This correction stage scores **8.5/10**.
+- Summary-only activity views omit the empty workout-structure image when no
+  segments were recorded. Populated session and Activity timelines retain a
+  nonempty accessible name. Chromium verified an unplanned manual outcome has
+  no `role="img"` at 390px and 1440px, while structured Activity rows and a
+  completed workout still show meaningful timeline labels. The outcome message
+  continues to explain that no blocks were recorded; this presentation repair
+  scores **9/10**.
+- Personal event milestones and completed-activity review score **8.5/10**.
+  Athletes can create and edit dated events, record their own goal/result time
+  and note, and explicitly link one or more of their completed activities.
+  Each Activity can be linked to at most one event; search is paginated and
+  owner-scoped. Link/unlink and event deletion leave the Activity and event
+  result independent. Linked rows show source-local dates for imported files
+  and server-local dates otherwise, duration, and optional distance without
+  exposing private Activity notes or snapshots.
+  A 390px Chromium review verified linking, unlinking with immediate candidate
+  refresh, event deletion preserving activities, source-local date display
+  across UTC midnight, and no horizontal overflow. Axe found zero WCAG 2 A/AA
+  violations; one contrast check was incomplete because the navigation link
+  was partially obscured. Impeccable found no UI findings. Automatic event
+  matching and training-plan generation remain out of scope.
+- Planner shows all seven weekdays at 390, 1280 and 1440px without a
+  hidden horizontal scroll; the calendar and selection panel stack beside the
+  source list on desktop. A successful placement clears the date selection, so
+  the assign button cannot place the same dates twice from a repeated click.
+- Session detail and Live do not highlight Home in the sidebar; Home matches
+  only its own route.
+- Athletes can share workouts directly from their library. Recipient saves
+  retain failed drafts, require explicit discard, and lock editing while
+  pending. Athlete copies go to Planner; coach copies are unscheduled and
+  visible in Workouts through the current library service.
+- Athlete workout and template cards open Planner with that owned source
+  selected. Successful saves link directly to the new source; the Planner
+  validates source IDs against the signed-in athlete's libraries, opens week
+  templates on a Monday-to-Sunday range, opens month templates on the full
+  calendar month, and retains a selected source during month navigation.
+  Athletes can review or change the cadence-aligned range before assignment;
+  invalid or removed source links show an explanation. This handoff scores
+  **8.5/10** after local Chromium verified creating and assigning a new workout,
+  single-day/week/month template handoffs, a seven-day template assignment,
+  month navigation, and invalid-source feedback. At 390px and 1440px, Planner
+  had no horizontal overflow; axe 4.12.1 found zero violations and zero
+  incomplete checks. Workouts and Templates also had zero violations or
+  incomplete checks at 390px.
 
-- Signup creates self-coached ATHLETE accounts. Personal Workouts/Templates,
-  Planner copies, Calendar, local Live, completion/correction and History form
-  the core loop. Middleware redirects coach pages; the discovery page redirects in the personal
-  experience; existing APIs/services retain role and ownership guards.
-- Planner uses canonical repeated durations, strict cadence ranges, independent
-  snapshots, atomic retry-safe batches and clear source selection. Personal
-  edits do not require Assignment lineage; completion preserves the first
-  planned baseline. Missing historical baselines are not fabricated.
-- Shared authoring supports profile-backed HR/pace zones, target adjustments,
-  repetitions/pauses, pointer/explicit ordering, undo/redo and tap-first phone
-  lists. Reusable profile targets remain relative.
-- Production uses Monolith, content-sized Home/Workouts, shared tokens and
-  collapsible desktop/focus-managed mobile navigation. DESIGN.md owns the rules.
-- File/Strava imports explicitly create standalone outcomes or match unfinished
-  sessions. Measurements follow plan context; unmatched imports use recorded
-  outcome layout. Removal restores matched plans. Live collects no telemetry.
-- Guided drafts validate bounded model output and aggregate completed history,
-  use cached provider health and standard-pattern fallback, and remain unsaved
-  until reviewed and saved.
-- Strava notifications read the local inbox on entry, every 15 visible seconds
-  and on focus. Review later acknowledges; dismissal is recoverable. More than
-  two arrivals open a selectable list that stays as the batch shrinks. Users can
-  bulk add standalone sessions or dismiss, and individually edit/match. Bulk
-  imports show progress and stop on failure with remaining selections preserved. All
-  unimported rows remain on Import beyond the recent 100-activity provider page;
-  provider updates preserve review state. Webhooks use two-minute leases,
-  30-second-to-one-hour backoff, owner-only recovery and a secret-authenticated
-  background worker. No retention deletion was added.
+## Verified gates
 
-## Recorded browser and integration evidence
-
-| Date | Evidence | Limits |
+| Gate | Result | Evidence |
 |---|---|---|
-| 2026-09-30 | Strava components in mock fixture at 1440/390px, both themes: matching/standalone, discard restore, failure draft, periodic arrival, keyboard/Escape and reload passed. `.impeccable/review/strava-notifications/` | Fixture session warnings; no authenticated login/live delivery/real DB concurrency; fixture removed |
-| 2026-09-30 | Strava batch mock fixture at 1440/390px, both themes: 30-row list, matching, preserved drafts, bulk standalone import, partial failure/retry, bulk dismiss, list at two remaining, Escape, live threshold transition and keyboard/overflow passed. `.impeccable/review/strava-batch/` | Mocked APIs, no live Strava delivery; fixture removed. Finish reviewer: ship; no material fixes |
-| 2026-09-30 | Shell/sidebar fixture at 1440/1024/768/390/320px: width recovery, desktop persistence, drawer focus/dismissal, inert/scroll/resize/history cleanup, blocked storage and themes passed. `.impeccable/review/collapsible-menu/` | Component interactions, not authenticated journey; fixture removed |
-| 2026-09-30 | Authenticated Home, Workouts, Planner, Templates, Calendar, History, Import, Profile, Preferences and completed detail at 1440/390px in both themes: 40 checks without horizontal overflow. `.impeccable/review/sizing-depth/` | Sparse data; populated Today/long lists, active editing/Live, import errors, coach/device acceptance unverified; preferences restored |
-| 2026-09-29 | Fresh signup, empty routes at 1440/390px, saved 45-minute run, dated copy, three-block Live completion, reopened 45-minute/32-TSS outcome; Athlete `/coach` redirect | Partial themes/states; coach/import errors/assistive technology not verified; ignored local credentials |
-| 2026-09-27 | Synthetic phone Planner/History and unsaved tap-edited draft at 320/390px; desktop Planner 1280px; auth screens and HTTP validation | No saved fixture data; native keyboard/devices/import profiling unverified |
-| 2026-09-25 | Authenticated desktop target presets, fine adjustments, zone crossing/reset, session HR mode, inheritance and pause | Specific mobile target adjustment flow unverified |
-| 2026-09-18 | Fresh create/plan/edit/reschedule/complete/correct/compare/reload journey; exact ranges, empty tabs, pointer/undo/reduced motion; DB replay/concurrency/rollback | Earlier UI and SQLite; does not certify current PostgreSQL |
+| Tests | Pass, 293 tests | `pnpm test` on 2026-11-10 after GPX import; includes GPX parsing and boundaries, upload validation, preview without writes, athlete isolation, concurrent deduplication, planned-session pairing, and source-local Activity, Calendar, and load models |
+| Lint | Pass | `pnpm lint` on 2026-11-10 after GPX import |
+| Production build | Pass | `pnpm build` on 2026-11-10 after GPX import; Node emits the existing `DEP0205` warning for `module.register()` |
+| Workout authoring design previews | Pass, 8.5/10 as design exploration | Six preview routes were checked in local production-build Chromium at 1440×900 and 390×844; document and body widths matched both viewports. Flowline keyboard/pointer reorder, presets, save/reset, Trail intention choices, and Workbench selection/repeat/copy-paste/staging/reset interactions were exercised. Axe 4.12.1 found zero WCAG 2 A/AA violations at both sizes; three contrast checks remained incomplete where content is covered by a drag pseudo-element or outside the current position of an intentional horizontal scroller, and those regions were visually inspected. Terrain labels and group semantics, Ribbon group semantics, Flowline card fit, drag description IDs, and forward reorder were corrected. Impeccable reported advisory-only design-token findings across the preview stylesheet. The previews remain sample-only; Ribbon is the strongest concept if a later authoring redesign is requested. No production authoring change was made. |
+| Library-to-Planner handoff | Pass, 8.5/10 | Local production-build Chromium at 390px created a workout, used the save feedback link to open it selected in Planner, and assigned it. Created single-day, week, and month templates; the week handoff selected Monday 9–Sunday 15 Nov and assigned seven copies; the month handoff selected 1–30 Nov and exposed the enabled assignment action. Month navigation retained the selected template; an invalid workout ID showed the unavailable-source explanation. Planner axe 4.12.1: zero WCAG 2 A/AA violations and zero incomplete checks at 390px and 1440px. Workouts and Templates scans also had zero violations/incomplete checks at 390px; measured document/body widths matched the 390px viewport. |
+| Imported activity pairing | Pass, 8.5/10 | SQLite TCX and FIT coverage verifies same-local-day candidates, owner/sport/date/status boundaries including missed-session exclusion, stale 409, preserved planned fields and baseline, null-baseline capture, atomic Activity/session completion, summary-only actuals, duplicate retry, paired Activity/detail/weekly duration, unknown TSS, and duration-only status. Chromium at 390px verified an unselected candidate and disabled save until an explicit choice, paired Activity/session outcomes, the separate-activity path and “no planned comparison,” and Calendar labels “Duration recorded” versus “Unplanned”; no horizontal overflow. Session detail and Activity axe scans had zero WCAG 2 A/AA violations. Calendar scan had zero violations; its two quick-navigation contrast checks were incomplete, then manually measured at 6.06:1 against the page background. |
+| Mobile workout actions | Pass | 390px Chromium: action bar bottom 780px, navigation top 783px; desktop offset 0px; both review axes found no actionable issue |
+| Template authoring | Pass | Chromium discard/keep, blocked fetch, delayed save locks, retry/reload, and 20-second interval persistence; editor and list axe scans have no violations; 390px and 1440px have no overflow; design detector has no findings |
+| Activity history | Pass | SQLite pagination across 26 outcomes, filtered totals, timestamp ties, ownership, stale pages, and literal `%`/`_`/backslash searches; Chromium recorded completion notes, older/newer pages, filters, reload, empty recovery, no overflow, and zero axe violations |
+| Manual activity logging | Pass, 8.5/10 | SQLite verifies athlete-only creation, retry idempotency and owner isolation, distance conversion/validation/omission and preservation on retry, no planned baseline, correct completion-date visibility, and unknown-load accounting; fresh and existing SQLite `db:push` preserve schema/data. Chromium at 390px saved a 42-minute run with 5.25 km, showed the value in Activity and session detail, and saved a second run with no distance; both routes had no horizontal overflow and zero WCAG 2 A/AA violations. Impeccable detector returned no findings. |
+| Manual summary pairing | Pass, 8.5/10 | SQLite verifies eligible self-planned candidates, explicit selection or separate logging, coach/owner/date/sport/status rejection, stale-choice rejection, atomic completion, request-key retries, planned content and baseline preservation, missing-baseline capture, summary-only actuals, distance/RPE/note retention, duration-only comparison, and no inferred TSS or blocks. Local production-build Chromium at 390px verified an unselected candidate and disabled save, paired Activity/session review showing actual versus planned duration, the standalone path, and no overflow. Axe: zero violations; one session-page contrast check remained incomplete because the navigation link was obscured. `pnpm test` (283), `pnpm lint`, and `pnpm build` pass; build emits the existing Node `DEP0205` warning. |
+| Manual activity correction | Pass, 8.5/10 | SQLite verifies standalone and paired corrections, ownership, field/source boundaries, validation, stale-write protection, and consistent Activity, Calendar, session, and load read models. Production-build Chromium verified standalone correction and paired correction through save and reload; paired metrics appeared in filtered Activity and Calendar while the planned title, date, blocks, and duration baseline stayed intact. At 390px and 1440px, session review had no horizontal overflow; the summary-only structured editor is absent. Axe on paired correction at 390px: zero WCAG 2 A/AA violations and zero incomplete checks. `pnpm test` (285), `pnpm lint`, and `pnpm build` pass; build emits existing `DEP0205`. |
+| Summary-only workout structure | Pass, 9/10 | The shared `SessionBlockBar` omits the image when there are no segments. Production-build Chromium verified a standalone manual outcome has no empty `role="img"` at 390px or 1440px; Activity rows and a populated planned outcome still expose meaningful timeline labels. The outcome still says no workout blocks were recorded. `pnpm test` (285), `pnpm lint`, and `pnpm build` pass; build emits existing `DEP0205`. |
+| TCX activity import | Pass, 8/10 | `pnpm test` passes 265 tests; parser/SQLite coverage verifies namespaced TCX, exact 5 MB parser boundary, malformed/DOCTYPE/unsupported inputs, streamed body cap without Content-Length, preview without writes, explicit confirmation, athlete ownership, per-athlete fingerprints, concurrent duplicate safety, atomic persistence, unknown TSS/no plan baseline/no route storage, source-local completion day around UTC midnight, and start/finish provenance in Activity and session detail. `pnpm lint` and `pnpm build` pass; build emits the existing Node `DEP0205` warning. Existing Chromium verified preview, explicit save, duplicate recognition, and 390px layout; final Chromium re-check verified recorded start, estimated finish, duplicate review, Sun 8 Nov placement, Activity/session detail, and desktop/390px layouts with no horizontal overflow. Impeccable detector returned no findings. Disposable test activity was removed. |
+| Personal event milestones and completed-activity review | Pass, 8.5/10 | SQLite coverage includes explicit multi-activity linking, one-event-per-Activity behavior, athlete and Session ownership, completed status, minimal private-field projection, source-local date, independent result data, atomic unlink, and activity preservation on event deletion. 390px Chromium verified linking/unlinking, candidate refresh, event deletion preserving Activity, source-local display across UTC midnight, and no overflow. Axe 4.12.1: 0 WCAG 2 A/AA violations and one incomplete color-contrast check on a partially obscured navigation link. Impeccable detector returned `[]`. |
+| FIT activity import | Pass, 8/10 | SQLite tests verify Activity type and integrity rejection, unsupported and multi-session sport rejection, absolute timestamp and local-time provenance validation, UTC-boundary local day, exact metric/provenance mapping, preview without Session/Activity writes, athlete isolation, concurrent retry deduplication, and no GPS/sensor persistence. `pnpm test` (276), `pnpm lint`, and `pnpm build` pass; build emits existing Node `DEP0205`. Chromium confirmed preview, explicit save, saved outcome times and metrics, duplicate recognition, and Saturday 7 Nov Calendar placement. At 390px, preview details stack without horizontal document overflow. Coach review shows imported activity duration and correctly labels load/comparison as unavailable. Impeccable detector found five existing 11px type-ramp advisories in the coach athlete page; no findings in the athlete import or session review surfaces. The disposable browser database and fixtures were removed. |
+| GPX activity import | Pass, 8.5/10 | SQLite verifies GPX 1.1 timed-track parsing, explicit sport selection, valid coordinates, consistent offsets, ordered timestamps, route-only/multiple-track/untimed/malformed rejection, segment-safe distance, preview without writes, athlete ownership, saved-sport duplicate review, concurrent deduplication, no coordinate/TSS persistence, planned-session pairing, and source-local Activity/Calendar/load models. `pnpm test` (293), `pnpm lint`, and `pnpm build` pass; build emits existing Node `DEP0205`. Production-build Chromium verified sport selection, preview, explicit standalone save, duplicate recognition, Activity and session review, and Calendar placement on the source-local day. At 390px the preview, saved Activity, session review, and Calendar had no horizontal overflow. Impeccable had no findings on the athlete import or session surfaces; five existing 11px type-ramp advisories remain on the coach athlete page. Disposable browser data and captures were removed. |
+| Shared recipient copies | Pass | SQLite checks athlete/coach/template destinations, privacy, independent copies, and 20-second blocks; Chromium anonymous preview, sign-in return, failure/retry, discard/keep, pending locks, template/calendar persistence, and zero share-editor or workout-library axe violations; both review axes found no actionable issue |
+| Short interval precision | Pass | Duration regression covers seconds, remainders, and hour boundaries; 390px Chromium saved/reloaded a 20-second workout block and showed `20s x 3` with a 20-second input; both review axes found no actionable issue |
+| Dashboard | Pass | Desktop and 390px Chromium: pointer at final plotted day, Home/End readings, no horizontal overflow or browser errors; coach-note service regressions pass |
+| Session execution and corrections | Pass | Chromium repeated/skipped execution, relative labels, completion, immediate actual correction, notes, reopening, planned adjustment, and reload persistence; session detail axe reports no violations |
+| Live progress and step timer | Pass, 253 tests | Execution tests verify resume data round-trip, workout-change invalidation, corrupt/out-of-range data recovery, explicit restart, timestamp-based countdown, pause/resume, expiry, and timer reset for completed/manual-navigation states. Chromium verified start, pause/resume, running and paused reload recovery, expiry without step completion, manual advance reset, and restart; a hydration guard prevents a false Start timer control before saved progress appears. `pnpm test`, `pnpm lint`, and `pnpm build` pass. |
+| Personal session removal | Pass | SQLite verifies owner scope, completed/activity/coach-assigned refusal, and block cascade; Chromium desktop and 390px confirms the in-app dialog, Escape cancel, Calendar removal, refresh feedback, and no horizontal overflow |
+| Untimed session display | Pass | Focused checks cover null and explicit times through Home, Calendar, detail, and the shared date formatter; `pnpm test`, `pnpm lint`, and `pnpm build` pass |
+| Overdue session recovery | Pass | Home and detail service regressions cover recent ordering, coach/plan/completion exclusions, matching Missed state, late completion, and retained schedule date; existing SQLite tests cover safe rescheduling and unchanged content |
+| Library-to-Planner handoff | Pass, 251 tests | Resolver and response tests cover owned, malformed, cross-kind, and unsafe IDs; route and UI assertions cover save/card links, template range setup, and source retention on month navigation; `pnpm test`, `pnpm lint`, and `pnpm build` pass |
+| Calendar persistence | Pass | Chromium explicit-date, keyboard-drag, and pointer-drag moves persisted after navigation/reload |
+| Calendar dates and ownership | Pass | Isolated SQLite tests cover foreign athletes, coach ownership, completed sessions, impossible dates, plan membership, content preservation, and Oslo/New York DST |
+| Calendar accessibility | Pass in scanned week view | Chromium axe 4.12.1: no violations; 390px month view has no horizontal overflow |
+| Roleless production authentication | Pass | `node --env-file=.env scripts/verify-roleless-setup.mjs` against a local production server; failed before the proxy migration and passed afterward |
+| Design detector | Advisory only | Event UI scan found one existing Home 11px type-ramp advisory at line 279, outside the event markup; no other findings in the scanned event surfaces |
 
-Earlier task recorded user confirmation of deployed Strava OAuth/manual import.
-That is user-reported evidence, not a fresh provider check by this cleanup.
+Calendar review identified unclear handling of optional scheduled times. Explicit
+times appear in visible metadata and accessible names, while unset times remain
+absent across athlete views and the calendar API. Session review identified
+cross-sport heart-rate resolution; both Live and WorkoutBuilder now require the
+current sport, with distinct-sport and missing-value regressions.
+Overdue personal sessions now have a direct recovery path from Home and detail;
+the state is derived from the scheduled date and ownership, and rescheduling
+reuses the conditional schedule mutation.
+Roleless JWT refresh previously called Prisma in Edge middleware and cleared
+the session. `proxy.ts` now runs that guard in Node.js; the runtime regression
+checks the real cookie/session flow and deletes its temporary account.
+Dashboard review
+findings are corrected, and its recheck found no actionable remaining issue.
+The continuation closed mobile, template, Activity, sharing, and duration
+iterations. Each was committed, reviewed on standards and product behavior,
+corrected where needed, and pushed. Disposable history fixtures and the fresh
+recipient account were removed after verification.
 
-## Strava production publication
+## Remaining limits and unverified behavior
 
-On 2026-09-30, implementation commit `251df37` was pushed to `origin/main` after
-284/284 tests, full lint, direct webpack bundle/TypeScript (76 pages), and diff
-checks passed. The independently published documentation consolidation was
-preserved. Standard `pnpm build` still hit the local Windows Prisma DLL lock
-before migrations; the running local preview was not stopped.
+- Personal sessions cannot yet be skipped (no skipped outcome or "Plan again").
+  An earlier uncommitted attempt is not on main.
+- Planner placement has no optional time-of-day input, and repeated placement
+  of the same source does not yet warn before duplicating dates.
+- The session correction editor is still a narrow side card at 1440px; its
+  horizontal overflow has not been fixed or verified on main.
 
-Production at `https://glowing-couscous-delta.vercel.app` now serves the new
-`/api/strava/inbox` endpoint: HTTP 401 with its expected sign-in JSON, replacing
-the previous HTTP 404. `/login` returns 200. This verifies publication and the
-unauthenticated guard, not an authenticated activity review. The production
-webhook challenge returns 200 with the exact challenge. Read-only configured
-database metadata confirms `20260930150000_strava_notifications` finished and
-was not rolled back. No activity data was created, imported or deleted during
-publication checks. Real Strava upload-to-popup, persisted review/matching,
-scheduled retry execution and database concurrency remain acceptance gates.
+- Auth.js still redirects to its error page if provider discovery fails, even
+  when credentials sign-in requested an inline response. Credential-callback
+  failures are recovered inline; provider-discovery outages remain a dependency
+  limitation.
+- Per-athlete time zones are not implemented. Calendar days use the server's
+  local time zone; rescheduling preserves wall time within that zone.
+- Live execution and its countdown are local guidance only; no device or sensor
+  telemetry is collected, and countdown expiry does not record actual work.
+- Live progress is stored per session in the current browser only; it does not
+  sync across browsers/devices. Timer browser verification covered desktop
+  Chromium; physical-device interaction remains unverified.
+- External Google OAuth, physical-device touch, and production deployment have
+  not been verified in this run.
+- Manual activity logging records duration, optional distance, RPE, and notes.
+  TCX and FIT imports preserve distance and source provenance. GPX import
+  derives distance from one timed track; mixed offsets and route-only files are
+  rejected because they cannot be represented consistently by the current
+  source-local timestamp model. FIT imports require a usable Activity local
+  timestamp and one supported sport session. GPS coordinates, raw file
+  contents, and sensor series are not stored. Imported TSS remains unavailable,
+  and direct device sync is unsupported.
+- Shared previews and recipient intake passed fresh Chromium checks. The six
+  workout authoring previews passed desktop/mobile browser acceptance; Terrain
+  and Ribbon keep horizontal scrolling inside their charts. Workouts, Templates,
+  and Activity list accessibility scans found no violations; template editor
+  and list now also pass fresh scans.
+- The specialized Next.js dev-loop skill requires Next.js 16.3 or later; this
+  app uses 16.2.4. Current evidence uses project checks and direct Chromium tests.
 
-Batch-review commit `eebb695` was pushed to `origin/main` after the recorded
-fixture, tests, lint and direct build checks. Production's public login build
-identifier changed from `px4Fm3HCkQRwQtCfjLQYa` to `GeGN8hEBlRyv3m38a-240`
-after the push; login returned 200 and the inbox retained its expected 401 guard.
-This confirms a new production build, not real authenticated batch acceptance.
-The design reviewer and documenter approved the scoped extension. The documenter
-reported pre-existing `.impeccable/design.json` drift from current Monolith
-rules; global design files were preserved.
+## Strava and activity import
 
-## Open gates and risks
+- Strava is an optional integration owned by one Tempo user and one Strava
+  athlete. OAuth tokens are encrypted server-side. Recent Strava activities land
+  in the Import inbox for explicit review; nothing is imported automatically.
+- Webhook notifications are queued and processed by a scheduled authenticated
+  worker. The production webhook challenge and the `/api/strava/inbox` auth
+  guard were checked; authenticated review of a real Strava upload, persisted
+  matching, retry execution and concurrency are still open acceptance gates.
+- File import (TCX, FIT, GPX) previews before save and deduplicates by file
+  fingerprint. Guided workout creation is provider-dependent; no live model call
+  is recorded here.
 
-- Imported workout interpretation has a [source-reviewed proposal](../IMPORTED-WORKOUT-ANALYSIS.md),
-  dated 2026-10-01; no behavior, schema or model call changed. Strava's current
-  API policy blocks the proposed API-data analysis path pending permitted scope.
-  Separately review existing Strava-derived guided-AI history and retention;
-  this planning pass did not audit or remediate their policy compatibility.
-  Proposed first implementation uses independently supplied device files.
+## Open gates
 
-1. Verify remaining migrations in the intended target, including provider
-   health; the Strava notification migration is confirmed in the configured
-   database. The latest local Prisma generation passed against the current schema.
-   Verify PostgreSQL persistence/concurrent placement and
-   webhook claims without resetting existing data.
-2. Configure HTTPS Strava callbacks/subscription and scheduled authenticated
-   worker; verify live delivery, retry, update/privacy/delete/disconnect and
-   deauthorization. Fixture inbox checks do not close live provider gates.
-   The user reports webhook registration completed. A read-only production
-   challenge check on 2026-09-30 against
-   `https://glowing-couscous-delta.vercel.app/api/strava/webhook` now returned
-   HTTP 200 with the exact challenge using the local `.env` verification token.
-   The previous token mismatch is resolved and the notification implementation
-   is published; see the production publication evidence above. No subscription
-   or activity data was changed by the read-only challenge checks.
-3. Verify guided creation with a server key and authenticated desktop/phone
-   save/reopen, provider labels and fallback. No live model call recorded.
-   Configure/test Resend delivery and optional Google OAuth independently.
-4. Refresh public sharing, session mutations, populated saved templates/import
-   errors and mobile target adjustments. Atlas, Flowline/Workbench/Trail and
-   Terrain/Ribbon/Staging comparisons remain deferred developer verification,
-   not personal-MVP blockers.
-5. Complete iOS/Android, native keyboard/file picker, Live sleep/resume, touch,
-   import performance and assistive-technology acceptance. Older axe findings
-   included contrast, landmarks and template container ARIA; later token and
-   landmark changes require a fresh audit rather than claiming old failures
-   remain reproduced today.
-6. Before broad signup, decide/complete privacy/support information, live-provider
-   deletion acceptance and server-side signup abuse controls. Earlier readiness review
-   recorded these missing; no launch certification is claimed.
-7. Middleware-to-proxy deprecation persists. Default Turbopack compilation stalled
-   during the latest cleanup; the migration-bearing webpack build passed on
-   disposable PostgreSQL. The root font is bundled locally.
-
-## Documentation maintenance
-
-### Remaining account/recovery rollout gates, 2026-09-30
-
-The initial source assessment has been followed by the implementation and
-isolated evidence above. The full active plan remains indexed; it is not complete.
-
-- Safe deletion is implemented and verified on disposable PostgreSQL and local
-  HTTP. Live Google/Strava callbacks, physical-device acceptance and the actual
-  backup/retention policy remain unverified. No real account deletion occurred.
-- Operator/support identity and actual retention/backup facts remain owner
-  inputs for public privacy/support. Durable signup/login abuse controls and
-  verified-email lifecycle are still pending; email verification is deferred by
-  the user. Downloads are also deferred.
-- Deploy WorkoutSaveRequest and safe-account-deletion migrations with code. They have been
-  reviewed/applied on the disposable database only; existing accounts/provider
-  data and the configured database schema were not modified by these new checks.
-- Home retains existing server-local date rules. An account timezone must be
-  applied consistently across Calendar/Planner/History, rather than Home alone.
-- Complete browser failures, multi-tab/account transitions, storage denial,
-  changed/deleted-source restoration and actual sign-out-everywhere
-  invalidation UI; finish physical phone sleep/wake and keyboard acceptance.
-
-
-The 2026-09-30 consolidation replaced superseded reviews/histories with this
-snapshot, owner index and operations/verification runbooks. Deferred gates are
-retained above; task files no longer archive completed or idle work. Product,
-architecture and design remain distinct contracts. Cleanup verification: relative documentation links and indexed owner paths resolve;
-no references to removed reviews remain. `pnpm test` passed 284/284 and `pnpm
-lint` passed on 2026-09-30 with installed dependencies reused. `git diff --check`
-passed after line-ending cleanup. No build, migration, browser or provider check
-was performed for this documentation-only change.
-
-## Imported running workout interpretation, 2026-10-01
-
-- Implemented opted-in independent running file analysis with TCX/FIT lap
-  preservation, telemetry v1/v2 compatibility, initial stream/lap segmentation,
-  code-calculated pooled interval pace, profile-backed intensity and steady-target
-  estimates. Human-duration candidates use a soft tolerance; genuine 53-second
-  repetitions are preserved. Coverage, insufficient measurements and uncertainty
-  remain explicit. Advanced segmentation/calibration follows implementation.
-- Atomic import enqueue and one current ActivityAnalysis job/result per activity;
-  separate confirmed intention, profile/input version snapshots, owned API,
-  duplicate-safe manual requests, bounded retries, leases and concurrency, and
-  publication guards against changed/deleted inputs and stale workers. A secret
-  worker provides browser-independent processing; after() improves import latency.
-  Strava sources are excluded from this pipeline and guided model history.
-- Optional model selects validated candidate IDs and adds bounded explanation;
-  code owns measurements/emphasis and supplies a fallback on missing/invalid
-  provider output. Reuses existing provider configuration. No live model call was
-  made. No raw location, identity, private notes or unrelated history in prompts.
-- Session review uses shared colorful duration-proportional blocks, measured
-  average effort pace, likely intended workout, estimated target, evidence table
-  and separate editable intention. Saved plans and telemetry remain untouched.
-  Impeccable finish review: ship, scoped to supplied screenshots/component code;
-  ordinary extension documentation review preserves existing visual contracts.
-  Reports and reviewed screenshots are under .impeccable/review/activity-analysis/.
-- pnpm test: 316/316 pass; pnpm lint and TypeScript check: pass. pnpm build --webpack:
-  pass with all eleven migrations current on disposable PostgreSQL and 69 pages
-  compiled. Existing middleware deprecation warning remains.
-- Disposable PostgreSQL acceptance: atomic import/rollback, duplicate/concurrent
-  jobs, owner/source refusal, corrections, cooldown, stale leases/exhausted attempts,
-  matched-plan preservation, in-flight deletion and account cascade passed.
-  Authenticated production-build HTTP acceptance passed for import/request/read,
-  correction, worker secret, owner/source refusal and rendered session access.
-  Secret worker processed the synthetic import before visiting its session.
-- Actual-component browser evidence: desktop light/dark, 390px and 320px narrow
-  layouts; evidence expansion and correction save/reload inspected. Confirmed
-  intention survived reload while measured pooled pace remained unchanged. This
-  does not certify physical phones, assistive technology or every result state.
-- Rollout gates: deploy 20261001150000_activity_analysis and application code,
-  configure worker secret/scheduler, verify live provider and scheduled delivery,
-  benchmark independent real files, and complete physical-device/accessibility
-  coverage. No configured database migration, hosted deployment or live-provider
-  verification was performed for this feature. Strava source permission remains
-  unresolved. Initial import enqueue lacks the manual queue cap; daily model
-  budgets are deferred. See ../IMPORTED-WORKOUT-ANALYSIS.md and OPERATIONS.md.
-
-- Temporary local server, browser tab and disposable PostgreSQL container were
-  removed after verification. git diff --check passes; unrelated worktree changes
-  are preserved.
-
-## Imported interpretation review and release checks, 2026-10-01
-
-- Corrected HR integration when an interval boundary clips a sensor span; only
-  the overlapping portion now contributes. Analyzer identity is intervals-v2;
-  obsolete queued jobs request reanalysis with a specific version-change message.
-- Varied effort durations no longer imply a uniform repetition time. The optional
-  model schema restricts candidate IDs to the actual supplied list; concrete JSON
-  examples, a preferred-candidate tie rule and uncertainty guidance prevent
-  unsupported within-effort variation claims from segment-only input.
-- Evidence shows separate pace/HR zones, flags substantial disagreement and
-  labels unclassified segments accurately. The table has named keyboard focus,
-  column scopes and local horizontal scrolling. Existing Monolith tokens/layout
-  remain. Inspected actual component at 1440px desktop in both themes, 390px light
-  and 320px dark; arrow-key table scrolling works with no page-width overflow.
-  Screenshots are in .impeccable/review/activity-analysis-review/.
-- pnpm test: 319/319 pass; pnpm lint: pass; pnpm build --webpack: pass, including
-  production TypeScript, 69 pages and all eleven migrations on a new disposable
-  PostgreSQL database. git diff --check passes. Added regression checks for clipped
-  sensor integration, irregular repetitions and bounded model input/invalid output.
-  No live provider call or physical-device check was made.
-- User explicitly authorized pushing all current worktree changes to main,
-  including earlier routine-template, calendar and shared UI work. Remote main
-  matched local c005c0387ab05d589de5c3125ce192e738b802b7 before release. Vercel
-  dashboard access is signed out; public production verification will follow
-  publication. Worker secret/scheduler and live-model readiness are not confirmed.
-
-- Release command now pins the verified webpack bundler. Standard pnpm build
-  passes on disposable PostgreSQL (69 pages); the leased-analysis PostgreSQL
-  acceptance also passed again after the review changes. No production data
-  was used by these checks.
-
-- Full release 8006c5d was pushed to origin/main. Production publication verified:
-  https://glowing-couscous-delta.vercel.app/login returns 200 and its build identity
-  changed from obtmG_LM8ITBJCNflxj70 to wp8qmr6l7hc2wV0ljWGci. The new
-  /api/activity-analysis/worker returns 401 Unauthorized JSON and owned analysis
-  /api/activity-imports/1/analysis returns its expected sign-in 401 JSON (both were
-  404 before publication). This verifies publication/guards, not an authenticated
-  production activity review or a live model request.
-- Read-only configured Neon migration metadata confirms template routine/retirement
-  migrations and 20261001150000_activity_analysis finished without rollback. The
-  analysis migration completed during release delivery; no seed, synthetic account,
-  or activity mutation was run in that database. Disposable DB/container and
-  temporary scripts were removed. Main includes the earlier routine, calendar and
-  shared UI changes, as explicitly requested. Worker scheduling, secret/provider
-  configuration and physical-device/real-file acceptance remain open gates.
-
-## Strava read-only health check, 2026-10-01
-
-- Strava subscription inspection returned 200, subscription 374668 points to the
-  production /api/strava/webhook callback. Production challenge returned 200 with
-  the exact challenge; invalid empty event returned the expected format 400 rather
-  than the unconfigured-subscription 503. No webhook event was created by the check.
-- Configured database has six pending, due webhook events from 2026-09-30, each
-  with four or five attempts; last errors are Unsupported state or unable to
-  authenticate data. No processed event rows are currently present. Existing
-  inbox/import rows do not certify successful current webhook processing.
-- A local read-only AES-GCM check failed to authenticate the saved connection's
-  tokens with the current local STRAVA_TOKEN_ENCRYPTION_KEY. Key mismatch or
-  encrypted-token damage is the likely cause; production key equality is not
-  verified because Vercel dashboard access is unavailable. Restore the correct
-  matching key or carefully reauthorize credentials after key configuration;
-  do not use Disconnect as a repair because it removes imported Strava outcomes.
-- Verify scheduled retry delivery and one real upload-to-review/import after fixing
-  credentials. These checks used only subscription/configuration and queue metadata,
-  never exposed tokens/keys and did not import, delete, refresh or process activities.
-
-## Strava Import inbox, 2026-10-01
-
-- Published to production: removed the shell's 15-second local-inbox checks and
-  automatic arrival dialogs. Import is the explicit newest-first review surface,
-  with Needs review count, All activities, Refresh inbox and provider Sync now.
-  Dismiss/restore, planned matching and standalone imports retain existing service
-  ownership. Reviewed rows leave Needs review immediately after successful writes;
-  keyboard focus returns to the filter if their trigger disappears.
-- Visiting Import schedules that owner's due webhook recovery after the response;
-  background delivery and the secret worker remain unchanged. Refresh inbox can
-  reveal arrivals processed after the page response. No timer was added to Import.
-- Verification: pnpm test 319/319, pnpm lint, and standard pnpm build passed.
-  Build applied all 11 migrations only to disposable PostgreSQL tempo_acceptance
-  on 127.0.0.1:55432. Initial localhost connection failed; IPv4 resolved it.
-  Removed stale generated development fixture types before the final clean build.
-- Synthetic AppShell/StravaImportPanel browser review passed desktop light/dark
-  and 390/320px dark mobile, including filters, dismiss/restore, explicit refresh
-  completion and keyboard focus; no horizontal overflow. This is component
-  evidence, not live webhook or authenticated persistence acceptance. Preview:
-  [.impeccable inbox screenshot](../../../.impeccable/review/strava-inbox/desktop-light.png).
-  Temporary fixture/server and disposable database container were removed.
-- Published commit 1aaac2a to origin/main. Production login returned 200 and
-  build identity changed from zrc25_bHd9264VoWy4EbG to n7SAm1E2_F8qqw_gyktjX.
-  Strava inbox GET and unauthenticated webhook-worker POST returned expected 401
-  JSON. This verifies public publication and guards, not authenticated inbox
-  review or live provider delivery. The production token-authentication failure
-  remains unresolved; this UI change does not certify provider health.
+- Live Strava delivery, retry, update, privacy, delete and deauthorization
+  flows need acceptance against the live provider.
+- Resend password-reset delivery and optional Google OAuth need separate
+  configuration and testing.
+- Imported workout interpretation is proposal-only (see
+  `docs/IMPORTED-WORKOUT-ANALYSIS.md`); Strava API-data analysis is blocked
+  pending permitted scope.
+- Before broad signup: privacy/support information, live-provider deletion
+  acceptance and server-side signup abuse controls are not yet in place.
+- `middleware` to `proxy` naming is complete in code; the default Turbopack
+  build has stalled in past runs, so webpack builds are the verified path.

@@ -1,4 +1,5 @@
-import { addDays, addMonths, differenceInCalendarDays, endOfMonth, endOfWeek, format, isSameDay, startOfMonth, startOfWeek } from 'date-fns';
+import { addDays, addMonths, differenceInCalendarDays, endOfDay, endOfMonth, endOfWeek, format, isSameDay, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
+import { Prisma } from '@prisma/client';
 import { readOverviewCardsFromPrefsJson } from './overview-preferences.ts';
 import { prisma } from './prisma.ts';
 import { deriveSessionMetrics } from './session-math.ts';
@@ -8,8 +9,14 @@ import { bucketActivityMetric, type ActivityIntensityTimeline } from './activity
 import { parsePerformanceProfileJson } from './performance-profile.ts';
 import { zoneForHeartRateBpm } from './profile-training-zones.ts';
 import { formatResolvedWorkoutTarget, formatWorkoutTarget } from './workout-target-resolution.ts';
-import type { WorkoutTarget, WorkoutTargetReference } from './workout-targets.ts';
+import { normalizeWorkoutTarget, type WorkoutTarget, type WorkoutTargetReference } from './workout-targets.ts';
 import { homeActivityLoadAvailable, homeActivityReadout, summarizeHomeActivities } from './home-summary.ts';
+import { createSessionEditorDraftFromPersisted } from './session-editor.ts';
+import { plannedMetrics } from './training-load-service.ts';
+import { addDayKeys, classifyCompliance, fromDayKey, summarizeWeeks, toDayKey, type WeekSession } from './training-load.ts';
+import { parseCalendarDay } from './calendar-navigation.ts';
+import { ACTIVITY_PAGE_SIZE, parseActivityFilters, type ActivityFilters } from './activity-navigation.ts';
+import { getSessionDisplayStatus, getSessionStatusAction, SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
 
 type AthleteServiceDeps = {
   db?: typeof prisma;
@@ -59,8 +66,41 @@ function buildActivityIntensityTimeline(
   };
 }
 
+const HOME_OVERDUE_SESSION_LIMIT = 3;
+
+/** Sessions the athlete placed themselves; coach-owned work keeps its coach's schedule. */
+export function isSelfPlanned(session: { coachOwnerId?: number | null; assignedById?: number | null; trainingPlanId?: number | null }) {
+  return !session.coachOwnerId && !session.assignedById && !session.trainingPlanId;
+}
+
 function selectPrimaryRequest<T extends { status: string }>(requests: T[]) {
   return requests.find((request) => request.status === 'PENDING') ?? requests[0] ?? null;
+}
+
+function isOverdueSession(session: {
+  date: Date | null;
+  status: string;
+  coachOwnerId?: number | null;
+  assignedById?: number | null;
+  trainingPlanId?: number | null;
+  activity?: unknown;
+}, today: Date) {
+  return Boolean(
+    session.date &&
+      !session.activity &&
+      session.status !== 'completed' &&
+      session.status !== SKIPPED_SESSION_STATUS &&
+      isSelfPlanned(session) &&
+      toDayKey(session.date) < toDayKey(today),
+  );
+}
+
+function dateOnlyFromKey(day: string) { return new Date(`${day}T12:00:00.000Z`); }
+function utcDayKey(date: Date) { return date.toISOString().slice(0, 10); }
+function calendarDayDistance(from: string, to: string) {
+  const [fy, fm, fd] = from.split('-').map(Number);
+  const [ty, tm, td] = to.split('-').map(Number);
+  return Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(fy, fm - 1, fd)) / 86_400_000);
 }
 
 export function createAthleteService({ db = prisma, now = () => new Date() }: AthleteServiceDeps = {}) {
@@ -73,6 +113,10 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
     timeLabel: string | null;
     status: string;
     adjusted: boolean;
+    coachOwnerId?: number | null;
+    assignedById?: number | null;
+    trainingPlanId?: number | null;
+    coachBaselineJson?: string | null;
     blocks: Array<{
       id: number;
       kind: string;
@@ -84,19 +128,25 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       targetReference?: string | null;
       targetLow: number | null;
       targetHigh: number | null;
+      targetLowDecimal?: string | null;
+      targetHighDecimal?: string | null;
       note: string | null;
       skipped?: boolean;
       sortOrder: number;
     }>;
     activity?: {
-      tss: number;
+      tss: number | null;
+      durationSec?: number;
+      distanceMeters?: number | null;
+      rpe?: number | null;
+      notes?: string | null;
       compliancePct?: number | null;
       segmentsJson?: string | null;
       metricsSource?: string;
-      durationSec?: number;
       telemetryJson?: string | null;
     } | null;
-  }, options: { includeIntensityTimeline?: boolean; heartRateMaxBpm?: number | null } = {}) {
+  }, options: { includeIntensityTimeline?: boolean; heartRateMaxBpm?: number | null; today?: Date } = {}) {
+    const today = options.today ?? now();
     const metrics = deriveSessionMetrics(
       session.blocks.filter((block) => !block.skipped).map((block) => ({
         kind: block.kind as 'warmup' | 'work' | 'recovery' | 'cooldown' | 'pause',
@@ -117,15 +167,40 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       session.sport,
     );
 
-    const targetBlock = session.blocks.find(
-      (block) =>
-        block.targetType !== null && block.targetLow !== null && block.targetHigh !== null,
+    const target = session.blocks
+      .filter((block) => !block.skipped)
+      .map((block) => normalizeWorkoutTarget({
+        metric: block.targetType,
+        mode: block.targetMode ?? 'absolute',
+        reference: block.targetReference ?? null,
+        low: block.targetLowDecimal ?? block.targetLow,
+        high: block.targetHighDecimal ?? block.targetHigh,
+      }))
+      .find((candidate) => candidate !== null);
+
+    const status = getSessionDisplayStatus(session);
+    const planned = plannedMetrics(
+      { coachBaselineJson: session.coachBaselineJson ?? null, blocks: session.blocks.map((block) => ({ ...block, skipped: Boolean(block.skipped) })) },
+      { completed: status === 'completed', metricsSource: session.activity?.metricsSource },
     );
     const isImportedActivity = ['file-import', 'strava-import'].includes(session.activity?.metricsSource ?? '');
 
     const intensityTimeline = options.includeIntensityTimeline && session.activity
       ? buildActivityIntensityTimeline(session.activity, options.heartRateMaxBpm ?? null)
       : null;
+    const todayKey = toDayKey(today);
+    const isOverdue = isOverdueSession(session, today);
+    const compliance = classifyCompliance({
+      status,
+      day: toDayKey(session.date),
+      today: todayKey,
+      plannedDurationSec: planned.durationSec,
+      plannedTss: planned.tss,
+      actualDurationSec: session.activity?.durationSec ?? null,
+      actualTss: session.activity?.tss ?? null,
+      compliancePct: session.activity?.compliancePct ?? null,
+      metricsSource: session.activity?.metricsSource ?? null,
+    });
 
     return {
       id: session.id,
@@ -133,37 +208,32 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       summary: session.summary,
       sport: session.sport,
       date: session.date,
-      timeLabel: session.timeLabel ?? format(session.date, 'HH:mm'),
-      status: (
-        session.activity
-          ? 'completed'
-          : session.status === 'missed'
-            ? 'missed'
-            : session.adjusted
-              ? 'adjusted'
-              : 'planned'
-      ) as 'planned' | 'completed' | 'adjusted' | 'missed',
-      targetLabel:
-        targetBlock && targetBlock.targetType
-          ? `${targetBlock.targetLow}-${targetBlock.targetHigh} ${
-              targetBlock.targetType === 'power'
-                ? 'W'
-                : targetBlock.targetType === 'hr'
-                  ? 'bpm'
-                  : 'pace'
-            }`
-          : null,
+      timeLabel: session.timeLabel,
+      status,
+      isOverdue,
+      compliance,
+      plannedDurationSec: planned.durationSec,
+      plannedTss: planned.tss,
+      targetLabel: target ? formatWorkoutTarget(target, session.sport) : null,
       durationSec: metrics.durationSec,
       tss: session.activity?.tss ?? metrics.tss,
       loadAvailable: !(isImportedActivity && session.activity?.tss === 0),
       recordedDurationSec: isImportedActivity
         ? session.activity?.durationSec ?? null
         : null,
+      activityDurationSec: session.activity?.durationSec ?? null,
+      distanceMeters: session.activity?.distanceMeters ?? null,
+      activityDistanceMeters: session.activity?.distanceMeters ?? null,
+      activityRpe: session.activity?.rpe ?? null,
+      activityTss: session.activity?.tss ?? null,
+      activityNotes: session.activity?.notes ?? null,
       segments: session.activity?.segmentsJson
         ? parseActivitySegments(session.activity.segmentsJson)
         : metrics.segments,
       intensityTimeline,
       compliancePct: session.activity?.compliancePct ?? null,
+      actualDurationSec: session.activity ? (session.activity.durationSec ?? null) : null,
+      actualTss: session.activity ? session.activity.tss : null,
       metricsSource: session.activity?.metricsSource ?? null,
       blockCount: session.blocks.length,
     };
@@ -227,8 +297,11 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
 
     async loadHomeDashboard(userId: number) {
       const today = now();
+      const todayKey = toDayKey(today);
       const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
       const currentWeekEnd = endOfWeek(today, { weekStartsOn: 1 });
+      // Late in the week, the next few days reach into next week.
+      const lookaheadEnd = endOfDay(addDays(today, 4));
       const athlete = await db.user.findUnique({
         where: { id: userId },
         include: {
@@ -239,7 +312,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
             where: {
               date: {
                 gte: currentWeekStart,
-                lte: currentWeekEnd,
+                lte: lookaheadEnd > currentWeekEnd ? lookaheadEnd : currentWeekEnd,
               },
             },
             include: {
@@ -257,12 +330,39 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
               session: true,
             },
           },
+          events: {
+            where: { eventDate: { gte: dateOnlyFromKey(todayKey) } },
+            orderBy: [{ eventDate: 'asc' }, { id: 'asc' }],
+            take: 1,
+          },
         },
       });
 
       if (!athlete) {
         return null;
       }
+
+      const overdueRecords = await db.session.findMany({
+        where: {
+          athleteId: userId,
+          date: { lt: startOfDay(today) },
+          status: { notIn: ['completed', SKIPPED_SESSION_STATUS] },
+          coachOwnerId: null,
+          assignedById: null,
+          trainingPlanId: null,
+          activity: { is: null },
+        },
+        include: {
+          blocks: { orderBy: { sortOrder: 'asc' } },
+          activity: true,
+        },
+        orderBy: [{ date: 'desc' }, { id: 'desc' }],
+        take: HOME_OVERDUE_SESSION_LIMIT,
+      });
+      const overdue = overdueRecords
+        .filter((session): session is typeof session & { date: Date } => session.date !== null)
+        .map((session) => mapSessionSummary(session, { today }))
+        .filter((session) => session.isOverdue);
 
       const overviewCards = readOverviewCardsFromPrefsJson(athlete.prefsJson);
 
@@ -272,17 +372,18 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         orderBy: [{ completedAt: 'desc' }, { id: 'desc' }],
       });
 
-      const sessions = athlete.sessions
-        .filter((s): s is typeof s & { date: Date } => s.date !== null)
-        .map((session) => ({
-          ...mapSessionSummary(session),
-          ...(session.activity ? { durationSec: session.activity.durationSec, loadAvailable: homeActivityLoadAvailable(session.activity) } : {}),
-        }));
+      const datedSessions = athlete.sessions.filter((s): s is typeof s & { date: Date } => s.date !== null);
+      const sessions = datedSessions.map((session) => ({
+        ...mapSessionSummary(session, { today }),
+        ...(session.activity ? { durationSec: session.activity.durationSec, loadAvailable: homeActivityLoadAvailable(session.activity) } : {}),
+      }));
       const todaySessions = sessions.filter((session) => isSameDay(session.date, today));
+      const nextSession = todaySessions.find((session) => session.status !== 'completed' && session.status !== SKIPPED_SESSION_STATUS);
+      const todayCoachNote = datedSessions.find((session) => session.id === nextSession?.id);
       const weekDays = Array.from({ length: 7 }, (_, index) => {
         const day = addDays(currentWeekStart, index);
         return {
-          label: format(day, 'EEE').toUpperCase(),
+          label: format(day, 'EEE'),
           dateLabel: format(day, 'd'),
           isoDate: format(day, 'yyyy-MM-dd'),
           isToday: isSameDay(day, today),
@@ -293,15 +394,17 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         const day = addDays(today, index + 1);
         const daySessions = sessions.filter((session) => isSameDay(session.date, day));
         return {
-          label: format(day, 'EEE').toUpperCase(),
+          label: format(day, 'EEE'),
           dateLabel: format(day, 'd'),
+          isoDate: format(day, 'yyyy-MM-dd'),
           sessions: daySessions,
         };
       });
 
       // Scheduled structure stays independent from saved outcome values and
       // standalone imports, whose sessions exist only to host their outcomes.
-      const scheduledSessions = athlete.sessions.filter((session) => session.date !== null && session.source !== 'activity-import');
+      // Skipped sessions stay on the week wall but add no planned load.
+      const scheduledSessions = athlete.sessions.filter((session) => session.date !== null && session.source !== 'activity-import' && session.status !== SKIPPED_SESSION_STATUS);
       const scheduledTotals = scheduledSessions.reduce(
         (accumulator, session) => {
           const planned = mapSessionSummary({ ...session, activity: null, date: session.date! });
@@ -311,6 +414,17 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         },
         { count: scheduledSessions.length, durationSec: 0, tss: 0, loadUnavailableCount: 0 },
       );
+      // Skipped sessions stay on the week wall but add no planned load.
+      const weekTotals = sessions.filter((session) => session.date <= currentWeekEnd && session.status !== SKIPPED_SESSION_STATUS).reduce(
+        (accumulator, session) => {
+          accumulator.durationSec += session.durationSec;
+          if (session.tss === null) accumulator.unknownLoad += 1;
+          else accumulator.tss += session.tss;
+          return accumulator;
+        },
+        { durationSec: 0, tss: 0, unknownLoad: 0 },
+      );
+      const upcomingEvents = athlete.events ?? [];
 
       return {
         athlete: {
@@ -321,12 +435,27 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
           ? { ...athlete.coach, name: athlete.coach.name ?? '' }
           : null,
         overviewCards,
+        todayKey,
+        nextEvent: upcomingEvents[0] ? {
+          id: upcomingEvents[0].id,
+          title: upcomingEvents[0].title,
+          sport: upcomingEvents[0].sport,
+          eventDate: utcDayKey(upcomingEvents[0].eventDate),
+          daysUntil: calendarDayDistance(todayKey, utcDayKey(upcomingEvents[0].eventDate)),
+          targetFinishSec: upcomingEvents[0].targetFinishSec,
+        } : null,
+        overdue,
         todaySessions,
         weekDays,
         nextDays,
         dateLabels: { today: format(today, 'EEEE, d MMMM'), shortToday: format(today, 'd MMM'), weekNumber: format(today, 'II'), weekRange: `${format(currentWeekStart, 'd MMM')} – ${format(currentWeekEnd, 'd MMM')}` },
         lastActivity: athlete.activities[0]
-          ? homeActivityReadout(athlete.activities[0])
+          ? {
+              ...homeActivityReadout(athlete.activities[0]),
+              sport: athlete.activities[0].session.sport,
+              rpe: athlete.activities[0].rpe,
+              notes: athlete.activities[0].notes,
+            }
           : null,
         trend: athlete.activities
           .slice()
@@ -334,9 +463,10 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
           .map(homeActivityReadout),
         scheduledTotals,
         completedTotals: summarizeHomeActivities(completedActivities),
+        weekTotals,
         coachNote:
-          athlete.coach && todaySessions[0]
-            ? `Keep ${todaySessions[0].title.toLowerCase()} controlled and smooth.`
+          athlete.coach && todayCoachNote?.coachNotes
+            ? { sessionTitle: todayCoachNote.title, text: todayCoachNote.coachNotes.trim() }
             : null,
       };
     },
@@ -370,7 +500,11 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
     },
 
     async loadCalendarView(userId: number, dateRef: Date | string, view: 'week' | 'month' = 'week') {
-      const referenceDate = new Date(dateRef);
+      const now = new Date();
+      // A yyyy-MM-dd reference is a local calendar day, never a UTC instant.
+      const dayRef = parseCalendarDay(dateRef);
+      const parsedReference = dayRef ? fromDayKey(dayRef) : new Date(dateRef);
+      const referenceDate = Number.isNaN(parsedReference.getTime()) ? now : parsedReference;
       const resolvedView = view === 'month' ? 'month' : 'week';
       const periodStart =
         resolvedView === 'month'
@@ -415,6 +549,12 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
             },
             orderBy: [{ date: 'asc' }, { id: 'asc' }],
           },
+          events: {
+            where: {
+              eventDate: { gte: dateOnlyFromKey(format(queryStart, 'yyyy-MM-dd')), lte: dateOnlyFromKey(format(queryEnd, 'yyyy-MM-dd')) },
+            },
+            orderBy: [{ eventDate: 'asc' }, { id: 'asc' }],
+          },
         },
       });
 
@@ -423,11 +563,23 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       }
 
       const heartRateMaxBpm = parsePerformanceProfileJson(athlete.performanceProfileJson).heartRateMaxBpm;
+      const events = athlete.events ?? [];
+      const eventsByDay = new Map<string, typeof events>();
+      for (const event of events) {
+        const key = utcDayKey(event.eventDate);
+        eventsByDay.set(key, [...(eventsByDay.get(key) ?? []), event]);
+      }
+
       const sessions = athlete.sessions
         .filter((s): s is typeof s & { date: Date } => s.date !== null)
-        .map((session) => mapSessionSummary(session, {
-          includeIntensityTimeline: resolvedView === 'week',
-          heartRateMaxBpm,
+        .map((session) => ({
+          ...mapSessionSummary(session, {
+            today: now,
+            includeIntensityTimeline: resolvedView === 'week',
+            heartRateMaxBpm,
+          }),
+          // Only the athlete's own open sessions can be moved from the calendar.
+          canReschedule: !session.activity && session.status !== 'completed' && isSelfPlanned(session),
         }));
       const buildDay = (date: Date) => ({
         label: format(date, 'EEE'),
@@ -436,8 +588,9 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         isCurrentMonth:
           date.getMonth() === periodStart.getMonth() &&
           date.getFullYear() === periodStart.getFullYear(),
-        isToday: isSameDay(date, new Date()),
+        isToday: isSameDay(date, now),
         sessions: sessions.filter((session) => isSameDay(session.date, date)),
+        events: eventsByDay.get(format(date, 'yyyy-MM-dd')) ?? [],
       });
       const days =
         resolvedView === 'week'
@@ -452,6 +605,21 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
             )
           : [];
 
+      const weekStarts: string[] = [];
+      for (let weekStart = toDayKey(queryStart); weekStart <= toDayKey(queryEnd); weekStart = addDayKeys(weekStart, 7)) {
+        weekStarts.push(weekStart);
+      }
+      const weekSessions: WeekSession[] = sessions.map((session) => ({
+        day: toDayKey(session.date),
+        sport: session.sport,
+        plannedDurationSec: session.plannedDurationSec,
+        plannedTss: session.plannedTss,
+        actualDurationSec: session.actualDurationSec,
+        actualTss: session.actualTss,
+        compliance: session.compliance,
+      }));
+      const weekSummaries = summarizeWeeks(weekSessions, weekStarts);
+
       return {
         athlete: {
           id: athlete.id,
@@ -459,6 +627,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         },
         coachName: athlete.coach?.name ?? null,
         view: resolvedView,
+        weekSummaries,
         period: {
           start: periodStart,
           previousStart: resolvedView === 'month' ? addMonths(periodStart, -1) : addDays(periodStart, -7),
@@ -470,51 +639,67 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       };
     },
 
-    async loadActivityFeed(userId: number) {
-      const athlete = await db.user.findUnique({
-        where: { id: userId },
-        select: {
-          activities: {
-            orderBy: [{ completedAt: 'desc' }, { id: 'desc' }],
-            select: {
-              id: true,
-              sessionId: true,
-              completedAt: true,
-              durationSec: true,
-              tss: true,
-              metricsSource: true,
-              notes: true,
-              distanceMeters: true,
-              importTitle: true,
-              importedSessionStatus: true,
-              session: {
-                select: { title: true, sport: true },
-              },
-            },
-          },
-        },
-      });
-
+    async loadActivityFeed(userId: number, filters: ActivityFilters = parseActivityFilters({})) {
+      const athlete = await loadAthleteIdentity(userId);
       if (!athlete) {
         return null;
       }
-
-      return {
-        activities: athlete.activities.map((activity) => ({
-          id: activity.id,
-          sessionId: activity.sessionId,
-          title: activity.importTitle || activity.session.title,
-          plannedTitle: activity.importedSessionStatus === null ? null : activity.session.title,
-          sport: activity.session.sport,
-          completedAt: activity.completedAt,
-          durationSec: activity.durationSec,
-          tss: activity.tss,
-          loadAvailable: !(['file-import', 'strava-import'].includes(activity.metricsSource) && activity.tss === 0),
-          metricsSource: activity.metricsSource,
-          notes: activity.notes,
-          distanceMeters: activity.distanceMeters,
-        })),
-      };
+      const scope = Prisma.sql`
+        FROM Activity a JOIN Session s ON s.id = a.sessionId
+        WHERE a.athleteId = ${userId} AND s.athleteId = ${userId}
+          AND (${filters.sport} IS NULL OR s.sport = ${filters.sport})
+          AND instr(lower(s.title), lower(${filters.query})) > 0
+      `;
+      return db.$transaction(async (tx) => {
+        const [summary] = await tx.$queryRaw<Array<{ count: bigint; durationSec: bigint; tss: bigint; unknownLoad: bigint }>>(Prisma.sql`
+          SELECT COUNT(*) AS count, COALESCE(SUM(a.durationSec), 0) AS durationSec,
+            COALESCE(SUM(a.tss), 0) AS tss, SUM(CASE WHEN a.tss IS NULL THEN 1 ELSE 0 END) AS unknownLoad ${scope}
+        `);
+        const count = Number(summary.count);
+        const totalPages = Math.max(1, Math.ceil(count / ACTIVITY_PAGE_SIZE));
+        const page = Math.min(filters.page, totalPages);
+        const matches = await tx.$queryRaw<Array<{ id: number }>>(Prisma.sql`
+          SELECT a.id ${scope} ORDER BY a.completedAt DESC, a.id DESC
+          LIMIT ${ACTIVITY_PAGE_SIZE} OFFSET ${(page - 1) * ACTIVITY_PAGE_SIZE}
+        `);
+        const activities = await tx.activity.findMany({
+          where: { id: { in: matches.map((match) => match.id) }, athleteId: userId },
+          orderBy: [{ completedAt: 'desc' }, { id: 'desc' }],
+          include: { session: { select: { id: true, title: true, sport: true, coachBaselineJson: true, blocks: { orderBy: { sortOrder: 'asc' } } } } },
+        });
+        return {
+          athlete: {
+            id: athlete.id,
+            name: athlete.name ?? '',
+          },
+          count,
+          page,
+          totalPages,
+          totals: { durationSec: Number(summary.durationSec), tss: Number(summary.tss), unknownLoad: Number(summary.unknownLoad) },
+          activities: activities.map((activity) => ({
+            id: activity.id,
+            sessionId: activity.sessionId,
+            title: activity.importTitle || activity.session.title,
+            plannedTitle: activity.importedSessionStatus === null ? null : activity.session.title,
+            sport: activity.session.sport,
+            plannedDurationSec: plannedMetrics(
+              { coachBaselineJson: activity.session.coachBaselineJson, blocks: activity.session.blocks },
+              { completed: true, metricsSource: activity.metricsSource },
+            ).durationSec,
+            completedAt: activity.completedAt,
+            startedAt: activity.startedAt,
+            sourceTimezoneOffsetMinutes: activity.sourceTimezoneOffsetMinutes,
+            durationSec: activity.durationSec,
+            distanceMeters: activity.distanceMeters,
+            tss: activity.tss,
+            loadAvailable: !(['file-import', 'strava-import'].includes(activity.metricsSource) && activity.tss === 0),
+            compliancePct: activity.compliancePct,
+            metricsSource: activity.metricsSource,
+            notes: activity.notes,
+            segments: parseActivitySegments(activity.segmentsJson),
+          })),
+        };
+      });
     },
 
     async loadSessionDetail(userId: number, sessionId: number) {
@@ -579,6 +764,11 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         && sourceWorkout.activity === null
         ? { id: sourceWorkout.id, title: sourceWorkout.title }
         : null;
+      const editor = createSessionEditorDraftFromPersisted(session.activity ? 'actual' : 'planned', {
+        ...session,
+        scheduledDate: session.date,
+        blocks: session.blocks,
+      });
 
       return {
         athlete: {
@@ -588,11 +778,20 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         coachName: session.athlete.coach?.name ?? null,
         session: {
           ...summary,
+          source: session.source,
+          canDelete: isSelfPlanned(session) && !session.activity && session.status !== 'completed',
+          statusAction: getSessionStatusAction(session, userId),
           importedActivityId: session.activity && ['file-import', 'strava-import'].includes(session.activity.metricsSource)
             ? session.activity.id
             : null,
           notes: session.activity?.notes ?? session.athleteNotes ?? '',
+          activityId: session.activity?.id ?? null,
+          activityUpdatedAt: session.activity?.updatedAt ?? null,
+          activityStartedAt: session.activity?.startedAt ?? null,
+          activityCompletedAt: session.activity?.completedAt ?? null,
+          activityTimezoneOffsetMinutes: session.activity?.sourceTimezoneOffsetMinutes ?? null,
           sourceWorkout: editableSourceWorkout,
+          editor,
           blocks: session.blocks.map((block) => {
             const meta = getTempoZoneMeta(block.zone as 1 | 2 | 3 | 4 | 5);
             const target: WorkoutTarget | null = block.targetType && block.targetLow !== null && block.targetHigh !== null

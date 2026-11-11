@@ -4,6 +4,7 @@ import { getWeekDays } from './week.ts';
 import { deriveSessionMetrics } from './session-math.ts';
 import { parseActivitySegments } from './activity-metrics.ts';
 import type { WorkoutTargetReference } from './workout-targets.ts';
+import { getSessionDisplayStatus } from './athlete-session-status-service.ts';
 
 type CoachServiceDeps = {
   db?: typeof prisma;
@@ -31,7 +32,7 @@ type SessionRecord = {
   }>;
   activity: {
     durationSec: number;
-    tss: number;
+    tss: number | null;
     compliancePct: number | null;
     segmentsJson: string | null;
     metricsSource: string;
@@ -63,18 +64,12 @@ function mapSessionSummary(session: SessionRecord) {
     title: session.title,
     sport: session.sport,
     date: session.date,
-    status: session.activity
-      ? ('completed' as const)
-      : session.status === 'missed'
-        ? ('missed' as const)
-        : session.adjusted
-          ? ('adjusted' as const)
-          : ('planned' as const),
+    status: getSessionDisplayStatus(session),
     durationSec: metrics.durationSec,
     actualDurationSec: session.activity?.durationSec ?? null,
     plannedTss: metrics.tss,
     actualTss: session.activity?.tss ?? null,
-    tss: session.activity?.tss ?? metrics.tss,
+    tss: session.activity ? session.activity.tss : metrics.tss,
     completionPct: session.activity?.compliancePct ?? null,
     metricsSource: session.activity?.metricsSource ?? null,
     segments: session.activity?.segmentsJson
@@ -167,13 +162,15 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
           }),
         );
 
-        const completedCount = sessions.filter((session) => session.status === 'completed').length;
+        // Skipped sessions are excluded from compliance and planned counts.
+        const countedSessions = sessions.filter((session) => session.status !== 'skipped');
+        const completedCount = countedSessions.filter((session) => session.status === 'completed').length;
         const compliancePct =
-          sessions.length > 0 ? Math.round((completedCount / sessions.length) * 100) : 0;
+          countedSessions.length > 0 ? Math.round((completedCount / countedSessions.length) * 100) : 0;
         const nextSession =
-          sessions.find((session) => session.status === 'planned' || session.status === 'adjusted')
-          ?? sessions.find((session) => session.status === 'missed')
-          ?? sessions[0]
+          countedSessions.find((session) => session.status === 'planned' || session.status === 'adjusted')
+          ?? countedSessions.find((session) => session.status === 'missed')
+          ?? countedSessions[0]
           ?? null;
 
         return {
@@ -182,11 +179,11 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
           email: athlete.email,
           compliancePct,
           completedCount,
-          plannedCount: sessions.length,
+          plannedCount: countedSessions.length,
           flag:
             compliancePct >= 80
               ? { label: 'On track', tone: 'success' as const }
-              : sessions.length === 0
+              : countedSessions.length === 0
                 ? { label: 'No plan', tone: 'warning' as const }
                 : { label: 'Needs attention', tone: 'warning' as const },
           nextSession: nextSession
@@ -318,19 +315,21 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
         }),
       );
 
-      const completedCount = weekSummaries.filter((session) => session.status === 'completed').length;
-      const plannedDurationSec = weekSummaries.reduce((total, session) => total + session.durationSec, 0);
-      const completedDurationSec = weekSummaries.reduce(
+      // Skipped sessions stay in the week list but are excluded from stats and compliance.
+      const countedWeekSummaries = weekSummaries.filter((session) => session.status !== 'skipped');
+      const completedCount = countedWeekSummaries.filter((session) => session.status === 'completed').length;
+      const plannedDurationSec = countedWeekSummaries.reduce((total, session) => total + session.durationSec, 0);
+      const completedDurationSec = countedWeekSummaries.reduce(
         (total, session) => total + (session.actualDurationSec ?? 0),
         0,
       );
-      const plannedTss = weekSummaries.reduce((total, session) => total + session.plannedTss, 0);
-      const weekTss = weekSummaries.reduce((total, session) => total + (session.actualTss ?? session.plannedTss), 0);
+      const plannedTss = countedWeekSummaries.reduce((total, session) => total + session.plannedTss, 0);
+      const weekTss = countedWeekSummaries.reduce((total, session) => total + (session.actualTss ?? session.plannedTss), 0);
       const compliancePct =
-        weekSummaries.length > 0 ? Math.round((completedCount / weekSummaries.length) * 100) : 0;
+        countedWeekSummaries.length > 0 ? Math.round((completedCount / countedWeekSummaries.length) * 100) : 0;
       const nextSession =
-        weekSummaries.find((session) => session.status === 'planned' || session.status === 'adjusted') ??
-        weekSummaries[0] ??
+        countedWeekSummaries.find((session) => session.status === 'planned' || session.status === 'adjusted') ??
+        countedWeekSummaries[0] ??
         null;
 
       return {
@@ -350,7 +349,7 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
         stats: {
           compliancePct,
           completedCount,
-          plannedCount: weekSummaries.length,
+          plannedCount: countedWeekSummaries.length,
           plannedDurationSec,
           completedDurationSec,
           plannedTss,

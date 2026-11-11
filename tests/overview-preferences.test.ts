@@ -20,3 +20,9 @@ test('readOverviewCardsFromPrefsJson normalizes persisted overview cards', () =>
     ['coachNote', 'trend'],
   );
 });
+
+test('a fresh account shows every overview card until it chooses otherwise', () => {
+  assert.deepEqual(readOverviewCardsFromPrefsJson(null), ['coachNote', 'lastActivity', 'weekLoad', 'trend']);
+  assert.deepEqual(readOverviewCardsFromPrefsJson('{"theme":"dark"}'), ['coachNote', 'lastActivity', 'weekLoad', 'trend']);
+  assert.deepEqual(readOverviewCardsFromPrefsJson('{"overviewCards":[]}'), []);
+});

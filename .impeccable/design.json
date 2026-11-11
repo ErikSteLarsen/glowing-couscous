@@ -1,754 +1,265 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-24T10:53:23.351Z",
-  "title": "Design System: Tempo",
+  "generatedAt": "2026-09-14T15:00:00.000Z",
+  "title": "Design System: Tempo Night Instrument",
   "extensions": {
     "colorMeta": {
-      "signal": {
+      "trace": {
         "role": "primary",
-        "displayName": "Indigo Action",
-        "canonical": "#102F51",
+        "displayName": "Cyan Trace",
+        "canonical": "#5EB6D8",
         "tonalRamp": [
-          "#071829",
-          "#0B2139",
-          "#102F51",
-          "#1D456D",
-          "#536B83",
-          "#8AA0B5",
-          "#E8EDF2",
-          "#F5F4EF"
+          "#06121A",
+          "#12303D",
+          "#2D4A5A",
+          "#3F7F99",
+          "#5EB6D8",
+          "#82C9E4",
+          "#B5E0F0",
+          "#EEF2F6"
         ]
       },
-      "signal-hover": {
+      "trace-hover": {
         "role": "primary",
-        "displayName": "Indigo Hover",
-        "canonical": "#1D456D",
+        "displayName": "Trace Hover",
+        "canonical": "#82C9E4",
         "tonalRamp": [
-          "#071829",
-          "#0B2139",
-          "#102F51",
-          "#1D456D",
-          "#536B83",
-          "#8AA0B5",
-          "#E8EDF2",
-          "#F5F4EF"
+          "#06121A",
+          "#2D4A5A",
+          "#5EB6D8",
+          "#82C9E4",
+          "#B5E0F0",
+          "#EEF2F6"
         ]
       },
-      "signal-ink": {
+      "ground": {
         "role": "neutral",
-        "displayName": "Signal White",
-        "canonical": "#FFFFFF",
+        "displayName": "Night Ground",
+        "canonical": "#0B0F15",
         "tonalRamp": [
-          "#112842",
-          "#304762",
-          "#53606B",
-          "#7F8588",
-          "#BFC2C0",
-          "#D4D3CD",
-          "#F5F4EF",
-          "#FFFFFF"
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
         ]
       },
-      "liquid": {
-        "role": "secondary",
-        "displayName": "Blue Gray Linework",
-        "canonical": "#71879A",
-        "tonalRamp": [
-          "#263A4B",
-          "#455C70",
-          "#71879A",
-          "#8AA0B5",
-          "#B0BDC6",
-          "#D4DDE3",
-          "#E7ECEF",
-          "#F5F4EF"
-        ]
-      },
-      "liquid-tint": {
-        "role": "secondary",
-        "displayName": "Current Tint",
-        "canonical": "#E7ECEF",
-        "tonalRamp": [
-          "#263A4B",
-          "#455C70",
-          "#71879A",
-          "#8AA0B5",
-          "#B0BDC6",
-          "#D4DDE3",
-          "#E7ECEF",
-          "#F5F4EF"
-        ]
-      },
-      "paper": {
+      "raised": {
         "role": "neutral",
-        "displayName": "Warm Paper",
-        "canonical": "#F5F4EF",
+        "displayName": "Raised Layer",
+        "canonical": "#151B24",
         "tonalRamp": [
-          "#112842",
-          "#53606B",
-          "#7F8588",
-          "#BFC2C0",
-          "#D4D3CD",
-          "#ECEAE4",
-          "#F5F4EF",
-          "#FBFAF7"
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
         ]
       },
       "surface": {
         "role": "neutral",
-        "displayName": "Study Surface",
-        "canonical": "#FBFAF7",
+        "displayName": "Tile Surface",
+        "canonical": "#10151C",
         "tonalRamp": [
-          "#112842",
-          "#53606B",
-          "#7F8588",
-          "#BFC2C0",
-          "#D4D3CD",
-          "#ECEAE4",
-          "#F5F4EF",
-          "#FBFAF7"
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
         ]
       },
       "field-surface": {
         "role": "neutral",
         "displayName": "Field Surface",
-        "canonical": "#F8F7F2",
+        "canonical": "#0E131A",
         "tonalRamp": [
-          "#112842",
-          "#53606B",
-          "#7F8588",
-          "#BFC2C0",
-          "#D4D3CD",
-          "#ECEAE4",
-          "#F8F7F2",
-          "#FBFAF7"
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
         ]
       },
-      "sunken": {
+      "rule": {
         "role": "neutral",
-        "displayName": "Recessed Paper",
-        "canonical": "#ECEAE4",
+        "displayName": "Hairline Rule",
+        "canonical": "#1F2732",
         "tonalRamp": [
-          "#112842",
-          "#53606B",
-          "#7F8588",
-          "#BFC2C0",
-          "#D4D3CD",
-          "#ECEAE4",
-          "#F5F4EF",
-          "#FBFAF7"
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
         ]
       },
-      "border": {
+      "rule-strong": {
         "role": "neutral",
-        "displayName": "Fine Rule",
-        "canonical": "#D4D3CD",
+        "displayName": "Strong Rule",
+        "canonical": "#323C4A",
         "tonalRamp": [
-          "#53606B",
-          "#7F8588",
-          "#BFC2C0",
-          "#D4D3CD",
-          "#ECEAE4",
-          "#F5F4EF",
-          "#FBFAF7",
-          "#FFFFFF"
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
         ]
       },
-      "ink": {
+      "ink-1": {
         "role": "neutral",
-        "displayName": "Indigo Ink",
-        "canonical": "#112842",
+        "displayName": "Primary Ink",
+        "canonical": "#EEF2F6",
         "tonalRamp": [
-          "#071829",
-          "#112842",
-          "#304762",
-          "#53606B",
-          "#71879A",
-          "#8AA0B5",
-          "#D4DDE3",
-          "#F5F4EF"
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
         ]
       },
-      "ink-secondary": {
+      "ink-2": {
         "role": "neutral",
         "displayName": "Supporting Ink",
-        "canonical": "#53606B",
+        "canonical": "#A9B4C1",
         "tonalRamp": [
-          "#112842",
-          "#304762",
-          "#53606B",
-          "#71879A",
-          "#8AA0B5",
-          "#BFC2C0",
-          "#D4D3CD",
-          "#F5F4EF"
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
         ]
       },
-      "ink-muted": {
+      "ink-3": {
         "role": "neutral",
-        "displayName": "Muted Ink",
-        "canonical": "#7F8588",
+        "displayName": "Quiet Ink",
+        "canonical": "#8592A1",
         "tonalRamp": [
-          "#112842",
-          "#53606B",
-          "#7F8588",
-          "#BFC2C0",
-          "#D4D3CD",
-          "#ECEAE4",
-          "#F5F4EF",
-          "#FBFAF7"
+          "#06090D",
+          "#0B0F15",
+          "#151B24",
+          "#1F2732",
+          "#323C4A",
+          "#8592A1",
+          "#A9B4C1",
+          "#EEF2F6"
         ]
       },
       "selection": {
         "role": "secondary",
-        "displayName": "Paper Selection",
-        "canonical": "#DCE4EB",
+        "displayName": "Selection",
+        "canonical": "#2C6078",
         "tonalRamp": [
-          "#112842",
-          "#53606B",
-          "#71879A",
-          "#8AA0B5",
-          "#BFC2C0",
-          "#DCE4EB",
-          "#E8EDF2",
-          "#F5F4EF"
-        ]
-      },
-      "scrollbar-thumb": {
-        "role": "neutral",
-        "displayName": "Scroll Thumb",
-        "canonical": "#AAB3B8",
-        "tonalRamp": [
-          "#53606B",
-          "#71879A",
-          "#7F8588",
-          "#AAB3B8",
-          "#BFC2C0",
-          "#D4D3CD",
-          "#ECEAE4",
-          "#F5F4EF"
-        ]
-      },
-      "scrollbar-thumb-hover": {
-        "role": "neutral",
-        "displayName": "Scroll Thumb Hover",
-        "canonical": "#7C8D99",
-        "tonalRamp": [
-          "#304762",
-          "#53606B",
-          "#71879A",
-          "#7C8D99",
-          "#AAB3B8",
-          "#BFC2C0",
-          "#D4D3CD",
-          "#ECEAE4"
+          "#0B0F15",
+          "#12303D",
+          "#2C6078",
+          "#3F7F99",
+          "#5EB6D8",
+          "#EEF2F6"
         ]
       },
       "success": {
         "role": "secondary",
-        "displayName": "Completed Green",
-        "canonical": "#2E6D53",
+        "displayName": "On Plan Green",
+        "canonical": "#5FCFA2",
         "tonalRamp": [
-          "#163B2B",
-          "#22533F",
-          "#2E6D53",
-          "#658A7A",
-          "#A7C6B6",
-          "#D4E5DC",
-          "#E6EFEA",
-          "#F5F4EF"
+          "#0F2B22",
+          "#1E5C47",
+          "#3F9F7C",
+          "#5FCFA2",
+          "#9AE3C6",
+          "#D2F3E5"
         ]
       },
       "warning": {
         "role": "tertiary",
-        "displayName": "Adjusted Ochre",
-        "canonical": "#8B681F",
+        "displayName": "Attention Amber",
+        "canonical": "#F0A84A",
         "tonalRamp": [
-          "#4A360D",
-          "#6A4F17",
-          "#8B681F",
-          "#A48658",
-          "#CABA8E",
-          "#E5DAC0",
-          "#F1EBDD",
-          "#F5F4EF"
+          "#33220B",
+          "#6B4A18",
+          "#B07A2E",
+          "#F0A84A",
+          "#F6C98A",
+          "#FBE6C4"
         ]
       },
       "danger": {
         "role": "tertiary",
-        "displayName": "Danger Clay",
-        "canonical": "#99443D",
+        "displayName": "Danger Coral",
+        "canonical": "#F3877A",
         "tonalRamp": [
-          "#56251F",
-          "#7D3932",
-          "#A84D45",
-          "#B36F5B",
-          "#D4A59B",
-          "#EBD3CC",
-          "#F2E5E0",
-          "#F5F4EF"
+          "#3A1814",
+          "#7A3A32",
+          "#B85F54",
+          "#F3877A",
+          "#F7B0A7",
+          "#FBD8D3"
         ]
       },
       "missed": {
         "role": "tertiary",
-        "displayName": "Missed Violet",
-        "canonical": "#725C76",
+        "displayName": "Missed Rose",
+        "canonical": "#E3818F",
         "tonalRamp": [
-          "#3E2E42",
-          "#55445A",
-          "#725C76",
-          "#8B708A",
-          "#B9A9BA",
-          "#D8CDD9",
-          "#EEE7EE",
-          "#F5F4EF"
+          "#3A1A20",
+          "#74404A",
+          "#B0606E",
+          "#E3818F",
+          "#EEAEB8",
+          "#F7D6DB"
         ]
       },
-      "nav-surface": {
-        "role": "neutral",
-        "displayName": "Studio Rail",
-        "canonical": "#F1F0EB",
+      "metric-fatigue": {
+        "role": "tertiary",
+        "displayName": "Fatigue Violet",
+        "canonical": "#C08AE8",
         "tonalRamp": [
-          "#112842",
-          "#53606B",
-          "#7F8588",
-          "#BFC2C0",
-          "#D2D1CB",
-          "#ECEAE4",
-          "#F1F0EB",
-          "#FBFAF7"
-        ]
-      },
-      "nav-active": {
-        "role": "secondary",
-        "displayName": "Active Index",
-        "canonical": "#E0E6EB",
-        "tonalRamp": [
-          "#112842",
-          "#53606B",
-          "#71879A",
-          "#8AA0B5",
-          "#BFC2C0",
-          "#D4DDE3",
-          "#E0E6EB",
-          "#F5F4EF"
-        ]
-      },
-      "signal-tint": {
-        "role": "primary",
-        "displayName": "Signal Tint",
-        "canonical": "#E8EDF2",
-        "tonalRamp": [
-          "#4A4C4D",
-          "#797B7E",
-          "#A7ABAE",
-          "#D5DADF",
-          "#EDF1F5",
-          "#F1F4F7",
-          "#F7F9FA",
-          "#FCFCFD"
-        ]
-      },
-      "field-border": {
-        "role": "neutral",
-        "displayName": "Field Border",
-        "canonical": "#BFC2C0",
-        "tonalRamp": [
-          "#3D3E3D",
-          "#636564",
-          "#8A8C8A",
-          "#B0B2B1",
-          "#CCCECD",
-          "#D9DAD9",
-          "#E9EAE9",
-          "#F5F6F6"
-        ]
-      },
-      "selected-border": {
-        "role": "primary",
-        "displayName": "Selected Border",
-        "canonical": "#8AA0B5",
-        "tonalRamp": [
-          "#2C333A",
-          "#48535E",
-          "#637382",
-          "#7F93A7",
-          "#A1B3C4",
-          "#B9C6D3",
-          "#D6DEE5",
-          "#EDF1F4"
-        ]
-      },
-      "selected-text": {
-        "role": "primary",
-        "displayName": "Selected Text",
-        "canonical": "#102F51",
-        "tonalRamp": [
-          "#050F1A",
-          "#08182A",
-          "#0C223A",
-          "#0F2B4B",
-          "#405974",
-          "#708297",
-          "#ABB6C2",
-          "#DBE0E5"
-        ]
-      },
-      "white": {
-        "role": "neutral",
-        "displayName": "White",
-        "canonical": "#FFFFFF",
-        "tonalRamp": [
-          "#525252",
-          "#858585",
-          "#B8B8B8",
-          "#EBEBEB",
-          "#FFFFFF",
-          "#FFFFFF",
-          "#FFFFFF",
-          "#FFFFFF"
-        ]
-      },
-      "success-tint": {
-        "role": "secondary",
-        "displayName": "Success Tint",
-        "canonical": "#E6EFEA",
-        "tonalRamp": [
-          "#4A4C4B",
-          "#787C7A",
-          "#A6ACA8",
-          "#D4DCD7",
-          "#EBF2EE",
-          "#F0F5F2",
-          "#F6F9F8",
-          "#FBFDFC"
-        ]
-      },
-      "success-border": {
-        "role": "secondary",
-        "displayName": "Success Border",
-        "canonical": "#B9D1C4",
-        "tonalRamp": [
-          "#3B433F",
-          "#606D66",
-          "#85968D",
-          "#AAC0B4",
-          "#C7DAD0",
-          "#D5E3DC",
-          "#E7EFEA",
-          "#F5F8F6"
-        ]
-      },
-      "warning-tint": {
-        "role": "secondary",
-        "displayName": "Warning Tint",
-        "canonical": "#F1EBDD",
-        "tonalRamp": [
-          "#4D4B47",
-          "#7D7A73",
-          "#AEA99F",
-          "#DED8CB",
-          "#F4EFE4",
-          "#F7F3EB",
-          "#FAF8F3",
-          "#FDFCFA"
-        ]
-      },
-      "warning-border": {
-        "role": "secondary",
-        "displayName": "Warning Border",
-        "canonical": "#DCCBA6",
-        "tonalRamp": [
-          "#464135",
-          "#726A56",
-          "#9E9278",
-          "#CABB99",
-          "#E3D5B8",
-          "#EAE0CA",
-          "#F3EDE0",
-          "#FAF7F2"
-        ]
-      },
-      "danger-tint": {
-        "role": "secondary",
-        "displayName": "Danger Tint",
-        "canonical": "#F2E5E0",
-        "tonalRamp": [
-          "#4D4948",
-          "#7E7774",
-          "#AEA5A1",
-          "#DFD3CE",
-          "#F5EAE6",
-          "#F7EFEC",
-          "#FAF6F4",
-          "#FDFBFA"
-        ]
-      },
-      "danger-tint-strong": {
-        "role": "secondary",
-        "displayName": "Danger Tint Strong",
-        "canonical": "#EBD3CC",
-        "tonalRamp": [
-          "#4B4441",
-          "#7A6E6A",
-          "#A99893",
-          "#D8C2BC",
-          "#EFDCD6",
-          "#F3E5E0",
-          "#F8F0ED",
-          "#FCF8F7"
-        ]
-      },
-      "danger-border": {
-        "role": "secondary",
-        "displayName": "Danger Border",
-        "canonical": "#D7AAA0",
-        "tonalRamp": [
-          "#453633",
-          "#705853",
-          "#9B7A73",
-          "#C69C93",
-          "#DFBBB3",
-          "#E7CCC6",
-          "#F1E1DE",
-          "#F9F2F1"
-        ]
-      },
-      "missed-tint": {
-        "role": "secondary",
-        "displayName": "Missed Tint",
-        "canonical": "#EEE7EE",
-        "tonalRamp": [
-          "#4C4A4C",
-          "#7C787C",
-          "#ABA6AB",
-          "#DBD5DB",
-          "#F1ECF1",
-          "#F5F1F5",
-          "#F9F7F9",
-          "#FCFBFC"
-        ]
-      },
-      "missed-border": {
-        "role": "secondary",
-        "displayName": "Missed Border",
-        "canonical": "#CDBFD0",
-        "tonalRamp": [
-          "#423D43",
-          "#6B636C",
-          "#948A96",
-          "#BDB0BF",
-          "#D7CCD9",
-          "#E1D9E3",
-          "#EEE9EF",
-          "#F8F5F8"
-        ]
-      },
-      "nav-border": {
-        "role": "neutral",
-        "displayName": "Nav Border",
-        "canonical": "#D2D1CB",
-        "tonalRamp": [
-          "#434341",
-          "#6D6D6A",
-          "#979692",
-          "#C1C0BB",
-          "#DBDAD5",
-          "#E4E3E0",
-          "#EFEFED",
-          "#F8F8F7"
-        ]
-      },
-      "nav-text": {
-        "role": "neutral",
-        "displayName": "Nav Text",
-        "canonical": "#112842",
-        "tonalRamp": [
-          "#050D15",
-          "#091522",
-          "#0C1D30",
-          "#10253D",
-          "#415368",
-          "#707E8E",
-          "#ACB4BD",
-          "#DBDFE3"
-        ]
-      },
-      "nav-muted": {
-        "role": "neutral",
-        "displayName": "Nav Muted",
-        "canonical": "#65717A",
-        "tonalRamp": [
-          "#202427",
-          "#353B3F",
-          "#495158",
-          "#5D6870",
-          "#848D95",
-          "#A3AAAF",
-          "#C9CDD0",
-          "#E8EAEB"
-        ]
-      },
-      "zone-1": {
-        "role": "secondary",
-        "displayName": "Zone 1",
-        "canonical": "#71879A",
-        "tonalRamp": [
-          "#242B31",
-          "#3B4650",
-          "#51616F",
-          "#687C8E",
-          "#8D9FAE",
-          "#AAB7C2",
-          "#CDD5DC",
-          "#EAEDF0"
-        ]
-      },
-      "zone-1-tint": {
-        "role": "secondary",
-        "displayName": "Zone 1 Tint",
-        "canonical": "#E7ECEF",
-        "tonalRamp": [
-          "#4A4C4C",
-          "#787B7C",
-          "#A6AAAC",
-          "#D5D9DC",
-          "#ECF0F2",
-          "#F1F4F5",
-          "#F7F8F9",
-          "#FBFCFD"
-        ]
-      },
-      "zone-2": {
-        "role": "secondary",
-        "displayName": "Zone 2",
-        "canonical": "#658A7A",
-        "tonalRamp": [
-          "#202C27",
-          "#35483F",
-          "#496358",
-          "#5D7F70",
-          "#84A195",
-          "#A3B9AF",
-          "#C9D6D0",
-          "#E8EDEB"
-        ]
-      },
-      "zone-2-tint": {
-        "role": "secondary",
-        "displayName": "Zone 2 Tint",
-        "canonical": "#E6EFEA",
-        "tonalRamp": [
-          "#4A4C4B",
-          "#787C7A",
-          "#A6ACA8",
-          "#D4DCD7",
-          "#EBF2EE",
-          "#F0F5F2",
-          "#F6F9F8",
-          "#FBFDFC"
-        ]
-      },
-      "zone-3": {
-        "role": "secondary",
-        "displayName": "Zone 3",
-        "canonical": "#A48658",
-        "tonalRamp": [
-          "#342B1C",
-          "#55462E",
-          "#76603F",
-          "#977B51",
-          "#B69E79",
-          "#C8B69B",
-          "#DFD5C5",
-          "#F1EDE6"
-        ]
-      },
-      "zone-3-tint": {
-        "role": "secondary",
-        "displayName": "Zone 3 Tint",
-        "canonical": "#F1EBDD",
-        "tonalRamp": [
-          "#4D4B47",
-          "#7D7A73",
-          "#AEA99F",
-          "#DED8CB",
-          "#F4EFE4",
-          "#F7F3EB",
-          "#FAF8F3",
-          "#FDFCFA"
-        ]
-      },
-      "zone-4": {
-        "role": "secondary",
-        "displayName": "Zone 4",
-        "canonical": "#B36F5B",
-        "tonalRamp": [
-          "#39241D",
-          "#5D3A2F",
-          "#815042",
-          "#A56654",
-          "#C28C7C",
-          "#D1A99D",
-          "#E4CDC6",
-          "#F4E9E6"
-        ]
-      },
-      "zone-4-tint": {
-        "role": "secondary",
-        "displayName": "Zone 4 Tint",
-        "canonical": "#F2E5E0",
-        "tonalRamp": [
-          "#4D4948",
-          "#7E7774",
-          "#AEA5A1",
-          "#DFD3CE",
-          "#F5EAE6",
-          "#F7EFEC",
-          "#FAF6F4",
-          "#FDFBFA"
-        ]
-      },
-      "zone-5": {
-        "role": "secondary",
-        "displayName": "Zone 5",
-        "canonical": "#8B708A",
-        "tonalRamp": [
-          "#2C242C",
-          "#483A48",
-          "#645163",
-          "#80677F",
-          "#A28DA1",
-          "#B9A9B9",
-          "#D6CDD6",
-          "#EEEAED"
-        ]
-      },
-      "zone-5-tint": {
-        "role": "secondary",
-        "displayName": "Zone 5 Tint",
-        "canonical": "#EEE7EE",
-        "tonalRamp": [
-          "#4C4A4C",
-          "#7C787C",
-          "#ABA6AB",
-          "#DBD5DB",
-          "#F1ECF1",
-          "#F5F1F5",
-          "#F9F7F9",
-          "#FCFBFC"
+          "#2A1840",
+          "#5A3A7A",
+          "#8F62B8",
+          "#C08AE8",
+          "#D8B4F0",
+          "#EEDDF9"
         ]
       }
     },
     "motion": [
       {
         "name": "standard",
-        "value": "transition 180ms ease-out",
-        "purpose": "Quiet hover, focus, and active-index changes."
+        "value": "transition 150-200ms ease-out",
+        "purpose": "Quiet hover, focus, and active-state changes."
+      },
+      {
+        "name": "reveal",
+        "value": "200-500ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Sidebar width and the chart sweep."
       },
       {
         "name": "reduced-motion",
-        "value": "remove transform movement while preserving color and state feedback",
+        "value": "durations collapse to near zero; state stays conveyed by color, text, and position",
         "purpose": "Respect reduced-motion preferences without hiding state feedback."
       }
     ],
@@ -773,160 +284,115 @@
     "shadows": [
       {
         "name": "inset",
-        "value": "0 1px 0 rgba(255, 255, 255, 0.72) inset, 0 -1px 0 rgba(17, 40, 66, 0.04) inset",
-        "purpose": "Quiet paper depth inside study surfaces and controls."
+        "value": "inset 0 1px 0 rgb(255 255 255 / 0.025)",
+        "purpose": "A faint top highlight on tiles."
       },
       {
         "name": "raised",
-        "value": "0 8px 18px -14px rgba(17, 40, 66, 0.24), 0 1px 1px rgba(17, 40, 66, 0.06)",
-        "purpose": "Small lift for the forward action and selected utility surfaces."
+        "value": "0 12px 32px rgb(0 0 0 / 0.4)",
+        "purpose": "Hover lift for interactive tiles."
       },
       {
         "name": "overlay",
-        "value": "0 20px 42px -20px rgba(17, 40, 66, 0.3)",
+        "value": "0 16px 48px rgb(0 0 0 / 0.55)",
         "purpose": "Menus, dialogs, drawers, and temporary layers."
       }
-    ],
-    "typographyMeta": {
-      "display": {
-        "displayName": "Editorial Display",
-        "purpose": "Route headings and primary page titles."
-      },
-      "title": {
-        "displayName": "Section Title",
-        "purpose": "Section headings and prominent session titles."
-      },
-      "body": {
-        "displayName": "Operational Body",
-        "purpose": "Explanations, notes, and task copy."
-      },
-      "label": {
-        "displayName": "Compact Label",
-        "purpose": "Metadata, dates, and status text."
-      },
-      "control": {
-        "displayName": "Standard Control",
-        "purpose": "Standard 40px actions and fields."
-      },
-      "compact-control": {
-        "displayName": "Compact Control",
-        "purpose": "Dense 32px toolbars, menus, and list controls."
-      },
-      "metric": {
-        "displayName": "Metric",
-        "purpose": "Duration, TSS, RPE, dates, and counts with tabular numerals."
-      }
-    }
+    ]
   },
   "components": [
     {
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The single indigo forward action in the current task.",
-      "html": "<button class=\"ds-btn-primary\">Save workout</button>",
-      "css": ".ds-btn-primary { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; border: 0; border-radius: 3px; background: var(--brand); color: var(--signal-ink); box-shadow: var(--shadow-raised); font: 600 13px/1 var(--font-schibsted), system-ui, sans-serif; letter-spacing: .01em; transition: background-color 180ms ease-out; } .ds-btn-primary:hover { background: var(--signal-hover); } .ds-btn-primary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }"
+      "description": "The single cyan forward action, 40px, rounded-lg."
     },
     {
       "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "A reversible paper-toned action with a fine rule.",
-      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
-      "css": ".ds-btn-secondary { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface); color: var(--text); box-shadow: var(--shadow-inset); font: 600 13px/1 var(--font-schibsted), system-ui, sans-serif; letter-spacing: .01em; transition: background-color 180ms ease-out, border-color 180ms ease-out; } .ds-btn-secondary:hover { border-color: var(--field-focus); background: var(--field-surface); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }"
+      "description": "A transparent, strong-ruled reversible action."
     },
     {
-      "name": "Text Field",
+      "name": "Icon Step Button",
+      "kind": "button",
+      "refersTo": "icon-step-button",
+      "description": "A round 40px outlined button for period navigation."
+    },
+    {
+      "name": "Field",
       "kind": "input",
       "refersTo": "field",
-      "description": "A labeled paper field with quiet inset depth and an indigo focus ring.",
-      "html": "<label class=\"ds-field-label\">Workout name<input class=\"ds-field\" value=\"Threshold intervals\" /></label>",
-      "css": ".ds-field-label { display: grid; gap: 6px; color: var(--text-secondary); font: 500 13px/1.35 var(--font-schibsted), system-ui, sans-serif; } .ds-field { min-height: 40px; width: 100%; padding: 8px 12px; border: 1px solid var(--field-border); border-radius: 3px; background: var(--field-surface); color: var(--text); box-shadow: var(--shadow-inset); font: 400 13px/1.4 var(--font-schibsted), system-ui, sans-serif; transition: border-color 180ms ease-out; } .ds-field:hover { border-color: var(--field-focus); } .ds-field:focus-visible { border-color: var(--field-focus); outline: 2px solid var(--field-focus); outline-offset: 2px; }"
+      "description": "A labeled dark field with a trace focus border and ring."
     },
     {
-      "name": "Navigation Item",
+      "name": "Navigation",
       "kind": "nav",
       "refersTo": "nav-item",
-      "description": "A quiet studio-index destination with an indigo active rail.",
-      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-item-active\" href=\"#\">Planner</a><a class=\"ds-nav-item\" href=\"#\">Workouts</a></nav>",
-      "css": ".ds-nav { display: grid; gap: 4px; padding: 8px; background: var(--nav-surface); } .ds-nav-item { min-height: 40px; display: flex; align-items: center; padding: 10px 16px; border-left: 2px solid transparent; border-radius: 3px; color: var(--nav-muted); font: 600 13px/1 var(--font-schibsted), system-ui, sans-serif; text-decoration: none; transition: background-color 180ms ease-out, color 180ms ease-out; } .ds-nav-item:hover { background: var(--field-surface); color: var(--nav-text); } .ds-nav-item:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; } .ds-nav-item-active { border-left-color: var(--brand); background: var(--nav-active); color: var(--nav-text); }"
+      "description": "A collapsible sidebar with an icon rail and a trace-marked active item."
     },
     {
-      "name": "Study Surface",
-      "kind": "card",
-      "refersTo": "surface",
-      "description": "A warm bordered work surface with restrained inset paper depth.",
-      "html": "<section class=\"ds-surface\"><h3>Training week</h3><p>Plan the work, then follow it through completion.</p></section>",
-      "css": ".ds-surface { padding: 20px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface); color: var(--text); box-shadow: var(--shadow-inset); font-family: var(--font-schibsted), system-ui, sans-serif; } .ds-surface h3 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.02em; } .ds-surface p { margin: 8px 0 0; color: var(--text-secondary); font-size: 15px; line-height: 1.55; }"
-    },
-    {
-      "name": "Session Row",
+      "name": "Tile",
       "kind": "custom",
-      "refersTo": "session-row",
-      "description": "A navigable study tile combining workout context, stable metrics, and ink-flow feedback.",
-      "html": "<a class=\"ds-session-row\" href=\"#\"><span class=\"ds-session-title\">Aerobic endurance</span><span class=\"ds-session-meta\">Today · 08:00 · Cycling</span><span class=\"ds-session-metrics\">60 min&nbsp;&nbsp;48 TSS</span></a>",
-      "css": ".ds-session-row { position: relative; display: grid; gap: 8px; overflow: hidden; padding: 16px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface); color: var(--text); box-shadow: var(--shadow-inset); font-family: var(--font-schibsted), system-ui, sans-serif; text-decoration: none; transition: background-color 180ms ease-out, border-color 180ms ease-out; } .ds-session-row::before { position: absolute; inset: 11px auto 11px 0; width: 2px; border-radius: 999px; background: var(--brand); content: \"\"; transform: scaleY(.2); transition: transform 180ms ease-out; } .ds-session-row:hover { border-color: var(--field-focus); background: var(--field-surface); } .ds-session-row:hover::before, .ds-session-row:focus-visible::before { transform: scaleY(1); } .ds-session-row:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; } .ds-session-title { font-size: 18px; font-weight: 500; } .ds-session-meta, .ds-session-metrics { color: var(--text-secondary); font-size: 14px; } .ds-session-metrics { font-variant-numeric: tabular-nums; }"
+      "refersTo": "tile",
+      "description": "A square of reading: label, large tabular value with a quiet unit, optional detail."
+    },
+    {
+      "name": "Segmented Switch",
+      "kind": "custom",
+      "refersTo": "switch-track",
+      "description": "A raised track with a lifted active option."
     },
     {
       "name": "Status Chip",
       "kind": "chip",
       "refersTo": "status-chip",
-      "description": "A text-visible state for planned, adjusted, or missed work.",
-      "html": "<span class=\"ds-status-chip\">Adjusted</span>",
-      "css": ".ds-status-chip { min-height: 28px; display: inline-flex; align-items: center; padding: 0 12px; border: 1px solid var(--status-adjusted-border); border-radius: 9999px; background: var(--status-adjusted-tint); color: var(--status-adjusted); box-shadow: var(--shadow-inset); font: 600 12.5px/1 var(--font-schibsted), system-ui, sans-serif; }"
+      "description": "A visible text state for planned, adjusted, or missed work."
     },
     {
       "name": "Intensity Timeline",
       "kind": "custom",
       "refersTo": "session-block-bar",
-      "description": "Duration-proportional workout structure whose height and color both communicate intensity.",
-      "html": "<div class=\"ds-timeline\" role=\"img\" aria-label=\"Workout intensity timeline: Zone 1 warm-up; Zone 3 tempo; Zone 2 recovery\"><i class=\"ds-zone-1\"></i><i class=\"ds-zone-3\"></i><i class=\"ds-zone-2\"></i></div>",
-      "css": ".ds-timeline { width: 288px; height: 32px; display: flex; align-items: end; gap: 2px; overflow: hidden; border-bottom: 1px solid var(--border); background: transparent; } .ds-timeline i { display: block; transition: height 150ms ease-out; } .ds-zone-1 { height: 20%; flex: 2; background: var(--color-zone-1); } .ds-zone-2 { height: 40%; flex: 1; background: var(--color-zone-2); } .ds-zone-3 { height: 60%; flex: 3; background: var(--color-zone-3); }"
+      "description": "Duration-proportional workout structure in zone colors."
     }
   ],
   "narrative": {
-    "northStar": "Ink Is Movement",
-    "overview": "Tempo is an operational training surface organized around the Monday-to-Sunday week and rendered as a quiet ink studio. The week connects personal planning, session execution, completion, and history. The first MVP prioritizes people managing their own training; onboarding, empty states, and primary actions should make sense without a coach connection. Coach collaboration is secondary. The interface should feel crafted and alive through line, texture, and considered transitions while staying quick to use repeatedly rather than performing as a motivational game board. The product world is warm paper, indigo ink, fine rules, editorial spacing, and organic flow linework. The sidebar is a studio index; the main field is a page for the current work; sessions become study tiles and connected marks. The authenticated product is the visual authority. The /design/* routes are alternate visual previews and sample content; they are not production tokens or layouts.",
+    "northStar": "Night Instrument",
+    "overview": "Tempo is a Monday-first endurance training instrument on a dark ground. Hairline rules replace heavy cards, numbers are large and tabular, and one cyan trace marks the primary action, active state, focus, and now.",
     "keyCharacteristics": [
-      "Monday-first hierarchy with the current week and current day easy to locate.",
-      "One clear next action before secondary metrics or history.",
-      "Shared session, status, metric, and block-structure language across routes.",
-      "Warm paper surfaces with semantic borders, fine linework, and restrained depth.",
-      "Text-visible states and persistent keyboard focus."
+      "Dark only",
+      "Hairline rules over heavy cards",
+      "One cyan trace",
+      "Tabular numbers with quiet units",
+      "Collapsible icon-rail sidebar",
+      "Hand-written SVG charts"
     ],
     "rules": [
       {
-        "name": "The Ink Roles Rule",
-        "body": "Indigo owns forward action and active context. Blue-gray linework owns focus and flow. Status colors explain what happened; they do not compete with the next action.",
+        "name": "The Signal Rule",
+        "body": "Amber means worse than usual or needs attention; green means better or on plan. Neutral metrics show no signal color.",
         "section": "colors"
       },
       {
-        "name": "The Measurement Rule",
-        "body": "Duration, TSS, RPE, dates, and counts are data. Keep their numerals stable and aligned with MetricText instead of styling each route's metrics as a new visual object.",
+        "name": "The Reading Rule",
+        "body": "A value is label, large tabular figure, quiet 0.5em unit, then optional detail. Use StatTile and the .data class.",
         "section": "typography"
       },
       {
-        "name": "The Paper Depth Rule",
-        "body": "A surface earns outer elevation only when it is raised by state or interaction, such as a menu, drawer, or dialog. Inset depth belongs to the paper material and should remain quiet.",
+        "name": "Tonal Depth",
+        "body": "Depth is tonal layers and hairlines; outer shadow is reserved for hover lift on interactive tiles and overlays.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "Do start from DESIGN.md, then inspect app/globals.css and the shared component owner before creating new visual tokens or primitives.",
-      "Do keep the current week, current day, session state, and next action in one context when the task requires them together.",
-      "Do reuse PageShell, TopBar, shared button and field classes, Surface, SessionRow, StatusBadge, MetricText, and SessionBlockBar.",
-      "Do pair every color state with text, structure, or an accessible label.",
-      "Do preserve keyboard focus, reduced-motion behavior, explicit labels, readable contrast, and 40px standard action targets. Reserve 32px compact controls for dense contexts with surrounding room.",
-      "Do use app/globals.css semantic variables when a token exists instead of introducing an inline color or shadow."
+      "Reuse PageShell, TopBar, Surface, StatTile, Badge, EmptyState, SessionRow, and the shared button, switch, and field classes.",
+      "Pair every color state with text, structure, or an accessible label.",
+      "Preserve visible trace focus, reduced-motion behavior, explicit labels, AA contrast, and 44px mobile touch targets."
     ],
     "donts": [
-      "Don't copy the palette, rounded geometry, or dashboard composition from /design/tempo-split or /design/tempo-field; those routes are previews only.",
-      "Don't invent a route-local card grammar when a shared session or surface primitive already fits.",
-      "Don't make every bordered region a floating card, or every secondary action as prominent as the primary action.",
-      "Don't use color alone for planned, completed, adjusted, missed, loading, error, permission, or success states.",
-      "Don't add gradients, decorative shadows, oversized hero metrics, or extra accent roles to ordinary authenticated product screens.",
-      "Don't use decorative eyebrow labels, section numbers, emoji, or Unicode glyphs as substitutes for hierarchy and the established icon system.",
-      "Don't add a new token before checking whether the semantic token in app/globals.css already expresses the state."
+      "Do not reintroduce a light theme or uppercase tracked labels.",
+      "Do not make every region a floating card.",
+      "Do not use color alone for state.",
+      "Do not add gradients, charting libraries, or extra accent roles."
     ]
   }
 }

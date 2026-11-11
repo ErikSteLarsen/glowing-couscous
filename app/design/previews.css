@@ -1,0 +1,907 @@
+/* Scoped styles for the /design preview routes only. Loaded by app/design/layout.tsx. */
+
+/* Values these earlier explorations still reference from the retired light system. */
+:root {
+  --font-schibsted: var(--font-body);
+  --paper: var(--background);
+  --liquid: var(--color-liquid);
+}
+
+.ink-brand-mark {
+  position: relative;
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--nav-text);
+  border-radius: 50%;
+}
+.ink-brand-mark span {
+  width: 21px;
+  height: 13px;
+  border: 1.5px solid var(--nav-signal);
+  border-right-color: transparent;
+  border-radius: 50%;
+  transform: rotate(-36deg) translate(-1px, 1px);
+}
+.ink-brand-mark i {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--nav-signal);
+  transform: translate(4px, -2px);
+}
+
+.tempo-demo {
+  --demo-bg: #f1f5f8;
+  --demo-surface: #ffffff;
+  --demo-surface-soft: #f7f9fb;
+  --demo-ink: #10263d;
+  --demo-muted: #687b8d;
+  --demo-rule: #d7e1e9;
+  --demo-signal: #9bb6ca;
+  --demo-signal-ink: #10263d;
+  --demo-sidebar: #10263d;
+  --demo-sidebar-ink: #f1f5f8;
+  --demo-sidebar-muted: #a6b5c3;
+  --demo-radius: 18px;
+  min-height: 100vh;
+  background: var(--demo-bg);
+  color: var(--demo-ink);
+  font-family: var(--font-schibsted), system-ui, sans-serif;
+}
+
+.tempo-demo__announcement {
+  align-items: center;
+  background: var(--demo-sidebar);
+  color: var(--demo-sidebar-muted);
+  display: flex;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 12px;
+  letter-spacing: .08em;
+  min-height: 34px;
+  padding: 7px 28px;
+  text-transform: uppercase;
+}
+
+.tempo-demo__announcement a {
+  align-items: center;
+  color: var(--demo-signal);
+  display: inline-flex;
+  gap: 5px;
+  margin-left: auto;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.tempo-demo__announcement a:hover { color: var(--demo-sidebar-ink); }
+.tempo-demo__announcement-separator { opacity: .35; }
+.tempo-demo a:focus-visible, .tempo-demo button:focus-visible {
+  outline: 2px solid var(--demo-signal);
+  outline-offset: 3px;
+}
+
+.tempo-demo__layout {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  min-height: calc(100vh - 34px);
+}
+
+.tempo-demo__sidebar {
+  background: var(--demo-sidebar);
+  color: var(--demo-sidebar-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 46px;
+  min-height: 100%;
+  padding: 28px 18px 22px;
+}
+
+.tempo-demo__brand-row { align-items: center; display: flex; justify-content: space-between; }
+.tempo-demo__brand { align-items: center; display: inline-flex; font-size: 20px; font-weight: 700; gap: 10px; letter-spacing: -.04em; }
+.tempo-demo__brand-mark { align-items: center; background: var(--demo-signal); border-radius: 7px; display: inline-flex; height: 27px; justify-content: center; width: 27px; }
+.tempo-demo__brand-mark span { background: var(--demo-sidebar); border-radius: 2px; height: 10px; transform: rotate(-45deg); width: 10px; }
+.tempo-demo__close-menu, .tempo-demo__menu-button { display: none; }
+.tempo-demo__nav { display: grid; gap: 6px; }
+.tempo-demo__nav-label { color: var(--demo-sidebar-muted); font-size: 10px; font-weight: 700; letter-spacing: .1em; margin: 0 11px 7px; text-transform: uppercase; }
+.tempo-demo__nav-item { align-items: center; border-radius: 11px; color: var(--demo-sidebar-muted); display: flex; font-size: 13px; font-weight: 600; gap: 11px; min-height: 42px; padding: 9px 11px; transition: background .2s ease, color .2s ease; }
+.tempo-demo__nav-item:hover { background: rgba(255,255,255,.07); color: var(--demo-sidebar-ink); }
+.tempo-demo__nav-item.is-active { background: rgba(155,182,202,.16); color: var(--demo-signal); }
+.tempo-demo__nav-icon { align-items: center; display: inline-flex; justify-content: center; width: 18px; }
+.tempo-demo__sidebar-bottom { display: grid; gap: 18px; margin-top: auto; }
+.tempo-demo__profile { align-items: center; border-top: 1px solid rgba(255,255,255,.12); display: flex; gap: 10px; padding: 18px 8px 0; }
+.tempo-demo__profile > span:nth-child(2) { display: grid; gap: 2px; min-width: 0; }
+.tempo-demo__profile strong { color: var(--demo-sidebar-ink); font-size: 12px; }
+.tempo-demo__profile small { color: var(--demo-sidebar-muted); font-size: 11px; }
+.tempo-demo__profile > svg { color: var(--demo-sidebar-muted); margin-left: auto; }
+.tempo-demo__avatar, .tempo-demo__top-avatar { align-items: center; background: #d8e3eb; border-radius: 50%; color: var(--demo-ink); display: inline-flex; font-size: 10px; font-weight: 800; height: 32px; justify-content: center; letter-spacing: -.04em; width: 32px; }
+
+.tempo-demo__content { min-width: 0; padding: 42px clamp(24px, 4vw, 68px) 28px; }
+.tempo-demo__topbar { align-items: flex-start; display: flex; justify-content: space-between; margin: 0 auto; max-width: 1220px; }
+.tempo-demo__date { color: var(--demo-muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; margin: 0 0 16px; text-transform: uppercase; }
+.tempo-demo h1 { font-size: clamp(30px, 3.2vw, 48px); font-weight: 650; letter-spacing: -.055em; line-height: 1.03; margin: 0; }
+.tempo-demo__punctuation { color: var(--demo-signal); }
+.tempo-demo__lede { color: var(--demo-muted); font-size: 15px; line-height: 1.5; margin: 12px 0 0; }
+.tempo-demo__topbar-actions { align-items: center; display: flex; gap: 12px; }
+.tempo-demo__icon-button { align-items: center; background: transparent; border: 1px solid var(--demo-rule); border-radius: 10px; color: var(--demo-muted); display: inline-flex; height: 38px; justify-content: center; width: 38px; }
+.tempo-demo__icon-button:hover { color: var(--demo-ink); background: var(--demo-surface); }
+.tempo-demo__top-avatar { background: var(--demo-signal); height: 38px; width: 38px; }
+
+.tempo-demo__content-grid { display: grid; gap: 22px; grid-template-columns: minmax(0, 1.5fr) minmax(300px, .85fr); margin: 42px auto 0; max-width: 1220px; }
+.tempo-demo__today-panel, .tempo-demo__side-column { min-width: 0; }
+.tempo-demo__side-column { display: grid; gap: 22px; align-content: start; }
+.tempo-demo__section-heading { align-items: flex-start; display: flex; justify-content: space-between; margin-bottom: 15px; }
+.tempo-demo__section-kicker { color: var(--demo-muted); font-size: 11px; font-weight: 750; letter-spacing: .1em; margin: 0 0 4px; text-transform: uppercase; }
+.tempo-demo h2 { font-size: 19px; font-weight: 650; letter-spacing: -.04em; line-height: 1.1; margin: 0; }
+.tempo-demo__status-chip { align-items: center; color: var(--demo-muted); display: inline-flex; font-size: 11px; font-weight: 650; gap: 6px; padding-top: 3px; }
+.tempo-demo__status-chip span { background: #628C78; border-radius: 50%; box-shadow: 0 0 0 4px rgba(98,140,120,.13); height: 7px; width: 7px; }
+
+.tempo-demo__next-card, .tempo-demo__week-card, .tempo-demo__activity-card { background: var(--demo-surface); border: 1px solid var(--demo-rule); border-radius: var(--demo-radius); }
+.tempo-demo__next-card { padding: clamp(22px, 3vw, 34px); }
+.tempo-demo__next-card-head { align-items: center; display: flex; justify-content: space-between; }
+.tempo-demo__sport-mark, .tempo-demo__duration { align-items: center; color: var(--demo-muted); display: inline-flex; font-size: 12px; font-weight: 700; gap: 8px; }
+.tempo-demo__sport-glyph { align-items: center; background: var(--demo-signal); border-radius: 8px; color: var(--demo-signal-ink); display: inline-flex; font-size: 17px; font-weight: 800; height: 28px; justify-content: center; width: 28px; }
+.tempo-demo__next-card h3 { font-size: clamp(30px, 4vw, 55px); font-weight: 650; letter-spacing: -.065em; line-height: .98; margin: 29px 0 12px; }
+.tempo-demo__next-description { color: var(--demo-muted); font-size: 14px; line-height: 1.55; margin: 0; max-width: 52ch; }
+.tempo-demo__metric-row { border-bottom: 1px solid var(--demo-rule); border-top: 1px solid var(--demo-rule); display: grid; gap: 15px; grid-template-columns: repeat(3, 1fr); margin: 29px 0 18px; padding: 16px 0; }
+.tempo-demo__metric-row div { display: grid; gap: 6px; }
+.tempo-demo__metric-row span, .tempo-demo__metric-row small { color: var(--demo-muted); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.tempo-demo__metric-row strong { font-size: 18px; font-weight: 650; letter-spacing: -.035em; }
+.tempo-demo__metric-row small { font-size: 10px; letter-spacing: 0; text-transform: none; }
+.tempo-demo__block-list { display: grid; }
+.tempo-demo__block { align-items: center; border-bottom: 1px solid var(--demo-rule); display: grid; gap: 10px; grid-template-columns: 8px 1fr auto; padding: 12px 0; position: relative; }
+.tempo-demo__block:last-child { border-bottom: 0; }
+.tempo-demo__block-line { background: #c2ced8; border-radius: 4px; height: 100%; min-height: 24px; width: 4px; }
+.tempo-demo__block--signal .tempo-demo__block-line { background: var(--demo-signal); }
+.tempo-demo__block--cool .tempo-demo__block-line { background: #8EA9BE; }
+.tempo-demo__block-kind { font-size: 13px; font-weight: 650; }
+.tempo-demo__block strong { font-size: 13px; font-weight: 700; }
+.tempo-demo__block small { color: var(--demo-muted); font-size: 11px; grid-column: 2 / -1; margin-top: -7px; }
+.tempo-demo__next-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; margin-top: 25px; }
+.tempo-demo__primary-button, .tempo-demo__secondary-button { align-items: center; border: 0; border-radius: 10px; display: inline-flex; font-size: 13px; font-weight: 750; gap: 8px; justify-content: center; min-height: 44px; padding: 10px 16px; transition: transform .2s ease, background .2s ease; }
+.tempo-demo__primary-button { background: var(--demo-signal); color: var(--demo-signal-ink); }
+.tempo-demo__primary-button:hover { background: #b4cad9; transform: translateY(-1px); }
+.tempo-demo__secondary-button { background: transparent; color: var(--demo-muted); padding-left: 4px; padding-right: 4px; }
+.tempo-demo__secondary-button:hover { color: var(--demo-ink); }
+.tempo-demo__detail-note { border-left: 2px solid var(--demo-signal); color: var(--demo-muted); font-size: 13px; line-height: 1.5; margin-top: 18px; padding: 5px 0 5px 14px; }
+
+.tempo-demo__week-card, .tempo-demo__activity-card { padding: 22px; }
+.tempo-demo__more-button { background: transparent; border: 0; color: var(--demo-muted); font-size: 16px; letter-spacing: 2px; padding: 0; }
+.tempo-demo__week-stats { align-items: baseline; display: flex; gap: 10px; margin: 25px 0 20px; }
+.tempo-demo__week-stats strong { font-size: 25px; letter-spacing: -.06em; }
+.tempo-demo__week-stats small, .tempo-demo__week-stats span { color: var(--demo-muted); font-size: 11px; font-weight: 600; letter-spacing: 0; }
+.tempo-demo__days { display: grid; gap: 5px; grid-template-columns: repeat(7, 1fr); }
+.tempo-demo__day { align-items: center; color: var(--demo-muted); display: grid; font-size: 10px; gap: 8px; justify-items: center; }
+.tempo-demo__day strong { color: var(--demo-ink); font-size: 12px; font-weight: 700; }
+.tempo-demo__day--active { color: var(--demo-ink); }
+.tempo-demo__day--active strong { align-items: center; background: var(--demo-signal); border-radius: 50%; display: inline-flex; height: 28px; justify-content: center; width: 28px; }
+.tempo-demo__day i { background: var(--demo-rule); border-radius: 50%; height: 5px; width: 5px; }
+.tempo-demo__day--done i { background: #719687; }
+.tempo-demo__day--active i { background: var(--demo-signal); }
+.tempo-demo__week-progress { background: var(--demo-rule); border-radius: 99px; height: 5px; margin: 23px 0 17px; overflow: hidden; }
+.tempo-demo__week-progress span { background: var(--demo-signal); border-radius: inherit; display: block; height: 100%; }
+.tempo-demo__text-link { align-items: center; color: var(--demo-ink); display: inline-flex; font-size: 12px; font-weight: 700; gap: 5px; }
+.tempo-demo__text-link:hover { color: var(--demo-muted); }
+.tempo-demo__activity-card .tempo-demo__section-heading { align-items: center; }
+.tempo-demo__activity-list { display: grid; }
+.tempo-demo__activity { align-items: center; border-top: 1px solid var(--demo-rule); display: flex; gap: 11px; min-height: 63px; }
+.tempo-demo__activity-dot { background: #9A8068; border-radius: 50%; height: 8px; width: 8px; }
+.tempo-demo__activity-dot--blue { background: #7895AB; }
+.tempo-demo__activity-dot--purple { background: #928DA5; }
+.tempo-demo__activity-copy { display: grid; gap: 3px; min-width: 0; }
+.tempo-demo__activity-copy strong { font-size: 12px; font-weight: 700; }
+.tempo-demo__activity-copy small { color: var(--demo-muted); font-size: 10px; }
+.tempo-demo__activity-value { font-size: 11px; margin-left: auto; white-space: nowrap; }
+.tempo-demo__footer { color: var(--demo-muted); display: flex; font-size: 10px; justify-content: space-between; letter-spacing: .02em; margin: 34px auto 0; max-width: 1220px; }
+
+/* Field notes is the warmer, more tactile alternate: same topology, different
+   material, rhythm, and emphasis. */
+.tempo-demo--field {
+  --demo-bg: #e4ece7;
+  --demo-surface: #f7f8f3;
+  --demo-surface-soft: #eff3ed;
+  --demo-ink: #172d40;
+  --demo-muted: #657a83;
+  --demo-rule: #cbd9d4;
+  --demo-signal: #f2b449;
+  --demo-signal-ink: #172d40;
+  --demo-sidebar: #172d40;
+  --demo-sidebar-ink: #f2f5ef;
+  --demo-sidebar-muted: #9babb0;
+  --demo-radius: 24px;
+}
+.tempo-demo--field .tempo-demo__announcement { background: #f2b449; color: #172d40; }
+.tempo-demo--field .tempo-demo__announcement a { color: #172d40; }
+.tempo-demo--field .tempo-demo__announcement a:hover { color: #fff; }
+.tempo-demo--field .tempo-demo__brand-mark { border-radius: 50%; }
+.tempo-demo--field .tempo-demo__brand-mark span { border-radius: 50%; height: 9px; transform: none; width: 9px; }
+.tempo-demo--field .tempo-demo__nav-item { border-radius: 14px; font-weight: 550; }
+.tempo-demo--field .tempo-demo__nav-item.is-active { background: #eaf0e3; color: #172d40; }
+.tempo-demo--field .tempo-demo__nav-item.is-active .tempo-demo__nav-icon { color: #e69d23; }
+.tempo-demo--field .tempo-demo__avatar, .tempo-demo--field .tempo-demo__top-avatar { background: #d9a1a0; }
+.tempo-demo--field .tempo-demo__content { padding-top: 48px; }
+.tempo-demo--field h1 { font-weight: 600; letter-spacing: -.065em; }
+.tempo-demo--field .tempo-demo__punctuation { color: #e69d23; }
+.tempo-demo--field .tempo-demo__next-card { background: #f7f8f3; box-shadow: 0 16px 28px -22px rgba(23,45,64,.35); }
+.tempo-demo--field .tempo-demo__sport-glyph { border-radius: 50%; }
+.tempo-demo--field .tempo-demo__section-kicker { color: #d38e1e; }
+.tempo-demo--field .tempo-demo__block { padding: 13px 0; }
+.tempo-demo--field .tempo-demo__block-line { border-radius: 99px; }
+.tempo-demo--field .tempo-demo__block--signal .tempo-demo__block-line { background: #e69d23; }
+.tempo-demo--field .tempo-demo__primary-button { border-radius: 99px; }
+.tempo-demo--field .tempo-demo__secondary-button { border-radius: 99px; border: 1px solid var(--demo-rule); padding-left: 15px; padding-right: 15px; }
+.tempo-demo--field .tempo-demo__day--active strong { background: #e69d23; color: white; }
+.tempo-demo--field .tempo-demo__day--active i { background: #e69d23; }
+.tempo-demo--field .tempo-demo__week-progress span { background: #e69d23; }
+.tempo-demo--field .tempo-demo__detail-note { border-left-color: #e69d23; }
+
+@media (max-width: 980px) {
+  .tempo-demo__content-grid { grid-template-columns: minmax(0, 1fr); }
+  .tempo-demo__side-column { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .tempo-demo__announcement { gap: 7px; padding-left: 16px; padding-right: 16px; }
+  .tempo-demo__announcement > span:first-child, .tempo-demo__announcement-separator { display: none; }
+  .tempo-demo__announcement a { margin-left: auto; }
+  .tempo-demo__layout { display: block; }
+  .tempo-demo__sidebar { bottom: 0; box-shadow: 12px 0 30px rgba(10,20,17,.2); left: 0; max-width: 280px; min-height: auto; position: fixed; top: 34px; transform: translateX(-105%); transition: transform .25s ease-out; width: 82vw; z-index: 20; }
+  .tempo-demo__sidebar.is-open { transform: translateX(0); }
+  .tempo-demo__close-menu { align-items: center; background: transparent; border: 0; color: var(--demo-sidebar-muted); display: inline-flex; height: 36px; justify-content: center; width: 36px; }
+  .tempo-demo__content { padding: 28px 16px 22px; }
+  .tempo-demo__topbar { gap: 14px; }
+  .tempo-demo__menu-button { align-items: center; background: var(--demo-surface); border: 1px solid var(--demo-rule); border-radius: 10px; color: var(--demo-ink); display: inline-flex; height: 38px; justify-content: center; margin-bottom: 18px; width: 38px; }
+  .tempo-demo__topbar-actions { display: none; }
+  .tempo-demo__content-grid { gap: 30px; margin-top: 32px; }
+  .tempo-demo__next-card { padding: 21px 18px; }
+  .tempo-demo__next-card h3 { font-size: 39px; margin-top: 24px; }
+  .tempo-demo__metric-row { gap: 8px; }
+  .tempo-demo__metric-row strong { font-size: 15px; }
+  .tempo-demo__metric-row span { font-size: 9px; }
+  .tempo-demo__block { gap: 8px; grid-template-columns: 7px 1fr auto; }
+  .tempo-demo__block small { font-size: 10px; }
+  .tempo-demo__side-column { display: grid; gap: 18px; grid-template-columns: 1fr; }
+  .tempo-demo__week-card, .tempo-demo__activity-card { padding: 19px 18px; }
+  .tempo-demo__footer { display: grid; gap: 6px; line-height: 1.4; margin-top: 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tempo-demo *, .tempo-demo *::before, .tempo-demo *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+
+/* Workout flow direction previews. They use the authenticated Tempo tokens but
+   keep their alternate topology scoped to the public design-preview routes. */
+.workout-preview {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-schibsted), system-ui, sans-serif;
+}
+
+.workout-preview--workbench { background: var(--sunken); }
+.workout-preview--trail { background: var(--field-surface); }
+
+.workout-preview a,
+.workout-preview button,
+.workout-preview input,
+.workout-preview select,
+.workout-preview textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.workout-preview a:focus-visible,
+.workout-preview button:focus-visible,
+.workout-preview input:focus-visible,
+.workout-preview select:focus-visible,
+.workout-preview textarea:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.workout-preview__topline {
+  align-items: center;
+  border-bottom: 1px solid var(--nav-border);
+  background: var(--nav-surface);
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  min-height: 62px;
+  padding: 10px clamp(20px, 4vw, 52px);
+}
+
+.workout-preview__brand {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 10px;
+  letter-spacing: -0.02em;
+}
+
+.workout-preview__brand .ink-brand-mark { height: 30px; width: 30px; }
+.workout-preview__brand .ink-brand-mark span { width: 18px; }
+
+.workout-preview__direction-links {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.workout-preview__direction-links::-webkit-scrollbar { display: none; }
+
+.workout-preview__direction-links a {
+  border-bottom: 1px solid transparent;
+  color: var(--nav-muted);
+  font-size: 12px;
+  min-height: 44px;
+  padding: 11px 12px 8px;
+  white-space: nowrap;
+}
+
+.workout-preview__direction-links a:hover,
+.workout-preview__direction-links a.is-active {
+  border-color: var(--brand);
+  color: var(--text);
+}
+
+.workout-preview__body {
+  margin: 0 auto;
+  max-width: 1500px;
+  padding: clamp(28px, 5vw, 64px) clamp(20px, 4vw, 52px) 56px;
+}
+
+.workout-preview__header {
+  align-items: end;
+  display: flex;
+  gap: 30px;
+  justify-content: space-between;
+  margin-bottom: clamp(28px, 4vw, 44px);
+}
+
+.workout-preview__context,
+.workout-preview__label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.workout-preview__header h1 {
+  font-size: clamp(34px, 4.7vw, 64px);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+  margin: 12px 0 13px;
+  max-width: 760px;
+}
+
+.workout-preview__header > div:first-child > p:last-child {
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 62ch;
+}
+
+.workout-preview__header-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.workout-preview__sample-note {
+  align-items: center;
+  color: var(--text-secondary);
+  display: inline-flex;
+  font-size: 12px;
+  gap: 6px;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+.workout-preview__stage {
+  animation: none;
+}
+
+.workout-preview__flowline-layout,
+.workout-preview__workbench-layout,
+.workout-preview__trail-layout {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+}
+
+.workout-preview__flowline-layout { grid-template-columns: minmax(150px, 0.58fr) minmax(0, 2.15fr) minmax(240px, 0.92fr); }
+.workout-preview__workbench-layout { grid-template-columns: minmax(200px, 0.68fr) minmax(0, 1.7fr) minmax(250px, 0.88fr); }
+.workout-preview__trail-layout { grid-template-columns: minmax(175px, 0.64fr) minmax(0, 1.72fr) minmax(245px, 0.9fr); }
+
+.workout-preview__direction-rail,
+.workout-preview__palette-panel,
+.workout-preview__inspector,
+.workout-preview__readout {
+  min-width: 0;
+}
+
+.workout-preview__direction-rail,
+.workout-preview__trail-steps {
+  padding: 18px 10px 10px 2px;
+}
+
+.workout-preview__rail-heading,
+.workout-preview__panel-heading > div {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.workout-preview__rail-heading { color: var(--brand); font-size: 12px; font-weight: 600; }
+.workout-preview__direction-rail h2,
+.workout-preview__trail-steps h2 { font-size: 24px; font-weight: 400; letter-spacing: -0.045em; line-height: 1.05; margin: 25px 0 10px; }
+.workout-preview__direction-rail > p,
+.workout-preview__trail-steps > p { color: var(--text-secondary); font-size: 13px; line-height: 1.55; margin: 0; }
+
+.workout-preview__rail-steps { border-top: 1px solid var(--border); margin-top: 26px; }
+.workout-preview__flowline-step { align-items: start; border-bottom: 1px solid var(--border); display: flex; gap: 9px; padding: 13px 0; }
+.workout-preview__flowline-step-mark { align-items: center; border: 1px solid var(--border); color: var(--text-muted); display: inline-flex; flex: 0 0 auto; height: 22px; justify-content: center; width: 22px; }
+.workout-preview__flowline-step.is-active .workout-preview__flowline-step-mark { background: var(--brand); border-color: var(--brand); color: var(--signal-ink); }
+.workout-preview__flowline-step span:last-child { display: grid; gap: 3px; }
+.workout-preview__flowline-step strong { font-size: 12px; font-weight: 600; }
+.workout-preview__flowline-step small { color: var(--text-secondary); font-size: 11px; line-height: 1.4; }
+
+.workout-preview__rail-note,
+.workout-preview__palette-foot,
+.workout-preview__readout-foot {
+  align-items: start;
+  color: var(--text-secondary);
+  display: flex;
+  font-size: 11px;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.workout-preview__rail-note { border-top: 1px solid var(--border); margin-top: 26px; padding-top: 14px; }
+.workout-preview__rail-note svg,
+.workout-preview__palette-foot svg,
+.workout-preview__readout-foot svg { color: var(--liquid); flex: 0 0 auto; margin-top: 2px; }
+
+.workout-preview__flowline-main,
+.workout-preview__workbench-main,
+.workout-preview__trail-main,
+.workout-preview__palette-panel,
+.workout-preview__inspector,
+.workout-preview__readout {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-inset);
+}
+
+.workout-preview__flowline-main,
+.workout-preview__workbench-main,
+.workout-preview__trail-main { min-width: 0; padding: clamp(18px, 3vw, 30px); }
+.workout-preview__palette-panel,
+.workout-preview__inspector,
+.workout-preview__readout { padding: 18px; }
+
+.workout-preview__surface-heading,
+.workout-preview__workbench-toolbar,
+.workout-preview__trail-heading { align-items: start; display: flex; gap: 18px; justify-content: space-between; }
+.workout-preview__surface-heading h2,
+.workout-preview__workbench-toolbar h2,
+.workout-preview__trail-heading h2 { font-size: 22px; font-weight: 500; letter-spacing: -0.04em; line-height: 1.1; margin: 5px 0 5px; }
+.workout-preview__surface-heading p,
+.workout-preview__workbench-toolbar p,
+.workout-preview__trail-heading p { color: var(--text-secondary); font-size: 12px; line-height: 1.45; margin: 0; }
+
+.workout-preview__metric-summary { display: flex; flex: 0 0 auto; gap: 18px; }
+.workout-preview__metric-summary div { display: grid; gap: 5px; }
+.workout-preview__metric-summary span { color: var(--text-muted); font-size: 10px; text-transform: uppercase; }
+.workout-preview__metric-summary strong { font-size: 16px; font-weight: 600; white-space: nowrap; }
+
+.workout-preview__flowline-overview { align-items: end; border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); display: flex; gap: 20px; justify-content: space-between; margin-top: 25px; padding: 15px 0; }
+.workout-preview__flowline-overview > div:first-child { display: grid; gap: 8px; min-width: 0; }
+.workout-preview__shape-copy { display: grid; gap: 3px; text-align: right; }
+.workout-preview__shape-copy strong { font-size: 21px; font-weight: 500; }
+.workout-preview__shape-copy span { color: var(--text-secondary); font-size: 11px; }
+
+.workout-preview__flowline-track { overflow-x: auto; padding: 26px 0 6px; scrollbar-color: var(--scrollbar-thumb) transparent; }
+.workout-preview__sequence { min-width: 0; }
+.workout-preview__sequence--flowline { display: grid; gap: 12px; grid-template-columns: repeat(5, minmax(118px, 1fr)); min-width: 620px; position: relative; }
+.workout-preview__sequence--flowline::before { background: var(--liquid); content: ''; height: 1px; left: 8%; opacity: 0.45; position: absolute; right: 8%; top: 25px; }
+.workout-preview__sequence--flowline .workout-preview__block-card { position: relative; z-index: 1; }
+.workout-preview__sequence--flowline .workout-preview__block-card:not(:last-of-type)::after { background: var(--liquid); content: ''; height: 1px; opacity: 0.55; position: absolute; right: -18px; top: 25px; width: 18px; }
+.workout-preview__sequence--flowline .workout-preview__sequence-end { display: none; }
+
+.workout-preview__block-card { align-items: stretch; background: var(--field-surface); border: 1px solid var(--border); display: flex; min-width: 0; position: relative; transition: border-color 160ms ease-out, background-color 160ms ease-out, opacity 160ms ease-out; }
+.workout-preview__block-card:hover { border-color: var(--field-focus); }
+.workout-preview__block-card.is-selected { background: var(--brand-tint); border-color: var(--field-selected-border); }
+.workout-preview__block-card--flowline { min-height: 184px; }
+@media (min-width: 761px) {
+  .workout-preview__block-card--flowline .workout-preview__block-top { display: grid; gap: 2px 6px; grid-template-columns: auto 20px minmax(0, 1fr); grid-template-rows: auto auto auto; }
+  .workout-preview__block-card--flowline .workout-preview__block-order { grid-column: 1; grid-row: 1; }
+  .workout-preview__block-card--flowline .workout-preview__zone-line { grid-column: 2; grid-row: 1; }
+  .workout-preview__block-card--flowline .workout-preview__block-kind { grid-column: 1 / -1; grid-row: 2; overflow: visible; text-overflow: clip; white-space: normal; }
+  .workout-preview__block-card--flowline .workout-preview__block-zone { grid-column: 1 / -1; grid-row: 3; margin-left: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .workout-preview__block-card--flowline .workout-preview__block-name-row { align-items: start; flex-direction: column; gap: 4px; margin-top: 12px; }
+  .workout-preview__block-card--flowline .workout-preview__block-name-row strong { font-size: 12px; overflow-wrap: anywhere; }
+}
+.workout-preview__drag-handle { align-items: center; align-self: stretch; background: transparent; border: 0; color: var(--text-muted); display: inline-flex; flex: 0 0 44px; justify-content: center; min-height: 44px; }
+.workout-preview__drag-handle:hover { color: var(--brand); }
+.workout-preview__block-content { background: transparent; border: 0; color: inherit; display: block; min-width: 0; padding: 13px 12px 14px 0; text-align: left; width: 100%; }
+.workout-preview__block-top { align-items: center; display: flex; gap: 6px; min-width: 0; }
+.workout-preview__block-order { color: var(--text-muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.workout-preview__zone-line { display: inline-block; flex: 0 0 auto; height: 7px; width: 20px; }
+.workout-preview__block-kind { color: var(--text-secondary); font-size: 10px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.workout-preview__block-zone { color: var(--text-secondary); font-size: 10px; margin-left: auto; white-space: nowrap; }
+.workout-preview__block-name-row { align-items: baseline; display: flex; gap: 8px; justify-content: space-between; margin-top: 19px; }
+.workout-preview__block-name-row strong { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
+.workout-preview__block-name-row .metric-text { color: var(--text-secondary); font-size: 11px; white-space: nowrap; }
+.workout-preview__block-content > p { color: var(--text-secondary); font-size: 12px; line-height: 1.4; margin: 6px 0 0; }
+.workout-preview__block-note { color: var(--text-muted); display: block; font-size: 11px; line-height: 1.4; margin-top: 14px; }
+.workout-preview__block-arrow { align-self: center; color: var(--text-muted); flex: 0 0 auto; margin-right: 10px; }
+
+.workout-preview__sequence-end { align-items: center; border: 1px dashed var(--border); color: var(--text-muted); display: flex; font-size: 11px; gap: 7px; justify-content: center; margin-top: 10px; min-height: 42px; transition: border-color 160ms ease-out, background-color 160ms ease-out; }
+.workout-preview__sequence-end.is-over { background: var(--brand-tint); border-color: var(--brand); color: var(--brand); }
+.workout-preview__empty-sequence { align-items: center; border: 1px dashed var(--border); color: var(--text-secondary); display: flex; font-size: 13px; gap: 8px; justify-content: center; min-height: 110px; }
+
+.workout-preview__flowline-footer,
+.workout-preview__workbench-footer,
+.workout-preview__trail-actions { align-items: center; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; margin-top: 20px; padding-top: 16px; }
+.workout-preview__quick-add,
+.workout-preview__move-controls,
+.workout-preview__command-controls { align-items: center; display: flex; flex-wrap: wrap; gap: 7px; }
+.workout-preview__quick-add { gap: 9px; }
+
+.workout-preview__panel-heading { align-items: center; display: flex; gap: 10px; justify-content: space-between; }
+.workout-preview__panel-heading h2 { font-size: 15px; font-weight: 600; margin: 0; }
+.workout-preview__panel-icon { align-items: center; background: var(--brand-tint); color: var(--brand); display: inline-flex; height: 30px; justify-content: center; width: 30px; }
+.workout-preview__count,
+.workout-preview__selected-dot,
+.workout-preview__trail-status { color: var(--text-secondary); font-size: 10px; white-space: nowrap; }
+.workout-preview__selected-dot { color: var(--status-success); }
+.workout-preview__panel-copy { color: var(--text-secondary); font-size: 12px; line-height: 1.5; margin: 12px 0 18px; }
+
+.workout-preview__preset-palette { display: grid; gap: 12px; }
+.workout-preview__zone-picker { display: grid; gap: 4px; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.workout-preview__zone-picker button { align-items: center; background: var(--surface); border: 1px solid var(--border); color: var(--text-secondary); display: flex; flex-direction: column; font-size: 10px; gap: 5px; justify-content: center; min-height: 44px; }
+.workout-preview__zone-picker button:hover,
+.workout-preview__zone-picker button.is-selected { background: var(--brand-tint); border-color: var(--field-selected-border); color: var(--field-selected-text); }
+.workout-preview__zone-picker button span { height: 5px; width: 22px; }
+.workout-preview__preset-list { display: grid; gap: 7px; }
+.workout-preview__preset { align-items: center; background: var(--surface); border: 1px solid var(--border); color: var(--text); display: flex; gap: 9px; min-height: 58px; padding: 9px; text-align: left; transition: background-color 160ms ease-out, border-color 160ms ease-out; }
+.workout-preview__preset:hover { background: var(--brand-tint); border-color: var(--field-focus); }
+.workout-preview__preset-line { align-self: stretch; flex: 0 0 4px; min-height: 26px; }
+.workout-preview__preset > span:nth-child(2),
+.workout-preview__preset-drag > span:last-child { display: grid; gap: 3px; min-width: 0; }
+.workout-preview__preset strong { font-size: 12px; font-weight: 600; }
+.workout-preview__preset small { color: var(--text-secondary); font-size: 10px; line-height: 1.35; }
+.workout-preview__preset svg { color: var(--text-muted); margin-left: auto; }
+.workout-preview__palette-foot { border-top: 1px solid var(--border); margin-top: 18px; padding-top: 14px; }
+.workout-preview__preset-drag { align-items: center; background: var(--surface); border: 1px solid var(--field-selected-border); box-shadow: var(--shadow-overlay); display: flex; gap: 9px; min-width: 210px; padding: 11px; }
+.workout-preview__preset-drag strong { font-size: 12px; font-weight: 600; }
+.workout-preview__preset-drag small { color: var(--text-secondary); font-size: 10px; }
+
+.workout-preview__workbench-main { background: var(--paper); }
+.workout-preview__workbench-toolbar { border-bottom: 1px solid var(--border); padding-bottom: 18px; }
+.workout-preview__timeline-panel { border-bottom: 1px solid var(--border); padding: 18px 0 14px; }
+.workout-preview__timeline-panel .workout-preview__sequence-end { display: none; }
+.workout-preview__timeline-meta { color: var(--text-muted); display: flex; font-size: 10px; justify-content: space-between; margin-top: 8px; }
+.workout-preview__sequence-heading { color: var(--text-secondary); display: flex; font-size: 11px; font-weight: 600; justify-content: space-between; margin: 20px 0 8px; }
+.workout-preview__sequence--workbench { display: grid; gap: 7px; }
+.workout-preview__sequence--workbench .workout-preview__block-card { min-height: 76px; }
+.workout-preview__sequence--workbench .workout-preview__block-name-row { margin-top: 7px; }
+.workout-preview__sequence--workbench .workout-preview__block-content > p { display: inline; margin-right: 7px; }
+.workout-preview__sequence--workbench .workout-preview__block-note { display: inline; margin-top: 0; }
+
+.workout-preview__inspector { position: sticky; top: 18px; }
+.workout-preview__inspector-fields { display: grid; gap: 13px; }
+.workout-preview__inspector-fields label,
+.workout-preview__form-grid label { display: grid; gap: 6px; }
+.workout-preview__inspector-fields label > span,
+.workout-preview__form-grid label > span { color: var(--text-secondary); font-size: 11px; font-weight: 500; }
+.workout-preview__inspector-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.workout-preview__inspector-empty { align-items: center; border: 1px dashed var(--border); color: var(--text-secondary); display: grid; gap: 9px; justify-items: center; margin-top: 24px; padding: 28px 12px; text-align: center; }
+.workout-preview__inspector-empty svg { color: var(--liquid); }
+
+.workout-preview__trail-steps ol { border-top: 1px solid var(--border); list-style: none; margin: 26px 0 0; padding: 0; }
+.workout-preview__trail-steps li { border-bottom: 1px solid var(--border); }
+.workout-preview__trail-steps li button { align-items: center; background: transparent; border: 0; color: var(--text-secondary); display: flex; gap: 9px; min-height: 58px; padding: 8px 0; text-align: left; width: 100%; }
+.workout-preview__trail-steps li button:hover { color: var(--text); }
+.workout-preview__trail-steps li button.is-current { color: var(--text); }
+.workout-preview__trail-steps li button > span:last-child { display: grid; gap: 3px; }
+.workout-preview__trail-steps strong { font-size: 12px; font-weight: 600; }
+.workout-preview__trail-steps small { color: var(--text-muted); font-size: 10px; }
+.workout-preview__trail-number { align-items: center; border: 1px solid var(--border); color: var(--text-muted); display: inline-flex; flex: 0 0 auto; font-size: 11px; height: 26px; justify-content: center; width: 26px; }
+.workout-preview__trail-steps button.is-current .workout-preview__trail-number { background: var(--brand); border-color: var(--brand); color: var(--signal-ink); }
+
+.workout-preview__trail-status { border: 1px solid var(--status-warning-border); color: var(--status-warning); padding: 6px 8px; }
+.workout-preview__intent-step { padding-top: 26px; }
+.workout-preview__intent-callout,
+.workout-preview__trail-sequence-note { align-items: start; background: var(--brand-tint); color: var(--field-selected-text); display: flex; gap: 10px; padding: 15px; }
+.workout-preview__intent-callout svg,
+.workout-preview__trail-sequence-note svg { flex: 0 0 auto; margin-top: 2px; }
+.workout-preview__intent-callout p,
+.workout-preview__trail-sequence-note p { font-size: 13px; line-height: 1.5; margin: 0; }
+.workout-preview__form-grid { display: grid; gap: 13px; grid-template-columns: minmax(0, 1.4fr) minmax(150px, 0.6fr); margin-top: 25px; }
+.workout-preview__choice-row { border-top: 1px solid var(--border); display: grid; gap: 10px; margin-top: 25px; padding-top: 17px; }
+.workout-preview__choice-row > div { display: flex; flex-wrap: wrap; gap: 7px; }
+.workout-preview__choice-row button { background: var(--field-surface); border: 1px solid var(--border); color: var(--text-secondary); min-height: 44px; padding: 8px 12px; }
+.workout-preview__choice-row button:hover,
+.workout-preview__choice-row button.is-selected { background: var(--brand-tint); border-color: var(--field-selected-border); color: var(--field-selected-text); }
+.workout-preview__trail-sequence { padding-top: 24px; }
+.workout-preview__trail-sequence .workout-preview__preset-palette { border-top: 1px solid var(--border); margin-top: 22px; padding-top: 18px; }
+.workout-preview__sequence--trail { display: grid; gap: 7px; margin-top: 20px; }
+.workout-preview__sequence--trail .workout-preview__block-name-row { margin-top: 7px; }
+.workout-preview__trail-tune { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) minmax(220px, 0.65fr); padding-top: 24px; }
+.workout-preview__trail-tune .workout-preview__inspector { position: static; }
+.workout-preview__readback { padding-top: 28px; }
+.workout-preview__readback-hero { align-items: end; display: flex; gap: 11px; margin-bottom: 22px; }
+.workout-preview__readback-hero .metric-text { font-size: 32px; font-weight: 500; letter-spacing: -0.05em; }
+.workout-preview__readback-hero span { color: var(--text-secondary); font-size: 12px; }
+.workout-preview__readback-hero strong { color: var(--status-warning); font-size: 12px; font-weight: 600; margin-left: auto; }
+.workout-preview__readback-list { border-top: 1px solid var(--border); margin-top: 24px; }
+.workout-preview__readback-list > div { align-items: center; border-bottom: 1px solid var(--border); display: grid; gap: 12px; grid-template-columns: 28px 1fr auto; min-height: 48px; }
+.workout-preview__readback-list > div > span:first-child { color: var(--text-muted); font-size: 11px; }
+.workout-preview__readback-list strong { font-size: 13px; font-weight: 600; }
+.workout-preview__readback-list > span:last-child { color: var(--text-secondary); font-size: 11px; }
+.workout-preview__readback-note { align-items: center; color: var(--status-success); display: flex; font-size: 12px; gap: 7px; margin: 18px 0 0; }
+
+.workout-preview__readout-metrics { border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(3, 1fr); margin: 21px 0 19px; padding: 14px 0; }
+.workout-preview__readout-metrics div { display: grid; gap: 5px; }
+.workout-preview__readout-metrics span { color: var(--text-muted); font-size: 10px; text-transform: uppercase; }
+.workout-preview__readout-metrics strong { font-size: 17px; font-weight: 500; }
+.workout-preview__readout-outline { display: grid; gap: 9px; }
+.workout-preview__readout-outline .workout-preview__label { margin-bottom: 3px; }
+.workout-preview__readout-outline > div { align-items: center; display: grid; gap: 7px; grid-template-columns: 5px 1fr auto; }
+.workout-preview__readout-outline > div span:first-child { height: 22px; }
+.workout-preview__readout-outline > div span:nth-child(2) { color: var(--text-secondary); font-size: 11px; }
+.workout-preview__readout-outline > div strong { font-size: 10px; font-weight: 500; white-space: nowrap; }
+.workout-preview__readout-foot { border-top: 1px solid var(--border); margin-top: 19px; padding-top: 14px; }
+
+@media (max-width: 1120px) {
+  .workout-preview__flowline-layout,
+  .workout-preview__workbench-layout,
+  .workout-preview__trail-layout { grid-template-columns: minmax(165px, 0.52fr) minmax(0, 1.55fr); }
+  .workout-preview__flowline-layout .workout-preview__inspector,
+  .workout-preview__workbench-layout .workout-preview__inspector,
+  .workout-preview__trail-layout .workout-preview__readout { grid-column: 2; position: static; }
+  .workout-preview__trail-tune .workout-preview__inspector { grid-column: auto; }
+}
+
+@media (max-width: 760px) {
+  .workout-preview__topline { align-items: start; flex-direction: column; gap: 8px; padding-bottom: 4px; }
+  .workout-preview__direction-links { margin-left: -4px; width: calc(100% + 8px); }
+  .workout-preview__header { align-items: start; flex-direction: column; margin-bottom: 26px; }
+  .workout-preview__header-actions { justify-content: flex-start; }
+  .workout-preview__sample-note { flex-basis: 100%; margin: 0 0 4px; }
+  .workout-preview__flowline-layout,
+  .workout-preview__workbench-layout,
+  .workout-preview__trail-layout { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .workout-preview__flowline-layout .workout-preview__inspector,
+  .workout-preview__workbench-layout .workout-preview__inspector,
+  .workout-preview__trail-layout .workout-preview__readout { grid-column: auto; }
+  .workout-preview__direction-rail,
+  .workout-preview__trail-steps { padding: 4px 0 0; }
+  .workout-preview__direction-rail h2,
+  .workout-preview__trail-steps h2 { margin-top: 15px; }
+  .workout-preview__rail-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 18px; }
+  .workout-preview__flowline-step { border: 1px solid var(--border); padding: 10px; }
+  .workout-preview__flowline-step small { display: none; }
+  .workout-preview__rail-note { margin-top: 14px; }
+  .workout-preview__surface-heading,
+  .workout-preview__workbench-toolbar,
+  .workout-preview__trail-heading { flex-direction: column; }
+  .workout-preview__metric-summary { width: 100%; }
+  .workout-preview__metric-summary div { flex: 1; }
+  .workout-preview__flowline-overview { align-items: start; flex-direction: column; }
+  .workout-preview__shape-copy { text-align: left; }
+  .workout-preview__sequence--flowline { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+  .workout-preview__sequence--flowline::before,
+  .workout-preview__sequence--flowline .workout-preview__block-card:not(:last-of-type)::after { display: none; }
+  .workout-preview__block-card--flowline { min-height: 0; }
+  .workout-preview__block-zone { white-space: normal; }
+  .workout-preview__flowline-footer,
+  .workout-preview__workbench-footer,
+  .workout-preview__trail-actions { align-items: stretch; flex-direction: column; }
+  .workout-preview__quick-add,
+  .workout-preview__move-controls,
+  .workout-preview__command-controls { width: 100%; }
+  .workout-preview__move-controls button,
+  .workout-preview__command-controls button,
+  .workout-preview__quick-add button { flex: 1; }
+  .workout-preview__form-grid,
+  .workout-preview__trail-tune { grid-template-columns: minmax(0, 1fr); }
+  .workout-preview__trail-steps ol { display: grid; gap: 6px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workout-preview__trail-steps li { border: 1px solid var(--border); }
+  .workout-preview__trail-steps li button { padding: 8px; }
+  .workout-preview__trail-actions button { width: 100%; }
+  .workout-preview__readback-hero { align-items: start; flex-wrap: wrap; }
+  .workout-preview__readback-hero strong { margin-left: 0; width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workout-preview__block-card,
+  .workout-preview__sequence-end,
+  .workout-preview__preset { transition: none; }
+}
+
+.workout-preview__variant-links {
+  align-items: center;
+  border-left: 1px solid var(--nav-border);
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  padding-left: 16px;
+}
+
+.workout-preview__variant-links a {
+  border: 1px solid transparent;
+  color: var(--nav-muted);
+  font-size: 11px;
+  min-height: 36px;
+  padding: 9px 10px;
+  white-space: nowrap;
+}
+
+.workout-preview__variant-links a:hover,
+.workout-preview__variant-links a.is-active {
+  background: var(--brand-tint);
+  border-color: var(--field-selected-border);
+  color: var(--field-selected-text);
+}
+
+.workout-preview__workbench-layout--terrain .workout-preview__workbench-main,
+.workout-preview__workbench-layout--ribbon .workout-preview__workbench-main,
+.workout-preview__workbench-layout--staging .workout-preview__workbench-main { background: var(--paper); }
+
+.workout-preview__terrain-legend,
+.workout-preview__ribbon-intro {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  display: flex;
+  font-size: 11px;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 14px 0 11px;
+}
+
+.workout-preview__terrain-legend > span:last-child { align-items: center; display: inline-flex; gap: 5px; }
+.workout-preview__terrain-legend i { display: inline-block; height: 7px; width: 20px; }
+.workout-preview__terrain-legend i:not(:first-child) { margin-left: 8px; }
+.workout-preview__terrain-timeline { padding: 17px 0 8px; }
+
+.workout-preview__terrain-canvas {
+  align-items: end;
+  background-color: var(--field-surface);
+  background-image: linear-gradient(to bottom, transparent calc(33.333% - 1px), var(--border) 33.333%, transparent calc(33.333% + 1px)), linear-gradient(to bottom, transparent calc(66.666% - 1px), var(--border) 66.666%, transparent calc(66.666% + 1px));
+  border: 1px solid var(--border);
+  display: flex;
+  min-height: 276px;
+  overflow-x: auto;
+  padding: 16px 12px 12px 0;
+}
+
+.workout-preview__terrain-axis {
+  align-self: stretch;
+  background: var(--field-surface);
+  color: var(--text-muted);
+  display: flex;
+  flex: 0 0 34px;
+  flex-direction: column;
+  font-size: 10px;
+  justify-content: space-between;
+  padding: 0 0 2px 9px;
+}
+
+.workout-preview__terrain-sequence {
+  align-items: end;
+  display: flex;
+  flex: 1 1 auto;
+  gap: 5px;
+  height: 246px;
+  min-width: 500px;
+}
+
+.workout-preview__terrain-block {
+  align-self: end;
+  height: var(--terrain-height);
+  min-width: 62px;
+  position: relative;
+}
+
+.workout-preview__terrain-block-inner {
+  align-items: stretch;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  height: 100%;
+  min-width: 0;
+  transition: background-color 160ms ease-out, border-color 160ms ease-out;
+}
+
+.workout-preview__terrain-block:hover .workout-preview__terrain-block-inner { border-color: var(--field-focus); }
+.workout-preview__terrain-block.is-selected .workout-preview__terrain-block-inner { background: color-mix(in srgb, var(--color-trace) 14%, var(--surface)); border-color: var(--field-selected-border); }
+.workout-preview__terrain-content { background: transparent; border: 0; color: var(--text); display: grid; gap: 6px; min-width: 0; padding: 9px 7px; text-align: left; width: 100%; }
+.workout-preview__terrain-content > span { align-items: center; color: var(--signal-ink); display: inline-flex; font-size: 10px; font-weight: 600; height: 20px; justify-content: center; justify-self: start; min-width: 28px; padding: 0 5px; }
+.workout-preview__terrain-content strong { font-size: 12px; font-weight: 600; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; }
+.workout-preview__terrain-content small { color: var(--text-secondary); font-size: 10px; white-space: nowrap; }
+
+.workout-preview__ribbon-intro { gap: 8px; }
+.workout-preview__ribbon-intro span:last-child { color: var(--text-muted); }
+.workout-preview__ribbon-track { display: flex; gap: 4px; min-height: 134px; overflow-x: auto; padding: 18px 0 16px; }
+.workout-preview__ribbon-segment { background: var(--ribbon-tint); border: 1px solid var(--border); border-top: 7px solid var(--ribbon-color); display: flex; flex: 1 1 0; min-width: 92px; min-height: 99px; transition: background-color 160ms ease-out, border-color 160ms ease-out, opacity 160ms ease-out; }
+.workout-preview__ribbon-segment:hover { border-color: var(--field-focus); border-top-color: var(--ribbon-color); }
+.workout-preview__ribbon-segment.is-selected { background: var(--brand-tint); border-color: var(--field-selected-border); border-top-color: var(--ribbon-color); }
+.workout-preview__ribbon-handle { align-items: center; background: transparent; border: 0; color: var(--text-muted); display: inline-flex; flex: 0 0 34px; justify-content: center; min-height: 44px; }
+.workout-preview__ribbon-handle:hover { color: var(--brand); }
+.workout-preview__ribbon-content { background: transparent; border: 0; color: var(--text); display: grid; gap: 7px; min-width: 0; padding: 12px 10px 10px 0; text-align: left; width: 100%; }
+.workout-preview__ribbon-content span { color: var(--text-secondary); font-size: 10px; font-variant-numeric: tabular-nums; }
+.workout-preview__ribbon-content strong { font-size: 13px; font-weight: 600; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; }
+.workout-preview__ribbon-content small { color: var(--text-secondary); font-size: 10px; white-space: nowrap; }
+
+.workout-preview__selection-tray {
+  background: var(--field-surface);
+  border: 1px solid var(--border);
+  margin-top: 18px;
+  padding: 15px;
+}
+
+.workout-preview__selection-heading { align-items: start; display: flex; gap: 15px; justify-content: space-between; }
+.workout-preview__selection-heading h3,
+.workout-preview__staging-shelf-heading h3 { font-size: 15px; font-weight: 600; margin: 4px 0 0; }
+.workout-preview__selection-list { border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 7px 14px; margin-top: 13px; padding: 10px 0; }
+.workout-preview__selection-list span { align-items: center; color: var(--text-secondary); display: inline-flex; font-size: 11px; gap: 5px; }
+.workout-preview__selection-list i { display: inline-block; height: 7px; width: 17px; }
+.workout-preview__selection-list strong { color: var(--text); font-weight: 600; }
+.workout-preview__selection-empty { color: var(--text-secondary); font-size: 12px; line-height: 1.45; margin: 13px 0 0; }
+.workout-preview__selection-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
+.workout-preview__selection-notice { align-items: center; color: var(--status-success); display: flex; font-size: 11px; gap: 6px; margin: 11px 0 0; }
+
+.workout-preview__staging-shelf { background: var(--field-surface); border: 1px solid var(--field-selected-border); margin-top: 19px; padding: 15px; }
+.workout-preview__staging-shelf-heading { align-items: start; display: flex; gap: 15px; justify-content: space-between; }
+.workout-preview__staging-status { border: 1px solid var(--field-selected-border); color: var(--field-selected-text); font-size: 10px; padding: 5px 7px; white-space: nowrap; }
+.workout-preview__staged-list { border-top: 1px solid var(--border); margin-top: 13px; }
+.workout-preview__staged-list > div { align-items: center; border-bottom: 1px solid var(--border); display: grid; gap: 9px; grid-template-columns: 5px minmax(0, 1fr) 32px; min-height: 48px; }
+.workout-preview__staged-list > div > span:first-child { height: 24px; }
+.workout-preview__staged-list strong,
+.workout-preview__staged-list small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workout-preview__staged-list strong { font-size: 12px; font-weight: 600; }
+.workout-preview__staged-list small { color: var(--text-secondary); font-size: 10px; margin-top: 3px; }
+.workout-preview__staged-remove { align-items: center; background: transparent; border: 0; color: var(--text-muted); display: inline-flex; height: 32px; justify-content: center; transform: rotate(45deg); width: 32px; }
+.workout-preview__staged-remove:hover { color: var(--status-danger); }
+.workout-preview__staging-empty { color: var(--text-secondary); font-size: 12px; line-height: 1.45; margin: 13px 0 0; }
+.workout-preview__staging-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
+.workout-preview__staging-final-heading { color: var(--text-secondary); display: flex; font-size: 11px; font-weight: 600; justify-content: space-between; margin: 20px 0 8px; }
+
+@media (max-width: 760px) {
+  .workout-preview__variant-links { border-left: 0; margin-left: -4px; padding-left: 0; width: calc(100% + 8px); }
+  .workout-preview__terrain-legend,
+  .workout-preview__ribbon-intro,
+  .workout-preview__selection-heading,
+  .workout-preview__staging-shelf-heading { align-items: start; flex-direction: column; }
+  .workout-preview__terrain-legend > span:last-child { flex-wrap: wrap; }
+  .workout-preview__terrain-canvas { padding-left: 0; }
+  .workout-preview__terrain-sequence { min-width: 520px; }
+  .workout-preview__ribbon-track { min-width: 0; }
+  .workout-preview__ribbon-segment { min-width: 104px; }
+  .workout-preview__selection-actions,
+  .workout-preview__staging-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .workout-preview__selection-actions button,
+  .workout-preview__staging-actions button { width: 100%; }
+  .workout-preview__staging-final-heading { align-items: start; flex-direction: column; gap: 3px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workout-preview__terrain-block-inner,
+  .workout-preview__ribbon-segment { transition: none; }
+}

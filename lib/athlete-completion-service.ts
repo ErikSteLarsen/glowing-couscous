@@ -1,6 +1,7 @@
 import { isValid, parseISO } from 'date-fns';
 
 import { prisma } from './prisma.ts';
+import { SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
 import { createSessionEditorDraftFromPersisted, serializeSessionEditorDraft, type SessionEditorDraft } from './session-editor.ts';
 import { deriveSessionEditorMetrics } from './session-editor.ts';
 import {
@@ -10,6 +11,7 @@ import {
 } from './session-snapshot-service.ts';
 
 const MAX_NOTES_LENGTH = 2000;
+const SKIPPED_OUTCOME_ERROR = 'Skipped sessions cannot record an outcome. Plan the session again first.';
 
 type OutcomeSession = {
   id: number;
@@ -71,7 +73,7 @@ export type ActualActor = { role: 'ATHLETE' | 'COACH'; userId: number };
 
 export type CompletionResult =
   | { ok: true; sessionId: number; isDone: boolean; notes: string; completedAt: Date | null }
-  | { ok: false; status: 400 | 404; error: string };
+  | { ok: false; status: 400 | 404 | 409; error: string };
 
 export type ActualOutcomeResult =
   | { ok: true; sessionId: number; isDone: true; completedAt: Date }
@@ -117,6 +119,9 @@ export function createAthleteCompletionService({
     if (validationError) return { ok: false, status: 400, error: validationError };
     if (!canEditActual(actor, session)) {
       return { ok: false, status: 404, error: 'Session not found' };
+    }
+    if (session.status === SKIPPED_SESSION_STATUS) {
+      return { ok: false, status: 409, error: SKIPPED_OUTCOME_ERROR };
     }
     if (draft.athleteId !== null && draft.athleteId !== session.athleteId) {
       return { ok: false, status: 404, error: 'Session not found' };
@@ -229,6 +234,7 @@ export function createAthleteCompletionService({
 
       const session = await loadSessionForAthlete(athleteId, sessionId);
       if (!session) return { ok: false, status: 404, error: 'Session not found' };
+      if (session.status === SKIPPED_SESSION_STATUS) return { ok: false, status: 409, error: SKIPPED_OUTCOME_ERROR };
 
       const retainedNotes = notes ?? session.activity?.notes ?? session.athleteNotes ?? null;
       const draft = createSessionEditorDraftFromPersisted('actual', {
@@ -239,7 +245,7 @@ export function createAthleteCompletionService({
         blocks: session.blocks,
       });
       const result = await saveActualForSession({ role: 'ATHLETE', userId: athleteId }, session, draft);
-      if (!result.ok) return { ok: false, status: result.status === 409 ? 404 : result.status, error: result.error };
+      if (!result.ok) return { ok: false, status: result.status, error: result.error };
       return { ok: true, sessionId: result.sessionId, isDone: true, notes: retainedNotes ?? '', completedAt: result.completedAt };
     },
 
@@ -249,6 +255,7 @@ export function createAthleteCompletionService({
 
       const session = await loadSessionForAthlete(athleteId, sessionId);
       if (!session) return { ok: false, status: 404, error: 'Session not found' };
+      if (session.status === SKIPPED_SESSION_STATUS) return { ok: false, status: 409, error: SKIPPED_OUTCOME_ERROR };
 
       const retainedNotes = notes ?? session.activity?.notes ?? session.athleteNotes ?? null;
       await db.$transaction([

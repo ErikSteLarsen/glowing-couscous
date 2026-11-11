@@ -1,163 +1,150 @@
 ---
 name: Tempo
-description: A bright white or layered black training workspace with decisive actions, restrained cobalt cues, and rounded work surfaces.
+description: A dark, quiet night instrument for endurance training where hairline rules, tabular numbers, and one cyan trace carry the week.
 colors:
-  signal: "#111412"
-  signal-tint: "#F7F9F7"
-  signal-hover: "#2A2D2B"
-  signal-ink: "#FFFFFF"
-  selection: "#DCE8FF"
-  accent: "#3D64B0"
-  accent-tint: "#E3ECFF"
-  accent-dark: "#A9C5FF"
-  scrollbar-thumb: "#A7B0A9"
-  scrollbar-thumb-hover: "#7D8B80"
-  liquid: "#68776B"
-  liquid-tint: "#EDF1ED"
-  paper: "#FFFFFF"
-  surface: "#FFFFFF"
-  field-surface: "#F8F9F8"
-  sunken: "#FAFBF9"
-  border: "#E1E5E0"
-  field-border: "#BCC6BC"
-  ink: "#111412"
-  ink-secondary: "#3B443E"
-  ink-muted: "#59635C"
-  selected-border: "#68786B"
-  selected-text: "#111412"
-  white: "#FFFFFF"
-  success: "#2E6D53"
-  success-tint: "#E6EFEA"
-  success-border: "#B9D1C4"
-  warning: "#8B681F"
-  warning-tint: "#F1EBDD"
-  warning-border: "#DCCBA6"
-  danger: "#99443D"
-  danger-tint: "#F2E5E0"
-  danger-tint-strong: "#EBD3CC"
-  danger-border: "#D7AAA0"
-  missed: "#725C76"
-  missed-tint: "#EEE7EE"
-  missed-border: "#CDBFD0"
-  nav-surface: "#FFFFFF"
-  nav-border: "#E1E7E2"
-  nav-text: "#111412"
-  nav-muted: "#505C52"
-  nav-active: "#E3ECFF"
-  nav-signal: "#3D64B0"
-  zone-1: "#2563EB"
-  zone-1-tint: "#E4EDFF"
-  zone-2: "#16A34A"
-  zone-2-tint: "#E1F4E7"
-  zone-3: "#CA8A04"
-  zone-3-tint: "#FBF1D2"
-  zone-4: "#EA580C"
-  zone-4-tint: "#FDE7D9"
-  zone-5: "#DC2626"
-  zone-5-tint: "#FBE4E2"
+  ground: "#0B0F15"
+  raised: "#151B24"
+  surface: "#10151C"
+  sunken: "#090C11"
+  field-surface: "#0E131A"
+  rule: "#1F2732"
+  rule-strong: "#323C4A"
+  ink-1: "#EEF2F6"
+  ink-2: "#A9B4C1"
+  ink-3: "#8592A1"
+  trace: "#5EB6D8"
+  trace-hover: "#82C9E4"
+  trace-faint: "#2D4A5A"
+  trace-ink: "#06121A"
+  selection: "#2C6078"
+  scrollbar-thumb: "#323C4A"
+  scrollbar-thumb-hover: "#4A5666"
+  success: "#5FCFA2"
+  warning: "#F0A84A"
+  danger: "#F3877A"
+  missed: "#E3818F"
+  compliance-good: "#5FCFA2"
+  compliance-partial: "#F0A84A"
+  compliance-off: "#F3877A"
+  metric-fitness: "#5EB6D8"
+  metric-fatigue: "#C08AE8"
+  metric-form: "#F0A84A"
+  zone-1: "#7F9BB5"
+  zone-2: "#4FB89F"
+  zone-3: "#D9B44A"
+  zone-4: "#EE8A4C"
+  zone-5: "#E8667E"
 typography:
-  display:
-    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
-    fontSize: "48px"
-    fontWeight: 400
-    lineHeight: 1
-    letterSpacing: "-0.045em"
-  title:
-    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
-    fontSize: "20px"
+  page-heading:
+    fontFamily: "Instrument Sans, system-ui, sans-serif"
+    fontSize: "28px"
     fontWeight: 500
-    lineHeight: 1.1
+    lineHeight: 1.25
+    letterSpacing: "-0.02em"
+  section-heading:
+    fontFamily: "Instrument Sans, system-ui, sans-serif"
+    fontSize: "16px"
+    fontWeight: 500
+    letterSpacing: "-0.01em"
   body:
-    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
-    fontSize: "15px"
+    fontFamily: "Instrument Sans, system-ui, sans-serif"
+    fontSize: "14px"
     fontWeight: 400
-    lineHeight: 1.55
+    lineHeight: 1.6
   label:
-    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
-    fontSize: "11px"
-    fontWeight: 600
-    lineHeight: 1.35
-  control:
-    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
-    fontSize: "13px"
-    fontWeight: 600
-    lineHeight: 1
-    letterSpacing: "0.07em"
-  compact-control:
-    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
+    fontFamily: "Instrument Sans, system-ui, sans-serif"
     fontSize: "12px"
-    fontWeight: 600
+    fontWeight: 500
+    lineHeight: 1.35
+  form-label:
+    fontFamily: "Instrument Sans, system-ui, sans-serif"
+    fontSize: "13px"
+    fontWeight: 500
+  control:
+    fontFamily: "Instrument Sans, system-ui, sans-serif"
+    fontSize: "14px"
+    fontWeight: 500
     lineHeight: 1
-    letterSpacing: "0.06em"
-  metric:
-    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
-    fontSize: "26px"
-    fontWeight: 600
-    lineHeight: 1.1
+  compact-control:
+    fontFamily: "Instrument Sans, system-ui, sans-serif"
+    fontSize: "13px"
+    fontWeight: 500
+    lineHeight: 1
+  stat-value:
+    fontFamily: "Instrument Sans, system-ui, sans-serif"
+    fontSize: "28px"
+    fontWeight: 500
+    lineHeight: 1
+    letterSpacing: "-0.02em"
     fontFeature: "tnum"
 rounded:
-  compact: "9px"
-  control: "10px"
-  field: "10px"
-  surface: "16px"
-  dialog: "20px"
+  compact: "6px"
+  control: "8px"
+  field: "8px"
+  tile: "16px"
+  dialog: "16px"
   pill: "9999px"
 spacing:
   sm: "8px"
   md: "16px"
   lg: "24px"
   page-inline: "20px"
-  page-inline-sm: "24px"
-  page-inline-lg: "32px"
+  page-inline-sm: "28px"
+  page-inline-lg: "40px"
 components:
   button-primary:
-    backgroundColor: "{colors.signal}"
-    textColor: "{colors.white}"
+    backgroundColor: "{colors.trace}"
+    textColor: "{colors.trace-ink}"
     rounded: "{rounded.control}"
     padding: "8px 16px"
     height: "40px"
   button-secondary:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
+    backgroundColor: "transparent"
+    textColor: "{colors.ink-1}"
     rounded: "{rounded.control}"
     padding: "8px 16px"
     height: "40px"
   button-compact:
-    backgroundColor: "{colors.signal}"
-    textColor: "{colors.white}"
-    rounded: "{rounded.compact}"
+    backgroundColor: "{colors.trace}"
+    textColor: "{colors.trace-ink}"
+    rounded: "{rounded.control}"
     padding: "6px 10px"
     height: "32px"
+  icon-step-button:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink-2}"
+    rounded: "{rounded.pill}"
+    height: "40px"
   field:
     backgroundColor: "{colors.field-surface}"
-    textColor: "{colors.ink}"
+    textColor: "{colors.ink-1}"
     rounded: "{rounded.field}"
     padding: "8px 12px"
     height: "40px"
-  surface:
+  tile:
     backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.surface}"
-    padding: "20px"
-  session-row:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.field}"
+    textColor: "{colors.ink-1}"
+    rounded: "{rounded.tile}"
     padding: "16px"
   status-chip:
-    backgroundColor: "{colors.liquid-tint}"
-    textColor: "{colors.selected-text}"
+    backgroundColor: "transparent"
+    textColor: "{colors.ink-2}"
     rounded: "{rounded.pill}"
-    padding: "0 12px"
+    padding: "0 10px"
+    height: "24px"
+  switch-track:
+    backgroundColor: "{colors.raised}"
+    rounded: "{rounded.control}"
+    padding: "2px"
   nav-item:
-    backgroundColor: "{colors.nav-surface}"
-    textColor: "{colors.nav-muted}"
-    rounded: "{rounded.field}"
-    padding: "10px 16px"
-    height: "40px"
+    backgroundColor: "transparent"
+    textColor: "{colors.ink-2}"
+    rounded: "{rounded.control}"
+    padding: "0 10px"
+    height: "36px"
   session-block-bar:
     backgroundColor: "transparent"
-    rounded: "{rounded.field}"
+    rounded: "{rounded.compact}"
     height: "32px"
 ---
 
@@ -165,433 +152,313 @@ components:
 
 ## Overview
 
-**Creative North Star: "Movement in Contrast"**
+**Creative North Star: "Night Instrument"**
 
 Tempo is an operational training surface organized around the Monday-to-Sunday
-week and rendered as a quiet Monolith workspace. The week connects personal planning,
-session execution, completion, and history. The first MVP prioritizes people
-managing their own training; onboarding, empty states, and primary actions
-should make sense without a coach connection. Coach collaboration is secondary.
-The interface should feel crafted and alive through line, texture, and considered
-transitions while staying quick to use repeatedly rather than performing as a
-motivational game board.
+week. The week connects personal planning, session execution, completion, and
+review. The first MVP prioritizes people managing their own training; onboarding,
+empty states, and primary actions must make sense without a coach connection.
+Coach collaboration is secondary.
 
-The product world is layered near-black in dark mode and crisp white in light
-mode. Primary actions are porcelain white on dark and near-black on light.
-Cobalt belongs to the logo, active navigation, hover feedback, and a few small
-identity cues; it is not the main fill for actions or large work surfaces. Rounded panels distinguish
-focused tasks from open reading areas. The selected Home and Workouts
-compositions are production surfaces. Older `/design/*` workout and planning
-experiments are developer-only studies, not alternative production themes.
+The interface is a dark, quiet instrument: one deep ground, hairline rules
+instead of heavy cards, tabular numbers wherever a value is read, and a single
+cyan trace for what is active. It should feel precise and calm to open every day,
+not like a motivational game board.
+
+The authenticated product is the visual authority. `app/globals.css` is the token
+implementation. The `/design/*` routes are alternate previews with sample content
+and their own scoped CSS in `app/design/previews.css`; they are not production
+tokens, layouts, or references.
 
 **Key Characteristics:**
 
-- Monday-first hierarchy with the current week and current day easy to locate.
-- One clear next action before secondary metrics or history.
-- Shared session, status, metric, and block-structure language across routes.
-- Clear tonal separation, soft panel corners, semantic borders, and restrained depth.
-- Content libraries and history favor open collections, clear spacing, and fine
-  separators; reserve enclosing frames for focused tasks, controls, and
-  deliberately compact grids.
+- Dark only. `color-scheme: dark` everywhere; there is no light theme or toggle.
+- Hairline rules and tonal layers over heavy cards, borders, and shadows.
+- One cyan trace owns primary action, active state, focus, and "now".
+- Numbers are the content: large, tabular, with quiet units.
+- Monday-first hierarchy with the current week and day easy to locate.
 - Text-visible states and persistent keyboard focus.
 
 ## Colors
 
-The palette is black and white first. Dark mode uses near-black layers and
-near-white controls. Light mode stays predominantly white, with a pale neutral
-Today plane and black reserved for forward actions and selected work. Cobalt
-marks the identity, active navigation, and small interaction cues. Large work
-surfaces keep the neutral color of their theme. Status
-colors remain available when their meaning matters, with text labels alongside.
+The ground is near-black blue; structure is drawn with rules and one step of
+lift. Color is scarce and always means something.
 
-In the implementation, `app/globals.css` owns both theme token sets on the
-document root (`data-workspace-theme`). A small head script restores the saved
-theme before hydration; `AppShell` owns the theme switch and persistence.
-`--color-signal`, `--color-liquid`, and their tint tokens feed the semantic
-aliases `--brand` and `--brand-tint`; preserve those aliases when changing
-shared styles. Preview query parameters are not production theme inputs.
+### Neutrals
 
-### Primary
+- **Ground** `{colors.ground}`: page canvas and sidebar.
+- **Raised** `{colors.raised}`: hover fill, switch track, skeletons, avatars.
+- **Surface** (`{colors.surface}`, raised mixed 55% into ground): tile fill.
+- **Field surface** `{colors.field-surface}`: input fill, slightly below ground.
+- **Rule** `{colors.rule}`: ordinary hairline and chart gridline.
+  **Rule strong** `{colors.rule-strong}`: control borders, dashed empties, the
+  lifted option in a switch.
+- **Ink 1** `{colors.ink-1}` primary text and values; **Ink 2** `{colors.ink-2}`
+  supporting text and labels; **Ink 3** `{colors.ink-3}` metadata and
+  placeholders. Ink 3 on ground passes AA (4.5:1); never go dimmer for text.
 
-- **Signal:** `{colors.signal}` is the near-black action fill in light mode and
-  porcelain fill in dark mode.
-- **Liquid:** `{colors.liquid}` is the quiet neutral for measurements and
-  supporting lines.
-- **Signal tints:** `{colors.signal-tint}` holds selected context;
-  `{colors.liquid-tint}` holds quiet informational surfaces.
+### Trace
 
-### Secondary
+`{colors.trace}` is the only accent. It marks the one primary action, the active
+nav item, the focus ring, the "today" or "now" marker, the planned state, and the
+fitness line. Hover is `{colors.trace-hover}`; button text on trace is
+`{colors.trace-ink}`. `--brand` and `--brand-tint` (trace at 14%) are the
+semantic aliases consumed by shared classes; preserve them. `--band` (trace at
+17%) draws the "usual range" band in charts.
 
-- **Completion green:** `{colors.success}` and `{colors.success-tint}` indicate
-  completed or successfully saved work.
-- **Adjusted amber:** `{colors.warning}` and `{colors.warning-tint}` indicate a
-  changed plan or a warning that needs attention.
-- **Missed violet:** `{colors.missed}` and `{colors.missed-tint}` identify missed
-  work without competing with the active signal.
-- **Danger red:** `{colors.danger}` and `{colors.danger-tint}` are reserved for
-  destructive actions and destructive feedback.
+### Signal colors
 
-### Tertiary
+- **Green** `{colors.success}`: better than usual, on plan, completed, saved.
+- **Amber** `{colors.warning}`: worse than usual, needs attention, adjusted plan.
+- **Danger** `{colors.danger}`: destructive actions and destructive feedback only.
+- **Missed** `{colors.missed}`: missed work, kept distinct from danger.
+- Each has a 13% tint and 40% border derived with `color-mix`
+  (`--status-*-tint`, `--status-*-border`).
+- **Compliance:** good `{colors.compliance-good}`, partial
+  `{colors.compliance-partial}`, off `{colors.compliance-off}`.
 
-- **Training zones:** Blue, green, yellow, orange, and red identify Zones 1–5.
-  Zone color is reserved for intensity data, never primary actions or large
-  work surfaces. Their tint tokens support compact block details. Text on those
-  tints uses the theme ink color for legibility.
-- **Within-zone intensity:** A target's percentage determines a fraction of its
-  zone band. Bar height and hue move continuously through the five anchor colors;
-  the midpoint of each band is its named zone color. Adjacent zone edges share
-  the same interpolated color. Missing target data uses the zone midpoint, and
-  pauses stay neutral. Dark mode uses brighter anchors and darker tints.
+**The Signal Rule.** Amber means worse than usual or needs attention; green means
+better or on plan. Neutral metrics (volume, counts, durations with no target)
+show no signal color at all. Never color a number just to decorate it.
 
-### Neutral
+### Training load
 
-- **Paper:** `{colors.paper}` is the light canvas; dark mode uses near-black.
-- **Surface:** `{colors.surface}` is a focused work surface held on the canvas.
-- **Field surface:** `{colors.field-surface}` is the quiet control and row
-  surface.
-- **Sunken:** `{colors.sunken}` is the week ribbon and inactive structure.
-- **Ink:** `{colors.ink}`, `{colors.ink-secondary}`, and `{colors.ink-muted}`
-  form the primary, supporting, and muted text hierarchy in light mode; dark
-  mode inverts them.
-- **Borders:** `{colors.border}` is the ordinary rule; `{colors.field-border}`
-  separates controls from their surrounding surface.
-- **Navigation:** the `nav-*` tokens carry the restrained cobalt accent in
-  active context while keeping the shell surface neutral.
+Fitness (CTL) `{colors.metric-fitness}` is the trace, fatigue (ATL)
+`{colors.metric-fatigue}`, and form (TSB) `{colors.metric-form}`. These three are
+reserved for load charts and their legends.
 
-**The Monolith Roles Rule.** Contrast owns forward action and major work
-surfaces. Cobalt is reserved for the mark and subtle interaction feedback. Status colors
-explain what happened; they do not compete with the next action.
+### Intensity zones
+
+`{colors.zone-1}` through `{colors.zone-5}` run cool to hot, mirrored in
+`lib/tempo-blocks.ts` (tints are the same hue at 16% alpha). Used by
+`SessionBlockBar`, block details, and the `.ink-zone-N` classes. Zone color
+always travels with a "Z1" to "Z5" label or accessible text.
 
 ## Typography
 
-**Display Font:** Schibsted Grotesk (with `system-ui`, `sans-serif` fallback)
+**Font:** Instrument Sans, loaded in `app/layout.tsx` as `--font-body`, with
+`ui-sans-serif`, `system-ui` fallback. One family throughout.
 
-**Body Font:** Schibsted Grotesk (with `system-ui`, `sans-serif` fallback)
+- **Page heading:** `pageHeadingClassName`; 28px, 30px from `sm`, weight 500,
+  `-0.02em`, balanced wrap.
+- **Section heading:** `sectionHeadingClassName`; 16px, weight 500.
+- **Body:** 14px, relaxed line height. Muted text is never used for essential
+  instructions.
+- **Labels:** 12 to 13px, weight 500, sentence case. No uppercase tracking labels,
+  eyebrows, or section numbers. `eyebrowClassName` is a small sentence-case line.
+- **Numbers:** apply `.data` (or `MetricText`, `.metric-text`), which sets
+  `tabular-nums`. Required for durations, TSS, RPE, dates, counts, and chart axes.
 
-**Character:** The single family keeps dense training information coherent while
-the lightest loaded weight gives route titles an editorial, studio-like voice. A
-clear scale ladder separates route titles, task labels, metrics, and supporting
-copy without compromising scan speed.
-
-### Hierarchy
-
-- **Display:** use the `display` token for route headings and primary page
-  titles. The selected Home and Workouts compositions use the large Focus
-  heading scale; other routes use the shared `TopBar` scale.
-- **Title:** use the `title` token for section headings and prominent session
-  titles. Shared page headings use `pageHeadingClassName` at 40px desktop and
-  34px mobile on shared routes. Focus Home and Workouts use their own aligned
-  section scale from `app/monolith.css`, with their selected Monolith
-  surface treatments in `app/globals.css`.
-- **Body:** use the `body` token for explanations, notes, and task copy. Keep
-  supporting text readable and do not use muted text for essential instructions.
-- **Label:** use the `label` token for compact metadata, dates, section labels,
-  and status text. Uppercase tracking is functional only when it improves scan
-  order.
-- **Metric:** use the `metric` token or `MetricText` for duration, TSS, dates,
-  counts, and other comparable measurements. Tabular numerals are required.
-
-**The Measurement Rule.** Duration, TSS, RPE, dates, and counts are data. Keep
-their numerals stable and aligned with `MetricText` instead of styling each
-route's metrics as a new visual object.
+**The Reading Rule.** A value is label, then a large tabular figure, then a quiet
+unit at `0.5em` in ink 3, then optional detail. Do not restyle each route's
+metrics as a new object; use `StatTile`.
 
 ## Layout
 
-The product is a week-first workspace, not a marketing canvas. `PageShell` in
-`components/ui.tsx` remains the shared frame for most signed-in routes. Athlete
-Home and Workouts use the selected Focus composition, backed by the real data
-and editor owners. The `page-layout`
-rules and `--page-*` tokens in `app/globals.css` own the centered 1800px maximum,
-20px mobile / 24px desktop / 32px large-screen gutters and matching top padding,
-64px desktop minimum header band (content-sized on mobile), and 24px page-group gap. `TopBar` top-aligns titles and actions.
-Descriptions, long titles, zoom, and narrow screens may grow the band to preserve
-content rather than clipping it. Content below the header can use shared
-maximum measures of 860px for compact account forms, 960px for session detail,
-and 1080px for activity and template libraries. The selected Workout library
-uses a rounded work panel and responsive compact-card grid, reaching three
-columns when space permits. These
-sections stay fluid below their maximum and center within the page frame when
-there is extra horizontal space. Workout and template editors use the full available frame width when
-active; the workout basics step keeps its centered 46rem panel. Home, Calendar,
-and Planner retain the full available frame width. None of these content
-measures moves the page heading or outer content anchor. Authentication
-uses the separate `AuthPageShell` reading-width frame.
+`PageShell` centers one `1440px` wall with `20px` inline padding, `28px` from
+`sm`, and `40px` from `lg`. Content is left-aligned inside it: `narrow`
+`max-w-3xl`, `default` `max-w-5xl`, `wide` `1140px`, `wall` full width. `TopBar`
+reserves a `64px` header band. Rhythm between page groups is `24px`. Content
+columns keep `min-width: 0`. Weeks always start on Monday.
 
-### Return Navigation
+### Shell
 
-Pages and nested editing states with a clear parent use the shared 40px (44px on mobile)
-icon-only `BackControl`. At page level, `TopBar` places its left arrow inline
-immediately before the title so the control adds no header row. Its accessible
-name and hover hint identify the destination; navigation uses an explicit
-parent URL and preserves relevant entry context. Main destinations reachable
-from workspace navigation do not repeat a back control. Nested editors place
-the same control beside their local heading and preserve any draft safeguards.
-
-Personal Calendar owns browsing and scheduling in one Monday-first week or
-month surface. Keep the page-level Add session action above the compact period
-toolbar, with previous/next, Today, Select days, and Week/Month controls. The seven-column
-grid uses fluid columns without a fixed minimum width. At viewport widths of
-1200px and above, inline scheduling occupies a 320px right rail with a 24px
-gap. Below 1200px, the date grid precedes the composer and selected-day agenda
-in natural page flow; the composer is capped at 640px. Week sessions move from
-day columns to a date strip and selected-day agenda below that viewport
-breakpoint or at 1000px or less of calendar container width. Month cells show
-counts in place of previews below 640px viewport width or at 600px or less of
-month grid width. Phone date buttons retain 72px height, and the
-toolbar wraps without clipping controls. Month cells preview one session and
-an additional count, with a 96px minimum height on wide calendars. Month browsing
-places its summary and selected-day agenda in a 280px right rail above 1200px;
-on narrower screens these follow the grid. Today uses a quiet neutral plane and
-a small text label beside the date, without a full-cell outline. Selection uses
-a subtle field border with stable padding. Select days exposes a count and clear/cancel
-controls, then carries the dates into scheduling; routines preview a full week or month.
-Preserve page scrolling and bottom
-navigation clearance rather than fitting all dates and scheduling controls
-into a fixed viewport.
-
-The coach Planner retains the shared `PlannerDesk` composition. It adapts to the actual page container: below 900px its source, calendar,
-and selection panels stack; from 900px the source and selection share a 240px
-rail alongside the calendar; from 1400px they flank it in three columns. The
-seven-day grid has no fixed minimum width. Month height responds to viewport
-height and always shows every week.
-Day cells preview one session and an additional count; the selection panel owns
-full details. Narrow calendars show counts instead of session titles. Source
-results may scroll independently on desktop once their list exceeds 320px;
-search, creation links, and selected-day details remain outside that scroll
-area. Small screens and enlarged text retain
-natural page scrolling; never hide content to force the whole page into a viewport.
-
-Desktop shows a `228px` viewport-bounded sidebar from the `md` breakpoint
-(`768px`) upward. Hide menu releases the whole sidebar column to the page;
-the browser remembers this preference across pages and reloads. A sticky
-Show menu control at the top left restores it without obscuring page actions.
-The sidebar owns primary navigation and local overflow; the
-content column must remain `min-width: 0`. Below that breakpoint, secondary
-navigation moves into a focus-managed drawer and the first four role-aware
-destinations become a fixed bottom navigation with four destinations and an icon-only menu control. Mobile content keeps
-bottom space for that navigation and never relies on hover.
-
-Training weeks always render Monday first. Home composes around the week,
-Calendar joins week/month browsing with contextual scheduling, Workouts and
-Session retain scheduled context, and coach Planner uses a month-first
-assignment desk with selected workout dates and Monday-starting training plans.
-Home uses a content-sized Today panel and compact optional readouts alongside
-a complete week ledger. The ledger has no fixed height or internal scrollbar;
-session titles wrap above their duration and state. Below 880px available
-content width the two groups stack. Disabled readouts reserve no grid space.
-Home and Workouts reuse the shared page gutters, and workout library columns
-fit their available width with a 280px preferred minimum, shrinking to one
-fluid column on phones. Preferences uses a 640px reading width; Profile keeps
-its 860px form width. Workouts hides its library while the production editor is active; returning
-to the library preserves the shared page context. Controls wrap without hiding save or navigation actions.
-
-Use the route-specific current-day treatment described under Workout / Session
-Language. Keep it independent of selection; expose selected Calendar and Planner dates
-through their button state. Preserve
-accessible current-date semantics and spoken labels; reserve “Today” text for
-headings and navigation actions.
+- **Desktop (from `md`, 768px):** fixed sidebar, `14rem` wide, collapsible to a
+  `3.75rem` icon rail. Width is the `--sidebar` variable; `.with-sidebar` pads the
+  content to match, animating 200ms with `--ease-out-expo`.
+- **Rail state:** persisted in `localStorage` under `tempo:sidebar`
+  (`lib/sidebar-state.ts`) and applied before paint as
+  `html[data-sidebar='rail']` so there is no layout jump. Style rail-dependent
+  parts with the `rail:` Tailwind variant (`@custom-variant` in `globals.css`,
+  desktop only), for example `rail:hidden` on labels and `rail:justify-center`
+  on items. In rail mode icons keep accessible names and titles.
+- **Mobile (below `md`):** sticky top bar with brand mark and a menu button
+  (44px), opening a drawer with overlay, Escape-to-close, focus return to the
+  menu button, and body scroll lock. A fixed bottom nav shows five icon items
+  with labels and a safe-area inset.
+- **Landmarks:** a "Skip to content" link first in tab order, and
+  `<main id="main">`.
+- `BrandMark` is the Tempo mark: a pace line in a 28px outlined square, trace
+  colored. Do not add route-local primary navigation or a second shell.
 
 ## Elevation & Depth
 
-Tempo is quiet and high contrast. Ordinary pages, rows, fields, and surfaces
-use tonal layering and one-pixel borders. The light canvas is a pale neutral
-`#F5F6F5` beneath white panels and lightly recessed `#F8F9F8` controls. Dark
-mode separates the `#080909` canvas, `#171919` work panels, `#202323` Today
-plane, and `#222424` fields. The shared inset highlight gives panel edges a
-subtle material cue without making repeated rows float. `--shadow-raised` is for a small number of
-persistently raised settings or utility surfaces. `--shadow-overlay` is for
-menus, dialogs, drawers, and other layers that must clearly sit above the page.
-Do not add a shadow to make a repeated content row feel more important.
-
-**The Depth Rule.** A surface earns outer elevation only when it is raised
-by state or interaction, such as a menu, drawer, or dialog. Regular work panels
-rely on tonal contrast and a fine rule.
-
-Repeated content does not need a separate enclosing surface for every item.
-Use open rows with spacing and a fine separator for activity history and other
-reading-first collections. Keep a frame when it helps users recognize an active
-work area, a control group, a date cell, or a compact interactive library card.
+Depth is tonal, not shadowed. Tiles are surface plus a one-pixel rule. Interactive
+tiles lift to raised plus rule-strong with `--shadow-raised` on hover.
+`--shadow-overlay` is for menus, dialogs, and drawers. `--shadow-inset` is a faint
+top highlight only. Do not add a shadow to make a repeated row feel important.
 
 ## Shapes
 
-The form language uses rounded but disciplined geometry. Compact controls use
-9px, normal buttons and fields 10px, common surfaces and library cards 16px,
-and focused Home or Workouts panels 20–24px. Status indicators use pill
-geometry. Borders remain semantic one-pixel rules.
-
-Training chart bars use the shared `--radius-chart-bar` token (4px) on their
-top corners and keep a flat baseline. Apply this cap to workout timelines,
-authoring bars, session structure, recorded metrics and recent load; preserve
-duration widths, intensity heights and missing/zero-value gaps. Calendar
-intensity swatches use subtle 2px corners.
-
-Avoid mixing unrelated radius values within one control group. Keep the 40px
-minimum control height for ordinary actions and fields; compact actions use 32px
-in dense toolbars where the surrounding context already provides sufficient room.
+- **Tiles and surfaces:** `rounded-2xl` via `.tile`.
+- **Controls and fields:** `rounded-lg`. Standard is 40px tall; compact is 32px
+  tall for dense toolbars and menus with surrounding room.
+- **Switch options and compact segments:** `rounded-md`.
+- **Chips, badges, avatars, icon step buttons:** full pill or circle.
+- Borders are one-pixel rules, not ornament. Avoid mixing unrelated radii within
+  one control group.
 
 ## Components
 
 ### Buttons
 
-Buttons are tactile, direct task controls. A near-white or near-black fill
-marks the forward action, according to the theme. Use the shared class
-names exported by `components/ui.tsx` rather than restyling buttons in a route.
+Use the exports in `components/ui.tsx`; do not restyle buttons in a route.
 
-- **Primary:** contrasting signal background and text, 10px radius, and a 40px
-  minimum height with a 13px label. Use for the one forward action in
-  the current task.
-- **Secondary:** surface tone, ordinary border, ink text, and the same target
-  size and label scale. Use for adjacent or reversible actions.
-- **Compact:** the compact primary/secondary/danger classes are for dense lists,
-  editor command strips, menus, and navigation. They keep the same hierarchy at
-  a smaller 32px height with a 12px sentence-case label and no raised shadow.
-  Do not use them for a button that submits, cancels, clears, copies, or
-  destructively changes a form with 40px fields; those actions use the matching
-  standard 40px tone so the row reads as one instrument.
-- **Danger:** danger tint, danger border, and danger text. Confirm actions that
-  can discard or delete work. It uses the same 10px control radius and sizing
-  tiers as the other tones.
-- **Ghost:** text-only actions use the shared ghost class at the standard or
-  compact height. They are for inline recovery and contextual links, not a new
-  visual button size.
-- **Segmented choices:** role, view, and comparison choices use the standard or
-  compact height matrix rather than padding-only sizing.
-- **Editor content controls:** preset cards and block selectors may be taller
-  when their labels and descriptions are the content being selected. They are
-  not general-purpose CTA variants.
-- **Focus and disabled:** every button keeps a visible signal focus ring;
-  disabled controls remain legible and expose their unavailable state.
+- **Primary:** trace fill, `{colors.trace-ink}` text, 40px. Exactly one forward
+  action per task.
+- **Secondary:** transparent, rule-strong border, ink 1 text; raised on hover.
+- **Danger:** danger tint, border, and text. Confirm actions that discard work.
+- **Ghost:** trace text, tint on hover, standard or compact.
+- **Compact:** 32px, 13px label, for dense lists and command strips. Do not use
+  compact buttons beside 40px fields in a form; use the standard tone so the row
+  reads as one instrument.
+- **Icon step button:** `iconButtonClassName`, a round 40px outlined button for
+  period navigation (previous/next week or month). Needs an `aria-label`.
+- **Segmented choice:** `getSegmentedChoiceClassName` for form-like selection;
+  selected uses trace tint and border.
+- **Segmented switch:** `switchTrackClassName` (raised track, `p-0.5`, `gap-0.5`)
+  with `getSwitchOptionClassName(selected)`: the active option is lifted on
+  rule-strong with ink 1 text; inactive is ink 3. Use for view and range
+  switching, not for form values.
+- **Focus and disabled:** every button shows a visible trace ring with offset
+  from the ground; disabled stays legible at reduced opacity.
 
-### Cards / Containers
+### Tiles
 
-Containers organize a task; they are not a page template. Repeated content reads
-as channels and study tiles inside the studio rather than a grid of floating
-dashboard cards.
+- **`Surface`:** `.tile rounded-2xl p-5` for grouped content.
+- **`StatTile`:** the square of reading, `min-h 7.5rem`, label at the top, value
+  pinned low, optional detail. Detail `tone` is `good` (green), `watch` (amber),
+  or `neutral` (ink 3); neutral is the default and carries no signal.
+- **Interactive tiles** (`a.tile`, `button.tile`, `.tile--interactive`) raise on
+  hover and need a visible focus state.
+- **`EmptyState`:** a dashed `.tile-empty` with a short title, one line of
+  explanation, and a recovery action when one exists. Place it where the content
+  would have been.
+- **`Badge`:** pill, 24px minimum, tone neutral, brand, success, or warning, with
+  text always present.
+- **`SessionRow`:** the shared workout unit across Home, Calendar, Workouts, and
+  week surfaces (`default`, `compact`, `month`). The whole row is the link; a thin
+  trace line grows on its left edge on hover and focus.
 
-- **Surface:** use `Surface` from `components/ui.tsx` for ordinary grouped
-  content. It is a bordered tonal work surface using the 16px surface radius.
-- **Session row:** use `SessionRow` for navigable workout summaries. The whole
-  row is the link; `default` uses the field radius, while `compact`, `calendar`,
-  and `month` use the compact radius. Calendar variants highlight the row
-  border and surface on hover and keyboard focus without the animated leading
-  stripe.
-- **Empty state:** use `EmptyState` beside the task that produced the empty
-  result, with a recovery action when one exists.
-- **Selection:** selected editor blocks and selected sessions use the liquid
-  tint and border; do not create a new selected-card treatment.
+### Fields
 
-### Inputs / Fields
-
-Inputs use the shared `formFieldClassName`, `formSelectClassName`, and
-`formTextareaClassName` exports. Ordinary inputs and selects use a 40px control
-height, 13px text, 10px radius, field surface, semantic border, and a visible
-focus ring. Textareas use the same type and surface language
-with extra vertical room for writing. Labels remain explicit and use the 13px
-form label scale; placeholder text is supporting copy, never the only label.
-Mobile forms keep save and destructive actions reachable without requiring a
-horizontal layout.
+`formFieldClassName`, `formSelectClassName`, `formTextareaClassName`: 40px,
+`rounded-lg`, field surface, rule-strong border, 14px text, trace border and
+40% trace ring on focus. Labels are explicit (`formLabelClassName`, 13px, ink 2);
+placeholders are never the only label. Mobile forms keep save and destructive
+actions reachable.
 
 ### Navigation
 
-`AppShell` and `AppSidebar` own authenticated navigation. Desktop uses a sticky
-228px sidebar with a near-black surface in dark mode and a white surface in
-light mode. Hide menu and Show menu use panel-direction icons and explicit
-accessible names and hover hints; reserve back arrows for returning to a page. Hidden desktop navigation
-leaves no rail or focusable links. Its active tint and identity cue use cobalt. The sidebar theme switch saves a user's light or
-dark choice locally. Mobile uses a drawer with an overlay, Escape-to-close,
-focus containment, and a fixed bottom bar with four primary destinations.
-Mobile uses the icon-only menu control in the bottom bar instead of a sticky
-top row. Right swipe from the interior left-edge band (20–48px) opens the drawer;
-left swipe inside closes it. Vertical scrolling, inputs and dialogs are excluded.
-The outer edge remains available for browser history. The desktop top-left
-Show menu control remains reachable when scrolling. Drawer
-dismissal restores focus, releases scroll lock, and retains the separate desktop
-preference. Route changes and crossing into desktop close the drawer; hidden
-page content is inert while it is open. Menu controls have 44px touch targets
-and honor safe areas and reduced motion. Do not add route-local
-primary navigation or a second shell. Page headers should not repeat sibling
-workspace destinations; reserve their actions for the current page's task or
-for contextual return and execution controls.
+`AppShell`, `AppSidebar`, and `AppProfileMenu` own authenticated navigation.
+Items are `rounded-lg`, 36px on desktop and 44px on mobile, ink 2 at rest, raised
+fill and ink 1 when active, with a trace icon or marker for the current page. The
+profile menu sits at the sidebar foot and collapses to an avatar in the rail.
+Page headers do not repeat sibling destinations.
 
-### Workout / Session Language
+### Charts and data
 
-Imported running-file interpretation reuses `SessionBlockBar` for detected
-effort structure: width represents actual duration, height and color represent
-estimated intensity, and unknown intensity remains neutral. Keep the intensity
-basis and actual-duration label visible. Present likely intent separately from
-recorded measurements and user-confirmed intent; supporting repetitions belong
-in a disclosure with a locally scrolling table on narrow screens. Reuse shared
-actions and fields for confirmation.
+Charts are hand-written SVG, not a charting library.
 
-- Home uses `HomeTrainingReadouts` for separate Scheduled and Completed summaries
-  and the latest four activity loads. Show estimated TSS numerically and use
-  proportional bar heights; unavailable values use an em dash and explanatory
-  text, while valid zero has no positive-height bar. Each chart item links to its
-  outcome with title/date/load in its accessible name. Last activity includes
-  date, source and an outcome link. Never call these estimates a fitness trend
-  or call an empty date a planned rest day.
+- Lines are 2px with `vector-effect: non-scaling-stroke`; gridlines use `--rule`;
+  the usual range is a `--band` fill; fitness, fatigue, and form use the
+  metric tokens.
+- On first render the plot sweeps in with `.chart-reveal` (500ms,
+  `--ease-out-expo`).
+- Points are keyboard focusable, show a visible focus state, and expose their
+  value as text. Every chart has a text title and a summary or legend; color is
+  never the only identifier of a series.
+- Axis and value numerals use `.data`.
 
-- `SessionRow` is the shared workout-card unit across Calendar, Planner, and
-  session lists. Focus Home's week ledger and Workouts' library cards use
-  their own compositions over the same data and `SessionBlockBar` language.
-  `default` includes metrics and the timeline, `compact`
-  preserves essential context for a week wall, `calendar` uses a shorter
-  timeline for stacked same-day entries, and `month` shows only what a month
-  grid can support.
-- Coach Planner month cells preview one session on a single row, with a short
-  zone-colored swatch beside its title. The swatch color represents the rounded,
-  duration-weighted average intensity zone; pause time is excluded. Below
-  600px container width they show counts instead. Athlete month calendar cells
-  show up to two single-line session titles, then a remaining-session count;
-  narrow month cells retain a selectable date button and session count, with
-  full details in the selected-day agenda. Calendar week and month rows
-  use the same zone swatch immediately before the session title; week rows retain
-  their session details and recorded heart-rate timeline.
-- Home's current day uses a quiet tinted row; personal Calendar uses a
-  brand-tinted full-day surface. Selected Calendar dates use the field surface
-  and selected border; keep the current-day tint identifiable during selection.
-  Planning Desk marks today on the numeral; selected dates use a tinted
-  full-day surface and inset brand frame, including when today is selected.
-- `SessionBlockBar` uses duration-proportional segments. Segment height and
-  color follow the target within its zone when a percentage is available. Its
-  accessible label carries the zone and block information in text.
-- Imported sessions in the week Calendar use `ActivityIntensityBars` when
-  heart-rate samples are available. Equal-width, minute-aligned bins follow the
-  recorded session duration and widen only for long activities to cap the chart
-  at 48 bars. Bar height follows the recorded heart-rate range, and saved HRmax
-  enables Olympiatoppen zone colors. Without HRmax, the chart stays neutral
-  and does not imply calibrated zones. Missing samples remain visible as gaps.
-  Calendar rows keep average bpm visible and move bin duration into the chart's
-  accessible label; hover text carries each bin's time, average, and
-  range. Month rows keep their title-only summary.
-- `ActivityMetricBars` keeps recorded heart rate, pace/speed, power, cadence,
-  temperature, elevation, and grade in a bar-based visual language. Time-based
-  metrics use one-minute buckets (five minutes for temperature); terrain uses
-  50 m distance buckets and widens only to cap a long chart. Pace omits
-  near-stationary readings below 0.5 m/s, averages from the underlying speeds,
-  and scales bars to the central 90% of samples so outliers do not flatten the
-  chart. Faster pace intervals still use taller bars; the interval table keeps
-  the accepted sample range. Each chart has average/range context and an
-  expandable interval table so the graph is not the only way to read values.
-- Session detail uses a compact structure overview. Fold identical consecutive
-  efforts/recoveries and repeated sets, retaining explicit warm-up/cool-down,
-  repeat counts and whether recovery follows the final effort. The diagram is
-  a structure schematic; it does not imply a duration-proportional full timeline.
-  Selecting an effort or pause reveals its target, duration and notes below.
-  Details start collapsed, keep keyboard/touch controls, and expose every
-  original block through the inspector selector. Different instructions and
-  skipped blocks must remain distinct. Resolve relative targets from Profile
-  and retain the reference alongside the resolved value.
-  For imported FIT and Strava sessions, recorded sensor charts follow the workout
-  overview so the athlete can compare planned structure with measured activity.
-  An import without a matched workout uses a single-column activity overview
-  with recorded duration and load, followed by its available measurements and
-  any saved activity notes. It omits plan-only context and the empty plan
-  canvas and block list.
-- `StatusBadge` shows planned, adjusted, or missed text states. Completed work
-  does not need a repeated completed badge.
-- `MetricText` provides tabular numerals. `Stepper` owns ordered live execution
-  and `Toggle` owns switch semantics and its focus treatment.
+### Workout language
+
+`SessionBlockBar` uses duration-proportional segments; height and color map to
+Zone 1 to Zone 5, with an accessible label carrying the same information in text.
+When no segments exist, omit the bar instead of rendering an empty image.
+`StatusBadge` shows planned, adjusted, or missed as text. Completed work does not
+need a repeated completed badge. `WorkoutBuilder` is the canonical authoring
+surface (palette, canvas, inspector); drag reordering must always have keyboard
+and explicit earlier/later alternatives.
+
+### Loading and empty
+
+Loading uses `.skeleton`, a raised block with a slow opacity "breathe" (1.6s),
+shaped like the content it replaces. No spinners over content that has a known
+shape. Empty is `.tile-empty` (above).
+
+## Motion
+
+- Hover, focus, and state changes: 150 to 200ms, `ease-out`.
+- Reveals and layout moves (sidebar width, chart sweep): `--ease-out-expo`,
+  200 to 500ms.
+- Buttons press to `scale(0.98)`. Nothing loops except the skeleton.
+- Everything honors `prefers-reduced-motion`: durations collapse to near zero
+  globally, and state is still conveyed by color, text, or position.
+
+## Copy
+
+Terse, sentence case, and specific. Say what the thing is, then what to do. No
+exclamation marks, filler, emoji, or decorative glyphs; use the icon set
+(`lucide-react`, 1.5 to 1.6 stroke).
+
+## Accessibility
+
+- Focus: `:focus-visible` is a 2px trace outline with 2px offset; buttons use a
+  2px trace ring with ground offset. Never remove it.
+- Targets: 40px for ordinary controls, 44px for touch on mobile (menu button,
+  nav rows, bottom nav items at 48px). 32px compact controls only where the
+  surrounding context gives room.
+- Labels: every control has a visible or accessible name; icon-only controls
+  need `aria-label`.
+- State is text, shape, or position plus color, never color alone.
+- Contrast: ink 1, 2, and 3 on ground all pass AA; signal colors are tuned for
+  the dark ground and pass for text.
+- Keyboard: drawer traps focus and returns it; drag and drop is never the only
+  path.
+
+## Do's and Don'ts
+
+### Do:
+
+- **Do** read `DESIGN.md`, then `app/globals.css` and the shared owner, before
+  adding tokens or primitives.
+- **Do** reuse `PageShell`, `TopBar`, `Surface`, `StatTile`, `Badge`,
+  `EmptyState`, `SessionRow`, `SessionBlockBar`, `MetricText`, and the shared
+  button, switch, and field classes.
+- **Do** use semantic CSS variables instead of inline colors or shadows.
+- **Do** keep the current week, session state, and next action in one context.
+- **Do** reserve trace for one thing per view that is active or primary.
+
+### Don't:
+
+- **Don't** reintroduce a light theme, paper textures, indigo ink, or uppercase
+  tracked labels.
+- **Don't** copy the look of `/design/*` previews into production.
+- **Don't** turn every region into a floating card; prefer rules and spacing.
+- **Don't** color neutral metrics, or use green and amber without meaning.
+- **Don't** add gradients, decorative shadows, oversized hero metrics, charting
+  libraries, or extra accent roles.
+- **Don't** use color alone for planned, completed, adjusted, missed, loading,
+  error, or success states.
+
+## Interaction Feedback
+
+Before an action, show its target and consequence. During it, distinguish
+selection, dragging, and pending persistence. Afterward, make the result easy to
+locate. Drags indicate the insertion point and resolve visibly; reduced motion
+keeps a clear static cue. Local drafts are never presented as saved. Show
+operation-specific pending, success, and failure text at the affected block,
+session, or date; preserve drafts on failure, offer recovery, and confirm server
+persistence before claiming a save.
+
+### Mobile action clearance
+
+`--mobile-nav-clearance` reserves the bottom navigation and device safe area.
+Mobile sticky editor actions sit above that clearance. The shell reserves one
+additional rem of content padding, so the final field remains reachable.
+Desktop sticky actions use the viewport bottom.
+
+## Feature contracts (carried from main)
 
 ### Personal Calendar scheduling
 
@@ -664,42 +531,7 @@ navigation, with content space reserved below the form. Workout blocks show
 the selected zone's resolved target and keep other target systems out of that
 block's readout.
 
-## Do's and Don'ts
-
-### Do:
-
-- **Do** start from `DESIGN.md`, then inspect `app/globals.css` and the shared
-  component owner before creating new visual tokens or primitives.
-- **Do** keep the current week, current day, session state, and next action in
-  one context when the task requires them together.
-- **Do** reuse `PageShell`, `TopBar`, shared button and field classes, `Surface`,
-  `SessionRow`, `StatusBadge`, `MetricText`, and `SessionBlockBar`.
-- **Do** pair every color state with text, structure, or an accessible label.
-- **Do** preserve keyboard focus, reduced-motion behavior, explicit labels,
-  readable contrast, and 40px standard action targets. Reserve 32px compact
-  controls for dense contexts with surrounding room.
-- **Do** use `app/globals.css` semantic variables when a token exists instead
-  of introducing an inline color or shadow.
-
-### Don't:
-
-- **Don't** copy the palette, rounded geometry, or dashboard composition from
-  unrelated developer-only `/design/*` experiments. Monolith is the sole
-  production direction.
-- **Don't** invent a route-local card grammar when a shared session or surface
-  primitive already fits.
-- **Don't** make every bordered region a floating card, or every secondary
-  action as prominent as the primary action.
-- **Don't** use color alone for planned, completed, adjusted, missed, loading,
-  error, permission, or success states.
-- **Don't** add gradients, decorative shadows, oversized hero metrics, or extra
-  accent roles to ordinary authenticated product screens.
-- **Don't** use decorative eyebrow labels, section numbers, emoji, or Unicode
-  glyphs as substitutes for hierarchy and the established icon system.
-- **Don't** add a new token before checking whether the semantic token in
-  `app/globals.css` already expresses the state.
-
-## Interaction Feedback Contract
+## Feature feedback contracts
 
 In the workout editor, chart bar height follows the block's numeric target within its zone. Adjacent values within one zone should be distinguishable; a pause remains a short visible mark above the baseline. Keep session-wide target configuration beside the sport selector and individual adjustments immediately below the block's zone selector. Resolve profile pace bounds and HRmax percentages for the current user, and expose only the current block's relevant pace or heart-rate target in its inspector and spoken chart label.
 
@@ -738,7 +570,7 @@ bottom navigation and Profile save actions; sync errors do not overlap notices.
 ### Home training setup
 
 Incomplete personal training targets appear in an inline, neutral-surface section
-above Today. Keep the Monolith treatment: a restrained cobalt outline and icon,
+above Today. Keep the Night Instrument treatment: a restrained cobalt outline and icon,
 shared field and button classes, rounded surface corners, and wrapping controls.
 Choose sports first, then maximum heart rate, then only the selected sports'
 targets. Show calculated heart-rate and running-pace previews beside their inputs;
@@ -755,7 +587,7 @@ are saved, hide the setup section and leave subsequent editing in Profile.
 
 ### Personal training templates
 
-Use the established Monolith surfaces and shared controls. Personal Templates
+Use the established Night Instrument surfaces and shared controls. Personal Templates
 is a routine composer, using existing library workouts rather than the block
 editor. Keep name and optional purpose together, followed by one saved-workout
 picker with multi-weekday selection and an ordered Monday–Sunday outline.

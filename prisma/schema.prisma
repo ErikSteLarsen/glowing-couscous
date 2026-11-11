@@ -40,6 +40,7 @@ model User {
   trainingPlanAssignmentsReceived TrainingPlanAssignment[] @relation("TrainingPlanAssignmentAthlete")
   trainingPlanAssignmentsSent     TrainingPlanAssignment[] @relation("TrainingPlanAssignmentAssigner")
   shareLinksCreated               ShareLink[]              @relation("ShareLinkCreator")
+  events                          AthleteEvent[]             @relation("AthleteEvents")
   placementRequests               PlacementRequest[]
   stravaConnection                StravaConnection?
   passwordResetToken              PasswordResetToken?
@@ -207,6 +208,7 @@ model Session {
 model Block {
   id                Int       @id @default(autoincrement())
   sessionId         Int?
+  templateId        Int?
   kind              String
   zone              Int
   durationSec       Int
@@ -222,34 +224,43 @@ model Block {
   skipped           Boolean   @default(false)
   sortOrder         Int
   session           Session?  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  template          Template? @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@index([sessionId, sortOrder])
+  @@index([templateId, sortOrder])
 }
 
 model Template {
   id         Int         @id @default(autoincrement())
   ownerId    Int
   name       String
+  sport      String      @default("RUNNING")
+  cadence    String      @default("day")
   summary    String?
   routineJson String
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
   owner      User        @relation("TemplateOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   sessions   Session[]
+  blocks     Block[]
+  shareLinks ShareLink[] @relation("TemplateShareLinks")
 }
 
 model ShareLink {
   id           Int       @id @default(autoincrement())
   tokenHash    String    @unique
   sessionId    Int?
+  templateId   Int?
   createdById  Int?
   ownerDeleted Boolean   @default(false)
   snapshotJson String
   createdAt    DateTime  @default(now())
   session      Session?  @relation("SessionShareLinks", fields: [sessionId], references: [id], onDelete: Cascade)
+  template     Template? @relation("TemplateShareLinks", fields: [templateId], references: [id], onDelete: Cascade)
   createdBy    User?     @relation("ShareLinkCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([sessionId])
+  @@index([templateId])
   @@index([createdById])
 }
 
@@ -258,12 +269,15 @@ model Activity {
   sessionId            Int      @unique
   athleteId            Int
   completedAt          DateTime
+  startedAt            DateTime?
+  sourceTimezoneOffsetMinutes Int?
   durationSec          Int
-  tss                  Int
+  tss                  Int?
   compliancePct        Int?
   zoneDistributionJson String
   segmentsJson         String
   metricsSource        String   @default("manual-planned")
+  manualEntryKey       String?  @unique
   notes                String?
   actualSnapshotJson   String?
   telemetryJson        String?
@@ -281,8 +295,11 @@ model Activity {
   session              Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   athlete              User     @relation("AthleteActivities", fields: [athleteId], references: [id], onDelete: Cascade)
   analysis             ActivityAnalysis?
+  eventId              Int?
+  event                AthleteEvent? @relation("EventActivities", fields: [eventId], references: [id], onDelete: SetNull)
 
   @@index([athleteId, completedAt])
+  @@index([eventId])
   @@unique([athleteId, importFingerprint])
   @@unique([athleteId, externalSource, externalActivityId])
 }
@@ -402,4 +419,21 @@ model Assignment {
   @@unique([sessionId, athleteId])
   @@unique([sourceSessionId, athleteId, targetDate])
   @@index([athleteId, assignedAt])
+}
+
+model AthleteEvent {
+  id                  Int      @id @default(autoincrement())
+  athleteId           Int
+  title               String
+  sport               String
+  eventDate           DateTime
+  targetFinishSec     Int?
+  resultFinishSec     Int?
+  resultNote          String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  athlete             User     @relation("AthleteEvents", fields: [athleteId], references: [id], onDelete: Cascade)
+  activities          Activity[] @relation("EventActivities")
+
+  @@index([athleteId, eventDate])
 }

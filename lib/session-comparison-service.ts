@@ -7,7 +7,7 @@ type ComparisonSession = {
   id: number;
   athleteId: number | null;
   coachBaselineJson: string | null;
-  activity: { actualSnapshotJson: string | null } | null;
+  activity: { actualSnapshotJson: string | null; metricsSource: string } | null;
   athlete: { coachId: number | null } | null;
 };
 
@@ -38,7 +38,7 @@ export function createSessionComparisonService({
           id: true,
           athleteId: true,
           coachBaselineJson: true,
-          activity: { select: { actualSnapshotJson: true } },
+          activity: { select: { actualSnapshotJson: true, metricsSource: true } },
           athlete: { select: { coachId: true } },
         },
       });
@@ -46,6 +46,7 @@ export function createSessionComparisonService({
         ? session.athleteId === actor.userId
         : session.athlete?.coachId === actor.userId);
       if (!authorized) return { ok: false, status: 404, error: 'Session not found' };
+      if (session.activity && ['manual-paired', 'manual-unplanned', 'tcx-import', 'fit-import', 'gpx-import'].includes(session.activity.metricsSource)) return { ok: false, status: 404, error: 'Structured comparison is unavailable for summary-only activities.' };
 
       const snapshots = projectSessionSnapshotJson(session.coachBaselineJson, session.activity?.actualSnapshotJson);
       return {

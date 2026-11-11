@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -94,7 +95,6 @@ export function WorkoutLibraryClient({
   const [draft, setDraft] = useState<SessionEditorDraft>(() => initialWorkout
     ? createSessionEditorDraftFromPersisted('create', { ...initialWorkout, date: null, scheduledDate: null })
     : createNewDraft());
-  const [builderDetailsVisible, setBuilderDetailsVisible] = useState(() => initialWorkout !== null);
   const [guidedFormOpen, setGuidedFormOpen] = useState(false);
   const [guidedInfo, setGuidedInfo] = useState<GuidedWorkoutInfo | null>(null);
   const clientMounted = useSyncExternalStore(subscribeToNothing, clientSnapshot, serverSnapshot);
@@ -116,7 +116,7 @@ export function WorkoutLibraryClient({
     setRevision(original && !asCopy ? currentRevision : '');
     setDraft({ ...recovered.draft, id: original && !asCopy ? original.id : null, mode: 'create', scheduledDate: null, planWeekday: null });
     setRequestKey(asCopy || !recovered.requestKey ? crypto.randomUUID() : recovered.requestKey);
-    setIsDirty(true); setEditorOpen(true); setBuilderDetailsVisible(Boolean(recovered.draft.blocks.length));
+    setIsDirty(true); setEditorOpen(true);
     recovery.restored(record);
     setMessageTone('success');
     setMessage(asCopy ? 'The saved workout changed or was removed. Your draft was restored as a new workout to protect the saved version.' : 'Workout draft restored. Review it before saving.');
@@ -152,7 +152,6 @@ export function WorkoutLibraryClient({
       if (initialWorkoutId !== null) router.replace('/athlete/workouts', { scroll: false });
     }
     setIsDirty(false);
-    setBuilderDetailsVisible(action.kind === 'workout');
     setPendingDraftAction(null);
     setMessage('');
   }
@@ -288,7 +287,6 @@ export function WorkoutLibraryClient({
           setGuidedInfo(info);
           setGuidedFormOpen(false);
           setEditorOpen(true);
-          setBuilderDetailsVisible(true);
           setMessage('');
         }} /> : null}
         <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-5">
@@ -327,45 +325,42 @@ export function WorkoutLibraryClient({
             action={<button type="button" className={secondaryButtonClassName} onClick={() => setFilterText('')}>Clear search</button>}
           />
         ) : (
-          <div className="workout-library-grid">
+          <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
             {visibleWorkouts.map((workout) => {
               const workoutDraft = createSessionEditorDraftFromPersisted('create', { ...workout, date: null, scheduledDate: null });
               const workoutMetrics = deriveSessionEditorMetrics(workoutDraft);
               const selected = editorOpen && selectedWorkoutId === workout.id;
               return (
-                <div key={workout.id} className="flex min-w-0 flex-col gap-1.5">
-                  <div
-                    role="button"
-                    tabIndex={0}
+                <div key={workout.id} className={`py-4 ${selected ? 'bg-[var(--brand-tint)]' : ''}`}>
+                  <button
+                    type="button"
                     aria-current={selected ? 'true' : undefined}
-                    aria-label={selected ? `Editing ${workout.title}` : `Edit workout ${workout.title}`}
                     onClick={() => requestDraftAction({ kind: 'workout', workout })}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        requestDraftAction({ kind: 'workout', workout });
-                      }
-                    }}
-                    className={`workout-library-card group cursor-pointer ${buttonFocusClassName} focus-visible:ring-inset ${selected ? 'workout-library-card--selected' : ''}`}
+                    className={`w-full rounded-lg px-2 text-left ${buttonFocusClassName} focus-visible:ring-inset`}
                   >
-                    <div className="workout-library-card__content">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="break-words text-[13px] font-semibold leading-[1.35] text-[var(--text)]">{workout.title}</p>
-                          <p className="mt-1 text-[12px] text-[var(--text-secondary)]">{getSportLabel(workout.sport)} · Saved in library</p>
-                        </div>
-                        <span className="shrink-0 pt-0.5 text-[11px] text-[var(--text-secondary)] group-hover:text-[var(--brand)]">{selected ? 'Editing' : 'Edit'}</span>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="break-words text-[13px] font-semibold text-[var(--text)]">{workout.title}</p>
+                        <p className="mt-1 text-[12px] text-[var(--text-secondary)]">{getSportLabel(workout.sport)} · Saved in library</p>
                       </div>
-                      <div className="space-y-2">
-                        <SessionBlockBar segments={workoutMetrics.segments} compact />
-                        <div className="flex gap-3 text-[12px] text-[var(--text-secondary)]">
-                          <MetricText>{formatDurationExact(workoutMetrics.durationSec)}</MetricText>
-                          <MetricText>{workoutMetrics.tss} TSS</MetricText>
-                        </div>
+                      <span className="shrink-0 text-[12px] text-[var(--text-secondary)]">{selected ? 'Editing' : 'Edit workout'}</span>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      <SessionBlockBar segments={workoutMetrics.segments} compact />
+                      <div className="flex gap-3 text-[12px] text-[var(--text-secondary)]">
+                        <MetricText>{formatDurationExact(workoutMetrics.durationSec)}</MetricText>
+                        <MetricText>{workoutMetrics.tss} TSS</MetricText>
                       </div>
                     </div>
+                  </button>
+                  <div className="mt-2 flex flex-wrap items-center gap-3 px-2">
+                    {role === 'ATHLETE' ? (
+                      <Link href={`/athlete/planner?source=workout:${workout.id}`} className={`${compactSecondaryButtonClassName} min-h-11`}>
+                        Plan this
+                      </Link>
+                    ) : null}
+                    <ShareLinkButton sourceKind="session" sourceId={workout.id} ariaLabel={`Create a share link for ${workout.title}`} />
                   </div>
-                  {role === 'COACH' ? <div className="px-1"><ShareLinkButton sourceKind="session" sourceId={workout.id} /></div> : null}
                 </div>
               );
             })}
@@ -427,16 +422,14 @@ export function WorkoutLibraryClient({
           summaryPlaceholder="What is this workout for?"
           durationUnit="minutes"
           performanceProfile={performanceProfile}
-          onDetailsVisibilityChange={setBuilderDetailsVisible}
-          showCanvasDraftStatus={false}
           />
-        {builderDetailsVisible ? <div className="sticky bottom-0 z-10 -mx-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3 max-md:bottom-[calc(4.75rem+env(safe-area-inset-bottom))] max-md:z-20">
+        <div className="sticky bottom-0 z-10 -mx-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3 max-md:bottom-[calc(4.75rem+env(safe-area-inset-bottom))] max-md:z-20">
           <button type="button" className={primaryButtonClassName} disabled={isPending || !draft.blocks.some((block) => !block.skipped && block.kind !== 'pause')} onClick={saveWorkout}>
             {isPending ? 'Saving…' : selectedWorkoutId ? 'Save changes' : 'Save workout'}
           </button>
           {!draft.blocks.some((block) => !block.skipped && block.kind !== 'pause') ? <span className="text-xs text-[var(--text-secondary)]">Add an active block to save.</span> : null}
-        </div> : null}
-        {builderDetailsVisible && selectedWorkoutId ? <div className="border-t border-[var(--border)] pt-4"><button type="button" className={dangerButtonClassName} disabled={isPending} onClick={deleteWorkout}>Delete workout from library</button></div> : null}
+        </div>
+        {selectedWorkoutId ? <div className="border-t border-[var(--border)] pt-4"><button type="button" className={dangerButtonClassName} disabled={isPending} onClick={deleteWorkout}>Delete workout from library</button></div> : null}
       </Surface> : null}
     </div>
   );

@@ -220,7 +220,7 @@ test('athlete planner rejects reuse of a request key for a different payload', a
 
   assert.deepEqual(conflict, {
     ok: false,
-    error: 'This placement key was already used for different dates or source content.',
+    error: 'This placement key was already used for different dates, start time, or source content.',
     status: 409,
   });
   assert.equal(state.sessions.length, 1);
@@ -236,6 +236,72 @@ test('placement keys are user-scoped and a new key permits an intentional repeat
 
   assert.equal(state.sessions.length, 3);
   assert.equal(state.requests.size, 3);
+});
+
+test('athlete placement stores a planned start time on every copy', async () => {
+  const { service, state } = createPlacementHarness();
+  const result = await service.assignSource(7, {
+    sourceKind: 'workout',
+    sourceId: 4,
+    dates: ['2026-08-24', '2026-08-26'],
+    requestKey: 'timed-placement',
+    timeLabel: '07:30',
+  });
+
+  assert.deepEqual(result, { ok: true, sessionIds: [30, 31] });
+  assert.deepEqual(state.sessions.map((session) => session.timeLabel), ['07:30', '07:30']);
+});
+
+test('athlete placement without a start time stores an untimed session', async () => {
+  const { service, state } = createPlacementHarness();
+  const result = await service.assignSource(7, {
+    sourceKind: 'workout',
+    sourceId: 4,
+    dates: ['2026-08-24'],
+    requestKey: 'untimed-placement',
+    timeLabel: '',
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(state.sessions[0].timeLabel, null);
+});
+
+test('athlete placement accepts boundary times and rejects anything outside 00:00-23:59 HH:mm before writing', async () => {
+  const { service, state } = createPlacementHarness();
+  const accepted = await service.assignSource(7, {
+    sourceKind: 'workout', sourceId: 4, dates: ['2026-08-24'], requestKey: 'midnight', timeLabel: '00:00',
+  });
+  const lastMinute = await service.assignSource(7, {
+    sourceKind: 'workout', sourceId: 4, dates: ['2026-08-25'], requestKey: 'last-minute', timeLabel: '23:59',
+  });
+  assert.equal(accepted.ok, true);
+  assert.equal(lastMinute.ok, true);
+  assert.deepEqual(state.sessions.map((session) => session.timeLabel), ['00:00', '23:59']);
+
+  for (const timeLabel of ['24:00', '23:60', '7:30', '07:5', '0730', '07:30:00', '12:00 ', ' 12:00', 1230, 'noon']) {
+    const result = await service.assignSource(7, {
+      sourceKind: 'workout', sourceId: 4, dates: ['2026-08-27'], requestKey: `invalid-${String(timeLabel)}`, timeLabel,
+    });
+    assert.deepEqual(result, {
+      ok: false,
+      error: 'Start time must use 24-hour HH:mm from 00:00 to 23:59.',
+      status: 400,
+    }, `expected ${String(timeLabel)} to be rejected`);
+  }
+  assert.equal(state.sessions.length, 2);
+  assert.equal(state.requests.size, 2);
+});
+
+test('athlete placement replay with a different start time is a conflict, not a silent reuse', async () => {
+  const { service, state } = createPlacementHarness();
+  const payload = { sourceKind: 'workout' as const, sourceId: 4, dates: ['2026-08-24'], requestKey: 'time-conflict' };
+  assert.equal((await service.assignSource(7, { ...payload, timeLabel: '07:30' })).ok, true);
+
+  const conflict = await service.assignSource(7, { ...payload, timeLabel: '08:00' });
+  assert.equal(conflict.ok, false);
+  assert.equal(conflict.status, 409);
+  assert.equal(state.sessions.length, 1);
+  assert.equal(state.sessions[0].timeLabel, '07:30');
 });
 
 test('athlete planner rejects incomplete template ranges before any session write', async () => {
@@ -257,7 +323,11 @@ test('athlete placement API and UI carry a stable retry key', async () => {
   const planner = await readFile(path.join(process.cwd(), 'components/PlannerDesk.tsx'), 'utf8');
 
   assert.match(route, /requestKey: body\.value\.requestKey/);
+  assert.match(route, /timeLabel: body\.value\.timeLabel/);
   assert.match(planner, /crypto\.randomUUID\(\)/);
+  assert.match(planner, /formLabelClassName\}>Start time<\/span>/);
+  assert.match(planner, /parsePlannedTime\(startTime\.trim\(\)\)/);
+  assert.match(planner, /Some selected days already have this/);
   assert.match(planner, /placementRequest\.current\?\.signature !== signature/);
   assert.match(planner, /if \(role === 'athlete'\) placementRequest\.current = null/);
 });
@@ -298,4 +368,166 @@ test('routine placement rejects malformed routines and incomplete periods withou
   const broken = createPlacementHarness({ routineJson: '{broken' });
   assert.equal((await broken.service.assignSource(7, { sourceKind: 'template', sourceId: 9, requestKey: 'broken', dates: ['2026-10-05'] })).ok, false);
   assert.equal(broken.state.sessions.length, 0);
+
+test('personal rescheduling persists calendar days, preserves content, and enforces boundaries in SQLite', async (t) => {
+  const { PrismaClient } = await import('@prisma/client');
+  const { mkdtemp, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { execFileSync } = await import('node:child_process');
+  const { format } = await import('date-fns');
+  const directory = await mkdtemp(path.join(tmpdir(), 'tempo-reschedule-'));
+  const databaseUrl = `file:${path.join(directory, 'test.db')}`;
+  const db = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
+  const originalTimezone = process.env.TZ;
+  process.env.TZ = 'Europe/Oslo';
+
+  try {
+    execFileSync(process.execPath, [
+      path.join(process.cwd(), 'node_modules/prisma/build/index.js'),
+      'db', 'push', '--skip-generate', '--schema', path.join(process.cwd(), 'prisma/schema.prisma'),
+    ], { env: { ...process.env, DATABASE_URL: databaseUrl }, stdio: 'pipe' });
+    const athlete = await db.user.create({ data: { email: 'self@example.test', role: 'ATHLETE' } });
+    const other = await db.user.create({ data: { email: 'other@example.test', role: 'ATHLETE' } });
+    const coach = await db.user.create({ data: { email: 'coach@example.test', role: 'COACH' } });
+    const service = createAthletePlannerService({ db });
+    const session = await db.session.create({ data: {
+      athleteId: athlete.id,
+      date: new Date('2026-03-28T07:15:00Z'),
+      sport: 'RUNNING',
+      title: 'Hill intervals',
+      source: 'athlete-library-copy',
+      timeLabel: '08:15',
+      summary: 'Keep the recoveries easy',
+      athleteNotes: 'Bring water',
+      coachBaselineJson: '{"preserved":true}',
+      blocks: { create: sourceBlocks },
+    } });
+
+    await t.test('cross-week DST move preserves local clock time and source content', async () => {
+      const result = await service.rescheduleSession(athlete.id, session.id, { date: '2026-03-30' });
+      assert.deepEqual(result, { ok: true, sessionId: session.id, date: '2026-03-30' });
+      const saved = await db.session.findUniqueOrThrow({ where: { id: session.id }, include: { blocks: true, plan: true } });
+      assert.ok(saved.date);
+      assert.equal(format(saved.date, 'yyyy-MM-dd HH:mm'), '2026-03-30 08:15');
+      assert.equal(saved.date.toISOString(), '2026-03-30T06:15:00.000Z');
+      assert.equal(saved.timeLabel, '08:15');
+      assert.equal(saved.title, session.title);
+      assert.equal(saved.summary, session.summary);
+      assert.equal(saved.athleteNotes, session.athleteNotes);
+      assert.equal(saved.coachBaselineJson, session.coachBaselineJson);
+      assert.equal(saved.blocks[0].durationSec, sourceBlocks[0].durationSec);
+      assert.ok(saved.plan);
+      assert.equal(format(saved.plan.startDate, 'yyyy-MM-dd'), '2026-03-30');
+      assert.equal(format(saved.plan.endDate, 'yyyy-MM-dd'), '2026-04-05');
+    });
+
+    await t.test('impossible dates and another athlete cannot move the session or create weeks', async () => {
+      const before = await db.session.findUniqueOrThrow({ where: { id: session.id } });
+      const planCount = await db.plan.count();
+      for (const date of ['2026-02-30', '2026-04-31', '2026-01-01T00:00:00Z', '', null]) {
+        const result = await service.rescheduleSession(athlete.id, session.id, { date });
+        assert.equal(result.ok, false);
+        if (!result.ok) assert.equal(result.status, 400);
+      }
+      const foreign = await service.rescheduleSession(other.id, session.id, { date: '2026-04-20' });
+      assert.equal(foreign.ok, false);
+      if (!foreign.ok) assert.equal(foreign.status, 404);
+      assert.deepEqual(await db.session.findUniqueOrThrow({ where: { id: session.id } }), before);
+      assert.equal(await db.plan.count(), planCount);
+    });
+
+    await t.test('completed status and coach ownership stay immutable', async () => {
+      for (const patch of [{ status: 'completed' }, { coachOwnerId: coach.id }, { assignedById: coach.id }]) {
+        await db.session.update({ where: { id: session.id }, data: { status: 'planned', coachOwnerId: null, assignedById: null, ...patch } });
+        const before = await db.session.findUniqueOrThrow({ where: { id: session.id } });
+        const result = await service.rescheduleSession(athlete.id, session.id, { date: '2026-04-20' });
+        assert.equal(result.ok, false);
+        if (!result.ok) assert.equal(result.status, 409);
+        assert.deepEqual(await db.session.findUniqueOrThrow({ where: { id: session.id } }), before);
+      }
+    });
+
+    await t.test('an Activity prevents movement even if the session status is still planned', async () => {
+      await db.session.update({ where: { id: session.id }, data: { status: 'planned', coachOwnerId: null, assignedById: null } });
+      await db.activity.create({ data: {
+        athleteId: athlete.id, sessionId: session.id,
+        completedAt: new Date('2026-03-30T06:15:00Z'), durationSec: 1800, tss: 40,
+        zoneDistributionJson: '[]', segmentsJson: '[]',
+      } });
+      const result = await service.rescheduleSession(athlete.id, session.id, { date: '2026-04-20' });
+      assert.equal(result.ok, false);
+      if (!result.ok) assert.equal(result.status, 409);
+      await db.activity.deleteMany({ where: { sessionId: session.id } });
+    });
+
+    await t.test('a negative UTC offset and fall DST still keep the chosen day and local time', async () => {
+      process.env.TZ = 'America/New_York';
+      try {
+        await db.session.update({ where: { id: session.id }, data: { date: new Date('2026-10-31T12:15:00Z') } });
+        const result = await service.rescheduleSession(athlete.id, session.id, { date: '2026-11-02' });
+        assert.equal(result.ok, true);
+        const saved = await db.session.findUniqueOrThrow({ where: { id: session.id }, include: { plan: true } });
+        assert.ok(saved.date);
+        assert.equal(format(saved.date, 'yyyy-MM-dd HH:mm'), '2026-11-02 08:15');
+        assert.equal(saved.date.toISOString(), '2026-11-02T13:15:00.000Z');
+        assert.ok(saved.plan);
+        assert.equal(format(saved.plan.startDate, 'yyyy-MM-dd'), '2026-11-02');
+        assert.equal(format(saved.plan.endDate, 'yyyy-MM-dd'), '2026-11-08');
+      } finally {
+        process.env.TZ = 'Europe/Oslo';
+      }
+    });
+
+    await t.test('a missed self-planned session can be rescheduled and restored to planned', async () => {
+      await db.session.update({ where: { id: session.id }, data: { status: 'missed' } });
+      assert.equal((await service.rescheduleSession(athlete.id, session.id, { date: '2026-04-06' })).ok, true);
+      assert.equal((await db.session.findUniqueOrThrow({ where: { id: session.id } })).status, 'planned');
+    });
+
+    await t.test('session deletion is owner-scoped and refuses completed or coach-assigned work', async () => {
+      const foreign = await service.deleteSession(other.id, session.id);
+      assert.deepEqual(foreign, { ok: false, error: 'Session not found.', status: 404 });
+
+      const source = await db.session.create({ data: {
+        athleteId: athlete.id, date: null, sport: 'RUNNING', title: 'Saved workout', source: 'athlete-library',
+      } });
+      const sourceRefused = await service.deleteSession(athlete.id, source.id);
+      assert.deepEqual(sourceRefused, {
+        ok: false, error: 'Only scheduled sessions can be removed from Planner.', status: 409,
+      });
+      assert.ok(await db.session.findUnique({ where: { id: source.id } }));
+      await db.session.delete({ where: { id: source.id } });
+
+      for (const patch of [{ status: 'completed' }, { coachOwnerId: coach.id }, { assignedById: coach.id }]) {
+        await db.session.update({ where: { id: session.id }, data: { status: 'planned', coachOwnerId: null, assignedById: null, ...patch } });
+        const before = await db.session.findUniqueOrThrow({ where: { id: session.id } });
+        const refused = await service.deleteSession(athlete.id, session.id);
+        assert.equal(refused.ok, false);
+        if (!refused.ok) assert.equal(refused.status, 409);
+        assert.deepEqual(await db.session.findUniqueOrThrow({ where: { id: session.id } }), before);
+      }
+
+      await db.session.update({ where: { id: session.id }, data: { status: 'planned', coachOwnerId: null, assignedById: null } });
+      await db.activity.create({ data: {
+        athleteId: athlete.id, sessionId: session.id,
+        completedAt: new Date('2026-04-06T06:15:00Z'), durationSec: 1800, tss: 40,
+        zoneDistributionJson: '[]', segmentsJson: '[]',
+      } });
+      const activityRefused = await service.deleteSession(athlete.id, session.id);
+      assert.equal(activityRefused.ok, false);
+      if (!activityRefused.ok) assert.equal(activityRefused.status, 409);
+      assert.ok(await db.session.findUnique({ where: { id: session.id } }));
+      await db.activity.deleteMany({ where: { sessionId: session.id } });
+
+      const deleted = await service.deleteSession(athlete.id, session.id);
+      assert.deepEqual(deleted, { ok: true, sessionId: session.id });
+      assert.equal(await db.session.findUnique({ where: { id: session.id } }), null);
+      assert.equal(await db.block.count({ where: { sessionId: session.id } }), 0);
+    });
+  } finally {
+    if (originalTimezone === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTimezone;
+    await db.$disconnect();
+    await rm(directory, { recursive: true, force: true });
+  }
 });

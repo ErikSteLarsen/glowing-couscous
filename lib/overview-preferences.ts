@@ -25,6 +25,8 @@ export function parsePrefsJson(input: string | null | undefined): Record<string,
   }
 }
 
+/** Every card shows until the athlete has chosen otherwise in Settings. */
 export function readOverviewCardsFromPrefsJson(input: string | null | undefined): OverviewCardId[] {
-  return normalizeOverviewCards(parsePrefsJson(input).overviewCards);
+  const stored = parsePrefsJson(input).overviewCards;
+  return Array.isArray(stored) ? normalizeOverviewCards(stored) : [...OVERVIEW_CARD_IDS];
 }

@@ -78,6 +78,7 @@ test('Workouts is a standalone library destination and session detail keeps its 
   const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
   const sessionPageSource = await read('app/(app)/athlete/session/[sessionId]/page.tsx');
   const calendarPageSource = await read('app/(app)/athlete/calendar/TrainingCalendar.tsx');
+  const calendarSource = await read('app/(app)/athlete/calendar/AthleteCalendar.tsx');
   const profileMenuSource = await read('components/AppProfileMenu.tsx');
 
   const navigationSource = await read('lib/app-navigation.ts');
@@ -87,7 +88,7 @@ test('Workouts is a standalone library destination and session detail keeps its 
   assert.doesNotMatch(navigationSource, /activeMatchPrefixes: \['\/athlete\/session', '\/athlete\/live'\]/);
   assert.match(sessionPageSource, /getSessionReturnTarget/);
   assert.match(sessionPageSource, /searchParams/);
-  assert.match(calendarPageSource, /from=calendar/);
+  assert.match(calendarSource, /from=calendar/);
   assert.match(profileMenuSource, /isProfileActionActive/);
   assert.match(profileMenuSource, /aria-current=\{isActive \? 'page' : undefined\}/);
   assert.match(workoutsClientSource, /const \[editorOpen, setEditorOpen\] = useState\(\(\) => initialWorkout !== null\)/);
@@ -96,7 +97,8 @@ test('Workouts is a standalone library destination and session detail keeps its 
   assert.match(workoutsClientSource, /Discard unsaved changes\?/);
   assert.match(workoutsClientSource, /Keep editing/);
   assert.match(workoutsClientSource, /Discard changes/);
-  assert.match(workoutsClientSource, /sticky bottom-0/);
+  assert.match(workoutsClientSource, /sticky bottom-\[var\(--mobile-nav-clearance\)\]/);
+  assert.match(workoutsClientSource, /md:bottom-0/);
 });
 
 test('athlete planner only places defined sources on selected dates', async () => {
@@ -104,6 +106,7 @@ test('athlete planner only places defined sources on selected dates', async () =
   const legacySource = await read('app/(app)/athlete/planner/page.tsx');
   const plannerClientSource = await read('app/(app)/athlete/calendar/TrainingCalendar.tsx');
   const templatesPageSource = await read('app/(app)/athlete/templates/page.tsx');
+  const athleteTemplateApiSource = await read('app/api/athlete/templates/route.ts');
 
   assert.match(plannerPageSource, /templateService\.listForOwner/);
   assert.match(plannerPageSource, /TrainingCalendar/);
@@ -139,7 +142,7 @@ test('coach pages rely on shared shell and keep only contextual local actions', 
   assert.doesNotMatch(plannerPageSource, /SignOutButton/);
 });
 
-test('workspace pages do not repeat sibling destinations in their headers', async () => {
+test('workspace pages keep shared navigation while Activity exposes its primary logging action', async () => {
   const pageSources = await Promise.all([
     'app/(app)/athlete/page.tsx',
     'app/(app)/athlete/activity/page.tsx',
@@ -152,9 +155,31 @@ test('workspace pages do not repeat sibling destinations in their headers', asyn
     'app/(app)/coach/workouts/page.tsx',
   ].map(read));
 
-  for (const source of pageSources) {
+  for (const source of pageSources.filter((_, index) => index !== 0 && index !== 1)) {
     assert.doesNotMatch(source, /actions=\{/);
   }
+  assert.match(pageSources[0], /href="\/athlete\/events"/);
+  assert.match(pageSources[1], /href="#import-activity"/);
+  assert.match(pageSources[1], /href="#log-activity"/);
+  assert.doesNotMatch(pageSources[1], /ActionLink href="\/(athlete\/calendar|athlete\/planner)"/);
+});
+
+test('summary-only activity outcomes do not offer structured comparison or editing', async () => {
+  const activityPage = await read('app/(app)/athlete/activity/page.tsx');
+  const athleteSession = await read('app/(app)/athlete/session/[sessionId]/page.tsx');
+  const coachDetail = await read('app/(app)/coach/athletes/[athleteId]/page.tsx');
+
+  assert.match(activityPage, /\['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'\]\.includes\(activity\.metricsSource\) \? null : <SessionComparisonDialog/);
+  assert.match(athleteSession, /\['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'\]\.includes\(detail\.session\.metricsSource \?\? ''\) \? null : <ShareLinkButton/);
+  assert.match(athleteSession, /<Surface id="session-outcome" className="space-y-3">/);
+  assert.match(athleteSession, /\['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'\]\.includes\(detail\.session\.metricsSource \?\? ''\) \? null : <SessionDetailClient/);
+  assert.match(athleteSession, /\['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'\]\.includes\(detail\.session\.metricsSource \?\? ''\) && detail\.session\.blocks\.length === 0/);
+  assert.match(athleteSession, /Summary-only activity has no recorded workout blocks\./);
+  assert.match(coachDetail, /function hasNoPlannedBaseline\(metricsSource: string \| null \| undefined\)/);
+  assert.match(coachDetail, /hasNoPlannedBaseline\(session\.metricsSource\) \? null : <SessionComparisonDialog/);
+  assert.match(coachDetail, /hasNoPlannedBaseline\(session\.metricsSource\) \? null : <ShareLinkButton/);
+  assert.match(coachDetail, /formatDuration\(hasNoPlannedBaseline\(session\.metricsSource\) \? session\.actualDurationSec \?\? session\.durationSec : session\.durationSec\)/);
+  assert.match(coachDetail, /hasNoPlannedBaseline\(session\.metricsSource\) \? 'No planned comparison'/);
 });
 
 test('coach athlete detail route uses coach-service detail loading instead of the legacy planner flow', async () => {

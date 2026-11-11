@@ -1,0 +1,1 @@
+export const MAX_ACTIVITY_IMPORT_BYTES = 5 * 1024 * 1024;

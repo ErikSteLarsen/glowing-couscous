@@ -7,6 +7,9 @@ import { addDays, differenceInCalendarDays, endOfMonth, endOfWeek, format, forma
 
 import { prisma } from './prisma.ts';
 import { derivePlannerSessionMetrics } from './planner-source-metrics.ts';
+import { parseActivitySegments } from './activity-metrics.ts';
+import { parseCalendarDay } from './calendar-navigation.ts';
+import { parsePlannedTime } from './planned-time.ts';
 import {
   normalizeSessionEditorDraft,
   createSessionEditorBlockData,
@@ -29,7 +32,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       const [sessions, templates, calendarSessions] = await Promise.all([
         db.session.findMany({
           where: { athleteId, date: { gte: weekStart, lte: weekEnd } },
-          include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+          include: { blocks: { orderBy: { sortOrder: 'asc' } }, activity: true },
           orderBy: [{ date: 'asc' }, { title: 'asc' }],
         }),
         db.template.findMany({
@@ -38,7 +41,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
         }),
         db.session.findMany({
           where: { athleteId, date: { gte: calendarStart, lte: calendarEnd } },
-          include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+          include: { blocks: { orderBy: { sortOrder: 'asc' } }, activity: true },
           orderBy: [{ date: 'asc' }, { title: 'asc' }],
         }),
       ]);
@@ -59,9 +62,10 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
           source: session.source,
           adjusted: session.adjusted,
           sportMetricsJson: session.sportMetricsJson,
-          durationSec: metrics.durationSec,
-          tss: metrics.tss,
-          segments: metrics.segments,
+          durationSec: session.activity?.durationSec ?? metrics.durationSec,
+          distanceMeters: session.activity?.distanceMeters ?? null,
+          tss: session.activity ? session.activity.tss : metrics.tss,
+          segments: session.activity?.segmentsJson ? parseActivitySegments(session.activity.segmentsJson) : metrics.segments,
           blocks: session.blocks,
         };
       };
@@ -138,9 +142,14 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       if (requestedDates.length === 0) {
         return { ok: false as const, error: 'Choose at least one target day.', status: 400 };
       }
+      const plannedTime = parsePlannedTime(record.timeLabel);
+      if (!plannedTime.ok) {
+        return { ok: false as const, error: plannedTime.error, status: 400 };
+      }
+      const timeLabel = plannedTime.timeLabel;
 
       const payloadHash = createHash('sha256')
-        .update(JSON.stringify({ sourceKind, sourceId, dates: requestedDates }))
+        .update(JSON.stringify({ sourceKind, sourceId, dates: requestedDates, timeLabel }))
         .digest('hex');
       const replay = await db.placementRequest.findUnique({
         where: { userId_requestKey: { userId: athleteId, requestKey } },
@@ -167,7 +176,6 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
                 title: string;
                 summary: string | null;
                 sportMetricsJson: string | null;
-                timeLabel: string | null;
                 blocks: Parameters<typeof createSourceCopyData>[0]['blocks'];
               };
 
@@ -188,7 +196,6 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
               title: template.name,
               summary: template.summary,
               sportMetricsJson: null,
-              timeLabel: null,
               blocks: routine.entries[0].blocks,
             };
           } else {
@@ -211,7 +218,6 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
               title: workout.title,
               summary: workout.summary,
               sportMetricsJson: workout.sportMetricsJson,
-              timeLabel: workout.timeLabel,
               blocks: workout.blocks,
             };
           }
@@ -235,7 +241,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
                 title: entry.title,
                 summary: entry.summary,
                 sportMetricsJson: entry.sportMetricsJson,
-                timeLabel: source.timeLabel,
+                timeLabel,
                 blocks: entry.blocks,
               }),
             });
@@ -339,18 +345,105 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       return { ok: true as const, sessionIds };
     },
 
-    async deleteSession(athleteId: number, sessionId: number) {
-      const existing = await db.session.findFirst({
-        where: { id: sessionId, athleteId },
-        select: { id: true, activity: { select: { id: true } } },
-      });
-      if (!existing) return { ok: false as const, error: 'Session not found.', status: 404 };
-      if (existing.activity) {
-        return { ok: false as const, error: 'Completed sessions are immutable.', status: 409 };
-      }
+    /**
+     * Moves one of the athlete's own open sessions to another day without
+     * touching its content. Completed and coach-owned sessions stay put.
+     */
+    async rescheduleSession(athleteId: number, sessionId: number, input: unknown) {
+      const date = parseCalendarDay(asRecord(input).date);
+      if (!date) return { ok: false as const, error: 'Choose a valid day.', status: 400 };
 
-      await db.session.delete({ where: { id: sessionId } });
-      return { ok: true as const, sessionId };
+      try {
+        return await db.$transaction(async (tx) => {
+          const existing = await tx.session.findFirst({
+            where: { id: sessionId, athleteId },
+            select: {
+              date: true,
+              status: true,
+              coachOwnerId: true,
+              assignedById: true,
+              trainingPlanId: true,
+              activity: { select: { id: true } },
+            },
+          });
+          if (!existing?.date) throw new PlacementError('Session not found.', 404);
+          if (existing.activity || existing.status === 'completed') {
+            throw new PlacementError('Completed sessions are immutable.', 409);
+          }
+          if (existing.coachOwnerId || existing.assignedById || existing.trainingPlanId) {
+            throw new PlacementError("Coach-assigned sessions keep the day your coach chose.", 409);
+          }
+
+          const plan = await findOrCreatePlan(tx, athleteId, date);
+          const nextDate = parseISO(date);
+          nextDate.setHours(existing.date.getHours(), existing.date.getMinutes(), existing.date.getSeconds(), existing.date.getMilliseconds());
+          const moved = await tx.session.updateMany({
+            where: {
+              id: sessionId,
+              athleteId,
+              date: existing.date,
+              status: existing.status,
+              coachOwnerId: null,
+              assignedById: null,
+              trainingPlanId: null,
+              activity: { is: null },
+            },
+            data: {
+              date: nextDate,
+              planId: plan.id,
+              ...(existing.status === 'missed' ? { status: 'planned' } : {}),
+            },
+          });
+          if (moved.count !== 1) throw new PlacementError('The session changed. Refresh the calendar and try again.', 409);
+          return { ok: true as const, sessionId, date };
+        });
+      } catch (error) {
+        if (error instanceof PlacementError) return { ok: false as const, error: error.message, status: error.status };
+        throw error;
+      }
+    },
+
+    async deleteSession(athleteId: number, sessionId: number) {
+      return db.$transaction(async (tx) => {
+        const existing = await tx.session.findFirst({
+          where: { id: sessionId, athleteId },
+          select: {
+            date: true,
+            status: true,
+            coachOwnerId: true,
+            assignedById: true,
+            trainingPlanId: true,
+            activity: { select: { id: true } },
+          },
+        });
+        if (!existing) return { ok: false as const, error: 'Session not found.', status: 404 };
+        if (!existing.date) {
+          return { ok: false as const, error: 'Only scheduled sessions can be removed from Planner.', status: 409 };
+        }
+        if (existing.activity || existing.status === 'completed') {
+          return { ok: false as const, error: 'Completed sessions are immutable.', status: 409 };
+        }
+        if (existing.coachOwnerId || existing.assignedById || existing.trainingPlanId) {
+          return { ok: false as const, error: 'Coach-assigned sessions cannot be removed.', status: 409 };
+        }
+
+        const deleted = await tx.session.deleteMany({
+          where: {
+            id: sessionId,
+            athleteId,
+            date: { not: null },
+            status: existing.status,
+            coachOwnerId: null,
+            assignedById: null,
+            trainingPlanId: null,
+            activity: { is: null },
+          },
+        });
+        if (deleted.count !== 1) {
+          return { ok: false as const, error: 'The session changed. Refresh and try again.', status: 409 };
+        }
+        return { ok: true as const, sessionId };
+      });
     },
   };
 }
@@ -369,7 +462,7 @@ function placementReplayResult(
   payloadHash: string,
 ) {
   if (request.payloadHash !== payloadHash) {
-    return { ok: false as const, error: 'This placement key was already used for different dates or source content.', status: 409 as const };
+    return { ok: false as const, error: 'This placement key was already used for different dates, start time, or source content.', status: 409 as const };
   }
   try {
     const sessionIds = JSON.parse(request.sessionIdsJson);
@@ -387,8 +480,8 @@ function isPlacementRaceError(error: unknown) {
     && (error.code === 'P2002' || error.code === 'P1008' || error.code === 'P2028');
 }
 
-async function findOrCreatePlan(db: typeof prisma, athleteId: number, dateInput: string) {
-  const date = parseISO(`${dateInput}T00:00:00.000Z`);
+async function findOrCreatePlan(db: Pick<Prisma.TransactionClient, 'plan'>, athleteId: number, dateInput: string) {
+  const date = parseISO(dateInput);
   const startDate = startOfWeek(date, { weekStartsOn: 1 });
   const endDate = endOfWeek(date, { weekStartsOn: 1 });
   return (

@@ -1,544 +1,220 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, Pause, Play, SkipBack, SkipForward, Sun } from 'lucide-react';
-import { ActionLink, Badge, dangerButtonClassName, dangerTextClassName, primaryButtonClassName, secondaryButtonClassName, Surface, sectionHeadingClassName } from '@/components/ui';
-import { SessionPlanCanvas, type SessionPlanBlock } from '@/components/SessionPlanCanvas';
+
+import {
+  dangerTextClassName,
+  compactPrimaryButtonClassName,
+  compactSecondaryButtonClassName,
+  primaryButtonClassName,
+  successTextClassName,
+} from '@/components/ui';
+import { Stepper } from '@/components/tempo/Stepper';
+import { formatDuration } from '@/lib/format-duration';
 import {
   advanceExecution,
-  advanceTimedExecution,
-  blockExecutionDurationSec,
   createExecutionState,
+  getExecutionTimerRemainingMs,
+  idleExecutionTimer,
   isExecutionComplete,
+  parseExecutionProgress,
+  parseExecutionTimer,
+  pauseExecutionTimer,
   previousExecution,
-  remainingExecutionSeconds,
+  resolveExecutionTimer,
   restartExecution,
-  skipCurrentExecution,
+  serializeExecutionProgress,
+  startExecutionTimer,
   type ExecutionState,
+  type ExecutionStep,
+  type ExecutionTimer,
 } from '@/lib/athlete-execution';
-import { formatDurationExact } from '@/lib/format-duration';
-import { useDraftRecovery } from '@/components/useDraftRecovery';
-import { DraftRecoveryNotice } from '@/components/DraftRecoveryNotice';
-import { parseLiveCheckpoint, restoreLiveCheckpoint } from '@/lib/live-recovery';
-import type { RecoveryDraft } from '@/lib/draft-recovery';
+import {
+  clearExecutionProgress,
+  getExecutionProgress,
+  saveExecutionProgress,
+  subscribeToExecutionProgress,
+} from '@/lib/athlete-execution-progress-store';
 
-type ScreenWakeLockSentinel = {
-  release: () => Promise<void>;
-  addEventListener: (type: 'release', listener: () => void) => void;
-};
-
-type ScreenWakeLockApi = {
-  request: (type: 'screen') => Promise<ScreenWakeLockSentinel>;
-};
-
-const subscribeToWakeLockSupport = () => () => {};
-const getWakeLockSupport = () => typeof navigator !== 'undefined' && 'wakeLock' in navigator;
-const getServerWakeLockSupport = () => false;
-
-function formatCountdown(totalSeconds: number) {
-  const seconds = Math.max(0, Math.ceil(totalSeconds));
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainder = seconds % 60;
-  return hours > 0
-    ? `${hours}:${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`
-    : `${minutes}:${String(remainder).padStart(2, '0')}`;
-}
-
-export function LiveSessionClient({
-  ownerId = null,
-  sessionId,
-  sessionHref,
-  blocks,
-  initialNotes,
-  alreadyCompleted,
-}: {
-  ownerId?: number | null;
+export function LiveSessionClient({ sessionId, blocks, isDone }: {
   sessionId: number;
-  sessionHref: string;
-  blocks: SessionPlanBlock[];
-  initialNotes: string;
-  alreadyCompleted: boolean;
+  blocks: ExecutionStep[];
+  isDone: boolean;
 }) {
   const router = useRouter();
-  const [activeBlocks, plannedSkippedBlocks] = useMemo(() => [blocks.filter((block) => !block.skipped), blocks.filter((block) => block.skipped)], [blocks]);
-  const blockDurations = useMemo(() => activeBlocks.map(blockExecutionDurationSec), [activeBlocks]);
-  const totalDurationSec = useMemo(() => blockDurations.reduce((sum, duration) => sum + duration, 0), [blockDurations]);
-  const [execution, setExecution] = useState<ExecutionState>(() => createExecutionState(activeBlocks.length));
-  const [remainingSec, setRemainingSec] = useState(() => blockDurations[0] ?? 0);
-  const [hasStarted, setHasStarted] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
   const [pending, setPending] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [confirmRestart, setConfirmRestart] = useState(false);
-  const [keepAwake, setKeepAwake] = useState(false);
-  const canKeepAwake = useSyncExternalStore(subscribeToWakeLockSupport, getWakeLockSupport, getServerWakeLockSupport);
-  const [wakeLockError, setWakeLockError] = useState('');
-  const deadlineRef = useRef<number | null>(null);
-  const wakeLockRef = useRef<ScreenWakeLockSentinel | null>(null);
-  const [checkpointAt, setCheckpointAt] = useState(0);
-  const baseline = JSON.stringify(blocks);
-  const recovery = useDraftRecovery({ userId: ownerId, surface: 'live', resource: String(sessionId), baseline, payload: JSON.stringify({ execution, remainingSec, wasRunning: isRunning, checkpointAt, notes: initialNotes }), dirty: hasStarted && !saved && !alreadyCompleted });
-
-  function restoreCheckpoint(record: RecoveryDraft, elapsed = false) {
-    if (pending || saved || alreadyCompleted) return;
-    if (record.baseline !== baseline) { setError('This workout changed. Its old checkpoint cannot be applied. Discard it and start from the current plan.'); return; }
-    const value = parseLiveCheckpoint(record.payload, blockDurations);
-    if (!value) { setError('This checkpoint is invalid or expired. Discard it and start again.'); return; }
-    if (hasStarted && !window.confirm('Replace the current Live progress with this checkpoint?')) return;
-    const restored = restoreLiveCheckpoint(value, blockDurations, elapsed);
-    recovery.discard();
-    deadlineRef.current = null; setIsRunning(false); setHasStarted(true);
-    setExecution(restored.state); setRemainingSec(restored.remainingSec); setCheckpointAt(Date.now());
-    recovery.restored(record); setError('');
-    setMessage(elapsed ? 'Elapsed time applied. Review progress before resuming or finishing; the timer is paused.' : 'Checkpoint restored. The timer is paused.');
-  }
-
-  const currentBlock = activeBlocks[execution.currentIndex] ?? null;
-  const currentZone = currentBlock ? Math.min(Math.max(currentBlock.zone, 1), 5) : 1;
-  const timerTone = currentBlock?.kind === 'pause' ? 'var(--text-muted)' : `var(--color-zone-${currentZone})`;
-  const timerTint = currentBlock?.kind === 'pause' ? 'var(--sunken)' : `var(--color-zone-${currentZone}-tint)`;
-  const isFinished = activeBlocks.length > 0 && isExecutionComplete(execution);
-  const remainingSessionSec = remainingExecutionSeconds(execution, remainingSec, blockDurations);
-  const handledCount = execution.completed.filter(Boolean).length + execution.skipped.filter(Boolean).length;
-  const sessionProgress = totalDurationSec > 0 ? Math.max(0, Math.min(100, (1 - remainingSessionSec / totalDurationSec) * 100)) : 0;
-  const currentBlockProgress = currentBlock
-    ? Math.max(0, Math.min(100, ((blockDurations[execution.currentIndex] - remainingSec) / blockDurations[execution.currentIndex]) * 100))
-    : 0;
-  const completedIds = activeBlocks.filter((_, index) => execution.completed[index]).map((block) => block.id);
-  const skippedIds = [
-    ...plannedSkippedBlocks.map((block) => block.id),
-    ...activeBlocks.filter((_, index) => execution.skipped[index]).map((block) => block.id),
-  ];
+  const [now, setNow] = useState<number | null>(null);
+  const saved = isDone || message !== '';
+  const hasBlocks = blocks.length > 0;
+  const progressKey = `tempo:live-progress:v1:${sessionId}`;
+  const savedProgress = useSyncExternalStore(
+    (callback) => subscribeToExecutionProgress(progressKey, callback),
+    () => getExecutionProgress(progressKey),
+    () => null,
+  );
+  const state: ExecutionState = isDone ? createExecutionState(blocks.length) : parseExecutionProgress(savedProgress, blocks) ?? createExecutionState(blocks.length);
+  const complete = hasBlocks && isExecutionComplete(state);
+  const restoredTimer = isDone ? idleExecutionTimer : parseExecutionTimer(savedProgress, blocks, state);
+  const timer = now === null ? restoredTimer : resolveExecutionTimer(restoredTimer, now);
+  const currentStep = blocks[state.currentIndex];
+  const timerRemainingMs = currentStep && now !== null ? getExecutionTimerRemainingMs(timer, currentStep.durationSec, now) : 0;
+  const timerRunning = timer.kind === 'running' && !saved;
 
   useEffect(() => {
-    if (!isRunning) return;
-
-    const tick = () => {
-      const deadline = deadlineRef.current;
-      if (deadline === null) return;
-      const now = Date.now();
-      const millisecondsLeft = deadline - now;
-
-      if (millisecondsLeft > 0) {
-        setRemainingSec(Math.ceil(millisecondsLeft / 1000));
-        setCheckpointAt(Math.floor(now / 1000) * 1000);
-        return;
-      }
-
-      const result = advanceTimedExecution(execution, Math.max(0, (now - deadline) / 1000), blockDurations);
-      setExecution(result.state);
-      setRemainingSec(result.remainingSec);
-      setCheckpointAt(now);
-      setError('');
-
-      if (isExecutionComplete(result.state)) {
-        deadlineRef.current = null;
-        setIsRunning(false);
-        setMessage('Final block complete. Review the session, then finish when you are ready.');
-      } else {
-        deadlineRef.current = now + result.remainingSec * 1000;
-        const nextBlock = activeBlocks[result.state.currentIndex];
-        setMessage(`Block complete. Now up: ${nextBlock.label}.`);
-      }
-    };
-
-    const interval = window.setInterval(tick, 200);
-    tick();
-    return () => window.clearInterval(interval);
-  }, [activeBlocks, blockDurations, execution, isRunning]);
-
-  useEffect(() => {
-    if (!keepAwake || !hasStarted || isFinished || !canKeepAwake) return;
-
-    const api = (navigator as Navigator & { wakeLock?: ScreenWakeLockApi }).wakeLock;
-    if (!api) return;
-    let disposed = false;
-    let acquired: ScreenWakeLockSentinel | null = null;
-
-    const acquire = async () => {
-      try {
-        const sentinel = await api.request('screen');
-        if (disposed) {
-          await sentinel.release();
-          return;
-        }
-        acquired = sentinel;
-        wakeLockRef.current = sentinel;
-        setWakeLockError('');
-        sentinel.addEventListener('release', () => {
-          if (wakeLockRef.current === sentinel) wakeLockRef.current = null;
-        });
-      } catch {
-        setWakeLockError('This browser could not keep the screen awake.');
-      }
-    };
-
-    const handleVisibility = () => {
-      if (!document.hidden && !wakeLockRef.current) void acquire();
-    };
-
-    void acquire();
-    document.addEventListener('visibilitychange', handleVisibility);
-
+    const initialRefresh = window.setTimeout(() => setNow(Date.now()), 0);
+    if (!timerRunning) return () => window.clearTimeout(initialRefresh);
+    const refresh = () => setNow(Date.now());
+    const interval = window.setInterval(refresh, 1000);
+    window.addEventListener('visibilitychange', refresh);
     return () => {
-      disposed = true;
-      document.removeEventListener('visibilitychange', handleVisibility);
-      if (wakeLockRef.current === acquired) wakeLockRef.current = null;
-      if (acquired) void acquired.release();
+      window.clearTimeout(initialRefresh);
+      window.clearInterval(interval);
+      window.removeEventListener('visibilitychange', refresh);
     };
-  }, [canKeepAwake, hasStarted, isFinished, keepAwake]);
+  }, [timerRunning]);
 
-  function startOrResume() {
-    if (!currentBlock || isFinished || pending) return;
-    deadlineRef.current = Date.now() + remainingSec * 1000;
-    setHasStarted(true);
-    setCheckpointAt(Date.now());
-    setIsRunning(true);
-    setError('');
-    setMessage('Workout started.');
-  }
-
-  function togglePause() {
-    if (isRunning) {
-      const left = deadlineRef.current === null ? remainingSec : Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000));
-      deadlineRef.current = null;
-      setRemainingSec(left);
-      setCheckpointAt(Date.now());
-      setIsRunning(false);
-      setMessage('Workout paused.');
+  function updateExecutionState(nextState: ExecutionState, nextTimer: ExecutionTimer = idleExecutionTimer): void {
+    if (!hasBlocks || isDone) return;
+    if (nextState.currentIndex === 0 && nextState.completed.every((value) => !value) && nextTimer.kind === 'idle') {
+      clearExecutionProgress(progressKey);
       return;
     }
-    startOrResume();
+    saveExecutionProgress(progressKey, serializeExecutionProgress(blocks, nextState, nextTimer));
   }
 
-  function moveToPreviousBlock() {
-    if (execution.currentIndex === 0 || pending) return;
-    const previous = previousExecution(execution);
-    deadlineRef.current = null;
-    setExecution(previous);
-    setCheckpointAt(Date.now());
-    setRemainingSec(blockDurations[previous.currentIndex] ?? 0);
-    setIsRunning(false);
-    setHasStarted(true);
-    setConfirmRestart(false);
-    setMessage(`Back to ${activeBlocks[previous.currentIndex].label}. The timer is paused.`);
+  function formatCountdown(milliseconds: number): string {
+    const totalSeconds = Math.ceil(milliseconds / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor(totalSeconds / 60) % 60;
+    const seconds = totalSeconds % 60;
+    return hours > 0
+      ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      : `${Math.floor(totalSeconds / 60)}:${String(seconds).padStart(2, '0')}`;
   }
 
-  function finishCurrentBlock(skip = false) {
-    if (!currentBlock || isFinished || pending) return;
-    const wasRunning = isRunning;
-    const next = skip ? skipCurrentExecution(execution) : advanceExecution(execution);
-    setExecution(next);
-    setCheckpointAt(Date.now());
-    setError('');
-    setConfirmRestart(false);
-
-    if (isExecutionComplete(next)) {
-      deadlineRef.current = null;
-      setRemainingSec(0);
-      setIsRunning(false);
-      setHasStarted(true);
-      setMessage(skip
-        ? 'No active blocks remain. Review the session, then finish when you are ready.'
-        : 'Final block complete. Review the session, then finish when you are ready.');
-      return;
-    }
-
-    const nextBlock = activeBlocks[next.currentIndex];
-    const nextDuration = blockDurations[next.currentIndex] ?? 0;
-    deadlineRef.current = wasRunning ? Date.now() + nextDuration * 1000 : null;
-    setRemainingSec(nextDuration);
-    setHasStarted(true);
-    setMessage(skip ? `${currentBlock.label} skipped. Now up: ${nextBlock.label}.` : `${currentBlock.label} complete. Now up: ${nextBlock.label}.`);
-  }
-
-  function restartWorkout() {
-    if (pending || saved || alreadyCompleted) return;
-    deadlineRef.current = null;
-    recovery.discard();
-    setExecution(restartExecution(execution));
-    setRemainingSec(blockDurations[0] ?? 0);
-    setIsRunning(false);
-    setHasStarted(false);
-    setConfirmRestart(false);
-    setError('');
-    setMessage('Workout reset. Start when you are ready.');
-  }
-
-  async function finishWorkout() {
-    if (!isFinished || pending || saved) return;
+  async function completeSession() {
     setPending(true);
     setError('');
     try {
-      if (!alreadyCompleted) {
-        const response = await fetch(`/api/athlete/sessions/${sessionId}/completion`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ isDone: true, notes: initialNotes }),
-        });
-        const payload = await response.json().catch(() => ({})) as { error?: string };
-        if (!response.ok) {
-          setError(payload.error ?? 'The session could not be saved. Your local workout progress is still here.');
-          return;
-        }
+      const response = await fetch(`/api/athlete/sessions/${sessionId}/completion`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isDone: true }),
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) {
+        setError(payload.error ?? 'Failed to complete session.');
+        return;
       }
-
-      recovery.discard();
-      setSaved(true);
-      setMessage(alreadyCompleted ? 'Run complete. The saved session outcome was left unchanged.' : 'Session marked complete and saved.');
-      if (!alreadyCompleted) router.refresh();
+      clearExecutionProgress(progressKey);
+      setMessage('Session marked complete.');
+      router.refresh();
     } catch {
-      setError('Could not reach the server. Your local workout progress is still here; check your connection and try again.');
+      setError('Could not reach the server. Check your connection and try again.');
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <div className="page-content--standard grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_304px]">
-      {!alreadyCompleted && !saved ? <div className="xl:col-span-2"><DraftRecoveryNotice candidates={recovery.candidates.filter((record) => record.resource === String(sessionId))} status={recovery.status} disabled={pending} onRestore={(record) => restoreCheckpoint(record)} onElapsed={(record) => restoreCheckpoint(record, true)} onDiscard={recovery.discard} /></div> : null}
-      <Surface className="min-w-0 space-y-4 p-4 sm:space-y-5 sm:p-5">
-        <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-4">
-          <div className="min-w-0">
-            <Badge tone={isFinished ? 'success' : isRunning ? 'brand' : 'neutral'}>
-              {isFinished ? 'Blocks complete' : isRunning ? 'In progress' : hasStarted ? 'Paused' : 'Ready'}
-            </Badge>
-            <p className="mt-2 text-[12px] text-[var(--text-secondary)]">
-              {currentBlock ? `Block ${execution.currentIndex + 1} of ${activeBlocks.length}` : 'No active workout blocks'}
-            </p>
-          </div>
-          <div className="shrink-0 text-right">
-            <p className="text-[11px] font-medium text-[var(--text-muted)]">Session remaining</p>
-            <p className="metric-text mt-1 text-[20px] font-semibold leading-none text-[var(--text)] sm:text-[26px]" aria-label={`${formatCountdown(remainingSessionSec)} session time remaining`}>
-              {formatCountdown(remainingSessionSec)}
-            </p>
-          </div>
-        </div>
-
-        {currentBlock ? (
-          <>
-            <div className="space-y-3 sm:space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
-                {currentBlock.targetLabel ? <span className="text-[13px] font-semibold text-[var(--text)]">{currentBlock.targetLabel}</span> : null}
-                {currentBlock.reps ? <span className="text-[12px] text-[var(--text-secondary)]">{currentBlock.reps} reps</span> : null}
-              </div>
-
-              <h2 className={`break-words ${sectionHeadingClassName}`}>
-                {isFinished ? 'Workout complete' : currentBlock.kind === 'pause' ? 'Pause and reset' : currentBlock.label}
-              </h2>
-
-              <div
-                className="border-y px-3 py-3 sm:px-5 sm:py-5"
-                style={{
-                  backgroundColor: `color-mix(in srgb, var(--surface) 50%, ${timerTint})`,
-                  borderColor: `color-mix(in srgb, var(--border) 45%, ${timerTone})`,
-                }}
-              >
-                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                  <p className="text-[11px] font-medium text-[var(--text-secondary)]">
-                    {isFinished ? 'BLOCK TIMER · COMPLETE' : isRunning ? 'BLOCK TIMER · COUNTING DOWN' : hasStarted ? 'BLOCK TIMER · PAUSED' : 'BLOCK TIMER · READY'}
-                  </p>
-                  <span className="text-[11px] font-semibold text-[var(--text)]">
-                    {currentBlock.kind === 'pause' ? 'Recovery' : `Zone ${currentZone}`}
-                  </span>
-                </div>
-                <p
-                  role="timer"
-                  aria-live="off"
-                  aria-label={`${formatCountdown(remainingSec)} remaining in ${currentBlock.label}`}
-                  className="metric-text mt-1 whitespace-nowrap text-[60px] font-semibold leading-none tracking-[-0.04em] text-[var(--text)] sm:text-[84px]"
-                >
-                  {formatCountdown(remainingSec)}
-                </p>
-                <div
-                  role="progressbar"
-                  aria-label="Current block progress"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={Math.round(currentBlockProgress)}
-                  className="mt-4 h-2 overflow-hidden bg-[var(--sunken)]"
-                >
-                  <div
-                    className={`h-full transition-[width] duration-300 ease-out motion-reduce:transition-none ${currentBlock.kind === 'pause' ? 'bg-[var(--text-muted)]' : `ink-zone-${Math.min(Math.max(currentBlock.zone, 1), 5)}`}`}
-                    style={{ width: `${currentBlockProgress}%` }}
-                  />
-                </div>
-                <div className="mt-2 flex justify-between text-[11px] text-[var(--text-muted)]">
-                  <span>{hasStarted ? formatDurationExact(Math.max(0, Math.floor(blockDurations[execution.currentIndex] - remainingSec))) : 'Not started'}</span>
-                  <span>{formatDurationExact(blockDurations[execution.currentIndex])}</span>
-                </div>
-              </div>
-
-              {currentBlock.note && currentBlock.note !== currentBlock.label ? (
-                <p className="max-w-[68ch] text-[15px] leading-[1.55] text-[var(--text-secondary)]">{currentBlock.note}</p>
-              ) : currentBlock.kind === 'pause' ? (
-                <p className="text-[15px] leading-[1.55] text-[var(--text-secondary)]">Take the recovery time before moving on.</p>
-              ) : currentBlock.targetLabel ? (
-                <p className="text-[15px] leading-[1.55] text-[var(--text-secondary)]">Stay with the target and keep this effort controlled.</p>
-              ) : null}
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-              {!hasStarted ? (
-                <button type="button" className={`${primaryButtonClassName} col-span-2 min-h-12 gap-2 py-3`} onClick={startOrResume}>
-                  <Play className="h-4 w-4" aria-hidden="true" />
-                  Start workout
-                </button>
-              ) : isFinished ? (
-                <>
-                  <button type="button" className={`${primaryButtonClassName} col-span-2 min-h-12 gap-2 py-3`} disabled={pending || saved} onClick={() => void finishWorkout()}>
-                    <Check className="h-4 w-4" aria-hidden="true" />
-                    {pending ? 'Saving session…' : saved ? 'Session complete' : alreadyCompleted ? 'Finish this run' : 'Finish workout'}
-                  </button>
-                  {saved ? <ActionLink href={sessionHref} tone="secondary" size="default">View session</ActionLink> : null}
-                </>
-              ) : (
-                <>
-                  <button type="button" className={`${primaryButtonClassName} min-h-12 gap-2 py-3`} disabled={pending} onClick={togglePause}>
-                    {isRunning ? <Pause className="h-4 w-4" aria-hidden="true" /> : <Play className="h-4 w-4" aria-hidden="true" />}
-                    {isRunning ? 'Pause' : 'Resume'}
-                  </button>
-                  <button type="button" className={`${secondaryButtonClassName} min-h-12 gap-2 py-3`} disabled={pending} onClick={() => finishCurrentBlock(true)}>
-                    <SkipForward className="h-4 w-4" aria-hidden="true" />
-                    Skip block
-                  </button>
-                  <button type="button" className={`${secondaryButtonClassName} min-h-12 gap-2 py-3`} disabled={pending || execution.currentIndex === 0} onClick={moveToPreviousBlock}>
-                    <SkipBack className="h-4 w-4" aria-hidden="true" />
-                    Previous block
-                  </button>
-                  <button type="button" className={`${secondaryButtonClassName} min-h-12 gap-2 py-3`} disabled={pending} onClick={() => finishCurrentBlock(false)}>
-                    <Check className="h-4 w-4" aria-hidden="true" />
-                    {execution.currentIndex === activeBlocks.length - 1 ? 'Finish block' : 'Next block'}
-                  </button>
-                </>
-              )}
-            </div>
-
-            {confirmRestart ? (
-              <div role="alert" className="space-y-3 border border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] p-4">
-                <p className="text-[13px] font-semibold text-[var(--text)]">Restart from the first block?</p>
-                <p className="text-[12px] leading-[1.5] text-[var(--text-secondary)]">This clears the live progress stored on this device.</p>
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" className={secondaryButtonClassName} onClick={() => setConfirmRestart(false)}>Keep progress</button>
-                  <button type="button" className={dangerButtonClassName} onClick={restartWorkout}>Restart workout</button>
-                </div>
-              </div>
-            ) : null}
-
-            {message ? <p role="status" aria-live="polite" className="text-[13px] text-[var(--text-secondary)]">{message}</p> : null}
-            {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
-          </>
-        ) : (
-          <div role="alert" className="border-y border-[var(--border)] py-6">
-            <h2 className={sectionHeadingClassName}>No active blocks</h2>
-            <p className="mt-2 text-[13px] leading-[1.5] text-[var(--text-secondary)]">This session has no active workout blocks to time. Return to the session details to review its plan.</p>
-          </div>
-        )}
-
-        {canKeepAwake ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
-            <div>
-              <p className="text-[12px] font-medium text-[var(--text)]">Keep screen awake</p>
-              <p className="mt-1 text-[11px] text-[var(--text-secondary)]">Useful while following the workout on a phone.</p>
-            </div>
+    <div className="space-y-4">
+      <Stepper
+        items={blocks.map((block, index) => ({
+          id: block.id,
+          title: `${block.label} · ${formatDuration(block.durationSec)}`,
+          detail: [block.targetLabel, block.note].filter(Boolean).join(' · ') || 'Stay smooth and controlled.',
+          active: index === state.currentIndex && !complete && !saved,
+          done: saved || state.completed[index],
+        }))}
+      />
+      {blocks.length === 0 ? <p role="alert" className={dangerTextClassName}>No workout blocks are available for this session.</p> : null}
+      {hasBlocks ? (
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            aria-label="Previous block"
+            className={compactSecondaryButtonClassName}
+            disabled={pending || saved || state.currentIndex === 0}
+            onClick={() => updateExecutionState(previousExecution(state))}
+          >
+            Previous
+          </button>
+          {!complete ? (
             <button
               type="button"
-              aria-pressed={keepAwake}
-              className={`${secondaryButtonClassName} min-h-10 gap-2`}
-              onClick={() => { setKeepAwake((value) => !value); setWakeLockError(''); }}
+              aria-label="Next block"
+              className={compactPrimaryButtonClassName}
+              disabled={pending || saved}
+              onClick={() => updateExecutionState(advanceExecution(state))}
             >
-              <Sun className="h-4 w-4" aria-hidden="true" />
-              {keepAwake ? 'On' : 'Off'}
+              Next block
             </button>
-            {wakeLockError ? <p role="status" className="w-full text-[12px] text-[var(--text-secondary)]">{wakeLockError}</p> : null}
-          </div>
-        ) : null}
-
-        {hasStarted && !saved && !alreadyCompleted ? (
-          <div className="border-t border-[var(--border)] pt-3">
-            {!confirmRestart ? (
-              <button type="button" className="text-[12px] font-medium text-[var(--text-secondary)] underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--text)]" onClick={() => setConfirmRestart(true)}>
-                Restart workout
-              </button>
-            ) : null}
-          </div>
-        ) : null}
-      </Surface>
-
-      <div className="min-w-0 space-y-4">
-        <Surface className="space-y-4">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className={sectionHeadingClassName}>Session progress</h2>
-            <span className="metric-text text-[12px] text-[var(--text-secondary)]">{handledCount} / {activeBlocks.length}</span>
-          </div>
-          <div
-            role="progressbar"
-            aria-label="Session progress"
-            aria-valuemin={0}
-            aria-valuemax={activeBlocks.length}
-            aria-valuenow={handledCount}
-            className="h-2 overflow-hidden bg-[var(--sunken)]"
+          ) : null}
+          <button
+            type="button"
+            aria-label="Restart workout"
+            className={compactSecondaryButtonClassName}
+            disabled={pending || saved || state.completed.every((value) => !value) && state.currentIndex === 0}
+            onClick={() => updateExecutionState(restartExecution(state))}
           >
-            <div className="h-full bg-[var(--brand)] transition-[width] duration-300 ease-out motion-reduce:transition-none" style={{ width: `${sessionProgress}%` }} />
+            Restart
+          </button>
+        </div>
+      ) : null}
+      {currentStep && !saved ? (
+        <section aria-label="Step timer" className="flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-4">
+          <div>
+            <p className="text-xs font-medium text-[var(--text-muted)]">Step timer</p>
+            {currentStep.durationSec <= 0 ? (
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">This step has no timed duration.</p>
+            ) : state.completed[state.currentIndex] ? (
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">This step is already marked complete.</p>
+            ) : timer.kind === 'elapsed' ? (
+              <p role="status" className="mt-1 text-sm font-medium text-[var(--text)]">Time is up. Step not marked complete.</p>
+            ) : now === null ? (
+              <p aria-label="Loading timer" className="data mt-1 text-2xl font-semibold text-[var(--text)]">--:--</p>
+            ) : (
+              <p aria-label={`Time remaining ${formatCountdown(timerRemainingMs)}`} className="data mt-1 text-2xl font-semibold text-[var(--text)]">
+                {formatCountdown(timerRemainingMs)}
+                <span className="ml-2 text-xs font-normal text-[var(--text-secondary)]">
+                  {timer.kind === 'running' ? 'Running' : timer.kind === 'paused' ? 'Paused' : 'Ready'}
+                </span>
+              </p>
+            )}
           </div>
-          <SessionPlanCanvas
-            blocks={blocks}
-            size="live"
-            activeBlockId={currentBlock?.id}
-            completedIds={completedIds}
-            skippedIds={skippedIds}
-          />
-          <p className="text-[12px] leading-[1.5] text-[var(--text-secondary)]">
-            {plannedSkippedBlocks.length ? `${plannedSkippedBlocks.length} planned ${plannedSkippedBlocks.length === 1 ? 'block is' : 'blocks are'} already skipped and excluded from the timer.` : `${activeBlocks.length} active ${activeBlocks.length === 1 ? 'block' : 'blocks'} in this workout.`}
-          </p>
-        </Surface>
-
-        <Surface className="space-y-3">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className={sectionHeadingClassName}>Block sequence</h2>
-            <span className="text-[11px] text-[var(--text-muted)]">{formatDurationExact(totalDurationSec)}</span>
-          </div>
-          <ol className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
-            {blocks.map((block, index) => {
-              const activeIndex = activeBlocks.findIndex((active) => active.id === block.id);
-              const isCurrent = activeIndex === execution.currentIndex && !isFinished;
-              const blockDone = activeIndex >= 0 && execution.completed[activeIndex];
-              const liveSkipped = activeIndex >= 0 && execution.skipped[activeIndex];
-              const blockStatus = block.skipped || liveSkipped ? 'Skipped' : blockDone ? 'Done' : isCurrent ? 'Current block' : 'Up next';
-
-              return (
-                <li key={block.id} aria-current={isCurrent ? 'step' : undefined} className={`py-3 ${block.skipped || liveSkipped ? 'opacity-65' : ''}`}>
-                  <div className="flex items-start gap-3">
-                    <span className="metric-text min-w-5 pt-0.5 text-[11px] text-[var(--text-muted)]">{index + 1}</span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span className="text-[13px] font-medium text-[var(--text)]">{block.label}</span>
-                        <span className={`text-[11px] font-semibold ${isCurrent ? 'text-[var(--field-selected-text)]' : 'text-[var(--text-muted)]'}`}>{blockStatus}</span>
-                      </div>
-                      <p className="mt-1 text-[12px] leading-[1.45] text-[var(--text-secondary)]">
-                        {formatDurationExact(block.durationSec * (block.reps ?? 1))}
-                        {block.reps ? ` · ${block.reps} reps` : ''}
-                        {block.targetLabel ? ` · ${block.targetLabel}` : ''}
-                      </p>
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-          {currentBlock?.note ? <p className="text-[12px] leading-[1.5] text-[var(--text-secondary)]">Current cue: {currentBlock.note}</p> : null}
-        </Surface>
-
-        <p className="px-1 text-[11px] leading-[1.5] text-[var(--text-muted)]">
-            Live checkpoints are kept in this browser for up to 24 hours. Restore paused after returning; session completion is saved only when you choose Finish workout.
-        </p>
-        {alreadyCompleted ? <p className="px-1 text-[11px] leading-[1.5] text-[var(--text-secondary)]">This session was already completed. Another run will not change its saved outcome.</p> : null}
-        {saved ? <ActionLink href={sessionHref} tone="secondary">View session details</ActionLink> : null}
-      </div>
+          {now !== null && currentStep.durationSec > 0 && !state.completed[state.currentIndex] && timer.kind !== 'elapsed' ? (
+            timer.kind === 'running' ? (
+              <button type="button" className={compactSecondaryButtonClassName} disabled={pending} onClick={() => updateExecutionState(state, pauseExecutionTimer(timer, Date.now()))}>
+                Pause timer
+              </button>
+            ) : (
+              <button type="button" className={compactSecondaryButtonClassName} disabled={pending} onClick={() => updateExecutionState(state, startExecutionTimer(timer, currentStep.durationSec, Date.now()))}>
+                {timer.kind === 'paused' ? 'Resume timer' : 'Start timer'}
+              </button>
+            )
+          ) : null}
+          {now !== null && timer.kind === 'elapsed' && currentStep.durationSec > 0 && !state.completed[state.currentIndex] ? (
+            <button type="button" className={compactSecondaryButtonClassName} disabled={pending} onClick={() => updateExecutionState(state, startExecutionTimer(idleExecutionTimer, currentStep.durationSec, Date.now()))}>
+              Start again
+            </button>
+          ) : null}
+        </section>
+      ) : null}
+      {complete && !saved ? (
+        <p role="status" className="text-sm font-semibold text-[var(--text)]">All blocks complete. Save the outcome to finish.</p>
+      ) : null}
+      {complete && !saved ? (
+        <button type="button" className={primaryButtonClassName} disabled={pending || saved} onClick={() => void completeSession()}>
+          {pending ? 'Saving…' : 'Mark session complete'}
+        </button>
+      ) : null}
+      {isDone ? <p role="status" className={successTextClassName}>Session saved. Review or correct the outcome in session details.</p> : null}
+      <p className="text-[12px] text-[var(--text-secondary)]">Progress is saved in this browser and resumes when you return. Restart begins again at the first step.</p>
+      {message && !isDone ? <p role="status" aria-live="polite" className={successTextClassName}>{message}</p> : null}
+      {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
     </div>
   );
 }

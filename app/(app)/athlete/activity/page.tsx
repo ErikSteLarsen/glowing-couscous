@@ -1,8 +1,10 @@
+import { format } from 'date-fns';
 import { redirect } from 'next/navigation';
 import { PageShell, TopBar } from '@/components/ui';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { ActivityHistoryOverview } from '@/components/ActivityHistoryOverview';
+import { ManualActivityForm } from './ManualActivityForm';
 
 export default async function AthleteActivityPage() {
   const user = await getCurrentUser();
@@ -23,6 +25,7 @@ export default async function AthleteActivityPage() {
           activities={activityFeed.activities}
           initialDate={new Date().toISOString()}
         />
+        <ManualActivityForm today={format(new Date(), 'yyyy-MM-dd')} />
       </div>
     </PageShell>
   );

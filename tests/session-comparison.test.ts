@@ -106,6 +106,28 @@ test('comparison hides equal actuals, supports missing baselines, and rejects un
   });
 });
 
+test('summary-only activity comparison does not expose a structured actual draft', async () => {
+  const { actual } = createDrafts();
+  const summaryDb = {
+    session: {
+      async findUnique() {
+        return {
+          id: 40,
+          athleteId: 7,
+          coachBaselineJson: serializeSessionSnapshot(actual),
+          activity: { actualSnapshotJson: null, metricsSource: 'manual-paired' },
+          athlete: { coachId: 2 },
+        };
+      },
+    },
+  };
+  assert.deepEqual(await createSessionComparisonService({ db: summaryDb as never }).loadComparison({ role: 'ATHLETE', userId: 7 }, 40), {
+    ok: false,
+    status: 404,
+    error: 'Structured comparison is unavailable for summary-only activities.',
+  });
+});
+
 test('comparison routes and history outcomes preserve both role adapters and comparison access', async () => {
   const athleteRoute = await readFile(path.join(process.cwd(), 'app/api/athlete/sessions/[sessionId]/comparison/route.ts'), 'utf8');
   const coachRoute = await readFile(path.join(process.cwd(), 'app/api/coach/sessions/[sessionId]/comparison/route.ts'), 'utf8');

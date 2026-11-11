@@ -2,60 +2,94 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { ReactNode } from 'react';
 
-export const pageHeadingClassName = 'text-[40px] font-normal leading-none tracking-[-0.045em] text-[var(--text)] max-md:text-[34px]';
-export const sectionHeadingClassName = 'text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]';
+const pageShellWidthClasses = {
+  narrow: 'max-w-3xl',
+  default: 'max-w-5xl',
+  wide: 'max-w-[1140px]',
+  wall: 'max-w-[1440px]',
+} as const;
+
+export const pageHeadingClassName = 'text-[1.75rem] font-medium leading-tight tracking-[-0.02em] text-balance text-[var(--text)] sm:text-3xl';
+export const sectionHeadingClassName = 'text-base font-medium tracking-[-0.01em] text-[var(--text)]';
+export const eyebrowClassName = 'text-xs font-medium text-[var(--text-muted)]';
 export const formLabelClassName = 'mb-1.5 block text-[13px] font-medium text-[var(--text-secondary)]';
-export const formFieldClassName =
-  'min-h-10 max-md:min-h-11 w-full rounded-[10px] border border-[var(--field-border)] bg-[var(--field-surface)] px-3 py-2 text-[13px] text-[var(--text)] outline-none shadow-[var(--shadow-inset)] transition placeholder:text-[var(--text-muted)] focus:border-[var(--field-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--field-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
+const fieldBaseClassName =
+  'w-full rounded-lg border border-[var(--field-border)] bg-[var(--field-surface)] px-3 text-sm text-[var(--text)] outline-none transition-colors placeholder:text-[var(--text-muted)] hover:border-[var(--field-border-hover)] focus:border-[var(--field-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--field-focus)]/40 disabled:cursor-not-allowed disabled:opacity-60';
+export const formFieldClassName = `min-h-10 py-2 ${fieldBaseClassName}`;
 export const formSelectClassName = `${formFieldClassName} pr-10`;
-export const formTextareaClassName =
-  'w-full rounded-[10px] border border-[var(--field-border)] bg-[var(--field-surface)] px-3 py-2.5 text-[13px] text-[var(--text)] outline-none shadow-[var(--shadow-inset)] transition placeholder:text-[var(--text-muted)] focus:border-[var(--field-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--field-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
+export const formTextareaClassName = `py-2.5 leading-relaxed ${fieldBaseClassName}`;
 export const buttonFocusClassName =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]';
 const buttonDisabledClassName = 'disabled:cursor-not-allowed disabled:opacity-50';
 const standardButtonBaseClassName =
-  `inline-flex min-h-10 max-md:min-h-11 items-center justify-center whitespace-nowrap rounded-[10px] px-4 py-2 text-[13px] font-semibold tracking-[0.01em] transition ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-[background-color,border-color,color,transform] active:scale-[0.98] ${buttonFocusClassName} ${buttonDisabledClassName}`;
 const compactButtonBaseClassName =
-  `inline-flex min-h-8 max-md:min-h-11 items-center justify-center whitespace-nowrap rounded-[9px] px-2.5 py-1.5 text-xs font-medium tracking-[0.01em] transition ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `inline-flex min-h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-[background-color,border-color,color] ${buttonFocusClassName} ${buttonDisabledClassName}`;
 export const primaryButtonClassName =
-  `${standardButtonBaseClassName} bg-[var(--brand)] text-[var(--signal-ink)] shadow-[var(--shadow-raised)] hover:bg-[var(--signal-hover)]`;
+  `${standardButtonBaseClassName} bg-[var(--brand)] text-[var(--signal-ink)] hover:bg-[var(--signal-hover)]`;
 export const secondaryButtonClassName =
-  `${standardButtonBaseClassName} border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-[var(--shadow-inset)] hover:border-[var(--field-focus)] hover:bg-[var(--field-surface)]`;
+  `${standardButtonBaseClassName} border border-[var(--border-strong)] bg-transparent text-[var(--text)] hover:bg-[var(--raised)]`;
 export const dangerButtonClassName =
   `${standardButtonBaseClassName} border border-[var(--danger-border)] bg-[var(--danger-tint)] text-[var(--status-danger)] hover:bg-[var(--danger-tint-strong)] focus-visible:ring-[var(--status-danger)]`;
 export const compactPrimaryButtonClassName =
   `${compactButtonBaseClassName} bg-[var(--brand)] text-[var(--signal-ink)] hover:bg-[var(--signal-hover)]`;
 export const compactSecondaryButtonClassName =
-  `${compactButtonBaseClassName} border border-[var(--border)] bg-transparent text-[var(--text-secondary)] hover:border-[var(--field-focus)] hover:bg-[var(--field-surface)] hover:text-[var(--text)]`;
+  `${compactButtonBaseClassName} border border-[var(--border-strong)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--raised)] hover:text-[var(--text)]`;
 export const compactDangerButtonClassName =
   `${compactButtonBaseClassName} border border-[var(--danger-border)] bg-[var(--danger-tint)] text-[var(--status-danger)] hover:bg-[var(--danger-tint-strong)] focus-visible:ring-[var(--status-danger)]`;
 export const compactListButtonClassName =
-  `flex min-h-8 max-md:min-h-11 w-full items-center justify-start rounded-[9px] bg-[var(--surface)] px-2.5 py-1.5 text-left text-xs text-[var(--text)] transition hover:bg-[var(--field-surface)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `flex min-h-8 w-full items-center justify-start rounded-lg px-2.5 py-1.5 text-left text-[13px] text-[var(--text)] transition-colors hover:bg-[var(--raised)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
 export const dangerTextClassName = 'text-sm text-[var(--status-danger)]';
 export const successTextClassName = 'text-sm text-[var(--status-success)]';
 
 export function ghostButtonClassName(size: 'default' | 'compact') {
   return size === 'compact'
-    ? `inline-flex min-h-8 max-md:min-h-11 items-center justify-center whitespace-nowrap rounded-[9px] px-2 py-1.5 text-xs font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--text)] ${buttonFocusClassName}`
-    : `inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-[10px] px-2 py-2 text-[13px] font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--text)] ${buttonFocusClassName}`;
+    ? `inline-flex min-h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-[13px] font-medium text-[var(--brand)] transition-colors hover:bg-[var(--brand-tint)] hover:text-[var(--text)] ${buttonFocusClassName}`
+    : `inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--brand)] transition-colors hover:bg-[var(--brand-tint)] hover:text-[var(--text)] ${buttonFocusClassName}`;
 }
+
+/** Icon-only round step button, as used for period navigation. */
+export const iconButtonClassName =
+  `inline-flex size-10 max-md:size-11 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[var(--text-secondary)] transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--raised)] hover:text-[var(--text)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
 
 export function getSegmentedChoiceClassName(selected: boolean, size: 'default' | 'compact' = 'default') {
   const sizeClassName =
     size === 'compact'
-      ? 'min-h-8 max-md:min-h-11 rounded-[9px] px-2.5 py-1.5 text-xs font-medium'
-      : 'min-h-10 max-md:min-h-11 rounded-[10px] px-4 py-2 text-[13px] font-semibold';
+      ? 'min-h-8 rounded-md px-2.5 py-1 text-[13px] font-medium'
+      : 'min-h-10 rounded-lg px-4 py-2 text-sm font-medium';
 
-  return `flex min-w-0 flex-1 items-center justify-center border transition ${sizeClassName} ${buttonFocusClassName} ${
+  return `flex min-w-0 flex-1 items-center justify-center border transition-colors ${sizeClassName} ${buttonFocusClassName} ${
     selected
       ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)] text-[var(--field-selected-text)]'
-      : 'border-[var(--field-border)] bg-[var(--field-surface)] text-[var(--text-secondary)] hover:border-[var(--field-focus)] hover:text-[var(--text)]'
+      : 'border-[var(--field-border)] bg-[var(--field-surface)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text)]'
   }`;
 }
 
-/** All workspace geometry is owned by the page-layout rules in globals.css. */
-export function PageShell({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <main className={`page-layout ${className}`}>{children}</main>;
+/** Segmented switch in the instrument style: a raised track with a lifted active option. */
+export function getSwitchOptionClassName(selected: boolean) {
+  return `inline-flex min-h-8 items-center justify-center rounded-md px-3 text-[13px] font-medium transition-colors ${buttonFocusClassName} ${
+    selected ? 'bg-[var(--border-strong)] text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+  }`;
+}
+
+export const switchTrackClassName = 'inline-flex gap-0.5 rounded-lg bg-[var(--raised)] p-0.5';
+
+export function PageShell({
+  children,
+  size = 'default',
+  className = '',
+}: {
+  children: ReactNode;
+  size?: keyof typeof pageShellWidthClasses;
+  className?: string;
+}) {
+  return (
+    <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-7 lg:px-10">
+      <div className={`flex w-full flex-col gap-6 py-7 ${pageShellWidthClasses[size]} ${className}`}>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 /** Authentication has its own reading-width frame, outside the workspace. */
@@ -63,7 +97,6 @@ export function AuthPageShell({ children }: { children: ReactNode }) {
   return <main className="auth-page-layout">{children}</main>;
 }
 
-export const iconButtonClassName = `inline-flex h-10 w-10 max-md:h-11 max-md:w-11 flex-none items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] transition hover:bg-[var(--field-surface)] hover:text-[var(--text)] ${buttonFocusClassName}`;
 
 const backControlClassName = `inline-flex h-10 w-10 max-md:h-11 max-md:w-11 flex-none items-center justify-center rounded-[10px] text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] ${buttonFocusClassName}`;
 
@@ -99,40 +132,41 @@ export function BackControl(props: BackControlProps) {
 export function TopBar({
   title,
   description,
+  eyebrow,
   actions,
   back,
   align = 'left',
 }: {
   title: string;
   description?: string;
+  eyebrow?: ReactNode;
   actions?: ReactNode;
   back?: { href: string; label: string };
   align?: 'left' | 'center';
 }) {
   const isCentered = align === 'center';
-  const heading = (
-    <div className="min-w-0 space-y-2">
-      <div className={isCentered ? 'space-y-2 text-center' : 'space-y-2'}>
-        <h1 className={pageHeadingClassName}>{title}</h1>
-        {description ? (
-          <p className={`text-[15px] leading-[1.55] text-[var(--text-secondary)] ${isCentered ? 'mx-auto max-w-2xl' : 'max-w-3xl'}`}>
-            {description}
-          </p>
-        ) : null}
-      </div>
+  const titleBlock = (
+    <div className={isCentered ? 'space-y-1.5 text-center' : 'min-w-0 space-y-1.5'}>
+      {eyebrow ? <p className={`data ${eyebrowClassName}`}>{eyebrow}</p> : null}
+      <h1 className={pageHeadingClassName}>{title}</h1>
+      {description ? (
+        <p className={`text-sm leading-relaxed text-[var(--text-muted)] ${isCentered ? 'mx-auto max-w-2xl' : 'max-w-3xl'}`}>
+          {description}
+        </p>
+      ) : null}
     </div>
   );
 
   return (
-    <div className={`page-header ink-topbar ${isCentered ? 'page-header--center' : ''}`}>
+    <header className={`min-h-[64px] ${isCentered ? 'text-center' : 'flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'}`}>
       {back ? (
-        <div className="page-header__heading flex min-w-0 items-start gap-3">
+        <div className="flex min-w-0 items-start gap-3">
           <BackControl href={back.href} label={back.label} />
-          {heading}
+          {titleBlock}
         </div>
-      ) : heading}
-      {actions ? <div className={`flex flex-wrap gap-3 ${isCentered ? 'justify-center' : ''}`}>{actions}</div> : null}
-    </div>
+      ) : titleBlock}
+      {actions ? <div className={`flex flex-wrap items-center gap-2 ${isCentered ? 'justify-center' : ''}`}>{actions}</div> : null}
+    </header>
   );
 }
 
@@ -167,23 +201,42 @@ export function ActionLink({
 
 export function Surface({ children, className = '', id }: { children: ReactNode; className?: string; id?: string }) {
   return (
-    <section
-      id={id}
-      className={`rounded-[16px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-inset)] ${className}`}
-    >
+    <section id={id} className={`tile rounded-2xl p-5 ${className}`}>
       {children}
     </section>
   );
 }
 
-export function StatTile({ label, value, detail }: { label: string; value: string; detail?: string }) {
+const statTileToneClassNames = {
+  good: 'text-[var(--status-success)]',
+  watch: 'text-[var(--status-warning)]',
+  neutral: 'text-[var(--text-muted)]',
+} as const;
+
+/** A square of reading: label, a large tabular value with a quiet unit, and optional detail. */
+export function StatTile({
+  label,
+  value,
+  unit,
+  detail,
+  tone,
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+  detail?: ReactNode;
+  tone?: 'good' | 'watch' | 'neutral';
+}) {
+  const toneClassName = statTileToneClassNames[tone ?? 'neutral'];
+
   return (
-    <div className="rounded-[16px] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-inset)]">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">{label}</p>
-      <p className="metric-text mt-2 text-[26px] font-semibold tracking-[-0.02em] text-[var(--text)]">
+    <div className="tile flex min-h-[7.5rem] flex-col rounded-2xl p-4">
+      <p className="text-sm text-[var(--text-secondary)]">{label}</p>
+      <p className="data mt-auto pt-3 text-[1.75rem] font-medium leading-none tracking-[-0.02em] text-[var(--text)]">
         {value}
+        {unit ? <span className="ml-1 text-[0.5em] font-normal text-[var(--text-muted)]">{unit}</span> : null}
       </p>
-      {detail ? <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{detail}</p> : null}
+      {detail ? <p className={`data mt-2 text-xs ${toneClassName}`}>{detail}</p> : null}
     </div>
   );
 }
@@ -196,16 +249,14 @@ export function Badge({
   tone?: 'neutral' | 'brand' | 'success' | 'warning';
 }) {
   const toneClasses = {
-    neutral: 'border-[var(--border)] bg-[var(--field-surface)] text-[var(--text-secondary)]',
-    brand: 'border-[var(--field-selected-border)] bg-[var(--brand-tint)] text-[var(--field-selected-text)]',
+    neutral: 'border-[var(--border-strong)] text-[var(--text-secondary)]',
+    brand: 'border-[var(--status-planned-border)] bg-[var(--brand-tint)] text-[var(--brand)]',
     success: 'border-[var(--status-success-border)] bg-[var(--status-success-tint)] text-[var(--status-success)]',
     warning: 'border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] text-[var(--status-warning)]',
   } as const;
 
   return (
-    <span
-      className={`inline-flex min-h-7 items-center rounded-full border px-3 text-[12.5px] font-medium shadow-[var(--shadow-inset)] ${toneClasses[tone]}`}
-    >
+    <span className={`inline-flex min-h-6 items-center rounded-full border px-2.5 text-xs font-medium ${toneClasses[tone]}`}>
       {children}
     </span>
   );
@@ -213,10 +264,10 @@ export function Badge({
 
 export function EmptyState({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
   return (
-    <div className="rounded-[16px] border border-dashed border-[var(--border)] bg-[var(--field-surface)] px-5 py-10 text-center">
-      <p className="text-base font-semibold text-[var(--text)]">{title}</p>
-      <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--text-secondary)]">{description}</p>
-      {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
+    <div className="tile-empty rounded-2xl px-5 py-10 text-center">
+      <p className="text-base font-medium text-[var(--text)]">{title}</p>
+      <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--text-muted)]">{description}</p>
+      {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
     </div>
   );
 }

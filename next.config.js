@@ -3,6 +3,7 @@ const path = require('path');
 
 const nextConfig = {
   outputFileTracingRoot: path.join(__dirname),
+  devIndicators: { position: 'bottom-right' },
 };
 
 module.exports = nextConfig;

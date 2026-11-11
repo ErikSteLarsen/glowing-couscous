@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { Activity, CalendarDays, Dumbbell, House, LayoutTemplate, Menu, PanelLeftOpen } from 'lucide-react';
+import { Menu, PanelLeftOpen } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { AppSidebar } from '@/components/AppSidebar';
+import { AppSidebar, navIconFor } from '@/components/AppSidebar';
+import { BrandMark } from '@/components/BrandMark';
 import { buttonFocusClassName, iconButtonClassName } from '@/components/ui';
 import { getMobileNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import type { SessionUser } from '@/lib/auth-session';
@@ -47,9 +48,11 @@ function getServerMenuHidden() { return false; }
 
 export function AppShell({
   user,
+  hasActiveCoach = false,
   children,
 }: {
   user: SessionUser & { role: 'COACH' | 'ATHLETE' };
+  hasActiveCoach?: boolean;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -61,7 +64,7 @@ export function AppShell({
   const theme = useSyncExternalStore(subscribeToTheme, getClientTheme, getServerTheme);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const desktopMenuButtonRef = useRef<HTMLButtonElement>(null);
-  const navItems = getMobileNavigation(user.role);
+  const navItems = getMobileNavigation(user.role, { hasActiveCoach });
 
   // A browser history change also dismisses the drawer, without reopening it
   // when the user returns to the route on which it was originally opened.
@@ -163,6 +166,13 @@ export function AppShell({
     if (mobileOpen) requestAnimationFrame(() => (window.matchMedia('(max-width: 767px)').matches ? menuButtonRef : desktopMenuButtonRef).current?.focus());
   };
 
+  // After choosing a destination, focus belongs to the new page rather than the menu button.
+  const closeAfterNavigation = () => {
+    if (!mobileOpen) return;
+    setMobileOpenPath(null);
+    requestAnimationFrame(() => document.getElementById('main')?.focus());
+  };
+
   const setDesktopMenuHidden = (hidden: boolean) => {
     sessionMenuHidden = hidden;
     try { window.localStorage.setItem('tempo-menu-hidden', String(hidden)); }
@@ -176,25 +186,51 @@ export function AppShell({
 
   return (
     <div
-      className="ink-studio-app tempo-shell relative min-h-screen bg-[var(--background)] text-[var(--text)]"
+      className="ink-studio-app tempo-shell relative min-h-screen bg-[var(--background)] text-[var(--text-secondary)]"
       data-menu-hidden={menuHidden}
     >
+      <a
+        href="#main"
+        className="sr-only z-50 rounded-lg bg-[var(--brand)] px-3 py-2 text-sm font-medium text-[var(--signal-ink)] focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
+      >
+        Skip to content
+      </a>
       <AppSidebar
         user={user}
         pathname={navigationPathname}
+        hasActiveCoach={hasActiveCoach}
         mobileOpen={mobileOpen}
         isMobileViewport={isMobileViewport}
         onClose={closeMobileMenu}
+        onNavigate={closeAfterNavigation}
         onHide={() => setDesktopMenuHidden(true)}
         previewMode={false}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
       <div
-        className="relative z-10 min-w-0 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
+        className="relative z-10 with-sidebar min-w-0 pb-[calc(var(--mobile-nav-clearance)+1rem)] md:pb-0"
         aria-hidden={mobileOpen && isMobileViewport ? true : undefined}
         inert={mobileOpen && isMobileViewport ? true : undefined}
       >
+        <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/90 px-4 backdrop-blur-md md:hidden">
+          <Link href={navItems[0]?.href ?? '/'} className={`flex items-center gap-2.5 rounded-lg ${buttonFocusClassName}`}>
+            <BrandMark />
+            <span className="text-[15px] font-semibold text-[var(--text)]">Tempo</span>
+          </Link>
+          <button
+            type="button"
+            aria-controls="tempo-sidebar"
+            aria-expanded={mobileOpen}
+            aria-label="Open menu"
+            title="Show menu"
+            ref={menuButtonRef}
+            className={`inline-flex size-11 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--raised)] hover:text-[var(--text)] ${buttonFocusClassName}`}
+            onClick={() => setMobileOpenPath(pathname)}
+          >
+            <Menu aria-hidden="true" size={18} strokeWidth={1.6} />
+          </button>
+        </header>
         <div className="tempo-menu-bar">
           <button
             type="button"
@@ -207,7 +243,6 @@ export function AppShell({
             onClick={() => setDesktopMenuHidden(false)}
           >
             <PanelLeftOpen aria-hidden="true" size={18} strokeWidth={1.8} />
-
           </button>
         </div>
         {children}
@@ -216,37 +251,23 @@ export function AppShell({
         aria-label="Primary navigation"
         aria-hidden={mobileOpen && isMobileViewport ? true : undefined}
         inert={mobileOpen && isMobileViewport ? true : undefined}
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--nav-border)] bg-[var(--nav-surface)] pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--nav-border)] bg-[var(--background)]/95 pb-[max(0.375rem,env(safe-area-inset-bottom))] backdrop-blur-md md:hidden"
       >
-        <div className="grid grid-cols-5 gap-1 px-3 pt-2">
-          <button type="button" ref={menuButtonRef} aria-label="Show menu" title="Show menu"
-            aria-controls="tempo-sidebar" aria-expanded={mobileOpen}
-            className={`flex min-h-14 items-center justify-center rounded-[10px] text-[var(--nav-muted)] hover:bg-[var(--nav-active)] ${buttonFocusClassName}`}
-            onClick={() => setMobileOpenPath(pathname)}>
-            <Menu aria-hidden="true" size={20} strokeWidth={1.8} />
-          </button>
+        <div className="grid px-2 pt-1.5" style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}>
           {navItems.map((item) => {
             const isActive = isNavigationItemActive(navigationPathname, item, navItems);
-            const Icon = item.label === 'Home'
-              ? House
-              : item.label === 'Plan' || item.label === 'Calendar'
-                ? CalendarDays
-                : item.label === 'Workouts'
-                  ? Dumbbell
-                  : item.label === 'Templates'
-                    ? LayoutTemplate
-                    : Activity;
+            const Icon = navIconFor(item.label);
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
-                  className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-[10px] px-1 text-[10px] font-semibold uppercase tracking-[0.04em] ${buttonFocusClassName} ${
-                  isActive ? 'bg-[var(--nav-active)] text-[var(--nav-signal)]' : 'text-[var(--nav-muted)]'
+                className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-medium transition-colors ${buttonFocusClassName} ${
+                  isActive ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
                 }`}
               >
-                <Icon aria-hidden="true" size={17} strokeWidth={1.8} />
+                <Icon aria-hidden="true" size={18} strokeWidth={1.5} className={isActive ? 'text-[var(--brand)]' : ''} />
                 {item.label}
               </Link>
             );

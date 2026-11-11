@@ -35,20 +35,20 @@ test('current profile resolves FTP, pace, CSS, HR, and profile-independent RPE w
   const css = { metric: 'pace' as const, mode: 'relative' as const, reference: 'css' as const, low: 95, high: 100 };
   const hr = { metric: 'hr' as const, mode: 'relative' as const, reference: 'threshold-hr' as const, low: 86, high: 90 };
   assert.equal(formatWorkoutTarget(ftp), '88-92% FTP');
-  assert.equal(formatResolvedWorkoutTarget(ftp, profile), '246-258 W');
-  assert.equal(formatResolvedWorkoutTarget(pace, profile), '4:43-4:54 /km');
-  assert.equal(formatResolvedWorkoutTarget(css, profile), '1:40-1:45 /100 m');
-  assert.equal(formatResolvedWorkoutTarget(hr, profile), '146-153 bpm');
-  assert.equal(resolveWorkoutTarget({ metric: 'rpe', mode: 'absolute', reference: null, low: 7, high: 8 }, profile), null);
+  assert.equal(formatResolvedWorkoutTarget(ftp, profile, 'BIKING'), '246-258 W');
+  assert.equal(formatResolvedWorkoutTarget(pace, profile, 'RUNNING'), '4:43-4:54 /km');
+  assert.equal(formatResolvedWorkoutTarget(css, profile, 'SWIMMING'), '1:40-1:45 /100 m');
+  assert.equal(formatResolvedWorkoutTarget(hr, profile, 'BIKING'), '146-153 bpm');
+  assert.equal(resolveWorkoutTarget({ metric: 'rpe', mode: 'absolute', reference: null, low: 7, high: 8 }, profile, 'RUNNING'), null);
   assert.equal(formatWorkoutTarget({ metric: 'rpe', mode: 'absolute', reference: null, low: 7, high: 8 }), 'RPE 7-8');
   assert.deepEqual(ftp, { metric: 'power', mode: 'relative', reference: 'ftp', low: 88, high: 92 });
 });
 
 test('missing values never resolve to zero and live profile updates refresh the same generic target', () => {
   const target = { metric: 'power' as const, mode: 'relative' as const, reference: 'ftp' as const, low: 88, high: 92 };
-  assert.equal(resolveWorkoutTarget(target, createEmptyPerformanceProfile()), null);
+  assert.equal(resolveWorkoutTarget(target, createEmptyPerformanceProfile(), 'BIKING'), null);
   assert.equal(missingProfileAction(target), 'Add FTP to preview watts.');
-  assert.equal(formatResolvedWorkoutTarget(target, normalizePerformanceProfile({ cycling: { ftpWatts: 300 } })), '264-276 W');
+  assert.equal(formatResolvedWorkoutTarget(target, normalizePerformanceProfile({ cycling: { ftpWatts: 300 } }), 'BIKING'), '264-276 W');
 });
 
 test('new running and heart-rate presets resolve from private profile values', () => {

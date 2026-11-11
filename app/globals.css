@@ -15,8 +15,7 @@
 }
 
 @media (min-width: 768px) {
-  .tempo-shell { display: grid; grid-template-columns: 228px minmax(0, 1fr); }
-  .tempo-shell[data-menu-hidden="true"] { grid-template-columns: minmax(0, 1fr); }
+  .tempo-shell[data-menu-hidden="true"] .with-sidebar { padding-left: 0; }
   .tempo-shell[data-menu-hidden="true"] .tempo-sidebar { display: none; }
   .tempo-shell[data-menu-hidden="false"] .tempo-menu-bar { display: none; }
 }
@@ -147,6 +146,122 @@
 .study-workouts__library, .study-workouts__library .workout-library-card {
   box-shadow: var(--shadow-inset);
 }
+/*
+ * Night instrument. A dark, quiet training instrument: one deep ground, hairline
+ * rules instead of heavy cards, one cyan trace for action and focus, and
+ * tabular numbers everywhere a value is read. DESIGN.md is the contract.
+ */
+
+/* `rail:` applies while the desktop sidebar is collapsed to its icon rail. */
+@custom-variant rail {
+  @media (min-width: 768px) {
+    html[data-sidebar='rail'] & {
+      @slot;
+    }
+  }
+}
+
+@theme {
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+
+  --color-ground: #0B0F15;
+  --color-raised: #151B24;
+  --color-rule: #1F2732;
+  --color-rule-strong: #323C4A;
+  --color-ink-1: #EEF2F6;
+  --color-ink-2: #A9B4C1;
+  --color-ink-3: #8592A1;
+  --color-trace: #5EB6D8;
+  --color-trace-faint: #2D4A5A;
+
+  /* Intensity zones read cool to hot on the dark ground. */
+  --color-zone-1: #7F9BB5;
+  --color-zone-2: #4FB89F;
+  --color-zone-3: #D9B44A;
+  --color-zone-4: #EE8A4C;
+  --color-zone-5: #E8667E;
+  --color-liquid: #7F9BB5;
+}
+
+:root {
+  --mobile-nav-clearance: calc(4rem + env(safe-area-inset-bottom, 0px));
+  --background: var(--color-ground);
+  --raised: var(--color-raised);
+  --surface: color-mix(in srgb, var(--color-raised) 55%, var(--color-ground));
+  --sunken: #090C11;
+  --border: var(--color-rule);
+  --border-strong: var(--color-rule-strong);
+
+  --text: var(--color-ink-1);
+  --text-secondary: var(--color-ink-2);
+  --text-muted: var(--color-ink-3);
+
+  --brand: var(--color-trace);
+  --brand-tint: color-mix(in srgb, var(--color-trace) 14%, transparent);
+  --signal-hover: #82C9E4;
+  --signal-ink: #06121A;
+  --band: color-mix(in srgb, var(--color-trace) 17%, transparent);
+
+  --field-surface: #0E131A;
+  --field-border: var(--color-rule-strong);
+  --field-border-hover: #4A5666;
+  --field-focus: var(--color-trace);
+  --field-selected-border: var(--color-trace);
+  --field-selected-text: var(--color-ink-1);
+
+  --selection: #2C6078;
+  --scrollbar-thumb: var(--color-rule-strong);
+  --scrollbar-thumb-hover: var(--field-border-hover);
+
+  --status-success: #5FCFA2;
+  --status-success-tint: color-mix(in srgb, #5FCFA2 13%, transparent);
+  --status-success-border: color-mix(in srgb, #5FCFA2 40%, transparent);
+  --status-warning: #F0A84A;
+  --status-warning-tint: color-mix(in srgb, #F0A84A 13%, transparent);
+  --status-warning-border: color-mix(in srgb, #F0A84A 40%, transparent);
+  --status-danger: #F3877A;
+  --danger-tint: color-mix(in srgb, #F3877A 12%, transparent);
+  --danger-tint-strong: color-mix(in srgb, #F3877A 22%, transparent);
+  --danger-border: color-mix(in srgb, #F3877A 42%, transparent);
+  --status-planned: var(--color-trace);
+  --status-planned-tint: var(--brand-tint);
+  --status-planned-border: color-mix(in srgb, var(--color-trace) 40%, transparent);
+  --status-adjusted: #F0A84A;
+  --status-adjusted-tint: color-mix(in srgb, #F0A84A 13%, transparent);
+  --status-adjusted-border: color-mix(in srgb, #F0A84A 40%, transparent);
+  --status-missed: #E3818F;
+  --status-missed-tint: color-mix(in srgb, #E3818F 13%, transparent);
+  --status-missed-border: color-mix(in srgb, #E3818F 40%, transparent);
+
+  /* Compliance: completed close to plan, partly, far off, or missed. */
+  --compliance-good: #5FCFA2;
+  --compliance-partial: #F0A84A;
+  --compliance-off: #F3877A;
+
+  /* Fitness, fatigue, form. */
+  --metric-fitness: var(--color-trace);
+  --metric-fatigue: #C08AE8;
+  --metric-form: #F0A84A;
+
+  --overlay: rgb(3 6 10 / 0.66);
+  --nav-surface: var(--color-ground);
+  --nav-text: var(--color-ink-1);
+  --nav-muted: var(--color-ink-2);
+  --nav-border: var(--color-rule);
+  --nav-active: var(--color-raised);
+  --nav-signal: var(--color-trace);
+
+  --shadow-raised: 0 12px 32px rgb(0 0 0 / 0.4);
+  --shadow-overlay: 0 16px 48px rgb(0 0 0 / 0.55);
+  --shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.025);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --sidebar: 14rem;
+}
+
+html[data-sidebar='rail'] {
+  --sidebar: 3.75rem;
+}
 .ink-studio-app .study-home__today { border-radius: 24px; }
 .ink-studio-app .study-home__week, .ink-studio-app .study-home__readout { border-radius: 20px; }
 .ink-studio-app .study-workouts__library, .ink-studio-app .study-workouts__editor { border-radius: 22px; }
@@ -180,16 +295,18 @@
 }
 
 html {
-  color-scheme: light;
+  color-scheme: dark;
+  background: var(--background);
 }
 
 body {
   margin: 0;
   min-height: 100vh;
   background: var(--background);
-  color: var(--text);
-  font-family: var(--font-schibsted), system-ui, sans-serif;
+  color: var(--text-secondary);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @layer base {
@@ -210,9 +327,29 @@ body {
   [role="button"] {
     cursor: pointer;
   }
+
+  h1,
+  h2,
+  h3,
+  strong {
+    color: var(--text);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+  }
 }
 
-.metric-text {
+/* Every number that is read as a value lines up. */
+.metric-text,
+.data {
   font-feature-settings: "tnum";
   font-variant-numeric: tabular-nums;
 }
@@ -222,22 +359,9 @@ body {
   color: var(--text);
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--background);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -245,78 +369,101 @@ body {
     scroll-behavior: auto;
   }
 
-  [class*='transition-transform'],
-  [class*='transition-all'],
-  .ink-session-row::before {
-    transition-property: color, background-color, border-color, opacity !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
-.ink-basin-app {
-  background-color: var(--background);
-  background-image: none;
+/* Shell */
+
+.with-sidebar {
+  transition: padding-left 200ms var(--ease-out-expo);
 }
 
-.ink-studio-app {
-  background-color: var(--background);
-  background-image: none;
-  overflow-x: clip;
+@media (min-width: 768px) {
+  .with-sidebar {
+    padding-left: var(--sidebar);
+  }
 }
 
-.ink-flow-backdrop {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 0;
-  width: min(82vw, 1180px);
-  height: 720px;
-  color: var(--ink-line);
-  opacity: 0.32;
-  pointer-events: none;
+.app-sidebar {
+  transition: width 200ms var(--ease-out-expo), transform 200ms ease-out;
 }
 
-.ink-flow-backdrop svg {
-  display: block;
-  width: 100%;
-  height: 100%;
+@media (min-width: 768px) {
+  .app-sidebar {
+    width: var(--sidebar);
+  }
 }
 
-.ink-brand-mark {
-  position: relative;
+.brand-mark {
   display: inline-flex;
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  border: 1px solid var(--nav-text);
-  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--brand);
 }
 
-.ink-brand-mark span {
-  width: 21px;
-  height: 13px;
-  border: 1.5px solid var(--nav-signal);
-  border-right-color: transparent;
-  border-radius: 50%;
-  transform: rotate(-36deg) translate(-1px, 1px);
+/* Tiles: squares of reading instead of heavy cards. */
+
+.tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition:
+    background-color 180ms ease-out,
+    border-color 180ms ease-out,
+    box-shadow 180ms ease-out,
+    transform 180ms var(--ease-out-expo);
 }
 
-.ink-brand-mark i {
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--nav-signal);
-  transform: translate(4px, -2px);
+a.tile:hover,
+button.tile:hover,
+.tile--interactive:hover {
+  background: var(--raised);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-raised);
 }
+
+.tile-empty {
+  background: transparent;
+  border: 1px dashed var(--border-strong);
+}
+
+@keyframes breathe {
+  0%,
+  100% { opacity: 0.45; }
+  50% { opacity: 0.9; }
+}
+
+.skeleton {
+  animation: breathe 1.6s ease-in-out infinite;
+  background: var(--raised);
+}
+
+@keyframes chart-reveal {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+.chart-reveal {
+  animation: chart-reveal 500ms var(--ease-out-expo) both;
+}
+
+/* Session language */
 
 .ink-session-row {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   background: var(--surface);
-  box-shadow: var(--shadow-inset);
 }
 
 .ink-session-row::before {
@@ -324,7 +471,7 @@ body {
   inset: 11px auto 11px 0;
   width: 2px;
   border-radius: 999px;
-  background: var(--color-signal);
+  background: var(--brand);
   content: '';
   transform: scaleY(0.2);
   transform-origin: center;
@@ -340,14 +487,14 @@ body {
   display: none;
 }
 
+.ink-session-row .font-semibold {
+  font-weight: 500;
+}
+
 .ink-form-inspector > div > button {
   min-height: 2.5rem;
   padding: 0.5rem 1rem;
   font-size: 0.8125rem;
-  font-weight: 600;
-}
-
-.ink-session-row .font-semibold {
   font-weight: 500;
 }
 
@@ -358,54 +505,15 @@ body {
 .ink-zone-5 { background: var(--color-zone-5); }
 
 .ink-next-action {
-  background: var(--sunken);
-  box-shadow: var(--shadow-inset);
-}
-
-.ink-home .ink-next-action {
-  position: relative;
-  min-height: 210px;
   background: var(--surface);
 }
 
-.ink-home .ink-next-action--quiet-tone {
-  background: color-mix(in srgb, var(--surface) 72%, var(--paper));
-  border-color: color-mix(in srgb, var(--border) 72%, transparent);
-  box-shadow: none;
+.ink-readout {
+  background: var(--surface);
 }
 
-.ink-home .ink-next-action--quiet-tone span.rounded-full {
-  background: transparent;
-  border-color: var(--border);
-  color: var(--text-secondary);
-}
-
-.ink-home .ink-next-action--summary {
-  min-height: 0;
-  border-radius: 0;
-  border-right: 0;
-  border-left: 0;
-  background: transparent;
-  box-shadow: none;
-  padding: 12px 0;
-}
-
-.ink-home .ink-next-action--summary > div {
-  gap: 8px;
-}
-
-.ink-home .ink-next-action--summary span.rounded-full {
-  background: transparent;
-  border-color: var(--border);
-  color: var(--text-secondary);
-}
-
-.ink-week-ribbon {
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: rgba(251, 250, 247, 0.84);
-  box-shadow: var(--shadow-inset);
+.ink-week-track {
+  scrollbar-width: thin;
 }
 
 .ink-day-channel {
@@ -414,13 +522,11 @@ body {
   border-color: var(--border);
 }
 
-.ink-week-track {
-  scrollbar-width: thin;
+.ink-day-channel--today {
+  border-color: var(--field-selected-border) !important;
+  background: var(--brand-tint);
 }
 
-.ink-day-channel--today {
-  border-color: var(--brand) !important;
-}
 
 .calendar-day--today {
   background: var(--brand-tint);
@@ -502,14 +608,6 @@ body {
 }
 
 @media (max-width: 767px) {
-  .ink-flow-backdrop {
-    top: 60px;
-    right: -35vw;
-    width: 125vw;
-    height: 430px;
-    opacity: 0.2;
-  }
-
   .ink-week-track {
     display: flex !important;
     max-width: 100%;
@@ -541,7 +639,7 @@ body {
   min-height: 100vh;
   background: var(--demo-bg);
   color: var(--demo-ink);
-  font-family: var(--font-schibsted), system-ui, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
 }
 
 .tempo-demo__announcement {
@@ -769,7 +867,7 @@ body {
   min-height: 100vh;
   background: var(--background);
   color: var(--text);
-  font-family: var(--font-schibsted), system-ui, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
 }
 
 .workout-preview--workbench { background: var(--sunken); }

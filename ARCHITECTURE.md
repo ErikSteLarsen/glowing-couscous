@@ -8,7 +8,7 @@ This document describes the current implementation. The source code, tests, and
 The first MVP centers on independent personal training, as defined in
 PRODUCT.md. The existing ATHLETE role and /athlete/* routes are the current
 implementation of that personal workspace. Coach services remain secondary compatibility; coach pages currently redirect
-to `/athlete` through middleware, and discovery redirects in its page. Their presence in this owner map does not
+to `/athlete` through the proxy, and discovery redirects in its page. Their presence in this owner map does not
 make coach feature completion a first-MVP gate. Extend the personal or shared
 service owner for personal workflows and preserve role/ownership boundaries.
 This priority does not change the current schema, roles, or route names.
@@ -36,7 +36,7 @@ one-time account creation flow directly.
 
 ### Coach compatibility
 
-These route implementations remain in the tree, but middleware redirects all
+These route implementations remain in the tree, but the proxy redirects all
 `/coach*` pages to `/athlete`. APIs bypass that redirect and keep their own role
 and ownership guards; page visibility is not API authorization.
 
@@ -55,9 +55,10 @@ and ownership guards; page visibility is not API authorization.
 - `/athlete/templates` - private weekly routines composed from saved workouts
 - `/athlete/session/[sessionId]` - compact read-only workout structure, block inspector and outcome review; `lib/session-structure.ts` groups identical instructions and `components/SessionWorkoutOverview.tsx` owns selection/disclosure
 - `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion
-- `/athlete/activity` - History for completed sessions and imported activities
+- `/athlete/activity` - History for completed sessions, manual logs and imported activities, paginated with URL name/sport filters and matching totals
 - `/athlete/import` - activity-file and Strava review/import; the previous `/athlete/imported-activities` path redirects here
 - `/athlete/find-coach` - dormant discovery entry; redirects to `/athlete`
+- `/athlete/events` - athlete-owned event milestones, targets, and results
 - `/athlete/profile`, `/profile` - profile surfaces and compatibility alias
 - `/settings` - Home overview card preferences
 
@@ -76,6 +77,10 @@ navigation.
 - `/api/athlete/planner/*`, `/api/athlete/sessions/*` - athlete planning and outcomes
 - `/api/athlete/workouts/generate` - private guided workout draft generation from bounded choices and recent completed training
 - `/api/athlete/workouts/ai-status` - private read of cached, app-wide model availability
+- `/api/athlete/activities` - manual activity logging, eligible session candidates, and explicit standalone-or-paired completion
+- `/api/athlete/activities/[activityId]` - owner-scoped correction of standalone and paired manual outcomes
+- `/api/athlete/activities/import/*` - bounded TCX/FIT/GPX preview and explicit import choice
+- `/api/athlete/events/*` - athlete-owned event milestone mutations and explicit completed-activity links
 - `/api/share-links/*` - authenticated share creation and intake
 - `/api/strava/*` - per-user OAuth, activity review/import, webhook receipt, disconnect/deauthorization cleanup, and webhook worker recovery
 
@@ -83,7 +88,7 @@ navigation.
 
 | Area | Owner | Responsibility |
 |---|---|---|
-| Authentication | `auth.ts`, `middleware.ts`, `lib/auth-session.ts`, `lib/api-auth.ts`, `lib/password-reset-service.ts` | Session shaping, redirects, current-user access, API role guards, and one-time password recovery |
+| Authentication | `auth.ts`, `proxy.ts`, `lib/auth-session.ts`, `lib/api-auth.ts`, `lib/password-reset-service.ts` | Session shaping, redirects, current-user access, API role guards, and one-time password recovery |
 | Account | `lib/account-service.ts` | Profile, performance profile, and overview preference reads/writes |
 | Coach reads | `lib/coach-service.ts` | Roster and athlete-detail read models |
 | Coach requests | `lib/coach-request-service.ts` | Search, request creation, approval, rejection, and pending uniqueness |
@@ -95,6 +100,10 @@ navigation.
 | Guided workout creation | `lib/guided-workout.ts`, `lib/guided-workout-service.ts`, `lib/workout-llm.ts`, `components/GuidedWorkoutForm.tsx` | Owner-scoped recent-training summary, validated full model-authored workouts, app-wide provider health cache, standard fallback patterns, and unsaved draft handoff to the shared builder |
 | Training plans | `lib/coach-training-plan-service.ts` | Reusable weekday-based coach plans |
 | Templates | `lib/template-service.ts`, `lib/template-routine.ts`, `components/TrainingTemplatesClient.tsx` | Owner-scoped saved-workout routine composition, snapshot validation and weekday expansion; `lib/template-period.ts` validates week/month application |
+| Activity navigation | `lib/activity-navigation.ts` | Validated history filters, page size, and pagination URLs |
+| Athlete events | `lib/athlete-event-service.ts`, `lib/athlete-service.ts` | Athlete-owned event validation, results, explicit completed-activity search/link/unlink, and Home and Calendar read models |
+| Manual activity | `lib/athlete-manual-activity-service.ts`, `lib/athlete-import-pairing.ts` | Athlete-owned manual summaries, eligible self-planned candidates, explicit pairing or standalone logging, atomic completion, and version-checked manual corrections |
+| Activity import | `lib/athlete-tcx-import-service.ts`, `lib/athlete-fit-import-service.ts`, `lib/athlete-gpx-import-service.ts`, `lib/athlete-import-pairing.ts`, `lib/tcx-activity.ts`, `lib/fit-activity.ts`, `lib/gpx-activity.ts`, `lib/tcx-upload.ts` | Shared bounded upload and explicit preview/confirmation routes; summary-only TCX/FIT/GPX parsing, athlete-scoped fingerprints, eligible self-planned candidates, and atomic Activity attachment |
 | Assignment | `lib/assignment-service.ts` | Snapshot copies, lineage, deduplication, and training-plan assignment |
 | Session compatibility | `lib/planner-service.ts` | Older coach session mutation adapter; transitional only |
 | Workout content | `lib/session-editor.ts`, `lib/session-editor-adapters.ts`, `lib/workout-editor.ts`, `lib/workout-blocks.ts`, `lib/workout-pattern.ts` | Canonical drafts, editor modes, block normalization, pattern and pause insertion, and persistence shaping |
@@ -110,7 +119,7 @@ navigation.
 `Plan`, `TrainingPlan`, `Session`, `Block`, `Template`, `Activity`,
 `Assignment`, `TrainingPlanAssignment`, `ShareLink`, `StravaConnection`,
 `StravaInboxActivity`, `StravaWebhookEvent`, `PasswordResetToken`,
-`PlacementRequest`, and `AiProviderHealth`.
+`PlacementRequest`, `AiProviderHealth`, and `AthleteEvent`.
 
 - `User.role` controls access. Credentials signup sets ATHLETE and selfCoached directly; nullable roles use compatibility setup.
 - `User.sessionVersion` invalidates previously issued JWT sessions after a credential password reset; server auth refreshes the version before accepting protected work.
@@ -125,8 +134,9 @@ navigation.
 - File imports store normalized recorded samples and import provenance on the owner's `Activity`. The uploaded original file is parsed in the browser and is never persisted. `Activity.importFingerprint` prevents importing the same normalized file twice for one account. Users can delete an import: matched sessions restore their prior status and keep their planned blocks; standalone imported sessions are removed.
 - Strava connections belong to one Tempo `User.id` and one Strava athlete ID. OAuth tokens are AES-GCM encrypted with a server-only key. The recent-activity inbox and webhook receipt queue are separate from Tempo sessions; a user must explicitly review and import an activity. Imported Strava sessions carry source identity so activity updates, privacy changes, disconnect, and deauthorization can be reflected in Tempo and matched planned sessions restored.
 - `StravaInboxActivity.notifiedAt` retains legacy notification acknowledgement state; `dismissedAt` records recoverable discard. Neither deletes data, and provider upserts preserve both. Needs review ignores legacy acknowledgement state so previously acknowledged but unimported items remain reviewable. All unimported inbox items remain reachable on Import, including older discarded items. `StravaWebhookEvent.processingUntil` leases concurrent work and `nextAttemptAt` controls bounded backoff. The shell does not poll or open automatic arrival dialogs. Import reads the local inbox on visit and explicit Refresh inbox; Needs review excludes imported and dismissed items, while All activities retains access to both. Visiting Import schedules only that owner's due recovery work after the response. Sync now explicitly fetches recent provider activities. The authenticated worker handles retries while users are away. No storage-retention deletion was added.
-- `ShareLink` stores a token hash and one sanitized snapshot tied to a `Session`; the raw token is never persisted.
 - `PasswordResetToken` stores one hashed, 30-minute reset token per credentials account, plus a per-account email cooldown and hourly send limit. Resend delivery requires `RESEND_API_KEY`, a verified `PASSWORD_RESET_FROM_EMAIL`, and an HTTPS `AUTH_URL` in production; raw reset tokens are sent by email and never stored. Password reset increments the account session version so older JWTs are rejected.
+- `AthleteEvent` stores a personal event date, optional target finish time, and optional post-event result, scoped to its athlete and independent of planned sessions. `Activity.eventId` is an optional athlete-owned association: an event can link multiple activities, but each activity can link to at most one event. Deleting an event clears the link; deleting an activity does not delete the event.
+- `ShareLink` stores a token hash and one sanitized snapshot tied to either a `Session` or `Template`; the raw token is never persisted.
 
 ## Safe Extension Rules
 
@@ -141,6 +151,9 @@ navigation.
 9. Keep public sharing sanitized and explicit. Never include Activity, actual/baseline JSON, private notes, RPE, ownership, or relationship data.
 10. Treat `lib/planner-service.ts` and `/api/coach/sessions/[sessionId]` as compatibility code, not a new extension point.
 11. The guided creator accepts model-authored blocks only after server validation of duration, structure, zones, and cautious-history limits. Its model call receives aggregate completed-training context, never raw notes or telemetry, and never persists the draft. Provider availability uses a short database-backed lease and cache shared across app instances.
+12. Imported activity pairing belongs to the import services and `lib/athlete-import-pairing.ts`; preserve the scheduled plan and report duration-only comparison unless an actual structured snapshot exists.
+13. Personal event/activity associations belong to `lib/athlete-event-service.ts`; require explicit athlete action and keep the event result independent of linked activity metrics.
+14. Manual activity/session pairing belongs to `lib/athlete-manual-activity-service.ts`; require explicit athlete choice, preserve planned content and baseline, and report duration only without inventing actual blocks or TSS.
 
 ## Persistence and verification
 
@@ -268,3 +281,13 @@ Presentation adapts analysis through lib/activity-analysis-view into the existin
 SessionBlockBar. Telemetry v1 remains readable; v2 optionally stores validated
 TCX/FIT laps. FIT elapsed chronology and timer duration are distinct. Timer events,
 advanced segmentation and historical result versions are deferred.
+- Public sharing, recipient intake, and session outcome mutations have local Chromium verification. Production deployment remains unverified.
+- Auth.js external OAuth integration is optional and not covered by local credentials tests.
+- The authentication proxy runs in Node.js so roleless JWT refreshes can query Prisma. Its redirects are secondary to the service/API authorization checks.
+## Calendar scheduling
+`lib/calendar-navigation.ts` owns validated local calendar-day URL navigation.
+`AthleteCalendar` renders week/month views and submits drag or explicit-date
+moves to `/api/athlete/planner/sessions/[sessionId]/schedule`.
+`athletePlannerService.rescheduleSession` atomically checks athlete ownership,
+completion, and coach assignment, preserves local time/content, and updates the
+Monday-based plan. Calendar content and summaries refresh from server data.
