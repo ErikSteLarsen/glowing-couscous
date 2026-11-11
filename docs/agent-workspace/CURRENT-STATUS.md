@@ -40,6 +40,10 @@ sanitized snapshots and requires an explicit recipient save.
   and undo/redo. Generic prescriptions do not store personal profile values.
   Workout, template, and share authoring retain seconds. Shared duration labels
   show short intervals and second remainders instead of rounding them away.
+  `WorkoutBuilder` is the mounted library editor. `WorkoutCanvasEditor` remains
+  a separate, unmounted implementation with its own selection, repeat, and
+  timeline controls; consolidation remains unresolved, so neither capability
+  was removed in this scoped handoff fix.
 - Template authoring uses the shared editor with profile previews, explicit
   discard confirmation, failed-save draft retention, and locked controls while
   saving. The library and editor appear separately; mobile Save clears the
@@ -203,6 +207,8 @@ sanitized snapshots and requires an explicit recipient save.
   validates source IDs against the signed-in athlete's libraries, opens week
   templates on a Monday-to-Sunday range, opens month templates on the full
   calendar month, and retains a selected source during month navigation.
+  The template card hands off with `source=template:<id>`; the Calendar route
+  does not consume the former `add=1&template=<id>` query.
   Athletes can review or change the cadence-aligned range before assignment;
   invalid or removed source links show an explanation. This handoff scores
   **8.5/10** after local Chromium verified creating and assigning a new workout,
@@ -220,7 +226,7 @@ sanitized snapshots and requires an explicit recipient save.
 | Lint | Pass | `pnpm lint` on 2026-11-10 after GPX import |
 | Production build | Pass | `pnpm build` on 2026-11-10 after GPX import; Node emits the existing `DEP0205` warning for `module.register()` |
 | Workout authoring design previews | Pass, 8.5/10 as design exploration | Six preview routes were checked in local production-build Chromium at 1440×900 and 390×844; document and body widths matched both viewports. Flowline keyboard/pointer reorder, presets, save/reset, Trail intention choices, and Workbench selection/repeat/copy-paste/staging/reset interactions were exercised. Axe 4.12.1 found zero WCAG 2 A/AA violations at both sizes; three contrast checks remained incomplete where content is covered by a drag pseudo-element or outside the current position of an intentional horizontal scroller, and those regions were visually inspected. Terrain labels and group semantics, Ribbon group semantics, Flowline card fit, drag description IDs, and forward reorder were corrected. Impeccable reported advisory-only design-token findings across the preview stylesheet. The previews remain sample-only; Ribbon is the strongest concept if a later authoring redesign is requested. No production authoring change was made. |
-| Library-to-Planner handoff | Pass, 8.5/10 | Local production-build Chromium at 390px created a workout, used the save feedback link to open it selected in Planner, and assigned it. Created single-day, week, and month templates; the week handoff selected Monday 9–Sunday 15 Nov and assigned seven copies; the month handoff selected 1–30 Nov and exposed the enabled assignment action. Month navigation retained the selected template; an invalid workout ID showed the unavailable-source explanation. Planner axe 4.12.1: zero WCAG 2 A/AA violations and zero incomplete checks at 390px and 1440px. Workouts and Templates scans also had zero violations/incomplete checks at 390px; measured document/body widths matched the 390px viewport. |
+| Library-to-Planner handoff | Pass, 8.5/10 | Local production-build Chromium at 390px created a workout, used the save feedback link to open it selected in Planner, and assigned it. Created single-day, week, and month templates; the week handoff selected Monday 9–Sunday 15 Nov and assigned seven copies; the month handoff selected 1–30 Nov and exposed the enabled assignment action. Month navigation retained the selected template; an invalid workout ID showed the unavailable-source explanation. The current template card now links directly with `source=template:<id>`; focused source assertion covers the repaired handoff, with browser re-check pending. Planner axe 4.12.1: zero WCAG 2 A/AA violations and zero incomplete checks at 390px and 1440px. Workouts and Templates scans also had zero violations/incomplete checks at 390px; measured document/body widths matched the 390px viewport. |
 | Imported activity pairing | Pass, 8.5/10 | SQLite TCX and FIT coverage verifies same-local-day candidates, owner/sport/date/status boundaries including missed-session exclusion, stale 409, preserved planned fields and baseline, null-baseline capture, atomic Activity/session completion, summary-only actuals, duplicate retry, paired Activity/detail/weekly duration, unknown TSS, and duration-only status. Chromium at 390px verified an unselected candidate and disabled save until an explicit choice, paired Activity/session outcomes, the separate-activity path and “no planned comparison,” and Calendar labels “Duration recorded” versus “Unplanned”; no horizontal overflow. Session detail and Activity axe scans had zero WCAG 2 A/AA violations. Calendar scan had zero violations; its two quick-navigation contrast checks were incomplete, then manually measured at 6.06:1 against the page background. |
 | Mobile workout actions | Pass | 390px Chromium: action bar bottom 780px, navigation top 783px; desktop offset 0px; both review axes found no actionable issue |
 | Template authoring | Pass | Chromium discard/keep, blocked fetch, delayed save locks, retry/reload, and 20-second interval persistence; editor and list axe scans have no violations; 390px and 1440px have no overflow; design detector has no findings |

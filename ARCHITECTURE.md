@@ -51,7 +51,7 @@ and ownership guards; page visibility is not API authorization.
 - `/athlete` - Home week overview
 - `/athlete/calendar` - unified week/month calendar with inline workout/template scheduling
 - `/athlete/workouts` - owner-scoped unscheduled workout library
-- `/athlete/planner` - compatibility redirect to Calendar scheduling, preserving the date
+- `/athlete/planner` - source-aware scheduling desk for assigning saved workouts and templates to calendar dates; workout and template library handoffs can preselect an owned source
 - `/athlete/templates` - private weekly routines composed from saved workouts
 - `/athlete/session/[sessionId]` - compact read-only workout structure, block inspector and outcome review; `lib/session-structure.ts` groups identical instructions and `components/SessionWorkoutOverview.tsx` owns selection/disclosure
 - `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion

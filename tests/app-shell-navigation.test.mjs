@@ -106,6 +106,7 @@ test('athlete planner only places defined sources on selected dates', async () =
   const plannerClientSource = await read('app/(app)/athlete/planner/AthletePlannerClient.tsx');
   const plannerDeskSource = await read('components/PlannerDesk.tsx');
   const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
+  const templatesClientSource = await read('components/TrainingTemplatesClient.tsx');
 
   assert.match(plannerPageSource, /athletePlannerService\.loadWorkspace/);
   assert.match(plannerPageSource, /workoutLibraryService\.listForOwner\('athlete', user\.id\)/);
@@ -119,6 +120,8 @@ test('athlete planner only places defined sources on selected dates', async () =
   assert.match(plannerDeskSource, /Month navigation/);
   assert.match(plannerDeskSource, /params\.set\('source', selectedSource\.key\)/);
   assert.match(workoutsClientSource, /source=workout:\$\{workout\.id\}/);
+  assert.match(templatesClientSource, /source=template:\$\{template\.id\}/);
+  assert.doesNotMatch(templatesClientSource, /\/athlete\/calendar\?add=1&template=/);
 });
 
 test('desktop sidebar stays within the viewport and owns its overflow', async () => {
