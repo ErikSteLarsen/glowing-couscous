@@ -54,6 +54,7 @@ test('Home independently queries week outcomes and keeps scheduled structure sep
   ];
   let weekQueries = 0;
   const service = createAthleteService({ now: () => clock, db: {
+    session: { async findMany() { return []; } },
     user: { async findUnique(args: { where: { id: number }; include: { sessions: { where: { date: { gte: Date; lte: Date } } }; activities: { take: number } } }) {
       assert.equal(args.where.id, 7);
       assert.equal(args.include.activities.take, 4);

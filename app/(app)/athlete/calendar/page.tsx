@@ -1,40 +1,61 @@
-import { parseTemplateRoutine } from '@/lib/template-routine';
-import { format, isValid, parseISO } from 'date-fns';
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { PageShell } from '@/components/ui';
-import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
+import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
-import { templateService } from '@/lib/template-service';
-import { workoutLibraryService } from '@/lib/workout-library-service';
-import { derivePlannerSourceDurationSec } from '@/lib/planner-source-metrics';
-import { TrainingCalendar } from './TrainingCalendar';
+import { parseCalendarDay, parseCalendarView } from '@/lib/calendar-navigation';
+import { toDayKey } from '@/lib/training-load';
+import { AthleteCalendar, type CalendarDay, type CalendarWeek } from './AthleteCalendar';
 
-export default async function AthleteCalendarPage({ searchParams }: {
-  searchParams: Promise<{ date?: string; weekStart?: string; view?: string; add?: string; template?: string }>;
+export const metadata: Metadata = { title: 'Calendar' };
+
+export default async function AthleteCalendarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ weekStart?: string; date?: string; view?: string }>;
 }) {
   const user = await getCurrentUser();
-  if (!user) redirect('/login');
-  if (!hasAppRole(user)) redirect('/setup');
-  const params = await searchParams;
-  const requested = parseISO(params.date ?? params.weekStart ?? '');
-  const date = format(isValid(requested) ? requested : new Date(), 'yyyy-MM-dd');
-  const view = params.view === 'month' ? 'month' : 'week';
-  const [calendar, templates, workouts] = await Promise.all([
-    athleteService.loadCalendarView(user.id, date, view),
-    templateService.listForOwner(user.id),
-    workoutLibraryService.listForOwner('athlete', user.id),
-  ]);
-  if (!calendar) redirect('/login');
-  const sources = [
-    ...workouts.map(workout => ({ key: `workout:${workout.id}`, id: workout.id,
-      kind: 'workout' as const, title: workout.title, sport: workout.sport,
-      summary: workout.summary, durationSec: derivePlannerSourceDurationSec(workout.blocks) })),
-    ...templates.map(template => ({ key: `template:${template.id}`, id: template.id,
-      kind: 'template' as const, title: template.name, sport: parseTemplateRoutine(template.routineJson)?.entries[0].sport ?? 'RUNNING',
-      summary: template.summary, routineEntries: parseTemplateRoutine(template.routineJson)?.entries.map(({ weekday, title }) => ({ weekday, title })) })),
-  ];
-  return <PageShell><TrainingCalendar date={date} view={view} label={calendar.period.label}
-    today={format(new Date(), 'yyyy-MM-dd')} initiallyAdding={params.add === '1'} initialTemplateId={params.template ? Number(params.template) : undefined} sources={sources}
-    days={(view === 'month' ? calendar.weeks.flat() : calendar.days).map(day => ({ ...day, sessions: day.sessions.map(session => ({ ...session,
-      durationSec: session.recordedDurationSec ?? session.durationSec })) }))} /></PageShell>;
+  if (!user || user.role !== 'ATHLETE') redirect('/login');
+
+  const { weekStart, date, view } = await searchParams;
+  const selectedView = parseCalendarView(view);
+  const today = toDayKey(new Date());
+  // yyyy-MM-dd is a local calendar day; anything else falls back to today.
+  const day = parseCalendarDay(date) ?? parseCalendarDay(weekStart) ?? today;
+  const calendar = await athleteService.loadCalendarView(user.id, day, selectedView);
+  if (!calendar) redirect('/athlete/find-coach');
+
+  const toDay = (entry: (typeof calendar.days)[number]): CalendarDay => ({
+    isoDate: entry.isoDate,
+    label: entry.label,
+    dateLabel: entry.dateLabel,
+    isToday: entry.isToday,
+    isCurrentMonth: entry.isCurrentMonth,
+    sessions: entry.sessions.map((session) => ({
+      id: session.id,
+      title: session.title,
+      sport: session.sport,
+      timeLabel: session.timeLabel,
+      durationSec: session.durationSec,
+      distanceMeters: session.distanceMeters,
+      tss: session.tss,
+      compliance: session.compliance,
+      canReschedule: session.canReschedule,
+      canDelete: session.canReschedule,
+      segments: session.segments,
+    })),
+    events: entry.events.map((event) => ({ id: event.id, title: event.title, sport: event.sport, targetFinishSec: event.targetFinishSec, resultFinishSec: event.resultFinishSec })),
+  });
+  const dayRows = selectedView === 'week' ? [calendar.days] : calendar.weeks;
+  const weeks: CalendarWeek[] = dayRows.map((row) => ({
+    weekStart: row[0].isoDate,
+    days: row.map(toDay),
+    summary: calendar.weekSummaries.find((summary) => summary.weekStart === row[0].isoDate) ?? null,
+  }));
+
+  return (
+    <PageShell size="wall">
+      <AthleteCalendar key={`${selectedView}:${day}`} view={selectedView} day={day} today={today} weeks={weeks} />
+    </PageShell>
+  );
 }

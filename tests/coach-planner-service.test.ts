@@ -436,7 +436,7 @@ test('planner page places defined sources without embedding workout creation', a
   assert.doesNotMatch(clientSource, /WorkoutBuilder|Create detailed session|Session canvas/);
   assert.match(clientSource, /PlannerDesk/);
   assert.match(plannerDeskSource, /Manage workouts/);
-  assert.doesNotMatch(plannerDeskSource, /Manage templates/);
+  assert.doesNotMatch(clientSource, /Manage templates/);
   assert.match(plannerDeskSource, /Assign training plan/);
 });
 

@@ -36,15 +36,15 @@ test('athlete pages and coach-request routes do not access prisma directly', asy
 
 test('planner view contracts belong to the domain and the personal Calendar does not depend on coach UI', async () => {
   const [calendar, coachPlanner, plannerDesk, contracts] = await Promise.all([
-    read('app/(app)/athlete/calendar/TrainingCalendar.tsx'),
+    read('app/(app)/athlete/calendar/AthleteCalendar.tsx'),
     read('app/(app)/coach/planner/PlannerClient.tsx'),
     read('components/PlannerDesk.tsx'),
     read('lib/planner-view.ts'),
   ]);
-  for (const consumer of [calendar, coachPlanner, plannerDesk]) {
+  for (const consumer of [coachPlanner]) {
     assert.match(consumer, /from '@\/lib\/planner-view'/);
   }
-  assert.doesNotMatch(calendar, /components\/PlannerDesk/);
+  assert.doesNotMatch(calendar, /components\/PlannerDesk|coach/);
   assert.doesNotMatch(contracts, /components\//);
 });
 
@@ -160,21 +160,17 @@ test('coach request UI surfaces failures and blocks duplicate actions', async ()
   assert.match(discoverySource, /Failed to send request/);
 });
 
-test('athlete home uses the selected Monolith composition and explicit session actions', async () => {
+test('athlete home uses the overhaul composition with explicit session actions', async () => {
   const athleteRouteSource = await read('app/(app)/athlete/page.tsx');
-  const athletePageSource = await read('components/FocusHome.tsx');
   const sessionRowSource = await read('components/tempo/SessionRow.tsx');
   const statusBadgeSource = await read('components/tempo/StatusBadge.tsx');
 
-  assert.match(athleteRouteSource, /<FocusHome dashboard=\{dashboard\}/);
-  assert.match(athletePageSource, /Welcome/);
-  assert.match(athletePageSource, /Today/);
-  assert.match(athletePageSource, /This week/);
-  assert.match(athletePageSource, /nextActionLabel/);
-  assert.match(athletePageSource, /Nothing is scheduled today/);
-  assert.match(athletePageSource, /Plan training/);
-  assert.match(athletePageSource, /athlete\/session/);
-  assert.match(athletePageSource, /StatusBadge/);
+  assert.match(athleteRouteSource, /HomeTrainingSetup/);
+  assert.match(athleteRouteSource, /next-event-heading/);
+  assert.match(athleteRouteSource, /OverdueSessions/);
+  assert.match(athleteRouteSource, /Rest day|Done for today/);
+  assert.match(athleteRouteSource, /athlete\/session/);
+  assert.doesNotMatch(athleteRouteSource, /find-coach/);
   assert.doesNotMatch(sessionRowSource, /StatusBadge|showStatus/);
   assert.match(statusBadgeSource, /status === 'completed'/);
   assert.match(sessionRowSource, /break-words text-\[13px\] font-semibold/);

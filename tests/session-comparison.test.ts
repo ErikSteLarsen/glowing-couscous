@@ -134,7 +134,6 @@ test('comparison routes and history outcomes preserve both role adapters and com
   const dialog = await readFile(path.join(process.cwd(), 'components/SessionComparisonDialog.tsx'), 'utf8');
   const athleteDetail = await readFile(path.join(process.cwd(), 'app/(app)/athlete/session/[sessionId]/SessionDetailClient.tsx'), 'utf8');
   const activityPage = await readFile(path.join(process.cwd(), 'app/(app)/athlete/activity/page.tsx'), 'utf8');
-  const activityHistory = await readFile(path.join(process.cwd(), 'components/ActivityHistoryOverview.tsx'), 'utf8');
   const coachDetail = await readFile(path.join(process.cwd(), 'app/(app)/coach/athletes/[athleteId]/page.tsx'), 'utf8');
 
   assert.match(athleteRoute, /requireAthlete/);
@@ -150,7 +149,6 @@ test('comparison routes and history outcomes preserve both role adapters and com
   assert.match(dialog, /Loading comparison/);
   assert.match(dialog, /Close comparison/);
   assert.match(athleteDetail, /SessionComparisonDialog/);
-  assert.match(activityPage, /ActivityHistoryOverview/);
-  assert.match(activityHistory, /`\/athlete\/session\/\$\{activity\.sessionId\}\?from=activity`/);
+  assert.match(activityPage, /`\/athlete\/session\/\$\{activity\.sessionId\}\?from=activity`/);
   assert.match(coachDetail, /SessionComparisonDialog/);
 });

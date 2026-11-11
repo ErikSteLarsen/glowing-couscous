@@ -79,6 +79,8 @@ export function parseExecutionProgress(serialized: string | null, steps: Executi
   }
 
   const { currentIndex, completed } = value.state;
+  // Version 1 saves predate skipped-step state, so they resume with nothing skipped.
+  const skipped: unknown = value.state.skipped ?? steps.map(() => false);
   if (
     typeof currentIndex !== 'number' ||
     !Number.isInteger(currentIndex) ||
@@ -86,12 +88,15 @@ export function parseExecutionProgress(serialized: string | null, steps: Executi
     currentIndex >= steps.length ||
     !Array.isArray(completed) ||
     completed.length !== steps.length ||
-    !completed.every((item: unknown) => typeof item === 'boolean')
+    !completed.every((item: unknown) => typeof item === 'boolean') ||
+    !Array.isArray(skipped) ||
+    skipped.length !== steps.length ||
+    !skipped.every((item: unknown) => typeof item === 'boolean')
   ) {
     return null;
   }
 
-  return { currentIndex, completed };
+  return { currentIndex, completed, skipped };
 }
 
 /** Restores a timer only when its active step and prescribed duration still match. */

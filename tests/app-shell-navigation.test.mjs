@@ -26,7 +26,7 @@ test('root route and app navigation define one signed-in personal workspace', as
   assert.doesNotMatch(navSource, /label: 'Coach'/);
   assert.doesNotMatch(navSource, /label: 'Athletes'/);
   assert.match(navSource, /label: 'Calendar'/);
-  assert.doesNotMatch(navSource, /label: 'Planner'/);
+  assert.match(navSource, /label: 'Planner'/);
   assert.match(navSource, /label: 'Workouts'/);
   assert.match(navSource, /href: '\/athlete\/workouts'/);
   assert.match(navSource, /href: '\/athlete\/calendar'/);
@@ -53,7 +53,7 @@ test('mobile navigation keeps the main personal training jobs directly reachable
   const shellSource = await read('components/AppShell.tsx');
 
   assert.match(navSource, /label: 'Calendar'.*href: '\/athlete\/calendar'/s);
-  assert.match(navSource, /label: 'History'.*href: '\/athlete\/activity'/s);
+  assert.match(navSource, /label: 'Activity'.*href: '\/athlete\/activity'/s);
   assert.match(shellSource, /getMobileNavigation\(user\.role\)/);
   assert.match(shellSource, /import Link from 'next\/link'/);
   assert.match(shellSource, /<Link/);
@@ -62,10 +62,10 @@ test('mobile navigation keeps the main personal training jobs directly reachable
 
 test('mobile navigation maps task routes by role without leaking athlete destinations to coaches', () => {
   const athleteItems = getMobileNavigation('ATHLETE');
-  assert.deepEqual(athleteItems.map((item) => item.label), ['Home', 'Calendar', 'Workouts', 'History']);
-  assert.equal(isNavigationItemActive('/athlete/templates', athleteItems[2], athleteItems), true);
-  assert.equal(isNavigationItemActive('/athlete/import', athleteItems[3], athleteItems), true);
-  assert.equal(isNavigationItemActive('/athlete/planner', athleteItems[1], athleteItems), true);
+  assert.deepEqual(athleteItems.map((item) => item.label), ['Home', 'Calendar', 'Planner', 'Workouts', 'Activity']);
+  assert.equal(isNavigationItemActive('/athlete/templates', athleteItems[3], athleteItems), true);
+  assert.equal(isNavigationItemActive('/athlete/import', athleteItems[4], athleteItems), true);
+  assert.equal(isNavigationItemActive('/athlete/planner', athleteItems[2], athleteItems), true);
   assert.equal(isNavigationItemActive('/athlete/workouts', athleteItems[0], athleteItems), false);
 
   const coachItems = getMobileNavigation('COACH');
@@ -77,7 +77,7 @@ test('Workouts is a standalone library destination and session detail keeps its 
   const workoutsPageSource = await read('app/(app)/athlete/workouts/page.tsx');
   const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
   const sessionPageSource = await read('app/(app)/athlete/session/[sessionId]/page.tsx');
-  const calendarPageSource = await read('app/(app)/athlete/calendar/TrainingCalendar.tsx');
+  const calendarPageSource = await read('app/(app)/athlete/calendar/AthleteCalendar.tsx');
   const calendarSource = await read('app/(app)/athlete/calendar/AthleteCalendar.tsx');
   const profileMenuSource = await read('components/AppProfileMenu.tsx');
 
@@ -102,22 +102,23 @@ test('Workouts is a standalone library destination and session detail keeps its 
 });
 
 test('athlete planner only places defined sources on selected dates', async () => {
-  const plannerPageSource = await read('app/(app)/athlete/calendar/page.tsx');
-  const legacySource = await read('app/(app)/athlete/planner/page.tsx');
-  const plannerClientSource = await read('app/(app)/athlete/calendar/TrainingCalendar.tsx');
-  const templatesPageSource = await read('app/(app)/athlete/templates/page.tsx');
-  const athleteTemplateApiSource = await read('app/api/athlete/templates/route.ts');
+  const plannerPageSource = await read('app/(app)/athlete/planner/page.tsx');
+  const plannerClientSource = await read('app/(app)/athlete/planner/AthletePlannerClient.tsx');
+  const plannerDeskSource = await read('components/PlannerDesk.tsx');
+  const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
 
-  assert.match(plannerPageSource, /templateService\.listForOwner/);
-  assert.match(plannerPageSource, /TrainingCalendar/);
-  assert.match(legacySource, /redirect\(/);
+  assert.match(plannerPageSource, /athletePlannerService\.loadWorkspace/);
+  assert.match(plannerPageSource, /workoutLibraryService\.listForOwner\('athlete', user\.id\)/);
+  assert.match(plannerPageSource, /resolvePlannerSourceSelection\(source/);
+  assert.match(plannerPageSource, /AthletePlannerClient/);
   assert.doesNotMatch(plannerClientSource, /WorkoutBuilder|Start from scratch|Create session/);
-  assert.match(plannerClientSource, /templateDatesForSelection/);
-  assert.match(plannerClientSource, /selectedDates/);
-  assert.match(plannerClientSource, /workout/);
-  assert.match(plannerClientSource, /template/);
-  assert.match(templatesPageSource, /TrainingTemplatesClient/);
-  assert.match(templatesPageSource, /workoutLibraryService\.listForOwner/);
+  assert.match(plannerClientSource, /PlannerDesk/);
+  assert.match(plannerClientSource, /initialSourceKey=\{initialSourceKey\}/);
+  assert.match(plannerDeskSource, /templateDatesForSelection\(initialSource\.cadence \?\? 'day', initialDate\)/);
+  assert.match(plannerDeskSource, /setSelectedDates\(dates\)/);
+  assert.match(plannerDeskSource, /Month navigation/);
+  assert.match(plannerDeskSource, /params\.set\('source', selectedSource\.key\)/);
+  assert.match(workoutsClientSource, /source=workout:\$\{workout\.id\}/);
 });
 
 test('desktop sidebar stays within the viewport and owns its overflow', async () => {

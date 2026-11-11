@@ -1,9 +1,9 @@
 'use client';
 
-import { addDays, addMonths, format, parseISO, startOfMonth, startOfWeek, subMonths } from 'date-fns';
+import { addMonths, format, parseISO, startOfMonth, startOfWeek, subMonths } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { useMemo, useRef, useState, useTransition } from 'react';
 import {
   ArrowRight,
   CalendarDays,
@@ -30,17 +30,54 @@ import {
   successTextClassName,
 } from '@/components/ui';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
-import { SessionIntensitySwatch } from '@/components/tempo/SessionIntensitySwatch';
 import { formatDuration } from '@/lib/format-duration';
 import { parsePlannedTime } from '@/lib/planned-time';
 import { getSportLabel } from '@/lib/sport';
-import { getTempoZoneMeta } from '@/lib/tempo-blocks';
-import { getAverageSessionZone } from '@/lib/session-intensity';
+import { getTemplateCadence, getTemplateDurationDays, templateDatesForSelection, templateCadenceMeta, validateTemplateDateRange, type TemplateCadence } from '@/lib/template-cadence';
 
-import type { PlannerAthlete, PlannerCalendarDay, PlannerRole, PlannerSession, PlannerSource as BasePlannerSource, PlannerSourceKind } from '@/lib/planner-view';
+export type PlannerDeskRole = 'coach' | 'athlete';
+export type PlannerDeskSourceKind = 'workout' | 'template' | 'training-plan';
 
-type SourceTab = Exclude<PlannerSourceKind, 'template'>;
-type PlannerSource = Omit<BasePlannerSource, 'kind'> & { kind: SourceTab };
+export type PlannerDeskSource = {
+  key: string;
+  id: number;
+  kind: PlannerDeskSourceKind;
+  title: string;
+  sport: string;
+  summary: string | null;
+  durationSec?: number;
+  cadence?: TemplateCadence;
+  sessionCount?: number;
+};
+
+export type PlannerDeskSession = {
+  id: number;
+  athleteId?: number | null;
+  scheduledDate: string;
+  sport: string;
+  title: string;
+  summary?: string | null;
+  status: string;
+  durationSec: number;
+  tss: number | null;
+  segments: Array<{ key: string; zone: number; durationSec: number; label: string; color: string }>;
+};
+
+export type PlannerDeskCalendarDay = {
+  isoDate: string;
+  label: string;
+  dateLabel: string;
+  inMonth: boolean;
+  sessions: PlannerDeskSession[];
+};
+
+export type PlannerDeskAthlete = {
+  id: number;
+  name: string;
+  email?: string;
+};
+
+type SourceTab = PlannerDeskSourceKind;
 type PlacementFeedback = { dates: string[]; title: string; state: 'placing' | 'saved' | 'failed'; athleteId: number | null };
 
 export function PlannerDesk({
@@ -55,24 +92,31 @@ export function PlannerDesk({
   initialSourceTab = 'workout',
   initialMessage = '',
 }: {
-  role: PlannerRole;
+  role: PlannerDeskRole;
   initialDate: string;
   calendarLabel: string;
-  calendarDays: PlannerCalendarDay[];
-  sources: PlannerSource[];
-  athletes?: PlannerAthlete[];
+  calendarDays: PlannerDeskCalendarDay[];
+  sources: PlannerDeskSource[];
+  athletes?: PlannerDeskAthlete[];
   initialAthleteId?: number | null;
   initialSourceKey?: string;
-  initialSourceTab?: SourceTab;
+  initialSourceTab?: PlannerDeskSourceKind;
   initialMessage?: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const initialSource = sources.find((source) => source.key === initialSourceKey && source.kind === initialSourceTab);
+  const initialTemplateDates = initialSource?.kind === 'template'
+    ? templateDatesForSelection(initialSource.cadence ?? 'day', initialDate)
+    : [initialDate];
+  const initialSelectedDates = initialTemplateDates.length ? initialTemplateDates : [initialDate];
   const [selectedAthleteId, setSelectedAthleteId] = useState<number | null>(initialAthleteId);
   const [sourceTab, setSourceTab] = useState<SourceTab>(initialSourceTab);
   const [query, setQuery] = useState('');
   const [selectedSourceKey, setSelectedSourceKey] = useState(initialSourceKey);
-  const [selectedDates, setSelectedDates] = useState([initialDate]);
+  const [selectedDates, setSelectedDates] = useState(initialSelectedDates);
+  const [rangeStart, setRangeStart] = useState<string | null>(initialSource?.kind === 'template' ? initialSelectedDates[0] ?? null : null);
+  const [rangeEnd, setRangeEnd] = useState<string | null>(initialSource?.kind === 'template' && (initialSource.cadence ?? 'day') !== 'day' ? initialSelectedDates.at(-1) ?? null : null);
   const [message, setMessage] = useState(initialMessage);
   const [startTime, setStartTime] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger' | 'neutral'>('neutral');
@@ -93,6 +137,12 @@ export function PlannerDesk({
 
   const visibleSessions = calendarDays.flatMap((day) => day.sessions).filter((session) => role === 'athlete' || session.athleteId === selectedAthleteId);
   const selectedDate = selectedDates[0] ?? initialDate;
+  const selectedTemplateDays = selectedSource?.kind === 'template' ? getTemplateDurationDays(selectedSource.cadence ?? 'day', selectedDate) : null;
+  const templateRangeError = selectedSource?.kind === 'template' ? validateTemplateDateRange(selectedDates, selectedSource.cadence ?? 'day') : null;
+  const templateRangeValid = selectedSource?.kind !== 'template'
+    || (selectedSource.cadence === 'day'
+      ? selectedDates.length === 1
+      : selectedDates.length === selectedTemplateDays && templateRangeError === null);
   const plannedTime = parsePlannedTime(startTime.trim());
   const timeError = plannedTime.ok ? null : plannedTime.error;
   const scopedCalendarDays = calendarDays.map((day) => ({ ...day, sessions: day.sessions.filter((session) => role === 'athlete' || session.athleteId === selectedAthleteId) }));
@@ -100,15 +150,28 @@ export function PlannerDesk({
     ? selectedDates.filter((date) => scopedCalendarDays.some((day) => day.isoDate === date
         && day.sessions.some((session) => session.title === selectedSource.title && session.sport === selectedSource.sport)))
     : [];
-  const sourceNoun = selectedSource?.kind === 'training-plan' ? 'plan' : 'workout';
+  const sourceNoun = selectedSource?.kind === 'template' ? 'template' : selectedSource?.kind === 'training-plan' ? 'plan' : 'workout';
   const duplicateWarning = duplicateSourceDates.length ? `Some selected days already have this ${sourceNoun}.` : null;
-  const canAssign = Boolean(selectedSource && selectedDates.length && !timeError && (role === 'athlete' || selectedAthleteId));
+  const canAssign = Boolean(selectedSource && selectedDates.length && templateRangeValid && !timeError && (role === 'athlete' || selectedAthleteId));
 
-  function selectSource(source: PlannerSource) {
+  function selectSource(source: PlannerDeskSource) {
     setSelectedSourceKey(source.key);
     setMessage('');
     setMessageTone('neutral');
-    if (!selectedDates.length) setSelectedDates([initialDate]);
+    if (source.kind === 'template') {
+      const dates = templateDatesForSelection(source.cadence ?? 'day', selectedDates[0] ?? initialDate);
+      setSelectedDates(dates);
+      setRangeStart(dates[0] ?? null);
+      setRangeEnd((source.cadence ?? 'day') === 'day' ? null : dates.at(-1) ?? null);
+      if (dates.length > 1) {
+        setMessageTone('neutral');
+        setMessage(`Selected ${formatShortDate(dates[0])} to ${formatShortDate(dates[dates.length - 1])}. Review the highlighted dates, then assign.`);
+      }
+    } else {
+      setRangeStart(null);
+      setRangeEnd(null);
+      if (!selectedDates.length) setSelectedDates([initialDate]);
+    }
     if (source.kind === 'training-plan') {
       const monday = format(startOfWeek(parseISO(`${selectedDates[0] ?? initialDate}T00:00:00`), { weekStartsOn: 1 }), 'yyyy-MM-dd');
       setSelectedDates([monday]);
@@ -122,11 +185,38 @@ export function PlannerDesk({
     setMessage('');
     setMessageTone('neutral');
     if (firstSource) selectSource(firstSource);
-    else setSelectedSourceKey('');
+    else { setSelectedSourceKey(''); setRangeStart(null); setRangeEnd(null); }
   }
 
   function selectDate(date: string) {
     setMessageTone('neutral');
+    if (selectedSource?.kind === 'template') {
+      if (selectedSource.cadence === 'day') {
+        setSelectedDates([date]);
+        setRangeStart(date);
+        setRangeEnd(null);
+        setMessage('');
+    setMessageTone('neutral');
+        return;
+      }
+      if (!rangeStart || rangeEnd) {
+        setRangeStart(date);
+        setRangeEnd(null);
+        setSelectedDates([date]);
+        setMessage(`Start date set to ${formatShortDate(date)}. Choose an end date.`);
+        return;
+      }
+      const dates = datesBetween(rangeStart, date);
+      setRangeEnd(date);
+      setSelectedDates(dates);
+      const rangeError = validateTemplateDateRange(dates, selectedSource.cadence ?? 'day');
+      setMessageTone(rangeError ? 'danger' : 'neutral');
+      setMessage(rangeError === null
+        ? `${selectedSource.title} fits this ${dates.length}-day range.`
+        : rangeError);
+      return;
+    }
+
     if (selectedSource?.kind === 'training-plan') {
       const monday = format(startOfWeek(parseISO(`${date}T00:00:00`), { weekStartsOn: 1 }), 'yyyy-MM-dd');
       setSelectedDates([monday]);
@@ -141,9 +231,23 @@ export function PlannerDesk({
     setMessageTone('neutral');
   }
 
+  function selectTemplateRange() {
+    if (selectedSource?.kind !== 'template') return;
+    const dates = templateDatesForSelection(selectedSource.cadence ?? 'day', selectedDate);
+    setSelectedDates(dates);
+    setRangeStart(dates[0]);
+    setRangeEnd(dates.at(-1) ?? null);
+    setMessageTone('neutral');
+    setMessage(`Selected ${formatShortDate(dates[0])} to ${formatShortDate(dates[dates.length - 1])}. Review the highlighted dates, then assign.`);
+  }
+
   function selectOnlyDate(date: string) {
     setMessageTone('neutral');
     setSelectedDates([date]);
+    if (selectedSource?.kind === 'template') {
+      setRangeStart(date);
+      setRangeEnd(null);
+    }
     setMessage(`Only ${formatShortDate(date)} is selected.`);
   }
 
@@ -157,20 +261,6 @@ export function PlannerDesk({
     router.push(`${role === 'coach' ? '/coach/planner' : '/athlete/planner'}?${params.toString()}`);
   }
 
-  function navigateWeek(offset: -1 | 1) {
-    const referenceDate = parseISO(`${selectedDate}T00:00:00`);
-    const shiftedDate = addDays(referenceDate, offset * 7);
-    const nextDate = selectedSource?.kind === 'training-plan'
-      ? format(startOfWeek(shiftedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')
-      : format(shiftedDate, 'yyyy-MM-dd');
-    setSelectedDates([nextDate]);
-    setMessage('');
-    setMessageTone('neutral');
-    const params = new URLSearchParams({ date: nextDate });
-    if (role === 'coach' && selectedAthleteId) params.set('athleteId', String(selectedAthleteId));
-    router.push(`${role === 'coach' ? '/coach/planner' : '/athlete/planner'}?${params.toString()}`);
-  }
-
   function assignSource() {
     if (mutationInFlight.current) return;
     if (!selectedSource || !selectedDates.length) {
@@ -181,6 +271,11 @@ export function PlannerDesk({
     if (role === 'coach' && !selectedAthleteId) {
       setMessageTone('danger');
       setMessage('Choose an athlete before assigning source content.');
+      return;
+    }
+    if (!templateRangeValid) {
+      setMessageTone('danger');
+      setMessage(templateRangeError ?? `Select exactly ${selectedTemplateDays} days for this template.`);
       return;
     }
     if (!plannedTime.ok) {
@@ -242,7 +337,7 @@ export function PlannerDesk({
     });
   }
 
-  function removeSession(session: PlannerSession) {
+  function removeSession(session: PlannerDeskSession) {
     if (mutationInFlight.current) return;
     if (!window.confirm(`Remove "${session.title}" from the plan? This cannot be undone.`)) return;
     mutationInFlight.current = true;
@@ -286,6 +381,10 @@ export function PlannerDesk({
         role={role}
         source={selectedSource}
         selectedDates={selectedDates}
+        selectedTemplateDays={selectedTemplateDays}
+        rangeStart={rangeStart}
+        rangeEnd={rangeEnd}
+        valid={templateRangeValid}
         isPending={isPending}
         isAssigning={pendingAction === 'assign'}
         message={message}
@@ -318,15 +417,14 @@ export function PlannerDesk({
         </div>
         <div className="min-w-0">
         <MonthCalendar
+          onSelectTemplateRange={selectTemplateRange}
           label={calendarLabel}
           initialDate={initialDate}
-          selectedDate={selectedDate}
           days={scopedCalendarDays}
           placement={role === 'athlete' || placement?.athleteId === selectedAthleteId ? placement : null}
           selectedDates={selectedDates}
           selectedSource={selectedSource}
           onNavigate={navigateMonth}
-          onNavigateWeek={navigateWeek}
           onSelectDate={selectDate}
         />
         </div>
@@ -346,25 +444,29 @@ export function PlannerDesk({
   );
 }
 
-function AssignmentSummary({ role, source, selectedDates, isPending, isAssigning, message, messageTone, canAssign, startTime, timeError, duplicateWarning, onStartTimeChange, onAssign }: { role: PlannerRole; source: PlannerSource | null; selectedDates: string[]; isPending: boolean; isAssigning: boolean; message: string; messageTone: 'success' | 'danger' | 'neutral'; canAssign: boolean; startTime: string; timeError: string | null; duplicateWarning: string | null; onStartTimeChange: (value: string) => void; onAssign: () => void }) {
+function AssignmentSummary({ role, source, selectedDates, selectedTemplateDays, rangeStart, rangeEnd, valid, isPending, isAssigning, message, messageTone, canAssign, startTime, timeError, duplicateWarning, onStartTimeChange, onAssign }: { role: PlannerDeskRole; source: PlannerDeskSource | null; selectedDates: string[]; selectedTemplateDays: number | null; rangeStart: string | null; rangeEnd: string | null; valid: boolean; isPending: boolean; isAssigning: boolean; message: string; messageTone: 'success' | 'danger' | 'neutral'; canAssign: boolean; startTime: string; timeError: string | null; duplicateWarning: string | null; onStartTimeChange: (value: string) => void; onAssign: () => void }) {
   const selectedCount = selectedDates.length;
   const buttonLabel = !source
     ? 'Choose a source'
     : source.kind === 'training-plan'
       ? 'Assign training plan'
-      : `Assign workout to ${selectedCount} day${selectedCount === 1 ? '' : 's'}`;
+      : source.kind === 'template'
+        ? `Assign ${selectedTemplateDays}-day template`
+        : `Assign workout to ${selectedCount} day${selectedCount === 1 ? '' : 's'}`;
   return (
-    <section className={`max-md:sticky max-md:top-0 max-md:z-20 border-y border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-[var(--shadow-inset)] sm:px-5 ${source ? 'planner-desk__assignment--active' : 'planner-desk__assignment--idle'}`}>
+    <section className="border-y border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-[var(--shadow-inset)] sm:px-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-[var(--text)]">{source ? source.title : 'No source selected'}{source ? <span className="font-normal text-[var(--text-secondary)]"> · {getSportLabel(source.sport)} · {sourceMeta(source)}</span> : null}</p>
+          <p className="truncate text-sm font-semibold text-[var(--text)]">{source ? source.title : 'No source selected'}{source ? <span className="font-normal text-[var(--text-secondary)]"> · {getSportLabel(source.sport)} · {sourceMeta(source, selectedDates[0])}</span> : null}</p>
           <p className="mt-1 text-xs text-[var(--text-secondary)]">
-            {`${selectedCount} ${selectedCount === 1 ? 'day' : 'days'} selected`}
+            {source?.kind === 'template'
+              ? `${selectedCount} of ${selectedTemplateDays} days selected${rangeStart ? ` · starts ${formatShortDate(rangeStart)}` : ''}${rangeEnd ? ` · ends ${formatShortDate(rangeEnd)}` : ''}`
+              : `${selectedCount} ${selectedCount === 1 ? 'day' : 'days'} selected`}
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <p className="text-xs text-[var(--text-muted)] sm:max-w-[200px]">
-            {source ? 'Click dates to toggle the selection.' : 'Choose a workout or plan below to start planning.'}
+          <p className={`text-xs sm:max-w-[200px] ${source?.kind === 'template' && !valid ? 'text-[var(--status-warning)]' : 'text-[var(--text-muted)]'}`}>
+            {source?.kind === 'template' ? (valid ? 'Range length matches the template.' : `Select exactly ${selectedTemplateDays} days.`) : 'Click dates to toggle the selection.'}
           </p>
           {role === 'athlete' ? (
             <div className="min-w-0 sm:w-40">
@@ -395,11 +497,9 @@ function AssignmentSummary({ role, source, selectedDates, isPending, isAssigning
                 <span>{duplicateWarning}</span>
               </p>
             ) : null}
-            {source ? <button type="button" aria-label={isAssigning ? 'Placing workout' : buttonLabel} disabled={isPending || !canAssign} onClick={onAssign} className={`${primaryButtonClassName} planner-desk__assignment-action`}>
-              <Check aria-hidden="true" className="mr-2 h-4 w-4" />
-              <span className="md:hidden">{isAssigning ? 'Placing…' : 'Assign'}</span>
-              <span className="hidden md:inline">{isAssigning ? 'Placing...' : buttonLabel}</span>
-            </button> : null}
+            <button type="button" disabled={isPending || !canAssign} onClick={onAssign} className={primaryButtonClassName}>
+              <Check aria-hidden="true" className="mr-2 h-4 w-4" /> {isAssigning ? 'Placing...' : buttonLabel}
+            </button>
           </div>
         </div>
       </div>
@@ -408,12 +508,10 @@ function AssignmentSummary({ role, source, selectedDates, isPending, isAssigning
   );
 }
 
-function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSources, selectedDate, athletes, selectedAthleteId, onAthleteChange, onQueryChange, onTabChange, onSelectSource }: { role: PlannerRole; sources: PlannerSource[]; selectedSource: PlannerSource | null; sourceTab: SourceTab; query: string; visibleSources: PlannerSource[]; selectedDate: string; athletes: PlannerAthlete[]; selectedAthleteId: number | null; onAthleteChange: (athleteId: number) => void; onQueryChange: (query: string) => void; onTabChange: (tab: SourceTab) => void; onSelectSource: (source: PlannerSource) => void }) {
-  const tabs: SourceTab[] = role === 'coach' ? ['workout', 'training-plan'] : ['workout'];
-  const tabSources = sources.filter((source) => source.kind === sourceTab);
-  const hasSearch = query.trim().length > 0;
+function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSources, selectedDate, athletes, selectedAthleteId, onAthleteChange, onQueryChange, onTabChange, onSelectSource }: { role: PlannerDeskRole; sources: PlannerDeskSource[]; selectedSource: PlannerDeskSource | null; sourceTab: SourceTab; query: string; visibleSources: PlannerDeskSource[]; selectedDate: string; athletes: PlannerDeskAthlete[]; selectedAthleteId: number | null; onAthleteChange: (athleteId: number) => void; onQueryChange: (query: string) => void; onTabChange: (tab: SourceTab) => void; onSelectSource: (source: PlannerDeskSource) => void }) {
+  const tabs: SourceTab[] = role === 'coach' ? ['workout', 'template', 'training-plan'] : ['workout', 'template'];
   return (
-    <aside className="planner-desk__sources min-w-0 border border-[var(--border)] bg-[var(--nav-surface)] p-3 shadow-[var(--shadow-inset)] xl:sticky xl:top-4 xl:self-start">
+    <aside className="min-w-0 border border-[var(--border)] bg-[var(--nav-surface)] p-3 shadow-[var(--shadow-inset)] xl:sticky xl:top-4 xl:self-start">
       {role === 'coach' ? (
         <label className="block border-b border-[var(--nav-border)] pb-3">
           <span className={formLabelClassName}>Athlete</span>
@@ -430,7 +528,7 @@ function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSo
         <Search aria-hidden="true" className="mt-1 h-5 w-5 text-[var(--color-liquid)]" />
       </div>
       <label className="relative mt-3 block">
-        <span className="sr-only">Search workouts and plans</span>
+        <span className="sr-only">Search workouts and templates</span>
         <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
         <input type="search" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Search by name or sport" className={`${formFieldClassName} pl-9`} />
       </label>
@@ -440,74 +538,37 @@ function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSo
           return <button key={tab} type="button" role="tab" aria-selected={sourceTab === tab} onClick={() => onTabChange(tab)} className={`min-h-9 shrink-0 border-b-2 px-2.5 text-xs font-semibold capitalize transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${sourceTab === tab ? 'border-[var(--brand)] text-[var(--brand)]' : 'border-transparent text-[var(--nav-muted)] hover:text-[var(--nav-text)]'}`}>{tab === 'training-plan' ? 'Plans' : `${tab}s`} <span className="font-normal">{count}</span></button>;
         })}
       </div>
-      <div className="planner-desk__source-results mt-3 space-y-2">
-        {visibleSources.length ? visibleSources.map((source) => <SourceResult key={source.key} source={source} selected={source.key === selectedSource?.key} selectedDate={selectedDate} onSelect={onSelectSource} />) : hasSearch && tabSources.length > 0 ? (
-          <div className="border border-dashed border-[var(--nav-border)] px-3 py-4">
-            <p className="text-sm text-[var(--nav-muted)]">No {sourceTab === 'training-plan' ? 'plans' : `${sourceTab}s`} match “{query.trim()}”.</p>
-            <button type="button" onClick={() => onQueryChange('')} className="mt-2 text-sm font-semibold text-[var(--brand)] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">Clear search</button>
-          </div>
-        ) : role === 'athlete' ? (
-          <div className="border border-dashed border-[var(--nav-border)] px-3 py-4">
-            <p className="text-sm font-semibold text-[var(--nav-text)]">No saved workouts yet.</p>
-            <p className="mt-1 text-sm leading-5 text-[var(--nav-muted)]">Create one in your library, then return here to add it to your calendar.</p>
-            <div className="mt-3"><ActionLink href="/athlete/workouts" tone="secondary" size="compact">Create workout</ActionLink></div>
-          </div>
-        ) : (
-          <p className="border border-dashed border-[var(--nav-border)] px-3 py-4 text-sm text-[var(--nav-muted)]">No {sourceTab === 'training-plan' ? 'plans' : `${sourceTab}s`} available.</p>
-        )}
+      <div className="mt-3 space-y-2">
+        {visibleSources.length ? visibleSources.map((source) => <SourceResult key={source.key} source={source} selected={source.key === selectedSource?.key} selectedDate={selectedDate} onSelect={onSelectSource} />) : <p className="border border-dashed border-[var(--nav-border)] px-3 py-4 text-sm text-[var(--nav-muted)]">No {sourceTab === 'training-plan' ? 'plans' : `${sourceTab}s`} match “{query}”.</p>}
       </div>
       <div className="mt-4 border-t border-[var(--nav-border)] pt-3 text-xs leading-5 text-[var(--nav-muted)]">
         <p>Planner places independent copies. Editing stays in the library.</p>
         <div className="mt-2 flex flex-wrap gap-2">
           <ActionLink href={role === 'coach' ? '/coach/workouts' : '/athlete/workouts'} tone="ghost" size="compact">Manage workouts</ActionLink>
+          {role === 'athlete' ? <ActionLink href="/athlete/templates" tone="ghost" size="compact">Manage templates</ActionLink> : null}
         </div>
       </div>
     </aside>
   );
 }
 
-function SourceResult({ source, selected, selectedDate, onSelect }: { source: PlannerSource; selected: boolean; selectedDate: string; onSelect: (source: PlannerSource) => void }) {
+function SourceResult({ source, selected, selectedDate, onSelect }: { source: PlannerDeskSource; selected: boolean; selectedDate: string; onSelect: (source: PlannerDeskSource) => void }) {
   return (
     <button type="button" aria-pressed={selected} onClick={() => onSelect(source)} className={`flex w-full min-w-0 items-start gap-3 rounded-lg border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${selected ? 'border-[var(--field-selected-border)] bg-[var(--surface)] shadow-[var(--shadow-inset)]' : 'border-[var(--nav-border)] bg-[var(--field-surface)] hover:border-[var(--field-selected-border)] hover:bg-[var(--surface)]'}`}>
-      <span className={`mt-1 h-8 w-1 shrink-0 rounded-full ${source.kind === 'training-plan' ? 'bg-[var(--color-zone-5)]' : 'bg-[var(--color-zone-2)]'}`} />
+      <span className={`mt-1 h-8 w-1 shrink-0 rounded-full ${source.kind === 'template' ? 'bg-[var(--color-zone-4)]' : source.kind === 'training-plan' ? 'bg-[var(--color-zone-5)]' : 'bg-[var(--color-zone-2)]'}`} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center justify-between gap-2"><span className="truncate text-[13px] font-semibold text-[var(--text)]">{source.title}</span>{selected ? <Check aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[var(--brand)]" /> : null}</span>
-        <span className="mt-1 block text-xs text-[var(--text-secondary)]">{getSportLabel(source.sport)} · {sourceMeta(source)}</span>
-        <span className="mt-2 block text-xs leading-5 text-[var(--text-muted)]">{source.summary ?? sourceDescription(source)}</span>
+        <span className="mt-1 block text-xs text-[var(--text-secondary)]">{getSportLabel(source.sport)} · {sourceMeta(source, selectedDate)}</span>
+        <span className="mt-2 block text-xs leading-5 text-[var(--text-muted)]">{source.summary ?? sourceDescription(source, selectedDate)}</span>
       </span>
     </button>
   );
 }
 
-function MonthCalendar({ placement, label, initialDate, selectedDate, days, selectedDates, selectedSource, onNavigate, onNavigateWeek, onSelectDate }: { placement: PlacementFeedback | null; label: string; initialDate: string; selectedDate: string; days: PlannerCalendarDay[]; selectedDates: string[]; selectedSource: PlannerSource | null; onNavigate: (offset: number) => void; onNavigateWeek: (offset: -1 | 1) => void; onSelectDate: (date: string) => void }) {
-  const weekStripRef = useRef<HTMLDivElement>(null);
+function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, days, selectedDates, selectedSource, onNavigate, onSelectDate }: { onSelectTemplateRange: () => void; placement: PlacementFeedback | null; label: string; initialDate: string; days: PlannerDeskCalendarDay[]; selectedDates: string[]; selectedSource: PlannerDeskSource | null; onNavigate: (offset: number) => void; onSelectDate: (date: string) => void }) {
   const todayIso = format(new Date(), 'yyyy-MM-dd');
-  const weekStart = startOfWeek(parseISO(`${selectedDate}T00:00:00`), { weekStartsOn: 1 });
-  const selectedWeekDays = Array.from({ length: 7 }, (_, index) => {
-    const date = addDays(weekStart, index);
-    const isoDate = format(date, 'yyyy-MM-dd');
-    const calendarDay = days.find((day) => day.isoDate === isoDate);
-    return {
-      isoDate,
-      label: format(date, 'EEEE'),
-      dateLabel: format(date, 'd MMMM yyyy'),
-      shortDate: format(date, 'd'),
-      sessions: calendarDay?.sessions ?? [],
-    };
-  });
-  useEffect(() => {
-    if (window.matchMedia('(min-width: 768px)').matches) return;
-    const strip = weekStripRef.current;
-    const selectedDay = strip?.querySelector<HTMLButtonElement>(`[data-date="${selectedDate}"]`);
-    if (!strip || !selectedDay) return;
-
-    const dayLeft = selectedDay.offsetLeft;
-    const dayRight = dayLeft + selectedDay.offsetWidth;
-    const stripLeft = strip.scrollLeft;
-    const stripRight = stripLeft + strip.clientWidth;
-    if (dayRight > stripRight) strip.scrollLeft = dayRight - strip.clientWidth;
-    else if (dayLeft < stripLeft) strip.scrollLeft = dayLeft;
-  }, [selectedDate]);
+  const shortcutDates = selectedSource?.kind === 'template' ? templateDatesForSelection(selectedSource.cadence ?? 'day', selectedDates[0] ?? initialDate) : [];
+  const rangeError = selectedSource?.kind === 'template' ? validateTemplateDateRange(selectedDates, selectedSource.cadence ?? 'day') : null;
   return (
     <section className="min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-inset)] sm:p-5">
       <div className="flex flex-col gap-3 border-b border-[var(--border)] pb-3 sm:flex-row sm:items-end sm:justify-between">
@@ -516,49 +577,23 @@ function MonthCalendar({ placement, label, initialDate, selectedDate, days, sele
           <p className="mt-1 text-sm text-[var(--text-secondary)]">{calendarInstruction(selectedSource)}</p>
         </div>
         <div className="flex items-center gap-1" role="group" aria-label="Month navigation">
-          <button type="button" aria-label="Previous month" onClick={() => onNavigate(-1)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] max-md:h-11 max-md:w-11"><ChevronLeft aria-hidden="true" className="h-4 w-4" /></button>
-          <button type="button" onClick={() => onNavigate(0)} className="min-h-8 rounded-lg px-2.5 text-xs font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] max-md:min-h-11">This month</button>
-          <button type="button" aria-label="Next month" onClick={() => onNavigate(1)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] max-md:h-11 max-md:w-11"><ChevronRight aria-hidden="true" className="h-4 w-4" /></button>
+          <button type="button" aria-label="Previous month" onClick={() => onNavigate(-1)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ChevronLeft aria-hidden="true" className="h-4 w-4" /></button>
+          <button type="button" onClick={() => onNavigate(0)} className="min-h-8 rounded-lg px-2.5 text-xs font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">This month</button>
+          <button type="button" aria-label="Next month" onClick={() => onNavigate(1)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ChevronRight aria-hidden="true" className="h-4 w-4" /></button>
         </div>
       </div>
-      <div className="mt-3">
-        <div className="mb-4 border-b border-[var(--border)] pb-3 md:hidden">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-[var(--text)]">Choose a day</h3>
-              <p className="mt-0.5 truncate text-xs text-[var(--text-secondary)]">{format(parseISO(`${selectedDate}T00:00:00`), 'EEEE d MMMM yyyy')}</p>
-            </div>
-            <div className="flex shrink-0 gap-1">
-              <button type="button" aria-label="Previous week" onClick={() => onNavigateWeek(-1)} className="planner-desk__week-nav"><ChevronLeft aria-hidden="true" className="h-4 w-4" /></button>
-              <button type="button" aria-label="Next week" onClick={() => onNavigateWeek(1)} className="planner-desk__week-nav"><ChevronRight aria-hidden="true" className="h-4 w-4" /></button>
-            </div>
-          </div>
-          <div ref={weekStripRef} className="planner-desk__week-strip" aria-label="Dates in this week">
-            {selectedWeekDays.map((day) => (
-              <button
-                key={day.isoDate}
-                data-date={day.isoDate}
-                type="button"
-                aria-pressed={selectedDates.includes(day.isoDate)}
-                aria-current={day.isoDate === todayIso ? 'date' : undefined}
-                aria-label={`${day.label}, ${day.dateLabel}${day.sessions.length ? `, ${day.sessions.length} planned` : ', no sessions planned'}`}
-                onClick={() => onSelectDate(day.isoDate)}
-                className="planner-desk__week-day"
-              >
-                <span>{format(parseISO(`${day.isoDate}T00:00:00`), 'EEE')}</span>
-                <strong>{day.shortDate}</strong>
-                {day.sessions.length ? <span className="planner-desk__week-count">{day.sessions.length}</span> : <span className="planner-desk__week-count planner-desk__week-count--empty" aria-hidden="true">·</span>}
-              </button>
-            ))}
-          </div>
-          <p className="mt-1.5 text-[11px] text-[var(--text-secondary)]">Swipe to browse days. Use the month below for a date range.</p>
-        </div>
+      {selectedSource?.kind === 'template' && selectedSource.cadence !== 'day' ? <div className="mt-3 flex flex-wrap items-center gap-3">
+        <button type="button" onClick={onSelectTemplateRange} className={primaryButtonClassName}>Select {selectedSource.cadence === 'week' ? `week of ${formatShortDate(shortcutDates[0])}` : format(parseISO(shortcutDates[0]), 'MMMM yyyy')}</button>
+        <p className="text-sm text-[var(--text-secondary)]">{formatShortDate(shortcutDates[0])} – {formatShortDate(shortcutDates[shortcutDates.length - 1])} · {shortcutDates.length} days</p>
+      </div> : null}
+      {rangeError ? <p className="mt-2 text-sm text-[var(--status-warning)]">{rangeError}</p> : null}
+      <div className="mt-3 pb-1">
         <div className="min-w-0">
           <div className="grid grid-cols-7 border-y border-[var(--border)] bg-[var(--sunken)]">
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => <div key={day} className="px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)] max-md:px-0.5 max-md:text-[9px]">{day}</div>)}
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => <div key={day} className="px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day}</div>)}
           </div>
           <div className="grid grid-cols-7 divide-x divide-y divide-[var(--border)] border-b border-[var(--border)]">
-            {days.map((day) => <CalendarCell key={day.isoDate} feedback={placement?.dates.includes(day.isoDate) ? placement : null} day={day} today={day.isoDate === todayIso} selected={selectedDates.includes(day.isoDate)} onSelect={() => onSelectDate(day.isoDate)} />)}
+            {days.map((day) => <CalendarCell key={day.isoDate} feedback={placement?.dates.includes(day.isoDate) ? placement : null} day={day} today={day.isoDate === todayIso} selected={selectedDates.includes(day.isoDate)} templateMode={selectedSource?.kind === 'template'} onSelect={() => onSelectDate(day.isoDate)} />)}
           </div>
         </div>
       </div>
@@ -572,25 +607,17 @@ function MonthCalendar({ placement, label, initialDate, selectedDate, days, sele
   );
 }
 
-function CalendarCell({ feedback, day, today, selected, onSelect }: { feedback: PlacementFeedback | null; day: PlannerCalendarDay; today: boolean; selected: boolean; onSelect: () => void }) {
-  const sessionNames = day.sessions.slice(0, 3).map((session) => session.title).join(', ');
-  const extraSessionCount = Math.max(0, day.sessions.length - 3);
-  const previewSession = day.sessions[0];
-  const previewAverageZone = previewSession ? getAverageSessionZone(previewSession.segments) : null;
-  const previewAverageZoneName = previewAverageZone ? getTempoZoneMeta(previewAverageZone).name : null;
-  const scheduleDescription = day.sessions.length === 0
-    ? 'No sessions planned.'
-    : `${day.sessions.length} planned: ${sessionNames}${extraSessionCount ? `, and ${extraSessionCount} more` : ''}.${previewAverageZoneName ? ` First session averages in the ${previewAverageZoneName} zone; pause time is excluded.` : ''}`;
+function CalendarCell({ feedback, day, today, selected, templateMode, onSelect }: { feedback: PlacementFeedback | null; day: PlannerDeskCalendarDay; today: boolean; selected: boolean; templateMode: boolean; onSelect: () => void }) {
   return (
-    <button type="button" aria-pressed={selected} aria-current={today ? 'date' : undefined} aria-label={`${day.label} ${day.dateLabel}${today ? ', today' : ''}. ${scheduleDescription} Toggle date.`} onClick={onSelect} className={`flex min-h-[104px] min-w-0 flex-col p-2 text-left transition focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] ${day.inMonth ? 'bg-[var(--field-surface)]' : 'bg-[var(--sunken)]'} ${selected ? 'bg-[var(--brand-tint)]' : ''} ${!selected ? 'hover:bg-[var(--selection)]' : ''}`}>
-      <span className="flex items-center justify-between gap-2"><span className={`metric-text text-sm font-semibold ${day.inMonth ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'} ${today ? 'calendar-day-date--today' : ''}`}>{day.dateLabel.split(' ')[0]}</span>{today ? <span className="rounded-full bg-[var(--brand)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--signal-ink)]">Today</span> : selected ? <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--signal-ink)]"><Check aria-hidden="true" className="h-3 w-3" /></span> : null}</span>
-      {feedback ? <span className={`mt-1 block truncate text-xs ${feedback.state === 'failed' ? 'text-[var(--status-danger)]' : feedback.state === 'saved' ? 'text-[var(--status-success)]' : 'text-[var(--text-secondary)]'}`}>{feedback.state === 'placing' ? 'Placing' : feedback.state === 'saved' ? 'Placed' : 'Not confirmed'}: {feedback.title}</span> : null}
-      <span className="mt-2 min-w-0 space-y-1">{previewSession ? <span key={previewSession.id} className="flex min-w-0 items-center gap-1.5 border-l-2 border-[var(--brand)] bg-[var(--surface)] px-1.5 py-1">{previewAverageZone ? <SessionIntensitySwatch zone={previewAverageZone} /> : null}<span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[var(--text)]">{previewSession.title}</span></span> : null}{day.sessions.length > 1 ? <span className="block px-1.5 text-[11px] text-[var(--text-muted)]">+{day.sessions.length - 1} more</span> : null}</span>
+    <button type="button" aria-pressed={selected} aria-current={today ? 'date' : undefined} aria-label={`${day.label} ${day.dateLabel}, ${day.sessions.length} assigned. ${templateMode ? 'Choose for template range.' : 'Toggle date.'}`} onClick={onSelect} className={`flex min-h-[104px] min-w-0 flex-col p-2 text-left transition focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] ${day.inMonth ? 'bg-[var(--field-surface)]' : 'bg-[var(--sunken)]'} ${selected ? 'bg-[var(--brand-tint)]' : ''} ${!selected ? 'hover:bg-[var(--selection)]' : ''}`}>
+      <span className="flex items-center justify-between gap-2"><span className={`metric-text text-sm font-semibold ${day.inMonth ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>{day.dateLabel.split(' ')[0]}</span>{today ? <span className="rounded-full bg-[var(--brand)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--signal-ink)]">Today</span> : selected ? <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--signal-ink)]"><Check aria-hidden="true" className="h-3 w-3" /></span> : null}</span>
+      {feedback ? <span className={`mt-2 block text-xs ${feedback.state === 'failed' ? 'text-[var(--status-danger)]' : feedback.state === 'saved' ? 'text-[var(--status-success)]' : 'text-[var(--text-secondary)]'}`}>{feedback.state === 'placing' ? 'Placing' : feedback.state === 'saved' ? 'Placed' : 'Not confirmed'}: {feedback.title}</span> : null}
+      <span className="mt-2 min-w-0 space-y-1">{day.sessions.slice(0, 2).map((session) => <span key={session.id} className="block truncate border-l-2 border-[var(--brand)] bg-[var(--surface)] px-1.5 py-1 text-[11px] font-medium text-[var(--text)]">{session.title}</span>)}{day.sessions.length > 2 ? <span className="block px-1.5 text-[11px] text-[var(--text-muted)]">+{day.sessions.length - 2} more</span> : null}</span>
     </button>
   );
 }
 
-function SelectionPanel({ role, sessions, selectedDates, isPending, removingId, onSelectOnlyDate, onRemoveSession }: { role: PlannerRole; sessions: PlannerSession[]; selectedDates: string[]; isPending: boolean; removingId: number | null; onSelectOnlyDate: (date: string) => void; onRemoveSession: (session: PlannerSession) => void }) {
+function SelectionPanel({ role, sessions, selectedDates, isPending, removingId, onSelectOnlyDate, onRemoveSession }: { role: PlannerDeskRole; sessions: PlannerDeskSession[]; selectedDates: string[]; isPending: boolean; removingId: number | null; onSelectOnlyDate: (date: string) => void; onRemoveSession: (session: PlannerDeskSession) => void }) {
   const multiple = selectedDates.length > 1;
   return (
     <section className="min-w-0 border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-4 shadow-[var(--shadow-inset)] xl:sticky xl:top-4 xl:self-start">
@@ -611,15 +638,15 @@ function SelectionPanel({ role, sessions, selectedDates, isPending, removingId, 
   );
 }
 
-function SelectedDaySessions({ role, date, sessions, isPending, removingId, onRemoveSession }: { role: PlannerRole; date: string | undefined; sessions: PlannerSession[]; isPending: boolean; removingId: number | null; onRemoveSession: (session: PlannerSession) => void }) {
+function SelectedDaySessions({ role, date, sessions, isPending, removingId, onRemoveSession }: { role: PlannerDeskRole; date: string | undefined; sessions: PlannerDeskSession[]; isPending: boolean; removingId: number | null; onRemoveSession: (session: PlannerDeskSession) => void }) {
   if (!date) return <p className="text-sm text-[var(--text-secondary)]">Select a day to see its sessions.</p>;
   const daySessions = sessions.filter((session) => session.scheduledDate === date);
   if (!daySessions.length) return <p className="text-sm text-[var(--text-secondary)]">No sessions assigned to this day.</p>;
   return <div className="space-y-2">{daySessions.map((session) => <SessionDetail key={session.id} role={role} session={session} isPending={isPending} removingId={removingId} onRemoveSession={onRemoveSession} />)}</div>;
 }
 
-function SessionDetail({ role, session, isPending, removingId, onRemoveSession }: { role: PlannerRole; session: PlannerSession; isPending: boolean; removingId: number | null; onRemoveSession: (session: PlannerSession) => void }) {
-  const sessionHref = role === 'athlete' ? `/athlete/session/${session.id}?from=planner` : session.athleteId ? `/coach/athletes/${session.athleteId}?from=planner&date=${session.scheduledDate}` : '/coach/planner';
+function SessionDetail({ role, session, isPending, removingId, onRemoveSession }: { role: PlannerDeskRole; session: PlannerDeskSession; isPending: boolean; removingId: number | null; onRemoveSession: (session: PlannerDeskSession) => void }) {
+  const sessionHref = role === 'athlete' ? `/athlete/session/${session.id}?from=planner` : session.athleteId ? `/coach/athletes/${session.athleteId}?date=${session.scheduledDate}` : '/coach/planner';
   return (
     <div className="border border-[var(--field-selected-border)] bg-[var(--surface)] p-3">
       <div className="flex items-start justify-between gap-2">
@@ -638,24 +665,41 @@ function SessionStatusIcon({ status }: { status: string }) {
   return <Icon aria-hidden="true" className={`h-3 w-3 ${className}`} />;
 }
 
-function coachSource(source: PlannerSource) {
+function coachSource(source: PlannerDeskSource) {
+  if (source.kind === 'template') return { kind: 'template' as const, templateId: source.id };
   if (source.kind === 'training-plan') return { kind: 'training-plan' as const, trainingPlanId: source.id };
   return { kind: 'library-session' as const, sessionId: source.id };
 }
 
-function sourceMeta(source: PlannerSource) {
+function sourceMeta(source: PlannerDeskSource, date: string) {
   if (source.kind === 'workout') return source.durationSec ? formatDuration(source.durationSec) : 'Workout';
-  return `${source.sessionCount ?? 0} sessions`;
+  if (source.kind === 'training-plan') return `${source.sessionCount ?? 0} sessions`;
+  return `${getTemplateDurationDays(source.cadence ?? 'day', date)} days`;
 }
 
-function sourceDescription(source: PlannerSource) {
+function sourceDescription(source: PlannerDeskSource, date: string) {
   if (source.kind === 'training-plan') return 'Monday-start plan with independent athlete sessions.';
+  if (source.kind === 'template') return `${templateCadenceMeta[source.cadence ?? 'day'].label} · ${getTemplateDurationDays(source.cadence ?? 'day', date)} target day${getTemplateDurationDays(source.cadence ?? 'day', date) === 1 ? '' : 's'}.`;
   return 'Saved workout copied independently onto the selected dates.';
 }
 
-function calendarInstruction(source: PlannerSource | null) {
+function calendarInstruction(source: PlannerDeskSource | null) {
+  if (source?.kind === 'template') return source.cadence === 'day' ? 'Select the day for this single-day template.' : 'Review the highlighted range, or choose a new start and end date.';
   if (source?.kind === 'training-plan') return 'Select the week anchor. Training plans always begin on Monday.';
   return 'Select one or more dates for the saved workout.';
+}
+
+function datesBetween(start: string, end: string) {
+  const first = start <= end ? start : end;
+  const last = start <= end ? end : start;
+  const dates: string[] = [];
+  const cursor = parseISO(`${first}T00:00:00`);
+  const endDate = parseISO(`${last}T00:00:00`);
+  while (cursor <= endDate) {
+    dates.push(format(cursor, 'yyyy-MM-dd'));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dates;
 }
 
 function formatShortDate(date: string) {

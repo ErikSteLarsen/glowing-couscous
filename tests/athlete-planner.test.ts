@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { createAthletePlannerService } from '../lib/athlete-planner-service.ts';
+import { disposableDatabaseSkip, withDisposableDatabase } from './disposable-postgres.ts';
 
 const sourceBlocks = [{
   kind: 'work', zone: 3, durationSec: 1800, reps: null, targetType: null,
@@ -370,23 +371,13 @@ test('routine placement rejects malformed routines and incomplete periods withou
   assert.equal(broken.state.sessions.length, 0);
 });
 
-test('personal rescheduling persists calendar days, preserves content, and enforces boundaries in SQLite', async (t) => {
-  const { PrismaClient } = await import('@prisma/client');
-  const { mkdtemp, rm } = await import('node:fs/promises');
-  const { tmpdir } = await import('node:os');
-  const { execFileSync } = await import('node:child_process');
+test('personal rescheduling persists calendar days, preserves content, and enforces boundaries in PostgreSQL', { skip: disposableDatabaseSkip }, async (t) => {
   const { format } = await import('date-fns');
-  const directory = await mkdtemp(path.join(tmpdir(), 'tempo-reschedule-'));
-  const databaseUrl = `file:${path.join(directory, 'test.db')}`;
-  const db = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
   const originalTimezone = process.env.TZ;
   process.env.TZ = 'Europe/Oslo';
 
   try {
-    execFileSync(process.execPath, [
-      path.join(process.cwd(), 'node_modules/prisma/build/index.js'),
-      'db', 'push', '--skip-generate', '--schema', path.join(process.cwd(), 'prisma/schema.prisma'),
-    ], { env: { ...process.env, DATABASE_URL: databaseUrl }, stdio: 'pipe' });
+    await withDisposableDatabase(async (db) => {
     const athlete = await db.user.create({ data: { email: 'self@example.test', role: 'ATHLETE' } });
     const other = await db.user.create({ data: { email: 'other@example.test', role: 'ATHLETE' } });
     const coach = await db.user.create({ data: { email: 'coach@example.test', role: 'COACH' } });
@@ -525,10 +516,9 @@ test('personal rescheduling persists calendar days, preserves content, and enfor
       assert.equal(await db.session.findUnique({ where: { id: session.id } }), null);
       assert.equal(await db.block.count({ where: { sessionId: session.id } }), 0);
     });
+    });
   } finally {
     if (originalTimezone === undefined) delete process.env.TZ;
     else process.env.TZ = originalTimezone;
-    await db.$disconnect();
-    await rm(directory, { recursive: true, force: true });
   }
 });

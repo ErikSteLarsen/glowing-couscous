@@ -38,13 +38,11 @@ test('production routes do not override page width and auth uses its own frame',
 
 test('athlete Home uses the selected Monolith header and section scale', async () => {
   const uiSource = await read('components/ui.tsx');
-  const athletePageSource = await read('components/FocusHome.tsx');
-  const designCss = await read('app/monolith.css');
+  const athletePageSource = await read('app/(app)/athlete/page.tsx');
 
   assert.match(uiSource, /<h1 className=\{pageHeadingClassName\}>\{title\}<\/h1>/);
-  assert.match(athletePageSource, /className="study-home__header"/);
-  assert.match(athletePageSource, /className="study-home__section-heading"/);
-  assert.match(designCss, /\.study-home__header h1, \.study-workouts__header h1/);
+  assert.match(athletePageSource, /<TopBar/);
+  assert.match(athletePageSource, /<PageShell size="wall">/);
   assert.doesNotMatch(uiSource, /ink-topbar__title/);
 });
 

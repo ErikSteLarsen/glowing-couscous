@@ -5,7 +5,8 @@ export type HomeActivity = {
   sessionId: number;
   completedAt: Date;
   durationSec: number;
-  tss: number;
+  /** Null when no defensible TSS was recorded; never a measured zero. */
+  tss: number | null;
   metricsSource: string;
   zoneDistributionJson?: string | null;
   importTitle?: string | null;
@@ -22,6 +23,7 @@ export type HomeTotals = {
 // Imports with no calibrated HR samples store 0 as a legacy sentinel. A real
 // rounded zero remains valid when the saved zone distribution contains time.
 export function homeActivityLoadAvailable(activity: Pick<HomeActivity, 'tss' | 'metricsSource' | 'zoneDistributionJson'>) {
+  if (activity.tss === null) return false;
   if (!['file-import', 'strava-import'].includes(activity.metricsSource) || activity.tss !== 0) return true;
   try {
     const zones: unknown = JSON.parse(activity.zoneDistributionJson ?? 'null');
@@ -38,7 +40,7 @@ export function summarizeHomeActivities(activities: HomeActivity[]): HomeTotals 
   return {
     count: uniqueActivities.length,
     durationSec: uniqueActivities.reduce((sum, activity) => sum + activity.durationSec, 0),
-    tss: uniqueActivities.length > 0 && available.length === 0 ? null : available.reduce((sum, activity) => sum + activity.tss, 0),
+    tss: uniqueActivities.length > 0 && available.length === 0 ? null : available.reduce((sum, activity) => sum + (activity.tss ?? 0), 0),
     loadUnavailableCount: uniqueActivities.length - available.length,
   };
 }
@@ -63,7 +65,7 @@ export function homeLoadLabel(totals: Pick<HomeTotals, 'tss' | 'loadUnavailableC
   return `${totals.tss} estimated TSS${totals.loadUnavailableCount > 0 ? ' · partial' : ''}`;
 }
 
-export function homeLoadBarPercent(point: { tss: number; loadAvailable: boolean }, points: Array<{ tss: number; loadAvailable: boolean }>) {
-  const max = Math.max(0, ...points.filter((entry) => entry.loadAvailable).map((entry) => entry.tss));
-  return point.loadAvailable && max > 0 ? (point.tss / max) * 100 : 0;
+export function homeLoadBarPercent(point: { tss: number | null; loadAvailable: boolean }, points: Array<{ tss: number | null; loadAvailable: boolean }>) {
+  const max = Math.max(0, ...points.filter((entry) => entry.loadAvailable).map((entry) => entry.tss ?? 0));
+  return point.loadAvailable && point.tss !== null && max > 0 ? (point.tss / max) * 100 : 0;
 }

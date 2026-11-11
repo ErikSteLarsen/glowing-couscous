@@ -25,21 +25,12 @@ function getMatchSpecificity(item: NavItem) {
 export function getPrimaryNavigation(): NavItem[] {
   return [
     { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete', exact: true },
-    {
-      label: 'Workouts',
-      description: 'Create & manage',
-      href: '/athlete/workouts',
-      matchPrefix: '/athlete/workouts',
-    },
+    { label: 'Calendar', description: 'See scheduled work', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
+    { label: 'Planner', description: 'Place on dates', href: '/athlete/planner', matchPrefix: '/athlete/planner' },
+    { label: 'Workouts', description: 'Create & manage', href: '/athlete/workouts', matchPrefix: '/athlete/workouts' },
     { label: 'Templates', description: 'Reuse & assign', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
-    { label: 'Calendar', description: 'Schedule & view training', href: '/athlete/calendar', matchPrefix: '/athlete/calendar', activeMatchPrefixes: ['/athlete/planner'] },
-    { label: 'History', description: 'Review completed work', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
-    {
-      label: 'Import',
-      description: 'Review Strava and activity files',
-      href: '/athlete/import',
-      matchPrefix: '/athlete/import',
-    },
+    { label: 'Activity', description: 'Review completed work', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
+    { label: 'Events', description: 'Goals and results', href: '/athlete/events', matchPrefix: '/athlete/events' },
   ];
 }
 
@@ -54,18 +45,10 @@ export function getMobileNavigation(role: AppRole): NavItem[] {
 
   return [
     { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete', exact: true },
-    {
-      label: 'Calendar', description: 'Schedule & view training', href: '/athlete/calendar',
-      matchPrefix: '/athlete/calendar', activeMatchPrefixes: ['/athlete/planner'],
-    },
-    {
-      label: 'Workouts', description: 'Create & manage', href: '/athlete/workouts',
-      matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/templates'],
-    },
-    {
-      label: 'History', description: 'Review completed work', href: '/athlete/activity',
-      matchPrefix: '/athlete/activity', activeMatchPrefixes: ['/athlete/import'],
-    },
+    { label: 'Calendar', description: 'Schedule & view training', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
+    { label: 'Planner', description: 'Place on dates', href: '/athlete/planner', matchPrefix: '/athlete/planner' },
+    { label: 'Workouts', description: 'Create & manage', href: '/athlete/workouts', matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/templates'] },
+    { label: 'Activity', description: 'Review completed work', href: '/athlete/activity', matchPrefix: '/athlete/activity', activeMatchPrefixes: ['/athlete/import'] },
   ];
 }
 
@@ -97,9 +80,9 @@ export function isProfileActionActive(
 const sessionReturnTargets = {
   home: { href: '/athlete', label: 'Back to Home' },
   calendar: { href: '/athlete/calendar', label: 'Back to Calendar' },
-  activity: { href: '/athlete/activity', label: 'Back to History' },
+  activity: { href: '/athlete/activity', label: 'Back to Activity' },
   imports: { href: '/athlete/import', label: 'Back to Import' },
-  planner: { href: '/athlete/calendar', label: 'Back to Calendar' },
+  planner: { href: '/athlete/planner', label: 'Back to Planner' },
 } as const;
 
 export type SessionOrigin = keyof typeof sessionReturnTargets;

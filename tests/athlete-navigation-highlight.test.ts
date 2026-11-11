@@ -15,5 +15,5 @@ test('Home is highlighted only on its own route, not on session detail or Live',
 
 test('section pages keep their own highlight', () => {
   assert.deepEqual(activeLabels('/athlete/calendar'), ['Calendar']);
-  assert.deepEqual(activeLabels('/athlete/activity'), ['History']);
+  assert.deepEqual(activeLabels('/athlete/activity'), ['Activity']);
 });

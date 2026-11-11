@@ -543,6 +543,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
                   segmentsJson: true,
                   metricsSource: true,
                   durationSec: true,
+                  distanceMeters: true,
                   telemetryJson: resolvedView === 'week',
                 },
               },
@@ -641,25 +642,26 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
 
     async loadActivityFeed(userId: number, filters: ActivityFilters = parseActivityFilters({})) {
       const athlete = await loadAthleteIdentity(userId);
-      if (!athlete) {
+      if (!athlete || athlete.role !== 'ATHLETE') {
         return null;
       }
+      // PostgreSQL: camelCase Prisma columns must stay quoted; the name filter is a case-insensitive substring match.
       const scope = Prisma.sql`
-        FROM Activity a JOIN Session s ON s.id = a.sessionId
-        WHERE a.athleteId = ${userId} AND s.athleteId = ${userId}
-          AND (${filters.sport} IS NULL OR s.sport = ${filters.sport})
-          AND instr(lower(s.title), lower(${filters.query})) > 0
+        FROM "Activity" a JOIN "Session" s ON s."id" = a."sessionId"
+        WHERE a."athleteId" = ${userId} AND s."athleteId" = ${userId}
+          AND (${filters.sport}::text IS NULL OR s."sport" = ${filters.sport}::text)
+          AND strpos(lower(s."title"), lower(${filters.query}::text)) > 0
       `;
       return db.$transaction(async (tx) => {
         const [summary] = await tx.$queryRaw<Array<{ count: bigint; durationSec: bigint; tss: bigint; unknownLoad: bigint }>>(Prisma.sql`
-          SELECT COUNT(*) AS count, COALESCE(SUM(a.durationSec), 0) AS durationSec,
-            COALESCE(SUM(a.tss), 0) AS tss, SUM(CASE WHEN a.tss IS NULL THEN 1 ELSE 0 END) AS unknownLoad ${scope}
+          SELECT COUNT(*) AS count, COALESCE(SUM(a."durationSec"), 0) AS "durationSec",
+            COALESCE(SUM(a."tss"), 0) AS tss, COALESCE(SUM(CASE WHEN a."tss" IS NULL THEN 1 ELSE 0 END), 0) AS "unknownLoad" ${scope}
         `);
         const count = Number(summary.count);
         const totalPages = Math.max(1, Math.ceil(count / ACTIVITY_PAGE_SIZE));
         const page = Math.min(filters.page, totalPages);
         const matches = await tx.$queryRaw<Array<{ id: number }>>(Prisma.sql`
-          SELECT a.id ${scope} ORDER BY a.completedAt DESC, a.id DESC
+          SELECT a."id" ${scope} ORDER BY a."completedAt" DESC, a."id" DESC
           LIMIT ${ACTIVITY_PAGE_SIZE} OFFSET ${(page - 1) * ACTIVITY_PAGE_SIZE}
         `);
         const activities = await tx.activity.findMany({
