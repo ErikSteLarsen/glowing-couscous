@@ -73,36 +73,25 @@ another incomplete source. This complements the current duration-first logging
 flow with the sport, time, and distance fields Strava provides in manual entry
 ([Strava manual activity entry](https://support.strava.com/en-us/articles/15402188-how-do-i-upload-a-manual-activity-to-strava)).
 
-Activity file import should preserve a clear review step before saving and keep
-source provenance and the recorded completion time. Supported inputs are TCX,
-FIT, and GPX activity files. FIT files require Garmin's Activity file type, one
-supported sport session, valid absolute start and finish timestamps, consistent
-Activity and Session finish times, and a valid Activity local timestamp so the
-source timezone and Calendar day are explicit. When FIT local time is absent or
-invalid, reject the preview instead of guessing from the server timezone.
-GPX files must contain one GPX 1.1 track with at least two valid, timed
-trackpoints. The athlete chooses the sport because GPX does not provide a
-dependable standard activity type. Require timestamps with an explicit time
-zone (`Z` or a signed UTC offset), one consistent offset, and increasing times;
-reject route-only files, multiple tracks, untimed points, and mixed offsets.
-Derive duration from the first and last trackpoint times and
-distance from consecutive points within each track segment. Keep only summary
-metrics and provenance; discard raw file bytes, GPS coordinates, sensor time
-series, and unknown fields after parsing. Imported summary metrics do not imply
-training load or full planned compliance. This scope follows Strava accepting
-GPX, TCX, and FIT and TrainingPeaks documenting completed device-file uploads
-([Strava file formats](https://support.strava.com/en-us/articles/15402066-how-do-i-get-my-activities-to-strava), [TrainingPeaks upload](https://help.trainingpeaks.com/hc/en-us/articles/204072994-How-do-I-manually-upload-a-workout-file-into-TrainingPeaks), [TrainingPeaks compatible files](https://help.trainingpeaks.com/hc/en-us/articles/204070354-Compatible-Device-Files), [GPX 1.1 schema](https://www.topografix.com/GPX/1/1/), [Garmin FIT Activity decoding](https://developer.garmin.com/fit/articles/cookbook/decoding_activity_files.html)).
+Activity-file import previews a recorded FIT, TCX or GPX activity before an
+explicit save. The mounted Import workspace accepts one file up to 20 MB,
+requires recorded samples, and bounds duration and sample count. It parses in
+the browser, retains normalized measurements and optional laps for outcome
+review, and does not persist the raw upload or GPS coordinates. Heart rate,
+speed, power and other available measurements can support charts and estimated
+load; unavailable measurements remain unavailable rather than invented.
 
-Preview may offer open, same-sport, same-source-local-date sessions owned by the
-athlete when they are self-planned and have no Activity. The athlete explicitly
-chooses one candidate or keeps the import separate; never infer a match. Pairing
-completes the scheduled session atomically while preserving its title, date,
-planned blocks, and existing baseline snapshot. If no baseline exists, capture
-the plan before completion. Imported summary metrics do not create actual
-intervals, compliance, or TSS. Paired review compares duration only; structured
-actual comparison stays unavailable without an actual snapshot. Weekly ratios
-that include imported summaries must be labeled as planned duration recorded,
-not full workout compliance.
+Users may explicitly match an import to an eligible unfinished planned session
+or save it separately. Preserve the planned blocks and baseline when matching;
+recorded samples do not become actual workout instructions or establish full
+structured compliance. Opt-in running-file interpretation proposes measured
+segments and likely intent without mutating the saved plan. Strava-derived
+records are excluded from model interpretation.
+
+Older 5 MB summary-upload endpoints remain as compatibility paths with their
+own stricter format, timezone and summary-only persistence contracts. Do not
+apply those limits or data-retention descriptions to the current Import
+workspace. Source owners and provenance rules live in ARCHITECTURE.md.
 
 Manual logging may also attach to an eligible same-sport, same-date open
 self-planned session by explicit athlete choice. Keep the separate-activity
@@ -149,10 +138,10 @@ expansion until personal use is complete or explicitly requested.
 - Short pause blocks sit between efforts or repeated sets. They count toward elapsed time but do not contribute training load.
 - Duration, training load, zones, and timelines are derived from structured blocks.
 - `Workouts` stores private reusable definitions without dates or assignments.
-- Personal `Calendar` combines week/month review with inline scheduling of independent copies. Coach `Planner` places content onto athlete dates or training-plan weekdays. Workouts can target multiple dates; routines apply their weekday pattern to a complete week or calendar month.
+- Personal `Calendar` provides week/month review and rescheduling, handing selected dates to the separate `Planner` desk to schedule independent copies. Coach `Planner` places content onto athlete dates or training-plan weekdays. Workouts can target multiple dates; routines apply their weekday pattern to a complete week or calendar month.
 - Personal `Templates` groups saved workouts into a Monday–Sunday routine, with a name and optional purpose/notes. Multiple workouts may be ordered on a weekday; empty weekdays add nothing. Apply one routine to a Monday-starting week or repeat it through a whole calendar month. Template composition cannot author workout blocks.
 - Routine saves capture server-owned library workout snapshots. Later library edits/deletions do not change saved routines; saving the routine again captures the selected library versions. Scheduled sessions are independent copies. Relative targets resolve against the person's Profile; absolute targets remain fixed.
-- Templates only contain saved-workout routines. Block-backed templates, cadence settings, workout-editor template loading, coach template assignment and public template intake are removed. Public routine sharing and curated standard routines remain future work; public sharing supports individual workouts only.
+- Templates only contain saved-workout routines. Block-backed templates, cadence settings, workout-editor template loading, and coach template assignment are removed. An Athlete may explicitly save a shared workout into their library and a one-entry Monday routine; public links still publish workout definitions only. Public routine sharing and curated standard routines remain future work; public sharing supports individual workouts only.
 - Completion stores performed metrics, notes, and the latest actual snapshot in `Activity`.
 - Home separates scheduled structure by Session date from completed outcomes by
   Activity date. Standalone imports contribute only to completed totals; matched
@@ -164,14 +153,14 @@ expansion until personal use is complete or explicitly requested.
   totals identify unavailable load. Empty calendar dates mean nothing scheduled,
   not an explicitly planned rest day.
 - Manually logged completed work is an athlete-owned, already-completed Session plus Activity. `Session.source` is `athlete-manual`; `Activity.metricsSource` is `manual-unplanned`. It has no workout blocks or planned baseline, and TSS is unknown unless load can be calculated from recorded facts.
-- A device-file import is athlete-owned, previewed before save, and deduplicated per athlete by a stable file fingerprint. Keep only parsed metrics and provenance needed for training history; do not retain route coordinates by default.
+- A device-file import is athlete-owned, previewed before save, and deduplicated per athlete by a stable file fingerprint. Keep normalized recorded measurements, optional laps, summary metrics and provenance needed for review; do not retain raw uploads or route coordinates.
 
 ## Current Capabilities
 
 - Credentials authentication, direct personal signup, compatibility role setup for accounts without a role, and optional Google OAuth.
 - Dormant coach roster, athlete detail, discovery and request services; current coach/discovery pages redirect to the personal workspace.
 - Coach and athlete workout libraries with a shared visual editor.
-- Coach planner, reusable training plans, source-copy assignment, and unified personal Calendar scheduling.
+- Coach planner, reusable training plans, source-copy assignment, and personal Calendar review and Planner scheduling.
 - Athlete Home, Calendar, Workouts, Session, Live, Activity, Profile, and Settings surfaces.
 - Personal maximum-heart-rate and race-based pace zones that resolve in workout creation.
 - Planned session adjustments, actual outcome editing, baseline and actual comparison, and completion.

@@ -101,7 +101,7 @@ navigation.
 | Coach reads | `lib/coach-service.ts` | Roster and athlete-detail read models |
 | Coach requests | `lib/coach-request-service.ts` | Search, request creation, approval, rejection, and pending uniqueness |
 | Athlete reads | `lib/athlete-service.ts`, `lib/home-summary.ts` | Home, Calendar, Activity, profile, discovery, and session reads; Home reads current-week outcomes separately from the latest four activities and uses pure outcome/load summaries |
-| Athlete planning | `app/(app)/athlete/calendar/TrainingCalendar.tsx`, `lib/athlete-service.ts`, `lib/athlete-planner-service.ts`, `lib/template-service.ts`, `lib/workout-library-service.ts` | Unified week/month calendar, inline source selection and date review, private dated copies and existing planner API mutations |
+| Athlete planning | `app/(app)/athlete/calendar/AthleteCalendar.tsx`, `lib/athlete-service.ts`, `lib/athlete-planner-service.ts`, `lib/template-service.ts`, `lib/workout-library-service.ts` | Week/month calendar review and rescheduling, date-aware handoff to the separate personal Planner desk, private dated copies and existing planner API mutations |
 | Coach planning | `lib/coach-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, dated sessions, source search, and roster-scoped planner writes |
 | Shared planning contracts and metrics | `lib/planner-view.ts`, `lib/planner-source-metrics.ts` | UI-independent source/session/day contracts; personal sources exclude coach training plans; persisted planner block conversion and canonical repeated source durations |
 | Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |
@@ -127,7 +127,7 @@ navigation.
 `Plan`, `TrainingPlan`, `Session`, `Block`, `Template`, `Activity`,
 `Assignment`, `TrainingPlanAssignment`, `ShareLink`, `StravaConnection`,
 `StravaInboxActivity`, `StravaWebhookEvent`, `PasswordResetToken`,
-`PlacementRequest`, `AiProviderHealth`, and `AthleteEvent`.
+`PlacementRequest`, `WorkoutSaveRequest`, `AiProviderHealth`, `ActivityAnalysis`, and `AthleteEvent`.
 
 - `User.role` controls access. Credentials signup sets ATHLETE and selfCoached directly; nullable roles use compatibility setup.
 - `User.sessionVersion` invalidates previously issued JWT sessions after a credential password reset; server auth refreshes the version before accepting protected work.
@@ -235,8 +235,10 @@ See [operations](docs/OPERATIONS.md) for setup/deployment and
 ## Personal training routines
 
 `Template.routineJson` holds a versioned weekly pattern of weekday entries and
-server-captured library workout snapshots. It is required; Template has no sport,
-cadence, Block relation or public ShareLink relation. Session.templateId retains
+server-captured library workout snapshots. Personal authoring uses this required
+field. The current schema also retains legacy sport/cadence columns and Block
+and ShareLink relations, restored by the personal-training-loop migration;
+they do not add a second personal authoring model. Session.templateId retains
 routine lineage with on-delete SET NULL, preserving independent calendar copies.
 Personal template POST/PATCH uses `template-service.saveForOwner`, accepting
 only library workout IDs, weekdays, name and summary. It checks ownership and
@@ -253,12 +255,14 @@ Within-day entry order is preserved in creation order, which Calendar reads by
 session ID after date. Relative references and decimal targets survive copying.
 Workouts never loads a template as one workout; standalone saves refuse template
 lineage. Coach assignment supports library sessions and training plans only.
-Sharing and public intake support session definitions only; a routine public
-projection is future work. No new coach authorization or public content access
-is added. The cleanup migration deletes old definitions, old template blocks
-and template share links (including detached owner-deleted snapshots), then
-drops their schema fields. Applied sessions and outcomes survive. Historical
-migrations remain immutable so existing databases can upgrade safely.
+Public links publish session definitions, not routines. An Athlete can explicitly
+save a shared workout into their library and a one-entry Monday routine through
+`share-link-service.saveTemplateCopy`. These are two service saves, not one
+transaction; a routine-save failure can leave its library workout copy. Public
+routine projection remains unsupported. No new coach authorization is added.
+Historical migrations remain immutable: the routine cleanup removed old fields,
+and the later personal-training-loop migration restored compatibility fields.
+Current schema and service behavior override that intermediate migration state.
 
 ## Imported running workout interpretation
 
@@ -292,7 +296,9 @@ advanced segmentation and historical result versions are deferred.
 - Public sharing, recipient intake, and session outcome mutations have local Chromium verification. Production deployment remains unverified.
 - Auth.js external OAuth integration is optional and not covered by local credentials tests.
 - The authentication proxy runs in Node.js so roleless JWT refreshes can query Prisma. Its redirects are secondary to the service/API authorization checks.
+
 ## Calendar scheduling
+
 `lib/calendar-navigation.ts` owns validated local calendar-day URL navigation.
 `AthleteCalendar` renders week/month views and submits drag or explicit-date
 moves to `/api/athlete/planner/sessions/[sessionId]/schedule`.
