@@ -11,10 +11,17 @@ Last verified locally on **2026-11-17**. Source code and tests are authoritative
   authentication/share flows. Local production HTTP verification passed
   credentials sign-in, roleless setup, same-role retry, JWT refresh and role
   boundaries; its synthetic account was deleted.
-- Registry audit after this step: 28 advisories (0 critical, 20 high), down from
-  75 (8 critical, 40 high). Direct Next/Auth.js advisories are resolved; remaining
-  transitive dependency findings need the next dependency/tooling step. Counts
-  describe the installed registry graph, not verified exploitation.
+- Core/tooling refresh: Prisma CLI/client 6.19.3, React/DOM 19.3.1,
+  Tailwind pair 4.3.5, PostCSS 8.5.33, date-fns 4.4.0, ESLint 9.39.5 and
+  compatible transitive updates. Removed unused bcryptjs type stub and
+  autoprefixer. No overrides or compatibility source changes were needed.
+  439 DB-enabled tests, 2 Chromium checks, lint, types and production build pass.
+- Registry audit now reports one high advisory (zero critical/moderate/low),
+  down from 75 findings before maintenance. Prisma config pins deepmerge-ts
+  7.1.5; its patched release is a major version. No speculative override was
+  added. The advisory involves recursive object graphs, and no user objects
+  enter this app's Prisma CLI configuration. This is a remaining upstream
+  dependency risk, not a claim of proven exploitability or safety.
 
 - Removed nine unreachable files: duplicate canvas authoring and exclusive
   helpers, abandoned editor wrappers, redirected discovery UI, legacy authoring
