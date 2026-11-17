@@ -1,5 +1,7 @@
 'use client';
 
+import { SegmentedControl, SegmentedControlItem } from '@ui-sdk/react/segmented-control';
+
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -267,10 +269,10 @@ export function StravaImportPanel({
       {connection.connected ? (
         <div className="space-y-3">
           <p className="text-[13px] text-[var(--text-secondary)]">Newest first. Refresh inbox checks synced activities; Sync now checks Strava directly.</p>
-          <div role="group" aria-label="Strava inbox filter" className="flex w-full max-w-sm gap-2">
-            <button ref={inboxFilterRef} type="button" className={getSegmentedChoiceClassName(!showAllActivities)} aria-pressed={!showAllActivities} onClick={() => setShowAllActivities(false)}>Needs review ({pendingActivities.length})</button>
-            <button type="button" className={getSegmentedChoiceClassName(showAllActivities)} aria-pressed={showAllActivities} onClick={() => setShowAllActivities(true)}>All activities</button>
-          </div>
+          <SegmentedControl value={showAllActivities ? 'all' : 'review'} onValueChange={(value) => { if (value) setShowAllActivities(value === 'all'); }} aria-label="Strava inbox filter" className="flex w-full max-w-sm gap-2">
+            <SegmentedControlItem ref={inboxFilterRef} value="review" className={getSegmentedChoiceClassName(!showAllActivities)}>Needs review ({pendingActivities.length})</SegmentedControlItem>
+            <SegmentedControlItem value="all" className={getSegmentedChoiceClassName(showAllActivities)}>All activities</SegmentedControlItem>
+          </SegmentedControl>
         </div>
       ) : null}
 

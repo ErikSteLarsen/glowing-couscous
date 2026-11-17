@@ -1,5 +1,7 @@
 'use client';
 
+import { SegmentedControl, SegmentedControlItem } from '@ui-sdk/react/segmented-control';
+
 import { useEffect, useRef, useState } from 'react';
 
 import { deriveSessionEditorMetrics, type SessionEditorDraft } from '@/lib/session-editor';
@@ -149,24 +151,20 @@ export function SessionComparisonDialog({
             {!isLoading && !error && selectedDraft ? (
               <div className="mt-6 space-y-5">
                 {data?.baseline && data.actual ? (
-                  <div className="flex gap-2 rounded-[3px] bg-[var(--field-surface)] p-1" role="group" aria-label="Comparison version">
-                    <button
-                      type="button"
-                      aria-pressed={selectedVersion === 'baseline'}
+                  <SegmentedControl value={selectedVersion} onValueChange={(value) => { if (value === 'baseline' || value === 'actual') setSelectedVersion(value); }} className="flex gap-2 rounded-[3px] bg-[var(--field-surface)] p-1" aria-label="Comparison version">
+                    <SegmentedControlItem
+                      value="baseline"
                       className={getSegmentedChoiceClassName(selectedVersion === 'baseline', 'compact')}
-                      onClick={() => setSelectedVersion('baseline')}
                     >
                       {perspective === 'coach' ? 'Coach plan' : 'Planned'}
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={selectedVersion === 'actual'}
+                    </SegmentedControlItem>
+                    <SegmentedControlItem
+                      value="actual"
                       className={getSegmentedChoiceClassName(selectedVersion === 'actual', 'compact')}
-                      onClick={() => setSelectedVersion('actual')}
                     >
                       {perspective === 'coach' ? 'Athlete actual' : 'Actual'}
-                    </button>
-                  </div>
+                    </SegmentedControlItem>
+                  </SegmentedControl>
                 ) : (
                   <p className="text-[13px] text-[var(--text-secondary)]">
                     {data?.actual ? 'Only the actual snapshot is available.' : 'Only the planned snapshot is available.'}

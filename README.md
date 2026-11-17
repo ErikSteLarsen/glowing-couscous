@@ -28,6 +28,7 @@ commands, Neon/Vercel, demo accounts, recovery, Strava and model providers.
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Routes, service owners, data and extension boundaries |
 | [DESIGN.md](DESIGN.md) | Durable visual and interaction contract |
 | [Operations](docs/OPERATIONS.md) | Setup, environment, deployment and integrations |
+| [UI SDK integration](docs/UI-SDK.md) | Shared interaction owners, pinned SDK docs and browser acceptance |
 | [Verification](docs/VERIFICATION.md) | Repeatable automated, database, browser and device acceptance |
 | [Current status](docs/agent-workspace/CURRENT-STATUS.md) | Latest recorded evidence and unresolved gates |
 | [Work index](docs/agent-workspace/WORK-INDEX.md) | Capability-to-owner lookup and active work |

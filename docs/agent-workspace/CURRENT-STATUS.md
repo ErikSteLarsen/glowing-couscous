@@ -1,6 +1,26 @@
 # Current status
 
-Last verified locally on **2026-11-11**. Source code and tests are authoritative.
+Last verified locally on **2026-11-17**. Source code and tests are authoritative.
+
+## UI SDK integration
+
+- Adopted pinned UI SDK 0.1.0-beta.6 for settings switches, session-removal
+  alert dialogs, snapshot selection and Strava inbox filters. Tempo tokens and
+  service authorization remain the owners of appearance and mutations.
+- Fixed the removal overlay's missing modal focus containment/return; pending
+  writes block dismissal and failed deletions retain their error and retry.
+- `pnpm test` with the disposable local PostgreSQL database passed **439/439**,
+  zero skips. `pnpm lint`, TypeScript checking and `pnpm build` passed.
+  The build applied no new schema changes to local `tempo_dev`. The existing
+  Node DEP0205 warning remains. Initial checks needed Prisma regeneration and
+  the existing local PostgreSQL container restarted.
+- `pnpm test:ui` passed isolated Chromium component acceptance at 390px and
+  1440px: switch keyboard/disabled states, comparison arrow-key selection,
+  alert-dialog focus containment/return, Escape, pending/error and retry.
+  These fixture checks do not close authenticated route, visual-layout,
+  physical-device, assistive-technology or live-provider gates.
+- [SDK integration guide](../UI-SDK.md) records ownership and upgrade checks.
+  This adoption does not constitute an exhaustive security or production audit.
 
 ## Release closeout
 

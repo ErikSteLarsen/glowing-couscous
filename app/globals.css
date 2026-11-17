@@ -1910,3 +1910,13 @@ body[data-workspace-theme="dark"] .profile-savebar {
 .training-setup__manual summary:focus-visible { outline: 2px solid var(--field-focus); outline-offset: 3px; }
 .training-setup__steps button:hover { color: var(--text); }
 .training-setup__steps button:disabled { cursor: wait; opacity: 0.6; }
+
+/* SDK alert dialogs use the native top layer; retain Tempo's visual tokens. */
+.tempo-alert-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+}
+.tempo-alert-dialog::backdrop { background: rgb(0 0 0 / 60%); }
