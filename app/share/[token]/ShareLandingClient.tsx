@@ -71,11 +71,11 @@ export function ShareLandingClient({
     if (isPending) return;
     const callbackPath = createSharePath(token, nextAction === 'template' ? undefined : nextAction);
     if (!isSignedIn) {
-      window.location.assign(`/login?callbackUrl=${encodeURIComponent(callbackPath)}`);
+      router.push(`/login?callbackUrl=${encodeURIComponent(callbackPath)}`);
       return;
     }
     if (!userRole) {
-      window.location.assign(`/setup?callbackUrl=${encodeURIComponent(callbackPath)}`);
+      router.push(`/setup?callbackUrl=${encodeURIComponent(callbackPath)}`);
       return;
     }
 

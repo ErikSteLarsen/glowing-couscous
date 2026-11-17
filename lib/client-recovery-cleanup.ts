@@ -7,3 +7,12 @@ export function clearClientRecovery(userId: number) {
   } catch { /* Other tabs/storage may be unavailable. */ }
   window.dispatchEvent(new CustomEvent('tempo-recovery-cleared', { detail: userId }));
 }
+
+/**
+ * Load a fresh document after the account session ends. A client-side router
+ * transition would keep the Router Cache, SessionProvider state and React state
+ * from the signed-in page, so this navigation must not use `router.push()`.
+ */
+export function loadSignedOutDocument(path: string) {
+  window.location.assign(path);
+}

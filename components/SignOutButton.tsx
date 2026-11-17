@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { LogOut } from 'lucide-react';
 import { parseApplicationUserId } from '@/lib/auth-principal';
-import { clearClientRecovery } from '@/lib/client-recovery-cleanup';
+import { clearClientRecovery, loadSignedOutDocument } from '@/lib/client-recovery-cleanup';
 import {
   buttonFocusClassName,
   compactPrimaryButtonClassName,
@@ -33,7 +33,7 @@ export function SignOutButton({ tone = 'secondary', size = 'default', variant = 
       await signOut({ redirect: false });
       const userId = parseApplicationUserId(session?.user?.id);
       if (userId !== null) clearClientRecovery(userId);
-      window.location.assign('/login');
+      loadSignedOutDocument('/login');
     } catch {
       setIsSigningOut(false);
       setErrorMessage('Could not sign out. Please try again.');

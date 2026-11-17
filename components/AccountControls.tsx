@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { signOut } from 'next-auth/react';
-import { clearClientRecovery } from '@/lib/client-recovery-cleanup';
+import { clearClientRecovery, loadSignedOutDocument } from '@/lib/client-recovery-cleanup';
 import { SignOutButton } from '@/components/SignOutButton';
 import { AccountDeletionControls } from '@/components/AccountDeletionControls';
 import { secondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
@@ -24,9 +24,9 @@ export function AccountControls({ userId, controls }: { userId: number; controls
       revoked = true;
       clearClientRecovery(userId);
       await signOut({ redirect: false });
-      window.location.assign('/login');
+      loadSignedOutDocument('/login');
     } catch {
-      if (revoked) { window.location.assign('/login'); return; }
+      if (revoked) { loadSignedOutDocument('/login'); return; }
       setPending(false); setError('Could not sign out everywhere. Please try again.');
     }
   }

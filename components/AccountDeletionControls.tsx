@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { signIn, signOut } from 'next-auth/react';
-import { clearClientRecovery } from '@/lib/client-recovery-cleanup';
+import { clearClientRecovery, loadSignedOutDocument } from '@/lib/client-recovery-cleanup';
 import { dangerButtonClassName, formFieldClassName, secondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
 
 export function AccountDeletionControls({ userId, email, hasPassword, hasGoogle }: { userId: number; email: string; hasPassword: boolean; hasGoogle: boolean }) {
@@ -60,9 +60,9 @@ export function AccountDeletionControls({ userId, email, hasPassword, hasGoogle 
       if (body.providerRevoked === false) destination += '?strava=manual';
       clearClientRecovery(userId);
       await signOut({ redirect: false });
-      window.location.assign(destination);
+      loadSignedOutDocument(destination);
     } catch (reason) {
-      if (deleted) { window.location.assign(destination); return; }
+      if (deleted) { loadSignedOutDocument(destination); return; }
       setPassword(''); setError(reason instanceof Error ? reason.message : 'Deletion could not be confirmed. Try again.'); setPending(false);
     }
   }
