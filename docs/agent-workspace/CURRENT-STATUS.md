@@ -4,6 +4,16 @@ Last verified locally on **2026-11-17**. Source code and tests are authoritative
 
 ## Maintenance verification
 
+- Build/test/type commands now generate Prisma explicitly; removed the broken
+  schema-text cache script. Node >=24 is declared. `pnpm test:db` safely targets
+  only local disposable PostgreSQL and refuses unsafe explicit targets without
+  exposing connection credentials. 444 database-enabled tests passed, including
+  five runner guard cases; lint, type checking and production build passed.
+- Added Knip as a development tool with explicit operational/test entrypoints.
+  `pnpm check:deadcode` passes unused-file/dependency and import-resolution gates.
+  Full Knip also reports internal export-surface opportunities, which are not
+  bulk-fixed. Build still deploys migrations; no data/schema changes were added.
+
 - Framework/authentication refresh: Next.js and matching ESLint config 16.4.6,
   Auth.js 5.0.0-beta.32 and Prisma adapter 2.11.3. 439 PostgreSQL-enabled tests,
   both Chromium checks, type checking and production build passed. Lint passes
@@ -378,8 +388,8 @@ recipient account were removed after verification.
   and Ribbon keep horizontal scrolling inside their charts. Workouts, Templates,
   and Activity list accessibility scans found no violations; template editor
   and list now also pass fresh scans.
-- The specialized Next.js dev-loop skill requires Next.js 16.3 or later; this
-  app uses 16.2.4. Current evidence uses project checks and direct Chromium tests.
+- Next.js is now 16.4.6. Current acceptance evidence uses project checks,
+  isolated Chromium interactions and local production HTTP authentication.
 
 ## Strava and activity import
 

@@ -66,6 +66,9 @@ The seed command creates these local accounts:
 ```bash
 pnpm dev
 pnpm test
+pnpm test:db
+pnpm typecheck
+pnpm check:deadcode
 pnpm lint
 pnpm build
 pnpm db:migrate

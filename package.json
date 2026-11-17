@@ -4,16 +4,19 @@
   "private": true,
   "scripts": {
     "dev": "prisma generate && next dev",
-    "build": "node scripts/ensure-prisma-client.mjs && prisma migrate deploy && next build --webpack",
+    "build": "prisma generate && prisma migrate deploy && next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "test:ui": "node --test tests/ui-sdk.acceptance.mjs",
-    "test": "node --experimental-strip-types --test tests/*.test.mjs tests/*.test.ts",
+    "test": "prisma generate && node --experimental-strip-types --test tests/*.test.mjs tests/*.test.ts",
     "db:push": "prisma db push",
     "strava:webhook": "node scripts/strava-webhook-subscribe.mjs",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "node prisma/seed.js",
-    "db:setup": "pnpm db:migrate && pnpm db:seed"
+    "db:setup": "pnpm db:migrate && pnpm db:seed",
+    "test:db": "node --env-file-if-exists=.env scripts/test-database.mjs",
+    "check:deadcode": "knip --include files,dependencies,unlisted,unresolved --treat-config-hints-as-errors",
+    "typecheck": "prisma generate && next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@auth/prisma-adapter": "2.11.3",
@@ -44,10 +47,14 @@
     "esbuild": "^0.28.2",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.4.6",
+    "knip": "6.45.1",
     "postcss": "^8.5.33",
     "prisma": "6.19.3",
     "tailwindcss": "^4.3.5",
     "typescript": "^5.9.3"
   },
-  "packageManager": "pnpm@10.26.0+sha512.3b3f6c725ebe712506c0ab1ad4133cf86b1f4b687effce62a9b38b4d72e3954242e643190fc51fa1642949c735f403debd44f5cb0edd657abe63a8b6a7e1e402"
+  "packageManager": "pnpm@10.26.0+sha512.3b3f6c725ebe712506c0ab1ad4133cf86b1f4b687effce62a9b38b4d72e3954242e643190fc51fa1642949c735f403debd44f5cb0edd657abe63a8b6a7e1e402",
+  "engines": {
+    "node": ">=24"
+  }
 }

@@ -6,17 +6,20 @@ names. Never copy real secrets into tracked documentation.
 
 ## Install and commands
 
-Use Node.js compatible with Next.js 16 and the Node test runner's
-`--experimental-strip-types`; Node 24.8.0 was used in earlier verification.
-The repository does not yet enforce an engines range. Use pnpm pinned by
-`package.json` (currently 10.26.0). First run `pnpm install --frozen-lockfile`.
+Use Node.js 24 or newer (declared in `package.json`) and the pinned pnpm
+10.26.0. First run `pnpm install --frozen-lockfile`. Build, test and type-check
+commands explicitly generate Prisma Client, including on a fresh checkout;
+there is no schema-text cache to invalidate.
 
 | Command | Effect |
 |---|---|
 | `pnpm dev` | Generate Prisma Client and start Next.js |
-| `pnpm test` | Run Node source/service and architecture tests |
+| `pnpm test` | Generate Prisma Client and run Node source/service and architecture tests |
+| `pnpm test:db` | Run the same suite with guarded disposable local PostgreSQL coverage; start the database first |
+| `pnpm typecheck` | Generate Prisma Client and Next route types, then check TypeScript |
+| `pnpm check:deadcode` | Check unused files/dependencies and unresolved/unlisted imports |
 | `pnpm lint` | Run full ESLint |
-| `pnpm build` | Ensure Prisma Client, **deploy database migrations**, build Next.js with the verified webpack bundler |
+| `pnpm build` | Generate Prisma Client, **deploy database migrations**, build Next.js with the verified webpack bundler |
 | `pnpm start` | Serve existing production output |
 | `pnpm db:migrate` | Apply committed PostgreSQL migrations |
 | `pnpm db:push` | Prototype local schema without creating migrations |

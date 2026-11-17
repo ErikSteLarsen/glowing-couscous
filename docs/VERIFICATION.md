@@ -7,7 +7,20 @@ component behavior, not authenticated persistence or live provider delivery.
 
 ## Automated checks
 
-Run smallest relevant checks during iteration. Before finishing behavior changes
+Run smallest relevant checks during iteration. Use `pnpm typecheck` for
+Prisma generation, Next route type generation and TypeScript together.
+`pnpm check:deadcode` checks files, dependencies and import resolution; full
+`pnpm exec knip` also exposes unused exports for review. The config explicitly
+includes operational scripts, standalone acceptance checks and the UI fixture
+so string-loaded entrypoints are not mistaken for dead code.
+
+`pnpm test:db` loads `.env` when present and enables the full default suite's
+PostgreSQL cases. It accepts `TEMPO_TEST_DATABASE_URL`, or derives the disposable
+`tempo_acceptance` database from a local `DATABASE_URL`. It refuses remote hosts,
+other ports and explicit non-disposable database names before running tests;
+it never starts, resets or seeds a database. Database tests create/drop isolated
+schemas and require local PostgreSQL on port 55432. `pnpm test` remains available
+without a database, with persistence cases explicitly skipped. Before finishing behavior changes
 run `pnpm test`, `pnpm lint` and `pnpm build` when allowed by the environment.
 The build **deploys migrations**: confirm the target database first.
 `pnpm exec next build --webpack` is a bundle-only check and must be labeled that

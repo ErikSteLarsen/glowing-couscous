@@ -226,7 +226,7 @@ test('package scripts include the architecture test command', async () => {
 
   assert.match(
     packageJson,
-    /"test": "node --experimental-strip-types --test tests\/\*\.test\.mjs tests\/\*\.test\.ts"/,
+    /"test": "(?:prisma generate && )?node --experimental-strip-types --test tests\/\*\.test\.mjs tests\/\*\.test\.ts"/,
   );
 });
 

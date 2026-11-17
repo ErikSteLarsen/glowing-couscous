@@ -1,0 +1,23 @@
+{
+  "entry": [
+    "tests/*.test.{ts,mjs}",
+    "tests/*.acceptance.{ts,mjs}",
+    "tests/fixtures/ui-sdk.tsx",
+    "scripts/*.{js,mjs}"
+  ],
+  "project": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}",
+    "tests/**/*.{ts,mjs,tsx}",
+    "scripts/*.{js,mjs}",
+    "*.{ts,js,mjs}",
+    "app/**/*.css",
+    "components/**/*.css",
+    "prisma/**/*.prisma"
+  ],
+  "ignoreExportsUsedInFile": {
+    "type": true,
+    "interface": true
+  }
+}
