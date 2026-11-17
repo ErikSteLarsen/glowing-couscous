@@ -134,16 +134,13 @@ test('athlete request services support re-opened rejected requests and shared re
   assert.match(athleteServiceSource, /listForAthlete/);
 });
 
-test('coach discovery remains implemented but is not exposed from the personal workspace', async () => {
+test('coach discovery redirects while request APIs preserve their service ownership', async () => {
   const profileSource = await read('app/(app)/profile/ProfileClient.tsx');
   const discoveryPageSource = await read('app/(app)/athlete/find-coach/page.tsx');
-  const searchSource = await read('app/(app)/athlete/find-coach/FindCoachClient.tsx');
   const routeSource = await read('app/api/athlete/coach-requests/route.ts');
 
   assert.doesNotMatch(profileSource, /Request pending|Waiting for|Find a coach/);
   assert.match(discoveryPageSource, /redirect\('\/athlete'\)/);
-  assert.match(searchSource, /Request pending|Send request again|Back to profile|Wait for current request/);
-  assert.match(searchSource, /fetch\('\/api\/athlete\/coach-requests'\)/);
   assert.match(routeSource, /athleteService/);
   assert.match(routeSource, /loadCoachSearchState/);
   assert.match(routeSource, /Request already pending/);
@@ -151,13 +148,10 @@ test('coach discovery remains implemented but is not exposed from the personal w
 
 test('coach request UI surfaces failures and blocks duplicate actions', async () => {
   const panelSource = await read('components/CoachRequestsPanel.tsx');
-  const discoverySource = await read('app/(app)/athlete/find-coach/FindCoachClient.tsx');
 
   assert.match(panelSource, /Failed to load athlete requests/);
   assert.match(panelSource, /actingRequestId/);
   assert.match(panelSource, /disabled=\{actingRequestId !== null\}/);
-  assert.match(discoverySource, /requestingCoachId/);
-  assert.match(discoverySource, /Failed to send request/);
 });
 
 test('athlete home uses the overhaul composition with explicit session actions', async () => {

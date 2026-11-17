@@ -1,7 +1,3 @@
-import {
-  createEmptyWorkoutContentDraft,
-  createSessionDraftFromWorkoutContent,
-} from '@/lib/workout-editor';
 import { normalizeWorkoutBlockDrafts, validateWorkoutBlocks, WorkoutBlockDraft } from '@/lib/workout-spec';
 import { SPORT_OPTIONS } from '@/lib/sport';
 
@@ -45,14 +41,6 @@ export function validateSessionDraft(draft: SessionDraft) {
   }
 
   return validateWorkoutBlocks(draft.blocks, BLOCK_OPTIONS);
-}
-
-export function createEmptySessionDraft(scheduledDate: string): SessionDraft {
-  return createSessionDraftFromWorkoutContent({
-    scheduledDate,
-    title: '',
-    content: createEmptyWorkoutContentDraft(),
-  });
 }
 
 function toNullableInt(value: unknown) {

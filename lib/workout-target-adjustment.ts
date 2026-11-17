@@ -1,6 +1,6 @@
 import type { WorkoutTarget } from './workout-targets.ts';
 
-export function targetAdjustmentStep(target: WorkoutTarget): number {
+function targetAdjustmentStep(target: WorkoutTarget): number {
   if (target.mode === 'relative') return 1;
   if (target.metric === 'power') return 5;
   if (target.metric === 'pace') return 5;
@@ -15,12 +15,4 @@ export function adjustWorkoutTarget(target: WorkoutTarget, direction: -1 | 1): W
   if (low < (target.metric === 'rpe' ? 1 : 0) || (target.metric === 'rpe' && high > 10)) return null;
   if (target.reference === 'max-hr' && high > 100) return null;
   return { ...target, low, high };
-}
-
-export function targetAdjustmentLabel(target: WorkoutTarget): string {
-  if (target.mode === 'relative') return '1 percentage point';
-  if (target.metric === 'power') return '5 W';
-  if (target.metric === 'pace') return '5 sec';
-  if (target.metric === 'hr') return '1 bpm';
-  return '0.5 RPE';
 }

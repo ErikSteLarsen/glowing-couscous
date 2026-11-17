@@ -1,14 +1,22 @@
 'use client';
 
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode, type CSSProperties } from 'react';
 import { ChevronDown } from 'lucide-react';
-import type { SessionPlanBlock } from './SessionPlanCanvas';
-import { getSessionBlockStyle } from './SessionPlanCanvas';
 import { Surface, buttonFocusClassName, formSelectClassName, sectionHeadingClassName } from './ui';
-import { describeStructureGroup, groupSessionStructure, structureBlockLabel } from '@/lib/session-structure';
+import { describeStructureGroup, groupSessionStructure, structureBlockLabel, type StructureBlock } from '@/lib/session-structure';
 import { formatDurationExact } from '@/lib/format-duration';
 
-export function SessionWorkoutOverview({ blocks, header }: { blocks: SessionPlanBlock[]; header?: ReactNode }) {
+type SessionOverviewBlock = StructureBlock & { label: string };
+
+function getSessionBlockStyle(block: Pick<SessionOverviewBlock, 'kind' | 'zone'>): CSSProperties {
+  if (block.kind === 'pause') {
+    return { backgroundColor: 'var(--sunken)', color: 'var(--text-secondary)' };
+  }
+  const zone = Math.min(Math.max(block.zone, 1), 5);
+  return { backgroundColor: `var(--color-zone-${zone}-tint)`, color: 'var(--text)' };
+}
+
+export function SessionWorkoutOverview({ blocks, header }: { blocks: SessionOverviewBlock[]; header?: ReactNode }) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const panelId = useId();

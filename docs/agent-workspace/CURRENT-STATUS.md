@@ -4,6 +4,13 @@ Last verified locally on **2026-11-17**. Source code and tests are authoritative
 
 ## Maintenance verification
 
+- Removed nine unreachable files: duplicate canvas authoring and exclusive
+  helpers, abandoned editor wrappers, redirected discovery UI, legacy authoring
+  helpers and an unused session renderer. Active WorkoutBuilder, session review,
+  coach APIs and routed design experiments remain. Caller searches, 439 tests
+  (zero skips), 2 Chromium interaction tests, lint, TypeScript and production
+  build passed. Two deleted tests exclusively exercised the removed drop helper.
+
 - Canonical block persistence now owns coach planner/library/training-plan writes
   and athlete planned/actual corrections. Duplicate field maps were removed;
   integer target columns round consistently while decimal strings and skipped
@@ -46,8 +53,8 @@ Last verified locally on **2026-11-17**. Source code and tests are authoritative
   this closeout. Anonymous production requests reached Vercel SSO protection,
   so application behavior in production is not verified. Deployment protection
   and live-provider acceptance remain explicit gates.
-- WorkoutBuilder is the mounted editor. The unused canvas editor is retained;
-  it does not expose a second editor in the running interface.
+- WorkoutBuilder is the canonical mounted editor. The unreachable canvas editor
+  and its exclusive helpers have been removed.
 
 ## Product and ownership
 
@@ -87,10 +94,8 @@ sanitized snapshots and requires an explicit recipient save.
   and undo/redo. Generic prescriptions do not store personal profile values.
   Workout, template, and share authoring retain seconds. Shared duration labels
   show short intervals and second remainders instead of rounding them away.
-  `WorkoutBuilder` is the mounted library editor. `WorkoutCanvasEditor` remains
-  a separate, unmounted implementation with its own selection, repeat, and
-  timeline controls; consolidation remains unresolved, so neither capability
-  was removed in this scoped handoff fix.
+  `WorkoutBuilder` is the mounted library editor; the duplicate unmounted canvas
+  implementation and its exclusive input/drop helpers have been removed.
 - Template authoring uses the shared editor with profile previews, explicit
   discard confirmation, failed-save draft retention, and locked controls while
   saving. The library and editor appear separately; mobile Save clears the

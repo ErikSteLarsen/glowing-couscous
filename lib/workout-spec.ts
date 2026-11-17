@@ -6,23 +6,6 @@ export type WorkoutBlockDraft = {
   sortOrder: number;
 };
 
-export type WorkoutBlockRecord = {
-  id: number;
-  blockType: string;
-  title: string;
-  instructions: string | null;
-  sortOrder: number;
-};
-
-export function createEmptyWorkoutBlockDraft(sortOrder = 0, blockType = 'WARMUP'): WorkoutBlockDraft {
-  return {
-    blockType,
-    title: '',
-    instructions: '',
-    sortOrder,
-  };
-}
-
 export function normalizeWorkoutBlockDrafts(input: unknown) {
   const values = Array.isArray(input) ? input : [];
 
@@ -50,47 +33,6 @@ export function validateWorkoutBlocks(blocks: WorkoutBlockDraft[], allowedTypes:
   }
 
   return null;
-}
-
-export function addWorkoutBlock(blocks: WorkoutBlockDraft[], blockType = 'NOTE') {
-  return [...blocks, createEmptyWorkoutBlockDraft(blocks.length, blockType)];
-}
-
-export function updateWorkoutBlock(
-  blocks: WorkoutBlockDraft[],
-  index: number,
-  key: 'blockType' | 'title' | 'instructions',
-  value: string,
-) {
-  return blocks.map((block, blockIndex) => (blockIndex === index ? { ...block, [key]: value } : block));
-}
-
-export function removeWorkoutBlock(blocks: WorkoutBlockDraft[], index: number) {
-  return blocks
-    .filter((_, blockIndex) => blockIndex !== index)
-    .map((block, blockIndex) => ({
-      ...block,
-      sortOrder: blockIndex,
-    }));
-}
-
-export function serializeWorkoutBlocksForPersistence(blocks: WorkoutBlockDraft[]) {
-  return blocks.map((block, index) => ({
-    blockType: block.blockType,
-    title: block.title,
-    instructions: block.instructions || null,
-    sortOrder: index,
-  }));
-}
-
-export function mapWorkoutBlockRecordsToDraft(blocks: WorkoutBlockRecord[]) {
-  return blocks.map((block, index) => ({
-    id: block.id,
-    blockType: block.blockType,
-    title: block.title,
-    instructions: block.instructions ?? '',
-    sortOrder: index,
-  } satisfies WorkoutBlockDraft));
 }
 
 function toNullableInt(value: unknown) {
