@@ -4,6 +4,18 @@ Last verified locally on **2026-11-17**. Source code and tests are authoritative
 
 ## Maintenance verification
 
+- Framework/authentication refresh: Next.js and matching ESLint config 16.4.6,
+  Auth.js 5.0.0-beta.32 and Prisma adapter 2.11.3. 439 PostgreSQL-enabled tests,
+  both Chromium checks, type checking and production build passed. Lint passes
+  with seven new warnings about existing deliberate hard navigations across
+  authentication/share flows. Local production HTTP verification passed
+  credentials sign-in, roleless setup, same-role retry, JWT refresh and role
+  boundaries; its synthetic account was deleted.
+- Registry audit after this step: 28 advisories (0 critical, 20 high), down from
+  75 (8 critical, 40 high). Direct Next/Auth.js advisories are resolved; remaining
+  transitive dependency findings need the next dependency/tooling step. Counts
+  describe the installed registry graph, not verified exploitation.
+
 - Removed nine unreachable files: duplicate canvas authoring and exclusive
   helpers, abandoned editor wrappers, redirected discovery UI, legacy authoring
   helpers and an unused session renderer. Active WorkoutBuilder, session review,
