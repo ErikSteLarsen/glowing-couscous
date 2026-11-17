@@ -62,6 +62,9 @@ importers:
       saxes:
         specifier: ^6.0.0
         version: 6.0.0
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
     devDependencies:
       '@playwright/test':
         specifier: ^1.65.1

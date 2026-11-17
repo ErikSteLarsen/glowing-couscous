@@ -1,3 +1,4 @@
+import { sessionEditorInput } from './session-write-input.ts';
 import { endOfWeek, isValid, parseISO, startOfWeek } from 'date-fns';
 
 import { prisma } from './prisma.ts';
@@ -5,7 +6,6 @@ import {
   createSessionEditorBlockData,
   serializeSessionEditorDraft,
   validateSessionEditorDraft,
-  type SessionEditorDraft,
 } from './session-editor.ts';
 import { validateSessionSnapshotDraft } from './session-snapshot-service.ts';
 import { SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
@@ -81,8 +81,11 @@ export function createAthleteSessionAdjustmentService({
     async savePlannedSession(
       athleteId: number,
       sessionId: number,
-      draft: SessionEditorDraft,
+      input: unknown,
     ): Promise<AdjustmentResult> {
+      const parsed = sessionEditorInput.safeParse(input);
+      if (!parsed.success) return { ok: false as const, status: 400, error: 'Invalid session draft.' };
+      const draft = parsed.data;
       if (draft.mode !== 'planned') {
         return { ok: false, status: 400, error: 'Planned session edits require planned mode.' };
       }

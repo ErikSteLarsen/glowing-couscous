@@ -18,7 +18,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
     }
 
-    const body = await readJsonObject<Parameters<typeof athleteSessionAdjustmentService.savePlannedSession>[2]>(request);
+    const body = await readJsonObject(request);
     if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
 
     const result = await athleteSessionAdjustmentService.savePlannedSession(user.id, parsedSessionId, body.value);

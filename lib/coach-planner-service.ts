@@ -1,3 +1,4 @@
+import { plannerSessionInput } from './session-write-input.ts';
 import { createSessionEditorBlockData } from './session-editor.ts';
 import { addDays, differenceInCalendarDays, endOfMonth, endOfWeek, format, formatISO, isValid, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 import { prisma } from './prisma.ts';
@@ -5,7 +6,6 @@ import { derivePlannerSessionMetrics } from './planner-source-metrics.ts';
 import {
   serializePlannerDraftForSave,
   validatePlannerSessionDraft,
-  type PlannerSessionDraft,
 } from './planner-draft.ts';
 import { createSessionSnapshotJson } from './session-snapshot-service.ts';
 
@@ -159,7 +159,10 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
       };
     },
 
-    async saveSession(coachId: number, draft: PlannerSessionDraft, sessionId?: number) {
+    async saveSession(coachId: number, input: unknown, sessionId?: number) {
+      const parsed = plannerSessionInput.safeParse(input);
+      if (!parsed.success) return { ok: false as const, status: 400, error: 'Invalid session draft.' };
+      const draft = parsed.data;
       const validationError = validatePlannerSessionDraft(draft);
       if (validationError) {
         return { ok: false as const, error: validationError, status: 400 };

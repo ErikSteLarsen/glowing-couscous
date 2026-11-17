@@ -4,6 +4,17 @@ Last verified locally on **2026-11-17**. Source code and tests are authoritative
 
 ## Maintenance verification
 
+- Added pinned Zod 4.6.7 structural schemas at seven existing session/plan
+  service boundaries. Eleven API routes no longer assert arbitrary JSON is a
+  typed draft. Invalid shapes return 400 before database access; no transport
+  coercion/defaults replace semantic validation. Valid optional fields, decimal
+  values, ownership and HTTP success contracts remain covered.
+- Final code checks: 455 disposable PostgreSQL-enabled tests (zero skips),
+  2 Chromium component checks, type checking, dead-code gate, lint and full
+  production build passed. Independent review checked real caller payloads and
+  successful response contracts. Authenticated editing/browser and live-provider
+  acceptance remain distinct from these service/component checks.
+
 - Independent tooling review caught and fixed datasource inheritance in
   `test:db`: the child now receives the validated disposable URL in all three
   datasource variables. Seven runner tests pass, including fake-child probes

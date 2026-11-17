@@ -1,3 +1,4 @@
+import { sessionEditorInput } from './session-write-input.ts';
 import { isValid, parseISO } from 'date-fns';
 
 import { prisma } from './prisma.ts';
@@ -198,7 +199,9 @@ export function createAthleteCompletionService({
   }
 
   return {
-    async saveActualOutcome(actor: ActualActor, sessionId: number, draft: SessionEditorDraft): Promise<ActualOutcomeResult> {
+    async saveActualOutcome(actor: ActualActor, sessionId: number, input: unknown): Promise<ActualOutcomeResult> {
+      const parsed = sessionEditorInput.safeParse(input);
+      if (!parsed.success) return { ok: false, status: 400, error: 'Invalid session draft.' };
       const session = await db.session.findUnique({
         where: { id: sessionId },
         include: {
@@ -210,7 +213,7 @@ export function createAthleteCompletionService({
       if (!session || !canEditActual(actor, session)) {
         return { ok: false, status: 404, error: 'Session not found' };
       }
-      return saveActualForSession(actor, session, draft);
+      return saveActualForSession(actor, session, parsed.data);
     },
 
     async completeSession(athleteId: number, sessionId: number, input: CompletionInput): Promise<CompletionResult> {

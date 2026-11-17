@@ -25,6 +25,14 @@ Most API routes guard the session with `lib/api-auth.ts`, parse transport input
 with `lib/route-params.ts`, and delegate business behavior to a domain service.
 The signup route is the intentional authentication exception and owns its
 one-time account creation flow directly.
+`readJsonObject` verifies only the transport object shape and returns unknown
+properties. `lib/session-write-input.ts` uses Zod to validate legacy planner,
+canonical session-edit and training-plan metadata shapes at their service
+boundaries before database access. It preserves provided values, optional fields
+and nullable fields without coercion or defaults; unknown keys are stripped.
+Existing domain validators retain title, target, schedule, duration and outcome
+rules, and existing service queries retain ownership and authorization checks.
+
 
 ## Routes
 

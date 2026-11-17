@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const { user, error } = await requireCoach();
     if (error) return error;
 
-    const body = await readJsonObject<Parameters<typeof coachPlannerService.saveSession>[1]>(request);
+    const body = await readJsonObject(request);
     if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     const result = await coachPlannerService.saveSession(user.id, body.value);
     if (!result.ok) {

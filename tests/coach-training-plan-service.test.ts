@@ -27,7 +27,7 @@ test('coach training plans create a reusable plan and weekday session', async ()
     } as never,
   });
 
-  const plan = await service.createPlan(2, { name: 'Base week', summary: 'Build aerobic durability', sport: 'RUNNING' });
+  const plan = await service.createPlan(2, { name: 'Base week', sport: 'RUNNING', extra: 'ignored' });
   const session = await service.savePlanSession(2, 71, {
     ownershipMode: 'training-plan',
     athleteId: null,
@@ -57,9 +57,9 @@ test('coach training plans create a reusable plan and weekday session', async ()
     ],
   });
 
-  assert.equal(plan.id, 71);
+  assert.deepEqual(plan, { ok: true, planId: 71 });
   assert.deepEqual(session, { ok: true, sessionId: 72 });
-  assert.equal(planCreate?.coachOwnerId, 2);
+  assert.deepEqual(planCreate, { coachOwnerId: 2, name: 'Base week', summary: null, sport: 'RUNNING' });
   assert.equal(sessionCreate?.trainingPlanId, 71);
   assert.equal(sessionCreate?.planWeekday, 3);
   assert.equal(sessionCreate?.date, null);

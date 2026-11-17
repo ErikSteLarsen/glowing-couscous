@@ -15,7 +15,7 @@ export async function PATCH(
   const parsedSessionId = parsePositiveInteger(sessionId);
   if (parsedPlanId === null) return NextResponse.json({ error: 'Invalid planId' }, { status: 400 });
   if (parsedSessionId === null) return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
-  const body = await readJsonObject<Parameters<typeof coachTrainingPlanService.savePlanSession>[2]>(request);
+  const body = await readJsonObject(request);
   if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   const result = await coachTrainingPlanService.savePlanSession(
     user.id,

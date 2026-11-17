@@ -12,11 +12,11 @@ export function isJsonObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-export async function readJsonObject<T = Record<string, unknown>>(request: Request) {
+export async function readJsonObject(request: Request) {
   try {
     const value: unknown = await request.json();
     return isJsonObject(value)
-      ? { ok: true as const, value: value as T }
+      ? { ok: true as const, value }
       : { ok: false as const };
   } catch {
     return { ok: false as const };

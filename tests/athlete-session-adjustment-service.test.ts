@@ -144,7 +144,7 @@ test('athlete planned edits move one assigned session, mark it adjusted, and pre
   const { db, calls } = createDb();
   const service = createAthleteSessionAdjustmentService({ db: db as never });
 
-  const result = await service.savePlannedSession(7, 40, createDraft());
+  const result = await service.savePlannedSession(7, 40, { ...createDraft(), ignoredTransportField: true });
 
   assert.deepEqual(result, { ok: true, sessionId: 40 });
   assert.equal(calls.sessionUpdate?.data.adjusted, true);

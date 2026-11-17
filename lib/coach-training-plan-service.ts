@@ -1,25 +1,31 @@
+import { plannerSessionInput, trainingPlanInput } from './session-write-input.ts';
 import { createSessionEditorBlockData } from './session-editor.ts';
 import { prisma } from './prisma.ts';
-import { serializePlannerDraftForSave, validatePlannerSessionDraft, type PlannerSessionDraft } from './planner-draft.ts';
+import { serializePlannerDraftForSave, validatePlannerSessionDraft } from './planner-draft.ts';
 
 export function createCoachTrainingPlanService({ db = prisma }: { db?: typeof prisma } = {}) {
   return {
-    async createPlan(coachId: number, input: { name: string; summary?: string | null; sport: string }) {
-      return db.trainingPlan.create({
+    async createPlan(coachId: number, input: unknown) {
+      const parsed = trainingPlanInput.safeParse(input);
+      if (!parsed.success) return { ok: false as const, status: 400, error: 'Invalid training plan.' };
+      const plan = await db.trainingPlan.create({
         data: {
           coachOwnerId: coachId,
-          name: input.name.trim(),
-          summary: input.summary?.trim() || null,
-          sport: input.sport,
+          name: parsed.data.name.trim(),
+          summary: parsed.data.summary?.trim() || null,
+          sport: parsed.data.sport,
         },
       });
+      return { ok: true as const, planId: plan.id };
     },
 
     async updatePlan(
       coachId: number,
       trainingPlanId: number,
-      input: { name: string; summary?: string | null; sport: string },
+      input: unknown,
     ) {
+      const parsed = trainingPlanInput.safeParse(input);
+      if (!parsed.success) return { ok: false as const, status: 400, error: 'Invalid training plan.' };
       const existing = await db.trainingPlan.findFirst({
         where: { id: trainingPlanId, coachOwnerId: coachId },
         select: { id: true },
@@ -29,9 +35,9 @@ export function createCoachTrainingPlanService({ db = prisma }: { db?: typeof pr
       await db.trainingPlan.update({
         where: { id: trainingPlanId },
         data: {
-          name: input.name.trim(),
-          summary: input.summary?.trim() || null,
-          sport: input.sport,
+          name: parsed.data.name.trim(),
+          summary: parsed.data.summary?.trim() || null,
+          sport: parsed.data.sport,
         },
       });
       return { ok: true as const, planId: trainingPlanId };
@@ -51,9 +57,12 @@ export function createCoachTrainingPlanService({ db = prisma }: { db?: typeof pr
     async savePlanSession(
       coachId: number,
       trainingPlanId: number,
-      draft: PlannerSessionDraft,
+      input: unknown,
       sessionId?: number,
     ) {
+      const parsed = plannerSessionInput.safeParse(input);
+      if (!parsed.success) return { ok: false as const, status: 400, error: 'Invalid session draft.' };
+      const draft = parsed.data;
       const validationError = validatePlannerSessionDraft(draft);
       if (validationError) return { ok: false as const, error: validationError, status: 400 };
 

@@ -1,10 +1,10 @@
+import { plannerSessionInput } from './session-write-input.ts';
 import { createSessionEditorBlockData } from './session-editor.ts';
 import { parseISO } from 'date-fns';
 import { prisma } from './prisma.ts';
 import {
   serializePlannerDraftForSave,
   validatePlannerSessionDraft,
-  type PlannerSessionDraft,
 } from './planner-draft.ts';
 
 export function createCoachSessionLibraryService({ db = prisma }: { db?: typeof prisma } = {}) {
@@ -21,7 +21,10 @@ export function createCoachSessionLibraryService({ db = prisma }: { db?: typeof 
       });
     },
 
-    async saveForCoach(coachId: number, draft: PlannerSessionDraft, sessionId?: number) {
+    async saveForCoach(coachId: number, input: unknown, sessionId?: number) {
+      const parsed = plannerSessionInput.safeParse(input);
+      if (!parsed.success) return { ok: false as const, status: 400, error: 'Invalid session draft.' };
+      const draft = parsed.data;
       const validationError = validatePlannerSessionDraft(draft);
       if (validationError) {
         return { ok: false as const, error: validationError, status: 400 };
