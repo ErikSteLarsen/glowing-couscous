@@ -4,6 +4,11 @@ Last verified locally on **2026-11-17**. Source code and tests are authoritative
 
 ## Maintenance verification
 
+- Independent tooling review caught and fixed datasource inheritance in
+  `test:db`: the child now receives the validated disposable URL in all three
+  datasource variables. Seven runner tests pass, including fake-child probes
+  proving both explicit and derived targets replace inherited datasource URLs.
+
 - Build/test/type commands now generate Prisma explicitly; removed the broken
   schema-text cache script. Node >=24 is declared. `pnpm test:db` safely targets
   only local disposable PostgreSQL and refuses unsafe explicit targets without

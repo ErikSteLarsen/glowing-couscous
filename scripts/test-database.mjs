@@ -15,7 +15,7 @@ try {
 
 const result = spawnSync('pnpm', ['test'], {
   stdio: 'inherit',
-  env: { ...process.env, TEMPO_TEST_DATABASE_URL: target.toString() },
+  env: { ...process.env, TEMPO_TEST_DATABASE_URL: target.toString(), DATABASE_URL: target.toString(), DIRECT_URL: target.toString() },
 });
 if (result.error) console.error('Could not start pnpm test.');
 process.exit(result.status ?? 1);
