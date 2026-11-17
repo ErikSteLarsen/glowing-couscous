@@ -38,6 +38,8 @@ means compatibility code, not the extension point for new work.
 
 ## Active work
 
+- [Independent maintenance steps](tasks/2026-11-17-maintenance.md) — structural cleanup, dead code and dependency review.
+
 
 - [Trustworthy account controls, recoverable work and truthful Home](tasks/2026-09-30-account-recovery-home.md) — Home, workout/Profile/Live recovery, Account controls and safe deletion implemented; public trust facts, auth hardening and remaining acceptance are open. Downloads and email verification are deferred.
 
