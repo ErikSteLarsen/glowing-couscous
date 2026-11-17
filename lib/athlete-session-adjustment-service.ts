@@ -2,6 +2,7 @@ import { endOfWeek, isValid, parseISO, startOfWeek } from 'date-fns';
 
 import { prisma } from './prisma.ts';
 import {
+  createSessionEditorBlockData,
   serializeSessionEditorDraft,
   validateSessionEditorDraft,
   type SessionEditorDraft,
@@ -130,22 +131,7 @@ export function createAthleteSessionAdjustmentService({
 
       const serialized = serializeSessionEditorDraft(draft);
       const baselineJson = session.coachBaselineJson;
-      const blocks = serialized.blocks.map((block) => ({
-        kind: block.kind,
-        zone: block.zone,
-        durationSec: block.durationSec,
-        reps: block.reps,
-        targetType: block.targetType,
-        targetMode: block.targetMode,
-        targetReference: block.targetReference,
-        targetLow: block.targetLow,
-        targetHigh: block.targetHigh,
-        targetLowDecimal: block.targetLowDecimal,
-        targetHighDecimal: block.targetHighDecimal,
-        note: block.note,
-        skipped: block.skipped,
-        sortOrder: block.sortOrder,
-      }));
+      const blocks = createSessionEditorBlockData(serialized.blocks);
 
       await db.$transaction([
         db.block.deleteMany({ where: { sessionId } }),

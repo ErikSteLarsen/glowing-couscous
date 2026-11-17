@@ -238,3 +238,17 @@ test('athlete session detail keeps the overview read-only, exposes the shared ad
   assert.match(page, /Start live/);
   assert.match(page, /sourceWorkout/);
 });
+
+
+test('planned edits retain decimal prescriptions while writing integer legacy target fields', async () => {
+  const { db, calls } = createDb();
+  const service = createAthleteSessionAdjustmentService({ db: db as never });
+  const draft = createDraft();
+  draft.blocks[1].target = { metric: 'pace', mode: 'relative', reference: 'threshold-pace', low: 87.5, high: 92.5 };
+
+  assert.equal((await service.savePlannedSession(7, 40, draft)).ok, true);
+  assert.partialDeepStrictEqual(calls.sessionUpdate, { data: { blocks: { create: [
+    { skipped: true },
+    { targetLow: 88, targetHigh: 93, targetLowDecimal: '87.5', targetHighDecimal: '92.5', targetReference: 'threshold-pace', skipped: false },
+  ] } } });
+});

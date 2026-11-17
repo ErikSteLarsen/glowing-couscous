@@ -178,7 +178,7 @@ hashes for transactional workout creation. Keep the identity after workout
 deletion to refuse accidental recreation on retry. Edits claim the expected
 Session revision before replacing blocks inside the same transaction.
 `session-editor.createSessionEditorBlockData` shapes canonical serialized blocks
-for personal planner and workout-library writes: omit source block IDs, round
+for personal/coach planning, libraries, training plans, planned adjustments and actual corrections: omit source block IDs, round
 legacy integer target fields and retain decimal targets, repetition, skip state
 and order. Do not create another route or service-specific block serializer.
 

@@ -283,3 +283,19 @@ test('actual outcome routes keep role guards while session detail stays read-onl
   assert.doesNotMatch(detailClient, /ManualActivityCorrectionForm/);
   assert.match(detailPage, /\['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'\]\.includes\(detail\.session\.metricsSource/);
 });
+
+
+test('actual corrections preserve decimal targets in snapshots and integer compatibility fields in rows', async () => {
+  const { service, calls } = createService(plannedSession({ id: 20 }, { status: 'completed' }));
+  const draft = actualDraft();
+  draft.blocks[0].target = { metric: 'pace', mode: 'relative', reference: 'threshold-pace', low: 87.5, high: 92.5 };
+
+  assert.equal((await service.saveActualOutcome({ role: 'ATHLETE', userId: 7 }, 11, draft)).ok, true);
+  assert.partialDeepStrictEqual(calls.sessionUpdate, { data: { blocks: { create: [
+    { targetLow: 88, targetHigh: 93, targetLowDecimal: '87.5', targetHighDecimal: '92.5', targetReference: 'threshold-pace' },
+  ] } } });
+  assert.ok(calls.activityUpsert && typeof calls.activityUpsert === 'object' && 'update' in calls.activityUpsert);
+  const update = calls.activityUpsert.update;
+  assert.ok(update && typeof update === 'object' && 'actualSnapshotJson' in update && typeof update.actualSnapshotJson === 'string');
+  assert.partialDeepStrictEqual(JSON.parse(update.actualSnapshotJson), { blocks: [{ targetLow: 87.5, targetHigh: 92.5 }] });
+});

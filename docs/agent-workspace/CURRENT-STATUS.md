@@ -2,6 +2,15 @@
 
 Last verified locally on **2026-11-17**. Source code and tests are authoritative.
 
+## Maintenance verification
+
+- Canonical block persistence now owns coach planner/library/training-plan writes
+  and athlete planned/actual corrections. Duplicate field maps were removed;
+  integer target columns round consistently while decimal strings and skipped
+  blocks survive. Regression coverage exercises these saved values.
+- Step verification: 441 PostgreSQL-enabled tests passed with zero skips;
+  `pnpm lint`, TypeScript and `pnpm build` passed against local `tempo_dev`.
+
 ## UI SDK integration
 
 - Adopted pinned UI SDK 0.1.0-beta.6 for settings switches, session-removal

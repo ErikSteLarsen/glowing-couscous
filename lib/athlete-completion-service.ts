@@ -2,7 +2,7 @@ import { isValid, parseISO } from 'date-fns';
 
 import { prisma } from './prisma.ts';
 import { SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
-import { createSessionEditorDraftFromPersisted, serializeSessionEditorDraft, type SessionEditorDraft } from './session-editor.ts';
+import { createSessionEditorBlockData, createSessionEditorDraftFromPersisted, serializeSessionEditorDraft, type SessionEditorDraft } from './session-editor.ts';
 import { deriveSessionEditorMetrics } from './session-editor.ts';
 import {
   createSessionSnapshotJson,
@@ -140,22 +140,7 @@ export function createAthleteCompletionService({
           })
         : null);
     const completedAt = session.activity?.completedAt ?? new Date();
-    const blocks = serialized.blocks.map((block) => ({
-      kind: block.kind,
-      zone: block.zone,
-      durationSec: block.durationSec,
-      reps: block.reps,
-      targetType: block.targetType,
-      targetMode: block.targetMode,
-      targetReference: block.targetReference,
-      targetLow: block.targetLow,
-      targetHigh: block.targetHigh,
-      targetLowDecimal: block.targetLowDecimal,
-      targetHighDecimal: block.targetHighDecimal,
-      note: block.note,
-      skipped: block.skipped,
-      sortOrder: block.sortOrder,
-    }));
+    const blocks = createSessionEditorBlockData(serialized.blocks);
 
     const sessionDate = session.date ?? parseSessionDate(draft.scheduledDate);
     await db.$transaction([

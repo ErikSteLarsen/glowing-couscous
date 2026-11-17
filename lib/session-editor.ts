@@ -416,7 +416,7 @@ export function serializeSessionEditorDraft(draft: SessionEditorDraft) {
   };
 }
 
-export function createSessionEditorBlockData(blocks: ReturnType<typeof serializeSessionEditorDraft>['blocks']) {
+export function createSessionEditorBlockData(blocks: ReadonlyArray<Omit<ReturnType<typeof serializeSessionEditorDraft>['blocks'][number], 'id'>>) {
   return blocks.map((block) => ({
     kind: block.kind,
     zone: block.zone,

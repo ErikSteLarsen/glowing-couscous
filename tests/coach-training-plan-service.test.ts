@@ -44,14 +44,15 @@ test('coach training plans create a reusable plan and weekday session', async ()
         zone: 3,
         durationSec: 1800,
         reps: null,
-        targetType: null,
+        targetType: 'pace',
         targetMode: 'absolute',
         targetReference: null,
-        targetLow: null,
-        targetHigh: null,
+        targetLow: 254.5,
+        targetHigh: 260.5,
         targetLowDecimal: null,
         targetHighDecimal: null,
         note: '',
+        skipped: true,
       },
     ],
   });
@@ -62,6 +63,9 @@ test('coach training plans create a reusable plan and weekday session', async ()
   assert.equal(sessionCreate?.trainingPlanId, 71);
   assert.equal(sessionCreate?.planWeekday, 3);
   assert.equal(sessionCreate?.date, null);
+  assert.partialDeepStrictEqual(sessionCreate, { blocks: { create: [{
+    targetLow: 255, targetHigh: 261, targetLowDecimal: '254.5', targetHighDecimal: '260.5', skipped: true,
+  }] } });
 });
 
 test('coach training plan update returns ok when coach owns plan', async () => {

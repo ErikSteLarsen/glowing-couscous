@@ -1,3 +1,4 @@
+import { createSessionEditorBlockData } from './session-editor.ts';
 import { prisma } from './prisma.ts';
 import { serializePlannerDraftForSave, validatePlannerSessionDraft, type PlannerSessionDraft } from './planner-draft.ts';
 
@@ -78,21 +79,7 @@ export function createCoachTrainingPlanService({ db = prisma }: { db?: typeof pr
         status: 'planned',
         adjusted: false,
         blocks: {
-          create: serialized.blocks.map((block) => ({
-            kind: block.kind,
-            zone: block.zone,
-            durationSec: block.durationSec,
-            reps: block.reps,
-            targetType: block.targetType,
-            targetMode: block.targetMode,
-            targetReference: block.targetReference,
-            targetLow: block.targetLow,
-            targetHigh: block.targetHigh,
-            targetLowDecimal: block.targetLowDecimal,
-            targetHighDecimal: block.targetHighDecimal,
-            note: block.note,
-            sortOrder: block.sortOrder,
-          })),
+          create: createSessionEditorBlockData(serialized.blocks),
         },
       };
 

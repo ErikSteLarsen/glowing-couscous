@@ -1,3 +1,4 @@
+import { createSessionEditorBlockData } from './session-editor.ts';
 import { addDays, differenceInCalendarDays, endOfMonth, endOfWeek, format, formatISO, isValid, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 import { prisma } from './prisma.ts';
 import { derivePlannerSessionMetrics } from './planner-source-metrics.ts';
@@ -211,22 +212,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
         }));
 
       const serialized = serializePlannerDraftForSave(draft);
-      const blocks = serialized.blocks.map((block) => ({
-        kind: block.kind,
-        zone: block.zone,
-        durationSec: block.durationSec,
-        reps: block.reps,
-        targetType: block.targetType,
-        targetMode: block.targetMode,
-        targetReference: block.targetReference,
-         targetLow: block.targetLow === null ? null : Math.round(block.targetLow),
-         targetHigh: block.targetHigh === null ? null : Math.round(block.targetHigh),
-        targetLowDecimal: block.targetLowDecimal,
-        targetHighDecimal: block.targetHighDecimal,
-        note: block.note,
-        skipped: block.skipped,
-        sortOrder: block.sortOrder,
-      }));
+      const blocks = createSessionEditorBlockData(serialized.blocks);
       const sessionData = {
         athleteId: draft.athleteId,
         planId: plan.id,
