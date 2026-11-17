@@ -12,11 +12,14 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 - `pnpm test:ui`: **2 Chromium component checks passed**, at 390px and 1440px.
   These cover SDK switch keyboard/disabled states, comparison selection, dialog
   focus containment/return, Escape, pending deletion, error retention and retry.
-- `pnpm typecheck`, `pnpm check:deadcode` and `pnpm build` passed. The production
-  build used local `tempo_dev`, with no pending migrations or schema changes.
-- `pnpm lint` passed with seven warnings from the new Next rule about existing
-  hard navigations in authentication/signout/share controls. Their behavior was
-  preserved during dependency updates. The Node DEP0205 warning also remains.
+- `pnpm typecheck`, `pnpm check:deadcode` and `pnpm build` passed. The latest
+  production build targeted the disposable `tempo_acceptance` database.
+- `pnpm lint` passes with zero warnings. Signed-out share actions use router
+  navigation to login/setup; a local production Chromium check confirmed the
+  login handoff keeps the share `callbackUrl` without a document reload. The
+  roleless `/setup` handoff was not browser-checked. Sign-out, sign-out-everywhere
+  and account deletion intentionally reload through `loadSignedOutDocument` in
+  `lib/client-recovery-cleanup.ts`. The Node DEP0205 warning remains.
 - Local production HTTP acceptance passed credentials sign-in, roleless setup,
   same-role retry, JWT refresh and role boundaries after the Next/Auth.js update.
   Its temporary account was deleted. No production deployment or push occurred.
@@ -72,11 +75,11 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 - Knip has explicit script/acceptance/UI-fixture entrypoints. The dead-code gate
   passes files, dependencies and import resolution. Full Knip also lists unused
   exports for case-by-case review; they were not blindly removed.
-- Registry audit fell from 75 advisories to **one high advisory**, with zero
-  critical/moderate/low findings. Prisma config pins deepmerge-ts 7.1.5; the
-  patched version requires a major change. No speculative override was added.
-  The advisory concerns recursive object graphs. No user objects enter this
-  app's Prisma CLI config; request-level exploitability was not established.
+- `pnpm audit` reports **no known vulnerabilities** (down from 75). A scoped
+  `pnpm-workspace.yaml` override moves `@prisma/config`'s deepmerge-ts from 7.1.5
+  to 8.0.2 (GHSA-ggr8-5vv4-36mx), matching Prisma 7's own pin. Config loading,
+  validation, generation and the DB suite were rechecked. Remove the override
+  when upgrading to Prisma 7.
 
 ## Remaining risks and acceptance gates
 
