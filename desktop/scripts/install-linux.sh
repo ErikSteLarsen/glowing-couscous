@@ -30,13 +30,18 @@ fi
 install -m 0644 -- "$desktop_dir/build/icons/512x512.png" "$icons/tempo-ride.png"
 
 # Exec arguments use desktop string escaping, followed by quoted argument escaping.
-exec_path=$(printf '%s' "$app_image" | sed 's/[\\]/\\\\\\\\/g; s/["`$]/\\\\&/g; s/%/%%/g')
+# xdg-open's generic handler cannot parse a quoted Exec path, so quote only when required.
+if [[ $app_image =~ ^[A-Za-z0-9/._+-]+$ ]]; then
+  exec_field=$app_image
+else
+  exec_field="\"$(printf '%s' "$app_image" | sed 's/[\\]/\\\\\\\\/g; s/["`$]/\\\\&/g; s/%/%%/g')\""
+fi
 cat > "$applications/tempo-ride.desktop" <<ENTRY
 [Desktop Entry]
 Type=Application
 Name=Tempo Ride
 Comment=Desktop companion for Tempo indoor bike workouts
-Exec="$exec_path" %u
+Exec=$exec_field %u
 Icon=tempo-ride
 Terminal=false
 StartupWMClass=tempo-ride
