@@ -446,3 +446,17 @@ test('telemetry records 1 Hz while the UI timer is suspended', () => {
   rec = tick(rec, ride, 4000);
   assert.equal(rec.samples[3].p, 300);
 });
+
+test('checkpoint rejects overlapping laps, invalid clock anchors, and impossible timer counts', () => {
+  const ride = plan();
+  const rec = tick(startRecording(createRecording(7, 'Threshold', ride), ride, 0), ride, 5000, reading(150));
+  assert.ok(parseCheckpoint(serializeCheckpoint(rec, 5000)));
+  assert.equal(parseCheckpoint(serializeCheckpoint({
+    ...rec,
+    laps: [{ stepIndex: 0, startSec: 0, endSec: 4 }, { stepIndex: 1, startSec: 3, endSec: null }],
+  }, 5000)), null);
+  assert.equal(parseCheckpoint(serializeCheckpoint({ ...rec, movingSec: rec.timerSec + 1 }, 5000)), null);
+  assert.equal(parseCheckpoint(serializeCheckpoint({ ...rec, elapsedSec: rec.timerSec - 1 }, 5000)), null);
+  assert.equal(parseCheckpoint(serializeCheckpoint({ ...rec, activeRemainderMs: 1200 }, 5000)), null);
+  assert.equal(parseCheckpoint(serializeCheckpoint(rec, 5000).replace('"savedAtMs":5000', '"savedAtMs":1e999')), null);
+});

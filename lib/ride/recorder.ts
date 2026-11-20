@@ -400,7 +400,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-const nonNegativeInt = (value: unknown) => Number.isInteger(value) && (value as number) >= 0;
+const nonNegativeInt = (value: unknown): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
+const distance = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0;
+const timestamp = (value: unknown): value is number => nonNegativeInt(value) && value <= 8.64e15;
+const nullableTimestamp = (value: unknown) => value === null || timestamp(value);
 const nullableNumber = (value: unknown) => value === null || (typeof value === 'number' && Number.isFinite(value));
 
 /** Returns the checkpoint when it is a structurally valid version-1 ride; otherwise null. */
@@ -412,18 +415,36 @@ export function parseCheckpoint(serialized: string | null): { savedAtMs: number;
   } catch {
     return null;
   }
-  if (!isRecord(value) || value.kind !== 'tempo-ride' || value.version !== RIDE_CHECKPOINT_VERSION || typeof value.savedAtMs !== 'number' || !isRecord(value.recording)) return null;
+  if (!isRecord(value) || value.kind !== 'tempo-ride' || value.version !== RIDE_CHECKPOINT_VERSION || !timestamp(value.savedAtMs) || !isRecord(value.recording)) return null;
   const r = value.recording;
   if (
-    r.version !== 1 || !Number.isInteger(r.sessionId) || (r.sessionId as number) <= 0 || typeof r.sessionTitle !== 'string' || typeof r.planSignature !== 'string' ||
-    !['ready', 'running', 'paused', 'finished'].includes(r.status as string) || !nullableNumber(r.startedAtMs) || !nullableNumber(r.finishedAtMs) || !nullableNumber(r.lastTickAtMs) ||
-    !nonNegativeInt(r.elapsedSec) || !nonNegativeInt(r.timerSec) || !nonNegativeInt(r.movingSec) || !nonNegativeInt(r.stepIndex) || !nonNegativeInt(r.stepElapsedSec) ||
-    typeof r.biasPct !== 'number' || typeof r.ergEnabled !== 'boolean' || typeof r.distanceMeters !== 'number' || !Array.isArray(r.samples) || !Array.isArray(r.laps) ||
+    r.version !== 1 || !nonNegativeInt(r.sessionId) || r.sessionId === 0 || typeof r.sessionTitle !== 'string' || typeof r.planSignature !== 'string' ||
+    (r.status !== 'ready' && r.status !== 'running' && r.status !== 'paused' && r.status !== 'finished') ||
+    !(r.status === 'ready' ? r.startedAtMs === null : timestamp(r.startedAtMs)) ||
+    !(r.status === 'finished' ? timestamp(r.finishedAtMs) : r.finishedAtMs === null) ||
+    !nullableTimestamp(r.lastTickAtMs) || (r.elapsedTickAtMs !== undefined && !nullableTimestamp(r.elapsedTickAtMs)) ||
+    (r.activeRemainderMs !== undefined && (!nonNegativeInt(r.activeRemainderMs) || r.activeRemainderMs >= 1000)) ||
+    !nonNegativeInt(r.elapsedSec) || !nonNegativeInt(r.timerSec) || !nonNegativeInt(r.movingSec) || r.movingSec > r.timerSec || r.timerSec > r.elapsedSec ||
+    !nonNegativeInt(r.stepIndex) || !nonNegativeInt(r.stepElapsedSec) ||
+    typeof r.biasPct !== 'number' || !Number.isInteger(r.biasPct) || r.biasPct < -50 || r.biasPct > 50 ||
+    typeof r.ergEnabled !== 'boolean' || !distance(r.distanceMeters) || !Array.isArray(r.samples) || !Array.isArray(r.laps) ||
     r.samples.length !== r.timerSec || !isRecord(r.pending)
   ) return null;
-  const samplesValid = (r.samples as unknown[]).every((sample, index) => isRecord(sample) && sample.t === index && nullableNumber(sample.p) && nullableNumber(sample.hr) && nullableNumber(sample.cad) && nullableNumber(sample.spd) && typeof sample.d === 'number' && nullableNumber(sample.tgt));
-  const lapsValid = (r.laps as unknown[]).every((lap) => isRecord(lap) && nonNegativeInt(lap.stepIndex) && nonNegativeInt(lap.startSec) && (lap.endSec === null || nonNegativeInt(lap.endSec)));
-  if (!samplesValid || !lapsValid) return null;
+  if (!r.samples.every((sample: unknown, index) => isRecord(sample) && sample.t === index && nullableNumber(sample.p) &&
+    nullableNumber(sample.hr) && nullableNumber(sample.cad) && nullableNumber(sample.spd) && distance(sample.d) && nullableNumber(sample.tgt))) return null;
+
+  let lapEnd = 0;
+  for (const [index, lap] of r.laps.entries()) {
+    if (!isRecord(lap) || !nonNegativeInt(lap.stepIndex) || lap.startSec !== lapEnd) return null;
+    if (lap.endSec === null) {
+      if (index !== r.laps.length - 1 || r.status === 'ready' || r.status === 'finished') return null;
+      lapEnd = r.timerSec;
+    } else {
+      if (!nonNegativeInt(lap.endSec) || lap.endSec < lapEnd || lap.endSec > r.timerSec) return null;
+      lapEnd = lap.endSec;
+    }
+  }
+  if (lapEnd !== r.timerSec) return null;
   return { savedAtMs: value.savedAtMs, recording: { ...(r as unknown as RideRecording), pending: emptyAccumulator() } };
 }
 
