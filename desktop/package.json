@@ -1,7 +1,7 @@
 {
   "name": "tempo-ride",
   "productName": "Tempo Ride",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Desktop companion for Tempo indoor bike workouts",
   "homepage": "https://github.com/ErikSteLarsen/glowing-couscous",
   "desktopName": "tempo-ride.desktop",
