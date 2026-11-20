@@ -15,10 +15,17 @@ jobs:
         include:
           - os: windows-latest
             target: win
-            extension: exe
+            installers: desktop/dist/Tempo-Ride-Windows-Setup.exe
           - os: macos-latest
             target: mac
-            extension: dmg
+            installers: |
+              desktop/dist/Tempo-Ride-macOS-arm64.dmg
+              desktop/dist/Tempo-Ride-macOS-x64.dmg
+          - os: ubuntu-latest
+            target: linux
+            installers: |
+              desktop/dist/Tempo-Ride-Linux.AppImage
+              desktop/dist/Tempo-Ride-Linux.deb
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -39,7 +46,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: tempo-ride-${{ matrix.target }}
-          path: desktop/dist/Tempo-Ride-*.${{ matrix.extension }}
+          path: ${{ matrix.installers }}
           if-no-files-found: error
 
   release:
@@ -59,9 +66,20 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
         run: |
+          files=(
+            installers/Tempo-Ride-Windows-Setup.exe
+            installers/Tempo-Ride-macOS-arm64.dmg
+            installers/Tempo-Ride-macOS-x64.dmg
+            installers/Tempo-Ride-Linux.AppImage
+            installers/Tempo-Ride-Linux.deb
+          )
+          for file in "${files[@]}"; do
+            test -s "$file"
+          done
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" installers/* --clobber
+            gh release upload "$TAG" "${files[@]}" --clobber
+            gh release edit "$TAG" --draft=false --prerelease=false --latest
           else
-            gh release create "$TAG" installers/* --verify-tag --title "Tempo Ride ${TAG#desktop-v}" \
+            gh release create "$TAG" "${files[@]}" --verify-tag --latest --title "Tempo Ride ${TAG#desktop-v}" \
               --notes "The Windows installer is unsigned. The macOS apps use ad hoc signatures and are not notarized. See desktop/README.md for installation."
           fi

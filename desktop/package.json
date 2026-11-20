@@ -3,6 +3,8 @@
   "productName": "Tempo Ride",
   "version": "0.1.0",
   "description": "Desktop companion for Tempo indoor bike workouts",
+  "homepage": "https://github.com/ErikSteLarsen/glowing-couscous",
+  "desktopName": "tempo-ride.desktop",
   "private": true,
   "main": "main.cjs",
   "packageManager": "pnpm@10.26.0",
@@ -10,7 +12,8 @@
     "dev": "electron .",
     "test": "node --test",
     "dist:win": "electron-builder --win --publish never",
-    "dist:mac": "electron-builder --mac --publish never"
+    "dist:mac": "electron-builder --mac --publish never",
+    "dist:linux": "electron-builder --linux --publish never"
   },
   "devDependencies": {
     "electron": "45.4.1",
@@ -18,8 +21,8 @@
   },
   "build": {
     "appId": "app.tempo.ride",
-    "artifactName": "Tempo-Ride-${version}-${arch}.${ext}",
-    "files": ["*.cjs", "ui/**"],
+    "icon": "build/icon.png",
+    "files": ["*.cjs", "ui/**", "build/icon.png"],
     "protocols": [
       { "name": "Tempo Ride", "schemes": ["tempo-ride"] }
     ],
@@ -27,14 +30,27 @@
       "target": [{ "target": "nsis", "arch": ["x64"] }]
     },
     "nsis": {
+      "artifactName": "Tempo-Ride-Windows-Setup.exe",
       "include": "build/installer.nsh"
     },
     "mac": {
+      "artifactName": "Tempo-Ride-macOS-${arch}.dmg",
       "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
       "identity": "-",
       "extendInfo": {
         "NSBluetoothAlwaysUsageDescription": "Tempo Ride connects to your trainer, heart-rate strap and cadence sensor during rides."
       }
+    },
+    "linux": {
+      "target": [
+        { "target": "AppImage", "arch": ["x64"] },
+        { "target": "deb", "arch": ["x64"] }
+      ],
+      "artifactName": "Tempo-Ride-Linux.${ext}",
+      "icon": "build/icons",
+      "category": "Sports",
+      "syncDesktopName": true,
+      "maintainer": "Erik Stensrud Larsen <ErikSteLarsen@users.noreply.github.com>"
     }
   }
 }
