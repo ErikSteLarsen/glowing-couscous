@@ -56,7 +56,7 @@ export default async function AthleteRidePage({
     return (
       <PageShell size="wide">
         <TopBar title={`Ride ${detail.session.title}`} actions={back} />
-        <UnsavedRidesNotice />
+        <UnsavedRidesNotice closedSessionId={detail.session.id} />
         <EmptyState
           title={detail.session.status === 'skipped' ? 'Session skipped' : 'Session already completed'}
           description={detail.session.status === 'skipped' ? 'Plan this session again before riding it.' : 'This session already has a saved outcome.'}

@@ -179,8 +179,7 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
   // Look for an unfinished ride for this session in this browser or the desktop store.
   useEffect(() => {
     let active = true;
-    void listStoredRides().then((rides) => {
-      const match = rides.find((ride) => ride.recording.sessionId === sessionId);
+    void listStoredRides(sessionId).then(([match]) => {
       if (!active || !match || recordingRef.current.status !== 'ready') return;
       setRecovered({ recording: match.recording, savedAtMs: match.savedAtMs, compatible: match.recording.planSignature === planSignature(plan) });
     });
