@@ -601,7 +601,7 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
   const hrZone = live.heartRateBpm !== null ? zoneForHeartRateBpm(live.heartRateBpm, heartRateMaxBpm) : null;
   const deviation = delta !== null && targetWatts ? Math.max(-1, Math.min(1, delta / Math.max(20, targetWatts * 0.25))) : null;
   const intervalColor = currentStep ? (currentStep.kind === 'pause' ? 'var(--text-muted)' : intensityColor(stepIntensityZone(currentStep, plan.ftpWatts))) : 'var(--brand)';
-  const heroNumeral = 'ride-numeral text-[clamp(4.5rem,min(10.5vw,19vh),12rem)]';
+  const heroNumeral = 'ride-numeral text-[clamp(4rem,min(9vw,16.5vh),10.25rem)]';
 
   const controls = (
     <>
@@ -654,7 +654,7 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
               <div className="mt-auto space-y-3">
                 <div className="flex items-baseline gap-3">
                   <Label>{recording.ergEnabled && devices.ergAvailable ? 'Target · ERG' : 'Target'}</Label>
-                  <p className="ride-numeral text-[clamp(2rem,min(3.6vw,6.5vh),4rem)]">{display(targetWatts)}<span className="ml-1.5 text-[0.4em] font-normal tracking-normal text-[var(--text-muted)]">W</span></p>
+                  <p className="ride-numeral text-[clamp(2.25rem,min(4.1vw,7.5vh),4.5rem)]">{display(targetWatts)}<span className="ml-1.5 text-[0.4em] font-normal tracking-normal text-[var(--text-muted)]">W</span></p>
                 </div>
                 {deviation !== null ? (
                   <div className="relative h-2 rounded-full bg-[var(--raised)]" role="meter" aria-label="Power versus target" aria-valuemin={-100} aria-valuemax={100} aria-valuenow={Math.round(deviation * 100)}>
@@ -711,14 +711,14 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
               <Label>Heart rate</Label>
               {hrZone ? <span className="data rounded-md px-2 py-0.5 text-[13px] font-semibold text-[var(--signal-ink)]" style={{ background: intensityColor(hrZone) }}>I-{hrZone}</span> : null}
             </div>
-            <p className="ride-numeral text-[clamp(3rem,min(6vw,11vh),7rem)]" style={hrZone ? { color: 'var(--ride-hr)' } : undefined}>
+            <p className="ride-numeral text-[clamp(3.5rem,min(7vw,13vh),8.25rem)]" style={hrZone ? { color: 'var(--ride-hr)' } : undefined}>
               {display(live.heartRateBpm)}<span className="ml-1.5 text-[0.28em] font-normal tracking-normal text-[var(--text-muted)]">bpm</span>
             </p>
             {devices.heartRate.status === 'disconnected' && live.heartRateBpm === null ? <p className="mt-auto text-[12px] text-[var(--text-muted)]">No heart-rate sensor</p> : null}
           </section>
           <section aria-label="Cadence" className="flex min-w-0 flex-col gap-2 bg-[var(--background)] px-5 py-5 sm:px-7">
             <Label>Cadence</Label>
-            <p className="ride-numeral text-[clamp(3rem,min(6vw,11vh),7rem)]">
+            <p className="ride-numeral text-[clamp(3.5rem,min(7vw,13vh),8.25rem)]">
               {display(live.cadenceRpm)}<span className="ml-1.5 text-[0.28em] font-normal tracking-normal text-[var(--text-muted)]">rpm</span>
             </p>
             {live.cadenceRpm === null && !anyDevice ? <p className="mt-auto text-[12px] text-[var(--text-muted)]">No cadence sensor</p> : null}

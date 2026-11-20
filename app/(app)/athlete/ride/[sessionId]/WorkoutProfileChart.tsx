@@ -1,9 +1,23 @@
+import { useEffect, useRef, useState } from 'react';
 import { intensityColor } from '@/lib/intensity-color';
 import type { RidePlan } from '@/lib/ride/ride-plan';
 import { stepIntensityZone, type RideChartBucket } from '@/lib/ride/ride-chart';
 
 const HEIGHT = 200;
 const WIDTH = 1000;
+const CORNER_PX = 4;
+
+/** Block outline with softly rounded top corners; rx/ry are in viewBox units so the curve stays circular on screen. */
+function blockPath(x0: number, x1: number, yStart: number, yEnd: number, rxUnits: number, ryUnits: number): string {
+  const width = x1 - x0;
+  const rx = Math.min(rxUnits, width / 2);
+  const ry = Math.min(ryUnits, HEIGHT - Math.max(yStart, yEnd));
+  if (rx <= 0 || ry <= 0) return `M${x0},${HEIGHT}L${x0},${yStart}L${x1},${yEnd}L${x1},${HEIGHT}Z`;
+  const slope = (yEnd - yStart) / width;
+  const topLeftY = yStart + slope * rx;
+  const topRightY = yEnd - slope * rx;
+  return `M${x0},${HEIGHT}L${x0},${yStart + ry}Q${x0},${yStart} ${x0 + rx},${topLeftY}L${x1 - rx},${topRightY}Q${x1},${yEnd} ${x1},${yEnd + ry}L${x1},${HEIGHT}Z`;
+}
 
 function clockLabel(totalSec: number): string {
   const minutes = Math.round(totalSec / 60);
@@ -24,6 +38,20 @@ export function WorkoutProfileChart({ plan, positionSec, buckets, domainSec, hea
   activeStepIndex?: number | null;
   className?: string;
 }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [pixelSize, setPixelSize] = useState<{ width: number; height: number } | null>(null);
+  useEffect(() => {
+    const element = svgRef.current;
+    if (!element || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (width > 0 && height > 0) setPixelSize({ width, height });
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  const rxUnits = pixelSize ? (CORNER_PX * WIDTH) / pixelSize.width : 0;
+  const ryUnits = pixelSize ? (CORNER_PX * HEIGHT) / pixelSize.height : 0;
   const domain = Math.max(1, domainSec);
   const maxTarget = Math.max(...plan.steps.map((step) => Math.max(step.startWatts ?? 0, step.endWatts ?? 0)), 0);
   const maxPower = Math.max(...buckets.map((bucket) => bucket.power ?? 0), 0);
@@ -59,7 +87,7 @@ export function WorkoutProfileChart({ plan, positionSec, buckets, domainSec, hea
 
   return (
     <figure className={`relative w-full ${className}`}>
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none" role="img" aria-label={`Workout profile, ${clockLabel(plan.totalSec)}${hasTrace ? ', with recorded power and heart rate' : ''}`} className="absolute inset-0 h-full w-full overflow-visible">
+      <svg ref={svgRef} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none" role="img" aria-label={`Workout profile, ${clockLabel(plan.totalSec)}${hasTrace ? ', with recorded power and heart rate' : ''}`} className="absolute inset-0 h-full w-full overflow-visible">
         {ticks.map((tick) => <line key={tick} x1={x(tick)} x2={x(tick)} y1={0} y2={HEIGHT} stroke="var(--border)" vectorEffect="non-scaling-stroke" />)}
         {plan.steps.map((step, index) => {
           const start = step.startWatts ?? zoneWatts(step.zone);
@@ -70,13 +98,13 @@ export function WorkoutProfileChart({ plan, positionSec, buckets, domainSec, hea
           const active = index === activeStepIndex;
           const color = step.kind === 'pause' ? 'var(--text-muted)' : intensityColor(stepIntensityZone(step, plan.ftpWatts));
           return (
-            <polygon
+            <path
               key={step.id}
-              points={`${x0},${HEIGHT} ${x0},${y(start)} ${x1},${y(end)} ${x1},${HEIGHT}`}
+              d={blockPath(x0, x1, y(start), y(end), rxUnits, ryUnits)}
               fill={color}
               opacity={active ? 0.85 : step.startWatts === null ? 0.28 : done ? 0.3 : 0.6}
               stroke="var(--background)"
-              strokeWidth={1}
+              strokeWidth={1.5}
               vectorEffect="non-scaling-stroke"
             />
           );
