@@ -160,7 +160,7 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
   const [saveState, setSaveState] = useState<SaveState>({ kind: 'idle' });
   const recordingRef = useRef(recording);
   const lastCheckpointRef = useRef(0);
-  const lastCommandRef = useRef<{ stepIndex: number; watts: number | null; erg: boolean } | null>(null);
+  const lastCommandRef = useRef<{ stepIndex: number; watts: number | null; erg: boolean; biasPct: number } | null>(null);
   const pendingSaveRef = useRef<AbortController | null>(null);
   const savedRef = useRef(false);
 
@@ -258,19 +258,23 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
   }, [status]);
 
   // Push ERG targets on step changes, ramps (5 W steps), bias and ERG toggles.
+  const { biasPct, ergEnabled } = recording;
   const currentStep = plan.steps[recording.stepIndex];
+  const { stepIndex: commandStepIndex } = recording;
   const targetWatts = targetWattsAt(currentStep, recording.stepElapsedSec, recording.biasPct);
   useEffect(() => {
-    if (!devices.ergAvailable) {
+    if (status === 'ready') {
       lastCommandRef.current = null;
+      manager.setCommand(null);
       return;
     }
-    const erg = status === 'running' && recording.ergEnabled && targetWatts !== null;
+    const erg = status === 'running' && ergEnabled && targetWatts !== null;
     const previous = lastCommandRef.current;
-    if (previous && previous.stepIndex === recording.stepIndex && previous.erg === erg && (!erg || !ergTargetChanged(previous.watts, targetWatts))) return;
-    lastCommandRef.current = { stepIndex: recording.stepIndex, watts: targetWatts, erg };
-    manager.setCommand(erg ? { mode: 'erg', watts: targetWatts! } : { mode: 'free' });
-  }, [devices.ergAvailable, manager, recording.ergEnabled, recording.stepIndex, status, targetWatts]);
+    const threshold = previous?.biasPct === biasPct ? 5 : 1;
+    if (previous && previous.stepIndex === commandStepIndex && previous.erg === erg && (!erg || !ergTargetChanged(previous.watts, targetWatts, threshold))) return;
+    lastCommandRef.current = { stepIndex: commandStepIndex, watts: targetWatts, erg, biasPct };
+    manager.setCommand(erg ? { mode: 'erg', watts: targetWatts } : { mode: 'free' });
+  }, [biasPct, commandStepIndex, ergEnabled, manager, status, targetWatts]);
 
   const start = useCallback(() => {
     lastCheckpointRef.current = Date.now();
@@ -288,8 +292,16 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
     const now = Date.now();
     commit(advanceStep(recordingRef.current, plan, now, manager.getReading(now)), true);
   }, [commit, manager, plan]);
-  const bias = useCallback((delta: number) => commit(setBias(recordingRef.current, recordingRef.current.biasPct + delta), true), [commit]);
-  const toggleErg = useCallback(() => commit(setErg(recordingRef.current, !recordingRef.current.ergEnabled), true), [commit]);
+  const bias = useCallback((delta: number) => {
+    const now = Date.now();
+    const current = tick(recordingRef.current, plan, now, manager.getReading(now));
+    commit(setBias(current, current.biasPct + delta), true);
+  }, [commit, manager, plan]);
+  const toggleErg = useCallback(() => {
+    const now = Date.now();
+    const current = tick(recordingRef.current, plan, now, manager.getReading(now));
+    commit(setErg(current, !current.ergEnabled), true);
+  }, [commit, manager, plan]);
 
   const toggleFullscreen = useCallback(() => {
     if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
