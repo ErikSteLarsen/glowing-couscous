@@ -20,7 +20,7 @@ export function createExecutionSteps(blocks: SessionEditorBlock[], sport: string
     const resolvedTarget = block.target?.mode === 'relative' ? formatResolvedWorkoutTarget(block.target, profile, sport) : null;
     return {
       id: `${block.clientId}:${block.occurrence}`,
-      label: `${meta.label} ${meta.name}${block.repetitionCount > 1 ? ` · Rep ${block.occurrence + 1} of ${block.repetitionCount}` : ''}`,
+      label: `${block.kind === 'warmup' ? 'Warm-up' : block.kind === 'cooldown' ? 'Cool-down' : `${meta.label} ${meta.name}`}${block.repetitionCount > 1 ? ` · Rep ${block.occurrence + 1} of ${block.repetitionCount}` : ''}`,
       durationSec: block.durationSec,
       targetLabel: resolvedTarget ? `${genericTarget} · ${resolvedTarget}` : genericTarget,
       note: block.note,
