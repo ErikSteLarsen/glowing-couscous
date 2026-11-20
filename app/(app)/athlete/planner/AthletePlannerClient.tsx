@@ -26,6 +26,7 @@ export function AthletePlannerClient({
   calendarDays,
   calendarLabel,
   initialDate,
+  today,
   initialSourceKey,
   initialSourceTab,
   initialMessage,
@@ -35,6 +36,7 @@ export function AthletePlannerClient({
   calendarDays: PlannerDeskCalendarDay[];
   calendarLabel: string;
   initialDate: string;
+  today: string;
   initialSourceKey: string;
   initialSourceTab: PlannerDeskSourceKind;
   initialMessage: string;
@@ -65,6 +67,7 @@ export function AthletePlannerClient({
       key={`${initialDate}:${initialSourceKey}`}
       role="athlete"
       initialDate={initialDate}
+      today={today}
       calendarLabel={calendarLabel}
       calendarDays={calendarDays}
       sources={sources}

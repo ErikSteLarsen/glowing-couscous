@@ -4,6 +4,8 @@ import { ActionLink, EmptyState, PageShell, StatTile, TopBar, formFieldClassName
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { getCurrentUser } from '@/lib/auth-session';
+import { getRequestTimeZone } from '@/lib/request-time-zone';
+import { todayInZone } from '@/lib/user-time';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
 import { formatDistance } from '@/lib/format-distance';
@@ -37,7 +39,7 @@ export default async function AthleteActivityPage({ searchParams }: {
       />
 
       <ActivityImportForm />
-      <ManualActivityForm today={format(new Date(), 'yyyy-MM-dd')} />
+      <ManualActivityForm today={todayInZone(await getRequestTimeZone())} />
 
       <form action="/athlete/activity" className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="min-w-0 flex-1 space-y-2">

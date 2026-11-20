@@ -83,6 +83,7 @@ type PlacementFeedback = { dates: string[]; title: string; state: 'placing' | 's
 export function PlannerDesk({
   role,
   initialDate,
+  today,
   calendarLabel,
   calendarDays,
   sources,
@@ -94,6 +95,8 @@ export function PlannerDesk({
 }: {
   role: PlannerDeskRole;
   initialDate: string;
+  /** The user's calendar day (yyyy-MM-dd), resolved on the server in their zone. */
+  today: string;
   calendarLabel: string;
   calendarDays: PlannerDeskCalendarDay[];
   sources: PlannerDeskSource[];
@@ -252,7 +255,7 @@ export function PlannerDesk({
   }
 
   function navigateMonth(offset: number) {
-    const referenceDate = offset === 0 ? new Date() : parseISO(`${initialDate}T00:00:00`);
+    const referenceDate = parseISO(`${offset === 0 ? today : initialDate}T00:00:00`);
     const nextMonth = offset === 0 ? referenceDate : offset > 0 ? addMonths(referenceDate, 1) : subMonths(referenceDate, 1);
     const nextDate = format(startOfMonth(nextMonth), 'yyyy-MM-dd');
     const params = new URLSearchParams({ date: nextDate });
@@ -420,6 +423,7 @@ export function PlannerDesk({
           onSelectTemplateRange={selectTemplateRange}
           label={calendarLabel}
           initialDate={initialDate}
+          today={today}
           days={scopedCalendarDays}
           placement={role === 'athlete' || placement?.athleteId === selectedAthleteId ? placement : null}
           selectedDates={selectedDates}
@@ -565,8 +569,7 @@ function SourceResult({ source, selected, selectedDate, onSelect }: { source: Pl
   );
 }
 
-function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, days, selectedDates, selectedSource, onNavigate, onSelectDate }: { onSelectTemplateRange: () => void; placement: PlacementFeedback | null; label: string; initialDate: string; days: PlannerDeskCalendarDay[]; selectedDates: string[]; selectedSource: PlannerDeskSource | null; onNavigate: (offset: number) => void; onSelectDate: (date: string) => void }) {
-  const todayIso = format(new Date(), 'yyyy-MM-dd');
+function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, today, days, selectedDates, selectedSource, onNavigate, onSelectDate }: { onSelectTemplateRange: () => void; placement: PlacementFeedback | null; label: string; initialDate: string; today: string; days: PlannerDeskCalendarDay[]; selectedDates: string[]; selectedSource: PlannerDeskSource | null; onNavigate: (offset: number) => void; onSelectDate: (date: string) => void }) {
   const shortcutDates = selectedSource?.kind === 'template' ? templateDatesForSelection(selectedSource.cadence ?? 'day', selectedDates[0] ?? initialDate) : [];
   const rangeError = selectedSource?.kind === 'template' ? validateTemplateDateRange(selectedDates, selectedSource.cadence ?? 'day') : null;
   return (
@@ -593,7 +596,7 @@ function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, d
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => <div key={day} className="px-2 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">{day}</div>)}
           </div>
           <div className="grid grid-cols-7 divide-x divide-y divide-[var(--border)] border-b border-[var(--border)]">
-            {days.map((day) => <CalendarCell key={day.isoDate} feedback={placement?.dates.includes(day.isoDate) ? placement : null} day={day} today={day.isoDate === todayIso} selected={selectedDates.includes(day.isoDate)} templateMode={selectedSource?.kind === 'template'} onSelect={() => onSelectDate(day.isoDate)} />)}
+            {days.map((day) => <CalendarCell key={day.isoDate} feedback={placement?.dates.includes(day.isoDate) ? placement : null} day={day} today={day.isoDate === today} selected={selectedDates.includes(day.isoDate)} templateMode={selectedSource?.kind === 'template'} onSelect={() => onSelectDate(day.isoDate)} />)}
           </div>
         </div>
       </div>

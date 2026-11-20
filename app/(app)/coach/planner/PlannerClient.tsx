@@ -28,6 +28,7 @@ export function PlannerClient({
   calendarLabel,
   initialAthleteId,
   initialDate,
+  today,
 }: {
   athletes: PlannerAthlete[];
   librarySessions: PlannerLibrarySession[];
@@ -36,6 +37,7 @@ export function PlannerClient({
   calendarLabel: string;
   initialAthleteId: number | null;
   initialDate: string;
+  today: string;
 }) {
   const sources: CoachPlannerSource[] = [
     ...librarySessions.map((session) => ({
@@ -63,6 +65,7 @@ export function PlannerClient({
       key={initialDate}
       role="coach"
       initialDate={initialDate}
+      today={today}
       calendarLabel={calendarLabel}
       calendarDays={calendarDays}
       sources={sources}

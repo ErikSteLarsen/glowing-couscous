@@ -2,6 +2,7 @@ import { format, isValid } from 'date-fns';
 import type { AthleteEvent } from '@prisma/client';
 import { prisma } from './prisma.ts';
 import { getTcxCalendarDay } from './tcx-time.ts';
+import { DEFAULT_TIME_ZONE, todayInZone } from './user-time.ts';
 
 const EVENT_SPORTS = ['RUNNING', 'BIKING', 'SWIMMING', 'TRIATHLON'] as const;
 const MAX_TITLE_LENGTH = 120;
@@ -38,7 +39,7 @@ function parseEvent(input: EventInput): { error: string } | { value: { title: st
   return { value: { title: input.title.trim(), sport: input.sport as string, eventDate, targetFinishSec: target.value } };
 }
 
-export function createAthleteEventService({ db = prisma }: { db?: EventDb } = {}) {
+export function createAthleteEventService({ db = prisma, now = () => new Date() }: { db?: EventDb; now?: () => Date } = {}) {
   async function athleteExists(athleteId: number) {
     const user = await db.user.findUnique({ where: { id: athleteId }, select: { id: true, role: true } });
     return Boolean(user && user.role === 'ATHLETE');
@@ -58,18 +59,18 @@ export function createAthleteEventService({ db = prisma }: { db?: EventDb } = {}
       if (!await athleteExists(athleteId)) return { ok: false, status: 404, error: 'Athlete not found.' };
       return { ok: true, value: await db.athleteEvent.create({ data: { athleteId, ...parsed.value } }) };
     },
-    async update(athleteId: number, eventId: number, input: EventInput): Promise<EventError | EventSuccess<AthleteEvent>> {
+    async update(athleteId: number, eventId: number, input: EventInput, { timeZone = DEFAULT_TIME_ZONE }: { timeZone?: string } = {}): Promise<EventError | EventSuccess<AthleteEvent>> {
       const parsed = parseEvent(input);
       if ('error' in parsed) return { ok: false, status: 400, error: parsed.error };
       const current = await ownedEvent(athleteId, eventId);
       if (!current) return { ok: false, status: 404, error: 'Event not found.' };
-      if (current.resultFinishSec !== null && dateKey(parsed.value.eventDate) > dateKey(new Date())) return { ok: false, status: 400, error: 'An event with a recorded result cannot be moved into the future.' };
+      if (current.resultFinishSec !== null && dateKey(parsed.value.eventDate) > todayInZone(timeZone, now())) return { ok: false, status: 400, error: 'An event with a recorded result cannot be moved into the future.' };
       return { ok: true, value: await db.athleteEvent.update({ where: { id: current.id }, data: parsed.value }) };
     },
-    async recordResult(athleteId: number, eventId: number, input: ResultInput): Promise<EventError | EventSuccess<AthleteEvent>> {
+    async recordResult(athleteId: number, eventId: number, input: ResultInput, { timeZone = DEFAULT_TIME_ZONE }: { timeZone?: string } = {}): Promise<EventError | EventSuccess<AthleteEvent>> {
       const current = await ownedEvent(athleteId, eventId);
       if (!current) return { ok: false, status: 404, error: 'Event not found.' };
-      if (dateKey(current.eventDate) > dateKey(new Date())) return { ok: false, status: 400, error: 'Results can be recorded on or after the event date.' };
+      if (dateKey(current.eventDate) > todayInZone(timeZone, now())) return { ok: false, status: 400, error: 'Results can be recorded on or after the event date.' };
       const finish = parseFinishTime(input.resultFinishSec, false);
       if (!finish.ok) return { ok: false, status: 400, error: 'Result finish time must be a whole number of seconds from 1 to 48 hours.' };
       if (input.resultNote !== null && input.resultNote !== undefined && (typeof input.resultNote !== 'string' || input.resultNote.length > MAX_NOTE_LENGTH)) return { ok: false, status: 400, error: `Result note must be ${MAX_NOTE_LENGTH} characters or fewer.` };

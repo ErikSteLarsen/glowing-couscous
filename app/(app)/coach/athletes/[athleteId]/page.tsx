@@ -6,6 +6,8 @@ import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { ActionLink, EmptyState, PageShell, StatTile, Surface, TopBar } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth-session';
 import { getCoachAthleteDetail } from '@/lib/coach-service';
+import { getRequestTimeZone } from '@/lib/request-time-zone';
+import { todayInZone } from '@/lib/user-time';
 import { getCoachAthleteReturnTarget } from '@/lib/app-navigation';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
@@ -39,7 +41,7 @@ export default async function CoachAthleteDetailPage({
   }
 
   const returnTarget = getCoachAthleteReturnTarget(from, parsedAthleteId, date);
-  const todayIso = format(new Date(), 'yyyy-MM-dd');
+  const todayIso = todayInZone(await getRequestTimeZone());
 
   return (
     <PageShell>
