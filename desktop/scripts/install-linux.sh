@@ -40,7 +40,7 @@ Exec="$exec_path" %u
 Icon=tempo-ride
 Terminal=false
 StartupWMClass=tempo-ride
-Categories=Sports;
+Categories=Science;Sports;
 MimeType=$mime_type;
 ENTRY
 
