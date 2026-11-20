@@ -70,7 +70,7 @@ type ImportDatabase = {
 export type ActivityImportTransaction = Omit<ImportDatabase, 'user' | '$transaction'>;
 
 export type ActivityImportResult =
-  | { ok: true; activityId: number; sessionId: number; duplicate: false }
+  | { ok: true; activityId: number; sessionId: number; duplicate: boolean }
   | { ok: false; status: 400 | 404 | 409; error: string };
 
 export function validateActivityImport(input: unknown): { ok: true; value: ActivityImportInput } | { ok: false; error: string } {
@@ -290,6 +290,9 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
       if (value.analyzeWorkout && provenance.sourceProvider !== 'STRAVA' && value.sport === 'RUNNING') {
         Object.assign(activityData, { analysis: { create: newActivityAnalysisJob(activityData.telemetryJson, value.durationSec, user.performanceProfileJson ?? '{}') } });
       }
+
+      const existing = await db.activity.findFirst({ where: { athleteId: userId, importFingerprint: fingerprint }, select: { id: true, sessionId: true } });
+      if (existing) return { ok: true, activityId: existing.id as number, sessionId: existing.sessionId as number, duplicate: true };
 
       try {
         const result = await db.$transaction(async (transaction) => {
