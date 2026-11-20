@@ -469,3 +469,10 @@ test('rider can upload valid telemetry when the total distance exceeds the impor
   const result = validateActivityImport(payload);
   assert.equal(result.ok, true, result.ok ? '' : result.error);
 });
+
+test('standard FTMS resistance uses one unsigned byte without shifting following values', () => {
+  const data = parseIndoorBikeData(bytes(0x61, 0x02, 173, 0xc8, 0, 140));
+  assert.equal(data.resistanceLevel, 173);
+  assert.equal(data.powerWatts, 200);
+  assert.equal(data.heartRateBpm, 140);
+});

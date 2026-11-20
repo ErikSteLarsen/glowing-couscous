@@ -56,6 +56,8 @@ class Cursor {
   u32() { return this.data.getUint32(this.take(4), true); }
 }
 
+const FTMS_FIELD_WIDTHS_AFTER_RESISTANCE = [2, 2, 5, 1, 1, 2, 2];
+
 /** FTMS Indoor Bike Data (0x2AD2). Bit 0 ("More Data") is inverted: instantaneous speed is present when it is 0. */
 export function parseIndoorBikeData(input: DataView | ArrayBuffer | Uint8Array): IndoorBikeData {
   const c = new Cursor(view(input));
@@ -71,7 +73,11 @@ export function parseIndoorBikeData(input: DataView | ArrayBuffer | Uint8Array):
   if (has(2)) result.cadenceRpm = c.u16() / 2;
   if (has(3)) result.averageCadenceRpm = c.u16() / 2;
   if (has(4)) result.totalDistanceMeters = c.u24();
-  if (has(5)) result.resistanceLevel = c.s16();
+  if (has(5)) {
+    // GSS defines uint8. Older trainers use sint16, which adds one byte to the packet.
+    const trailingBytes = FTMS_FIELD_WIDTHS_AFTER_RESISTANCE.reduce((total, width, index) => has(6 + index) ? total + width : total, 0);
+    result.resistanceLevel = c.data.byteLength === c.offset + trailingBytes + 2 ? c.s16() : c.u8();
+  }
   if (has(6)) result.powerWatts = c.s16();
   if (has(7)) result.averagePowerWatts = c.s16();
   if (has(8)) {
