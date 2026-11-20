@@ -1,4 +1,4 @@
-import test from 'node:test';
+import test, { type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { cadenceFromCrank, parseCscMeasurement, parseCyclingPowerMeasurement, parseHeartRateMeasurement, parseIndoorBikeData, speedFromWheel } from '../lib/ride/ble-parsers.ts';
@@ -335,4 +335,90 @@ test('planned TSS follows %FTP targets and needs FTP', async () => {
   assert.equal(estimatePlanTss({ steps: [step(3600, 250)], totalSec: 3600, ftpWatts: 250 }), 100);
   assert.equal(estimatePlanTss({ steps: [step(1800, 125), step(600, null)], totalSec: 2400, ftpWatts: 250 }), 13);
   assert.equal(estimatePlanTss({ steps: [step(3600, 250)], totalSec: 3600, ftpWatts: null }), null);
+});
+
+class MockCharacteristic extends EventTarget {
+  value: DataView | null = null;
+  writes: number[][] = [];
+  async startNotifications() { return this; }
+  async writeValueWithResponse(value: ArrayBuffer) { this.writes.push([...new Uint8Array(value)]); }
+  notify(...packet: number[]) {
+    this.value = new DataView(bytes(...packet).buffer);
+    this.dispatchEvent(new Event('characteristicvaluechanged'));
+  }
+}
+
+function mockBluetooth(t: TestContext, characteristics: Map<number, MockCharacteristic>) {
+  const device = Object.assign(new EventTarget(), {
+    gatt: {
+      connect: async () => ({
+        getPrimaryService: async () => ({
+          getCharacteristic: async (uuid: number) => {
+            const characteristic = characteristics.get(uuid);
+            if (!characteristic) throw new Error('Missing characteristic');
+            return characteristic;
+          },
+        }),
+      }),
+      disconnect() { device.dispatchEvent(new Event('gattserverdisconnected')); },
+    },
+  });
+  Object.defineProperty(navigator, 'bluetooth', { configurable: true, value: { requestDevice: async () => device } });
+  t.after(() => Reflect.deleteProperty(navigator, 'bluetooth'));
+  return device;
+}
+
+const flushBluetooth = () => new Promise<void>((resolve) => setImmediate(resolve));
+
+test('FTMS waits for control indications and reapplies the latest target after reconnect', async (t) => {
+  const { RideDeviceManager } = await import('../lib/ride/bluetooth.ts');
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const control = new MockCharacteristic();
+  const device = mockBluetooth(t, new Map([[0x2ad2, new MockCharacteristic()], [0x2ad9, control]]));
+  const manager = new RideDeviceManager();
+  t.after(() => manager.dispose());
+  manager.setCommand({ mode: 'erg', watts: 100 });
+  await manager.connect('trainer');
+  await flushBluetooth();
+  manager.setCommand({ mode: 'erg', watts: 103 });
+  assert.deepEqual(control.writes, [[0x00]]);
+  control.notify(0x80, 0x00, 0x01);
+  await flushBluetooth();
+  assert.deepEqual(control.writes, [[0x00], [0x07]]);
+  control.notify(0x80, 0x07, 0x01);
+  await flushBluetooth();
+  assert.deepEqual(control.writes.at(-1), [0x05, 103, 0]);
+  control.notify(0x80, 0x05, 0x01);
+  await flushBluetooth();
+
+  device.gatt.disconnect();
+  assert.equal(manager.getSnapshot().ergAvailable, false);
+  t.mock.timers.tick(1000);
+  await flushBluetooth();
+  assert.deepEqual(control.writes.at(-1), [0x00]);
+  control.notify(0x80, 0x00, 0x01);
+  await flushBluetooth();
+  control.notify(0x80, 0x07, 0x01);
+  await flushBluetooth();
+  assert.deepEqual(control.writes.at(-1), [0x05, 103, 0]);
+});
+
+test('cadence decays to zero when crank notifications stop and clears on disconnect', async (t) => {
+  const { RideDeviceManager } = await import('../lib/ride/bluetooth.ts');
+  t.mock.timers.enable({ apis: ['Date'], now: 1000 });
+  const csc = new MockCharacteristic();
+  mockBluetooth(t, new Map([[0x2a5b, csc]]));
+  const manager = new RideDeviceManager();
+  t.after(() => manager.dispose());
+  await manager.connect('cadence');
+  csc.notify(0x02, 10, 0, 0, 4);
+  t.mock.timers.tick(1000);
+  csc.notify(0x02, 11, 0, 0, 8);
+  assert.equal(manager.getReading().cadenceRpm, 60);
+  t.mock.timers.tick(2700);
+  assert.equal(manager.getReading().cadenceRpm, 0);
+  manager.disconnect('cadence');
+  assert.equal(manager.getReading().cadenceRpm, null);
+  csc.notify(0x02, 12, 0, 0, 12);
+  assert.equal(manager.getReading().cadenceRpm, null);
 });
