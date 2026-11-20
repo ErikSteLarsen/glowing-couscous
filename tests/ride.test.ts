@@ -527,3 +527,25 @@ test('desktop launch preserves the same encoded return destination as the browse
   assert.equal(url.searchParams.get('url'), 'https://tempo.example/athlete/ride/7?from=home');
   assert.equal(rideSessionPath(7, 'home&device=hr'), '/athlete/ride/7?from=home%26device%3Dhr');
 });
+
+test('recovery keeps the newest matching checkpoint and ignores records under the wrong session key', async (t) => {
+  const { listStoredRides, rideStorageKey } = await import('../lib/ride/recording-store.ts');
+  const ride = plan();
+  const rec = tick(startRecording(createRecording(7, 'Threshold', ride), ride, 0), ride, 1000, reading(150));
+  const entries = new Map([[rideStorageKey(7), serializeCheckpoint(rec, 1000)], [rideStorageKey(8), serializeCheckpoint(rec, 3000)]]);
+  const replace = (key: string, value: unknown) => {
+    const previous = Object.getOwnPropertyDescriptor(globalThis, key);
+    Object.defineProperty(globalThis, key, { configurable: true, value });
+    t.after(() => {
+      if (previous) Object.defineProperty(globalThis, key, previous);
+      else Reflect.deleteProperty(globalThis, key);
+    });
+  };
+  replace('localStorage', {
+    length: entries.size, key: (index: number) => [...entries.keys()][index], getItem: (key: string) => entries.get(key),
+  });
+  replace('window', { tempoDesktop: { listRecordings: async () => [
+    { key: rideStorageKey(7), json: serializeCheckpoint(rec, 2000) },
+  ] } });
+  assert.deepEqual((await listStoredRides()).map(({ key, savedAtMs }) => [key, savedAtMs]), [[rideStorageKey(7), 2000]]);
+});

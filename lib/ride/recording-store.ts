@@ -33,19 +33,23 @@ export function clearRideCheckpoint(sessionId: number): void {
 }
 
 /** Unsaved rides from this browser and the desktop store; the newest copy per session wins. */
-export async function listStoredRides(): Promise<StoredRide[]> {
+export async function listStoredRides(sessionId?: number): Promise<StoredRide[]> {
+  const requestedKey = sessionId === undefined ? null : rideStorageKey(sessionId);
   const byKey = new Map<string, StoredRide>();
   const consider = (key: string, json: string | null) => {
-    if (!key.startsWith(PREFIX)) return;
+    if (requestedKey ? key !== requestedKey : !key.startsWith(PREFIX)) return;
     const parsed = parseCheckpoint(json);
-    if (!parsed || !hasRecordedData(parsed.recording)) return;
+    if (!parsed || key !== rideStorageKey(parsed.recording.sessionId) || !hasRecordedData(parsed.recording)) return;
     const existing = byKey.get(key);
     if (!existing || existing.savedAtMs < parsed.savedAtMs) byKey.set(key, { key, ...parsed });
   };
   try {
-    for (let index = 0; index < localStorage.length; index += 1) {
-      const key = localStorage.key(index);
-      if (key) consider(key, localStorage.getItem(key));
+    if (requestedKey) consider(requestedKey, localStorage.getItem(requestedKey));
+    else {
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const key = localStorage.key(index);
+        if (key?.startsWith(PREFIX)) consider(key, localStorage.getItem(key));
+      }
     }
   } catch {
     // Ignore unavailable storage.
