@@ -5,7 +5,7 @@ import { cadenceFromCrank, parseCscMeasurement, parseCyclingPowerMeasurement, pa
 import { encodeRequestControl, encodeReset, encodeSetIndoorBikeSimulation, encodeSetTargetPower, encodeSetTargetResistance, encodeStartOrResume, encodeStopOrPause, parseControlPointResponse } from '../lib/ride/ftms-control.ts';
 import { applyBias, createRidePlan, ergTargetChanged, planHasPowerTargets, targetWattsAt } from '../lib/ride/ride-plan.ts';
 import {
-  addReading, advanceStep, createRecording, downsampleSamples, finishRecording, normalizedPower, parseCheckpoint, pauseRecording,
+  addReading, advanceStep, createRecording, downsampleSamples, finishRecording, normalizedPower, parseCheckpoint, pauseRecording, recordReading,
   restoreRecording, resumeRecording, serializeCheckpoint, startRecording, summarizeRecording, tick, toImportPayload, type RideSample,
 } from '../lib/ride/recorder.ts';
 import { createSessionEditorBlock } from '../lib/session-editor.ts';
@@ -434,4 +434,15 @@ test('skipping after a delayed tick counts elapsed seconds in the step they were
   const crossed = advanceStep(rec, ride, 5000, reading(100));
   assert.equal(crossed.stepIndex, 1);
   assert.equal(crossed.stepElapsedSec, 1);
+});
+
+test('telemetry records 1 Hz while the UI timer is suspended', () => {
+  const ride = plan();
+  let rec = startRecording(createRecording(7, 'Threshold', ride), ride, 0);
+  rec = recordReading(rec, ride, 900, reading(100));
+  rec = recordReading(rec, ride, 1100, reading(200));
+  rec = recordReading(rec, ride, 3200, reading(300));
+  assert.deepEqual(rec.samples.map(({ t, p }) => [t, p]), [[0, 100], [1, 200], [2, null]]);
+  rec = tick(rec, ride, 4000);
+  assert.equal(rec.samples[3].p, 300);
 });

@@ -14,7 +14,6 @@ import { isWebBluetoothAvailable, RideDeviceManager, type RideDeviceRole, type R
 import { ergTargetChanged, estimatePlanTss, planHasPowerTargets, targetWattsAt, type RidePlan } from '@/lib/ride/ride-plan';
 import { complianceTone, planPositionSec, powerBuckets, stepIntensityZone } from '@/lib/ride/ride-chart';
 import {
-  addReading,
   advanceStep,
   createRecording,
   currentLapStats,
@@ -22,6 +21,7 @@ import {
   finishRecording,
   pauseRecording,
   planSignature,
+  recordReading,
   restoreRecording,
   resumeRecording,
   setBias,
@@ -183,30 +183,51 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
     return () => { active = false; };
   }, [plan, sessionId]);
 
-  useEffect(() => () => manager.dispose(), [manager]);
+  useEffect(() => {
+    manager.activate();
+    return () => manager.dispose();
+  }, [manager]);
 
   const status = recording.status;
   const active = status === 'running' || status === 'paused';
 
-  // Sample sensors at 4 Hz; the recorder writes one sample per whole second.
   useEffect(() => {
     if (!active) return;
-    const interval = window.setInterval(() => {
+    const unsubscribe = manager.subscribeReadings((now) => {
+      const current = recordingRef.current;
+      if (current.status !== 'running') return;
+      const next = recordReading(current, plan, now, manager.getReading(now));
+      if (next.timerSec !== current.timerSec || next.elapsedSec !== current.elapsedSec) {
+        commit(next, now - lastCheckpointRef.current >= CHECKPOINT_INTERVAL_MS);
+      } else {
+        recordingRef.current = next;
+      }
+    });
+    const syncClock = (persist = false) => {
+      const current = recordingRef.current;
+      if (current.status !== 'running' && current.status !== 'paused') return;
       const now = Date.now();
       const reading = manager.getReading(now);
-      setLive(reading);
-      const current = recordingRef.current;
-      const next = tick(addReading(current, reading), plan, now, reading);
-      if (next !== current) commit(next, now - lastCheckpointRef.current >= CHECKPOINT_INTERVAL_MS);
-    }, SAMPLE_INTERVAL_MS);
-    const persistNow = () => { if (recordingRef.current.timerSec > 0) saveRideCheckpoint(recordingRef.current); };
-    const onVisibility = () => { if (document.visibilityState === 'hidden') persistNow(); };
+      if (!persist) setLive(reading);
+      const next = tick(current, plan, now, reading);
+      if (next !== current || persist) commit(next, persist || now - lastCheckpointRef.current >= CHECKPOINT_INTERVAL_MS);
+    };
+    const interval = window.setInterval(syncClock, SAMPLE_INTERVAL_MS);
+    const onPageHide = () => syncClock(true);
+    const onVisibility = () => syncClock(document.visibilityState === 'hidden');
     document.addEventListener('visibilitychange', onVisibility);
-    window.addEventListener('pagehide', persistNow);
+    window.addEventListener('pagehide', onPageHide);
     return () => {
+      unsubscribe();
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisibility);
-      window.removeEventListener('pagehide', persistNow);
+      window.removeEventListener('pagehide', onPageHide);
+      const current = recordingRef.current;
+      if (current.status === 'running' || current.status === 'paused') {
+        const now = Date.now();
+        const next = tick(current, plan, now, manager.getReading(now));
+        if (next.timerSec > 0) saveRideCheckpoint(next);
+      }
     };
   }, [active, commit, manager, plan]);
 
@@ -215,12 +236,14 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
     if (status !== 'running' || !('wakeLock' in navigator)) return;
     let lock: WakeLockSentinel | null = null;
     let cancelled = false;
+    let requesting = false;
     const acquire = () => {
-      if (document.visibilityState !== 'visible') return;
-      navigator.wakeLock.request('screen').then((sentinel) => {
-        if (cancelled) void sentinel.release();
-        else lock = sentinel;
-      }).catch(() => undefined);
+      if (document.visibilityState !== 'visible' || requesting || (lock && !lock.released)) return;
+      requesting = true;
+      void navigator.wakeLock.request('screen').then((sentinel) => {
+        if (cancelled || document.visibilityState !== 'visible') return sentinel.release();
+        lock = sentinel;
+      }).catch(() => undefined).finally(() => { requesting = false; });
     };
     acquire();
     document.addEventListener('visibilitychange', acquire);

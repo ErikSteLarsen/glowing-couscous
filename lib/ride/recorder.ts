@@ -107,6 +107,11 @@ export function addReading(recording: RideRecording, reading: RideReading): Ride
   };
 }
 
+/** Closes earlier sample windows before adding a newly arrived sensor reading. */
+export function recordReading(recording: RideRecording, plan: RidePlan, nowMs: number, reading: RideReading): RideRecording {
+  return addReading(tick(recording, plan, nowMs), reading);
+}
+
 function average([sum, count]: [number, number], fallback: number | null): number | null {
   return count > 0 ? sum / count : fallback;
 }
