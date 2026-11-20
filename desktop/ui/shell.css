@@ -1,17 +1,26 @@
 :root {
   color-scheme: dark;
-  font: 15px/1.5 system-ui, sans-serif;
-  --background: #0b0f15;
-  --raised: #151b24;
-  --border-strong: #323c4a;
-  --text: #eef2f6;
-  --text-secondary: #a9b4c1;
-  --brand: #5eb6d8;
-  --signal-ink: #06121a;
-  --field-surface: #0e131a;
-  --status-danger: #e8667e;
+  font: 15px/1.5 "Instrument Sans", system-ui, sans-serif;
+  --background: #0e1010;
+  --surface: #171919;
+  --field: #222424;
+  --border: #414444;
+  --field-border: #7d847e;
+  --text: #f8f9f7;
+  --muted: #b5bdb7;
+  --action: #f7f8f5;
+  --action-hover: #e5e8e5;
+  --action-ink: #121413;
+  --focus: #a9c5ff;
+  --selection: #354969;
+  --danger: #f4ada6;
   background: var(--background);
   color: var(--text);
+  scrollbar-color: var(--field-border) var(--surface);
+}
+
+::selection {
+  background: var(--selection);
 }
 
 body {
@@ -19,20 +28,32 @@ body {
 }
 
 main {
-  padding: 24px;
+  max-width: 48rem;
+  margin-inline: auto;
+  padding: 26px;
+}
+
+.app-icon {
+  display: block;
+  width: 48px;
+  height: 48px;
+  margin: -4px 0 10px -2px;
 }
 
 h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
+  font-weight: 680;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }
 
 p {
   margin: 8px 0 20px;
-  color: var(--text-secondary);
+  color: var(--muted);
 }
 
-label {
+label, legend {
   display: block;
   margin-bottom: 6px;
   font-weight: 600;
@@ -42,58 +63,159 @@ label {
   display: none;
 }
 
-input, select, button {
+input:not([type="radio"]), button {
   box-sizing: border-box;
-  padding: 8px 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
+  min-height: 42px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   font: inherit;
 }
 
-input, select {
+input:not([type="radio"]) {
   width: 100%;
-  background-color: var(--field-surface);
+  background: var(--field);
+  border-color: var(--field-border);
 }
 
-select {
-  padding: 4px;
+input::placeholder {
+  color: var(--muted);
 }
 
-option {
-  padding: 4px 8px;
+input[type="radio"] {
+  margin: 0;
+  accent-color: var(--focus);
+}
+
+fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+#devices {
+  display: grid;
+  max-height: 210px;
+  gap: 6px;
+  overflow: auto;
+  padding: 3px;
+  margin-inline: -3px;
+}
+
+#devices:empty {
+  display: none;
+}
+
+.device-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 8px 12px;
+  overflow-wrap: anywhere;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.device-row:hover {
+  background: var(--field);
+}
+
+.device-row:has(input:checked) {
+  border-color: var(--focus);
+  background: var(--selection);
+}
+
+.device-row strong, .hint {
+  display: block;
+}
+
+.hint {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+#signal-note {
+  margin: 0 0 8px;
+}
+
+.origin {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  overflow-wrap: anywhere;
 }
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: end;
   gap: 8px;
   margin-top: 18px;
 }
 
 button {
-  min-width: 84px;
-  background: var(--raised);
+  background: var(--surface);
   color: inherit;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--field);
 }
 
 button[type="submit"] {
-  background: var(--brand);
-  color: var(--signal-ink);
+  background: var(--action);
+  color: var(--action-ink);
   font-weight: 650;
 }
 
-button:disabled {
-  opacity: 0.5;
+button[type="submit"]:hover {
+  background: var(--action-hover);
 }
 
-:focus-visible {
-  outline: 2px solid var(--brand);
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+button.quick-option {
+  display: block;
+  min-height: 36px;
+  margin-top: 4px;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--focus);
+  font-size: 0.88rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+button.quick-option:hover {
+  color: var(--text);
+}
+
+:focus-visible, .device-row:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+.device-row input:focus-visible {
+  outline: none;
 }
 
 #error {
   margin: 6px 0;
-  color: var(--status-danger);
+  color: var(--danger);
 }
 
 #error:empty {
