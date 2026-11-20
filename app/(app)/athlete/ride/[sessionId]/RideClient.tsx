@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { ArrowLeft, Maximize, Minimize, Minus, Pause, Play, Plus, SkipForward, Square } from 'lucide-react';
 import { buttonFocusClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { Toggle } from '@/components/tempo/Toggle';
@@ -150,7 +149,6 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
   backHref: string;
   heartRateMaxBpm: number | null;
 }) {
-  const router = useRouter();
   const [manager] = useState(() => new RideDeviceManager());
   const devices = useSyncExternalStore(manager.subscribe, manager.getSnapshot, manager.getSnapshot);
   const bluetoothAvailable = useSyncExternalStore(subscribeNever, isWebBluetoothAvailable, () => true);
@@ -285,7 +283,6 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
       if (response?.ok) {
         clearRideCheckpoint(sessionId);
         setSaveState({ kind: 'saved', note: null });
-        router.refresh();
         return;
       }
       const payload = response ? await response.json().catch(() => ({})) as { error?: string } : {};
@@ -293,7 +290,6 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
         // An earlier attempt reached the server even though its response was lost.
         clearRideCheckpoint(sessionId);
         setSaveState({ kind: 'saved', note: 'Tempo already had this ride.' });
-        router.refresh();
         return;
       }
       const retryable = !response || response.status >= 500 || response.status === 429;
@@ -309,7 +305,7 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
       }
       await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempt));
     }
-  }, [router, sessionId]);
+  }, [sessionId]);
 
   const finish = useCallback(() => {
     const now = Date.now();
