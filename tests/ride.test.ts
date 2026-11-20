@@ -549,3 +549,8 @@ test('recovery keeps the newest matching checkpoint and ignores records under th
   ] } });
   assert.deepEqual((await listStoredRides()).map(({ key, savedAtMs }) => [key, savedAtMs]), [[rideStorageKey(7), 2000]]);
 });
+
+test('CSC wheel event time rolls over, while a decreasing wheel counter is never a forward speed', () => {
+  assert.equal(speedFromWheel({ revolutions: 10, eventTime: 0xff00 }, { revolutions: 11, eventTime: 0x0100 }, 2, 1024), 4);
+  assert.equal(speedFromWheel({ revolutions: 0xffffffff, eventTime: 1024 }, { revolutions: 0, eventTime: 2048 }, 2, 1024), null);
+});

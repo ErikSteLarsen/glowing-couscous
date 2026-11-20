@@ -154,7 +154,10 @@ export function cadenceFromCrank(previous: CrankData | null, current: CrankData)
 /** Wheel speed in m/s from two cumulative wheel readings (uint32 revolutions, uint16 time). */
 export function speedFromWheel(previous: WheelData | null, current: WheelData, circumferenceMeters: number, timeResolution: 1024 | 2048): number | null {
   if (!previous) return null;
-  const revolutions = (current.revolutions - previous.revolutions + 0x100000000) % 0x100000000;
+  const delta = current.revolutions - previous.revolutions;
+  // CSC only rolls over event time. A backward revolution count is a reset or reverse movement.
+  if (timeResolution === 1024 && delta < 0) return null;
+  const revolutions = (delta + 0x100000000) % 0x100000000;
   const ticks = (current.eventTime - previous.eventTime + 0x10000) % 0x10000;
   if (ticks === 0) return null;
   const speed = (revolutions * circumferenceMeters * timeResolution) / ticks;
