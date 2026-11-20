@@ -6,6 +6,7 @@ import { ArrowLeft, Maximize, Minimize, Minus, Pause, Play, Plus, SkipForward, S
 import { buttonFocusClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { Toggle } from '@/components/tempo/Toggle';
 import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
+import { MAX_ACTIVITY_IMPORT_DURATION_SEC } from '@/lib/activity-import-limits';
 import type { ExecutionStep } from '@/lib/athlete-execution';
 import { formatDistance } from '@/lib/format-distance';
 import { intensityColor } from '@/lib/intensity-color';
@@ -201,7 +202,7 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
       if (current.status !== 'running') return;
       const next = recordReading(current, plan, now, manager.getReading(now));
       if (next.timerSec !== current.timerSec || next.elapsedSec !== current.elapsedSec) {
-        commit(next, now - lastCheckpointRef.current >= CHECKPOINT_INTERVAL_MS);
+        commit(next, next.status === 'finished' || now - lastCheckpointRef.current >= CHECKPOINT_INTERVAL_MS);
       } else {
         recordingRef.current = next;
       }
@@ -213,7 +214,7 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
       const reading = manager.getReading(now);
       if (!persist) setLive(reading);
       const next = tick(current, plan, now, reading);
-      if (next !== current || persist) commit(next, persist || now - lastCheckpointRef.current >= CHECKPOINT_INTERVAL_MS);
+      if (next !== current || persist) commit(next, persist || next.status === 'finished' || now - lastCheckpointRef.current >= CHECKPOINT_INTERVAL_MS);
     };
     const interval = window.setInterval(syncClock, SAMPLE_INTERVAL_MS);
     const onPageHide = () => syncClock(true);
@@ -517,7 +518,8 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
               {saveState.kind === 'saved' ? <p role="status" className="text-[var(--status-success)]">Saved. The session is marked complete.{saveState.note ? ` ${saveState.note}` : ''}</p> : null}
               {saveState.kind === 'failed' ? <p role="alert" className="text-[var(--status-danger)]">{saveState.error}</p> : null}
               {saveState.kind === 'saving' ? <p role="status" className="text-[var(--text-secondary)]">Saving to Tempo…</p> : null}
-              {saveState.kind === 'idle' ? <p className="text-[var(--text-secondary)]">The ride stays on this device until Tempo confirms it is saved.</p> : null}
+              {timerSec >= MAX_ACTIVITY_IMPORT_DURATION_SEC ? <p className="text-[var(--text-secondary)]">This ride reached the 36-hour recording limit.</p> : null}
+            {saveState.kind === 'idle' ? <p className="text-[var(--text-secondary)]">The ride stays on this device until Tempo confirms it is saved.</p> : null}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">

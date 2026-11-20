@@ -505,3 +505,16 @@ test('summarizes a ride at the upload duration limit without overflowing the sta
   assert.equal(summary.normalizedPowerWatts, 200);
   assert.equal(summary.workKj, 25920);
 });
+
+test('a long suspended ride stops at the upload duration limit with a valid payload', () => {
+  const ride = plan();
+  const started = startRecording(createRecording(7, 'Endurance', ride), ride, 0);
+  const timerSec = 36 * 60 * 60;
+  const finished = tick(started, ride, (timerSec + 2) * 1000, reading(200));
+  assert.equal(finished.status, 'finished');
+  assert.equal(finished.timerSec, timerSec);
+  assert.equal(finished.finishedAtMs, timerSec * 1000);
+  assert.equal(finished.samples.at(-1)?.p, null);
+  const payload = validateActivityImport(toImportPayload(finished));
+  assert.equal(payload.ok, true, payload.ok ? '' : payload.error);
+});

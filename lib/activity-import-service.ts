@@ -9,10 +9,13 @@ import type { ActivitySeriesPoint } from './activity-series.ts';
 import { validateActivityLaps, type ActivityLap } from './activity-laps.ts';
 import { newActivityAnalysisJob } from './activity-analysis-job.ts';
 import type { ActivityTelemetry } from './activity-metrics.ts';
+import {
+  MAX_ACTIVITY_IMPORT_DISTANCE_METERS,
+  MAX_ACTIVITY_IMPORT_DURATION_SEC,
+  MAX_ACTIVITY_IMPORT_POINTS,
+} from './activity-import-limits.ts';
 
 const MAX_TITLE_LENGTH = 140;
-const MAX_POINTS = 20000;
-const MAX_DURATION_SEC = 36 * 60 * 60;
 
 export type ActivityImportInput = {
   title: string;
@@ -87,11 +90,11 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
     return { ok: false, error: 'Choose a supported activity type.' };
   }
   if (!Number.isFinite(startedAtDate.getTime())) return { ok: false, error: 'Activity start time is invalid.' };
-  if (!Number.isInteger(durationSec) || (durationSec as number) < 1 || (durationSec as number) > MAX_DURATION_SEC) {
+  if (!Number.isInteger(durationSec) || (durationSec as number) < 1 || (durationSec as number) > MAX_ACTIVITY_IMPORT_DURATION_SEC) {
     return { ok: false, error: 'Activity duration must be between one second and 36 hours.' };
   }
-  if (!Array.isArray(points) || points.length < 1 || points.length > MAX_POINTS) {
-    return { ok: false, error: `Activity samples must contain between one and ${MAX_POINTS.toLocaleString()} points.` };
+  if (!Array.isArray(points) || points.length < 1 || points.length > MAX_ACTIVITY_IMPORT_POINTS) {
+    return { ok: false, error: `Activity samples must contain between one and ${MAX_ACTIVITY_IMPORT_POINTS.toLocaleString()} points.` };
   }
   const cleanPoints: ActivitySeriesPoint[] = [];
   let previousElapsed = -1;
@@ -99,13 +102,13 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
     if (!point || typeof point !== 'object') return { ok: false, error: 'Activity contains an invalid sensor sample.' };
     const sample = point as Record<string, unknown>;
     const elapsedSec = sample.elapsedSec;
-    if (!Number.isInteger(elapsedSec) || (elapsedSec as number) < 0 || (elapsedSec as number) > MAX_DURATION_SEC || (elapsedSec as number) < previousElapsed) {
+    if (!Number.isInteger(elapsedSec) || (elapsedSec as number) < 0 || (elapsedSec as number) > MAX_ACTIVITY_IMPORT_DURATION_SEC || (elapsedSec as number) < previousElapsed) {
       return { ok: false, error: 'Activity samples must have ordered elapsed times.' };
     }
     previousElapsed = elapsedSec as number;
     const cleaned: ActivitySeriesPoint = { elapsedSec: elapsedSec as number };
     const allowedValues: Array<[keyof ActivitySeriesPoint, number, number]> = [
-      ['distanceMeters', 0, 2000000],
+      ['distanceMeters', 0, MAX_ACTIVITY_IMPORT_DISTANCE_METERS],
       ['heartRateBpm', 20, 260],
       ['speedMetersPerSecond', 0, 50],
       ['powerWatts', 0, 5000],
@@ -124,7 +127,7 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
     }
     cleanPoints.push(cleaned);
   }
-  const distanceMeters = optionalBoundedNumber(value.distanceMeters, 0, 2000000);
+  const distanceMeters = optionalBoundedNumber(value.distanceMeters, 0, MAX_ACTIVITY_IMPORT_DISTANCE_METERS);
   const elevationGainMeters = optionalBoundedNumber(value.elevationGainMeters, 0, 100000);
   if (distanceMeters === 'invalid' || elevationGainMeters === 'invalid') {
     return { ok: false, error: 'Activity distance or elevation is outside the supported range.' };

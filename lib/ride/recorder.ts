@@ -1,3 +1,8 @@
+import {
+  MAX_ACTIVITY_IMPORT_DISTANCE_METERS,
+  MAX_ACTIVITY_IMPORT_DURATION_SEC,
+  MAX_ACTIVITY_IMPORT_POINTS,
+} from '../activity-import-limits.ts';
 import { targetWattsAt, type RidePlan } from './ride-plan.ts';
 
 /** The latest value each sensor reported; null when absent or stale. */
@@ -57,8 +62,6 @@ export type RideRecording = {
 };
 
 export const RIDE_CHECKPOINT_VERSION = 1;
-export const MAX_IMPORT_POINTS = 20000;
-const MAX_GAP_SEC = 12 * 60 * 60;
 
 function emptyAccumulator(): Accumulator {
   return { power: [0, 0], hr: [0, 0], cad: [0, 0], spd: [0, 0] };
@@ -160,8 +163,13 @@ export function startRecording(recording: RideRecording, plan: RidePlan, nowMs: 
 /** Advances the recording to `nowMs`, writing one sample per whole elapsed second. */
 export function tick(recording: RideRecording, plan: RidePlan, nowMs: number, latest: RideReading = emptyReading): RideRecording {
   if (recording.status === 'ready' || recording.status === 'finished') return recording;
+  const remaining = MAX_ACTIVITY_IMPORT_DURATION_SEC - recording.timerSec;
+  const running = recording.status === 'running' && recording.lastTickAtMs !== null;
+  if (running && remaining <= 0) return { ...closeLap(recording), status: 'finished', finishedAtMs: nowMs };
+  const activeLimit = running ? recording.lastTickAtMs + remaining * 1000 : Infinity;
+  const clockNow = Math.min(nowMs, activeLimit);
   const elapsedAnchor = recording.elapsedTickAtMs ?? recording.lastTickAtMs ?? nowMs;
-  const elapsed = Math.max(0, Math.floor((nowMs - elapsedAnchor) / 1000));
+  const elapsed = Math.max(0, Math.floor((clockNow - elapsedAnchor) / 1000));
   const elapsedUpdate = elapsed > 0 || recording.elapsedTickAtMs === null ? {
     elapsedSec: recording.elapsedSec + elapsed,
     elapsedTickAtMs: elapsedAnchor + elapsed * 1000,
@@ -170,9 +178,10 @@ export function tick(recording: RideRecording, plan: RidePlan, nowMs: number, la
     return elapsedUpdate ? { ...recording, ...elapsedUpdate } : recording;
   }
 
-  const whole = Math.min(MAX_GAP_SEC, Math.floor((nowMs - recording.lastTickAtMs) / 1000));
+  const whole = Math.floor((clockNow - recording.lastTickAtMs) / 1000);
   if (whole <= 0) return elapsedUpdate ? { ...recording, ...elapsedUpdate } : recording;
-  const fallback = whole === 1 ? latest : emptyReading;
+  const lastReading = clockNow === nowMs ? latest : emptyReading;
+  const fallback = whole === 1 ? lastReading : emptyReading;
   const first: RideReading = {
     powerWatts: average(recording.pending.power, fallback.powerWatts),
     heartRateBpm: average(recording.pending.hr, fallback.heartRateBpm),
@@ -187,7 +196,7 @@ export function tick(recording: RideRecording, plan: RidePlan, nowMs: number, la
   };
   const samples = [...recording.samples];
   for (let second = 0; second < whole; second += 1) {
-    const reading = second === 0 ? first : second === whole - 1 ? latest : emptyReading;
+    const reading = second === 0 ? first : second === whole - 1 ? lastReading : emptyReading;
     const step = plan.steps[next.stepIndex];
     const target = next.ergEnabled ? targetWattsAt(step, next.stepElapsedSec, next.biasPct) : null;
     const speed = reading.speedMetersPerSecond;
@@ -212,12 +221,16 @@ export function tick(recording: RideRecording, plan: RidePlan, nowMs: number, la
     };
     if (step && next.stepElapsedSec >= step.durationSec) next = advanceStep(next, plan);
   }
-  return { ...next, samples };
+  next = { ...next, samples };
+  return next.timerSec === MAX_ACTIVITY_IMPORT_DURATION_SEC
+    ? { ...closeLap(next), status: 'finished', finishedAtMs: next.lastTickAtMs }
+    : next;
 }
 
 export function pauseRecording(recording: RideRecording, plan: RidePlan, nowMs: number, latest?: RideReading): RideRecording {
   if (recording.status !== 'running') return recording;
   const ticked = tick(recording, plan, nowMs, latest);
+  if (ticked.status === 'finished') return ticked;
   return {
     ...ticked,
     status: 'paused',
@@ -239,7 +252,7 @@ export function resumeRecording(recording: RideRecording, plan: RidePlan, nowMs:
 export function finishRecording(recording: RideRecording, plan: RidePlan, nowMs: number, latest?: RideReading): RideRecording {
   if (recording.status === 'finished' || recording.status === 'ready') return recording;
   const ticked = tick(recording, plan, nowMs, latest);
-  return { ...closeLap(ticked), status: 'finished', finishedAtMs: nowMs };
+  return ticked.status === 'finished' ? ticked : { ...closeLap(ticked), status: 'finished', finishedAtMs: nowMs };
 }
 
 export function setBias(recording: RideRecording, biasPct: number): RideRecording {
@@ -371,7 +384,7 @@ function toPoint(samples: RideSample[]): RideImportPoint {
   const heartRate = inRange(round(avg((sample) => sample.hr)), 20, 260);
   const cadence = inRange(round(avg((sample) => sample.cad)), 0, 300);
   const speed = inRange(round(avg((sample) => sample.spd), 2), 0, 50);
-  const distance = inRange(last.d, 0, 2000000);
+  const distance = inRange(last.d, 0, MAX_ACTIVITY_IMPORT_DISTANCE_METERS);
   if (power !== undefined) point.powerWatts = power;
   if (heartRate !== undefined) point.heartRateBpm = heartRate;
   if (cadence !== undefined) point.cadenceRpm = cadence;
@@ -381,7 +394,7 @@ function toPoint(samples: RideSample[]): RideImportPoint {
 }
 
 /** Averages consecutive samples into buckets so the import stays within the point limit. */
-export function downsampleSamples(samples: RideSample[], maxPoints = MAX_IMPORT_POINTS): RideImportPoint[] {
+export function downsampleSamples(samples: RideSample[], maxPoints = MAX_ACTIVITY_IMPORT_POINTS): RideImportPoint[] {
   const bucket = Math.max(1, Math.ceil(samples.length / maxPoints));
   const points: RideImportPoint[] = [];
   for (let index = 0; index < samples.length; index += bucket) points.push(toPoint(samples.slice(index, index + bucket)));
@@ -402,7 +415,7 @@ export function toImportPayload(recording: RideRecording): RideImportPayload {
     sport: 'BIKING',
     startedAt: new Date(recording.startedAtMs ?? recording.finishedAtMs ?? 0).toISOString(),
     durationSec,
-    distanceMeters: inRange(Math.round(recording.distanceMeters), 1, 2000000) ?? null,
+    distanceMeters: inRange(Math.round(recording.distanceMeters), 1, MAX_ACTIVITY_IMPORT_DISTANCE_METERS) ?? null,
     elevationGainMeters: null,
     plannedSessionId: recording.sessionId,
     points,
