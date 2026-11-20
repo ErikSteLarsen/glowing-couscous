@@ -94,14 +94,20 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   validation, generation and the DB suite were rechecked. Remove the override
   when upgrading to Prisma 7.
 
-- Indoor bike rides (`RIDE-001`, 2026-11-20): `/athlete/ride/[sessionId]`
-  with targets-only and Web Bluetooth modes, ERG targets, bias, crash-safe
-  checkpoints with resume/save/discard, and save via `/api/activity-imports`
-  with backoff and JSON backup. `tests/ride.test.ts` covers BLE parsing, FTMS
-  encoding, ride plan, recorder, payload validation against
-  `validateActivityImport`, downsampling, checkpoints and chart mapping.
-  `pnpm test` (437, 0 failures), `pnpm lint` and `pnpm typecheck` passed; build
-  and browser checks were not run (no database in that session).
+- Indoor bike rides (`RIDE-001`, 2026-11-20): BLE regressions cover standard
+  and legacy FTMS packets, control acknowledgements and reconnect, zero-watt
+  coasting, cadence decay, and CSC wheel event rollover. The recorder uses
+  Bluetooth notifications and elapsed deltas for 1 Hz samples, preserves
+  fractional active time through pauses, and records gaps when the renderer
+  receives no telemetry. Checkpoint tests cover v1 recovery, desktop keys,
+  session matching, and three hours of recording through upload conversion.
+  Uploads retain the device copy until the server confirms the planned session.
+- Ride reliability verification on the shared checkout: `pnpm test` passed
+  465 tests with seven database cases skipped. `pnpm test:db` passed 507 tests
+  with zero skips. `pnpm lint`, `pnpm typecheck`, and `pnpm build` passed.
+  The build used local disposable PostgreSQL `tempo_acceptance`.
+  `pnpm --dir desktop test` passed all eight Node tests.
+
 
 ## Remaining risks and acceptance gates
 
@@ -122,11 +128,11 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   time except source-provenance rules on the separate legacy summary imports.
 - Live countdown/progress is browser-local guidance, restores paused, does not
   sync across devices and does not record sensor telemetry or auto-completion.
-- Tempo Ride is unverified with real trainers, HR straps and cadence sensors
-  and in a browser. Reconnect, ERG write timing and wake lock need hardware
-  acceptance. A lost save response that later returns 409 "session no longer
-  available" without a prior network failure shows as a failed save; the rider
-  keeps the local copy and can download or discard it.
+- Tempo Ride still needs browser and physical-device acceptance for reconnect,
+  FTMS Free Ride support, wake lock, and desktop picker/deep-link behavior.
+  A fully suspended renderer can recover elapsed time and sample slots, with gaps
+  for telemetry that never arrived. Browser backups are keyed by session within
+  an origin, and trusted Tempo origins use a shared desktop backup directory.
 - Physical iOS/Android, assistive technology, complete authenticated editing
   journeys and session-correction layout at 1440px remain distinct gates.
   Component fixture viewports do not establish route layout acceptance.

@@ -98,6 +98,7 @@ folder. It sends links to other HTTP(S) origins to the system browser. The ride
 page can detect the shell with `window.tempoDesktop?.isDesktop` and read its
 `version`. Use `saveRecording(key, json)`, `listRecordings()`, and
 `deleteRecording(key)` for crash recovery. Each save takes up to 20 MiB of
-UTF-8 JSON and a 1–120 character key using letters, digits, underscores, and
-hyphens. Backups stay in the app's `recordings/` folder. Trusted Tempo origins
-share access to that folder.
+UTF-8 JSON. The ride page uses `tempo:ride:v1:<sessionId>` as its checkpoint key.
+The store also accepts 1–120 character keys made of letters, digits,
+underscores and hyphens. Backups stay in the app's `recordings/` folder.
+Trusted Tempo origins share access to that folder.
