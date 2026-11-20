@@ -476,3 +476,8 @@ test('standard FTMS resistance uses one unsigned byte without shifting following
   assert.equal(data.powerWatts, 200);
   assert.equal(data.heartRateBpm, 140);
 });
+
+test('heart rate skips measurements flagged as having poor skin contact', () => {
+  assert.equal(parseHeartRateMeasurement(bytes(0x04, 142)), null);
+  assert.equal(parseHeartRateMeasurement(bytes(0x06, 142)), 142);
+});

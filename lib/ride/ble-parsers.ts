@@ -130,10 +130,11 @@ export function parseCscMeasurement(input: DataView | ArrayBuffer | Uint8Array):
 }
 
 /** Heart Rate Measurement (0x2A37): uint8 or uint16 value selected by flag bit 0. */
-export function parseHeartRateMeasurement(input: DataView | ArrayBuffer | Uint8Array): number {
+export function parseHeartRateMeasurement(input: DataView | ArrayBuffer | Uint8Array): number | null {
   const c = new Cursor(view(input));
   const flags = c.u8();
-  return flags & 0x01 ? c.u16() : c.u8();
+  const bpm = flags & 0x01 ? c.u16() : c.u8();
+  return (flags & 0x06) === 0x04 ? null : bpm;
 }
 
 /**

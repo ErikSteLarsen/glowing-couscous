@@ -255,7 +255,10 @@ export class RideDeviceManager {
   private async setup(role: RideDeviceRole, server: BluetoothRemoteGATTServer, signal: AbortSignal): Promise<RideDeviceState['protocol']> {
     if (role === 'heartRate') {
       const characteristic = await (await server.getPrimaryService(BLE_UUIDS.heartRateService)).getCharacteristic(BLE_UUIDS.heartRateMeasurement);
-      await this.listen(characteristic, signal, (data) => { this.strapHeartRate = { value: parseHeartRateMeasurement(data), at: Date.now() }; });
+      await this.listen(characteristic, signal, (data) => {
+        const value = parseHeartRateMeasurement(data);
+        this.strapHeartRate = value ? { value, at: Date.now() } : null;
+      });
       return 'heart-rate';
     }
     if (role === 'cadence') {
