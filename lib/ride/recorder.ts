@@ -164,9 +164,9 @@ export function startRecording(recording: RideRecording, plan: RidePlan, nowMs: 
 export function tick(recording: RideRecording, plan: RidePlan, nowMs: number, latest: RideReading = emptyReading): RideRecording {
   if (recording.status === 'ready' || recording.status === 'finished') return recording;
   const remaining = MAX_ACTIVITY_IMPORT_DURATION_SEC - recording.timerSec;
-  const running = recording.status === 'running' && recording.lastTickAtMs !== null;
-  if (running && remaining <= 0) return { ...closeLap(recording), status: 'finished', finishedAtMs: nowMs };
-  const activeLimit = running ? recording.lastTickAtMs + remaining * 1000 : Infinity;
+  const runningSince = recording.status === 'running' ? recording.lastTickAtMs : null;
+  if (runningSince !== null && remaining <= 0) return { ...closeLap(recording), status: 'finished', finishedAtMs: nowMs };
+  const activeLimit = runningSince === null ? Infinity : runningSince + remaining * 1000;
   const clockNow = Math.min(nowMs, activeLimit);
   const elapsedAnchor = recording.elapsedTickAtMs ?? recording.lastTickAtMs ?? nowMs;
   const elapsed = Math.max(0, Math.floor((clockNow - elapsedAnchor) / 1000));

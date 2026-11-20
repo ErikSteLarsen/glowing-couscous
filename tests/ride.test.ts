@@ -374,11 +374,16 @@ test('FTMS waits for control indications and reapplies the latest target after r
   const { RideDeviceManager } = await import('../lib/ride/bluetooth.ts');
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const control = new MockCharacteristic();
-  const device = mockBluetooth(t, new Map([[0x2ad2, new MockCharacteristic()], [0x2ad9, control]]));
+  const telemetry = new MockCharacteristic();
+  const device = mockBluetooth(t, new Map([[0x2ad2, telemetry], [0x2ad9, control]]));
   const manager = new RideDeviceManager();
   t.after(() => manager.dispose());
   manager.setCommand({ mode: 'erg', watts: 100 });
   await manager.connect('trainer');
+  telemetry.notify(0x41, 0x00, 150, 0);
+  assert.equal(manager.getReading().powerWatts, 150);
+  telemetry.notify(0x41, 0x00, 0, 0);
+  assert.equal(manager.getReading().powerWatts, 0);
   await flushBluetooth();
   manager.setCommand({ mode: 'erg', watts: 103 });
   assert.deepEqual(control.writes, [[0x00]]);
@@ -553,4 +558,17 @@ test('recovery keeps the newest matching checkpoint and ignores records under th
 test('CSC wheel event time rolls over, while a decreasing wheel counter is never a forward speed', () => {
   assert.equal(speedFromWheel({ revolutions: 10, eventTime: 0xff00 }, { revolutions: 11, eventTime: 0x0100 }, 2, 1024), 4);
   assert.equal(speedFromWheel({ revolutions: 0xffffffff, eventTime: 1024 }, { revolutions: 0, eventTime: 2048 }, 2, 1024), null);
+});
+
+test('three hours of 1 Hz samples survive checkpoint and upload conversion', () => {
+  const ride = plan();
+  let rec = startRecording(createRecording(7, 'Endurance', ride), ride, 0);
+  for (let second = 1; second <= 10800; second += 1) rec = tick(rec, ride, second * 1000, reading(150));
+  const finished = finishRecording(rec, ride, 10800000);
+  const restored = parseCheckpoint(serializeCheckpoint(finished, 10800000));
+  assert.ok(restored);
+  const payload = toImportPayload(restored.recording);
+  assert.equal(payload.points.length, 10800);
+  assert.equal(payload.points.at(-1)?.elapsedSec, 10799);
+  assert.equal(validateActivityImport(payload).ok, true);
 });
