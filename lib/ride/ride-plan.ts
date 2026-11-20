@@ -70,3 +70,15 @@ export function ergTargetChanged(previous: number | null, next: number | null, s
 export function planHasPowerTargets(plan: RidePlan): boolean {
   return plan.steps.some((step) => step.startWatts !== null);
 }
+
+/** Planned TSS from power targets and FTP; null when either is missing. Free-ride steps count as zero load. */
+export function estimatePlanTss(plan: RidePlan): number | null {
+  if (!plan.ftpWatts || !planHasPowerTargets(plan)) return null;
+  const ftp = plan.ftpWatts;
+  const load = plan.steps.reduce((sum, step) => {
+    if (step.startWatts === null || step.endWatts === null) return sum;
+    const intensity = (step.startWatts + step.endWatts) / 2 / ftp;
+    return sum + step.durationSec * intensity * intensity;
+  }, 0);
+  return Math.round((load / 3600) * 100);
+}

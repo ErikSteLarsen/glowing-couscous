@@ -252,6 +252,16 @@ test('chart maps recorded power onto the plan timeline after a skip', async () =
   assert.equal(complianceTone(200, null), 'none');
 });
 
+test('step intensity zone follows %FTP and falls back to the authored zone', async () => {
+  const { stepIntensityZone } = await import('../lib/ride/ride-chart.ts');
+  assert.equal(stepIntensityZone({ startWatts: 100, endWatts: 100, zone: 3 }, 250), 1);
+  assert.equal(stepIntensityZone({ startWatts: 150, endWatts: 200, zone: 1 }, 250), 2);
+  assert.equal(stepIntensityZone({ startWatts: 250, endWatts: 250, zone: 1 }, 250), 4);
+  assert.equal(stepIntensityZone({ startWatts: 300, endWatts: 300, zone: 1 }, 250), 5);
+  assert.equal(stepIntensityZone({ startWatts: null, endWatts: null, zone: 3 }, 250), 3);
+  assert.equal(stepIntensityZone({ startWatts: 300, endWatts: 300, zone: 2 }, null), 2);
+});
+
 test('lap stats average each step and report the open lap', async () => {
   const { summarizeLaps, currentLapStats } = await import('../lib/ride/recorder.ts');
   const profile = createEmptyPerformanceProfile();
@@ -298,4 +308,12 @@ test('ride app launch detects OS and orders installers', async () => {
   assert.equal(rideDownloads('other').length, 5);
   assert.equal(rideAppLink('https://t.app/athlete/ride/4'), 'tempo-ride://open?url=https%3A%2F%2Ft.app%2Fathlete%2Fride%2F4');
   assert.ok(rideInstallHints('linux').some((hint) => hint.includes('chmod +x')));
+});
+
+test('planned TSS follows %FTP targets and needs FTP', async () => {
+  const { estimatePlanTss } = await import('../lib/ride/ride-plan.ts');
+  const step = (durationSec: number, watts: number | null) => ({ id: String(durationSec), kind: 'work' as const, zone: 3, startSec: 0, durationSec, lowWatts: watts, highWatts: watts, startWatts: watts, endWatts: watts });
+  assert.equal(estimatePlanTss({ steps: [step(3600, 250)], totalSec: 3600, ftpWatts: 250 }), 100);
+  assert.equal(estimatePlanTss({ steps: [step(1800, 125), step(600, null)], totalSec: 2400, ftpWatts: 250 }), 13);
+  assert.equal(estimatePlanTss({ steps: [step(3600, 250)], totalSec: 3600, ftpWatts: null }), null);
 });

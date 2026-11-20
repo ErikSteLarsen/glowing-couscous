@@ -1920,3 +1920,58 @@ body[data-workspace-theme="dark"] .profile-savebar {
   overflow-y: auto;
 }
 .tempo-alert-dialog::backdrop { background: rgb(0 0 0 / 60%); }
+
+/*
+ * Ride mode: the full-bleed trainer screen is always the night instrument,
+ * whatever the workspace theme, and its numerals are read from 2-3 m away.
+ */
+.ride-mode {
+  color-scheme: dark;
+  --background: #0B0F15;
+  --raised: #151B24;
+  --surface: #10151C;
+  --sunken: #090C11;
+  --border: #1F2732;
+  --border-strong: #323C4A;
+  --text: #EEF2F6;
+  --text-secondary: #A9B4C1;
+  --text-muted: #8592A1;
+  --brand: #5EB6D8;
+  --brand-tint: color-mix(in srgb, #5EB6D8 14%, transparent);
+  --signal-hover: #82C9E4;
+  --signal-ink: #06121A;
+  --field-border: #323C4A;
+  --status-success: #5FCFA2;
+  --status-warning: #F0A84A;
+  --status-danger: #F3877A;
+  --status-warning-tint: color-mix(in srgb, #F0A84A 13%, transparent);
+  --status-warning-border: color-mix(in srgb, #F0A84A 40%, transparent);
+  --danger-tint: color-mix(in srgb, #F3877A 12%, transparent);
+  --danger-border: color-mix(in srgb, #F3877A 42%, transparent);
+  --color-zone-1: #7F9BB5;
+  --color-zone-2: #4FB89F;
+  --color-zone-3: #D9B44A;
+  --color-zone-4: #EE8A4C;
+  --color-zone-5: #E8667E;
+  /* Heart rate is its own series; it never borrows a zone or compliance hue. */
+  --ride-hr: #C08AE8;
+  /* Compliance state: below, on, above target. */
+  --ride-under: #F3877A;
+  --ride-on: #5FCFA2;
+  --ride-over: #F0A84A;
+  background: var(--background);
+  color: var(--text-secondary);
+}
+
+.ride-numeral {
+  font-feature-settings: "tnum", "ss01";
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 0.86;
+  color: var(--text);
+}
+
+.ride-state-bar {
+  transition: background-color 200ms ease-out, width 400ms var(--ease-out-expo);
+}

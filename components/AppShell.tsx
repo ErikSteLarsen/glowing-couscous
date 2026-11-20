@@ -182,6 +182,11 @@ export function AppShell({
     });
   };
 
+  // Riding is a full-bleed instrument: no sidebar, top bar or bottom nav.
+  if (/^\/athlete\/ride\/\d+\/?$/.test(pathname)) {
+    return <div id="main" tabIndex={-1} className="ink-studio-app outline-none">{children}</div>;
+  }
+
   return (
     <div
       className="ink-studio-app tempo-shell relative min-h-screen bg-[var(--background)] text-[var(--text-secondary)]"

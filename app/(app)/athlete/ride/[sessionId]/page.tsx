@@ -71,10 +71,13 @@ export default async function AthleteRidePage({
   const plan = createRidePlan(detail.session.editor.blocks, profile);
 
   return (
-    <PageShell size="wide">
-      <TopBar title={detail.session.title} description="Indoor ride" actions={back} />
-      <UnsavedRidesNotice excludeSessionId={detail.session.id} />
-      <RideClient sessionId={detail.session.id} sessionTitle={detail.session.title} plan={plan} steps={steps} />
-    </PageShell>
+    <RideClient
+      sessionId={detail.session.id}
+      sessionTitle={detail.session.title}
+      plan={plan}
+      steps={steps}
+      backHref={sessionHref}
+      heartRateMaxBpm={profile?.heartRateMaxBpm ?? null}
+    />
   );
 }
