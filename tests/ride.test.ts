@@ -494,3 +494,14 @@ test('restoring a paused checkpoint starts both clocks on the same new boundary'
   assert.equal(resumed.elapsedSec, 1);
   assert.ok(parseCheckpoint(serializeCheckpoint(resumed, 10100)));
 });
+
+test('summarizes a ride at the upload duration limit without overflowing the stack', () => {
+  const ride = plan();
+  const timerSec = 36 * 60 * 60;
+  const samples = Array.from({ length: timerSec }, (_, t) => ({ t, p: 200, hr: 140, cad: 90, spd: null, d: 0, tgt: 200 }));
+  const recording = { ...createRecording(7, 'Endurance', ride), timerSec, elapsedSec: timerSec, samples };
+  const summary = summarizeRecording(recording, 200);
+  assert.equal(summary.maxPowerWatts, 200);
+  assert.equal(summary.normalizedPowerWatts, 200);
+  assert.equal(summary.workKj, 25920);
+});

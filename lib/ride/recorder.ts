@@ -272,29 +272,50 @@ export type RideSummary = {
   tss: number | null;
 };
 
-function mean(values: number[]): number | null {
-  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+function measure(
+  samples: RideSample[],
+  field: 'p' | 'hr' | 'cad' | 'tgt',
+  start = 0,
+  end = samples.length,
+) {
+  let sum = 0;
+  let count = 0;
+  let max: number | null = null;
+  for (let index = start; index < end; index += 1) {
+    const value = samples[index][field];
+    if (value === null || ((field === 'hr' || field === 'cad') && value <= 0)) continue;
+    sum += value;
+    count += 1;
+    max = max === null ? value : Math.max(max, value);
+  }
+  return { sum, count, max, average: count > 0 ? sum / count : null };
+}
+
+function normalizedPowerFrom(length: number, powerAt: (index: number) => number | null): number | null {
+  let windowSum = 0;
+  let fourthPowerSum = 0;
+  let hasPower = false;
+  for (let index = 0; index < length; index += 1) {
+    const value = powerAt(index);
+    hasPower ||= value !== null;
+    windowSum += value ?? 0;
+    if (index >= 30) windowSum -= powerAt(index - 30) ?? 0;
+    if (index >= 29) fourthPowerSum += (windowSum / 30) ** 4;
+  }
+  if (!hasPower) return null;
+  return length < 30 ? windowSum / length : (fourthPowerSum / (length - 29)) ** 0.25;
 }
 
 export function normalizedPower(powers: Array<number | null>): number | null {
-  const values = powers.map((value) => value ?? 0);
-  if (!powers.some((value) => value !== null)) return null;
-  if (values.length < 30) return mean(values);
-  let windowSum = values.slice(0, 30).reduce((sum, value) => sum + value, 0);
-  let fourthPowerSum = (windowSum / 30) ** 4;
-  for (let index = 30; index < values.length; index += 1) {
-    windowSum += values[index] - values[index - 30];
-    fourthPowerSum += (windowSum / 30) ** 4;
-  }
-  return (fourthPowerSum / (values.length - 29)) ** 0.25;
+  return normalizedPowerFrom(powers.length, (index) => powers[index]);
 }
 
 export function summarizeRecording(recording: RideRecording, ftpWatts: number | null): RideSummary {
-  const powerSamples = recording.samples.map((sample) => sample.p);
-  const powers = powerSamples.filter((value): value is number => value !== null);
-  const heartRates = recording.samples.map((sample) => sample.hr).filter((value): value is number => value !== null && value > 0);
-  const cadences = recording.samples.map((sample) => sample.cad).filter((value): value is number => value !== null && value > 0);
-  const np = normalizedPower(powerSamples);
+  const { samples } = recording;
+  const power = measure(samples, 'p');
+  const heartRate = measure(samples, 'hr');
+  const cadence = measure(samples, 'cad');
+  const np = normalizedPowerFrom(samples.length, (index) => samples[index].p);
   const intensityFactor = np !== null && ftpWatts ? np / ftpWatts : null;
   const tss = intensityFactor !== null && ftpWatts && np !== null ? (recording.timerSec * np * intensityFactor) / (ftpWatts * 3600) * 100 : null;
   return {
@@ -302,13 +323,13 @@ export function summarizeRecording(recording: RideRecording, ftpWatts: number | 
     elapsedSec: recording.elapsedSec,
     movingSec: recording.movingSec,
     distanceMeters: Math.round(recording.distanceMeters),
-    averagePowerWatts: round(mean(powers)),
+    averagePowerWatts: round(power.average),
     normalizedPowerWatts: round(np),
-    maxPowerWatts: powers.length ? Math.max(...powers) : null,
-    averageHeartRateBpm: round(mean(heartRates)),
-    maxHeartRateBpm: heartRates.length ? Math.max(...heartRates) : null,
-    averageCadenceRpm: round(mean(cadences)),
-    workKj: powers.length ? round(powers.reduce((sum, value) => sum + value, 0) / 1000, 1) : null,
+    maxPowerWatts: power.max,
+    averageHeartRateBpm: round(heartRate.average),
+    maxHeartRateBpm: heartRate.max,
+    averageCadenceRpm: round(cadence.average),
+    workKj: power.count > 0 ? round(power.sum / 1000, 1) : null,
     intensityFactor: round(intensityFactor, 2),
     tss: round(tss),
   };
@@ -466,21 +487,20 @@ export type RideLapStats = {
 };
 
 function lapStatsFor(lap: RideLap, samples: RideSample[]): RideLapStats {
-  const slice = samples.slice(lap.startSec, lap.endSec ?? samples.length);
-  const pick = (read: (sample: RideSample) => number | null, positive = false) =>
-    slice.map(read).filter((value): value is number => value !== null && (!positive || value > 0));
-  const powers = pick((sample) => sample.p);
-  const heartRates = pick((sample) => sample.hr, true);
+  const start = Math.min(lap.startSec, samples.length);
+  const end = Math.min(lap.endSec ?? samples.length, samples.length);
+  const power = measure(samples, 'p', start, end);
+  const heartRate = measure(samples, 'hr', start, end);
   return {
     stepIndex: lap.stepIndex,
     startSec: lap.startSec,
-    durationSec: slice.length,
-    averagePowerWatts: round(mean(powers)),
-    maxPowerWatts: powers.length ? Math.max(...powers) : null,
-    averageTargetWatts: round(mean(pick((sample) => sample.tgt))),
-    averageHeartRateBpm: round(mean(heartRates)),
-    maxHeartRateBpm: heartRates.length ? Math.max(...heartRates) : null,
-    averageCadenceRpm: round(mean(pick((sample) => sample.cad, true))),
+    durationSec: end - start,
+    averagePowerWatts: round(power.average),
+    maxPowerWatts: power.max,
+    averageTargetWatts: round(measure(samples, 'tgt', start, end).average),
+    averageHeartRateBpm: round(heartRate.average),
+    maxHeartRateBpm: heartRate.max,
+    averageCadenceRpm: round(measure(samples, 'cad', start, end).average),
   };
 }
 
