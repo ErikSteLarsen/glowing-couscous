@@ -63,6 +63,7 @@ and ownership guards; page visibility is not API authorization.
 - `/athlete/templates` - private weekly routines composed from saved workouts
 - `/athlete/session/[sessionId]` - compact read-only workout structure, block inspector and outcome review; `lib/session-structure.ts` groups identical instructions and `components/SessionWorkoutOverview.tsx` owns selection/disclosure
 - `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion
+- `/athlete/ride/[sessionId]` - indoor bike ride for BIKING sessions: targets-only timer or Web Bluetooth trainer/HR/cadence with ERG targets, 1 Hz recording checkpointed to localStorage (and `window.tempoDesktop` when present), saved through `POST /api/activity-imports` as a `file-import` attached to the planned session
 - `/athlete/activity` - History for completed sessions, manual logs and imported activities, paginated with URL name/sport filters and matching totals
 - `/athlete/import` - activity-file and Strava review/import; the previous `/athlete/imported-activities` path redirects here
 - `/athlete/find-coach` - dormant discovery entry; redirects to `/athlete`
@@ -119,6 +120,7 @@ navigation.
 | Session outcomes | `lib/athlete-completion-service.ts`, `lib/session-snapshot-service.ts`, `lib/athlete-session-adjustment-service.ts`, `lib/session-comparison-service.ts` | Completion, baseline/actual snapshots, planned edits, and comparison reads |
 | Activity file imports | `lib/activity-file-parser.ts`, `lib/activity-import-service.ts`, `lib/activity-series.ts` | Local FIT/TCX/GPX parsing, validated user-selected imports, planned-session matching, deduplication, telemetry persistence, and metric-specific bar buckets |
 | Strava sync | `lib/strava-service.ts`, `lib/strava-inbox-service.ts`, `app/api/strava/*`, `components/StravaImportPanel.tsx`, `prisma/schema.prisma` | User-scoped OAuth, durable inbox review state, leased webhook queue and retry recovery, explicit newest-first Import inbox review, server-side stream normalization, explicit import via the shared importer, and existing disconnect/revocation cleanup |
+| Indoor rides | `lib/ride/*`, `app/(app)/athlete/ride/[sessionId]/*` | Pure BLE characteristic parsers and FTMS control encoders, ride plan (ERG midpoint watts, warm-up/cool-down ramps, free ride without power target), recorder/summary/import payload/checkpoint; client-only Web Bluetooth manager with backoff reconnect and crash-safe local storage. No ride-specific server code: persistence reuses `activityImportService.importForUser` |
 | Sharing | `lib/share-link.ts`, `lib/share-link-service.ts` | Sanitized snapshots, opaque tokens, public lookup, and explicit recipient copies |
 
 ## Data Ownership

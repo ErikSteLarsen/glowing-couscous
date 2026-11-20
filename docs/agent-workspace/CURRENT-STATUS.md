@@ -81,6 +81,15 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   validation, generation and the DB suite were rechecked. Remove the override
   when upgrading to Prisma 7.
 
+- Indoor bike rides (`RIDE-001`, 2026-11-20): `/athlete/ride/[sessionId]`
+  with targets-only and Web Bluetooth modes, ERG targets, bias, crash-safe
+  checkpoints with resume/save/discard, and save via `/api/activity-imports`
+  with backoff and JSON backup. `tests/ride.test.ts` covers BLE parsing, FTMS
+  encoding, ride plan, recorder, payload validation against
+  `validateActivityImport`, downsampling, checkpoints and chart mapping.
+  `pnpm test` (437, 0 failures), `pnpm lint` and `pnpm typecheck` passed; build
+  and browser checks were not run (no database in that session).
+
 ## Remaining risks and acceptance gates
 
 - Live Strava OAuth/delivery, retry, update/privacy/delete/deauthorization and
@@ -100,6 +109,11 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   time except source-provenance rules on the separate legacy summary imports.
 - Live countdown/progress is browser-local guidance, restores paused, does not
   sync across devices and does not record sensor telemetry or auto-completion.
+- Tempo Ride is unverified with real trainers, HR straps and cadence sensors
+  and in a browser. Reconnect, ERG write timing and wake lock need hardware
+  acceptance. A lost save response that later returns 409 "session no longer
+  available" without a prior network failure shows as a failed save; the rider
+  keeps the local copy and can download or discard it.
 - Physical iOS/Android, assistive technology, complete authenticated editing
   journeys and session-correction layout at 1440px remain distinct gates.
   Component fixture viewports do not establish route layout acceptance.

@@ -50,6 +50,16 @@ For a fresh, disposable development database only, run `pnpm db:seed` after
 the migration to create demo accounts. Seeding deletes existing application
 data; it is not needed to fix the connection error.
 
+## Tempo Ride (indoor trainer)
+
+`/athlete/ride/[sessionId]` uses Web Bluetooth, which needs Chrome or Edge
+(desktop or Android) on HTTPS or `localhost`. Safari and Firefox get a
+targets-only ride and a pointer to the desktop app. Optional
+`NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL` (build-time, public) is the desktop
+download page shown beside the `tempo-ride://open?url=…` deep link; the link is
+hidden when it is unset. Unsaved rides are kept in browser localStorage under
+`tempo:ride:v1:<sessionId>` until the server confirms the import.
+
 ## Strava Sync Setup
 
 The Import page supports connecting a Strava account, reviewing
