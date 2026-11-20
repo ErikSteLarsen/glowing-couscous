@@ -235,3 +235,19 @@ test('checkpoint round-trips, rejects other versions and restores paused', () =>
   assert.equal(parseCheckpoint('not json'), null);
   assert.equal(parseCheckpoint(JSON.stringify({ kind: 'tempo-ride', version: 1, savedAtMs: 1, recording: { ...rec, timerSec: 99 } })), null);
 });
+
+test('chart maps recorded power onto the plan timeline after a skip', async () => {
+  const { planPositionSec, powerBuckets, complianceTone } = await import('../lib/ride/ride-chart.ts');
+  const ride = plan();
+  let rec = startRecording(createRecording(7, 'Threshold', ride), ride, 0);
+  rec = tick(rec, ride, 2000, reading(100));
+  rec = advanceStep(rec, ride); // skip rest of warm-up → plan second 4
+  rec = tick(rec, ride, 3000, reading(300));
+  assert.equal(planPositionSec(rec, ride), 5);
+  const buckets = powerBuckets(rec, ride, ride.totalSec, 100);
+  assert.deepEqual(buckets.map((bucket) => [bucket.x, bucket.power, bucket.target]), [[0, 100, 100], [1, 100, 110], [4, 300, 290]]);
+  assert.equal(complianceTone(300, 290), 'on');
+  assert.equal(complianceTone(330, 290), 'over');
+  assert.equal(complianceTone(200, 290), 'under');
+  assert.equal(complianceTone(200, null), 'none');
+});
