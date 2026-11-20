@@ -169,6 +169,7 @@ navigation.
 12. Imported activity pairing belongs to the import services and `lib/athlete-import-pairing.ts`; preserve the scheduled plan and report duration-only comparison unless an actual structured snapshot exists.
 13. Personal event/activity associations belong to `lib/athlete-event-service.ts`; require explicit athlete action and keep the event result independent of linked activity metrics.
 14. Manual activity/session pairing belongs to `lib/athlete-manual-activity-service.ts`; require explicit athlete choice, preserve planned content and baseline, and report duration only without inventing actual blocks or TSS.
+15. Derive the user's "today", week and overdue boundaries from their IANA zone: read it with `getRequestTimeZone()` (`lib/request-time-zone.ts`, the `tempo-tz` cookie kept current by `components/TimeZoneSync.tsx`, UTC until reported) and compute with `lib/user-time.ts`. Never use the server clock's local day; stored session dates keep their UTC-midnight day convention.
 
 ## Persistence and verification
 
