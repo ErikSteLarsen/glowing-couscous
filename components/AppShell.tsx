@@ -182,8 +182,8 @@ export function AppShell({
     });
   };
 
-  // Riding is a full-bleed instrument: no sidebar, top bar or bottom nav.
-  if (/^\/athlete\/ride\/\d+\/?$/.test(pathname)) {
+  // Riding and the Ride home are full-bleed instruments: no sidebar, top bar or bottom nav.
+  if (/^\/athlete\/ride(?:\/\d+)?\/?$/.test(pathname)) {
     return <div id="main" tabIndex={-1} className="ink-studio-app outline-none">{children}</div>;
   }
 
