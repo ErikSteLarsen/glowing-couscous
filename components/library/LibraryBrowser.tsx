@@ -84,7 +84,7 @@ export function LibraryBrowser({
               autoComplete="off"
             />
           </label>
-          <div className="grid grid-cols-3 gap-2 @2xl:flex">
+          <div className="grid grid-cols-2 gap-2 @md:grid-cols-3 @2xl:flex">
             <label className="min-w-0">
               <span className="sr-only">Duration</span>
               <select className={`${formSelectClassName} @2xl:w-auto`} value={query.durations[0] ?? ''} onChange={(event) => update({ durations: event.target.value ? [event.target.value as DurationBucket] : [] })}>
@@ -99,7 +99,7 @@ export function LibraryBrowser({
                 {CATALOG_LEVELS.map((level) => <option key={level.id} value={level.id}>{level.label}</option>)}
               </select>
             </label>
-            <label className="min-w-0">
+            <label className="col-span-2 min-w-0 @md:col-span-1">
               <span className="sr-only">Sort</span>
               <select className={`${formSelectClassName} @2xl:w-auto`} value={query.sort} onChange={(event) => update({ sort: event.target.value as CatalogSort })}>
                 {CATALOG_SORTS.map((sort) => <option key={sort.id} value={sort.id}>{sort.id === 'name' ? 'By focus' : sort.label}</option>)}
@@ -146,7 +146,7 @@ export function LibraryBrowser({
           {groups.map((group) => (
             <section key={group.id} aria-labelledby={group.label ? `library-group-${group.id}` : undefined} className="flex flex-col gap-3">
               {group.label ? (
-                <h2 id={`library-group-${group.id}`} className="flex items-baseline gap-2 text-[15px] font-medium text-[var(--text)]">
+                <h2 id={`library-group-${group.id}`} className="flex items-baseline gap-2 text-base font-medium text-[var(--text)]">
                   {group.label}<span className="data text-[13px] font-normal text-[var(--text-muted)]">{group.entries.length}</span>
                 </h2>
               ) : null}
@@ -179,7 +179,7 @@ function LibraryCard({ entry, href, ride, riding, rideDisabled }: { entry: Catal
     <article className="tile tile--interactive group relative flex h-full flex-col rounded-2xl p-4 [--profile-gap:var(--surface)] hover:[--profile-gap:var(--raised)] has-[a:focus-visible]:border-[var(--brand)]">
       <CatalogProfile steps={steps} idPrefix={`card-${workout.slug}`} label={`${workout.name} intensity profile, ${formatDuration(metrics.durationSec)}, peak ${Math.round(metrics.maxPct)}% FTP`} className="h-14" />
       <div className="mt-3 flex items-baseline justify-between gap-3">
-        <h3 className="min-w-0 text-[15px] font-medium leading-snug text-[var(--text)]">
+        <h3 className="min-w-0 text-base font-medium leading-snug text-[var(--text)]">
           <Link href={href} className="rounded-sm outline-none after:absolute after:inset-0 after:rounded-2xl after:content-['']">
             {workout.name}
           </Link>

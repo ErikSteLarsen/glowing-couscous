@@ -35,7 +35,7 @@ export default async function RideHubPage({ searchParams }: { searchParams: Prom
         <div className="mx-auto flex h-16 max-w-[1880px] items-center justify-between gap-4 px-5 sm:px-7 lg:px-10">
           <div className="flex min-w-0 items-center gap-3">
             <BrandMark />
-            <h1 className="text-[17px] font-medium tracking-[-0.01em] text-[var(--text)]">Ride</h1>
+            <h1 className="text-base font-medium tracking-[-0.01em] text-[var(--text)]">Ride</h1>
             <span className="data hidden truncate text-[13px] text-[var(--text-muted)] sm:inline">{format(fromDayKey(hub.today), 'EEEE d MMMM')}</span>
           </div>
           <nav aria-label="Leave ride" className="flex items-center gap-1">
@@ -64,7 +64,7 @@ export default async function RideHubPage({ searchParams }: { searchParams: Prom
               </>
             ) : (
               <div className="tile-empty rounded-2xl px-5 py-6">
-                <p className="text-[15px] font-medium text-[var(--text)]">Nothing planned for today</p>
+                <p className="text-base font-medium text-[var(--text)]">Nothing planned for today</p>
                 <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--text-muted)]">Pick a workout from the library and ride it now, or plan your week in Calendar.</p>
               </div>
             )}

@@ -74,7 +74,7 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
         <StatTile label="Duration" value={formatDuration(metrics.durationSec)} />
         <StatTile label="Training load" value={String(metrics.tss)} unit="TSS" />
         <StatTile label="Intensity factor" value={metrics.intensityFactor.toFixed(2)} unit="IF" />
-        <StatTile label="Normalized power" value={pct(metrics.npPct)} unit={pctUnit} detail="Estimate from targets" />
+        <StatTile label="Normalized power, est." value={pct(metrics.npPct)} unit={pctUnit} />
         <StatTile label="Peak target" value={pct(metrics.maxPct)} unit={pctUnit} />
       </div>
 

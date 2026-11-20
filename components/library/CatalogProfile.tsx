@@ -1,5 +1,4 @@
 import { intensityColor } from '@/lib/intensity-color';
-import { formatDuration } from '@/lib/format-duration';
 import { ZONE_BANDS } from '@/lib/workout-zone-intensity';
 import { wattsForPct, zoneForPct, type CatalogFlatStep } from '@/lib/workout-catalog/metrics';
 
@@ -41,7 +40,7 @@ export function CatalogProfile({
 }) {
   const totalSec = Math.max(1, steps.reduce((sum, step) => sum + step.durationSec, 0));
   const maxPct = Math.max(0, ...steps.map((step) => Math.max(step.startPct, step.endPct)));
-  const top = variant === 'mini' ? 160 : Math.max(130, Math.ceil((maxPct * 1.08) / 10) * 10);
+  const top = variant === 'mini' ? Math.max(125, maxPct * 1.04) : Math.max(130, Math.ceil((maxPct * 1.08) / 10) * 10);
   const x = (sec: number) => (sec / totalSec) * WIDTH;
   const y = (pct: number) => HEIGHT - (Math.min(pct, top) / top) * HEIGHT;
   const gridPcts = variant === 'full' ? [50, 75, 100, 125, 150, 200, 250, 300].filter((pct) => pct < top) : [];
@@ -103,7 +102,7 @@ export function CatalogProfile({
       </span>
       <div aria-hidden="true" className="data pointer-events-none absolute inset-x-0 top-full pt-2 text-[11px] leading-none text-[var(--text-muted)]">
         {ticks.map((tick) => <span key={tick} className="absolute -translate-x-1/2" style={{ left: `${(tick / totalSec) * 100}%` }}>{clockLabel(tick)}</span>)}
-        <span className="absolute right-0">{formatDuration(totalSec)}</span>
+        <span className="absolute right-0">{clockLabel(totalSec)}</span>
       </div>
     </figure>
   );
@@ -113,6 +112,6 @@ function timeTicks(totalSec: number): number[] {
   const steps = [300, 600, 900, 1200, 1800, 3600];
   const interval = steps.find((candidate) => totalSec / candidate <= 7) ?? 3600;
   const ticks: number[] = [];
-  for (let tick = interval; tick < totalSec - interval * 0.4; tick += interval) ticks.push(tick);
+  for (let tick = interval; tick < totalSec - interval * 0.9; tick += interval) ticks.push(tick);
   return ticks;
 }
