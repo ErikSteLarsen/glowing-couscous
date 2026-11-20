@@ -98,7 +98,7 @@ export function RideEntryLinks({ sessionId, from }: { sessionId: number; from?: 
           aria-labelledby={`${panelId}-title`}
           role="region"
           onKeyDown={(event) => { if (event.key === 'Escape') setLaunch('idle'); }}
-          className="absolute right-0 top-full z-40 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-[var(--border-strong)] bg-[var(--raised)] p-4 text-left shadow-[var(--shadow-overlay)] sm:p-5"
+          className="absolute right-0 top-full z-40 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-xl max-sm:fixed max-sm:inset-x-4 max-sm:bottom-20 max-sm:top-auto max-sm:z-50 max-sm:mt-0 max-sm:max-h-[calc(100dvh-7rem)] max-sm:w-auto max-sm:overflow-y-auto border border-[var(--border-strong)] bg-[var(--raised)] p-4 text-left shadow-[var(--shadow-overlay)] sm:p-5"
         >
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -107,7 +107,7 @@ export function RideEntryLinks({ sessionId, from }: { sessionId: number; from?: 
                 {os === 'other' ? 'The desktop app runs on Windows, macOS and Linux.' : `Install the desktop app for ${OS_NAME[os]} to ride with a Bluetooth trainer outside the browser.`}
               </p>
             </div>
-            <button type="button" className={`inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--raised)] hover:text-[var(--text)] ${buttonFocusClassName}`} aria-label="Close install help" onClick={() => setLaunch('idle')}>
+            <button type="button" className={`inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--border)] hover:text-[var(--text)] ${buttonFocusClassName}`} aria-label="Close install help" onClick={() => setLaunch('idle')}>
               <X aria-hidden="true" size={16} strokeWidth={1.6} />
             </button>
           </div>
