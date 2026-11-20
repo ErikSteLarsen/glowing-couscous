@@ -56,7 +56,7 @@ export function rideInstallHints(os: RideOs): string[] {
       ];
     case 'linux':
       return [
-        'AppImage: chmod +x Tempo-Ride-Linux.AppImage, move it to ~/.local/bin, then run it once so it registers the tempo-ride:// link handler.',
+        'AppImage: move it somewhere permanent (e.g. ~/Applications), chmod +x Tempo-Ride-Linux.AppImage, then open it once. It registers the tempo-ride:// link handler itself.',
         'Or install the .deb with sudo apt install ./Tempo-Ride-Linux.deb, which registers the handler for you.',
         'Allow Bluetooth access when asked (your user may need to be in the bluetooth group).',
       ];

@@ -1,4 +1,5 @@
 const { app, BrowserWindow, dialog, powerSaveBlocker, shell } = require('electron')
+const { registerAppImage } = require('./linux-integration.cjs')
 const { readFileSync, renameSync, writeFileSync } = require('node:fs')
 const path = require('node:path')
 const { pathToFileURL } = require('node:url')
@@ -248,6 +249,9 @@ function start(startupLink) {
     if (settings.site) trustedOrigins.add(settings.site)
     for (const origin of settings.origins) trustedOrigins.add(origin)
     recordings = createRecordingStore(path.join(userData, 'recordings'))
+    if (isLinux) {
+      registerAppImage({ iconPath: path.join(__dirname, 'build', 'icon.png') }).catch(() => {})
+    }
     if (startupLink) enqueueLink(startupLink)
     else showMainWindow()
   }).catch((error) => {
