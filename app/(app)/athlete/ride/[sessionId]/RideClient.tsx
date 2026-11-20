@@ -435,18 +435,20 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
   const frame = (stateLabel: string, controls: ReactNode, body: ReactNode, label: string) => (
     <div className="ride-mode flex min-h-dvh flex-col">
       <header className="flex min-h-16 flex-wrap items-center gap-x-4 gap-y-2 border-b border-[var(--border)] px-3 py-2 sm:px-5">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
+        <div className="flex min-w-0 flex-1 basis-40 items-center gap-2">
           {backLink}
           <div className="min-w-0">
             <h1 className="truncate text-[15px] font-medium text-[var(--text)]">{sessionTitle}</h1>
-            <p className="text-[12px] text-[var(--text-muted)]">{stateLabel}</p>
+            <p className="truncate text-[12px] text-[var(--text-muted)]">{stateLabel}</p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-          {deviceChips}
-          {controls}
-          {fullscreenButton}
-        </div>
+        {deviceChips}
+        {controls ? (
+          <div className="flex flex-wrap items-center gap-2 max-xl:basis-full sm:gap-3">
+            {controls}
+            {fullscreenButton}
+          </div>
+        ) : fullscreenButton}
       </header>
       <main id="ride" aria-label={label} className="flex min-h-0 flex-1 flex-col">{body}</main>
     </div>
@@ -631,7 +633,7 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
             </button>
             {!anyDevice ? <p className="text-[13px] text-[var(--text-muted)]">Without a trainer, Tempo times each interval and shows its target. Connect devices any time from the top bar.</p> : null}
           </div>
-          <dl className="mt-auto grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 text-[13px] text-[var(--text-secondary)]">
+          <dl className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 text-[13px] text-[var(--text-secondary)] lg:mt-auto">
             <dt><Kbd>Space</Kbd></dt><dd>Pause or resume</dd>
             <dt><Kbd>N</Kbd></dt><dd>Skip to next interval</dd>
             <dt><Kbd>E</Kbd></dt><dd>Toggle ERG</dd>
@@ -670,8 +672,8 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
       {devices.ergAvailable ? (
         <span className="inline-flex items-center gap-1 text-[13px] font-medium text-[var(--text-secondary)]">ERG<Toggle checked={recording.ergEnabled} onChange={toggleErg} label="ERG mode" /></span>
       ) : null}
-      <span aria-hidden="true" className="hidden h-6 w-px bg-[var(--border)] sm:block" />
-      <button type="button" className={iconControlClassName} onClick={skip} disabled={!currentStep} aria-label="Skip to next interval" aria-keyshortcuts="N" title="Skip interval (N)"><SkipForward aria-hidden="true" size={17} strokeWidth={1.7} /></button>
+      <span aria-hidden="true" className="hidden h-6 w-px bg-[var(--border)] xl:block" />
+      <button type="button" className={`${iconControlClassName} sm:max-xl:ml-auto`} onClick={skip} disabled={!currentStep} aria-label="Skip to next interval" aria-keyshortcuts="N" title="Skip interval (N)"><SkipForward aria-hidden="true" size={17} strokeWidth={1.7} /></button>
       <button type="button" className={`${status === 'paused' ? primaryButtonClassName : secondaryButtonClassName} !h-10 gap-2`} onClick={togglePause} aria-keyshortcuts="Space">
         {status === 'paused' ? <Play aria-hidden="true" size={16} strokeWidth={1.8} /> : <Pause aria-hidden="true" size={16} strokeWidth={1.8} />}
         {status === 'paused' ? 'Resume' : 'Pause'}
@@ -685,12 +687,12 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
   return frame(status === 'paused' ? 'Paused' : anyDevice ? 'Riding' : 'Riding · targets only', controls, (
     <>
       {lostDevices.length ? (
-        <p role="status" className="border-b border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] px-5 py-2 text-[13px] text-[var(--text)]">
+        <p role="status" className="border-b border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] px-5 py-2 text-[13px] text-[var(--text)] sm:px-7">
           {lostDevices.map((role) => ROLE_LABEL[role]).join(' and ')} disconnected. Recording continues; reconnecting automatically…
         </p>
       ) : null}
       {status === 'paused' ? (
-        <p role="status" className="border-b border-[var(--border)] bg-[var(--raised)] px-5 py-2 text-[13px] text-[var(--text)]">Paused. The timer is stopped; press <Kbd>Space</Kbd> to resume.</p>
+        <p role="status" className="border-b border-[var(--border)] bg-[var(--raised)] px-5 py-2 text-[13px] text-[var(--text)] sm:px-7">Paused. The timer is stopped; press <Kbd>Space</Kbd> to resume.</p>
       ) : null}
 
       <div className="grid gap-px bg-[var(--border)] md:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,0.72fr)]">
@@ -763,7 +765,7 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
 
         {/* Heart rate and cadence */}
         <div className="grid gap-px bg-[var(--border)] max-lg:md:col-span-2 max-lg:md:grid-cols-2 lg:grid-rows-2">
-          <section aria-label="Heart rate" className="flex min-w-0 flex-col gap-2 bg-[var(--background)] px-5 py-5 sm:px-7">
+          <section aria-label="Heart rate" className="flex min-w-0 flex-col gap-2 bg-[var(--background)] px-5 pb-5 pt-6 sm:px-7">
             <div className="flex items-center justify-between gap-2">
               <Label>Heart rate</Label>
               {hrZone ? <span className="data rounded-md px-2 py-0.5 text-[13px] font-semibold text-[var(--signal-ink)]" style={{ background: intensityColor(hrZone) }}>I-{hrZone}</span> : null}
@@ -773,7 +775,7 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
             </p>
             {devices.heartRate.status === 'disconnected' && live.heartRateBpm === null ? <p className="mt-auto text-[12px] text-[var(--text-muted)]">No heart-rate sensor</p> : null}
           </section>
-          <section aria-label="Cadence" className="flex min-w-0 flex-col gap-2 bg-[var(--background)] px-5 py-5 sm:px-7">
+          <section aria-label="Cadence" className="flex min-w-0 flex-col gap-2 bg-[var(--background)] px-5 pb-5 pt-6 sm:px-7">
             <Label>Cadence</Label>
             <p className="ride-numeral text-[clamp(3.5rem,min(7vw,13vh),8.25rem)]">
               {display(live.cadenceRpm)}<span className="ml-1.5 text-[0.28em] font-normal tracking-normal text-[var(--text-muted)]">rpm</span>
@@ -799,7 +801,7 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
       </section>
 
       {/* Profile */}
-      <section aria-label="Workout profile" className="flex min-h-[180px] flex-1 flex-col px-5 pb-9 pt-4 sm:px-7">
+      <section aria-label="Workout profile" className="flex min-h-[180px] flex-1 flex-col px-5 pb-8 pt-4 sm:px-7">
         <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? recording.stepIndex : null} className="min-h-[150px] flex-1" />
       </section>
     </>
