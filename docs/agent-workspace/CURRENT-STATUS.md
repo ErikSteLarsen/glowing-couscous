@@ -27,6 +27,19 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   datasource isolation and valid JSON client/response contracts. These checks
   do not certify the full authenticated browser journey or physical devices.
 
+### Tempo Ride desktop shell
+
+- On 2026-11-20, the standalone desktop install, all six Node tests, JavaScript
+  syntax checks, and release workflow lint passed. An unpacked Linux build
+  contained the shell, preload scripts, and bundled start and Bluetooth UI.
+- Repo checks passed on the same branch. `pnpm test` passed 413 tests with seven
+  database cases skipped. `pnpm lint`, `pnpm check:deadcode`, and `pnpm build`
+  passed. The build used a disposable local PostgreSQL database.
+- The Windows cross-build reached NSIS and stopped because Wine is unavailable
+  on this host. Open acceptance includes the Windows and macOS installers, tag
+  release, GUI, OS-level deep links, and the ride page with physical Bluetooth
+  devices.
+
 ## Current implementation
 
 - Tempo prioritizes self-directed personal training in the Athlete workspace.
