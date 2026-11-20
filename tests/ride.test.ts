@@ -460,3 +460,12 @@ test('checkpoint rejects overlapping laps, invalid clock anchors, and impossible
   assert.equal(parseCheckpoint(serializeCheckpoint({ ...rec, activeRemainderMs: 1200 }, 5000)), null);
   assert.equal(parseCheckpoint(serializeCheckpoint(rec, 5000).replace('"savedAtMs":5000', '"savedAtMs":1e999')), null);
 });
+
+test('rider can upload valid telemetry when the total distance exceeds the import limit', () => {
+  const ride = plan();
+  let rec = startRecording(createRecording(7, 'Threshold', ride), ride, 0);
+  rec = tick(rec, ride, 1000, reading(200));
+  const payload = toImportPayload({ ...rec, distanceMeters: 2000001 });
+  const result = validateActivityImport(payload);
+  assert.equal(result.ok, true, result.ok ? '' : result.error);
+});

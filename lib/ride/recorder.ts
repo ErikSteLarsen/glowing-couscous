@@ -381,7 +381,7 @@ export function toImportPayload(recording: RideRecording): RideImportPayload {
     sport: 'BIKING',
     startedAt: new Date(recording.startedAtMs ?? recording.finishedAtMs ?? 0).toISOString(),
     durationSec,
-    distanceMeters: recording.distanceMeters > 0 ? Math.round(recording.distanceMeters) : null,
+    distanceMeters: inRange(Math.round(recording.distanceMeters), 1, 2000000) ?? null,
     elevationGainMeters: null,
     plannedSessionId: recording.sessionId,
     points,
