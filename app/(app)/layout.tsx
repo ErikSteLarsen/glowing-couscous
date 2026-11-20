@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/AppShell';
+import { TimeZoneSync } from '@/components/TimeZoneSync';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 
 export default async function SignedInLayout({ children }: { children: React.ReactNode }) {
@@ -10,6 +11,7 @@ export default async function SignedInLayout({ children }: { children: React.Rea
 
   return (
     <AppShell user={user}>
+      <TimeZoneSync />
       {children}
     </AppShell>
   );
