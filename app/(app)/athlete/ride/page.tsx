@@ -10,6 +10,7 @@ import { compactSecondaryButtonClassName, ghostButtonClassName, primaryButtonCla
 import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
 import { accountService } from '@/lib/account-service';
 import { getCurrentUser } from '@/lib/auth-session';
+import { getRequestTimeZone } from '@/lib/request-time-zone';
 import { formatDuration } from '@/lib/format-duration';
 import { rideHubService, type RideHubRecent, type RideHubSession } from '@/lib/ride-hub-service';
 import { fromDayKey } from '@/lib/training-load';
@@ -25,7 +26,7 @@ export default async function RideHubPage({ searchParams }: { searchParams: Prom
   const user = await getCurrentUser();
   if (!user || user.role !== 'ATHLETE') redirect('/login');
 
-  const [hub, account, params] = await Promise.all([rideHubService.load(user.id), accountService.getAccount(user.id), searchParams]);
+  const [hub, account, params] = await Promise.all([getRequestTimeZone().then((timeZone) => rideHubService.load(user.id, { timeZone })), accountService.getAccount(user.id), searchParams]);
   const ftp = account?.performanceProfile.cycling.ftpWatts ?? null;
   const [firstToday, ...laterToday] = hub.todaySessions;
 

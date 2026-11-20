@@ -14,6 +14,7 @@ import { homeActivityLoadAvailable, homeActivityReadout, summarizeHomeActivities
 import { createSessionEditorDraftFromPersisted } from './session-editor.ts';
 import { plannedMetrics } from './training-load-service.ts';
 import { addDayKeys, classifyCompliance, fromDayKey, summarizeWeeks, toDayKey, type WeekSession } from './training-load.ts';
+import { endOfDayInZone, startOfDayInZone, todayInZone } from './user-time.ts';
 import { parseCalendarDay } from './calendar-navigation.ts';
 import { ACTIVITY_PAGE_SIZE, parseActivityFilters, type ActivityFilters } from './activity-navigation.ts';
 import { getSessionDisplayStatus, getSessionStatusAction, SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
@@ -104,6 +105,9 @@ function calendarDayDistance(from: string, to: string) {
 }
 
 export function createAthleteService({ db = prisma, now = () => new Date() }: AthleteServiceDeps = {}) {
+  /** The user's calendar day; without a zone, the server clock's local day. */
+  const currentDayKey = (timeZone?: string) => (timeZone ? todayInZone(timeZone, now()) : toDayKey(now()));
+
   function mapSessionSummary(session: {
     id: number;
     title: string;
@@ -295,9 +299,9 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       };
     },
 
-    async loadHomeDashboard(userId: number) {
-      const today = now();
-      const todayKey = toDayKey(today);
+    async loadHomeDashboard(userId: number, { timeZone }: { timeZone?: string } = {}) {
+      const todayKey = currentDayKey(timeZone);
+      const today = fromDayKey(todayKey);
       const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
       const currentWeekEnd = endOfWeek(today, { weekStartsOn: 1 });
       // Late in the week, the next few days reach into next week.
@@ -367,7 +371,13 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       const overviewCards = readOverviewCardsFromPrefsJson(athlete.prefsJson);
 
       const completedActivities = await db.activity.findMany({
-        where: { athleteId: userId, completedAt: { gte: currentWeekStart, lte: currentWeekEnd } },
+        where: {
+          athleteId: userId,
+          // Completion times are instants, so the week is bounded in the user's zone.
+          completedAt: timeZone
+            ? { gte: startOfDayInZone(format(currentWeekStart, 'yyyy-MM-dd'), timeZone), lte: endOfDayInZone(format(currentWeekEnd, 'yyyy-MM-dd'), timeZone) }
+            : { gte: currentWeekStart, lte: currentWeekEnd },
+        },
         select: { id: true, sessionId: true, completedAt: true, durationSec: true, tss: true, metricsSource: true, zoneDistributionJson: true, session: { select: { title: true } } },
         orderBy: [{ completedAt: 'desc' }, { id: 'desc' }],
       });
@@ -499,12 +509,12 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       return { profile: null, latestRequest };
     },
 
-    async loadCalendarView(userId: number, dateRef: Date | string, view: 'week' | 'month' = 'week') {
-      const now = new Date();
+    async loadCalendarView(userId: number, dateRef: Date | string, view: 'week' | 'month' = 'week', { timeZone }: { timeZone?: string } = {}) {
+      const today = fromDayKey(currentDayKey(timeZone));
       // A yyyy-MM-dd reference is a local calendar day, never a UTC instant.
       const dayRef = parseCalendarDay(dateRef);
       const parsedReference = dayRef ? fromDayKey(dayRef) : new Date(dateRef);
-      const referenceDate = Number.isNaN(parsedReference.getTime()) ? now : parsedReference;
+      const referenceDate = Number.isNaN(parsedReference.getTime()) ? today : parsedReference;
       const resolvedView = view === 'month' ? 'month' : 'week';
       const periodStart =
         resolvedView === 'month'
@@ -575,7 +585,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         .filter((s): s is typeof s & { date: Date } => s.date !== null)
         .map((session) => ({
           ...mapSessionSummary(session, {
-            today: now,
+            today,
             includeIntensityTimeline: resolvedView === 'week',
             heartRateMaxBpm,
           }),
@@ -589,7 +599,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         isCurrentMonth:
           date.getMonth() === periodStart.getMonth() &&
           date.getFullYear() === periodStart.getFullYear(),
-        isToday: isSameDay(date, now),
+        isToday: isSameDay(date, today),
         sessions: sessions.filter((session) => isSameDay(session.date, date)),
         events: eventsByDay.get(format(date, 'yyyy-MM-dd')) ?? [],
       });
@@ -704,7 +714,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       });
     },
 
-    async loadSessionDetail(userId: number, sessionId: number) {
+    async loadSessionDetail(userId: number, sessionId: number, { timeZone }: { timeZone?: string } = {}) {
       if (!Number.isInteger(sessionId) || sessionId <= 0) {
         return null;
       }
@@ -755,7 +765,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         return null;
       }
 
-      const summary = mapSessionSummary({ ...session, date: session.date });
+      const summary = mapSessionSummary({ ...session, date: session.date }, { today: fromDayKey(currentDayKey(timeZone)) });
       const sourceWorkout = session.assignments[0]?.sourceSession;
       const editableSourceWorkout = sourceWorkout
         && sourceWorkout.athleteId === userId

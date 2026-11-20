@@ -4,7 +4,8 @@ import { PageShell } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { parseCalendarDay, parseCalendarView } from '@/lib/calendar-navigation';
-import { toDayKey } from '@/lib/training-load';
+import { getRequestTimeZone } from '@/lib/request-time-zone';
+import { todayInZone } from '@/lib/user-time';
 import { AthleteCalendar, type CalendarDay, type CalendarWeek } from './AthleteCalendar';
 
 export const metadata: Metadata = { title: 'Calendar' };
@@ -19,10 +20,11 @@ export default async function AthleteCalendarPage({
 
   const { weekStart, date, view } = await searchParams;
   const selectedView = parseCalendarView(view);
-  const today = toDayKey(new Date());
+  const timeZone = await getRequestTimeZone();
+  const today = todayInZone(timeZone);
   // yyyy-MM-dd is a local calendar day; anything else falls back to today.
   const day = parseCalendarDay(date) ?? parseCalendarDay(weekStart) ?? today;
-  const calendar = await athleteService.loadCalendarView(user.id, day, selectedView);
+  const calendar = await athleteService.loadCalendarView(user.id, day, selectedView, { timeZone });
   if (!calendar) redirect('/athlete/find-coach');
 
   const toDay = (entry: (typeof calendar.days)[number]): CalendarDay => ({

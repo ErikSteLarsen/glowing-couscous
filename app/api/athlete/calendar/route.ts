@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAthlete } from '@/lib/api-auth';
 import { athleteService } from '@/lib/athlete-service';
+import { getRequestTimeZone } from '@/lib/request-time-zone';
+import { todayInZone } from '@/lib/user-time';
 
 export async function GET(req: NextRequest) {
   const { user, error } = await requireAthlete();
   if (error) return error;
 
   const view = req.nextUrl.searchParams.get('view') === 'month' ? 'month' : 'week';
-  const date = req.nextUrl.searchParams.get('date') ?? new Date().toISOString();
-  const calendar = await athleteService.loadCalendarView(user.id, date, view);
+  const timeZone = await getRequestTimeZone();
+  const date = req.nextUrl.searchParams.get('date') ?? todayInZone(timeZone);
+  const calendar = await athleteService.loadCalendarView(user.id, date, view, { timeZone });
   if (!calendar) {
     return NextResponse.json({ error: 'Calendar unavailable' }, { status: 404 });
   }

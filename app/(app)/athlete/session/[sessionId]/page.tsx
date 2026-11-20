@@ -16,7 +16,9 @@ import { ManualActivityCorrectionForm, type ManualActivityCorrectionDraft } from
 import { ShareLinkButton } from '@/components/ShareLinkButton';
 import { accountService } from '@/lib/account-service';
 import { formatSessionWhen } from '@/lib/session-display';
+import { getRequestTimeZone } from '@/lib/request-time-zone';
 import { toDayKey } from '@/lib/training-load';
+import { todayInZone } from '@/lib/user-time';
 import { SessionRescheduleAction } from '@/components/SessionRescheduleAction';
 import { ImportedActivityMeasurements } from '@/components/ImportedActivityMeasurements';
 import { SessionWorkoutOverview } from '@/components/SessionWorkoutOverview';
@@ -39,7 +41,8 @@ export default async function AthleteSessionPage({
     notFound();
   }
 
-  const [detail, account] = await Promise.all([athleteService.loadSessionDetail(user.id, parsedSessionId), accountService.getAccount(user.id)]);
+  const timeZone = await getRequestTimeZone();
+  const [detail, account] = await Promise.all([athleteService.loadSessionDetail(user.id, parsedSessionId, { timeZone }), accountService.getAccount(user.id)]);
   if (!detail) {
     return (
       <PageShell size="wide">
@@ -135,7 +138,7 @@ export default async function AthleteSessionPage({
                 sessionId={detail.session.id}
                 title={detail.session.title}
                 currentDay={toDayKey(detail.session.date)}
-                today={toDayKey(new Date())}
+                today={todayInZone(timeZone)}
               />
             ) : null}
             {['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'].includes(detail.session.metricsSource ?? '') ? null : <ShareLinkButton sourceKind="session" sourceId={detail.session.id} />}

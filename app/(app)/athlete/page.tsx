@@ -30,12 +30,13 @@ import { signed } from '@/lib/chart-format';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
 import { trainingLoadService } from '@/lib/training-load-service';
-import { formZoneLabels, type FormZone } from '@/lib/training-load';
+import { formZoneLabels, fromDayKey, type FormZone } from '@/lib/training-load';
+import { getRequestTimeZone } from '@/lib/request-time-zone';
+import { hourInZone, todayInZone } from '@/lib/user-time';
 
 export const metadata: Metadata = { title: 'Home' };
 
-function greetingFor(date: Date) {
-  const hour = date.getHours();
+function greetingFor(hour: number) {
   if (hour < 5) return 'Good evening';
   if (hour < 12) return 'Good morning';
   if (hour < 18) return 'Good afternoon';
@@ -73,14 +74,15 @@ export default async function AthletePage() {
   if (!user) redirect('/login');
   if (!hasAppRole(user)) redirect('/setup');
 
+  const timeZone = await getRequestTimeZone();
   const [dashboard, load, account] = await Promise.all([
-    athleteService.loadHomeDashboard(user.id),
-    trainingLoadService.loadOverview(user.id),
+    athleteService.loadHomeDashboard(user.id, { timeZone }),
+    trainingLoadService.loadOverview(user.id, { now: fromDayKey(todayInZone(timeZone)) }),
     accountService.getAccount(user.id),
   ]);
   if (!dashboard || !account) redirect('/login');
 
-  const now = new Date();
+  const today = fromDayKey(dashboard.todayKey);
   const firstName = dashboard.athlete.name.split(' ')[0] || dashboard.athlete.name;
   const nextAction = dashboard.todaySessions.find((session) => session.status !== 'completed' && session.status !== 'skipped') ?? null;
   const doneToday = dashboard.todaySessions.filter((session) => session.status === 'completed');
@@ -109,8 +111,8 @@ export default async function AthletePage() {
   return (
     <PageShell size="wall">
       <TopBar
-        eyebrow={`${format(now, 'EEEE d MMMM')} · Week ${getISOWeek(now)}`}
-        title={`${greetingFor(now)}, ${firstName}`}
+        eyebrow={`${format(today, 'EEEE d MMMM')} · Week ${getISOWeek(today)}`}
+        title={`${greetingFor(hourInZone(timeZone))}, ${firstName}`}
         actions={<Link href="/athlete/events" className={ghostButtonClassName('default')}>Events</Link>}
       />
       <UnsavedRidesNotice />

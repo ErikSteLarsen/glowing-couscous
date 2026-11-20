@@ -2,6 +2,7 @@ import { prisma } from './prisma.ts';
 import { SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
 import { createSessionEditorDraftFromPersisted, deriveSessionEditorMetrics } from './session-editor.ts';
 import { addDayKeys, toDayKey } from './training-load.ts';
+import { todayInZone } from './user-time.ts';
 import { workoutCatalog } from './workout-catalog/index.ts';
 import type { CatalogWorkout } from './workout-catalog/types.ts';
 
@@ -37,12 +38,13 @@ function utcMidnight(day: string) {
 
 /**
  * Reads the Ride home: open bike sessions for today and the last two weeks, and the
- * latest completed rides. Sessions are stored at UTC midnight of their local day.
+ * latest completed rides. Sessions are stored at UTC midnight of their local day;
+ * today is the rider's day in their zone (the server's local day when omitted).
  */
 export function createRideHubService({ db = prisma, now = () => new Date(), catalog = workoutCatalog }: RideHubDeps = {}) {
   return {
-    async load(athleteId: number) {
-      const today = toDayKey(now());
+    async load(athleteId: number, { timeZone }: { timeZone?: string } = {}) {
+      const today = timeZone ? todayInZone(timeZone, now()) : toDayKey(now());
       const tomorrow = addDayKeys(today, 1);
       const [open, recent] = await Promise.all([
         db.session.findMany({
