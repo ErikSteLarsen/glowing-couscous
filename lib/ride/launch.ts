@@ -65,6 +65,10 @@ export function rideInstallHints(os: RideOs): string[] {
   }
 }
 
+export function rideSessionPath(sessionId: number, from?: string): string {
+  return `/athlete/ride/${sessionId}${from ? `?from=${encodeURIComponent(from)}` : ''}`;
+}
+
 export function rideAppLink(rideUrl: string): string {
   return `tempo-ride://open?url=${encodeURIComponent(rideUrl)}`;
 }

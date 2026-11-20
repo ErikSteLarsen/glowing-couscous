@@ -518,3 +518,12 @@ test('a long suspended ride stops at the upload duration limit with a valid payl
   const payload = validateActivityImport(toImportPayload(finished));
   assert.equal(payload.ok, true, payload.ok ? '' : payload.error);
 });
+
+test('desktop launch preserves the same encoded return destination as the browser ride', async () => {
+  const { rideAppLink, rideSessionPath } = await import('../lib/ride/launch.ts');
+  const path = rideSessionPath(7, 'home');
+  assert.equal(path, '/athlete/ride/7?from=home');
+  const url = new URL(rideAppLink(new URL(path, 'https://tempo.example').href));
+  assert.equal(url.searchParams.get('url'), 'https://tempo.example/athlete/ride/7?from=home');
+  assert.equal(rideSessionPath(7, 'home&device=hr'), '/athlete/ride/7?from=home%26device%3Dhr');
+});

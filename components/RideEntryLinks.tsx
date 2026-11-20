@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { Download, MonitorCheck, X } from 'lucide-react';
 import { ActionLink, buttonFocusClassName, compactPrimaryButtonClassName, compactSecondaryButtonClassName } from '@/components/ui';
-import { detectRideOs, rideAppLink, rideDownloadBase, rideDownloads, rideInstallHints, RIDE_APP_LAUNCH_TIMEOUT_MS, type RideOs } from '@/lib/ride/launch';
+import { detectRideOs, rideAppLink, rideDownloadBase, rideDownloads, rideInstallHints, rideSessionPath, RIDE_APP_LAUNCH_TIMEOUT_MS, type RideOs } from '@/lib/ride/launch';
 
 const subscribeNever = () => () => undefined;
 const OS_NAME: Record<RideOs, string> = { windows: 'Windows', macos: 'macOS', linux: 'Linux', other: 'your computer' };
@@ -25,7 +25,7 @@ export function RideEntryLinks({ sessionId, from }: { sessionId: number; from?: 
   const [launch, setLaunch] = useState<LaunchState>('idle');
   const cleanupRef = useRef<(() => void) | null>(null);
   const panelId = useId();
-  const ridePath = `/athlete/ride/${sessionId}${from ? `?from=${from}` : ''}`;
+  const ridePath = rideSessionPath(sessionId, from);
 
   useEffect(() => () => cleanupRef.current?.(), []);
 
@@ -58,8 +58,8 @@ export function RideEntryLinks({ sessionId, from }: { sessionId: number; from?: 
     window.addEventListener('pagehide', succeed);
     document.addEventListener('visibilitychange', onVisibility);
     cleanupRef.current = cleanup;
-    window.location.href = rideAppLink(`${origin}/athlete/ride/${sessionId}`);
-  }, [origin, sessionId]);
+    window.location.href = rideAppLink(new URL(ridePath, origin).href);
+  }, [origin, ridePath]);
 
   if (isDesktop) {
     return (
