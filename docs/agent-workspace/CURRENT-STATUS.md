@@ -143,12 +143,18 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   erasure and cross-device draft deletion are not implied by account deletion.
 - Shared workout-to-routine intake uses two service saves. A failed routine save
   can leave its recipient-owned library copy; this flow is not atomic.
-- Per-athlete time zones are not implemented. Calendar dates use server-local
-  time except source-provenance rules on the separate legacy summary imports.
+- "Today" and week bounds follow the browser time zone (`tempo-tz` cookie,
+  `lib/user-time.ts`) on Home, Calendar, Ride home, session detail, planners,
+  events and activity logging. Coach-only services and the training-load
+  completion day for activities without a source offset still use the server
+  zone. A first visit renders once in UTC before the cookie refresh.
 - Live countdown/progress is browser-local guidance, restores paused, does not
   sync across devices and does not record sensor telemetry or auto-completion.
-- Open in Tempo Ride from the library and the desktop app's default page
-  (`/athlete/ride`) still need desktop-app acceptance.
+- Linux deep links (2026-11-20): the AppImage registers `tempo-ride://` on first
+  launch and `xdg-open` launched it with a link on Hyprland; the .deb rewrites
+  its desktop Exec to `/usr/bin/tempo-ride` because xdg-open cannot parse the
+  quoted `/opt/Tempo Ride` path. Windows/macOS link handoff and an in-browser
+  click into the installed app remain unverified.
 - Tempo Ride still needs browser and physical-device acceptance for reconnect,
   FTMS Free Ride support, wake lock, and desktop picker/deep-link behavior.
   A fully suspended renderer can recover elapsed time and sample slots, with gaps
