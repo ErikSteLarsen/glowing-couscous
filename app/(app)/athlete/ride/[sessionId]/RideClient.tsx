@@ -161,7 +161,10 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
   const recordingRef = useRef(recording);
   const lastCheckpointRef = useRef(0);
   const lastCommandRef = useRef<{ stepIndex: number; watts: number | null; erg: boolean } | null>(null);
-  const uncertainSaveRef = useRef(false);
+  const pendingSaveRef = useRef<AbortController | null>(null);
+  const savedRef = useRef(false);
+
+  useEffect(() => () => pendingSaveRef.current?.abort(), []);
 
   const commit = useCallback((next: RideRecording, persist = false) => {
     recordingRef.current = next;
@@ -294,57 +297,73 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
   }, []);
 
   const save = useCallback(async (): Promise<void> => {
-    for (let attempt = 1; ; attempt += 1) {
-      setSaveState({ kind: 'saving', attempt });
-      let response: Response | null = null;
-      try {
-        response = await fetch('/api/activity-imports', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(toImportPayload(recordingRef.current)),
+    const current = recordingRef.current;
+    if (pendingSaveRef.current || savedRef.current || current.status !== 'finished' || current.timerSec === 0) return;
+    const operation = new AbortController();
+    pendingSaveRef.current = operation;
+    const { signal } = operation;
+
+    try {
+      const body = JSON.stringify(toImportPayload(current));
+      for (let attempt = 1; !signal.aborted; attempt += 1) {
+        setSaveState({ kind: 'saving', attempt });
+        let response: Response | null = null;
+        try {
+          response = await fetch('/api/activity-imports', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+            signal,
+          });
+        } catch {
+          // A lost response can be retried with the same import fingerprint.
+        }
+        const payload = response ? await response.json().catch(() => null) : null;
+        if (signal.aborted) return;
+        if (response?.ok && payload?.sessionId === sessionId) {
+          savedRef.current = true;
+          clearRideCheckpoint(sessionId);
+          setSaveState({ kind: 'saved', note: payload.duplicate === true ? 'Tempo already had this ride.' : null });
+          return;
+        }
+        const retryable = !response || response.status >= 500 || response.status === 429;
+        if (!retryable || attempt >= SAVE_RETRY_LIMIT) {
+          const error = response?.ok ? 'Tempo could not confirm the save for this session.'
+            : typeof payload?.error === 'string' ? payload.error
+              : response ? 'Tempo could not save this ride.' : 'Could not reach Tempo.';
+          setSaveState({ kind: 'failed', error: `${error} Your ride is kept on this device.` });
+          return;
+        }
+        await new Promise<void>((resolve) => {
+          const done = () => {
+            window.clearTimeout(timer);
+            signal.removeEventListener('abort', done);
+            resolve();
+          };
+          const timer = window.setTimeout(done, 1000 * 2 ** attempt);
+          signal.addEventListener('abort', done, { once: true });
         });
-      } catch {
-        uncertainSaveRef.current = true;
       }
-      if (response?.ok) {
-        clearRideCheckpoint(sessionId);
-        setSaveState({ kind: 'saved', note: null });
-        return;
-      }
-      const payload = response ? await response.json().catch(() => ({})) as { error?: string } : {};
-      if (response?.status === 409 && (payload.error?.includes('already been imported') || uncertainSaveRef.current)) {
-        // An earlier attempt reached the server even though its response was lost.
-        clearRideCheckpoint(sessionId);
-        setSaveState({ kind: 'saved', note: 'Tempo already had this ride.' });
-        return;
-      }
-      const retryable = !response || response.status >= 500 || response.status === 429;
-      if (response && response.status >= 500) uncertainSaveRef.current = true;
-      if (!retryable || attempt >= SAVE_RETRY_LIMIT) {
-        setSaveState({
-          kind: 'failed',
-          error: response
-            ? `${payload.error ?? 'Tempo could not save this ride.'} Your ride is kept on this device.`
-            : 'Could not reach Tempo. Your ride is kept on this device; try again when you are online.',
-        });
-        return;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempt));
+    } catch {
+      setSaveState({ kind: 'failed', error: 'Tempo could not prepare the upload. Your ride is kept on this device.' });
+    } finally {
+      pendingSaveRef.current = null;
     }
   }, [sessionId]);
 
   const finish = useCallback(() => {
+    const current = recordingRef.current;
+    if (current.status !== 'running' && current.status !== 'paused') return;
     const now = Date.now();
-    const finished = finishRecording(recordingRef.current, plan, now, manager.getReading(now));
+    const finished = finishRecording(current, plan, now, manager.getReading(now));
     commit(finished, true);
-    manager.setCommand({ mode: 'free' });
     if (finished.timerSec > 0) void save();
   }, [commit, manager, plan, save]);
 
   const discard = useCallback(() => {
+    if (pendingSaveRef.current || savedRef.current) return;
     clearRideCheckpoint(sessionId);
     setRecovered(null);
-    uncertainSaveRef.current = false;
     setSaveState({ kind: 'idle' });
     commit(createRecording(sessionId, sessionTitle, plan));
   }, [commit, plan, sessionId, sessionTitle]);
@@ -490,7 +509,7 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
           <div className="flex flex-wrap items-center gap-3">
             {saveButton}
             <button type="button" className={secondaryButtonClassName} onClick={() => downloadRideBackup(recording)}>Download backup</button>
-            {saveState.kind !== 'saved' ? <button type="button" className={secondaryButtonClassName} onClick={() => { if (window.confirm('Discard this ride without saving?')) discard(); }}>Discard</button> : null}
+            {saveState.kind !== 'saved' ? <button type="button" className={secondaryButtonClassName} disabled={saveState.kind === 'saving'} onClick={() => { if (window.confirm('Discard this ride without saving?')) discard(); }}>Discard</button> : null}
           </div>
         </div>
 
