@@ -11,6 +11,7 @@ import { accountService } from '@/lib/account-service';
 import { createExecutionSteps } from '@/lib/athlete-execution';
 import { formatSessionWhen } from '@/lib/session-display';
 import { LiveSessionClient } from './LiveSessionClient';
+import { RideEntryLinks } from '@/components/RideEntryLinks';
 
 export default async function AthleteLivePage({
   params,
@@ -57,7 +58,12 @@ export default async function AthleteLivePage({
     <PageShell size="wide">
       <TopBar
         title={`Execute ${detail.session.title}`}
-        actions={<ActionLink href={`/athlete/session/${detail.session.id}?from=${sessionOrigin}`} tone="secondary">Back to session</ActionLink>}
+        actions={
+          <>
+            <ActionLink href={`/athlete/session/${detail.session.id}?from=${sessionOrigin}`} tone="secondary">Back to session</ActionLink>
+            {detail.session.sport === 'BIKING' && detail.session.status !== 'completed' ? <RideEntryLinks sessionId={detail.session.id} from={sessionOrigin} /> : null}
+          </>
+        }
       />
 
       <div className="flex flex-wrap items-center gap-3 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">

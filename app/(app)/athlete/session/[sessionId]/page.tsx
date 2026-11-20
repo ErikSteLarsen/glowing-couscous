@@ -20,6 +20,7 @@ import { toDayKey } from '@/lib/training-load';
 import { SessionRescheduleAction } from '@/components/SessionRescheduleAction';
 import { ImportedActivityMeasurements } from '@/components/ImportedActivityMeasurements';
 import { SessionWorkoutOverview } from '@/components/SessionWorkoutOverview';
+import { RideEntryLinks } from '@/components/RideEntryLinks';
 
 export default async function AthleteSessionPage({
   params,
@@ -125,6 +126,9 @@ export default async function AthleteSessionPage({
               {returnTarget.label}
             </ActionLink>
             {isSkipped ? null : <ActionLink href={sessionActionHref}>{sessionAction}</ActionLink>}
+            {detail.session.sport === 'BIKING' && !isSkipped && !importedWithoutWorkout && detail.session.status !== 'completed' ? (
+              <RideEntryLinks sessionId={detail.session.id} from={sessionOrigin} />
+            ) : null}
             {isOverdue ? (
               <SessionRescheduleAction
                 mode="dialog"

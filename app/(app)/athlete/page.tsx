@@ -22,6 +22,7 @@ import {
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { accountService } from '@/lib/account-service';
 import { HomeTrainingSetup } from '@/components/HomeTrainingSetup';
+import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
 import { parsePrefsJson } from '@/lib/overview-preferences';
 import { parseTrainingSports } from '@/lib/training-setup';
 import { athleteService } from '@/lib/athlete-service';
@@ -112,6 +113,7 @@ export default async function AthletePage() {
         title={`${greetingFor(now)}, ${firstName}`}
         actions={<Link href="/athlete/events" className={ghostButtonClassName('default')}>Events</Link>}
       />
+      <UnsavedRidesNotice />
       <HomeTrainingSetup key={account.updatedAt.toISOString()} profile={account.performanceProfile} sports={parseTrainingSports(parsePrefsJson(account.prefsJson).trainingSports)} revision={account.updatedAt.toISOString()} />
 
       {dashboard.nextEvent ? (
