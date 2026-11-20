@@ -135,7 +135,11 @@ function closeLap(recording: RideRecording): RideRecording {
 }
 
 /** Ends the current step (or lap) and moves to the next plan step. */
-export function advanceStep(recording: RideRecording, plan: RidePlan): RideRecording {
+export function advanceStep(recording: RideRecording, plan: RidePlan, nowMs?: number, latest?: RideReading): RideRecording {
+  if (nowMs !== undefined) {
+    const caughtUp = tick(recording, plan, nowMs, latest);
+    return caughtUp.stepIndex === recording.stepIndex ? advanceStep(caughtUp, plan) : caughtUp;
+  }
   if (recording.stepIndex >= plan.steps.length || recording.status === 'finished') return recording;
   let next = closeLap(recording);
   next = skipZeroLengthSteps({ ...next, stepIndex: next.stepIndex + 1, stepElapsedSec: 0 }, plan);

@@ -258,7 +258,10 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
     else if (current.status === 'paused') commit(resumeRecording(current, plan, now), true);
   }, [commit, manager, plan]);
 
-  const skip = useCallback(() => commit(advanceStep(recordingRef.current, plan), true), [commit, plan]);
+  const skip = useCallback(() => {
+    const now = Date.now();
+    commit(advanceStep(recordingRef.current, plan, now, manager.getReading(now)), true);
+  }, [commit, manager, plan]);
   const bias = useCallback((delta: number) => commit(setBias(recordingRef.current, recordingRef.current.biasPct + delta), true), [commit]);
   const toggleErg = useCallback(() => commit(setErg(recordingRef.current, !recordingRef.current.ergEnabled), true), [commit]);
 

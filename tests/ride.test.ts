@@ -422,3 +422,16 @@ test('cadence decays to zero when crank notifications stop and clears on disconn
   csc.notify(0x02, 12, 0, 0, 12);
   assert.equal(manager.getReading().cadenceRpm, null);
 });
+
+test('skipping after a delayed tick counts elapsed seconds in the step they were ridden', () => {
+  const ride = plan();
+  const rec = startRecording(createRecording(7, 'Threshold', ride), ride, 0);
+  const skipped = advanceStep(rec, ride, 3000, reading(100));
+  assert.equal(skipped.stepIndex, 1);
+  assert.equal(skipped.stepElapsedSec, 0);
+  assert.deepEqual(skipped.laps[0], { stepIndex: 0, startSec: 0, endSec: 3 });
+
+  const crossed = advanceStep(rec, ride, 5000, reading(100));
+  assert.equal(crossed.stepIndex, 1);
+  assert.equal(crossed.stepElapsedSec, 1);
+});
