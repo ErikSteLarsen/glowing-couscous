@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { cadenceFromCrank, parseCscMeasurement, parseCyclingPowerMeasurement, parseHeartRateMeasurement, parseIndoorBikeData, speedFromWheel } from '../lib/ride/ble-parsers.ts';
-import { encodeRequestControl, encodeReset, encodeSetIndoorBikeSimulation, encodeSetTargetPower, encodeStartOrResume, encodeStopOrPause, parseControlPointResponse } from '../lib/ride/ftms-control.ts';
+import { encodeRequestControl, encodeReset, encodeSetIndoorBikeSimulation, encodeSetTargetPower, encodeSetTargetResistance, encodeStartOrResume, encodeStopOrPause, parseControlPointResponse } from '../lib/ride/ftms-control.ts';
 import { applyBias, createRidePlan, ergTargetChanged, planHasPowerTargets, targetWattsAt } from '../lib/ride/ride-plan.ts';
 import {
   addReading, advanceStep, createRecording, downsampleSamples, finishRecording, normalizedPower, parseCheckpoint, pauseRecording,
@@ -92,11 +92,17 @@ test('FTMS control point encoders and responses', () => {
   assert.deepEqual([...encodeStopOrPause('stop')], [0x08, 0x01]);
   assert.deepEqual([...encodeStopOrPause('pause')], [0x08, 0x02]);
   assert.deepEqual([...encodeSetTargetPower(300)], [0x05, 0x2c, 0x01]);
-  assert.deepEqual([...encodeSetTargetPower(-5)], [0x05, 0x00, 0x00]);
+  assert.deepEqual([...encodeSetTargetPower(-5)], [0x05, 0xfb, 0xff]);
+  assert.deepEqual([...encodeSetTargetPower(40000)], [0x05, 0xff, 0x7f]);
   assert.deepEqual([...encodeSetIndoorBikeSimulation({ gradePercent: -1.5 })], [0x11, 0x00, 0x00, 0x6a, 0xff, 40, 51]);
   assert.deepEqual(parseControlPointResponse(bytes(0x80, 0x05, 0x01)), { requestOpcode: 0x05, result: 'success' });
   assert.deepEqual(parseControlPointResponse(bytes(0x80, 0x00, 0x05)), { requestOpcode: 0x00, result: 'control-not-permitted' });
   assert.equal(parseControlPointResponse(bytes(0x05, 0x00)), null);
+});
+
+test('FTMS target resistance is a signed little-endian value in tenths', () => {
+  assert.deepEqual([...encodeSetTargetResistance(30)], [0x04, 0x2c, 0x01]);
+  assert.deepEqual([...encodeSetTargetResistance(-1.5)], [0x04, 0xf1, 0xff]);
 });
 
 function profileWithFtp(ftpWatts: number | null) {

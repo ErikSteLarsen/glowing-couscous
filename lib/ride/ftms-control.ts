@@ -42,15 +42,21 @@ export function encodeStopOrPause(mode: 'stop' | 'pause'): Uint8Array {
   return Uint8Array.of(FTMS_OPCODES.stopOrPause, mode === 'stop' ? 0x01 : 0x02);
 }
 
-/** ERG target in watts as uint16. */
-export function encodeSetTargetPower(watts: number): Uint8Array {
-  const value = clampInt(watts, 0, 0xffff);
-  return Uint8Array.of(FTMS_OPCODES.setTargetPower, value & 0xff, value >> 8);
+function encodeSignedTarget(opcode: number, target: number): Uint8Array {
+  const bytes = new Uint8Array(3);
+  bytes[0] = opcode;
+  new DataView(bytes.buffer).setInt16(1, clampInt(target, -32768, 32767), true);
+  return bytes;
 }
 
-/** Target resistance level, uint8 with 0.1 resolution (unitless). */
+/** ERG target in watts as sint16. */
+export function encodeSetTargetPower(watts: number): Uint8Array {
+  return encodeSignedTarget(FTMS_OPCODES.setTargetPower, watts);
+}
+
+/** Target resistance level as sint16, in tenths. */
 export function encodeSetTargetResistance(level: number): Uint8Array {
-  return Uint8Array.of(FTMS_OPCODES.setTargetResistance, clampInt(level * 10, 0, 0xff));
+  return encodeSignedTarget(FTMS_OPCODES.setTargetResistance, level * 10);
 }
 
 export type IndoorBikeSimulation = {
