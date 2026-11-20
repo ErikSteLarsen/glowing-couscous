@@ -291,8 +291,13 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
         Object.assign(activityData, { analysis: { create: newActivityAnalysisJob(activityData.telemetryJson, value.durationSec, user.performanceProfileJson ?? '{}') } });
       }
 
-      const existing = await db.activity.findFirst({ where: { athleteId: userId, importFingerprint: fingerprint }, select: { id: true, sessionId: true } });
-      if (existing) return { ok: true, activityId: existing.id as number, sessionId: existing.sessionId as number, duplicate: true };
+      const findDuplicate = async (): Promise<ActivityImportResult | null> => {
+        const existing = await db.activity.findFirst({ where: { athleteId: userId, importFingerprint: fingerprint }, select: { id: true, sessionId: true } });
+        if (!existing) return null;
+        return { ok: true, activityId: existing.id as number, sessionId: existing.sessionId as number, duplicate: true };
+      };
+      const existing = await findDuplicate();
+      if (existing) return existing;
 
       try {
         const result = await db.$transaction(async (transaction) => {
@@ -352,9 +357,14 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
           });
           return { ok: true as const, activityId: session.activity.id, sessionId: session.id };
         });
-        return result.ok ? { ...result, duplicate: false } : result;
+        if (result.ok) return { ...result, duplicate: false };
+        if (!provenance.sourceProvider && result.status === 409) return await findDuplicate() ?? result;
+        return result;
       } catch (error) {
-        if (isUniqueConflict(error)) return { ok: false, status: 409, error: 'This activity has already been imported.' };
+        if (isUniqueConflict(error)) {
+          const duplicate = !provenance.sourceProvider ? await findDuplicate() : null;
+          return duplicate ?? { ok: false, status: 409, error: 'This activity has already been imported.' };
+        }
         throw error;
       }
     },

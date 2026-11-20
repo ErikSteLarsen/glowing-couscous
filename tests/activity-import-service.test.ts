@@ -147,6 +147,20 @@ test('refuses a planned-session match that changed before import', async () => {
   assert.equal(calls.some((call) => call.owner === 'activity.create'), false);
 });
 
+test('confirms the existing ride when a concurrent save completes its session', async () => {
+  let saved = false;
+  const db = fakeDatabase([], {
+    findFirst: async () => {
+      saved = true;
+      return null;
+    },
+    findActivityFirst: async () => saved ? { id: 71, sessionId: 27 } : null,
+  });
+  const service = createActivityImportService({ db: db as never });
+  const result = await service.importForUser(7, { ...validInput, sport: 'BIKING', plannedSessionId: 27 });
+  assert.deepEqual(result, { ok: true, activityId: 71, sessionId: 27, duplicate: true });
+});
+
 test('lists imported history and match candidates only for the signed-in owner and scheduled sessions', async () => {
   const calls: Array<{ owner: string; args: Record<string, unknown> }> = [];
   const db = fakeDatabase(calls);
