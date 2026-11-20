@@ -28,6 +28,7 @@ export function getPrimaryNavigation(): NavItem[] {
     { label: 'Calendar', description: 'See scheduled work', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
     { label: 'Planner', description: 'Place on dates', href: '/athlete/planner', matchPrefix: '/athlete/planner' },
     { label: 'Workouts', description: 'Create & manage', href: '/athlete/workouts', matchPrefix: '/athlete/workouts' },
+    { label: 'Library', description: 'Built-in bike workouts', href: '/athlete/library', matchPrefix: '/athlete/library' },
     { label: 'Templates', description: 'Reuse & assign', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
     { label: 'Activity', description: 'Review completed work', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
     { label: 'Events', description: 'Goals and results', href: '/athlete/events', matchPrefix: '/athlete/events' },
@@ -47,7 +48,7 @@ export function getMobileNavigation(role: AppRole): NavItem[] {
     { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete', exact: true },
     { label: 'Calendar', description: 'Schedule & view training', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
     { label: 'Planner', description: 'Place on dates', href: '/athlete/planner', matchPrefix: '/athlete/planner' },
-    { label: 'Workouts', description: 'Create & manage', href: '/athlete/workouts', matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/templates'] },
+    { label: 'Workouts', description: 'Create & manage', href: '/athlete/workouts', matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/templates', '/athlete/library'] },
     { label: 'Activity', description: 'Review completed work', href: '/athlete/activity', matchPrefix: '/athlete/activity', activeMatchPrefixes: ['/athlete/import'] },
   ];
 }
@@ -83,6 +84,8 @@ const sessionReturnTargets = {
   activity: { href: '/athlete/activity', label: 'Back to Activity' },
   imports: { href: '/athlete/import', label: 'Back to Import' },
   planner: { href: '/athlete/planner', label: 'Back to Planner' },
+  library: { href: '/athlete/library', label: 'Back to Library' },
+  ride: { href: '/athlete/ride', label: 'Back to Ride' },
 } as const;
 
 export type SessionOrigin = keyof typeof sessionReturnTargets;

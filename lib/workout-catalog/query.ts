@@ -97,6 +97,11 @@ export function createCatalogEntries(workouts: readonly CatalogWorkout[]): Catal
   });
 }
 
+/** List entries without long descriptions, for pages that only show cards. */
+export function createCatalogListEntries(workouts: readonly CatalogWorkout[]): CatalogEntry[] {
+  return createCatalogEntries(workouts).map((entry) => ({ ...entry, workout: { ...entry.workout, description: '' } }));
+}
+
 export function findCatalogWorkout(workouts: readonly CatalogWorkout[], slug: string): CatalogWorkout | null {
   return workouts.find((workout) => workout.slug === slug) ?? null;
 }

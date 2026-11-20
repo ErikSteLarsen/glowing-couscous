@@ -1,5 +1,6 @@
 import type { ComponentProps } from 'react';
-import { ArrowUpRight } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowUpRight, LibraryBig } from 'lucide-react';
 import { MobileLibrarySwitch } from '@/components/MobileLibrarySwitch';
 import { WorkoutLibraryClient } from '@/components/WorkoutLibraryClient';
 
@@ -12,6 +13,11 @@ export function FocusWorkouts(libraryProps: LibraryProps) {
         <div>
           <h1>Workouts</h1>
           <p>Create once. Refine when you need to. Add a copy to your calendar when it is ready.</p>
+          {libraryProps.role === 'ATHLETE' ? (
+            <Link href="/athlete/library" className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg text-sm font-medium text-[var(--brand)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]">
+              <LibraryBig aria-hidden="true" size={15} strokeWidth={1.6} />Browse built-in bike workouts
+            </Link>
+          ) : null}
         </div>
         <div className="study-workouts__header-count"><strong>{libraryProps.workouts.length}</strong><span>saved {libraryProps.workouts.length === 1 ? 'workout' : 'workouts'}</span><ArrowUpRight size={18} aria-hidden="true" /></div>
       </header>
