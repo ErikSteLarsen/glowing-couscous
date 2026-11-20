@@ -174,9 +174,22 @@ test('recorder after the plan keeps recording as a free-ride lap', () => {
   assert.equal(rec.stepIndex, ride.steps.length);
   assert.equal(rec.laps.at(-1)?.stepIndex, ride.steps.length);
   assert.equal(rec.samples.at(-1)?.tgt, null);
-  // Long gaps keep the timer but record no sensor values after the hold window.
-  assert.equal(rec.samples[3].p, 200);
+  // With no notifications during a stalled callback, only the latest second has a reading.
+  assert.equal(rec.samples[3].p, null);
   assert.equal(rec.samples[10].p, null);
+  assert.equal(rec.samples.at(-1)?.p, 200);
+});
+
+test('recorder carries partial active seconds across multiple pauses and includes a final pause', () => {
+  const ride = plan();
+  let rec = startRecording(createRecording(7, 'Threshold', ride), ride, 0);
+  rec = pauseRecording(rec, ride, 600);
+  rec = resumeRecording(rec, ride, 1400);
+  rec = pauseRecording(rec, ride, 2000, reading(100));
+  assert.equal(rec.timerSec, 1);
+  rec = finishRecording(rec, ride, 3500);
+  assert.equal(rec.elapsedSec, 3);
+  assert.deepEqual(rec.samples.map((sample) => sample.t), [0]);
 });
 
 test('summary computes power, heart rate, cadence, work and TSS', () => {
@@ -246,7 +259,7 @@ test('chart maps recorded power onto the plan timeline after a skip', async () =
   const { planPositionSec, powerBuckets, complianceTone } = await import('../lib/ride/ride-chart.ts');
   const ride = plan();
   let rec = startRecording(createRecording(7, 'Threshold', ride), ride, 0);
-  rec = tick(rec, ride, 2000, reading(100));
+  rec = tick(tick(rec, ride, 1000, reading(100)), ride, 2000, reading(100));
   rec = advanceStep(rec, ride); // skip rest of warm-up → plan second 4
   rec = tick(rec, ride, 3000, reading(300));
   assert.equal(planPositionSec(rec, ride), 5);

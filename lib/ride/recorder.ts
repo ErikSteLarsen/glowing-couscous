@@ -37,6 +37,9 @@ export type RideRecording = {
   startedAtMs: number | null;
   finishedAtMs: number | null;
   lastTickAtMs: number | null;
+  /** Elapsed and active time have independent phases after a pause. Optional in older v1 checkpoints. */
+  elapsedTickAtMs?: number | null;
+  activeRemainderMs?: number;
   /** Wall-clock seconds since start, including pauses. */
   elapsedSec: number;
   /** Unpaused seconds; equals the number of samples. */
@@ -56,8 +59,6 @@ export type RideRecording = {
 export const RIDE_CHECKPOINT_VERSION = 1;
 export const MAX_IMPORT_POINTS = 20000;
 const MAX_GAP_SEC = 12 * 60 * 60;
-/** Short gaps (a throttled timer) repeat the last values; longer gaps record no sensor data. */
-const HOLD_GAP_SEC = 5;
 
 function emptyAccumulator(): Accumulator {
   return { power: [0, 0], hr: [0, 0], cad: [0, 0], spd: [0, 0] };
@@ -143,29 +144,41 @@ export function advanceStep(recording: RideRecording, plan: RidePlan): RideRecor
 
 export function startRecording(recording: RideRecording, plan: RidePlan, nowMs: number): RideRecording {
   if (recording.status !== 'ready') return recording;
-  const started = skipZeroLengthSteps({ ...recording, status: 'running', startedAtMs: nowMs, lastTickAtMs: nowMs }, plan);
+  const started = skipZeroLengthSteps({ ...recording, status: 'running', startedAtMs: nowMs, lastTickAtMs: nowMs, elapsedTickAtMs: nowMs }, plan);
   return openLap(started);
 }
 
 /** Advances the recording to `nowMs`, writing one sample per whole elapsed second. */
 export function tick(recording: RideRecording, plan: RidePlan, nowMs: number, latest: RideReading = emptyReading): RideRecording {
   if (recording.status === 'ready' || recording.status === 'finished') return recording;
-  if (recording.lastTickAtMs === null) return { ...recording, lastTickAtMs: nowMs };
-  const whole = Math.min(MAX_GAP_SEC, Math.floor((nowMs - recording.lastTickAtMs) / 1000));
-  if (whole <= 0) return recording;
-  const lastTickAtMs = recording.lastTickAtMs + whole * 1000;
-  if (recording.status === 'paused') return { ...recording, elapsedSec: recording.elapsedSec + whole, lastTickAtMs };
+  const elapsedAnchor = recording.elapsedTickAtMs ?? recording.lastTickAtMs ?? nowMs;
+  const elapsed = Math.max(0, Math.floor((nowMs - elapsedAnchor) / 1000));
+  const elapsedUpdate = elapsed > 0 || recording.elapsedTickAtMs === null ? {
+    elapsedSec: recording.elapsedSec + elapsed,
+    elapsedTickAtMs: elapsedAnchor + elapsed * 1000,
+  } : null;
+  if (recording.status === 'paused' || recording.lastTickAtMs === null) {
+    return elapsedUpdate ? { ...recording, ...elapsedUpdate } : recording;
+  }
 
+  const whole = Math.min(MAX_GAP_SEC, Math.floor((nowMs - recording.lastTickAtMs) / 1000));
+  if (whole <= 0) return elapsedUpdate ? { ...recording, ...elapsedUpdate } : recording;
+  const fallback = whole === 1 ? latest : emptyReading;
   const first: RideReading = {
-    powerWatts: average(recording.pending.power, latest.powerWatts),
-    heartRateBpm: average(recording.pending.hr, latest.heartRateBpm),
-    cadenceRpm: average(recording.pending.cad, latest.cadenceRpm),
-    speedMetersPerSecond: average(recording.pending.spd, latest.speedMetersPerSecond),
+    powerWatts: average(recording.pending.power, fallback.powerWatts),
+    heartRateBpm: average(recording.pending.hr, fallback.heartRateBpm),
+    cadenceRpm: average(recording.pending.cad, fallback.cadenceRpm),
+    speedMetersPerSecond: average(recording.pending.spd, fallback.speedMetersPerSecond),
   };
-  let next: RideRecording = { ...recording, lastTickAtMs, pending: emptyAccumulator() };
+  let next: RideRecording = {
+    ...recording,
+    ...elapsedUpdate,
+    lastTickAtMs: recording.lastTickAtMs + whole * 1000,
+    pending: emptyAccumulator(),
+  };
   const samples = [...recording.samples];
   for (let second = 0; second < whole; second += 1) {
-    const reading = second === 0 || second < HOLD_GAP_SEC ? first : emptyReading;
+    const reading = second === 0 ? first : second === whole - 1 ? latest : emptyReading;
     const step = plan.steps[next.stepIndex];
     const target = next.ergEnabled ? targetWattsAt(step, next.stepElapsedSec, next.biasPct) : null;
     const speed = reading.speedMetersPerSecond;
@@ -184,7 +197,6 @@ export function tick(recording: RideRecording, plan: RidePlan, nowMs: number, la
     next = {
       ...next,
       timerSec: next.timerSec + 1,
-      elapsedSec: next.elapsedSec + 1,
       movingSec: next.movingSec + (moving ? 1 : 0),
       stepElapsedSec: next.stepElapsedSec + 1,
       distanceMeters,
@@ -196,18 +208,28 @@ export function tick(recording: RideRecording, plan: RidePlan, nowMs: number, la
 
 export function pauseRecording(recording: RideRecording, plan: RidePlan, nowMs: number, latest?: RideReading): RideRecording {
   if (recording.status !== 'running') return recording;
-  return { ...tick(recording, plan, nowMs, latest), status: 'paused' };
+  const ticked = tick(recording, plan, nowMs, latest);
+  return {
+    ...ticked,
+    status: 'paused',
+    activeRemainderMs: Math.max(0, nowMs - (ticked.lastTickAtMs ?? nowMs)) % 1000,
+  };
 }
 
 export function resumeRecording(recording: RideRecording, plan: RidePlan, nowMs: number): RideRecording {
   if (recording.status !== 'paused') return recording;
-  const ticked = recording.lastTickAtMs === null ? recording : tick(recording, plan, nowMs);
-  return { ...ticked, status: 'running', lastTickAtMs: nowMs, pending: emptyAccumulator() };
+  const ticked = tick(recording, plan, nowMs);
+  return {
+    ...ticked,
+    status: 'running',
+    lastTickAtMs: nowMs - (recording.activeRemainderMs ?? 0),
+    elapsedTickAtMs: ticked.elapsedTickAtMs ?? ticked.lastTickAtMs ?? nowMs,
+  };
 }
 
 export function finishRecording(recording: RideRecording, plan: RidePlan, nowMs: number, latest?: RideReading): RideRecording {
   if (recording.status === 'finished' || recording.status === 'ready') return recording;
-  const ticked = recording.status === 'running' ? tick(recording, plan, nowMs, latest) : recording;
+  const ticked = tick(recording, plan, nowMs, latest);
   return { ...closeLap(ticked), status: 'finished', finishedAtMs: nowMs };
 }
 
@@ -221,8 +243,8 @@ export function setErg(recording: RideRecording, ergEnabled: boolean): RideRecor
 
 /** A recording restored after a crash or reload resumes paused, without counting the gap. */
 export function restoreRecording(recording: RideRecording): RideRecording {
-  if (recording.status !== 'running') return { ...recording, lastTickAtMs: recording.status === 'paused' ? null : recording.lastTickAtMs };
-  return { ...recording, status: 'paused', lastTickAtMs: null, pending: emptyAccumulator() };
+  if (recording.status === 'ready' || recording.status === 'finished') return recording;
+  return { ...recording, status: 'paused', lastTickAtMs: null, elapsedTickAtMs: null, pending: emptyAccumulator() };
 }
 
 export type RideSummary = {
