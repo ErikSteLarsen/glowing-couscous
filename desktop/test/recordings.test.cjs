@@ -30,3 +30,14 @@ test('reopens the last complete recording and ignores temporary files', async (t
   await reopened.delete('Ride')
   assert.deepEqual((await reopened.list()).map(({ key }) => key), ['ride'])
 })
+
+test('saves, lists and deletes the checkpoint key sent by the ride page', async (t) => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'tempo-ride-'))
+  t.after(() => rm(directory, { recursive: true, force: true }))
+  const store = createRecordingStore(directory)
+  const key = 'tempo:ride:v1:42'
+  await store.save(key, '{}')
+  assert.deepEqual((await store.list()).map((entry) => entry.key), [key])
+  await store.delete(key)
+  assert.deepEqual(await store.list(), [])
+})

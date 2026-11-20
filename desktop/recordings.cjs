@@ -1,7 +1,7 @@
 const { randomUUID } = require('node:crypto')
 const { mkdir, open, readdir, rename, rm, writeFile } = require('node:fs/promises')
 const path = require('node:path')
-const { sanitizeRecordingKey } = require('./recording-key.cjs')
+const { isRecordingKey, sanitizeRecordingKey } = require('./recording-key.cjs')
 
 const MAX_BYTES = 20 * 1024 * 1024
 const RECORDING_FILE = /^([0-9a-f]{2,240})\.json$/
@@ -48,7 +48,7 @@ function createRecordingStore(directory) {
           const match = RECORDING_FILE.exec(entry.name)
           if (!entry.isFile() || !match || match[1].length % 2 !== 0) continue
           const key = Buffer.from(match[1], 'hex').toString('utf8')
-          if (/[^a-zA-Z0-9_-]/.test(key)) continue
+          if (!isRecordingKey(key)) continue
 
           const file = await open(path.join(directory, entry.name))
           try {
