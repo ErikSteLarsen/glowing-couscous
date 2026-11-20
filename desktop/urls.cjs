@@ -21,7 +21,7 @@ function parseRideLink(value) {
   }
 
   const ride = parseWebUrl(link.searchParams.get('url'))
-  return ride && /^\/athlete\/ride\/[^/]+\/?$/.test(ride.pathname) ? ride : null
+  return ride && /^\/athlete\/ride(\/[^/]+)?\/?$/.test(ride.pathname) ? ride : null
 }
 
 function isTrustedWebUrl(value, origins) {

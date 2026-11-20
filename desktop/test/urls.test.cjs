@@ -11,6 +11,8 @@ test('decodes a ride URL once and preserves its session ID, query and fragment',
   assert.equal(parseRideLink(rideLink(url)).href, url)
   const localRide = 'http://localhost:3000/athlete/ride/session-1'
   assert.equal(parseRideLink(rideLink(localRide)).href, localRide)
+  const hub = 'https://tempo.example/athlete/ride'
+  assert.equal(parseRideLink(rideLink(hub)).href, hub)
 })
 
 test('rejects malformed deep links and links to other routes or protocols', () => {
@@ -24,7 +26,6 @@ test('rejects malformed deep links and links to other routes or protocols', () =
     `tempo-ride://open?url=${encoded}&url=${encoded}`,
     `tempo-ride://open?url=${encoded}#extra`,
     `tempo-ride://open?url=${encodeURIComponent(encoded)}`,
-    rideLink('https://tempo.example/athlete/ride/'),
     rideLink('https://tempo.example/athlete/ride/session/extra'),
     rideLink('https://tempo.example/profile'),
     rideLink('file:///athlete/ride/one'),

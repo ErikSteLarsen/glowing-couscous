@@ -126,7 +126,7 @@ function wireIpc(window) {
 
     saveSettings({ ...settings, site: url.origin })
     trustedOrigins.add(url.origin)
-    openSite(window, new URL(url.origin))
+    openSite(window, new URL('/athlete/ride', url.origin))
   })
   ipc.handle('recording:save', (event, key, json) => {
     assertMainPage(event, isTrusted)
