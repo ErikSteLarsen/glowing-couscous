@@ -251,3 +251,51 @@ test('chart maps recorded power onto the plan timeline after a skip', async () =
   assert.equal(complianceTone(200, 290), 'under');
   assert.equal(complianceTone(200, null), 'none');
 });
+
+test('lap stats average each step and report the open lap', async () => {
+  const { summarizeLaps, currentLapStats } = await import('../lib/ride/recorder.ts');
+  const profile = createEmptyPerformanceProfile();
+  profile.cycling.ftpWatts = 200;
+  const blocks = [
+    createSessionEditorBlock({ kind: 'work', durationSec: 3, target: { metric: 'power' as const, mode: 'relative' as const, reference: 'ftp' as const, low: 50, high: 50 } }),
+    createSessionEditorBlock({ kind: 'recovery', durationSec: 10, target: null }),
+  ];
+  const plan = createRidePlan(blocks, profile);
+  let recording = startRecording(createRecording(1, 'Laps', plan), plan, 0);
+  for (const [second, power, hr] of [[1, 100, 120], [2, 110, 0], [3, 120, 130], [4, 300, 150], [5, 200, 140]] as const) {
+    recording = tick(addReading(recording, { powerWatts: power, heartRateBpm: hr || null, cadenceRpm: 90, speedMetersPerSecond: null }), plan, second * 1000);
+  }
+  const laps = summarizeLaps(recording);
+  assert.equal(laps.length, 2);
+  assert.deepEqual(
+    { ...laps[0] },
+    { stepIndex: 0, startSec: 0, durationSec: 3, averagePowerWatts: 110, maxPowerWatts: 120, averageTargetWatts: 100, averageHeartRateBpm: 125, maxHeartRateBpm: 130, averageCadenceRpm: 90 },
+  );
+  const open = currentLapStats(recording);
+  assert.equal(open?.stepIndex, 1);
+  assert.equal(open?.durationSec, 2);
+  assert.equal(open?.averagePowerWatts, 250);
+  assert.equal(open?.maxHeartRateBpm, 150);
+  assert.equal(currentLapStats(createRecording(1, 'x', plan)), null);
+});
+
+test('ride app launch detects OS and orders installers', async () => {
+  const { detectRideOs, rideDownloads, rideDownloadBase, rideAppLink, rideInstallHints } = await import('../lib/ride/launch.ts');
+  assert.equal(detectRideOs({ platform: 'Windows' }), 'windows');
+  assert.equal(detectRideOs({ userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit' }), 'macos');
+  assert.equal(detectRideOs({ userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' }), 'linux');
+  assert.equal(detectRideOs({ userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8)' }), 'other');
+  assert.equal(detectRideOs({ userAgent: 'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X)' }), 'other');
+  assert.equal(detectRideOs({}), 'other');
+
+  assert.equal(rideDownloadBase(null), 'https://github.com/ErikSteLarsen/glowing-couscous/releases/latest/download');
+  assert.equal(rideDownloadBase(' https://example.com/r/ '), 'https://example.com/r');
+  const mac = rideDownloads('macos', 'https://x');
+  assert.equal(mac[0].url, 'https://x/Tempo-Ride-macOS-arm64.dmg');
+  assert.equal(rideDownloads('macos', 'https://x', 'x86')[0].fileName, 'Tempo-Ride-macOS-x64.dmg');
+  assert.equal(rideDownloads('linux')[0].fileName, 'Tempo-Ride-Linux.AppImage');
+  assert.equal(rideDownloads('windows')[0].fileName, 'Tempo-Ride-Windows-Setup.exe');
+  assert.equal(rideDownloads('other').length, 5);
+  assert.equal(rideAppLink('https://t.app/athlete/ride/4'), 'tempo-ride://open?url=https%3A%2F%2Ft.app%2Fathlete%2Fride%2F4');
+  assert.ok(rideInstallHints('linux').some((hint) => hint.includes('chmod +x')));
+});

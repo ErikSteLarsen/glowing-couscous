@@ -400,3 +400,45 @@ export function parseCheckpoint(serialized: string | null): { savedAtMs: number;
 export function hasRecordedData(recording: RideRecording): boolean {
   return recording.timerSec > 0;
 }
+
+export type RideLapStats = {
+  stepIndex: number;
+  startSec: number;
+  durationSec: number;
+  averagePowerWatts: number | null;
+  maxPowerWatts: number | null;
+  averageTargetWatts: number | null;
+  averageHeartRateBpm: number | null;
+  maxHeartRateBpm: number | null;
+  averageCadenceRpm: number | null;
+};
+
+function lapStatsFor(lap: RideLap, samples: RideSample[]): RideLapStats {
+  const slice = samples.slice(lap.startSec, lap.endSec ?? samples.length);
+  const pick = (read: (sample: RideSample) => number | null, positive = false) =>
+    slice.map(read).filter((value): value is number => value !== null && (!positive || value > 0));
+  const powers = pick((sample) => sample.p);
+  const heartRates = pick((sample) => sample.hr, true);
+  return {
+    stepIndex: lap.stepIndex,
+    startSec: lap.startSec,
+    durationSec: slice.length,
+    averagePowerWatts: round(mean(powers)),
+    maxPowerWatts: powers.length ? Math.max(...powers) : null,
+    averageTargetWatts: round(mean(pick((sample) => sample.tgt))),
+    averageHeartRateBpm: round(mean(heartRates)),
+    maxHeartRateBpm: heartRates.length ? Math.max(...heartRates) : null,
+    averageCadenceRpm: round(mean(pick((sample) => sample.cad, true))),
+  };
+}
+
+/** Per-lap (per plan step) averages and maxima, including the open lap. */
+export function summarizeLaps(recording: Pick<RideRecording, 'laps' | 'samples'>): RideLapStats[] {
+  return recording.laps.map((lap) => lapStatsFor(lap, recording.samples));
+}
+
+/** Stats for the lap in progress, or null before the ride starts. */
+export function currentLapStats(recording: Pick<RideRecording, 'laps' | 'samples'>): RideLapStats | null {
+  const lap = recording.laps.at(-1);
+  return lap ? lapStatsFor(lap, recording.samples) : null;
+}
