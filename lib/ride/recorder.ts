@@ -253,7 +253,7 @@ export function setErg(recording: RideRecording, ergEnabled: boolean): RideRecor
 /** A recording restored after a crash or reload resumes paused, without counting the gap. */
 export function restoreRecording(recording: RideRecording): RideRecording {
   if (recording.status === 'ready' || recording.status === 'finished') return recording;
-  return { ...recording, status: 'paused', lastTickAtMs: null, elapsedTickAtMs: null, pending: emptyAccumulator() };
+  return { ...recording, status: 'paused', lastTickAtMs: null, elapsedTickAtMs: null, activeRemainderMs: 0, pending: emptyAccumulator() };
 }
 
 export type RideSummary = {

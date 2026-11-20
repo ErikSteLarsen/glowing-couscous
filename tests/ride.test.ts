@@ -481,3 +481,16 @@ test('heart rate skips measurements flagged as having poor skin contact', () => 
   assert.equal(parseHeartRateMeasurement(bytes(0x04, 142)), null);
   assert.equal(parseHeartRateMeasurement(bytes(0x06, 142)), 142);
 });
+
+test('restoring a paused checkpoint starts both clocks on the same new boundary', () => {
+  const ride = plan();
+  const started = startRecording(createRecording(7, 'Threshold', ride), ride, 0);
+  const paused = pauseRecording(tick(started, ride, 1000, reading(100)), ride, 1900);
+  const saved = parseCheckpoint(serializeCheckpoint(paused, 1900));
+  assert.ok(saved);
+  const restored = restoreRecording(saved.recording);
+  const resumed = tick(resumeRecording(restored, ride, 10000), ride, 10100, reading(100));
+  assert.equal(resumed.timerSec, 1);
+  assert.equal(resumed.elapsedSec, 1);
+  assert.ok(parseCheckpoint(serializeCheckpoint(resumed, 10100)));
+});
