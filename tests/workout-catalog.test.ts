@@ -9,7 +9,7 @@ import {
 } from '../lib/workout-catalog/query.ts';
 import { catalogStepNote, catalogWorkoutToEditorBlocks, catalogWorkoutToSessionInput } from '../lib/workout-catalog/session.ts';
 import { validateCatalog, validateCatalogWorkout } from '../lib/workout-catalog/validate.ts';
-import { createEmptySessionEditorDraft, validateSessionEditorDraft } from '../lib/session-editor.ts';
+import { createEmptySessionEditorDraft, deriveSessionEditorMetrics, validateSessionEditorDraft } from '../lib/session-editor.ts';
 import { createRidePlan } from '../lib/ride/ride-plan.ts';
 import { createEmptyPerformanceProfile } from '../lib/performance-profile.ts';
 
@@ -58,7 +58,7 @@ test('metrics derive duration, NP, IF, TSS, zones and peak from %FTP', () => {
   assert.equal(metrics.zoneSec.reduce((sum, seconds) => sum + seconds, 0), 4200);
   assert.ok(metrics.npPct > metrics.averagePct, 'NP weights hard efforts above the mean');
   assert.ok(metrics.intensityFactor > 0.8 && metrics.intensityFactor < 0.95);
-  assert.equal(metrics.tss, Math.round((4200 / 3600) * metrics.npPct / 100 * metrics.npPct / 100 * 100));
+  assert.equal(metrics.tss, 80);
 
   // A 50→75% ramp spends 15/25 of its time below 65% and the rest in Z2.
   const ramp = computeCatalogMetrics([{ kind: 'warmup', durationSec: 1000, lowPct: 50, highPct: 75 }]);
@@ -153,5 +153,12 @@ test('the shipped catalog satisfies the schema contract', () => {
     const input = catalogWorkoutToSessionInput(entry);
     assert.equal(validateSessionEditorDraft(createEmptySessionEditorDraft({ ...input, sport: 'BIKING' })), null, entry.slug);
     assert.ok(computeCatalogMetrics(entry.items).durationSec > 0, entry.slug);
+  }
+});
+
+test('every catalog workout keeps the same planned TSS when copied into a session', () => {
+  for (const workout of workoutCatalog) {
+    const draft = createEmptySessionEditorDraft(catalogWorkoutToSessionInput(workout));
+    assert.equal(deriveSessionEditorMetrics(draft).tss, computeCatalogMetrics(workout.items).tss, workout.name);
   }
 });

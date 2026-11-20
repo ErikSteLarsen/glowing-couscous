@@ -6,6 +6,7 @@ import { isAssignmentDate } from './template-period.ts';
 import { addDays, differenceInCalendarDays, endOfMonth, endOfWeek, format, formatISO, isValid, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 
 import { prisma } from './prisma.ts';
+import { parsePerformanceProfileJson } from './performance-profile.ts';
 import { derivePlannerSessionMetrics } from './planner-source-metrics.ts';
 import { parseActivitySegments } from './activity-metrics.ts';
 import { parseCalendarDay } from './calendar-navigation.ts';
@@ -32,7 +33,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       const [sessions, templates, calendarSessions] = await Promise.all([
         db.session.findMany({
           where: { athleteId, date: { gte: weekStart, lte: weekEnd } },
-          include: { blocks: { orderBy: { sortOrder: 'asc' } }, activity: true },
+          include: { blocks: { orderBy: { sortOrder: 'asc' } }, activity: true, athlete: { select: { performanceProfileJson: true } } },
           orderBy: [{ date: 'asc' }, { title: 'asc' }],
         }),
         db.template.findMany({
@@ -41,13 +42,14 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
         }),
         db.session.findMany({
           where: { athleteId, date: { gte: calendarStart, lte: calendarEnd } },
-          include: { blocks: { orderBy: { sortOrder: 'asc' } }, activity: true },
+          include: { blocks: { orderBy: { sortOrder: 'asc' } }, activity: true, athlete: { select: { performanceProfileJson: true } } },
           orderBy: [{ date: 'asc' }, { title: 'asc' }],
         }),
       ]);
 
       const shapeSession = (session: typeof sessions[number]) => {
-        const metrics = derivePlannerSessionMetrics(session.blocks);
+        const ftpWatts = parsePerformanceProfileJson(session.athlete?.performanceProfileJson).cycling.ftpWatts;
+        const metrics = derivePlannerSessionMetrics(session.blocks, session.sport, { ftpWatts });
 
         return {
           id: session.id,

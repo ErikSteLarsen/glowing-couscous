@@ -1,8 +1,13 @@
+import { blockPowerTss } from './planned-power-load.ts';
 import { getTempoZoneMeta, type TempoBlock } from './tempo-blocks.ts';
 import { expandRepeatedBlocks } from './workout-blocks.ts';
 import { chartIntensityFraction } from './workout-zone-intensity.ts';
 
-export function deriveSessionMetrics(blocks: TempoBlock[], sport = 'RUNNING') {
+export function deriveSessionMetrics(
+  blocks: TempoBlock[],
+  sport = 'RUNNING',
+  { ftpWatts, loadBasis = 'planned' }: { ftpWatts?: number | null; loadBasis?: 'planned' | 'zones' } = {},
+) {
   const expandedBlocks = expandRepeatedBlocks(blocks);
   const durationSec = expandedBlocks.reduce((sum, block) => sum + block.durationSec, 0);
   const zoneDistributionSec = [0, 0, 0, 0, 0];
@@ -13,7 +18,10 @@ export function deriveSessionMetrics(blocks: TempoBlock[], sport = 'RUNNING') {
     const intensityFraction = block.kind === 'pause' ? 0 : chartIntensityFraction(block.target ?? null, block.zone, sport, null);
     if (block.kind !== 'pause') {
       zoneDistributionSec[block.zone - 1] += block.durationSec;
-      rawTss += (block.durationSec / 3600) * zoneMeta.factor * zoneMeta.factor * 100;
+      const powerTss = sport === 'BIKING' && loadBasis === 'planned'
+        ? blockPowerTss(block.kind, block.durationSec, block.target, ftpWatts)
+        : null;
+      rawTss += powerTss ?? (block.durationSec / 3600) * zoneMeta.factor ** 2 * 100;
     }
 
     return {

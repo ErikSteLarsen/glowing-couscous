@@ -335,8 +335,11 @@ export function sessionEditorDraftToTempoBlocks(draft: SessionEditorDraft): Temp
     }));
 }
 
-export function deriveSessionEditorMetrics(draft: SessionEditorDraft) {
-  return deriveSessionMetrics(sessionEditorDraftToTempoBlocks(draft), draft.sport);
+export function deriveSessionEditorMetrics(draft: SessionEditorDraft, ftpWatts?: number | null) {
+  return deriveSessionMetrics(sessionEditorDraftToTempoBlocks(draft), draft.sport, {
+    ftpWatts,
+    loadBasis: draft.mode === 'actual' ? 'zones' : 'planned',
+  });
 }
 
 export function validateSessionEditorDraft(draft: SessionEditorDraft): string | null {

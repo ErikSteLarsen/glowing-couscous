@@ -1,3 +1,4 @@
+import { powerTargetEndpoints } from '../planned-power-load.ts';
 import type { SessionEditorBlock } from '../session-editor.ts';
 import type { PerformanceProfile } from '../performance-profile.ts';
 import { expandRepeatedBlocks } from '../workout-blocks.ts';
@@ -31,8 +32,8 @@ export function createRidePlan(blocks: SessionEditorBlock[], profile?: Performan
     const resolved = block.target?.metric === 'power' ? resolveWorkoutTarget(block.target, profile, 'BIKING') : null;
     const low = resolved?.unit === 'W' ? resolved.low : null;
     const high = resolved?.unit === 'W' ? resolved.high : null;
-    const midpoint = low !== null && high !== null ? Math.round((low + high) / 2) : null;
-    const ramps = low !== null && high !== null && low !== high && (block.kind === 'warmup' || block.kind === 'cooldown');
+    const endpoints = low !== null && high !== null ? powerTargetEndpoints(block.kind, low, high) : null;
+    const steadyWatts = endpoints && endpoints.start === endpoints.end ? Math.round(endpoints.start) : null;
     const step: RidePlanStep = {
       id: `${block.clientId}:${block.occurrence}`,
       kind: block.kind,
@@ -41,8 +42,8 @@ export function createRidePlan(blocks: SessionEditorBlock[], profile?: Performan
       durationSec: Math.max(0, Math.round(block.durationSec)),
       lowWatts: low,
       highWatts: high,
-      startWatts: ramps ? (block.kind === 'warmup' ? low : high) : midpoint,
-      endWatts: ramps ? (block.kind === 'warmup' ? high : low) : midpoint,
+      startWatts: steadyWatts ?? endpoints?.start ?? null,
+      endWatts: steadyWatts ?? endpoints?.end ?? null,
     };
     startSec += step.durationSec;
     return step;
@@ -69,16 +70,4 @@ export function ergTargetChanged(previous: number | null, next: number | null, s
 
 export function planHasPowerTargets(plan: RidePlan): boolean {
   return plan.steps.some((step) => step.startWatts !== null);
-}
-
-/** Planned TSS from power targets and FTP; null when either is missing. Free-ride steps count as zero load. */
-export function estimatePlanTss(plan: RidePlan): number | null {
-  if (!plan.ftpWatts || !planHasPowerTargets(plan)) return null;
-  const ftp = plan.ftpWatts;
-  const load = plan.steps.reduce((sum, step) => {
-    if (step.startWatts === null || step.endWatts === null) return sum;
-    const intensity = (step.startWatts + step.endWatts) / 2 / ftp;
-    return sum + step.durationSec * intensity * intensity;
-  }, 0);
-  return Math.round((load / 3600) * 100);
 }

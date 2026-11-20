@@ -2,7 +2,7 @@ import { addDays, addMonths, differenceInCalendarDays, endOfDay, endOfMonth, end
 import { Prisma } from '@prisma/client';
 import { readOverviewCardsFromPrefsJson } from './overview-preferences.ts';
 import { prisma } from './prisma.ts';
-import { deriveSessionMetrics } from './session-math.ts';
+import { derivePlannerSessionMetrics } from './planner-source-metrics.ts';
 import { getTempoZoneMeta } from './tempo-blocks.ts';
 import { parseActivitySegments, parseActivityTelemetry } from './activity-metrics.ts';
 import { bucketActivityMetric, type ActivityIntensityTimeline } from './activity-series.ts';
@@ -149,27 +149,12 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       metricsSource?: string;
       telemetryJson?: string | null;
     } | null;
-  }, options: { includeIntensityTimeline?: boolean; heartRateMaxBpm?: number | null; today?: Date } = {}) {
+  }, options: { includeIntensityTimeline?: boolean; heartRateMaxBpm?: number | null; ftpWatts?: number | null; today?: Date } = {}) {
     const today = options.today ?? now();
-    const metrics = deriveSessionMetrics(
-      session.blocks.filter((block) => !block.skipped).map((block) => ({
-        kind: block.kind as 'warmup' | 'work' | 'recovery' | 'cooldown' | 'pause',
-        zone: block.zone as 1 | 2 | 3 | 4 | 5,
-        durationSec: block.durationSec,
-        reps: block.reps,
-        target:
-          block.targetType && block.targetLow !== null && block.targetHigh !== null
-            ? {
-                metric: block.targetType as 'power' | 'pace' | 'hr' | 'rpe',
-                mode: block.targetMode === 'relative' ? 'relative' : 'absolute',
-                reference: block.targetReference as WorkoutTargetReference | null,
-                low: block.targetLow,
-                high: block.targetHigh,
-              }
-            : null,
-      })),
-      session.sport,
-    );
+    const metrics = derivePlannerSessionMetrics(session.blocks, session.sport, {
+      ftpWatts: options.ftpWatts,
+      loadBasis: session.activity ? 'zones' : 'planned',
+    });
 
     const target = session.blocks
       .filter((block) => !block.skipped)
@@ -184,8 +169,9 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
 
     const status = getSessionDisplayStatus(session);
     const planned = plannedMetrics(
-      { coachBaselineJson: session.coachBaselineJson ?? null, blocks: session.blocks.map((block) => ({ ...block, skipped: Boolean(block.skipped) })) },
+      session,
       { completed: status === 'completed', metricsSource: session.activity?.metricsSource },
+      options.ftpWatts,
     );
     const isImportedActivity = ['file-import', 'strava-import'].includes(session.activity?.metricsSource ?? '');
 
@@ -346,6 +332,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         return null;
       }
 
+      const ftpWatts = parsePerformanceProfileJson(athlete.performanceProfileJson).cycling.ftpWatts;
       const overdueRecords = await db.session.findMany({
         where: {
           athleteId: userId,
@@ -365,7 +352,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       });
       const overdue = overdueRecords
         .filter((session): session is typeof session & { date: Date } => session.date !== null)
-        .map((session) => mapSessionSummary(session, { today }))
+        .map((session) => mapSessionSummary(session, { today, ftpWatts }))
         .filter((session) => session.isOverdue);
 
       const overviewCards = readOverviewCardsFromPrefsJson(athlete.prefsJson);
@@ -384,7 +371,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
 
       const datedSessions = athlete.sessions.filter((s): s is typeof s & { date: Date } => s.date !== null);
       const sessions = datedSessions.map((session) => ({
-        ...mapSessionSummary(session, { today }),
+        ...mapSessionSummary(session, { today, ftpWatts }),
         ...(session.activity ? { durationSec: session.activity.durationSec, loadAvailable: homeActivityLoadAvailable(session.activity) } : {}),
       }));
       const todaySessions = sessions.filter((session) => isSameDay(session.date, today));
@@ -417,7 +404,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       const scheduledSessions = athlete.sessions.filter((session) => session.date !== null && session.source !== 'activity-import' && session.status !== SKIPPED_SESSION_STATUS);
       const scheduledTotals = scheduledSessions.reduce(
         (accumulator, session) => {
-          const planned = mapSessionSummary({ ...session, activity: null, date: session.date! });
+          const planned = mapSessionSummary({ ...session, activity: null, date: session.date! }, { today, ftpWatts });
           accumulator.durationSec += planned.durationSec;
           accumulator.tss += planned.tss;
           return accumulator;
@@ -573,7 +560,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         return null;
       }
 
-      const heartRateMaxBpm = parsePerformanceProfileJson(athlete.performanceProfileJson).heartRateMaxBpm;
+      const profile = parsePerformanceProfileJson(athlete.performanceProfileJson);
       const events = athlete.events ?? [];
       const eventsByDay = new Map<string, typeof events>();
       for (const event of events) {
@@ -587,7 +574,8 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
           ...mapSessionSummary(session, {
             today,
             includeIntensityTimeline: resolvedView === 'week',
-            heartRateMaxBpm,
+            heartRateMaxBpm: profile.heartRateMaxBpm,
+            ftpWatts: profile.cycling.ftpWatts,
           }),
           // Only the athlete's own open sessions can be moved from the calendar.
           canReschedule: !session.activity && session.status !== 'completed' && isSelfPlanned(session),
@@ -695,7 +683,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
             plannedTitle: activity.importedSessionStatus === null ? null : activity.session.title,
             sport: activity.session.sport,
             plannedDurationSec: plannedMetrics(
-              { coachBaselineJson: activity.session.coachBaselineJson, blocks: activity.session.blocks },
+              activity.session,
               { completed: true, metricsSource: activity.metricsSource },
             ).durationSec,
             completedAt: activity.completedAt,
@@ -765,7 +753,8 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         return null;
       }
 
-      const summary = mapSessionSummary({ ...session, date: session.date }, { today: fromDayKey(currentDayKey(timeZone)) });
+      const profile = parsePerformanceProfileJson(athlete.performanceProfileJson);
+      const summary = mapSessionSummary({ ...session, date: session.date }, { ftpWatts: profile.cycling.ftpWatts, today: fromDayKey(currentDayKey(timeZone)) });
       const sourceWorkout = session.assignments[0]?.sourceSession;
       const editableSourceWorkout = sourceWorkout
         && sourceWorkout.athleteId === userId
@@ -809,7 +798,6 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
             const target: WorkoutTarget | null = block.targetType && block.targetLow !== null && block.targetHigh !== null
               ? { metric: block.targetType as WorkoutTarget['metric'], mode: block.targetMode === 'relative' ? 'relative' : 'absolute', reference: block.targetReference as WorkoutTargetReference | null, low: Number(block.targetLowDecimal ?? block.targetLow), high: Number(block.targetHighDecimal ?? block.targetHigh) }
               : null;
-            const profile = parsePerformanceProfileJson(athlete.performanceProfileJson);
             return {
               id: block.id,
               label: block.kind === 'pause' ? 'Pause' : `${meta.label} ${meta.name}`,

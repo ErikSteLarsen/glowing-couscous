@@ -1,9 +1,9 @@
 import { endOfWeek, format, isSameDay, startOfWeek } from 'date-fns';
 import { prisma } from './prisma.ts';
 import { getWeekDays } from './week.ts';
-import { deriveSessionMetrics } from './session-math.ts';
+import { derivePlannerSessionMetrics, type PlannerSessionMetricBlock } from './planner-source-metrics.ts';
+import { parsePerformanceProfileJson } from './performance-profile.ts';
 import { parseActivitySegments } from './activity-metrics.ts';
-import type { WorkoutTargetReference } from './workout-targets.ts';
 import { getSessionDisplayStatus } from './athlete-session-status-service.ts';
 
 type CoachServiceDeps = {
@@ -18,18 +18,7 @@ type SessionRecord = {
   date: Date;
   status: string;
   adjusted: boolean;
-  blocks: Array<{
-    id: number;
-    kind: string;
-    zone: number;
-    durationSec: number;
-    reps: number | null;
-      targetType: string | null;
-      targetMode?: string | null;
-      targetReference?: string | null;
-    targetLow: number | null;
-    targetHigh: number | null;
-  }>;
+  blocks: PlannerSessionMetricBlock[];
   activity: {
     durationSec: number;
     tss: number | null;
@@ -39,25 +28,8 @@ type SessionRecord = {
   } | null;
 };
 
-function mapSessionSummary(session: SessionRecord) {
-  const metrics = deriveSessionMetrics(
-    session.blocks.map((block) => ({
-      kind: block.kind as 'warmup' | 'work' | 'recovery' | 'cooldown' | 'pause',
-      zone: block.zone as 1 | 2 | 3 | 4 | 5,
-      durationSec: block.durationSec,
-      reps: block.reps,
-      target:
-        block.targetType && block.targetLow !== null && block.targetHigh !== null
-          ? {
-              metric: block.targetType as 'power' | 'pace' | 'hr' | 'rpe',
-              mode: block.targetMode === 'relative' ? 'relative' : 'absolute',
-              reference: block.targetReference as WorkoutTargetReference | null,
-              low: block.targetLow,
-              high: block.targetHigh,
-            }
-          : null,
-    })),
-  );
+function mapSessionSummary(session: SessionRecord, ftpWatts: number | null) {
+  const metrics = derivePlannerSessionMetrics(session.blocks, session.sport, { ftpWatts });
 
   return {
     id: session.id,
@@ -139,6 +111,7 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
       }
 
       const athletes = coach.athletes.map((athlete) => {
+        const ftpWatts = parsePerformanceProfileJson(athlete.performanceProfileJson).cycling.ftpWatts;
         const sessions = athlete.sessions
           .filter((s): s is typeof s & { date: Date } => s.date !== null)
           .map((session) =>
@@ -159,7 +132,7 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
                    metricsSource: session.activity.metricsSource,
                 }
               : null,
-          }),
+          }, ftpWatts),
         );
 
         // Skipped sessions are excluded from compliance and planned counts.
@@ -216,6 +189,7 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
           id: true,
           name: true,
           email: true,
+          performanceProfileJson: true,
           plans: {
             orderBy: { endDate: 'desc' },
             take: 1,
@@ -270,6 +244,7 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
         }),
       ]);
 
+      const ftpWatts = parsePerformanceProfileJson(athlete.performanceProfileJson).cycling.ftpWatts;
       const weekSummaries = weekSessions
         .filter((s): s is typeof s & { date: Date } => s.date !== null)
         .map((session) =>
@@ -290,7 +265,7 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
                   metricsSource: session.activity.metricsSource,
                 }
               : null,
-          }),
+          }, ftpWatts),
         );
       const recentSummaries = recentSessions
         .filter((s): s is typeof s & { date: Date } => s.date !== null)
@@ -312,7 +287,7 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
                 metricsSource: session.activity.metricsSource,
               }
             : null,
-        }),
+        }, ftpWatts),
       );
 
       // Skipped sessions stay in the week list but are excluded from stats and compliance.

@@ -75,6 +75,7 @@ export default async function AthleteRidePage({
       sessionId={detail.session.id}
       sessionTitle={detail.session.title}
       plan={plan}
+      plannedTss={detail.session.plannedTss}
       steps={steps}
       backHref={sessionHref}
       heartRateMaxBpm={profile?.heartRateMaxBpm ?? null}

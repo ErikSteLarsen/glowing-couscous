@@ -1,3 +1,4 @@
+import { powerStepTss, powerTargetEndpoints } from '../planned-power-load.ts';
 import type { TempoZone } from '../tempo-blocks.ts';
 import { ZONE_BANDS } from '../workout-zone-intensity.ts';
 import type { CatalogItem, CatalogStep, CatalogStepKind, CatalogWorkout } from './types.ts';
@@ -44,10 +45,8 @@ export function isCatalogRepeat(item: CatalogItem): item is Extract<CatalogItem,
  * high → low, and every other ranged step is ridden at its midpoint.
  */
 export function stepEndpoints(step: Pick<CatalogStep, 'kind' | 'lowPct' | 'highPct'>): { startPct: number; endPct: number; ramp: boolean } {
-  if (step.lowPct !== step.highPct && step.kind === 'warmup') return { startPct: step.lowPct, endPct: step.highPct, ramp: true };
-  if (step.lowPct !== step.highPct && step.kind === 'cooldown') return { startPct: step.highPct, endPct: step.lowPct, ramp: true };
-  const midpoint = (step.lowPct + step.highPct) / 2;
-  return { startPct: midpoint, endPct: midpoint, ramp: false };
+  const { start, end } = powerTargetEndpoints(step.kind, step.lowPct, step.highPct);
+  return { startPct: start, endPct: end, ramp: start !== end };
 }
 
 export function expandCatalogItems(items: readonly CatalogItem[]): CatalogFlatStep[] {
@@ -112,6 +111,7 @@ export function computeCatalogMetrics(items: readonly CatalogItem[]): CatalogMet
   const durationSec = steps.reduce((sum, step) => sum + step.durationSec, 0);
   let fourth = 0;
   let linear = 0;
+  let tss = 0;
   let maxPct = 0;
   const zoneSec: CatalogMetrics['zoneSec'] = [0, 0, 0, 0, 0];
   const bands = ZONE_BANDS.power;
@@ -119,6 +119,7 @@ export function computeCatalogMetrics(items: readonly CatalogItem[]): CatalogMet
   for (const step of steps) {
     const a = step.startPct / 100;
     const b = step.endPct / 100;
+    tss += powerStepTss(step.durationSec, a, b);
     fourth += rampPowerMean(a, b, 4) * step.durationSec;
     linear += rampPowerMean(a, b, 1) * step.durationSec;
     maxPct = Math.max(maxPct, step.startPct, step.endPct);
@@ -130,7 +131,7 @@ export function computeCatalogMetrics(items: readonly CatalogItem[]): CatalogMet
     durationSec,
     npPct: Math.round(np * 1000) / 10,
     intensityFactor: Math.round(np * 100) / 100,
-    tss: Math.round((durationSec / 3600) * np * np * 100),
+    tss: Math.round(tss),
     averagePct: durationSec > 0 ? Math.round((linear / durationSec) * 1000) / 10 : 0,
     maxPct,
     zoneSec: zoneSec.map((seconds) => Math.round(seconds)) as CatalogMetrics['zoneSec'],

@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+import { createAthletePlannerService } from '../lib/athlete-planner-service.ts';
+import { createAthleteService } from '../lib/athlete-service.ts';
+import { createRideHubService } from '../lib/ride-hub-service.ts';
+import { createTrainingLoadService } from '../lib/training-load-service.ts';
+import { catalogWorkoutMetrics } from '../lib/workout-catalog/metrics.ts';
+import { disposableDatabaseSkip, withDisposableDatabase } from './disposable-postgres.ts';
 import { createWorkoutCatalogService } from '../lib/workout-catalog-service.ts';
 import type { CatalogWorkout } from '../lib/workout-catalog/types.ts';
 
@@ -75,4 +81,41 @@ test('schedule and add to workouts delegate to the existing owners', async () =>
   assert.equal(libraryCall.ownerId, 3);
   assert.equal(libraryCall.input.requestKey, 'abcdefabcdefabcdef');
   assert.equal(libraryCall.input.scheduledDate, undefined);
+});
+
+
+test('scheduled and Ride now copies carry catalog load through athlete reads', { skip: disposableDatabaseSkip }, async () => {
+  await withDisposableDatabase(async (db) => {
+    const athlete = await db.user.create({ data: { email: 'catalog-load@example.test', role: 'ATHLETE' } });
+    const day = '2026-11-19';
+    const tomorrow = '2026-11-20';
+    const now = () => new Date(2026, 10, 19, 12);
+    const planner = createAthletePlannerService({ db });
+    const catalogService = createWorkoutCatalogService({ db, planner });
+    const workout = catalogService.find('falling-ridgeline');
+    assert.ok(workout);
+    const expected = catalogWorkoutMetrics(workout).tss;
+    const ride = await catalogService.rideNow(athlete.id, workout.slug, { date: day });
+    const scheduled = await catalogService.schedule(athlete.id, workout.slug, { dates: [tomorrow] });
+    assert.ok(ride.ok && scheduled.ok);
+
+    const athleteService = createAthleteService({ db, now });
+    const [detail, calendar, workspace, hub, home, training] = await Promise.all([
+      athleteService.loadSessionDetail(athlete.id, ride.sessionId),
+      athleteService.loadCalendarView(athlete.id, day),
+      planner.loadWorkspace(athlete.id, day),
+      createRideHubService({ db, now }).load(athlete.id),
+      athleteService.loadHomeDashboard(athlete.id),
+      createTrainingLoadService({ db }).loadOverview(athlete.id, { now: now() }),
+    ]);
+
+    assert.equal(detail?.session.tss, expected);
+    assert.equal(detail?.session.plannedTss, expected);
+    assert.equal(calendar?.days.flatMap((entry) => entry.sessions).find((session) => session.id === scheduled.sessionIds[0])?.tss, expected);
+    assert.equal(workspace.days.flatMap((entry) => entry.sessions).find((session) => session.id === scheduled.sessionIds[0])?.tss, expected);
+    assert.equal(hub.todaySessions.find((session) => session.id === ride.sessionId)?.tss, expected);
+    assert.equal(home?.scheduledTotals.tss, expected * 2);
+    assert.equal(training.series.find((point) => point.day === tomorrow)?.plannedTss, expected);
+    assert.equal(training.weeks.find((week) => week.weekStart === '2026-11-16')?.planned.tss, expected * 2);
+  });
 });

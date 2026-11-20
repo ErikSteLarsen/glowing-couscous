@@ -1,3 +1,4 @@
+import { parsePerformanceProfileJson } from './performance-profile.ts';
 import { prisma } from './prisma.ts';
 import { SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
 import { createSessionEditorDraftFromPersisted, deriveSessionEditorMetrics } from './session-editor.ts';
@@ -55,7 +56,7 @@ export function createRideHubService({ db = prisma, now = () => new Date(), cata
             status: { notIn: ['completed', SKIPPED_SESSION_STATUS] },
             activity: { is: null },
           },
-          include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+          include: { blocks: { orderBy: { sortOrder: 'asc' } }, athlete: { select: { performanceProfileJson: true } } },
           orderBy: [{ date: 'desc' }, { id: 'asc' }],
         }),
         db.activity.findMany({
@@ -69,7 +70,8 @@ export function createRideHubService({ db = prisma, now = () => new Date(), cata
       const sessions: RideHubSession[] = open.flatMap((session) => {
         if (!session.date) return [];
         const day = session.date.toISOString().slice(0, 10);
-        const metrics = deriveSessionEditorMetrics(createSessionEditorDraftFromPersisted('planned', session));
+        const ftpWatts = parsePerformanceProfileJson(session.athlete?.performanceProfileJson).cycling.ftpWatts;
+        const metrics = deriveSessionEditorMetrics(createSessionEditorDraftFromPersisted('planned', session), ftpWatts);
         return [{ id: session.id, title: session.title, day, timeLabel: session.timeLabel, durationSec: metrics.durationSec, tss: metrics.tss, segments: metrics.segments, overdue: day < today }];
       });
       const slugByName = new Map(catalog.map((workout) => [workout.name, workout.slug]));

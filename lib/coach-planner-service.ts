@@ -2,6 +2,7 @@ import { plannerSessionInput } from './session-write-input.ts';
 import { createSessionEditorBlockData } from './session-editor.ts';
 import { addDays, differenceInCalendarDays, endOfMonth, endOfWeek, format, formatISO, isValid, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 import { prisma } from './prisma.ts';
+import { parsePerformanceProfileJson } from './performance-profile.ts';
 import { derivePlannerSessionMetrics } from './planner-source-metrics.ts';
 import {
   serializePlannerDraftForSave,
@@ -79,8 +80,11 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
         }),
       ]);
 
+      const ftpByAthlete = new Map(athletes.map((athlete) => [
+        athlete.id, parsePerformanceProfileJson(athlete.performanceProfileJson).cycling.ftpWatts,
+      ]));
       const shapeSession = (session: typeof sessions[number]) => {
-        const metrics = derivePlannerSessionMetrics(session.blocks);
+        const metrics = derivePlannerSessionMetrics(session.blocks, session.sport, { ftpWatts: ftpByAthlete.get(session.athleteId ?? 0) });
 
         return {
           id: session.id,

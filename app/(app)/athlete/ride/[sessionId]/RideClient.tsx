@@ -12,7 +12,7 @@ import { formatDistance } from '@/lib/format-distance';
 import { intensityColor } from '@/lib/intensity-color';
 import { zoneForHeartRateBpm } from '@/lib/profile-training-zones';
 import { isWebBluetoothAvailable, RideDeviceManager, type RideDeviceRole, type RideDeviceState } from '@/lib/ride/bluetooth';
-import { ergTargetChanged, estimatePlanTss, planHasPowerTargets, targetWattsAt, type RidePlan } from '@/lib/ride/ride-plan';
+import { ergTargetChanged, planHasPowerTargets, targetWattsAt, type RidePlan } from '@/lib/ride/ride-plan';
 import { complianceTone, planPositionSec, powerBuckets, stepIntensityZone } from '@/lib/ride/ride-chart';
 import {
   advanceStep,
@@ -142,10 +142,11 @@ function ProgressBar({ value, label, color = 'var(--brand)', className = 'h-2' }
   );
 }
 
-export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, heartRateMaxBpm }: {
+export function RideClient({ sessionId, sessionTitle, plan, plannedTss, steps, backHref, heartRateMaxBpm }: {
   sessionId: number;
   sessionTitle: string;
   plan: RidePlan;
+  plannedTss: number;
   steps: ExecutionStep[];
   backHref: string;
   heartRateMaxBpm: number | null;
@@ -597,7 +598,6 @@ export function RideClient({ sessionId, sessionTitle, plan, steps, backHref, hea
   }
 
   if (status === 'ready') {
-    const plannedTss = estimatePlanTss(plan);
     const intervalCount = plan.steps.filter((step) => step.kind !== 'pause' && step.durationSec > 0).length;
     return frame('Ready to ride', null, (
       <div className="grid flex-1 lg:grid-cols-[minmax(0,1fr)_400px]">

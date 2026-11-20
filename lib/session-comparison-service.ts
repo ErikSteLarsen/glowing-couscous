@@ -1,3 +1,4 @@
+import { parsePerformanceProfileJson } from './performance-profile.ts';
 import { prisma } from './prisma.ts';
 import { projectSessionSnapshotJson } from './session-snapshot-service.ts';
 
@@ -8,7 +9,7 @@ type ComparisonSession = {
   athleteId: number | null;
   coachBaselineJson: string | null;
   activity: { actualSnapshotJson: string | null; metricsSource: string } | null;
-  athlete: { coachId: number | null } | null;
+  athlete: { coachId: number | null; performanceProfileJson?: string | null } | null;
 };
 
 type ComparisonDatabase = {
@@ -24,6 +25,7 @@ export type SessionComparisonResult =
       baseline: ReturnType<typeof projectSessionSnapshotJson>['baseline'];
       actual: ReturnType<typeof projectSessionSnapshotJson>['actual'];
       hasDifference: boolean;
+      ftpWatts: number | null;
     }
   | { ok: false; status: 404; error: string };
 
@@ -39,7 +41,7 @@ export function createSessionComparisonService({
           athleteId: true,
           coachBaselineJson: true,
           activity: { select: { actualSnapshotJson: true, metricsSource: true } },
-          athlete: { select: { coachId: true } },
+          athlete: { select: { coachId: true, performanceProfileJson: true } },
         },
       });
       const authorized = session && (actor.role === 'ATHLETE'
@@ -55,6 +57,7 @@ export function createSessionComparisonService({
         baseline: snapshots.baseline,
         actual: snapshots.actual,
         hasDifference: snapshots.actual !== null,
+        ftpWatts: parsePerformanceProfileJson(session.athlete?.performanceProfileJson).cycling.ftpWatts,
       };
     },
   };

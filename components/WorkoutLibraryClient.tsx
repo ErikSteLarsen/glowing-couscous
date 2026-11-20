@@ -253,7 +253,7 @@ export function WorkoutLibraryClient({
     });
   }
 
-  const metrics = deriveSessionEditorMetrics(draft);
+  const metrics = deriveSessionEditorMetrics(draft, performanceProfile?.cycling.ftpWatts);
   const showEditor = editorOpen && (!designDirection || clientMounted);
 
   return (
@@ -328,7 +328,7 @@ export function WorkoutLibraryClient({
           <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
             {visibleWorkouts.map((workout) => {
               const workoutDraft = createSessionEditorDraftFromPersisted('create', { ...workout, date: null, scheduledDate: null });
-              const workoutMetrics = deriveSessionEditorMetrics(workoutDraft);
+              const workoutMetrics = deriveSessionEditorMetrics(workoutDraft, performanceProfile?.cycling.ftpWatts);
               const selected = editorOpen && selectedWorkoutId === workout.id;
               return (
                 <div key={workout.id} className={`py-4 ${selected ? 'bg-[var(--brand-tint)]' : ''}`}>

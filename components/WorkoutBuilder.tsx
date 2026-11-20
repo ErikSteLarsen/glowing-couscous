@@ -117,7 +117,7 @@ export function WorkoutBuilder({
     useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-  const metrics = deriveSessionEditorMetrics(draft);
+  const metrics = deriveSessionEditorMetrics(draft, performanceProfile?.cycling.ftpWatts);
   const selected = selection.map((index) => draft.blocks[index]).filter(Boolean);
   const selectedBlock = selected[0] ?? null;
   const activePreset = activePresetId ? findPreset(activePresetId) : null;

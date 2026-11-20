@@ -119,6 +119,15 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   detail page, Add to my workouts, Schedule, Ride now into the ride page and
   Ride home at 390, 1440 and 1920 px.
 
+- Planned cycling load (2026-11-20) uses one power calculation for catalog and
+  session TSS. All 91 catalog workouts match their converted session blocks.
+  PostgreSQL acceptance verifies both Schedule and Ride now through session,
+  planner, calendar, Ride hub, Home totals, and projected training load.
+  `pnpm test` passed 473 tests with eight database cases skipped.
+  `pnpm test:db` passed 516 tests with zero skips. `pnpm lint`,
+  `pnpm typecheck`, and `pnpm build` passed. The build used the local
+  disposable `tempo_acceptance` database.
+
 ## Remaining risks and acceptance gates
 
 - Live Strava OAuth/delivery, retry, update/privacy/delete/deauthorization and
@@ -138,9 +147,7 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   time except source-provenance rules on the separate legacy summary imports.
 - Live countdown/progress is browser-local guidance, restores paused, does not
   sync across devices and does not record sensor telemetry or auto-completion.
-- Library catalog TSS is an NP-based estimate from %FTP targets; scheduled
-  copies show Tempo's zone-factor planned TSS, so the two numbers differ.
-  Open in Tempo Ride from the library and the desktop app's default page
+- Open in Tempo Ride from the library and the desktop app's default page
   (`/athlete/ride`) still need desktop-app acceptance.
 - Tempo Ride still needs browser and physical-device acceptance for reconnect,
   FTMS Free Ride support, wake lock, and desktop picker/deep-link behavior.

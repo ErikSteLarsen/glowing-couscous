@@ -17,6 +17,7 @@ import {
 type ComparisonData = {
   baseline: SessionEditorDraft | null;
   actual: SessionEditorDraft | null;
+  ftpWatts?: number | null;
 };
 
 export function SessionComparisonDialog({
@@ -170,7 +171,7 @@ export function SessionComparisonDialog({
                     {data?.actual ? 'Only the actual snapshot is available.' : 'Only the planned snapshot is available.'}
                   </p>
                 )}
-                <SnapshotView draft={selectedDraft} />
+                <SnapshotView draft={selectedDraft} ftpWatts={data?.ftpWatts} />
               </div>
             ) : null}
           </div>
@@ -180,8 +181,8 @@ export function SessionComparisonDialog({
   );
 }
 
-function SnapshotView({ draft }: { draft: SessionEditorDraft }) {
-  const metrics = deriveSessionEditorMetrics(draft);
+function SnapshotView({ draft, ftpWatts }: { draft: SessionEditorDraft; ftpWatts?: number | null }) {
+  const metrics = deriveSessionEditorMetrics(draft, ftpWatts);
   return (
     <div className="space-y-5">
       <div>

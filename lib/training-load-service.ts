@@ -1,9 +1,9 @@
 import { prisma } from './prisma.ts';
-import { deriveSessionMetrics } from './session-math.ts';
+import { derivePlannerSessionMetrics, type PlannerSessionMetricBlock } from './planner-source-metrics.ts';
+import { parsePerformanceProfileJson } from './performance-profile.ts';
 import { deriveSessionEditorMetrics } from './session-editor.ts';
 import { deserializeSessionSnapshot } from './session-snapshot-service.ts';
 import { SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
-import type { TempoBlockKind, TempoZone } from './tempo-blocks.ts';
 import {
   FITNESS_DAYS,
   addDayKeys,
@@ -24,8 +24,6 @@ import {
 } from './training-load.ts';
 
 type TrainingLoadDeps = { db?: typeof prisma };
-
-export type MetricBlock = { kind: string; zone: number; durationSec: number; reps: number | null; skipped: boolean };
 
 export type SessionLoad = {
   sessionId: number;
@@ -59,20 +57,6 @@ export type TrainingLoadOverview = {
   sessions: SessionLoad[];
 };
 
-function metricsForBlocks(blocks: MetricBlock[]) {
-  return deriveSessionMetrics(
-    blocks
-      .filter((block) => !block.skipped)
-      .map((block) => ({
-        kind: block.kind as TempoBlockKind,
-        zone: block.zone as TempoZone,
-        durationSec: block.durationSec,
-        reps: block.reps,
-        target: null,
-      })),
-  );
-}
-
 function sessionStatus(session: { status: string; adjusted: boolean; activity: unknown }): SessionLoad['status'] {
   if (session.activity) return 'completed';
   if (session.status === SKIPPED_SESSION_STATUS) return 'skipped';
@@ -88,12 +72,13 @@ const NO_PLAN = { durationSec: 0, tss: 0 };
  * kept the planned blocks. Without either, there is no plan to compare with.
  */
 export function plannedMetrics(
-  session: { coachBaselineJson: string | null; blocks: MetricBlock[] },
+  session: { sport: string; coachBaselineJson?: string | null; blocks: PlannerSessionMetricBlock[] },
   completion: { completed: boolean; metricsSource?: string | null },
+  ftpWatts?: number | null,
 ) {
-  if (!completion.completed) return metricsForBlocks(session.blocks);
+  if (!completion.completed) return derivePlannerSessionMetrics(session.blocks, session.sport, { ftpWatts });
   const baseline = deserializeSessionSnapshot('planned', session.coachBaselineJson);
-  if (baseline) return deriveSessionEditorMetrics(baseline);
+  if (baseline) return deriveSessionEditorMetrics(baseline, ftpWatts);
   return completion.metricsSource === ACTUAL_BLOCKS_SOURCE
     || completion.metricsSource === 'manual-unplanned'
     || completion.metricsSource === 'tcx-import'
@@ -101,7 +86,7 @@ export function plannedMetrics(
     || completion.metricsSource === 'gpx-import'
     || completion.metricsSource === 'manual-paired'
     ? NO_PLAN
-    : metricsForBlocks(session.blocks);
+    : derivePlannerSessionMetrics(session.blocks, session.sport, { ftpWatts });
 }
 
 /** Activity source written when the athlete records actual blocks over the plan. */
@@ -136,7 +121,15 @@ export function createTrainingLoadService({ db = prisma }: TrainingLoadDeps = {}
           status: true,
           adjusted: true,
           coachBaselineJson: true,
-          blocks: { select: { kind: true, zone: true, durationSec: true, reps: true, skipped: true }, orderBy: { sortOrder: 'asc' } },
+          blocks: {
+            select: {
+              kind: true, zone: true, durationSec: true, reps: true, skipped: true,
+              targetType: true, targetMode: true, targetReference: true,
+              targetLow: true, targetHigh: true, targetLowDecimal: true, targetHighDecimal: true,
+            },
+            orderBy: { sortOrder: 'asc' },
+          },
+          athlete: { select: { performanceProfileJson: true } },
           activity: { select: { completedAt: true, durationSec: true, tss: true, compliancePct: true, metricsSource: true, sourceTimezoneOffsetMinutes: true } },
         },
         orderBy: [{ date: 'asc' }, { id: 'asc' }],
@@ -145,7 +138,8 @@ export function createTrainingLoadService({ db = prisma }: TrainingLoadDeps = {}
       const sessions: SessionLoad[] = records.flatMap((record) => {
         if (!record.date) return [];
         const status = sessionStatus(record);
-        const planned = plannedMetrics(record, { completed: status === 'completed', metricsSource: record.activity?.metricsSource });
+        const ftpWatts = parsePerformanceProfileJson(record.athlete?.performanceProfileJson).cycling.ftpWatts;
+        const planned = plannedMetrics(record, { completed: status === 'completed', metricsSource: record.activity?.metricsSource }, ftpWatts);
         const day = toDayKey(record.date);
 
         return [

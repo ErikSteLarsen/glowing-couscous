@@ -329,14 +329,6 @@ test('ride app launch detects OS and orders installers', async () => {
   assert.ok(rideInstallHints('linux').some((hint) => hint.includes('chmod +x')));
 });
 
-test('planned TSS follows %FTP targets and needs FTP', async () => {
-  const { estimatePlanTss } = await import('../lib/ride/ride-plan.ts');
-  const step = (durationSec: number, watts: number | null) => ({ id: String(durationSec), kind: 'work' as const, zone: 3, startSec: 0, durationSec, lowWatts: watts, highWatts: watts, startWatts: watts, endWatts: watts });
-  assert.equal(estimatePlanTss({ steps: [step(3600, 250)], totalSec: 3600, ftpWatts: 250 }), 100);
-  assert.equal(estimatePlanTss({ steps: [step(1800, 125), step(600, null)], totalSec: 2400, ftpWatts: 250 }), 13);
-  assert.equal(estimatePlanTss({ steps: [step(3600, 250)], totalSec: 3600, ftpWatts: null }), null);
-});
-
 class MockCharacteristic extends EventTarget {
   value: DataView | null = null;
   writes: number[][] = [];
