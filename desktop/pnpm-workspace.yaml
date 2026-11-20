@@ -1,0 +1,2 @@
+ignoredBuiltDependencies:
+  - electron-winstaller # Squirrel tooling. Tempo Ride builds an NSIS installer.

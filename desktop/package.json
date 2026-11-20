@@ -1,0 +1,40 @@
+{
+  "name": "tempo-ride",
+  "productName": "Tempo Ride",
+  "version": "0.1.0",
+  "description": "Desktop companion for Tempo indoor bike workouts",
+  "private": true,
+  "main": "main.cjs",
+  "packageManager": "pnpm@10.26.0",
+  "scripts": {
+    "dev": "electron .",
+    "test": "node --test",
+    "dist:win": "electron-builder --win --publish never",
+    "dist:mac": "electron-builder --mac --publish never"
+  },
+  "devDependencies": {
+    "electron": "45.4.1",
+    "electron-builder": "26.18.1"
+  },
+  "build": {
+    "appId": "app.tempo.ride",
+    "artifactName": "Tempo-Ride-${version}-${arch}.${ext}",
+    "files": ["*.cjs", "ui/**"],
+    "protocols": [
+      { "name": "Tempo Ride", "schemes": ["tempo-ride"] }
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "nsis": {
+      "include": "build/installer.nsh"
+    },
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
+      "identity": "-",
+      "extendInfo": {
+        "NSBluetoothAlwaysUsageDescription": "Tempo Ride connects to your trainer, heart-rate strap and cadence sensor during rides."
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; form-action 'none'; base-uri 'none'">
+    <title>Tempo Ride</title>
+    <link rel="stylesheet" href="shell.css">
+    <script src="start.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <h1>Tempo Ride</h1>
+      <p>Open your Tempo site to choose an indoor ride.</p>
+      <form>
+        <label for="site">Tempo site URL</label>
+        <input id="site" type="url" placeholder="https://tempo.example" required autofocus>
+        <p id="error" role="alert"></p>
+        <div class="actions">
+          <button type="submit">Open Tempo</button>
+        </div>
+      </form>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,101 @@
+:root {
+  color-scheme: dark;
+  font: 15px/1.5 system-ui, sans-serif;
+  --background: #0b0f15;
+  --raised: #151b24;
+  --border-strong: #323c4a;
+  --text: #eef2f6;
+  --text-secondary: #a9b4c1;
+  --brand: #5eb6d8;
+  --signal-ink: #06121a;
+  --field-surface: #0e131a;
+  --status-danger: #e8667e;
+  background: var(--background);
+  color: var(--text);
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  padding: 24px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+p {
+  margin: 8px 0 20px;
+  color: var(--text-secondary);
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+[hidden] {
+  display: none;
+}
+
+input, select, button {
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  font: inherit;
+}
+
+input, select {
+  width: 100%;
+  background-color: var(--field-surface);
+}
+
+select {
+  padding: 4px;
+}
+
+option {
+  padding: 4px 8px;
+}
+
+.actions {
+  display: flex;
+  justify-content: end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+button {
+  min-width: 84px;
+  background: var(--raised);
+  color: inherit;
+}
+
+button[type="submit"] {
+  background: var(--brand);
+  color: var(--signal-ink);
+  font-weight: 650;
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+#error {
+  margin: 6px 0;
+  color: var(--status-danger);
+}
+
+#error:empty {
+  display: none;
+}
