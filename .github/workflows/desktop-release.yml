@@ -1,0 +1,67 @@
+name: Tempo Ride release
+
+on:
+  push:
+    tags:
+      - 'desktop-v*'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            target: win
+            extension: exe
+          - os: macos-latest
+            target: mac
+            extension: dmg
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: desktop/package.json
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: desktop/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm dist:${{ matrix.target }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tempo-ride-${{ matrix.target }}
+          path: desktop/dist/Tempo-Ride-*.${{ matrix.extension }}
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tempo-ride-*
+          path: installers
+          merge-multiple: true
+      - name: Publish installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" installers/* --clobber
+          else
+            gh release create "$TAG" installers/* --verify-tag --title "Tempo Ride ${TAG#desktop-v}" \
+              --notes "The Windows installer is unsigned. The macOS apps use ad hoc signatures and are not notarized. See desktop/README.md for installation."
+          fi
