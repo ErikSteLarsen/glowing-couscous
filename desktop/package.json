@@ -13,7 +13,7 @@
     "test": "node --test",
     "dist:win": "electron-builder --win --publish never",
     "dist:mac": "electron-builder --mac --publish never",
-    "dist:linux": "electron-builder --linux --publish never"
+    "dist:linux": "bash scripts/dist-linux.sh"
   },
   "devDependencies": {
     "electron": "45.4.1",

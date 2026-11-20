@@ -73,8 +73,9 @@ single-instance handoff.
 
 Run `pnpm test` from `desktop/`. On Windows, run `pnpm dist:win` for the
 NSIS installer. On macOS, run `pnpm dist:mac` for both DMGs. On Linux x64, run
-`pnpm dist:linux` for the AppImage and Debian package. Debian packaging needs
-`dpkg-deb` and the builder's bundled Ruby needs `libcrypt.so.1`. Find the
+`pnpm dist:linux` for the AppImage and Debian package. The bundled fpm needs
+`libcrypt.so.1`; if your distro lacks it (Arch), run
+`gem install --user-install fpm erb` and the build script uses that fpm instead. Find the
 installers in `desktop/dist/`. The icon source is `build/icon.svg`. The
 1024 px PNG feeds the Windows and macOS builders, and `build/icons/` provides
 the Linux sizes.
