@@ -4,7 +4,7 @@ import type { ComponentProps, KeyboardEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { LibraryBrowser } from '@/components/library/LibraryBrowser';
 import { WorkoutLibraryClient } from '@/components/WorkoutLibraryClient';
-import { buttonFocusClassName } from '@/components/ui';
+import { getSwitchOptionClassName, switchTrackClassName } from '@/components/ui';
 import { athleteWorkoutsHref, resolveWorkoutTab, type WorkoutTab } from '@/lib/athlete-workouts-navigation';
 import { parseCatalogQuery, type CatalogEntry } from '@/lib/workout-catalog/query';
 
@@ -58,7 +58,7 @@ export function FocusWorkouts({ catalogEntries, ...libraryProps }: Props) {
         </div>
       </header>
       {catalogEntries ? <div className="space-y-2 max-md:mb-3">
-        <div role="tablist" aria-label="Workout collections" className="grid w-full auto-cols-fr grid-flow-col gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1 sm:w-fit">
+        <div role="tablist" aria-label="Workout collections" className={`${switchTrackClassName} w-full sm:w-fit`}>
           {tabs.map(({ id, count }, index) => (
             <button
               key={id}
@@ -71,7 +71,7 @@ export function FocusWorkouts({ catalogEntries, ...libraryProps }: Props) {
               tabIndex={tab === id ? 0 : -1}
               onClick={() => selectTab(id)}
               onKeyDown={(event) => handleTabKey(event, index)}
-              className={`inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border px-2.5 text-sm font-semibold sm:px-4 ${buttonFocusClassName} ${tab === id ? 'border-[var(--brand)] bg-[var(--brand-tint)] text-[var(--text)]' : 'border-transparent text-[var(--text-secondary)] hover:bg-[var(--raised)] hover:text-[var(--text)]'}`}
+              className={`${getSwitchOptionClassName(tab === id)} flex-1 cursor-pointer gap-2 whitespace-nowrap min-h-11`}
             >
               {labels[id].title}
               <span className="data text-xs font-medium text-[var(--text-secondary)]">{count}</span>
