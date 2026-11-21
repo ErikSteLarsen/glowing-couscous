@@ -554,7 +554,7 @@ function SessionCard({
         ref={setActivatorNodeRef}
         href={`/athlete/session/${session.id}?from=calendar`}
         aria-label={`Open ${sessionLabel(session, day)}`}
-        className={`block space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2.5 pl-3.5 ${hasActions ? 'pr-9' : 'pr-3'} transition-colors hover:border-[var(--border-strong)] ${
+        className={`block space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2.5 pl-3.5 ${hasActions ? 'pr-9 max-xl:pr-12 max-md:pr-13' : 'pr-3'} transition-colors hover:border-[var(--border-strong)] ${
           draggable && session.canReschedule ? 'cursor-grab active:cursor-grabbing' : ''
         } ${pending ? 'opacity-70' : ''} ${buttonFocusClassName}`}
         style={complianceStyle(session.compliance)}
@@ -573,7 +573,7 @@ function SessionCard({
           <MenuTrigger
             disabled={pending}
             aria-label={`Actions for ${session.title}`}
-            className={`absolute right-1 top-1 inline-flex size-8 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-xl:size-10 disabled:opacity-50 ${buttonFocusClassName}`}
+            className={`absolute right-1 top-1 inline-flex size-8 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-xl:size-10 max-md:size-11 disabled:opacity-50 ${buttonFocusClassName}`}
           >
             <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
           </MenuTrigger>
