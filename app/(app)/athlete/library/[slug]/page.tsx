@@ -5,6 +5,7 @@ import { CatalogProfile, pctColor } from '@/components/library/CatalogProfile';
 import { LibraryWorkoutActions } from '@/components/library/LibraryWorkoutActions';
 import { ChevronDown } from 'lucide-react';
 import { Badge, PageShell, StatTile, Surface, TopBar, buttonFocusClassName, sectionHeadingClassName } from '@/components/ui';
+import { publicLibraryHref } from '@/lib/athlete-workouts-navigation';
 import { accountService } from '@/lib/account-service';
 import { parseBackOrigin, resolveBackTarget } from '@/lib/app-navigation';
 import { getCurrentUser } from '@/lib/auth-session';
@@ -12,14 +13,14 @@ import { formatDuration, formatDurationExact } from '@/lib/format-duration';
 import { getTempoZoneMeta } from '@/lib/tempo-blocks';
 import { workoutCatalog } from '@/lib/workout-catalog';
 import { catalogWorkoutMetrics, expandCatalogItems, isCatalogRepeat, wattsForPct } from '@/lib/workout-catalog/metrics';
-import { categoryLabel, findCatalogWorkout, levelLabel } from '@/lib/workout-catalog/query';
+import { categoryLabel, EMPTY_CATALOG_QUERY, findCatalogWorkout, levelLabel } from '@/lib/workout-catalog/query';
 import type { CatalogStep } from '@/lib/workout-catalog/types';
 
 type Params = { params: Promise<{ slug: string }>; searchParams: Promise<{ from?: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const workout = findCatalogWorkout(workoutCatalog, (await params).slug);
-  return { title: workout ? workout.name : 'Library' };
+  return { title: workout ? workout.name : 'Public library' };
 }
 
 const KIND_LABEL: Record<CatalogStep['kind'], string> = { warmup: 'Warm-up', work: 'Effort', recovery: 'Recovery', cooldown: 'Cool-down' };
@@ -133,7 +134,7 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
                 <h2 id="library-tags" className={sectionHeadingClassName}>Tags</h2>
                 <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-2">
                   {workout.tags.map((tag) => (
-                    <li key={tag}><Link href={`/athlete/library?tag=${encodeURIComponent(tag)}`} className="rounded-full text-[13px] text-[var(--text-muted)] underline-offset-4 hover:text-[var(--text)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--brand)]">#{tag}</Link></li>
+                    <li key={tag}><Link href={publicLibraryHref({ ...EMPTY_CATALOG_QUERY, tags: [tag] })} className="rounded-full text-[13px] text-[var(--text-muted)] underline-offset-4 hover:text-[var(--text)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--brand)]">#{tag}</Link></li>
                   ))}
                 </ul>
               </section>

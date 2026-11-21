@@ -5,11 +5,11 @@ import { workoutCatalog } from '../lib/workout-catalog/index.ts';
 import type { CatalogWorkout } from '../lib/workout-catalog/types.ts';
 import { computeCatalogMetrics, expandCatalogItems, zoneForPct } from '../lib/workout-catalog/metrics.ts';
 import {
-  createCatalogEntries, durationBucketFor, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, matchesCatalogSearch, parseCatalogQuery, serializeCatalogQuery,
+  createCatalogEntries, durationBucketFor, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, matchesCatalogSearch, parseCatalogQuery, serializeCatalogQuery, withCatalogQuery,
 } from '../lib/workout-catalog/query.ts';
-import { catalogStepNote, catalogWorkoutToEditorBlocks, catalogWorkoutToSessionInput } from '../lib/workout-catalog/session.ts';
+import { catalogStepNote, catalogWorkoutToEditorBlocks, catalogWorkoutToSessionInput, createCatalogWorkoutDraft } from '../lib/workout-catalog/session.ts';
 import { validateCatalog, validateCatalogWorkout } from '../lib/workout-catalog/validate.ts';
-import { createEmptySessionEditorDraft, deriveSessionEditorMetrics, validateSessionEditorDraft } from '../lib/session-editor.ts';
+import { createEmptySessionEditorDraft, deriveSessionEditorMetrics, serializeSessionEditorDraft, validateSessionEditorDraft } from '../lib/session-editor.ts';
 import { createRidePlan } from '../lib/ride/ride-plan.ts';
 import { createEmptyPerformanceProfile } from '../lib/performance-profile.ts';
 
@@ -111,6 +111,14 @@ test('query state round-trips through URL params and drops unknown values', () =
   assert.deepEqual(parseCatalogQuery({ category: ['sprint'], sort: 'bogus' }).categories, ['sprint']);
 });
 
+test('updating catalog filters preserves the selected tab and other URL state', () => {
+  const current = new URLSearchParams('tab=library&category=recovery&category=sprint&sort=tss-desc&example=retained');
+  const updated = withCatalogQuery(current, { ...EMPTY_CATALOG_QUERY, q: 'steady spin', levels: ['beginner'] });
+  assert.equal(updated.toString(), 'tab=library&example=retained&q=steady+spin&level=beginner');
+  assert.equal(withCatalogQuery(updated, EMPTY_CATALOG_QUERY).toString(), 'tab=library&example=retained');
+  assert.deepEqual(current.getAll('category'), ['recovery', 'sprint']);
+});
+
 test('active filters list every narrowing choice except search and sort, each removable', () => {
   const query = parseCatalogQuery(new URLSearchParams('q=over&category=threshold,vo2max&level=advanced&duration=45-75&tag=climb&tssMin=40&sort=tss-desc'));
   const chips = listCatalogFilters(query);
@@ -134,6 +142,20 @@ test('conversion produces valid canonical relative-FTP blocks with notes', () =>
   const input = catalogWorkoutToSessionInput(workout());
   assert.equal(input.summary, 'Two long threshold efforts.\n\nRide steady.\n\nStay seated.');
   assert.equal(validateSessionEditorDraft(createEmptySessionEditorDraft({ ...input, sport: 'BIKING' })), null);
+});
+
+test('Customize prefills an unscheduled create draft with the complete workout and no stored lineage', () => {
+  const catalogWorkout = workout();
+  const draft = createCatalogWorkoutDraft(catalogWorkout);
+  const input = catalogWorkoutToSessionInput(catalogWorkout);
+  assert.equal(draft.mode, 'create');
+  assert.equal(draft.id, null);
+  assert.equal(draft.templateId, null);
+  assert.equal(draft.scheduledDate, null);
+  assert.equal(draft.athleteId, null);
+  assert.deepEqual({ sport: draft.sport, title: draft.title, summary: draft.summary, blocks: draft.blocks }, input);
+  assert.equal(validateSessionEditorDraft(draft), null);
+  assert.ok(!JSON.stringify(serializeSessionEditorDraft(draft)).includes(catalogWorkout.slug));
 });
 
 test('ridden catalog workouts ramp warm-ups up and cool-downs down', () => {

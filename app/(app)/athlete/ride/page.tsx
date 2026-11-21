@@ -5,6 +5,7 @@ import { loginPathFor } from '@/lib/auth-callback';
 import { format, parseISO } from 'date-fns';
 import { ArrowRight, CalendarDays, Ellipsis, House, RotateCcw } from 'lucide-react';
 import { BrandMark } from '@/components/BrandMark';
+import { publicLibraryHref } from '@/lib/athlete-workouts-navigation';
 import { LibraryCard } from '@/components/library/LibraryCard';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
@@ -18,7 +19,7 @@ import { formatDuration } from '@/lib/format-duration';
 import { rideHubService, type RideHubRecent, type RideHubSession } from '@/lib/ride-hub-service';
 import { fromDayKey } from '@/lib/training-load';
 import { workoutCatalog } from '@/lib/workout-catalog';
-import { createCatalogListEntries, parseCatalogQuery, serializeCatalogQuery } from '@/lib/workout-catalog/query';
+import { createCatalogListEntries, parseCatalogQuery } from '@/lib/workout-catalog/query';
 
 export const metadata: Metadata = { title: 'Ride' };
 
@@ -33,8 +34,7 @@ export default async function RideHubPage({ searchParams }: { searchParams: Prom
   const ftp = account?.performanceProfile.cycling.ftpWatts ?? null;
   const [firstToday, ...laterToday] = hub.todaySessions;
   const earlierCount = hub.overdueSessions.length + hub.recent.length;
-  const libraryQuery = serializeCatalogQuery(parseCatalogQuery(params));
-  const libraryHref = libraryQuery ? `/athlete/library?${libraryQuery}` : '/athlete/library';
+  const libraryHref = publicLibraryHref(parseCatalogQuery(params));
   const ftpLink = (
     <Link href="/profile#cycling" className={`${ghostButtonClassName('compact')} max-md:min-h-11`}>
       {ftp ? `FTP ${ftp} W` : 'Set FTP for watts'}

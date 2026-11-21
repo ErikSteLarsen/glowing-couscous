@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   getPrimaryNavigation,
+  getMobileNavigation,
+  isNavigationItemActive,
   parseBackOrigin,
   resolveBackTarget,
   withBackOrigin,
@@ -17,6 +19,21 @@ test('desktop activity navigation uses the same label as the mobile destination'
   });
 });
 
+test('catalog detail and schedule belong to Workouts in desktop and mobile navigation', () => {
+  const desktop = getPrimaryNavigation();
+  const mobile = getMobileNavigation('ATHLETE');
+  assert.ok(desktop.some((item) => item.href === '/athlete/templates'));
+  for (const items of [desktop, mobile]) {
+    assert.equal(items.some((item) => item.href === '/athlete/library'), false);
+    const workouts = items.find((item) => item.label === 'Workouts');
+    assert.ok(workouts);
+    assert.equal(workouts.description, 'Yours & public library');
+    for (const path of ['/athlete/workouts', '/athlete/library/gentle-spin-30', '/athlete/library/gentle-spin-30/schedule']) {
+      assert.deepEqual(items.filter((item) => isNavigationItemActive(path, item, items)), [workouts]);
+    }
+  }
+});
+
 const back = (href: string, destination: string) => ({ href, destination, label: `Back to ${destination}` });
 
 test('session detail returns to every allowed origin', () => {
@@ -26,7 +43,7 @@ test('session detail returns to every allowed origin', () => {
     planner: back('/athlete/calendar', 'Calendar'),
     activity: back('/athlete/activity', 'Activity'),
     imports: back('/athlete/import', 'Import'),
-    library: back('/athlete/library', 'Library'),
+    library: back('/athlete/workouts?tab=library', 'Workouts'),
     ride: back('/athlete/ride', 'Ride'),
   };
   for (const [from, target] of Object.entries(expected)) {
@@ -48,11 +65,11 @@ test('live and ride pages return to their session and keep only a valid origin',
   assert.deepEqual(resolveBackTarget({ route: 'session-live', sessionId: 7, from: '//evil.example' }), back('/athlete/session/7', 'Session'));
 });
 
-test('library workout returns to Ride from Tempo Ride, otherwise to Library', () => {
+test('library workout returns to Ride from Tempo Ride, otherwise to the Workouts public tab', () => {
   assert.deepEqual(resolveBackTarget({ route: 'library-workout', from: 'ride' }), back('/athlete/ride', 'Ride'));
-  assert.deepEqual(resolveBackTarget({ route: 'library-workout', from: 'library' }), back('/athlete/library', 'Library'));
-  assert.deepEqual(resolveBackTarget({ route: 'library-workout' }), back('/athlete/library', 'Library'));
-  assert.deepEqual(resolveBackTarget({ route: 'library-workout', from: 'calendar' }), back('/athlete/library', 'Library'));
+  assert.deepEqual(resolveBackTarget({ route: 'library-workout', from: 'library' }), back('/athlete/workouts?tab=library', 'Workouts'));
+  assert.deepEqual(resolveBackTarget({ route: 'library-workout' }), back('/athlete/workouts?tab=library', 'Workouts'));
+  assert.deepEqual(resolveBackTarget({ route: 'library-workout', from: 'calendar' }), back('/athlete/workouts?tab=library', 'Workouts'));
 });
 
 test('import returns to Settings, Profile or Activity', () => {

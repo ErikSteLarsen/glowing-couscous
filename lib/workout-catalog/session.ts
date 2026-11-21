@@ -1,4 +1,4 @@
-import type { SessionEditorBlock } from '../session-editor.ts';
+import { createEmptySessionEditorDraft, type SessionEditorBlock } from '../session-editor.ts';
 import { chartIntensityFraction, zoneForTarget } from '../workout-zone-intensity.ts';
 import type { WorkoutTarget } from '../workout-targets.ts';
 import { expandCatalogItems, type CatalogFlatStep } from './metrics.ts';
@@ -41,7 +41,7 @@ export function catalogSessionSummary(workout: Pick<CatalogWorkout, 'summary' | 
   return [workout.summary.trim(), workout.description.trim()].filter(Boolean).join('\n\n');
 }
 
-/** A session-editor input (title, sport, summary, blocks) shared by Ride now, Schedule and Add to my workouts. */
+/** A session-editor input (title, sport, summary, blocks) shared by Ride now, Schedule and Customize. */
 export function catalogWorkoutToSessionInput(workout: CatalogWorkout) {
   return {
     sport: workout.sport,
@@ -49,6 +49,10 @@ export function catalogWorkoutToSessionInput(workout: CatalogWorkout) {
     summary: catalogSessionSummary(workout),
     blocks: catalogWorkoutToEditorBlocks(workout),
   };
+}
+
+export function createCatalogWorkoutDraft(workout: CatalogWorkout) {
+  return createEmptySessionEditorDraft({ ...catalogWorkoutToSessionInput(workout), source: 'athlete-library' });
 }
 
 /** Segments in the shape `SessionBlockBar` draws, with intensity inside the zone for height and color. */

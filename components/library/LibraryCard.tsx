@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LibraryWorkoutMenu } from '@/components/library/LibraryWorkoutMenu';
 import { CatalogProfile } from '@/components/library/CatalogProfile';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { compactSecondaryButtonClassName } from '@/components/ui';
@@ -29,13 +30,16 @@ export function LibraryCard({ entry, from }: { entry: CatalogEntry; from?: 'ride
           <div className="flex gap-1"><dt>TSS</dt><dd className="text-[var(--text)]">{metrics.tss}</dd></div>
           <div className="flex gap-1"><dt>IF</dt><dd className="text-[var(--text)]">{metrics.intensityFactor.toFixed(2)}</dd></div>
         </dl>
-        {from === 'ride' ? (
-          <WorkoutStartChooser
-            workout={{ title: workout.name, durationSec: metrics.durationSec, sport: 'BIKING', status: 'planned', hasSteps: steps.length > 0 }}
-            source={{ kind: 'catalog', slug: workout.slug, from: 'ride' }}
-            triggerClassName={`${compactSecondaryButtonClassName} relative z-10 max-md:min-h-11`}
-          />
-        ) : null}
+        <div className="flex items-center gap-1">
+          {from === 'ride' ? (
+            <WorkoutStartChooser
+              workout={{ title: workout.name, durationSec: metrics.durationSec, sport: 'BIKING', status: 'planned', hasSteps: steps.length > 0 }}
+              source={{ kind: 'catalog', slug: workout.slug, from: 'ride' }}
+              triggerClassName={`${compactSecondaryButtonClassName} relative z-10 max-md:min-h-11`}
+            />
+          ) : null}
+          <LibraryWorkoutMenu slug={workout.slug} name={workout.name} from={from ?? 'library'} showSchedule />
+        </div>
       </div>
     </article>
   );

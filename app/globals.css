@@ -271,7 +271,6 @@
   background: #101211; border-color: #101211;
 }
 .study-workouts__library > div:first-child > h2,
-.study-workouts__header-count svg,
 .study-home__today .study-home__section-heading > span { color: var(--nav-signal); }
 :root[data-workspace-theme="dark"] #tempo-sidebar nav a:hover,
 :root[data-workspace-theme="dark"] #tempo-sidebar button:hover { background: var(--nav-active); }

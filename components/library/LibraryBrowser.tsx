@@ -1,11 +1,11 @@
 'use client';
 
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useMemo, useRef, useState } from 'react';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { LibraryCard } from '@/components/library/LibraryCard';
 import { buttonFocusClassName, compactSecondaryButtonClassName, EmptyState, formFieldClassName, formLabelClassName, formSelectClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import {
-  CATALOG_CATEGORIES, CATALOG_LEVELS, CATALOG_SORTS, DURATION_BUCKETS, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, serializeCatalogQuery,
+  CATALOG_CATEGORIES, CATALOG_LEVELS, CATALOG_SORTS, DURATION_BUCKETS, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, serializeCatalogQuery, withCatalogQuery,
   type CatalogEntry, type CatalogQuery, type CatalogSort, type DurationBucket,
 } from '@/lib/workout-catalog/query';
 import type { CatalogCategory, CatalogLevel } from '@/lib/workout-catalog/types';
@@ -18,12 +18,18 @@ const chipClassName = (selected: boolean) => `inline-flex min-h-8 shrink-0 items
 
 export function LibraryBrowser({
   entries,
-  initialQuery,
+  urlQuery,
 }: {
   entries: CatalogEntry[];
-  initialQuery: CatalogQuery;
+  urlQuery: CatalogQuery;
 }) {
-  const [query, setQuery] = useState(initialQuery);
+  const urlFilters = serializeCatalogQuery(urlQuery);
+  const [observedFilters, setObservedFilters] = useState(urlFilters);
+  const [query, setQuery] = useState(urlQuery);
+  if (urlFilters !== observedFilters) {
+    setObservedFilters(urlFilters);
+    if (urlFilters !== serializeCatalogQuery(query)) setQuery(urlQuery);
+  }
   const deferredQuery = useDeferredValue(query);
   const results = useMemo(() => filterCatalog(entries, deferredQuery), [entries, deferredQuery]);
   const categoryCounts = useMemo(() => {
@@ -33,23 +39,20 @@ export function LibraryBrowser({
   }, [entries, deferredQuery]);
   const filtered = isCatalogQueryFiltered(query);
   const activeFilters = listCatalogFilters(query);
-  const firstRender = useRef(true);
   const filtersDialog = useRef<HTMLDialogElement>(null);
 
-  // Keep filters in the URL without a server round trip, so reload and Back restore them.
-  useEffect(() => {
-    if (firstRender.current) { firstRender.current = false; return; }
-    const timer = window.setTimeout(() => {
-      const search = serializeCatalogQuery(query);
-      const url = `${window.location.pathname}${search ? `?${search}` : ''}${window.location.hash}`;
-      if (url !== `${window.location.pathname}${window.location.search}${window.location.hash}`) window.history.replaceState(window.history.state, '', url);
-    }, 250);
-    return () => window.clearTimeout(timer);
-  }, [query]);
+  function update(patch: Partial<CatalogQuery>) {
+    const next = { ...query, ...patch };
+    setQuery(next);
+    const { pathname, search, hash } = window.location;
+    const params = withCatalogQuery(new URLSearchParams(search), next);
+    params.set('tab', 'library');
+    const nextSearch = `?${params.toString()}`;
+    if (nextSearch !== search) window.history.replaceState(null, '', `${pathname}${nextSearch}${hash}`);
+  }
 
-  const update = (patch: Partial<CatalogQuery>) => setQuery((current) => ({ ...current, ...patch }));
   const toggle = <T extends string>(values: T[], value: T) => values.includes(value) ? values.filter((entry) => entry !== value) : [...values, value];
-  const clearFilters = () => setQuery({ ...EMPTY_CATALOG_QUERY, sort: query.sort });
+  const clearFilters = () => update({ ...EMPTY_CATALOG_QUERY, sort: query.sort });
   const sortLabel = (sort: CatalogSort) => sort === 'name' ? 'By focus' : CATALOG_SORTS.find((entry) => entry.id === sort)?.label ?? sort;
 
   const groups = query.sort === 'name'
@@ -72,6 +75,7 @@ export function LibraryBrowser({
               value={query.q}
               onChange={(event) => update({ q: event.target.value })}
               placeholder="Search workouts"
+              maxLength={80}
               className={`${formFieldClassName} pl-9`}
               autoComplete="off"
             />
@@ -153,7 +157,7 @@ export function LibraryBrowser({
           </label>
         </div>
         <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-          <button type="button" className={ghostButtonClassName('default')} disabled={activeFilters.length === 0} onClick={() => setQuery({ ...query, ...EMPTY_CATALOG_QUERY, q: query.q, sort: query.sort })}>Clear filters</button>
+          <button type="button" className={ghostButtonClassName('default')} disabled={activeFilters.length === 0} onClick={() => update({ ...EMPTY_CATALOG_QUERY, q: query.q, sort: query.sort })}>Clear filters</button>
           <button type="button" className={primaryButtonClassName} onClick={() => filtersDialog.current?.close()}>
             {`Show ${results.length} ${results.length === 1 ? 'workout' : 'workouts'}`}
           </button>

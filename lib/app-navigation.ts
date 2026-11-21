@@ -26,8 +26,7 @@ export function getPrimaryNavigation(): NavItem[] {
   return [
     { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete', exact: true },
     { label: 'Calendar', description: 'See scheduled work', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
-    { label: 'Workouts', description: 'Create & manage', href: '/athlete/workouts', matchPrefix: '/athlete/workouts' },
-    { label: 'Library', description: 'Built-in bike workouts', href: '/athlete/library', matchPrefix: '/athlete/library' },
+    { label: 'Workouts', description: 'Yours & public library', href: '/athlete/workouts', matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/library'] },
     { label: 'Templates', description: 'Reuse & assign', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
     { label: 'Activity', description: 'Review completed work', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
     { label: 'Events', description: 'Goals and results', href: '/athlete/events', matchPrefix: '/athlete/events' },
@@ -46,7 +45,7 @@ export function getMobileNavigation(role: AppRole): NavItem[] {
   return [
     { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete', exact: true },
     { label: 'Calendar', description: 'Schedule & view training', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
-    { label: 'Workouts', description: 'Create & manage', href: '/athlete/workouts', matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/templates', '/athlete/library'] },
+    { label: 'Workouts', description: 'Yours & public library', href: '/athlete/workouts', matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/templates', '/athlete/library'] },
     { label: 'Activity', description: 'Review completed work', href: '/athlete/activity', matchPrefix: '/athlete/activity', activeMatchPrefixes: ['/athlete/import'] },
   ];
 }
@@ -89,7 +88,7 @@ const backDestinations = {
   planner: { href: '/athlete/calendar', destination: 'Calendar' },
   activity: { href: '/athlete/activity', destination: 'Activity' },
   imports: { href: '/athlete/import', destination: 'Import' },
-  library: { href: '/athlete/library', destination: 'Library' },
+  library: { href: '/athlete/workouts?tab=library', destination: 'Workouts' },
   ride: { href: '/athlete/ride', destination: 'Ride' },
   profile: { href: '/profile', destination: 'Profile' },
   settings: { href: '/settings#connections', destination: 'Settings' },

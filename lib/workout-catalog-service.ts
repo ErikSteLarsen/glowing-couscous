@@ -3,7 +3,6 @@ import { Prisma } from '@prisma/client';
 
 import { prisma } from './prisma.ts';
 import { createAthletePlannerService } from './athlete-planner-service.ts';
-import { workoutLibraryService } from './workout-library-service.ts';
 import { parseCalendarDay } from './calendar-navigation.ts';
 import { workoutCatalog } from './workout-catalog/index.ts';
 import type { CatalogWorkout } from './workout-catalog/types.ts';
@@ -11,7 +10,6 @@ import { findCatalogWorkout } from './workout-catalog/query.ts';
 import { catalogWorkoutToSessionInput } from './workout-catalog/session.ts';
 
 type PlannerPort = Pick<ReturnType<typeof createAthletePlannerService>, 'saveSession'>;
-type LibraryPort = Pick<typeof workoutLibraryService, 'saveForOwner'>;
 type CatalogTransaction = Pick<Prisma.TransactionClient, 'session' | 'placementRequest' | '$executeRaw'>;
 type CatalogDatabase = Pick<typeof prisma, 'placementRequest'> & {
   $transaction<T>(run: (tx: CatalogTransaction) => Promise<T>): Promise<T>;
@@ -21,7 +19,6 @@ type WorkoutCatalogDeps = {
   catalog?: readonly CatalogWorkout[];
   /** Builds the planner that writes inside a catalog transaction. */
   plannerFor?: (tx: CatalogTransaction) => PlannerPort;
-  library?: LibraryPort;
   db?: CatalogDatabase;
 };
 
@@ -65,13 +62,11 @@ function asRecord(input: unknown): Record<string, unknown> {
 
 /**
  * Copies built-in catalog workouts into a person's own training. The catalog stays
- * read-only code; every action creates an independent copy through the existing
- * planner or workout-library owner, with that owner's validation.
+ * read-only code. Ride now and Schedule use the existing planner validation.
  */
 export function createWorkoutCatalogService({
   catalog = workoutCatalog,
   plannerFor = (tx) => createAthletePlannerService({ db: tx as typeof prisma }),
-  library = workoutLibraryService,
   db = prisma as unknown as CatalogDatabase,
 }: WorkoutCatalogDeps = {}) {
   function find(slug: string) {
@@ -169,19 +164,6 @@ export function createWorkoutCatalogService({
         }
         throw error;
       }
-    },
-
-    /** Saves an editable copy into the person's own Workouts library. */
-    async addToLibrary(athleteId: number, slug: string, input: unknown): Promise<{ ok: true; sessionId: number } | Failure> {
-      const workout = find(slug);
-      if (!workout) return notFound;
-      const requestKey = asRecord(input).requestKey;
-      const result = await library.saveForOwner('athlete', athleteId, {
-        ...catalogWorkoutToSessionInput(workout),
-        ...(requestKey === undefined ? {} : { requestKey }),
-      });
-      if (!result.ok) return { ok: false, error: result.error, status: result.status as Failure['status'] };
-      return { ok: true, sessionId: result.sessionId };
     },
   };
 }

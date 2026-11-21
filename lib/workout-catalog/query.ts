@@ -197,6 +197,15 @@ export function serializeCatalogQuery(query: CatalogQuery): string {
   return params.toString();
 }
 
+export function withCatalogQuery(params: URLSearchParams, query: CatalogQuery) {
+  const result = new URLSearchParams(params);
+  for (const key of ['q', 'category', 'level', 'duration', 'tag', 'tssMin', 'tssMax', 'ifMin', 'ifMax', 'sort']) {
+    result.delete(key);
+  }
+  for (const [key, value] of new URLSearchParams(serializeCatalogQuery(query))) result.set(key, value);
+  return result;
+}
+
 export function isCatalogQueryFiltered(query: CatalogQuery): boolean {
   return serializeCatalogQuery({ ...query, sort: 'name' }) !== '';
 }

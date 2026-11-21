@@ -43,6 +43,7 @@ import type { PerformanceProfile } from '@/lib/performance-profile';
 import { useDraftRecovery } from '@/components/useDraftRecovery';
 import { DraftRecoveryNotice } from '@/components/DraftRecoveryNotice';
 import { parseWorkoutRecovery } from '@/lib/workout-recovery';
+import { athleteWorkoutsHref, type WorkoutTab } from '@/lib/athlete-workouts-navigation';
 import type { RecoveryDraft } from '@/lib/draft-recovery';
 
 type WorkoutRecord = {
@@ -72,6 +73,8 @@ export function WorkoutLibraryClient({
   endpoint,
   performanceProfile = null,
   initialWorkoutId = null,
+  initialCustomization = null,
+  collections = null,
   previewMode = false,
   designDirection = null,
   ownerId = null,
@@ -82,6 +85,12 @@ export function WorkoutLibraryClient({
   endpoint: string;
   performanceProfile?: PerformanceProfile | null;
   initialWorkoutId?: number | null;
+  initialCustomization?: { slug: string; draft: SessionEditorDraft } | null;
+  collections?: {
+    tab: WorkoutTab;
+    onBrowse: () => void;
+    otherPanels: { id: Exclude<WorkoutTab, 'mine'>; content: ReactNode }[];
+  } | null;
   previewMode?: boolean;
   designDirection?: 'nocturne' | null;
   ownerId?: number | null;
@@ -93,14 +102,15 @@ export function WorkoutLibraryClient({
   const [isPending, startTransition] = useTransition();
   const [filterText, setFilterText] = useState('');
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<number | null>(() => initialWorkout?.id ?? null);
-  const [editorOpen, setEditorOpen] = useState(() => initialWorkout !== null);
+  const entry = initialCustomization ? `customize:${initialCustomization.slug}` : initialWorkout ? `edit:${initialWorkout.id}` : null;
+  const [editorEntry, setEditorEntry] = useState(entry);
+  const [catalogName, setCatalogName] = useState(initialCustomization?.draft.title ?? null);
+  const [editorOpen, setEditorOpen] = useState(() => entry !== null);
   const [isDirty, setIsDirty] = useState(false);
   const [pendingDraftAction, setPendingDraftAction] = useState<PendingDraftAction | null>(null);
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
-  const [draft, setDraft] = useState<SessionEditorDraft>(() => initialWorkout
-    ? createSessionEditorDraftFromPersisted('create', { ...initialWorkout, date: null, scheduledDate: null })
-    : createNewDraft());
+  const [draft, setDraft] = useState(() => initialCustomization?.draft ?? draftForWorkout(initialWorkout));
   const [guidedFormOpen, setGuidedFormOpen] = useState(false);
   const [guidedInfo, setGuidedInfo] = useState<GuidedWorkoutInfo | null>(null);
   const clientMounted = useSyncExternalStore(subscribeToNothing, clientSnapshot, serverSnapshot);
@@ -125,6 +135,24 @@ export function WorkoutLibraryClient({
     if (saved?.workoutId != null) document.querySelector<HTMLElement>(`[data-workout-row="${saved.workoutId}"]`)?.focus({ preventScroll: true });
   }, [editorOpen]);
 
+  // A link or browser Back can change the server entry while this page stays mounted.
+  if (editorEntry !== entry) {
+    setEditorEntry(entry);
+    if (initialCustomization || (initialWorkout && (!editorOpen || selectedWorkoutId !== initialWorkout.id)) || (!entry && editorOpen)) {
+      setSelectedWorkoutId(initialWorkout?.id ?? null);
+      setCatalogName(initialCustomization?.draft.title ?? null);
+      setDraft(initialCustomization?.draft ?? draftForWorkout(initialWorkout));
+      setRevision(initialWorkout?.updatedAt ? new Date(initialWorkout.updatedAt).toISOString() : '');
+      setRequestKey('');
+      setIsDirty(false);
+      setPendingDraftAction(null);
+      setGuidedInfo(null);
+      setGuidedFormOpen(false);
+      setEditorOpen(entry !== null);
+      setMessage('');
+    }
+  }
+
   function rememberListPosition(workoutId: number | null) {
     if (!editorOpen) listScroll.current = { top: window.scrollY, workoutId };
   }
@@ -137,6 +165,7 @@ export function WorkoutLibraryClient({
     const currentRevision = original?.updatedAt ? new Date(original.updatedAt).toISOString() : '';
     const asCopy = record.resource !== 'new' && (!original || currentRevision !== record.baseline);
     recovery.discard();
+    setCatalogName(null);
     setSelectedWorkoutId(original && !asCopy ? original.id : null);
     setRevision(original && !asCopy ? currentRevision : '');
     setDraft({ ...recovered.draft, id: original && !asCopy ? original.id : null, mode: 'create', scheduledDate: null, planWeekday: null });
@@ -160,6 +189,7 @@ export function WorkoutLibraryClient({
     recovery.discard();
     setRequestKey(crypto.randomUUID());
     setRevision(action.kind === 'workout' && action.workout.updatedAt ? new Date(action.workout.updatedAt).toISOString() : '');
+    setCatalogName(null);
     setGuidedInfo(null);
     setGuidedFormOpen(false);
     if (action.kind !== 'close') rememberListPosition(action.kind === 'workout' ? action.workout.id : null);
@@ -169,14 +199,20 @@ export function WorkoutLibraryClient({
       setEditorOpen(true);
     } else if (action.kind === 'workout') {
       setSelectedWorkoutId(action.workout.id);
-      setDraft(createSessionEditorDraftFromPersisted('create', { ...action.workout, date: null, scheduledDate: null }));
+      setDraft(draftForWorkout(action.workout));
       setEditorOpen(true);
       if (initialWorkoutId !== null) router.replace(`/athlete/workouts?edit=${action.workout.id}`, { scroll: false });
     } else {
       setSelectedWorkoutId(null);
       setDraft(createNewDraft());
       setEditorOpen(false);
-      if (initialWorkoutId !== null) router.replace('/athlete/workouts', { scroll: false });
+      if (entry) {
+        const params = new URLSearchParams(window.location.search);
+        params.delete('edit');
+        params.delete('customize');
+        if (initialCustomization) params.set('tab', 'library');
+        router.replace(athleteWorkoutsHref(params), { scroll: false });
+      }
     }
     setIsDirty(false);
     setPendingDraftAction(null);
@@ -210,6 +246,8 @@ export function WorkoutLibraryClient({
       return;
     }
     const submittedSnapshot = JSON.stringify(draft);
+    const saveKey = selectedWorkoutId === null ? requestKey || crypto.randomUUID() : '';
+    if (saveKey && !requestKey) setRequestKey(saveKey);
     startTransition(async () => {
       try {
         const payload = {
@@ -218,7 +256,7 @@ export function WorkoutLibraryClient({
           planWeekday: null,
           source: role === 'COACH' ? 'coach-library' : 'athlete-library',
           ...(selectedWorkoutId && revision ? { expectedUpdatedAt: revision } : {}),
-          ...(!selectedWorkoutId && requestKey ? { requestKey } : {}),
+          ...(saveKey ? { requestKey: saveKey } : {}),
         };
         const response = await fetch(selectedWorkoutId ? `${endpoint}/${selectedWorkoutId}` : endpoint, {
           method: selectedWorkoutId ? 'PATCH' : 'POST',
@@ -240,10 +278,19 @@ export function WorkoutLibraryClient({
         if (!selectedWorkoutId && payloadResponse.sessionId) {
           setSelectedWorkoutId(payloadResponse.sessionId);
           setDraft((current) => ({ ...current, id: payloadResponse.sessionId! }));
-          if (untouched) setEditorOpen(false);
+          if (!initialCustomization && untouched) setEditorOpen(false);
+        }
+        if (initialCustomization && payloadResponse.sessionId) {
+          setCatalogName(null);
+          const params = new URLSearchParams(window.location.search);
+          params.delete('customize');
+          params.set('edit', String(payloadResponse.sessionId));
+          params.set('tab', 'library');
+          router.replace(athleteWorkoutsHref(params), { scroll: false });
+        } else {
+          router.refresh();
         }
         if (!untouched) setMessage('The submitted workout was saved. Your newer edits are still unsaved; save again to apply them.');
-        router.refresh();
       } catch {
         setMessageTone('danger');
         setMessage('Could not reach the server. Check your connection and try again.');
@@ -290,20 +337,32 @@ export function WorkoutLibraryClient({
   }
 
   const newWorkoutAction = role === 'ATHLETE'
-    ? <NewWorkoutMenu onGuided={openGuidedForm} onScratch={() => requestDraftAction({ kind: 'new' })} />
+    ? <NewWorkoutMenu onGuided={openGuidedForm} onScratch={() => requestDraftAction({ kind: 'new' })} onBrowse={collections?.onBrowse} />
     : <button type="button" className={primaryButtonClassName} onClick={() => requestDraftAction({ kind: 'new' })}>Create workout</button>;
 
   const metrics = deriveSessionEditorMetrics(draft, performanceProfile?.cycling.ftpWatts);
   const showEditor = editorOpen && (!designDirection || clientMounted);
+  const showMine = !collections || collections.tab === 'mine';
 
   return (
     <>
     {editorOpen ? null : listIntro}
     <div className={designDirection ? 'study-workouts__body' : editorOpen ? 'min-w-0' : 'page-content--library workout-library'}>
       <DraftRecoveryNotice candidates={recovery.candidates} status={recovery.status} disabled={isPending} onRestore={restoreWorkout} onDiscard={recovery.discard} />
-      {!editorOpen ? <section aria-labelledby="workout-library-title" className="study-workouts__library min-w-0 space-y-5">
+      {!editorOpen && collections?.otherPanels.map(({ id, content }) => (
+        <div key={id} role="tabpanel" id={`workout-panel-${id}`} aria-labelledby={`workout-tab-${id}`} hidden={collections.tab !== id}>
+          {collections.tab === id ? content : null}
+        </div>
+      ))}
+      {!editorOpen && !showMine ? <div role="tabpanel" id="workout-panel-mine" aria-labelledby="workout-tab-mine" hidden /> : null}
+      {!editorOpen && showMine ? <section
+        role={collections ? 'tabpanel' : undefined}
+        id={collections ? 'workout-panel-mine' : undefined}
+        aria-labelledby={collections ? 'workout-tab-mine' : 'workout-library-title'}
+        className="study-workouts__library min-w-0 space-y-5"
+      >
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="workout-library-title" className="text-lg font-semibold text-[var(--text)]">Workout library</h2>
+          <h2 id="workout-library-title" className="text-lg font-semibold text-[var(--text)]">{collections ? 'Saved workouts' : 'Workout library'}</h2>
           {newWorkoutAction}
         </div>
         {role === 'ATHLETE' && guidedFormOpen ? <GuidedWorkoutForm onCancel={() => setGuidedFormOpen(false)} onGenerated={(nextDraft, info) => {
@@ -345,8 +404,12 @@ export function WorkoutLibraryClient({
         {visibleWorkouts.length === 0 && guidedFormOpen ? null : visibleWorkouts.length === 0 ? workouts.length === 0 ? (
           <EmptyState
             title="Your workout library is empty"
-            description={role === 'ATHLETE' ? 'Build one with guidance or from scratch, then schedule a copy in Calendar.' : 'Create a workout here, then add a copy to a day in Planner.'}
-            action={newWorkoutAction}
+            description={collections
+              ? 'Build a workout or start with one from the public library.'
+              : role === 'ATHLETE'
+                ? 'Build one with guidance or from scratch, then schedule a copy in Calendar.'
+                : 'Create a workout here, then add a copy to a day in Planner.'}
+            action={collections ? undefined : newWorkoutAction}
           />
         ) : (
           <EmptyState
@@ -446,6 +509,12 @@ export function WorkoutLibraryClient({
           </p>
         ) : null}
 
+        {catalogName ? (
+          <p className="text-sm text-[var(--text-secondary)]">
+            Starting from <strong className="font-semibold text-[var(--text)]">{catalogName}</strong> in the public library. Saving creates your own workout and leaves the public version unchanged.
+          </p>
+        ) : null}
+
         {guidedInfo ? <div className="space-y-1 border-b border-[var(--border)] pb-4 text-sm leading-6">
           <p className="font-semibold text-[var(--text)]">{guidedInfo.source === 'ai' ? 'AI-created workout' : `Standard guided pattern: ${guidedInfo.selectedPattern}`}</p>
           <p className="text-[var(--text-secondary)]">{guidedInfo.reason}</p>
@@ -454,7 +523,7 @@ export function WorkoutLibraryClient({
         </div> : null}
 
         <WorkoutBuilder
-          key={draft.id ?? 'new'}
+          key={draft.id ?? initialCustomization?.slug ?? 'new'}
           draft={draft}
           onChange={(next) => {
             setDraft((current) => ({ ...next, scheduledDate: null, planWeekday: null, mode: 'create', id: current.id }));
@@ -478,7 +547,7 @@ export function WorkoutLibraryClient({
   );
 }
 
-function NewWorkoutMenu({ onGuided, onScratch }: { onGuided: () => void; onScratch: () => void }) {
+function NewWorkoutMenu({ onGuided, onScratch, onBrowse }: { onGuided: () => void; onScratch: () => void; onBrowse?: () => void }) {
   return (
     <Menu>
       <MenuTrigger className={primaryButtonClassName}>
@@ -495,6 +564,7 @@ function NewWorkoutMenu({ onGuided, onScratch }: { onGuided: () => void; onScrat
           <span className="font-medium">Build from scratch</span>
           <span className="text-xs text-[var(--text-secondary)]">Choose a name and sport, then add blocks yourself.</span>
         </MenuItem>
+        {onBrowse ? <MenuItem onSelect={onBrowse}>Start from public library</MenuItem> : null}
       </MenuContent>
     </Menu>
   );
@@ -529,6 +599,12 @@ function WorkoutRowActions({ workout, canSchedule }: { workout: WorkoutRecord; c
       <ShareLinkResult share={share} showAudience />
     </div>
   );
+}
+
+function draftForWorkout(workout: WorkoutRecord | null) {
+  return workout
+    ? createSessionEditorDraftFromPersisted('create', { ...workout, date: null, scheduledDate: null })
+    : createNewDraft();
 }
 
 function createNewDraft(sport = 'RUNNING', title = '') {

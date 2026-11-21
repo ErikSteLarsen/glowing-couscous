@@ -28,7 +28,7 @@ const catalog: CatalogWorkout[] = [{
 const REQUEST_KEY = 'catalog-schedule-key-0001';
 
 function setup(existing: { id: number } | null = null) {
-  const calls: { planner: unknown[]; library: unknown[]; lookups: unknown[]; locks: unknown[] } = { planner: [], library: [], lookups: [], locks: [] };
+  const calls: { planner: unknown[]; lookups: unknown[]; locks: unknown[] } = { planner: [], lookups: [], locks: [] };
   const tx = {
     session: { findFirst: async (query: unknown) => { calls.lookups.push(query); return existing; } },
     placementRequest: { create: async () => ({}), update: async () => ({}) },
@@ -37,7 +37,6 @@ function setup(existing: { id: number } | null = null) {
   const service = createWorkoutCatalogService({
     catalog,
     plannerFor: () => ({ saveSession: async (athleteId: number, input: unknown) => { calls.planner.push({ athleteId, input }); return { ok: true as const, sessionIds: [41, 42] }; } }) as never,
-    library: { saveForOwner: async (owner: string, ownerId: number, input: unknown) => { calls.library.push({ owner, ownerId, input }); return { ok: true as const, sessionId: 7 }; } } as never,
     db: {
       placementRequest: { findUnique: async () => null },
       $transaction: async (run: (client: typeof tx) => Promise<unknown>) => run(tx),
@@ -79,20 +78,13 @@ test('catalog actions reject unknown workouts and invalid dates', async () => {
   assert.equal(calls.planner.length, 0);
 });
 
-test('schedule and add to workouts delegate to the existing owners', async () => {
+test('schedule delegates to the athlete planner', async () => {
   const { service, calls } = setup();
   const scheduled = await service.schedule(3, 'fixture-sweet-spot', { dates: ['2026-11-24', '2026-11-22', '2026-11-24'], timeLabel: ' 06:30 ', requestKey: REQUEST_KEY });
   assert.deepEqual(scheduled, { ok: true, sessionIds: [41, 42], dates: ['2026-11-22', '2026-11-24'] });
   const plannerInput = (calls.planner[0] as { input: { dates: string[]; timeLabel: string } }).input;
   assert.deepEqual(plannerInput.dates.sort(), ['2026-11-22', '2026-11-24']);
   assert.equal(plannerInput.timeLabel, '06:30');
-
-  assert.deepEqual(await service.addToLibrary(3, 'fixture-sweet-spot', { requestKey: 'abcdefabcdefabcdef' }), { ok: true, sessionId: 7 });
-  const libraryCall = calls.library[0] as { owner: string; ownerId: number; input: { requestKey: string; scheduledDate?: string } };
-  assert.equal(libraryCall.owner, 'athlete');
-  assert.equal(libraryCall.ownerId, 3);
-  assert.equal(libraryCall.input.requestKey, 'abcdefabcdefabcdef');
-  assert.equal(libraryCall.input.scheduledDate, undefined);
 });
 
 

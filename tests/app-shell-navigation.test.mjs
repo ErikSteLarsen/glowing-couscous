@@ -72,7 +72,7 @@ test('mobile navigation maps task routes by role without leaking athlete destina
   assert.equal(coachItems.some((item) => item.href.startsWith('/athlete')), false);
 });
 
-test('Workouts is a standalone library destination and session detail keeps its entry context', async () => {
+test('Workouts keeps its owner-scoped list and session detail keeps its entry context', async () => {
   const workoutsPageSource = await read('app/(app)/athlete/workouts/page.tsx');
   const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
   const sessionPageSource = await read('app/(app)/athlete/session/[sessionId]/page.tsx');
@@ -90,8 +90,8 @@ test('Workouts is a standalone library destination and session detail keeps its 
   assert.match(calendarSource, /from=calendar/);
   assert.match(profileMenuSource, /isProfileActionActive/);
   assert.match(profileMenuSource, /aria-current=\{isActive \? 'page' : undefined\}/);
-  assert.match(workoutsClientSource, /const \[editorOpen, setEditorOpen\] = useState\(\(\) => initialWorkout !== null\)/);
-  assert.match(workoutsPageSource, /initialWorkoutId=\{initialWorkoutId\}/);
+  assert.match(workoutsClientSource, /const \[editorOpen, setEditorOpen\] = useState\(\(\) => entry !== null\)/);
+  assert.match(workoutsPageSource, /initialWorkoutId=\{catalogWorkout \? null : initialWorkoutId\}/);
   assert.match(workoutsClientSource, /if \(editorOpen && isDirty\)/);
   assert.match(workoutsClientSource, /Discard unsaved changes\?/);
   assert.match(workoutsClientSource, /Keep editing/);
@@ -106,6 +106,7 @@ test('Workouts has one New workout entry, a visible Schedule action and sharing 
   assert.match(workoutsClientSource, /New workout/);
   assert.match(workoutsClientSource, /Build with guidance/);
   assert.match(workoutsClientSource, /Build from scratch/);
+  assert.match(workoutsClientSource, /Start from public library/);
   assert.match(workoutsClientSource, />\s*Schedule\s*<\/Link>/);
   assert.doesNotMatch(workoutsClientSource, /Plan this|Build guided workout|Create manually/);
   assert.match(workoutsClientSource, /<MenuItem onSelect=\{share\.createLink\}>/);
@@ -117,7 +118,7 @@ test('the workout editor replaces the list and its header, returning to the list
   const focusSource = await read('components/FocusWorkouts.tsx');
 
   assert.match(workoutsClientSource, /\{editorOpen \? null : listIntro\}/);
-  assert.match(workoutsClientSource, /\{!editorOpen \? <section/);
+  assert.match(workoutsClientSource, /\{!editorOpen && showMine \? <section/);
   assert.match(workoutsClientSource, /<BackButton destination="Workouts" onClick=\{\(\) => requestDraftAction\(\{ kind: 'close' \}\)\}/);
   assert.match(workoutsClientSource, /rememberListPosition/);
   assert.match(workoutsClientSource, /<MenuItem destructive onSelect=\{deleteWorkout\}>/);
@@ -132,10 +133,12 @@ test('Library detail keeps Start workout and Schedule visible and schedules thro
   const placementSource = await read('app/(app)/athlete/calendar/CalendarPlacement.tsx');
 
   assert.match(actionsSource, /<WorkoutStartChooser/);
-  assert.match(actionsSource, /\/schedule`/);
+  assert.match(actionsSource, /href=\{catalogScheduleHref\(slug, from\)\}/);
   assert.doesNotMatch(actionsSource, /type="date"/);
-  assert.match(actionsSource, /<MenuItem[^>]*onSelect=\{\(\) => void addToWorkouts\(\)\}/);
-  assert.match(actionsSource, /Edit copy/);
+  assert.match(actionsSource, /<LibraryWorkoutMenu/);
+  const menuSource = await read('components/library/LibraryWorkoutMenu.tsx');
+  assert.match(menuSource, /href=\{customizeWorkoutHref\(slug\)\}/);
+  assert.match(menuSource, />Customize/);
   assert.match(detailSource, /Workout details/);
   assert.ok(detailSource.indexOf('library-intervals') < detailSource.indexOf('Workout details'));
   assert.ok(detailSource.indexOf('Workout details') < detailSource.indexOf('Intensity factor'));
