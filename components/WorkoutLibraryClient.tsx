@@ -428,6 +428,8 @@ export function WorkoutLibraryClient({
                   <button
                     type="button"
                     data-workout-row={workout.id}
+                    aria-label={`Edit workout: ${workout.title}`}
+                    aria-describedby={`workout-sport-${workout.id} workout-metrics-${workout.id}`}
                     aria-current={selected ? 'true' : undefined}
                     onClick={() => requestDraftAction({ kind: 'workout', workout })}
                     className={`w-full rounded-lg px-2 text-left ${buttonFocusClassName} focus-visible:ring-inset`}
@@ -435,13 +437,13 @@ export function WorkoutLibraryClient({
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="break-words text-[13px] font-semibold text-[var(--text)]">{workout.title}</p>
-                        <p className="mt-1 text-[12px] text-[var(--text-secondary)]">{getSportLabel(workout.sport)}</p>
+                        <p id={`workout-sport-${workout.id}`} className="mt-1 text-[12px] text-[var(--text-secondary)]">{getSportLabel(workout.sport)}</p>
                       </div>
                       <span className="shrink-0 text-[12px] text-[var(--text-secondary)]">{selected ? 'Editing' : 'Edit workout'}</span>
                     </div>
                     <div className="mt-3 space-y-2">
                       <SessionBlockBar segments={workoutMetrics.segments} compact />
-                      <div className="flex gap-3 text-[12px] text-[var(--text-secondary)]">
+                      <div id={`workout-metrics-${workout.id}`} className="flex gap-3 text-[12px] text-[var(--text-secondary)]">
                         <MetricText>{formatDurationExact(workoutMetrics.durationSec)}</MetricText>
                         <MetricText>{workoutMetrics.tss} TSS</MetricText>
                       </div>
