@@ -98,7 +98,7 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
       </section>
 
       <details className="group border-y border-[var(--border)]">
-        <summary className={`flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-[var(--text)] [&::-webkit-details-marker]:hidden ${buttonFocusClassName}`}>
+        <summary className={`flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-lg text-sm font-medium text-[var(--text)] transition-colors hover:bg-[var(--raised)] [&::-webkit-details-marker]:hidden ${buttonFocusClassName}`}>
           Workout details
           <ChevronDown aria-hidden="true" size={16} className="text-[var(--text-muted)] transition-transform group-open:rotate-180" />
         </summary>
