@@ -37,7 +37,7 @@ export default async function AthleteActivityPage({ searchParams }: {
         actions={<AddActivity today={todayInZone(await getRequestTimeZone())} />}
       />
 
-      <form action="/athlete/activity" className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <form action="/athlete/activity" className="flex flex-col gap-3 sm:flex-row sm:items-end max-md:[&_:is(input,select,button,a)]:min-h-11">
         <label className="min-w-0 flex-1 space-y-2">
           <span className={formLabelClassName}>Find a completed session</span>
           <input key={filters.query} type="search" name="q" defaultValue={filters.query} maxLength={100} placeholder="Search by workout name" className={formFieldClassName} />
@@ -96,7 +96,7 @@ export default async function AthleteActivityPage({ searchParams }: {
                       <p className="mt-1 text-xs text-[var(--text-muted)]">Started {formatActivityDateTime(activity.startedAt, activity.sourceTimezoneOffsetMinutes)}{activity.metricsSource === 'tcx-import' ? ' · finish estimated from duration' : activity.metricsSource === 'fit-import' ? ' · timezone from FIT Activity local timestamp' : ' · timed trackpoints; coordinates not stored'}</p>
                     ) : null}
                     </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-3">
+                  <div className="flex shrink-0 flex-wrap items-center gap-3 max-md:[&>:is(a,button)]:min-h-11">
                       <ActionLink href={`/athlete/session/${activity.sessionId}?from=activity`} tone="ghost">
                     Review outcome
                     </ActionLink>
@@ -137,7 +137,7 @@ export default async function AthleteActivityPage({ searchParams }: {
             ))}
           </div>
           {activityFeed.totalPages > 1 ? (
-            <nav aria-label="Activity pages" className="flex flex-wrap items-center justify-between gap-3">
+            <nav aria-label="Activity pages" className="flex flex-wrap items-center justify-between gap-3 max-md:[&>a]:min-h-11">
               {activityFeed.page > 1 ? <ActionLink href={getActivityHref(filters, activityFeed.page - 1)} tone="secondary">Newer sessions</ActionLink> : <span />}
               <span className="data text-sm text-[var(--text-secondary)]">Page {activityFeed.page} of {activityFeed.totalPages}</span>
               {activityFeed.page < activityFeed.totalPages ? <ActionLink href={getActivityHref(filters, activityFeed.page + 1)} tone="secondary">Older sessions</ActionLink> : <span />}

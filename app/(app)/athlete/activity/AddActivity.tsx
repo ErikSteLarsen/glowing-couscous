@@ -38,7 +38,7 @@ export function AddActivity({ today }: { today: string }) {
   return (
     <>
       <Menu>
-        <MenuTrigger ref={trigger} className={primaryButtonClassName}>
+        <MenuTrigger ref={trigger} className={`${primaryButtonClassName} max-md:min-h-11`}>
           <Plus size={16} aria-hidden="true" /> Add activity
         </MenuTrigger>
         <MenuContent align="end">
