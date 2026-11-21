@@ -299,7 +299,10 @@ export function ActivityImportClient({
                       {activity.sessionTitle !== activity.title ? ` · Matched to ${activity.sessionTitle}` : ''}
                     </span>
                   </span>
-                <span className="text-[12px] font-medium text-[var(--brand)]">{loadedTelemetry[activity.id] ? 'Hide measurements' : 'Show measurements'}</span>
+                  <span className="text-[12px] font-medium text-[var(--brand)]">
+                    <span className="group-open:hidden">Show measurements</span>
+                    <span className="hidden group-open:inline">Hide measurements</span>
+                  </span>
                 </summary>
                 <div className="mt-4 space-y-5 border-t border-[var(--border)] pt-4">
                   {loadingTelemetry[activity.id] ? (
