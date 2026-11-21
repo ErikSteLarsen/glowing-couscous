@@ -435,7 +435,7 @@ export function WorkoutLibraryClient({
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="break-words text-[13px] font-semibold text-[var(--text)]">{workout.title}</p>
-                        <p className="mt-1 text-[12px] text-[var(--text-secondary)]">{getSportLabel(workout.sport)} · Saved in library</p>
+                        <p className="mt-1 text-[12px] text-[var(--text-secondary)]">{getSportLabel(workout.sport)}</p>
                       </div>
                       <span className="shrink-0 text-[12px] text-[var(--text-secondary)]">{selected ? 'Editing' : 'Edit workout'}</span>
                     </div>
