@@ -620,8 +620,9 @@ and remove controls; at narrow widths their actions wrap below the workout
 selector. Show save failures beside Save and retain the draft. Cancelling or
 leaving the browser requires an unsaved-change safeguard.
 
-The library previews weekday workout names, session count and week/month reuse.
-Apply to Calendar carries the chosen template into scheduling. Routine application
+The library previews only the weekdays that have workouts, with the session count.
+The title opens the editor, Duplicate and Delete live in the card's ⋯ menu, and
+the visible Apply to Calendar carries the chosen template into scheduling. Routine application
 offers One week or Whole month, an explicit full date range and the actual dated
 workout list/count before saving. Explain that existing sessions remain, empty
 days add nothing, relative targets use Profile and fixed targets remain fixed.

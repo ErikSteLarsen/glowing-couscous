@@ -182,6 +182,19 @@ test('template workflow supports duplication and library filtering', async () =>
   assert.match(templatesClientSource, /Duplicate/);
 });
 
+test('template cards keep Apply to Calendar visible, edit from the title and tuck Duplicate/Delete into the overflow menu', async () => {
+  const templatesClientSource = await read('components/TrainingTemplatesClient.tsx');
+
+  assert.match(templatesClientSource, /size="compact">Apply to Calendar<\/ActionLink>/);
+  assert.match(templatesClientSource, /aria-label=\{`Edit \$\{template\.name\}`\}[^>]*onClick=\{\(\) => edit\(template\)\}/);
+  assert.match(templatesClientSource, /<MenuItem onSelect=\{\(\) => void mutate\(`\/api\/athlete\/templates\/\$\{template\.id\}\/duplicate`, 'POST'\)\}>/);
+  assert.match(templatesClientSource, /<MenuItem destructive onSelect=/);
+  // The preview lists only days with workouts; the editor keeps all seven days.
+  assert.match(templatesClientSource, /return titles\.length \? \[\{ day, titles \}\] : \[\]/);
+  assert.match(templatesClientSource, /'No workout'|>No workout</);
+  assert.doesNotMatch(templatesClientSource, /More actions<\/summary>|Edit routine/);
+});
+
 test('planner places sources while libraries own live editing', async () => {
   const plannerSource = await read('app/(app)/coach/planner/PlannerClient.tsx');
   const plannerDeskSource = await read('components/PlannerDesk.tsx');

@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
-import { ActionLink, Surface, EmptyState, primaryButtonClassName, secondaryButtonClassName, compactSecondaryButtonClassName, compactDangerButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, dangerTextClassName, successTextClassName } from '@/components/ui';
+import { ArrowDown, ArrowUp, Copy, Ellipsis, Plus, Trash2 } from 'lucide-react';
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/tempo/Menu';
+import { ActionLink, buttonFocusClassName, Surface, EmptyState, primaryButtonClassName, secondaryButtonClassName, compactSecondaryButtonClassName, compactDangerButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, dangerTextClassName, successTextClassName } from '@/components/ui';
 import { parseTemplateRoutine, ROUTINE_DAYS } from '@/lib/template-routine';
 import { getSportLabel } from '@/lib/sport';
 import { getCalendarPlacementHref } from '@/lib/calendar-navigation';
@@ -22,6 +23,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
   const [workoutId, setWorkoutId] = useState(workouts[0]?.id ?? 0);
   const [weekdays, setWeekdays] = useState<number[]>([0]);
+  const [notesOpen, setNotesOpen] = useState(false);
   const nextKey = useRef(0);
   const inFlight = useRef(false);
   const editorHeading = useRef<HTMLHeadingElement>(null);
@@ -37,6 +39,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
     const routine = parseTemplateRoutine(template?.routineJson);
     setDraft({ id: template?.id, name: template?.name ?? '', summary: template?.summary ?? '', entries: routine?.entries.map(entry => ({ key: nextKey.current++, weekday: entry.weekday, workoutId: entry.workoutId })) ?? [] });
     setNotice(null);
+    setNotesOpen(false);
     requestAnimationFrame(() => { editorHeading.current?.focus(); editorHeading.current?.scrollIntoView({ block: 'nearest' }); });
   }
 
@@ -69,7 +72,6 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
 
   const visible = templates.filter(template => `${template.name} ${template.summary ?? ''}`.toLowerCase().includes(filter.toLowerCase().trim()));
   return <div className="space-y-6">
-    <p className="max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">Group saved workouts into a Monday–Sunday routine. Apply it to one week or repeat it through a calendar month. Edit workouts in your workout library.</p>
     {notice && !draft && <p role={notice.error ? 'alert' : 'status'} className={notice.error ? dangerTextClassName : successTextClassName}>{notice.text}</p>}
     {draft ? <Surface className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -77,9 +79,12 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
         <button type="button" disabled={busy} className={secondaryButtonClassName} onClick={() => { if (window.confirm('Discard your unsaved template changes?')) setDraft(null); }}>Cancel</button>
       </div>
       <fieldset disabled={busy} className="space-y-6 min-w-0">
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="space-y-2"><span className={formLabelClassName}>Template name</span><input autoComplete="off" maxLength={160} value={draft.name} className={formFieldClassName} onChange={event => setDraft({ ...draft, name: event.target.value })} placeholder="Easy running and intervals" /></label>
-          <label className="space-y-2"><span className={formLabelClassName}>Purpose or notes (optional)</span><textarea maxLength={2000} value={draft.summary} rows={2} className={formFieldClassName} onChange={event => setDraft({ ...draft, summary: event.target.value })} placeholder="A relaxed base week with two interval days" /></label>
+        <div className="space-y-3">
+          <label className="block max-w-xl space-y-2"><span className={formLabelClassName}>Template name</span><input autoComplete="off" maxLength={160} value={draft.name} className={formFieldClassName} onChange={event => setDraft({ ...draft, name: event.target.value })} placeholder="Easy running and intervals" /></label>
+          <details open={notesOpen} onToggle={event => setNotesOpen(event.currentTarget.open)}>
+            <summary className="inline-flex min-h-9 cursor-pointer list-none items-center text-sm font-medium text-[var(--text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><span className="underline decoration-[var(--border)] underline-offset-4">Purpose or notes (optional)</span>{!notesOpen && draft.summary.trim() ? <span className="ml-1.5 font-normal text-[var(--text-muted)]">· Added</span> : null}</summary>
+            <label className="mt-2 block max-w-xl"><span className="sr-only">Purpose or notes (optional)</span><textarea maxLength={2000} value={draft.summary} rows={2} className={formFieldClassName} onChange={event => setDraft({ ...draft, summary: event.target.value })} placeholder="A relaxed base week with two interval days" /></label>
+          </details>
         </div>
         {workouts.length ? <div className="space-y-4 border-y border-[var(--border)] py-5">
           <h3 className="font-semibold">Add a saved workout</h3>
@@ -105,14 +110,40 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
         {notice && <p role={notice.error ? 'alert' : 'status'} className={notice.error ? dangerTextClassName : successTextClassName}>{notice.text}</p>}
         <button type="button" disabled={!draft.name.trim() || !draft.entries.length || draft.entries.some(entry => !workouts.some(workout => workout.id === entry.workoutId))} className={primaryButtonClassName} onClick={() => void mutate(draft.id ? `/api/athlete/templates/${draft.id}` : '/api/athlete/templates', draft.id ? 'PATCH' : 'POST', { name: draft.name, summary: draft.summary, entries: draft.entries.map(({ weekday, workoutId }) => ({ weekday, workoutId })) })}>{busy ? 'Saving…' : 'Save template'}</button>
       </fieldset>
-    </Surface> : <div className="flex flex-col gap-3 sm:flex-row sm:items-center"><label className="flex-1"><span className="sr-only">Search templates</span><input type="search" value={filter} onChange={event => setFilter(event.target.value)} className={formFieldClassName} placeholder="Search templates" /></label><button type="button" disabled={busy} className={primaryButtonClassName} onClick={() => edit()}>New template</button></div>}
+    </Surface> : <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">{templates.length ? <label className="flex-1 sm:max-w-md"><span className="sr-only">Search templates</span><input type="search" value={filter} onChange={event => setFilter(event.target.value)} className={formFieldClassName} placeholder="Search templates" /></label> : null}<button type="button" disabled={busy} className={primaryButtonClassName} onClick={() => edit()}>New template</button></div>}
     {!draft && (visible.length ? <div className="space-y-4">{visible.map(template => {
       const routine = parseTemplateRoutine(template.routineJson);
+      const filledDays = routine ? ROUTINE_DAYS.flatMap((day, weekday) => {
+        const titles = routine.entries.filter(entry => entry.weekday === weekday).map(entry => entry.title);
+        return titles.length ? [{ day, titles }] : [];
+      }) : [];
       return <Surface key={template.id} className="space-y-4">
-        <div className="space-y-2"><h2 className="text-lg font-semibold break-words">{template.name}</h2>{template.summary && <p className="text-sm leading-6 text-[var(--text-secondary)] break-words">{template.summary}</p>}<p className="text-sm text-[var(--text-muted)]">{routine ? `${routine.entries.length} sessions per week · Apply to a week or month` : 'Invalid routine — edit and save again'}</p></div>
-        {routine && <dl className="grid gap-x-6 gap-y-2 md:grid-cols-2">{ROUTINE_DAYS.map((day, weekday) => <div key={day} className="flex min-w-0 gap-3 text-sm"><dt className="w-24 shrink-0 text-[var(--text-secondary)]">{day}</dt><dd className="break-words min-w-0">{routine.entries.filter(entry => entry.weekday === weekday).map(entry => entry.title).join(', ') || 'No workout'}</dd></div>)}</dl>}
-        <div className="flex flex-wrap gap-3"><ActionLink href={getCalendarPlacementHref(`template:${template.id}`)} size="compact">Apply to Calendar</ActionLink><button type="button" disabled={busy} className={compactSecondaryButtonClassName} onClick={() => edit(template)}>Edit routine</button><details><summary className={`${compactSecondaryButtonClassName} list-none`}>More actions</summary><div className="flex flex-wrap gap-2 pt-2"><button type="button" disabled={busy} className={compactSecondaryButtonClassName} onClick={() => void mutate(`/api/athlete/templates/${template.id}/duplicate`, 'POST')}>Duplicate</button><button type="button" disabled={busy} className={compactDangerButtonClassName} onClick={() => { if (window.confirm(`Delete “${template.name}”? Sessions already on your calendar will remain.`)) void mutate(`/api/athlete/templates/${template.id}`, 'DELETE'); }}>Delete</button></div></details></div>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <h2 className="text-lg font-semibold break-words"><button type="button" disabled={busy} aria-label={`Edit ${template.name}`} className={`rounded-sm text-left underline-offset-4 hover:underline disabled:opacity-60 ${buttonFocusClassName}`} onClick={() => edit(template)}>{template.name}</button></h2>
+            {template.summary && <p className="text-sm leading-6 text-[var(--text-secondary)] break-words">{template.summary}</p>}
+            <p className="text-sm text-[var(--text-muted)]">{routine ? `${routine.entries.length} ${routine.entries.length === 1 ? 'session' : 'sessions'} per week` : 'Invalid routine — edit and save again'}</p>
+          </div>
+          <Menu>
+            <MenuTrigger disabled={busy} aria-label={`More actions for ${template.name}`} className={`inline-flex size-10 shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-md:size-11 disabled:opacity-50 ${buttonFocusClassName}`}>
+              <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
+            </MenuTrigger>
+            <MenuContent align="end">
+              <MenuItem onSelect={() => void mutate(`/api/athlete/templates/${template.id}/duplicate`, 'POST')}>
+                <Copy aria-hidden="true" size={16} strokeWidth={1.8} />
+                Duplicate
+              </MenuItem>
+              <MenuSeparator />
+              <MenuItem destructive onSelect={() => { if (window.confirm(`Delete “${template.name}”? Sessions already on your calendar will remain.`)) void mutate(`/api/athlete/templates/${template.id}`, 'DELETE'); }}>
+                <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />
+                Delete…
+              </MenuItem>
+            </MenuContent>
+          </Menu>
+        </div>
+        {filledDays.length ? <dl className="grid gap-x-6 gap-y-2 md:grid-cols-2">{filledDays.map(({ day, titles }) => <div key={day} className="flex min-w-0 gap-3 text-sm"><dt className="w-24 shrink-0 text-[var(--text-secondary)]">{day}</dt><dd className="break-words min-w-0">{titles.join(', ')}</dd></div>)}</dl> : null}
+        <div><ActionLink href={getCalendarPlacementHref(`template:${template.id}`)} size="compact">Apply to Calendar</ActionLink></div>
       </Surface>;
-    })}</div> : <EmptyState title={templates.length ? 'No matching templates' : 'Build your first training routine'} description={templates.length ? 'Try a different search.' : 'Add your easy workout on Monday, Wednesday and Friday, then your intervals on Tuesday and Thursday. Apply the finished routine in Calendar.'} />)}
+    })}</div> : <EmptyState title={templates.length ? 'No matching templates' : 'Build your first training routine'} description={templates.length ? 'Try a different search.' : 'Put saved workouts on the days you train. Days left empty add nothing when you apply it.'} />)}
   </div>;
 }
