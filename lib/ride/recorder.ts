@@ -354,7 +354,7 @@ export type RideImportPayload = {
   durationSec: number;
   distanceMeters: number | null;
   elevationGainMeters: null;
-  plannedSessionId: number;
+  plannedSessionId?: number;
   points: RideImportPoint[];
   laps: Array<{ startSec: number; endSec: number; timerSec: number; origin: 'device' }>;
 };
@@ -392,7 +392,8 @@ export function downsampleSamples(samples: RideSample[], maxPoints = MAX_ACTIVIT
 }
 
 /** The `/api/activity-imports` body for a finished ride attached to its planned session. */
-export function toImportPayload(recording: RideRecording): RideImportPayload {
+/** `standalone` drops the planned session so the importer files the ride as its own completed activity. */
+export function toImportPayload(recording: RideRecording, { standalone = false }: { standalone?: boolean } = {}): RideImportPayload {
   const durationSec = Math.max(1, recording.timerSec);
   const points = recording.samples.length ? downsampleSamples(recording.samples) : [{ elapsedSec: 0 }];
   const laps = recording.laps
@@ -414,7 +415,7 @@ export function toImportPayload(recording: RideRecording): RideImportPayload {
     durationSec,
     distanceMeters: inRange(Math.round(recording.distanceMeters), 1, MAX_ACTIVITY_IMPORT_DISTANCE_METERS) ?? null,
     elevationGainMeters: null,
-    plannedSessionId: recording.sessionId,
+    ...(standalone ? {} : { plannedSessionId: recording.sessionId }),
     points,
     laps,
   };

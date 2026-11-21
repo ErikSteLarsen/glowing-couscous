@@ -672,3 +672,17 @@ test('a ride from Sunday 23:45 to Monday 00:45 uploads its real finish time', ()
   const validated = validateActivityImport(payload);
   assert.equal(validated.ok, true, validated.ok ? '' : validated.error);
 });
+
+test('a standalone payload is the same upload without a planned session, so it keeps power load and finish time', () => {
+  const ride = plan();
+  let rec = startRecording(createRecording(7, 'Threshold', ride), ride, Date.UTC(2026, 10, 20, 7));
+  rec = tick(rec, ride, Date.UTC(2026, 10, 20, 7) + 13000, reading(210));
+  rec = finishRecording(rec, ride, Date.UTC(2026, 10, 20, 7) + 13000);
+  const { plannedSessionId, ...planned } = toImportPayload(rec);
+  assert.equal(plannedSessionId, 7);
+  const standalone = toImportPayload(rec, { standalone: true });
+  assert.equal('plannedSessionId' in standalone, false);
+  assert.deepEqual(standalone, planned);
+  const validated = validateActivityImport(standalone);
+  assert.equal(validated.ok && validated.value.plannedSessionId, null);
+});

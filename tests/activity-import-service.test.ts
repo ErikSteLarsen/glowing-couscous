@@ -373,3 +373,42 @@ function fakeDatabase(
     }),
   };
 }
+
+function fingerprintedDatabase(calls: Array<{ owner: string; args: Record<string, unknown> }>, saved: Map<string, { id: number; sessionId: number }>) {
+  const db = fakeDatabase(calls, {
+    performanceProfileJson: powerProfile,
+    findActivityFirst: async (args) => saved.get((args as { where: { importFingerprint: string } }).where.importFingerprint) ?? null,
+  });
+  const create = db.session.create;
+  db.session.create = async (args: unknown) => {
+    const fingerprint = (args as { data: { activity: { create: { importFingerprint: string } } } }).data.activity.create.importFingerprint;
+    if (saved.has(fingerprint)) throw Object.assign(new Error('Unique constraint failed'), { code: 'P2002' });
+    saved.set(fingerprint, { id: 71, sessionId: 27 });
+    return create(args);
+  };
+  return db;
+}
+
+test('saving an orphaned ride twice creates one standalone activity with power load and its finish time', async () => {
+  const calls: Array<{ owner: string; args: Record<string, unknown> }> = [];
+  const service = createActivityImportService({ db: fingerprintedDatabase(calls, new Map()) as never });
+  const [first, second] = await Promise.all([service.importForUser(7, steadyHour), service.importForUser(7, steadyHour)]);
+  const retry = await service.importForUser(7, steadyHour);
+  assert.deepEqual([first, second, retry].map((result) => result.ok && [result.activityId, result.sessionId]), [[71, 27], [71, 27], [71, 27]]);
+  assert.deepEqual([first, second, retry].filter((result) => result.ok && !result.duplicate).length, 1);
+  assert.equal(calls.filter((call) => call.owner === 'session.create').length, 1);
+  const activity = createdActivity(calls);
+  assert.equal(activity.tss, 100);
+  assert.equal((activity.completedAt as Date).toISOString(), '2026-11-16T00:45:00.000Z');
+});
+
+test('a standalone save of a ride already saved to its planned session returns that activity', async () => {
+  const calls: Array<{ owner: string; args: Record<string, unknown> }> = [];
+  const saved = new Map<string, { id: number; sessionId: number }>();
+  const planned = createActivityImportService({ db: fakeDatabase(calls, { findFirst: async () => ({ id: 55, status: 'planned', sport: 'BIKING' }) }) as never });
+  assert.equal((await planned.importForUser(7, { ...steadyHour, plannedSessionId: 55 })).ok, true);
+  const fingerprint = (calls.find((call) => call.owner === 'activity.create')?.args as { data: { importFingerprint: string } }).data.importFingerprint;
+  saved.set(fingerprint, { id: 90, sessionId: 55 });
+  const service = createActivityImportService({ db: fingerprintedDatabase(calls, saved) as never });
+  assert.deepEqual(await service.importForUser(7, steadyHour), { ok: true, activityId: 90, sessionId: 55, duplicate: true });
+});

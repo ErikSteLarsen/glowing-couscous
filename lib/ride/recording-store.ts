@@ -1,6 +1,6 @@
 'use client';
 
-import { hasRecordedData, parseCheckpoint, serializeCheckpoint, type RideRecording } from './recorder.ts';
+import { hasRecordedData, parseCheckpoint, serializeCheckpoint, toImportPayload, type RideRecording } from './recorder.ts';
 
 /** Keys written before per-user scoping carry no owner; the server must confirm ownership before use. */
 const LEGACY_PREFIX = 'tempo:ride:v1:';
@@ -102,6 +102,31 @@ export function classifyStoredRides(rides: StoredRide[], ownedStatuses: Readonly
     if (ride.legacy && !status) return [];
     return [{ ride, state: status === 'planned' ? 'open' as const : 'closed' as const }];
   });
+}
+
+export type StandaloneSaveResult = { ok: true; sessionId: number; duplicate: boolean } | { ok: false; error: string };
+
+/**
+ * Saves a ride whose session is gone, skipped or completed as its own completed activity, then clears its checkpoint.
+ * Retries are safe: the importer returns the existing activity for the same recording.
+ */
+export async function saveRideAsActivity(userId: number, recording: RideRecording, fetcher: typeof fetch = fetch): Promise<StandaloneSaveResult> {
+  let response: Response;
+  try {
+    response = await fetcher('/api/activity-imports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(toImportPayload(recording, { standalone: true })),
+    });
+  } catch {
+    return { ok: false, error: 'Could not reach Tempo.' };
+  }
+  const body = (await response.json().catch(() => null)) as { sessionId?: unknown; duplicate?: unknown; error?: unknown } | null;
+  if (!response.ok || typeof body?.sessionId !== 'number') {
+    return { ok: false, error: typeof body?.error === 'string' ? body.error : 'Tempo could not save this ride.' };
+  }
+  clearRideCheckpoint(userId, recording.sessionId);
+  return { ok: true, sessionId: body.sessionId, duplicate: body.duplicate === true };
 }
 
 export function downloadRideBackup(recording: RideRecording): void {

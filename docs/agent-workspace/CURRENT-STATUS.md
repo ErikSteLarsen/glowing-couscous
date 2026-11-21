@@ -159,8 +159,13 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   v1 checkpoints appear only after `GET /api/athlete/ride-checkpoints` confirms
   that the session is the rider's own. Rides whose session was deleted, skipped
   or completed show Download backup and Discard on Ride home and on the
-  "Ride unavailable" page. Saving an orphaned ride as a standalone activity is
-  not built.
+  "Ride unavailable" page. These orphaned rides can also be saved with **Save
+  as activity**. That uploads the normal ride payload without `plannedSessionId`
+  through the existing import path, which creates a completed `activity-import`
+  session. The import fingerprint makes retries and double clicks return the
+  same activity. Checked in a local browser: a 20-minute ride at 220 W saved
+  26 TSS with its real finish time. `pnpm test` 499 passed; `pnpm test:db` 551
+  passed.
 - Write races: a planned edit (session adjustment and planner edit) claims the
   validated row (status, `updatedAt`, no Activity) inside its transaction and
   returns 409 if a ride or completion committed first. Ride now is serialized
