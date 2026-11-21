@@ -336,6 +336,11 @@ Use the exports in `components/ui.tsx`; do not restyle buttons in a route.
   would have been.
 - **`Badge`:** pill, 24px minimum, tone neutral, brand, success, or warning, with
   text always present.
+- **`WorkoutCard`** (`components/library/WorkoutCard.tsx`): the card for both
+  Workouts tabs, Tempo Ride and Activity. Its title is the one link or button and
+  covers the card; a mini profile, a meta line, an optional summary and a footer
+  of metrics with tab-specific actions follow. It raises on hover and takes a
+  trace border on keyboard focus. Grids are 1 column on phones, then 2–4.
 - **`SessionRow`:** the shared workout unit across Home, Calendar, Workouts, and
   week surfaces (`default`, `compact`, `month`). The whole row is the link; a thin
   trace line grows on its left edge on hover and focus.
@@ -550,7 +555,13 @@ Public library tab.
 Hide the header and tabs while the editor is open. **Customize** prefills an
 unsaved draft from the catalog workout. Show its source name and explain that
 Save creates an athlete-owned workout and leaves the public version intact.
-Use the existing unsaved draft status and recovery controls. Back returns
+Both tabs share the `WorkoutCard` grid, search toolbar and count row; My
+workouts cards open the editor and offer Schedule and ⋯ (share, delete). Workout
+drafts kept on this browser appear as an "N unsaved drafts" chip at the right of
+the tabs row, opening a popover that names each draft with its age and offers
+Restore and Discard. Opening a workout that has a draft offers "Restore unsaved
+changes saved <age>?" inside the editor. Drafts identical to the saved version
+are removed. Profile keeps its inline recovery notice, beside its single form. Back returns
 to Public library. A clean draft closes without confirmation.
 
 ### Editing
@@ -629,6 +640,13 @@ Shell feedback uses a content-sized frame capped at 480px, centered within the
 available content column. Use 12px inline / 8px block padding, a 12px gap,
 and an icon-only dismiss control with a 44px mobile target. Feedback clears
 bottom navigation and Profile save actions; sync errors do not overlap notices.
+
+### Activity
+
+Completed work is a `WorkoutCard` grid: title, date · sport, duration, a slim
+block bar, one-line notes, TSS and compliance, and Compare where a planned
+baseline exists. The card opens the session outcome. Search, sport filter,
+totals and pagination stay above and below the grid.
 
 ### Home overview
 
