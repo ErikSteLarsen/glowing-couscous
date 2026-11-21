@@ -44,8 +44,8 @@ export default function SetupPage() {
   return (
     <AuthPageShell>
       <TopBar
-        title="Your workspace is ready"
-        description="Create, plan, complete, and review your training in one place."
+        title="Set up your workspace"
+        description="Plan workouts and track your training in Tempo."
         align="center"
       />
       <Surface className="mx-auto w-full max-w-md">
@@ -54,9 +54,9 @@ export default function SetupPage() {
           <button
             type="submit"
             disabled={loading}
-            className={`${primaryButtonClassName} w-full`}
+            className={`${primaryButtonClassName} w-full max-md:min-h-11`}
           >
-            {loading ? 'Saving…' : 'Continue'}
+            {loading ? 'Setting up…' : 'Open my workspace'}
           </button>
         </form>
       </Surface>
