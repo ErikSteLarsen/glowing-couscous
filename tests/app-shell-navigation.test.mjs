@@ -100,6 +100,18 @@ test('Workouts is a standalone library destination and session detail keeps its 
   assert.match(workoutsClientSource, /md:bottom-0/);
 });
 
+test('Workouts has one New workout entry, a visible Schedule action and sharing in the row menu', async () => {
+  const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
+
+  assert.match(workoutsClientSource, /New workout/);
+  assert.match(workoutsClientSource, /Build with guidance/);
+  assert.match(workoutsClientSource, /Build from scratch/);
+  assert.match(workoutsClientSource, />\s*Schedule\s*<\/Link>/);
+  assert.doesNotMatch(workoutsClientSource, /Plan this|Build guided workout|Create manually/);
+  assert.match(workoutsClientSource, /<MenuItem onSelect=\{share\.createLink\}>/);
+  assert.doesNotMatch(workoutsClientSource, /<ShareLinkButton/);
+});
+
 test('Calendar placement only places defined sources on selected dates', async () => {
   const plannerPageSource = await read('app/(app)/athlete/calendar/page.tsx');
   const retiredPlannerSource = await read('app/(app)/athlete/planner/page.tsx');

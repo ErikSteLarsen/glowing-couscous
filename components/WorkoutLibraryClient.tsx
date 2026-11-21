@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react';
 import Link from 'next/link';
+import { ChevronDown, Ellipsis, Link2, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -24,7 +25,8 @@ import { WorkoutBuilder } from '@/components/WorkoutBuilder';
 import { GuidedWorkoutForm, type GuidedWorkoutInfo } from '@/components/GuidedWorkoutForm';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
-import { ShareLinkButton } from '@/components/ShareLinkButton';
+import { ShareLinkResult, useShareLink } from '@/components/ShareLinkButton';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
 import { formatDurationExact } from '@/lib/format-duration';
 import {
   createEmptySessionEditorDraft,
@@ -254,6 +256,19 @@ export function WorkoutLibraryClient({
     });
   }
 
+  function openGuidedForm() {
+    if (previewMode) {
+      setMessageTone('danger');
+      setMessage('Guided creation uses your account. Open your Workouts page to build a workout.');
+    } else {
+      setGuidedFormOpen(true);
+    }
+  }
+
+  const newWorkoutAction = role === 'ATHLETE'
+    ? <NewWorkoutMenu onGuided={openGuidedForm} onScratch={() => requestDraftAction({ kind: 'new' })} />
+    : <button type="button" className={primaryButtonClassName} onClick={() => requestDraftAction({ kind: 'new' })}>Create workout</button>;
+
   const metrics = deriveSessionEditorMetrics(draft, performanceProfile?.cycling.ftpWatts);
   const showEditor = editorOpen && (!designDirection || clientMounted);
 
@@ -261,22 +276,9 @@ export function WorkoutLibraryClient({
     <div className={designDirection ? 'study-workouts__body' : editorOpen ? 'min-w-0' : 'page-content--library workout-library'}>
       <DraftRecoveryNotice candidates={recovery.candidates} status={recovery.status} disabled={isPending} onRestore={restoreWorkout} onDiscard={recovery.discard} />
       {designDirection || !editorOpen ? <section aria-labelledby="workout-library-title" className="study-workouts__library min-w-0 space-y-5">
-        <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 id="workout-library-title" className="text-lg font-semibold text-[var(--text)]">Workout library</h2>
-          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
-            <p className="max-w-[44ch] text-sm leading-6 text-[var(--text-secondary)]">
-              Keep reusable workouts here. They stay unscheduled until you schedule a copy.
-            </p>
-            {role === 'ATHLETE' ? <button type="button" className={primaryButtonClassName} onClick={() => {
-              if (previewMode) {
-                setMessageTone('danger');
-                setMessage('Guided creation uses your account. Open your Workouts page to build a workout.');
-              } else {
-                setGuidedFormOpen(true);
-              }
-            }}>Build guided workout</button> : null}
-            <button type="button" className={role === 'ATHLETE' ? secondaryButtonClassName : primaryButtonClassName} onClick={() => requestDraftAction({ kind: 'new' })}>{role === 'ATHLETE' ? 'Create manually' : 'Create workout'}</button>
-          </div>
+          {newWorkoutAction}
         </div>
         {role === 'ATHLETE' && guidedFormOpen ? <GuidedWorkoutForm onCancel={() => setGuidedFormOpen(false)} onGenerated={(nextDraft, info) => {
           if (editorOpen && isDirty && !window.confirm('Replace the open unsaved workout with this generated draft?')) return;
@@ -316,8 +318,8 @@ export function WorkoutLibraryClient({
         {visibleWorkouts.length === 0 && guidedFormOpen ? null : visibleWorkouts.length === 0 ? workouts.length === 0 ? (
           <EmptyState
             title="Your workout library is empty"
-            description={role === 'ATHLETE' ? 'Build a guided workout or create one manually, then schedule a copy in Calendar.' : 'Create a workout here, then add a copy to a day in Planner.'}
-            action={<button type="button" className={primaryButtonClassName} onClick={() => role === 'ATHLETE' ? setGuidedFormOpen(true) : requestDraftAction({ kind: 'new' })}>{role === 'ATHLETE' ? 'Build guided workout' : 'Create workout'}</button>}
+            description={role === 'ATHLETE' ? 'Build one with guidance or from scratch, then schedule a copy in Calendar.' : 'Create a workout here, then add a copy to a day in Planner.'}
+            action={newWorkoutAction}
           />
         ) : (
           <EmptyState
@@ -354,14 +356,7 @@ export function WorkoutLibraryClient({
                       </div>
                     </div>
                   </button>
-                  <div className="mt-2 flex flex-wrap items-center gap-3 px-2">
-                    {role === 'ATHLETE' ? (
-                      <Link href={getCalendarPlacementHref(`workout:${workout.id}`)} className={`${compactSecondaryButtonClassName} min-h-11`}>
-                        Plan this
-                      </Link>
-                    ) : null}
-                    <ShareLinkButton sourceKind="session" sourceId={workout.id} ariaLabel={`Create a share link for ${workout.title}`} />
-                  </div>
+                  <WorkoutRowActions workout={workout} canSchedule={role === 'ATHLETE'} />
                 </div>
               );
             })}
@@ -434,6 +429,59 @@ export function WorkoutLibraryClient({
         </div>
         {selectedWorkoutId ? <div className="border-t border-[var(--border)] pt-4"><button type="button" className={dangerButtonClassName} disabled={isPending} onClick={deleteWorkout}>Delete workout from library</button></div> : null}
       </Surface> : null}
+    </div>
+  );
+}
+
+function NewWorkoutMenu({ onGuided, onScratch }: { onGuided: () => void; onScratch: () => void }) {
+  return (
+    <Menu>
+      <MenuTrigger className={primaryButtonClassName}>
+        <Plus aria-hidden="true" size={16} strokeWidth={2} />
+        New workout
+        <ChevronDown aria-hidden="true" size={16} strokeWidth={1.8} />
+      </MenuTrigger>
+      <MenuContent align="start" className="max-w-[min(22rem,calc(100vw-2rem))]">
+        <MenuItem onSelect={onGuided} className="flex-col items-start gap-0.5 py-2">
+          <span className="font-medium">Build with guidance</span>
+          <span className="text-xs text-[var(--text-secondary)]">Describe the session and review a suggested workout.</span>
+        </MenuItem>
+        <MenuItem onSelect={onScratch} className="flex-col items-start gap-0.5 py-2">
+          <span className="font-medium">Build from scratch</span>
+          <span className="text-xs text-[var(--text-secondary)]">Choose a name and sport, then add blocks yourself.</span>
+        </MenuItem>
+      </MenuContent>
+    </Menu>
+  );
+}
+
+function WorkoutRowActions({ workout, canSchedule }: { workout: WorkoutRecord; canSchedule: boolean }) {
+  const share = useShareLink('session', workout.id);
+  return (
+    <div className="mt-2 space-y-2 px-2">
+      <div className="flex flex-wrap items-center gap-2">
+        {canSchedule ? (
+          <Link href={getCalendarPlacementHref(`workout:${workout.id}`)} aria-label={`Schedule ${workout.title}`} className={`${compactSecondaryButtonClassName} min-h-11`}>
+            Schedule
+          </Link>
+        ) : null}
+        <Menu>
+          <MenuTrigger
+            disabled={share.isPending}
+            aria-label={`More actions for ${workout.title}`}
+            className={`inline-flex size-11 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] disabled:opacity-50 ${buttonFocusClassName}`}
+          >
+            <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
+          </MenuTrigger>
+          <MenuContent align="start">
+            <MenuItem onSelect={share.createLink}>
+              <Link2 aria-hidden="true" size={16} strokeWidth={1.8} />
+              Create share link
+            </MenuItem>
+          </MenuContent>
+        </Menu>
+      </div>
+      <ShareLinkResult share={share} showAudience />
     </div>
   );
 }

@@ -12,7 +12,7 @@ export function FocusWorkouts(libraryProps: LibraryProps) {
       <header className="study-workouts__header">
         <div>
           <h1>Workouts</h1>
-          <p>Create once. Refine when you need to. Add a copy to your calendar when it is ready.</p>
+          <p>Reusable workouts. Scheduling one adds a copy to your Calendar and keeps this version unchanged.</p>
           {libraryProps.role === 'ATHLETE' ? (
             <Link href="/athlete/library" className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg text-sm font-medium text-[var(--brand)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]">
               <LibraryBig aria-hidden="true" size={15} strokeWidth={1.6} />Browse built-in bike workouts
