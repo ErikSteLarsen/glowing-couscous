@@ -35,14 +35,13 @@ means compatibility code, not the extension point for new work.
 | `EVENT-001` | Personal event milestones, results, and completed activity links | `shipped` | `lib/athlete-event-service.ts`, `lib/athlete-service.ts`, `prisma/schema.prisma`, `app/(app)/athlete/events/*`, `app/(app)/athlete/calendar/*`, `app/(app)/athlete/page.tsx` | `/athlete/events`, `/api/athlete/events/*` |
 | `GPX-001` | GPX completed-activity import | `shipped` | `lib/gpx-activity.ts`, `lib/athlete-gpx-import-service.ts`, `lib/tcx-upload.ts`, `app/(app)/athlete/activity/ActivityImportForm.tsx` | `/athlete/activity`, `/api/athlete/activities/import/*` |
 | `FIT-001` | FIT device-activity import | `shipped` | `lib/athlete-fit-import-service.ts`, `lib/fit-activity.ts`, `lib/tcx-upload.ts`, `app/(app)/athlete/activity/*` | `/athlete/activity`, `/api/athlete/activities/import/*` |
-| `RIDE-001` | Indoor bike trainer ride (Web Bluetooth, ERG, crash-safe recording) | `in-progress` | `lib/ride/ble-parsers.ts`, `lib/ride/ftms-control.ts`, `lib/ride/ride-plan.ts`, `lib/ride/recorder.ts`, `lib/ride/ride-chart.ts`, `lib/ride/bluetooth.ts`, `lib/ride/recording-store.ts`, `types/tempo-desktop.d.ts`, `app/(app)/athlete/ride/[sessionId]/*`, `lib/ride/launch.ts`, `components/RideAppLaunch.tsx`, `components/RideEntryLinks.tsx`, `components/UnsavedRidesNotice.tsx` | `/athlete/ride/[sessionId]` for BIKING sessions; targets-only or connected FTMS/Cycling Power/HR/CSC; saves through `/api/activity-imports`; real-hardware and browser acceptance remain |
+| `RIDE-001` | Indoor bike trainer ride (Web Bluetooth, ERG, crash-safe recording) | `in-progress` | `lib/ride/ble-parsers.ts`, `lib/ride/ftms-control.ts`, `lib/ride/ride-plan.ts`, `lib/ride/recorder.ts`, `lib/ride/ride-chart.ts`, `lib/ride/bluetooth.ts`, `lib/ride/recording-store.ts`, `types/tempo-desktop.d.ts`, `app/(app)/athlete/ride/[sessionId]/*`, `lib/ride/launch.ts`, `components/RideAppLaunch.tsx`, `components/WorkoutStartChooser.tsx`, `lib/workout-start.ts`, `components/UnsavedRidesNotice.tsx` | `/athlete/ride/[sessionId]` for BIKING sessions; targets-only or connected FTMS/Cycling Power/HR/CSC; saves through `/api/activity-imports`; real-hardware and browser acceptance remain |
 | `COMPAT-001` | Older coach session adapter | `transitional` | `lib/planner-service.ts` | `/api/coach/sessions/[sessionId]` |
 
 
 ## Active work
 
 
-- [UI simplicity pass P1–P17](tasks/2026-11-21-ui-simplicity-proposal.md) — approved 2026-11-21: one Start workout chooser and per-page simplification. P1 uses Ask each time with no saved preference.
 - [Trustworthy account controls, recoverable work and truthful Home](tasks/2026-09-30-account-recovery-home.md) — Home, workout/Profile/Live recovery, Account controls and safe deletion implemented; public trust facts, auth hardening and remaining acceptance are open. Downloads and email verification are deferred.
 
 ## Capability specifications

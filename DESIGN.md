@@ -380,6 +380,21 @@ Page headers do not repeat sibling destinations.
   ("Back to preview") are not back controls. Error and not-found pages offer a
   recovery action, not a `BackLink`.
 
+### Starting a workout
+
+Every runnable workout shows one **Start workout** button that opens the shared
+chooser (`components/WorkoutStartChooser.tsx`; options from `lib/workout-start.ts`).
+The chooser lists only the modes this workout and device support, with one
+sentence each, and asks every time. Never add a direct Live, Ride or desktop
+link beside it; completed, skipped and stepless sessions show no start.
+
+### Primary and secondary actions
+
+Each screen keeps its one or two primary actions visible. Secondary and
+advanced actions go in a named place: the row or page ⋯ menu, **Advanced
+options**, **Connections**, **Filters** or **More details**. Move, don't
+remove: every feature stays reachable.
+
 ### Charts and data
 
 Charts are hand-written SVG, not a charting library.

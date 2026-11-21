@@ -7,6 +7,18 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- UI simplicity pass P1–P17 (2026-11-21): one shared **Start workout** chooser
+  (`components/WorkoutStartChooser.tsx`, options in `lib/workout-start.ts`)
+  replaces every direct start on Home, session detail, Library detail, Ride home
+  and the Live header; per-page simplifications moved secondary actions into ⋯,
+  Filters, Connections, Advanced options and More details. `pnpm typecheck`,
+  `pnpm lint`, `pnpm test` (532 passed, 17 skipped) and `pnpm build` passed on the
+  integrated branch. Every changed screen was browser-checked as Mara at 1440 and
+  390 by its implementer, and an integrated Chromium sweep loaded all athlete
+  pages and routed the chooser's Follow along to Live. Not verified: physical
+  Bluetooth pairing/ERG, desktop-app handoff on each OS (simulated), and live
+  Strava connect/import (no local credentials).
+
 - Demo login on 2026-11-21 passed against the existing local `tempo_dev`
   database after its PostgreSQL container was restarted. The advertised Mara
   credentials created an Athlete session through Auth.js and `/athlete`
