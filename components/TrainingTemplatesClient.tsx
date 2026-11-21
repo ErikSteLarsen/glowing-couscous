@@ -76,7 +76,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
     {draft ? <Surface className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 ref={editorHeading} tabIndex={-1} className="text-lg font-semibold">{draft.id ? 'Edit training template' : 'New training template'}</h2>
-        <button type="button" disabled={busy} className={secondaryButtonClassName} onClick={() => { if (window.confirm('Discard your unsaved template changes?')) setDraft(null); }}>Cancel</button>
+        <button type="button" disabled={busy} className={`${secondaryButtonClassName} max-md:min-h-11`} onClick={() => { if (window.confirm('Discard your unsaved template changes?')) setDraft(null); }}>Cancel</button>
       </div>
       <fieldset disabled={busy} className="space-y-6 min-w-0">
         <div className="space-y-3">
@@ -90,8 +90,8 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
           <h3 className="font-semibold">Add a saved workout</h3>
           <label className="block space-y-2"><span className={formLabelClassName}>Workout</span><select className={formSelectClassName} value={workoutId} onChange={event => setWorkoutId(Number(event.target.value))}>{workouts.map(workout => <option key={workout.id} value={workout.id}>{workout.title} · {getSportLabel(workout.sport)} · {formatDuration(workout.durationSec)}</option>)}</select></label>
           <fieldset className="space-y-2"><legend className={formLabelClassName}>Days for this workout</legend><div className="flex flex-wrap gap-3">{ROUTINE_DAYS.map((day, weekday) => <label key={day} className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={weekdays.includes(weekday)} onChange={event => setWeekdays(current => event.target.checked ? [...current, weekday].sort() : current.filter(value => value !== weekday))} />{day}</label>)}</div></fieldset>
-          <button type="button" disabled={!weekdays.length || draft.entries.length + weekdays.length > 70} className={`${secondaryButtonClassName} gap-2`} onClick={() => setDraft({ ...draft, entries: [...draft.entries, ...weekdays.map(weekday => ({ key: nextKey.current++, weekday, workoutId }))] })}><Plus size={16} />Add to {weekdays.length || 'selected'} {weekdays.length === 1 ? 'day' : 'days'}</button>
-        </div> : <EmptyState title="Save a workout first" description="Templates use workouts from your library. Create your easy session and intervals there, then group them here." action={<ActionLink href="/athlete/workouts">Open Workouts</ActionLink>} />}
+          <button type="button" disabled={!weekdays.length || draft.entries.length + weekdays.length > 70} className={`${secondaryButtonClassName} max-md:min-h-11`} onClick={() => setDraft({ ...draft, entries: [...draft.entries, ...weekdays.map(weekday => ({ key: nextKey.current++, weekday, workoutId }))] })}><Plus size={16} />Add to {weekdays.length || 'selected'} {weekdays.length === 1 ? 'day' : 'days'}</button>
+        </div> : <EmptyState title="Save a workout first" description="Templates use workouts from your library. Create your easy session and intervals there, then group them here." action={<div className="max-md:[&>a]:min-h-11"><ActionLink href="/athlete/workouts">Open Workouts</ActionLink></div>} />}
         <div className="space-y-2">
           <h3 className="font-semibold">Your weekly routine</h3>
           <p role="status" aria-live="polite" className="text-sm text-[var(--text-secondary)]">{draft.entries.length} sessions per week. Days without workouts leave the calendar unchanged.</p>
@@ -101,16 +101,16 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
               const workout = workouts.find(item => item.id === entry.workoutId);
               return <div key={entry.key} className="flex flex-wrap items-center gap-2">
                 <label className="min-w-0 flex-1 basis-40"><span className="sr-only">{day} workout {index + 1}</span><select className={formSelectClassName} value={entry.workoutId} onChange={event => setDraft({ ...draft, entries: draft.entries.map(item => item.key === entry.key ? { ...item, workoutId: Number(event.target.value) } : item) })}>{!workout && <option value={entry.workoutId}>Unavailable workout — choose a replacement</option>}{workouts.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
-                <div className="flex w-full justify-end gap-1 sm:w-auto">{entries.length > 1 && <><button type="button" aria-label={`Move ${day} workout ${index + 1} earlier`} disabled={index === 0} className={compactSecondaryButtonClassName} onClick={() => move(entry.key, -1)}><ArrowUp size={16} /></button><button type="button" aria-label={`Move ${day} workout ${index + 1} later`} disabled={index === entries.length - 1} className={compactSecondaryButtonClassName} onClick={() => move(entry.key, 1)}><ArrowDown size={16} /></button></>}<button type="button" aria-label={`Remove ${day} workout ${index + 1}`} className={compactDangerButtonClassName} onClick={() => setDraft({ ...draft, entries: draft.entries.filter(item => item.key !== entry.key) })}><Trash2 size={16} /></button></div>
+                <div className="flex w-full justify-end gap-1 sm:w-auto">{entries.length > 1 && <><button type="button" aria-label={`Move ${day} workout ${index + 1} earlier`} disabled={index === 0} className={`${compactSecondaryButtonClassName} max-md:min-h-11 max-md:min-w-11`} onClick={() => move(entry.key, -1)}><ArrowUp size={16} /></button><button type="button" aria-label={`Move ${day} workout ${index + 1} later`} disabled={index === entries.length - 1} className={`${compactSecondaryButtonClassName} max-md:min-h-11 max-md:min-w-11`} onClick={() => move(entry.key, 1)}><ArrowDown size={16} /></button></>}<button type="button" aria-label={`Remove ${day} workout ${index + 1}`} className={`${compactDangerButtonClassName} max-md:min-h-11 max-md:min-w-11`} onClick={() => setDraft({ ...draft, entries: draft.entries.filter(item => item.key !== entry.key) })}><Trash2 size={16} /></button></div>
               </div>;
             }) : <p className="text-sm text-[var(--text-muted)]">No workout</p>}</div></section>;
           })}</div>
         </div>
         <p className="text-sm leading-6 text-[var(--text-secondary)]">Saving captures the selected workouts as they are now. Profile-based pace, power and heart-rate targets stay relative; fixed targets stay fixed. Later library edits do not change this template or sessions already scheduled.</p>
         {notice && <p role={notice.error ? 'alert' : 'status'} className={notice.error ? dangerTextClassName : successTextClassName}>{notice.text}</p>}
-        <button type="button" disabled={!draft.name.trim() || !draft.entries.length || draft.entries.some(entry => !workouts.some(workout => workout.id === entry.workoutId))} className={primaryButtonClassName} onClick={() => void mutate(draft.id ? `/api/athlete/templates/${draft.id}` : '/api/athlete/templates', draft.id ? 'PATCH' : 'POST', { name: draft.name, summary: draft.summary, entries: draft.entries.map(({ weekday, workoutId }) => ({ weekday, workoutId })) })}>{busy ? 'Saving…' : 'Save template'}</button>
+        <button type="button" disabled={!draft.name.trim() || !draft.entries.length || draft.entries.some(entry => !workouts.some(workout => workout.id === entry.workoutId))} className={`${primaryButtonClassName} max-md:min-h-11`} onClick={() => void mutate(draft.id ? `/api/athlete/templates/${draft.id}` : '/api/athlete/templates', draft.id ? 'PATCH' : 'POST', { name: draft.name, summary: draft.summary, entries: draft.entries.map(({ weekday, workoutId }) => ({ weekday, workoutId })) })}>{busy ? 'Saving…' : 'Save template'}</button>
       </fieldset>
-    </Surface> : <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">{templates.length ? <label className="flex-1 sm:max-w-md"><span className="sr-only">Search templates</span><input type="search" value={filter} onChange={event => setFilter(event.target.value)} className={formFieldClassName} placeholder="Search templates" /></label> : null}<button type="button" disabled={busy} className={primaryButtonClassName} onClick={() => edit()}>New template</button></div>}
+    </Surface> : <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">{templates.length ? <label className="flex-1 sm:max-w-md"><span className="sr-only">Search templates</span><input type="search" value={filter} onChange={event => setFilter(event.target.value)} className={formFieldClassName} placeholder="Search templates" /></label> : null}<button type="button" disabled={busy} className={`${primaryButtonClassName} max-md:min-h-11`} onClick={() => edit()}>New template</button></div>}
     {!draft && (visible.length ? <div className="space-y-4">{visible.map(template => {
       const routine = parseTemplateRoutine(template.routineJson);
       const filledDays = routine ? ROUTINE_DAYS.flatMap((day, weekday) => {
@@ -120,7 +120,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
       return <Surface key={template.id} className="space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
-            <h2 className="text-lg font-semibold break-words"><button type="button" disabled={busy} aria-label={`Edit ${template.name}`} className={`rounded-sm text-left underline-offset-4 hover:underline disabled:opacity-60 ${buttonFocusClassName}`} onClick={() => edit(template)}>{template.name}</button></h2>
+            <h2 className="text-lg font-semibold break-words"><button type="button" disabled={busy} aria-label={`Edit ${template.name}`} className={`rounded-sm text-left underline-offset-4 max-md:min-h-11 hover:underline disabled:opacity-60 ${buttonFocusClassName}`} onClick={() => edit(template)}>{template.name}</button></h2>
             {template.summary && <p className="text-sm leading-6 text-[var(--text-secondary)] break-words">{template.summary}</p>}
             <p className="text-sm text-[var(--text-muted)]">{routine ? `${routine.entries.length} ${routine.entries.length === 1 ? 'session' : 'sessions'} per week` : 'Invalid routine — edit and save again'}</p>
           </div>
@@ -142,7 +142,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
           </Menu>
         </div>
         {filledDays.length ? <dl className="grid gap-x-6 gap-y-2 md:grid-cols-2">{filledDays.map(({ day, titles }) => <div key={day} className="flex min-w-0 gap-3 text-sm"><dt className="w-24 shrink-0 text-[var(--text-secondary)]">{day}</dt><dd className="break-words min-w-0">{titles.join(', ')}</dd></div>)}</dl> : null}
-        <div><ActionLink href={getCalendarPlacementHref(`template:${template.id}`)} size="compact">Apply to Calendar</ActionLink></div>
+        <div className="max-md:[&>a]:min-h-11"><ActionLink href={getCalendarPlacementHref(`template:${template.id}`)} size="compact">Apply to Calendar</ActionLink></div>
       </Surface>;
     })}</div> : <EmptyState title={templates.length ? 'No matching templates' : 'Build your first training routine'} description={templates.length ? 'Try a different search.' : 'Put saved workouts on the days you train. Days left empty add nothing when you apply it.'} />)}
   </div>;
