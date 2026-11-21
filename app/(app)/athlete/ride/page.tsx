@@ -3,11 +3,12 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { loginPathFor } from '@/lib/auth-callback';
 import { format, parseISO } from 'date-fns';
-import { CalendarDays, House, LibraryBig, Play, RotateCcw } from 'lucide-react';
+import { CalendarDays, House, LibraryBig, RotateCcw } from 'lucide-react';
 import { BrandMark } from '@/components/BrandMark';
 import { LibraryBrowser } from '@/components/library/LibraryBrowser';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { compactSecondaryButtonClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
+import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
 import { accountService } from '@/lib/account-service';
 import { getCurrentUser } from '@/lib/auth-session';
@@ -96,7 +97,7 @@ export default async function RideHubPage({ searchParams }: { searchParams: Prom
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 id="ride-library" className="text-[22px] font-medium tracking-[-0.02em] text-[var(--text)]">Workout library</h2>
-              <p className="mt-1 text-[13px] text-[var(--text-muted)]">Ride now plans the workout for today and opens it on your trainer.</p>
+              <p className="mt-1 text-[13px] text-[var(--text-muted)]">Start a library workout to add it to today.</p>
             </div>
             <Link href="/athlete/library" className={navLinkClassName}><LibraryBig aria-hidden="true" size={16} strokeWidth={1.6} />Open full library</Link>
           </div>
@@ -120,7 +121,11 @@ function TodayFeature({ session }: { session: RideHubSession }) {
       </div>
       <SessionBlockBar segments={session.segments} size="card" />
       <div className="flex flex-wrap gap-2">
-        <Link href={`/athlete/ride/${session.id}?from=ride`} className={`${primaryButtonClassName} flex-1`}><Play aria-hidden="true" size={16} strokeWidth={1.8} />Ride</Link>
+        <WorkoutStartChooser
+          workout={{ title: session.title, durationSec: session.durationSec, hasSteps: session.hasSteps, sport: 'BIKING', status: 'planned' }}
+          source={{ kind: 'session', id: session.id, from: 'ride' }}
+          triggerClassName={`${primaryButtonClassName} flex-1 max-md:min-h-11`}
+        />
         <Link href={`/athlete/session/${session.id}?from=ride`} className={secondaryButtonClassName}>Details</Link>
       </div>
     </article>
@@ -137,7 +142,11 @@ function SessionLine({ session }: { session: RideHubSession }) {
           </h3>
           <p className="data mt-0.5 text-[12px] text-[var(--text-muted)]">{sessionMeta(session)}</p>
         </div>
-        <Link href={`/athlete/ride/${session.id}?from=ride`} className={compactSecondaryButtonClassName} aria-label={`Ride ${session.title}`}><Play aria-hidden="true" size={13} strokeWidth={1.8} />Ride</Link>
+        <WorkoutStartChooser
+          workout={{ title: session.title, durationSec: session.durationSec, hasSteps: session.hasSteps, sport: 'BIKING', status: 'planned' }}
+          source={{ kind: 'session', id: session.id, from: 'ride' }}
+          triggerClassName={`${compactSecondaryButtonClassName} max-md:min-h-11`}
+        />
       </div>
       <SessionBlockBar segments={session.segments} size="calendar" />
     </article>

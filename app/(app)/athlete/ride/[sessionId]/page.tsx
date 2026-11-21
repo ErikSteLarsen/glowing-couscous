@@ -10,6 +10,7 @@ import { accountService } from '@/lib/account-service';
 import { createExecutionSteps } from '@/lib/athlete-execution';
 import { parseBackOrigin, resolveBackTarget, withBackOrigin } from '@/lib/app-navigation';
 import { createRidePlan } from '@/lib/ride/ride-plan';
+import { canStartWorkout } from '@/lib/workout-start';
 import { RideClient } from './RideClient';
 
 export const metadata: Metadata = { title: 'Ride' };
@@ -51,6 +52,22 @@ export default async function AthleteRidePage({
         <EmptyState
           title={detail.session.status === 'skipped' ? 'Session skipped' : 'Session already completed'}
           description={detail.session.status === 'skipped' ? 'Plan this session again before riding it.' : 'This session already has a saved outcome.'}
+        />
+      </PageShell>
+    );
+  }
+
+  if (detail.session.sport !== 'BIKING') {
+    const canFollowAlong = canStartWorkout(detail.session);
+    return (
+      <PageShell size="wide">
+        <TopBar back={back} title={`Ride ${detail.session.title}`} />
+        <EmptyState
+          title="Trainer rides are for bike sessions"
+          description={canFollowAlong ? 'Follow this workout step by step.' : 'Open session details to review the plan.'}
+          action={canFollowAlong ? (
+            <ActionLink href={withBackOrigin(`/athlete/live/${detail.session.id}`, parseBackOrigin('session-live', from))}>Follow along</ActionLink>
+          ) : undefined}
         />
       </PageShell>
     );

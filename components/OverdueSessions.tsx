@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Play } from 'lucide-react';
+import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { ghostButtonClassName, sectionHeadingClassName } from '@/components/ui';
 import { formatSessionWhen } from '@/lib/session-display';
 import { formatDuration } from '@/lib/format-duration';
@@ -13,6 +13,8 @@ type OverdueSession = {
   id: number;
   title: string;
   sport: string;
+  status: string;
+  hasSteps: boolean;
   date: Date;
   timeLabel: string | null;
   durationSec: number;
@@ -43,10 +45,7 @@ export function OverdueSessions({ sessions, today }: { sessions: OverdueSession[
                 </span>
               </Link>
               <div className="flex flex-wrap gap-2">
-                <Link href={`/athlete/live/${session.id}?from=home`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-medium text-[var(--signal-ink)] hover:bg-[var(--signal-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]">
-                  <Play aria-hidden="true" size={15} strokeWidth={1.8} />
-                  Start now
-                </Link>
+                <WorkoutStartChooser workout={session} source={{ kind: 'session', id: session.id, from: 'home' }} />
                 <SessionRescheduleAction
                   mode="quick"
                   sessionId={session.id}

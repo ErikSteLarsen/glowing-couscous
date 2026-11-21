@@ -1,5 +1,11 @@
+import { parseExecutionProgress, parseExecutionTimer, pauseExecutionTimer, serializeExecutionProgress, type ExecutionStep } from './athlete-execution.ts';
+
 const STORAGE_EVENT = 'tempo:live-progress-change';
 const fallbackProgress = new Map<string, string>();
+
+export function executionProgressKey(sessionId: number): string {
+  return `tempo:live-progress:v1:${sessionId}`;
+}
 
 function notifyProgressChanged(key: string): void {
   window.dispatchEvent(new CustomEvent(STORAGE_EVENT, { detail: key }));
@@ -49,4 +55,15 @@ export function subscribeToExecutionProgress(key: string, callback: () => void):
     window.removeEventListener(STORAGE_EVENT, handleLocalChange);
     window.removeEventListener('storage', handleStorageChange);
   };
+}
+
+export function pauseSavedExecutionProgress(key: string, steps: ExecutionStep[]) {
+  const progress = getExecutionProgress(key);
+  const state = parseExecutionProgress(progress, steps);
+  if (!state) return;
+
+  const timer = parseExecutionTimer(progress, steps, state);
+  if (timer.kind === 'running') {
+    saveExecutionProgress(key, serializeExecutionProgress(steps, state, pauseExecutionTimer(timer, Date.now())));
+  }
 }

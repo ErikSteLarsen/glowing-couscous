@@ -3,10 +3,9 @@
 import { useId, useState } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { CalendarPlus, Check, MonitorCheck, MonitorUp, Play, Plus } from 'lucide-react';
-import { RideAppInstallPanel } from '@/components/RideAppLaunch';
-import { useCatalogRide } from '@/components/library/useCatalogRide';
-import { formFieldClassName, formLabelClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { CalendarPlus, Check, Plus } from 'lucide-react';
+import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
+import { formFieldClassName, formLabelClassName, ghostButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { getCalendarHref } from '@/lib/calendar-navigation';
 import { addDayKeys, fromDayKey, toDayKey } from '@/lib/training-load';
 
@@ -23,10 +22,7 @@ function newRequestKey() {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 14)}`;
 }
 
-/** Ride now, Open in Tempo Ride, Add to my workouts and Schedule for one catalog workout. */
-export function LibraryWorkoutActions({ slug, name, from }: { slug: string; name: string; from: 'library' | 'ride' }) {
-  const rides = useCatalogRide(from);
-  const panelId = useId();
+export function LibraryWorkoutActions({ slug, name, durationSec, hasSteps, from }: { slug: string; name: string; durationSec: number; hasSteps: boolean; from: 'library' | 'ride' }) {
   const scheduleId = useId();
   const [saveKey] = useState(newRequestKey);
   const [save, setSave] = useState<Status>({ kind: 'idle' });
@@ -36,8 +32,6 @@ export function LibraryWorkoutActions({ slug, name, from }: { slug: string; name
   // One key per submission: a retry after a lost response replays it instead of adding a copy.
   const [scheduleKey, setScheduleKey] = useState(newRequestKey);
   const base = `/api/athlete/library/${encodeURIComponent(slug)}`;
-  const ridingWeb = rides.pending?.target === 'web';
-  const ridingApp = rides.pending?.target === 'app' || rides.app.state === 'launching';
 
   async function addToWorkouts() {
     setSave({ kind: 'pending' });
@@ -64,30 +58,10 @@ export function LibraryWorkoutActions({ slug, name, from }: { slug: string; name
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" className={primaryButtonClassName} onClick={() => rides.ride(slug, 'web')} disabled={rides.pending !== null}>
-          <Play aria-hidden="true" size={16} strokeWidth={1.8} />{ridingWeb ? 'Starting ride…' : 'Ride now'}
-        </button>
-        {rides.isDesktop ? (
-          <span className="inline-flex items-center gap-1.5 px-1 text-[12px] text-[var(--text-muted)]">
-            <MonitorCheck aria-hidden="true" size={14} strokeWidth={1.6} className="text-[var(--status-success)]" />Running in Tempo Ride
-          </span>
-        ) : (
-          <span className="relative inline-flex">
-            <button
-              type="button"
-              className={secondaryButtonClassName}
-              onClick={() => rides.ride(slug, 'app')}
-              disabled={rides.pending !== null || rides.app.state === 'launching'}
-              aria-expanded={rides.app.state === 'failed'}
-              aria-controls={panelId}
-            >
-              <MonitorUp aria-hidden="true" size={16} strokeWidth={1.6} />{ridingApp ? 'Opening Tempo Ride…' : 'Open in Tempo Ride'}
-            </button>
-            {rides.app.state === 'failed' && rides.launchedSessionId ? (
-              <RideAppInstallPanel id={panelId} onClose={rides.app.dismiss} onRetry={() => rides.app.launch(rides.launchedSessionId!, from)} />
-            ) : null}
-          </span>
-        )}
+        <WorkoutStartChooser
+          workout={{ title: name, durationSec, sport: 'BIKING', status: 'planned', hasSteps }}
+          source={{ kind: 'catalog', slug, from }}
+        />
         <button type="button" className={secondaryButtonClassName} onClick={addToWorkouts} disabled={save.kind === 'pending' || save.kind === 'done'}>
           {save.kind === 'done' ? <Check aria-hidden="true" size={16} strokeWidth={1.8} /> : <Plus aria-hidden="true" size={16} strokeWidth={1.6} />}
           {save.kind === 'pending' ? 'Saving…' : save.kind === 'done' ? 'In your workouts' : 'Add to my workouts'}
@@ -98,12 +72,6 @@ export function LibraryWorkoutActions({ slug, name, from }: { slug: string; name
       </div>
 
       <div aria-live="polite" className="flex flex-col gap-1 empty:hidden">
-        {rides.error ? <p role="alert" className="text-sm text-[var(--status-danger)]">{rides.error.message}</p> : null}
-        {rides.launchedSessionId && rides.app.state === 'idle' ? (
-          <p className="text-sm text-[var(--text-secondary)]">
-            Planned for today and sent to Tempo Ride. <Link className="text-[var(--brand)] underline-offset-4 hover:underline" href={`/athlete/session/${rides.launchedSessionId}?from=${from}`}>View session</Link>
-          </p>
-        ) : null}
         <StatusLine status={save} />
       </div>
 

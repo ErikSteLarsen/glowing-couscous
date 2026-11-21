@@ -9,7 +9,7 @@ import { athleteService } from '@/lib/athlete-service';
 import { formatDuration, formatDurationExact } from '@/lib/format-duration';
 import { formatDistance } from '@/lib/format-distance';
 import { formatTcxDateTime } from '@/lib/tcx-time';
-import { parseBackOrigin, resolveBackTarget, withBackOrigin } from '@/lib/app-navigation';
+import { parseBackOrigin, resolveBackTarget } from '@/lib/app-navigation';
 import { SessionDetailClient } from './SessionDetailClient';
 import { isRecordedOutcome } from '@/lib/athlete-completion-service';
 import { SessionStatusControl } from './SessionStatusControl';
@@ -23,7 +23,7 @@ import { todayInZone } from '@/lib/user-time';
 import { SessionRescheduleAction } from '@/components/SessionRescheduleAction';
 import { ImportedActivityMeasurements } from '@/components/ImportedActivityMeasurements';
 import { SessionWorkoutOverview } from '@/components/SessionWorkoutOverview';
-import { RideEntryLinks } from '@/components/RideEntryLinks';
+import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 
 export default async function AthleteSessionPage({
   params,
@@ -56,20 +56,13 @@ export default async function AthleteSessionPage({
   const returnTarget = resolveBackTarget({ route: 'session', from });
   const isOverdue = detail.session.isOverdue;
   const displayStatus = isOverdue ? 'missed' : detail.session.status;
-  const isSkipped = detail.session.status === 'skipped';
+  const { id, title, sport, status, durationSec, hasSteps } = detail.session;
+  const isSkipped = status === 'skipped';
   // Imported activities with no matched workout show their recorded data instead of a plan.
   const importedWithoutWorkout = detail.session.importedActivityId !== null && detail.session.blocks.length === 0;
   const scoreDurationSec = importedWithoutWorkout
     ? detail.session.recordedDurationSec ?? detail.session.durationSec
     : detail.session.durationSec;
-  const sessionAction = importedWithoutWorkout
-    ? 'View activity data'
-    : detail.session.status === 'completed' ? 'Review outcome' : 'Start live';
-  const sessionActionHref = importedWithoutWorkout
-    ? '#recorded-activity'
-    : detail.session.status === 'completed'
-      ? '#session-outcome'
-      : withBackOrigin(`/athlete/live/${detail.session.id}`, sessionOrigin);
   const manualCorrectionDraft: ManualActivityCorrectionDraft | null = detail.session.metricsSource === 'manual-unplanned'
     ? {
         kind: 'manual-unplanned',
@@ -127,10 +120,16 @@ export default async function AthleteSessionPage({
         description={detail.session.summary ?? (importedWithoutWorkout ? 'Imported activity.' : 'Session details.')}
         actions={
           <>
-            {isSkipped ? null : <ActionLink href={sessionActionHref}>{sessionAction}</ActionLink>}
-            {detail.session.sport === 'BIKING' && !isSkipped && !importedWithoutWorkout && detail.session.status !== 'completed' ? (
-              <RideEntryLinks sessionId={detail.session.id} from={sessionOrigin ?? undefined} />
-            ) : null}
+            {importedWithoutWorkout && !isSkipped ? (
+              <ActionLink href="#recorded-activity">View activity data</ActionLink>
+            ) : detail.session.status === 'completed' ? (
+              <ActionLink href="#session-outcome">Review outcome</ActionLink>
+            ) : (
+              <WorkoutStartChooser
+                workout={{ title, sport, status, durationSec, hasSteps }}
+                source={{ kind: 'session', id, from: sessionOrigin }}
+              />
+            )}
             {isOverdue ? (
               <SessionRescheduleAction
                 mode="dialog"

@@ -1,53 +1,42 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useRideAppEnvironment, useRideAppLaunch } from '@/components/RideAppLaunch';
+import { useState } from 'react';
 import { toDayKey } from '@/lib/training-load';
-import { rideSessionPath } from '@/lib/ride/launch';
 
-export type CatalogRideTarget = 'web' | 'app';
+type Preparation =
+  | { kind: 'idle' | 'pending' }
+  | { kind: 'ready'; sessionId: number }
+  | { kind: 'error'; message: string };
 
-async function readError(response: Response, fallback: string) {
-  const body = await response.json().catch(() => null) as { error?: unknown } | null;
-  return typeof body?.error === 'string' ? body.error : fallback;
-}
+/** Resolves the current chooser's selections to the same local-day catalog copy. */
+export function useCatalogRide() {
+  const [preparation, setPreparation] = useState<Preparation>({ kind: 'idle' });
 
-/**
- * Ride now for a catalog workout: plans it on the rider's local today, then opens the
- * ride in this window (browser or Tempo Ride) or hands it to the desktop app.
- */
-export function useCatalogRide(from: 'library' | 'ride') {
-  const router = useRouter();
-  const { isDesktop } = useRideAppEnvironment();
-  const app = useRideAppLaunch();
-  const [pending, setPending] = useState<{ slug: string; target: CatalogRideTarget } | null>(null);
-  const [error, setError] = useState<{ slug: string; message: string } | null>(null);
-  const [launchedSessionId, setLaunchedSessionId] = useState<number | null>(null);
+  async function prepare(slug: string): Promise<number | null> {
+    if (preparation.kind === 'ready') return preparation.sessionId;
+    if (preparation.kind === 'pending') return null;
 
-  const ride = useCallback(async (slug: string, target: CatalogRideTarget = 'web') => {
-    setPending({ slug, target });
-    setError(null);
+    setPreparation({ kind: 'pending' });
     try {
       const response = await fetch(`/api/athlete/library/${encodeURIComponent(slug)}/ride`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ date: toDayKey(new Date()) }),
       });
-      if (!response.ok) throw new Error(await readError(response, 'Could not plan this ride. Try again.'));
-      const { sessionId } = await response.json() as { sessionId: number };
-      if (target === 'app' && !isDesktop) {
-        setLaunchedSessionId(sessionId);
-        app.launch(sessionId, from);
-        setPending(null);
-        return;
+      const body: { sessionId?: unknown; error?: unknown } | null = await response.json().catch(() => null);
+      const sessionId = body?.sessionId;
+      if (!response.ok || typeof sessionId !== 'number' || !Number.isSafeInteger(sessionId) || sessionId <= 0) {
+        throw new Error(typeof body?.error === 'string' ? body.error : 'Could not add this workout to today. Try again.');
       }
-      router.push(rideSessionPath(sessionId, from));
-    } catch (caught) {
-      setError({ slug, message: caught instanceof Error ? caught.message : 'Could not plan this ride. Try again.' });
-      setPending(null);
+      setPreparation({ kind: 'ready', sessionId });
+      return sessionId;
+    } catch (error) {
+      setPreparation({ kind: 'error', message: error instanceof TypeError || !(error instanceof Error)
+        ? 'Could not add this workout to today. Try again.'
+        : error.message });
+      return null;
     }
-  }, [app, from, isDesktop, router]);
+  }
 
-  return { ride, pending, error, isDesktop, app, launchedSessionId };
+  return { preparation, prepare, reset: () => setPreparation({ kind: 'idle' }) };
 }

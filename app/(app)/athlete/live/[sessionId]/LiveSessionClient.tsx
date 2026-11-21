@@ -36,6 +36,7 @@ import {
 } from '@/lib/athlete-execution';
 import {
   clearExecutionProgress,
+  executionProgressKey,
   getExecutionProgress,
   saveExecutionProgress,
   subscribeToExecutionProgress,
@@ -53,7 +54,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
   const [now, setNow] = useState<number | null>(null);
   const saved = isDone || message !== '';
   const hasBlocks = blocks.length > 0;
-  const progressKey = `tempo:live-progress:v1:${sessionId}`;
+  const progressKey = executionProgressKey(sessionId);
   const savedProgress = useSyncExternalStore(
     (callback) => subscribeToExecutionProgress(progressKey, callback),
     () => getExecutionProgress(progressKey),

@@ -2,9 +2,9 @@
 
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Play, Search, SlidersHorizontal, X } from 'lucide-react';
+import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { CatalogProfile } from '@/components/library/CatalogProfile';
-import { useCatalogRide } from '@/components/library/useCatalogRide';
+import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { buttonFocusClassName, compactSecondaryButtonClassName, EmptyState, formFieldClassName, formLabelClassName, formSelectClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { formatDuration } from '@/lib/format-duration';
 import { expandCatalogItems } from '@/lib/workout-catalog/metrics';
@@ -27,7 +27,7 @@ export function LibraryBrowser({
 }: {
   entries: CatalogEntry[];
   initialQuery: CatalogQuery;
-  /** `hub` adds Ride now to every card and opens rides from the Ride home. */
+  /** `hub` adds a start action to every card. */
   variant?: 'page' | 'hub';
 }) {
   const [query, setQuery] = useState(initialQuery);
@@ -39,7 +39,6 @@ export function LibraryBrowser({
     return counts;
   }, [entries, deferredQuery]);
   const from = variant === 'hub' ? 'ride' : 'library';
-  const rides = useCatalogRide(from);
   const filtered = isCatalogQueryFiltered(query);
   const activeFilters = listCatalogFilters(query);
   const firstRender = useRef(true);
@@ -182,7 +181,6 @@ export function LibraryBrowser({
         ) : null}
       </div>
 
-      {rides.error ? <p role="alert" className="text-sm text-[var(--status-danger)]">{rides.error.message}</p> : null}
 
       {results.length === 0 ? (
         <EmptyState
@@ -205,9 +203,7 @@ export function LibraryBrowser({
                     <LibraryCard
                       entry={entry}
                       href={`/athlete/library/${entry.workout.slug}${detailQuery}`}
-                      ride={variant === 'hub' ? () => rides.ride(entry.workout.slug) : undefined}
-                      riding={rides.pending?.slug === entry.workout.slug}
-                      rideDisabled={rides.pending !== null}
+                      showStart={variant === 'hub'}
                     />
                   </li>
                 ))}
@@ -220,7 +216,7 @@ export function LibraryBrowser({
   );
 }
 
-function LibraryCard({ entry, href, ride, riding, rideDisabled }: { entry: CatalogEntry; href: string; ride?: () => void; riding: boolean; rideDisabled: boolean }) {
+function LibraryCard({ entry, href, showStart }: { entry: CatalogEntry; href: string; showStart: boolean }) {
   const { workout, metrics } = entry;
   const steps = useMemo(() => expandCatalogItems(workout.items), [workout.items]);
 
@@ -242,10 +238,12 @@ function LibraryCard({ entry, href, ride, riding, rideDisabled }: { entry: Catal
           <div className="flex gap-1"><dt>TSS</dt><dd className="text-[var(--text)]">{metrics.tss}</dd></div>
           <div className="flex gap-1"><dt>IF</dt><dd className="text-[var(--text)]">{metrics.intensityFactor.toFixed(2)}</dd></div>
         </dl>
-        {ride ? (
-          <button type="button" onClick={ride} disabled={rideDisabled} className={`${compactSecondaryButtonClassName} relative z-10`} aria-label={`Ride ${workout.name} now`}>
-            <Play aria-hidden="true" size={13} strokeWidth={1.8} />{riding ? 'Starting…' : 'Ride now'}
-          </button>
+        {showStart ? (
+          <WorkoutStartChooser
+            workout={{ title: workout.name, durationSec: metrics.durationSec, sport: 'BIKING', status: 'planned', hasSteps: steps.length > 0 }}
+            source={{ kind: 'catalog', slug: workout.slug, from: 'ride' }}
+            triggerClassName={`${compactSecondaryButtonClassName} relative z-10 max-md:min-h-11`}
+          />
         ) : null}
       </div>
     </article>

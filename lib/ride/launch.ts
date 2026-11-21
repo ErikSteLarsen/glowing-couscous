@@ -13,12 +13,12 @@ const DOWNLOADS: Array<Omit<RideDownload, 'url'>> = [
   { id: 'linux-deb', os: 'linux', label: 'Linux .deb (Debian, Ubuntu)', fileName: 'Tempo-Ride-Linux.deb' },
 ];
 
-export type OsHints = { platform?: string | null; userAgent?: string | null };
+export type OsHints = { platform?: string | null; userAgent?: string | null; maxTouchPoints?: number };
 
 /** Detects the desktop OS from `navigator.userAgentData.platform` or the user agent. Phones and tablets are `other`. */
-export function detectRideOs({ platform, userAgent }: OsHints): RideOs {
+export function detectRideOs({ platform, userAgent, maxTouchPoints = 0 }: OsHints): RideOs {
   const ua = userAgent ?? '';
-  if (/android|iphone|ipad|ipod|cros/i.test(ua)) return 'other';
+  if (/android|iphone|ipad|ipod|cros|windows phone|\bmobile\b/i.test(ua) || (platform === 'MacIntel' && maxTouchPoints > 1)) return 'other';
   const source = `${platform ?? ''} ${ua}`.toLowerCase();
   if (/windows|win32|win64/.test(source)) return 'windows';
   if (/mac ?os|macintosh|mac os x/.test(source)) return 'macos';

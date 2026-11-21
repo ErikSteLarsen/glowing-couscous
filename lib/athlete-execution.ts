@@ -14,6 +14,10 @@ export type ExecutionStep = {
   note: string;
 };
 
+export function hasExecutionSteps(blocks: ReadonlyArray<{ skipped?: boolean }>): boolean {
+  return blocks.some((block) => !block.skipped);
+}
+
 /** The same ordered repetitions as the workout timeline, omitting skipped work. */
 export function createExecutionSteps(blocks: SessionEditorBlock[], sport: string, profile?: PerformanceProfile | null): ExecutionStep[] {
   return expandRepeatedBlocks(blocks.filter((block) => !block.skipped).map((block) => ({ ...block, repetitionCount: block.reps ?? 1 }))).map((block) => {

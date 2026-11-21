@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { format, startOfWeek } from 'date-fns';
-import { ActionLink, EmptyState, PageShell, Surface, TopBar } from '@/components/ui';
+import { ActionLink, EmptyState, PageShell, secondaryButtonClassName, Surface, TopBar } from '@/components/ui';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser } from '@/lib/auth-session';
@@ -11,7 +11,8 @@ import { accountService } from '@/lib/account-service';
 import { createExecutionSteps } from '@/lib/athlete-execution';
 import { formatSessionWhen } from '@/lib/session-display';
 import { LiveSessionClient } from './LiveSessionClient';
-import { RideEntryLinks } from '@/components/RideEntryLinks';
+import { canStartWorkout } from '@/lib/workout-start';
+import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 
 export default async function AthleteLivePage({
   params,
@@ -52,14 +53,30 @@ export default async function AthleteLivePage({
       </PageShell>
     );
   }
-  const steps = createExecutionSteps(detail.session.editor.blocks, detail.session.sport, account?.performanceProfile);
+  const { id, title, sport, status, durationSec } = detail.session;
+  const steps = createExecutionSteps(detail.session.editor.blocks, sport, account?.performanceProfile);
+  const workout = { title, sport, status, durationSec, hasSteps: steps.length > 0 };
+  if (status !== 'completed' && !canStartWorkout(workout)) {
+    return (
+      <PageShell size="wide">
+        <TopBar back={back} title={title} />
+        <EmptyState title="No workout steps" description="Open session details to review the plan." />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell size="wide">
       <TopBar
         back={back}
         title={`Execute ${detail.session.title}`}
-        actions={detail.session.sport === 'BIKING' && detail.session.status !== 'completed' ? <RideEntryLinks sessionId={detail.session.id} from={sessionOrigin ?? undefined} /> : undefined}
+        actions={detail.session.sport === 'BIKING' ? (
+          <WorkoutStartChooser
+            workout={workout}
+            source={{ kind: 'session', id, from: sessionOrigin, liveSteps: steps }}
+            triggerClassName={`${secondaryButtonClassName} max-md:min-h-11`}
+          />
+        ) : undefined}
       />
 
       <div className="flex flex-wrap items-center gap-3 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">

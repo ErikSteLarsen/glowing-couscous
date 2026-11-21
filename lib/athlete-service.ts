@@ -1,5 +1,6 @@
 import { addDays, addMonths, differenceInCalendarDays, endOfDay, endOfMonth, endOfWeek, format, isSameDay, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
 import { Prisma } from '@prisma/client';
+import { hasExecutionSteps } from './athlete-execution.ts';
 import { readOverviewCardsFromPrefsJson } from './overview-preferences.ts';
 import { prisma } from './prisma.ts';
 import { derivePlannerSessionMetrics } from './planner-source-metrics.ts';
@@ -206,6 +207,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       date: session.date,
       timeLabel: session.timeLabel,
       status,
+      hasSteps: hasExecutionSteps(session.blocks),
       isOverdue,
       compliance,
       plannedDurationSec: planned.durationSec,

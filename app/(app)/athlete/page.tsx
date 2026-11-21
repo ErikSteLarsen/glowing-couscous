@@ -2,18 +2,18 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { format, getISOWeek } from 'date-fns';
-import { ArrowRight, CalendarPlus, Play } from 'lucide-react';
+import { ArrowRight, CalendarPlus } from 'lucide-react';
 import { PerformanceChart } from '@/components/charts/PerformanceChart';
 import { WeeklyVolumeChart, type VolumeWeek } from '@/components/charts/WeeklyVolumeChart';
 import { ComplianceMark } from '@/components/tempo/ComplianceMark';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { SessionRow } from '@/components/tempo/SessionRow';
+import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { OverdueSessions } from '@/components/OverdueSessions';
 import {
   ActionLink,
   ghostButtonClassName,
   PageShell,
-  primaryButtonClassName,
   secondaryButtonClassName,
   sectionHeadingClassName,
   StatTile,
@@ -189,10 +189,10 @@ export default async function AthletePage() {
                 </blockquote>
               ) : null}
               <div className="mt-auto flex flex-wrap gap-2 pt-1">
-                <Link href={`/athlete/live/${nextAction.id}?from=home`} className={primaryButtonClassName}>
-                  <Play aria-hidden="true" size={15} strokeWidth={1.8} />
-                  Start session
-                </Link>
+                <WorkoutStartChooser
+                  workout={{ title: nextAction.title, sport: nextAction.sport, status: nextAction.status, durationSec: nextAction.durationSec, hasSteps: nextAction.hasSteps }}
+                  source={{ kind: 'session', id: nextAction.id, from: 'home' }}
+                />
                 <Link href={`/athlete/session/${nextAction.id}?from=home`} className={secondaryButtonClassName}>
                   Details
                 </Link>

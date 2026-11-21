@@ -53,7 +53,7 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
         ))}
       </div>
 
-      <LibraryWorkoutActions slug={workout.slug} name={workout.name} from={origin} />
+      <LibraryWorkoutActions slug={workout.slug} name={workout.name} durationSec={metrics.durationSec} hasSteps={steps.length > 0} from={origin} />
 
       <Surface className="[--profile-gap:var(--surface)] pb-4">
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
