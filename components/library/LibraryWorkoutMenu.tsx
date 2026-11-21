@@ -12,7 +12,7 @@ export function catalogScheduleHref(slug: string, from: 'library' | 'ride') {
 export function LibraryWorkoutMenu({ slug, name, from, showSchedule = false }: { slug: string; name: string; from: 'library' | 'ride'; showSchedule?: boolean }) {
   return (
     <Menu>
-      <MenuTrigger aria-label={`More options for ${name}`} className={`${iconButtonClassName} relative z-10 max-md:size-11`}>
+      <MenuTrigger aria-label={`More options for ${name}`} className={`${iconButtonClassName} max-md:size-11`}>
         <Ellipsis aria-hidden="true" size={18} strokeWidth={1.8} />
       </MenuTrigger>
       <MenuContent align="end">

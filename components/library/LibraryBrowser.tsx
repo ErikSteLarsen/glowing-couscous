@@ -1,9 +1,11 @@
 'use client';
 
 import { useDeferredValue, useMemo, useRef, useState } from 'react';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X } from 'lucide-react';
+import { CollectionSearch, CollectionSummary, CollectionToolbar } from '@/components/library/CollectionToolbar';
 import { LibraryCard } from '@/components/library/LibraryCard';
-import { buttonFocusClassName, compactSecondaryButtonClassName, EmptyState, formFieldClassName, formLabelClassName, formSelectClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { WorkoutCardGrid } from '@/components/library/WorkoutCard';
+import { buttonFocusClassName, compactSecondaryButtonClassName, EmptyState, formLabelClassName, formSelectClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import {
   CATALOG_CATEGORIES, CATALOG_LEVELS, CATALOG_SORTS, DURATION_BUCKETS, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, serializeCatalogQuery, withCatalogQuery,
   type CatalogEntry, type CatalogQuery, type CatalogSort, type DurationBucket,
@@ -66,20 +68,7 @@ export function LibraryBrowser({
   return (
     <div className="@container flex min-w-0 flex-col gap-5">
       <div role="search" aria-label="Filter workouts" className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <label className="relative min-w-0 flex-1 @2xl:max-w-md">
-            <span className="sr-only">Search by name, focus or tag</span>
-            <Search aria-hidden="true" size={16} strokeWidth={1.6} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-            <input
-              type="search"
-              value={query.q}
-              onChange={(event) => update({ q: event.target.value })}
-              placeholder="Search workouts"
-              maxLength={80}
-              className={`${formFieldClassName} pl-9 max-md:min-h-11`}
-              autoComplete="off"
-            />
-          </label>
+        <CollectionToolbar search={<CollectionSearch value={query.q} onChange={(q) => update({ q })} label="Search by name, focus or tag" placeholder="Search workouts" />}>
           <button
             type="button"
             aria-haspopup="dialog"
@@ -91,7 +80,7 @@ export function LibraryBrowser({
             Filters
             {activeFilters.length ? <span aria-hidden="true" className="data inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--brand)] px-1.5 text-[12px] font-semibold leading-5 text-[var(--signal-ink)]">{activeFilters.length}</span> : null}
           </button>
-        </div>
+        </CollectionToolbar>
         {activeFilters.length ? (
           <ul aria-label="Active filters" className="flex flex-wrap gap-2">
             {activeFilters.map((chip) => (
@@ -164,17 +153,14 @@ export function LibraryBrowser({
         </div>
       </dialog>
 
-      <div className="flex min-h-8 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-[var(--border)] pb-3">
-        <p aria-live="polite" className="data text-[13px] text-[var(--text-muted)]">
-          {results.length === entries.length ? `${entries.length} workouts` : `${results.length} of ${entries.length} workouts`}
-          {query.sort === 'name' ? null : ` · ${sortLabel(query.sort)}`}
-        </p>
-        {filtered && results.length > 0 ? (
-          <button type="button" className={`${ghostButtonClassName('compact')} max-md:min-h-11`} onClick={clearFilters}>
-            <X aria-hidden="true" size={14} strokeWidth={1.7} />Clear search and filters
-          </button>
-        ) : null}
-      </div>
+      <CollectionSummary action={filtered && results.length > 0 ? (
+        <button type="button" className={`${ghostButtonClassName('compact')} max-md:min-h-11`} onClick={clearFilters}>
+          <X aria-hidden="true" size={14} strokeWidth={1.7} />Clear search and filters
+        </button>
+      ) : null}>
+        {results.length === entries.length ? `${entries.length} workouts` : `${results.length} of ${entries.length} workouts`}
+        {query.sort === 'name' ? null : ` · ${sortLabel(query.sort)}`}
+      </CollectionSummary>
 
       {results.length === 0 ? (
         <EmptyState
@@ -191,13 +177,13 @@ export function LibraryBrowser({
                   {group.label}<span className="data text-[13px] font-normal text-[var(--text-muted)]">{group.entries.length}</span>
                 </h2>
               ) : null}
-              <ul className="grid grid-cols-1 gap-3 @xl:grid-cols-2 @4xl:grid-cols-3 @7xl:grid-cols-4">
+              <WorkoutCardGrid>
                 {group.entries.map((entry) => (
                   <li key={entry.workout.slug} className="min-w-0">
                     <LibraryCard entry={entry} />
                   </li>
                 ))}
-              </ul>
+              </WorkoutCardGrid>
             </section>
           ))}
         </div>
