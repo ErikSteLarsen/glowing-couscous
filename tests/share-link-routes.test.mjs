@@ -51,17 +51,19 @@ test('public share route is outside the signed-in shell and hardens metadata', a
   assert.match(appLayout, /AppShell/);
 });
 
-test('auth continuation preserves only local share token and action paths', async () => {
+test('auth continuation uses the shared share-and-ride callback guard', async () => {
   const login = await read('app/(auth)/login/page.tsx');
   const signup = await read('app/(auth)/signup/page.tsx');
   const setup = await read('app/(auth)/setup/page.tsx');
   const middleware = await read('proxy.ts');
 
   for (const source of [login, signup, setup]) {
-    assert.match(source, /getSafeShareCallbackPath/);
+    assert.match(source, /getSafeCallbackPath/);
     assert.match(source, /callbackUrl/);
   }
+  assert.match(await read('lib/auth-callback.ts'), /getSafeShareCallbackPath/);
   assert.match(middleware, /pathname\.startsWith\('\/share\/'\)/);
+  assert.match(middleware, /loginPathFor\(pathname \+ req\.nextUrl\.search\)/);
 });
 
 test('supported source surfaces expose share controls with copy and failure states', async () => {

@@ -3,6 +3,8 @@ import { notFound, redirect } from 'next/navigation';
 import { ActionLink, EmptyState, PageShell, TopBar } from '@/components/ui';
 import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
 import { getCurrentUser } from '@/lib/auth-session';
+import { loginPathFor } from '@/lib/auth-callback';
+import { rideSessionPath } from '@/lib/ride/launch';
 import { athleteService } from '@/lib/athlete-service';
 import { accountService } from '@/lib/account-service';
 import { createExecutionSteps } from '@/lib/athlete-execution';
@@ -19,11 +21,11 @@ export default async function AthleteRidePage({
   params: Promise<{ sessionId: string }>;
   searchParams: Promise<{ from?: string }>;
 }) {
-  const user = await getCurrentUser();
-  if (!user || user.role !== 'ATHLETE') redirect('/login');
-
   const { sessionId } = await params;
   const { from } = await searchParams;
+  const user = await getCurrentUser();
+  if (!user || user.role !== 'ATHLETE') redirect(loginPathFor(rideSessionPath(Number(sessionId), from)));
+
   const parsedSessionId = Number(sessionId);
   if (!Number.isInteger(parsedSessionId) || parsedSessionId <= 0) notFound();
 

@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import { authConfig } from '@/auth.config';
 import { NextResponse } from 'next/server';
 import { parseApplicationUserId } from '@/lib/auth-principal';
+import { loginPathFor } from '@/lib/auth-callback';
 
 const { auth } = NextAuth(authConfig);
 
@@ -16,7 +17,7 @@ export default auth((req) => {
 
   if (!user || !hasValidUser) {
     if (pathname.startsWith('/coach') || pathname.startsWith('/athlete') || pathname === '/setup') {
-      return NextResponse.redirect(new URL('/login', req.url));
+      return NextResponse.redirect(new URL(loginPathFor(pathname + req.nextUrl.search), req.url));
     }
     return NextResponse.next();
   }

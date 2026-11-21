@@ -13,7 +13,7 @@ import {
   Surface,
   TopBar,
 } from '@/components/ui';
-import { getSafeShareCallbackPath } from '@/lib/share-link';
+import { getSafeCallbackPath } from '@/lib/auth-callback';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -142,5 +142,5 @@ export default function LoginPage() {
 
 function readCallbackUrl() {
   if (typeof window === 'undefined') return null;
-  return getSafeShareCallbackPath(new URLSearchParams(window.location.search).get('callbackUrl'));
+  return getSafeCallbackPath(new URLSearchParams(window.location.search).get('callbackUrl'));
 }

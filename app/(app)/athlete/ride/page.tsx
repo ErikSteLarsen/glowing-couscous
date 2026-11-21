@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { loginPathFor } from '@/lib/auth-callback';
 import { format, parseISO } from 'date-fns';
 import { CalendarDays, House, LibraryBig, Play, RotateCcw } from 'lucide-react';
 import { BrandMark } from '@/components/BrandMark';
@@ -24,7 +25,7 @@ const navLinkClassName = `${ghostButtonClassName('compact')} !text-[var(--text-s
 /** Ride home: what to ride today, recent rides, and the built-in library. Tempo Ride opens here. */
 export default async function RideHubPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const user = await getCurrentUser();
-  if (!user || user.role !== 'ATHLETE') redirect('/login');
+  if (!user || user.role !== 'ATHLETE') redirect(loginPathFor('/athlete/ride'));
 
   const [hub, account, params] = await Promise.all([getRequestTimeZone().then((timeZone) => rideHubService.load(user.id, { timeZone })), accountService.getAccount(user.id), searchParams]);
   const ftp = account?.performanceProfile.cycling.ftpWatts ?? null;
