@@ -319,7 +319,7 @@ export function EventsClient({ initialEvents, today }: { initialEvents: EventRow
   const past = events.filter((event) => dateValue(event.eventDate) < today).reverse();
   const openAdd = () => { setNotice(''); setAdding(true); };
   return <PageShell size="default">
-    <TopBar title="Events" description="Race days and goals, with your results afterwards." actions={<>
+    <TopBar title="Events" description="Plan race days, set goal times, and record results." actions={<>
       <button type="button" className={primaryButtonClassName} onClick={openAdd}><Plus aria-hidden="true" size={16} strokeWidth={1.8} />Add event</button>
       <Menu>
         <MenuTrigger aria-label="More event options" className={iconButtonClassName}><Ellipsis aria-hidden="true" size={18} strokeWidth={1.8} /></MenuTrigger>
@@ -335,7 +335,7 @@ export function EventsClient({ initialEvents, today }: { initialEvents: EventRow
         setAdding(false); setNotice(`${created.title} added.`); router.refresh();
       }} />
     </FormDialog>
-    {events.length === 0 ? <EmptyState title="No events yet" description="Add a race or goal day to count down to it here and see it on your Calendar. Afterwards, record your result and link the activity." action={<button type="button" className={primaryButtonClassName} onClick={openAdd}><Plus aria-hidden="true" size={16} strokeWidth={1.8} />Add event</button>} /> : <>
+    {events.length === 0 ? <EmptyState title="No events yet" description="Add a race or goal day to see it on your Calendar." /> : <>
       <section aria-labelledby="upcoming-events"><h2 id="upcoming-events" className="mb-2 text-base font-medium text-[var(--text)]">Upcoming</h2>{upcoming.length ? <EventList events={upcoming} today={today} onChange={updateEvent} onDelete={deleteEvent} /> : <p className="rounded-xl border border-dashed border-[var(--border)] px-4 py-5 text-sm text-[var(--text-muted)]">Nothing coming up. Use <span className="text-[var(--text-secondary)]">Add event</span> for your next race or goal day.</p>}</section>
       {past.length ? <section aria-labelledby="past-events"><h2 id="past-events" className="mb-2 text-base font-medium text-[var(--text)]">Past events</h2><EventList events={past} today={today} onChange={updateEvent} onDelete={deleteEvent} /></section> : null}
     </>}
