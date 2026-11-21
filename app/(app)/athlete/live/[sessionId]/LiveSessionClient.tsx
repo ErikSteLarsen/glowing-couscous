@@ -2,14 +2,18 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
+import { ChevronDown, Ellipsis, RotateCcw } from 'lucide-react';
 
 import {
   dangerTextClassName,
-  compactPrimaryButtonClassName,
-  compactSecondaryButtonClassName,
+  buttonFocusClassName,
+  iconButtonClassName,
   primaryButtonClassName,
+  secondaryButtonClassName,
+  sectionHeadingClassName,
   successTextClassName,
 } from '@/components/ui';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
 import { Stepper } from '@/components/tempo/Stepper';
 import { formatDuration } from '@/lib/format-duration';
 import {
@@ -62,6 +66,10 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
   const currentStep = blocks[state.currentIndex];
   const timerRemainingMs = currentStep && now !== null ? getExecutionTimerRemainingMs(timer, currentStep.durationSec, now) : 0;
   const timerRunning = timer.kind === 'running' && !saved;
+  const currentIndex = state.currentIndex;
+  const canRestart = currentIndex > 0 || state.completed.some(Boolean) || restoredTimer.kind !== 'idle';
+  const stepCompleted = state.completed[currentIndex];
+  const totalDuration = blocks.reduce((total, step) => total + step.durationSec, 0);
 
   useEffect(() => {
     const initialRefresh = window.setTimeout(() => setNow(Date.now()), 0);
@@ -121,100 +129,123 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
 
   return (
     <div className="space-y-4">
-      <Stepper
-        items={blocks.map((block, index) => ({
-          id: block.id,
-          title: `${block.label} · ${formatDuration(block.durationSec)}`,
-          detail: [block.targetLabel, block.note].filter(Boolean).join(' · ') || 'Stay smooth and controlled.',
-          active: index === state.currentIndex && !complete && !saved,
-          done: saved || state.completed[index],
-        }))}
-      />
-      {blocks.length === 0 ? <p role="alert" className={dangerTextClassName}>No workout blocks are available for this session.</p> : null}
-      {hasBlocks ? (
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            aria-label="Previous block"
-            className={compactSecondaryButtonClassName}
-            disabled={pending || saved || state.currentIndex === 0}
-            onClick={() => updateExecutionState(previousExecution(state))}
-          >
-            Previous
-          </button>
+      {!hasBlocks ? <p role="alert" className={dangerTextClassName}>No workout blocks are available for this session.</p> : null}
+      {currentStep && !saved ? (
+        <section aria-labelledby="live-current-step" className="space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0" aria-live="polite">
+              <h2 id="live-current-step" className={sectionHeadingClassName}>{complete ? 'All blocks complete' : currentStep.label}</h2>
+              {complete ? (
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">Save the outcome to finish.</p>
+              ) : (
+                <>
+                  <p className="data mt-1 text-sm text-[var(--text-secondary)]">Step {currentIndex + 1} of {blocks.length}</p>
+                  {currentStep.targetLabel ? <p className="data mt-2 text-sm font-medium text-[var(--text)]">{currentStep.targetLabel}</p> : null}
+                  {currentStep.note ? <p className="mt-1 max-w-prose text-sm text-[var(--text-secondary)]">{currentStep.note}</p> : null}
+                </>
+              )}
+            </div>
+            <Menu>
+              <MenuTrigger aria-label="More workout options" className={`${iconButtonClassName} shrink-0 max-md:size-11`} disabled={pending}>
+                <Ellipsis aria-hidden="true" size={18} strokeWidth={1.8} />
+              </MenuTrigger>
+              <MenuContent align="end">
+                <MenuItem value="restart" disabled={!canRestart} onSelect={() => updateExecutionState(restartExecution(state))}>
+                  <RotateCcw aria-hidden="true" size={16} strokeWidth={1.8} />
+                  Restart workout
+                </MenuItem>
+              </MenuContent>
+            </Menu>
+          </div>
           {!complete ? (
+            <div role="group" aria-label="Step timer" className="flex flex-wrap items-end gap-x-4 gap-y-2">
+              <div>
+                <p className="text-xs font-medium text-[var(--text-muted)]">Step timer</p>
+                {currentStep.durationSec <= 0 ? (
+                  <p className="mt-1 text-sm text-[var(--text-secondary)]">This step has no timed duration.</p>
+                ) : stepCompleted ? (
+                  <p className="mt-1 text-sm text-[var(--text-secondary)]">This step is already marked complete.</p>
+                ) : timer.kind === 'elapsed' ? (
+                  <p role="status" className="mt-1 text-sm font-medium text-[var(--text)]">Time is up. Step not marked complete.</p>
+                ) : now === null ? (
+                  <p aria-label="Loading timer" className="data mt-1 text-3xl font-medium text-[var(--text)]">--:--</p>
+                ) : (
+                  <p aria-label={`Time remaining ${formatCountdown(timerRemainingMs)}`} className="data mt-1 text-3xl font-medium text-[var(--text)]">
+                    {formatCountdown(timerRemainingMs)}
+                    <span className="ml-2 text-xs font-normal text-[var(--text-secondary)]">
+                      {timer.kind === 'running' ? 'Running' : timer.kind === 'paused' ? 'Paused' : 'Ready'}
+                    </span>
+                  </p>
+                )}
+              </div>
+              {now !== null && currentStep.durationSec > 0 && !stepCompleted ? (
+                timerRunning ? (
+                  <button type="button" className={`${secondaryButtonClassName} min-h-11`} disabled={pending} onClick={() => updateExecutionState(state, pauseExecutionTimer(timer, Date.now()))}>
+                    Pause timer
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className={`${secondaryButtonClassName} min-h-11`}
+                    disabled={pending}
+                    onClick={() => updateExecutionState(state, startExecutionTimer(timer.kind === 'elapsed' ? idleExecutionTimer : timer, currentStep.durationSec, Date.now()))}
+                  >
+                    {timer.kind === 'elapsed' ? 'Start again' : timer.kind === 'paused' ? 'Resume timer' : 'Start timer'}
+                  </button>
+                )
+              ) : null}
+            </div>
+          ) : null}
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              aria-label="Next block"
-              className={compactPrimaryButtonClassName}
-              disabled={pending || saved}
-              onClick={() => updateExecutionState(advanceExecution(state))}
+              aria-label="Previous block"
+              className={`${secondaryButtonClassName} min-h-11`}
+              disabled={pending || saved || currentIndex === 0}
+              onClick={() => updateExecutionState(previousExecution(state))}
             >
-              Next block
+              Previous
             </button>
-          ) : null}
-          <button
-            type="button"
-            aria-label="Restart workout"
-            className={compactSecondaryButtonClassName}
-            disabled={pending || saved || state.completed.every((value) => !value) && state.currentIndex === 0}
-            onClick={() => updateExecutionState(restartExecution(state))}
-          >
-            Restart
-          </button>
-        </div>
-      ) : null}
-      {currentStep && !saved ? (
-        <section aria-label="Step timer" className="flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-4">
-          <div>
-            <p className="text-xs font-medium text-[var(--text-muted)]">Step timer</p>
-            {currentStep.durationSec <= 0 ? (
-              <p className="mt-1 text-sm text-[var(--text-secondary)]">This step has no timed duration.</p>
-            ) : state.completed[state.currentIndex] ? (
-              <p className="mt-1 text-sm text-[var(--text-secondary)]">This step is already marked complete.</p>
-            ) : timer.kind === 'elapsed' ? (
-              <p role="status" className="mt-1 text-sm font-medium text-[var(--text)]">Time is up. Step not marked complete.</p>
-            ) : now === null ? (
-              <p aria-label="Loading timer" className="data mt-1 text-2xl font-semibold text-[var(--text)]">--:--</p>
+            {complete ? (
+              <button type="button" className={`${primaryButtonClassName} min-h-11`} disabled={pending || saved} onClick={() => void completeSession()}>
+                {pending ? 'Saving…' : 'Mark session complete'}
+              </button>
             ) : (
-              <p aria-label={`Time remaining ${formatCountdown(timerRemainingMs)}`} className="data mt-1 text-2xl font-semibold text-[var(--text)]">
-                {formatCountdown(timerRemainingMs)}
-                <span className="ml-2 text-xs font-normal text-[var(--text-secondary)]">
-                  {timer.kind === 'running' ? 'Running' : timer.kind === 'paused' ? 'Paused' : 'Ready'}
-                </span>
-              </p>
+              <button
+                type="button"
+                className={`${primaryButtonClassName} min-h-11`}
+                disabled={pending || saved}
+                onClick={() => updateExecutionState(advanceExecution(state))}
+              >
+                Next block
+              </button>
             )}
           </div>
-          {now !== null && currentStep.durationSec > 0 && !state.completed[state.currentIndex] && timer.kind !== 'elapsed' ? (
-            timer.kind === 'running' ? (
-              <button type="button" className={compactSecondaryButtonClassName} disabled={pending} onClick={() => updateExecutionState(state, pauseExecutionTimer(timer, Date.now()))}>
-                Pause timer
-              </button>
-            ) : (
-              <button type="button" className={compactSecondaryButtonClassName} disabled={pending} onClick={() => updateExecutionState(state, startExecutionTimer(timer, currentStep.durationSec, Date.now()))}>
-                {timer.kind === 'paused' ? 'Resume timer' : 'Start timer'}
-              </button>
-            )
-          ) : null}
-          {now !== null && timer.kind === 'elapsed' && currentStep.durationSec > 0 && !state.completed[state.currentIndex] ? (
-            <button type="button" className={compactSecondaryButtonClassName} disabled={pending} onClick={() => updateExecutionState(state, startExecutionTimer(idleExecutionTimer, currentStep.durationSec, Date.now()))}>
-              Start again
-            </button>
-          ) : null}
         </section>
       ) : null}
-      {complete && !saved ? (
-        <p role="status" className="text-sm font-semibold text-[var(--text)]">All blocks complete. Save the outcome to finish.</p>
-      ) : null}
-      {complete && !saved ? (
-        <button type="button" className={primaryButtonClassName} disabled={pending || saved} onClick={() => void completeSession()}>
-          {pending ? 'Saving…' : 'Mark session complete'}
-        </button>
-      ) : null}
       {isDone ? <p role="status" className={successTextClassName}>Session saved. Review or correct the outcome in session details.</p> : null}
-      <p className="text-[12px] text-[var(--text-secondary)]">Progress is saved in this browser and resumes when you return. Restart begins again at the first step.</p>
-      {message && !isDone ? <p role="status" aria-live="polite" className={successTextClassName}>{message}</p> : null}
+      {message && !isDone ? <p role="status" className={successTextClassName}>{message}</p> : null}
       {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
+      {hasBlocks ? (
+        <details className="group border-t border-[var(--border)]">
+          <summary className={`flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg py-2 text-sm text-[var(--text)] ${buttonFocusClassName}`}>
+            <ChevronDown aria-hidden="true" size={16} className="shrink-0 group-open:rotate-180" />
+            <span className="font-medium">Workout steps</span>
+            <span className="data ml-auto text-right text-[var(--text-secondary)]">{formatDuration(totalDuration)}</span>
+          </summary>
+          <div className="pt-2">
+            <Stepper
+              items={blocks.map((block, index) => ({
+                id: block.id,
+                title: `${block.label} · ${formatDuration(block.durationSec)}`,
+                detail: [block.targetLabel, block.note].filter(Boolean).join(' · '),
+                active: index === currentIndex && !complete && !saved,
+                done: saved || state.completed[index],
+              }))}
+            />
+          </div>
+        </details>
+      ) : null}
     </div>
   );
 }

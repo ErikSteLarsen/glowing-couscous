@@ -5,6 +5,8 @@ import { createEmptySessionEditorDraft } from '../../lib/session-editor';
 import { Toggle } from '../../components/tempo/Toggle';
 import { SessionDeleteAction } from '../../components/SessionDeleteAction';
 import { RideClient } from '../../app/(app)/athlete/ride/[sessionId]/RideClient';
+import { LiveSessionClient } from '../../app/(app)/athlete/live/[sessionId]/LiveSessionClient';
+import type { ExecutionStep } from '../../lib/athlete-execution';
 import { resolveBackTarget } from '../../lib/app-navigation';
 
 window.fetch = async () => new Response(JSON.stringify({
@@ -25,8 +27,12 @@ function Fixture() {
   </>;
 }
 const root = document.getElementById('root');
-const ride = new URLSearchParams(location.search).has('ride');
-if (root) createRoot(root).render(ride ? (
+const params = new URLSearchParams(location.search);
+const liveSteps: ExecutionStep[] = [
+  { id: 'warmup', label: 'Warm-up', durationSec: 60, targetLabel: '50% FTP', prescribedTarget: '50% FTP', note: 'Spin smoothly.' },
+  { id: 'untimed', label: 'Cool-down', durationSec: 0, targetLabel: null, prescribedTarget: null, note: '' },
+];
+if (root) createRoot(root).render(params.has('ride') ? (
   <RideClient
     userId={1}
     sessionId={1}
@@ -37,4 +43,4 @@ if (root) createRoot(root).render(ride ? (
     back={resolveBackTarget({ route: 'session-ride', sessionId: 1 })}
     heartRateMaxBpm={null}
   />
-) : <Fixture />);
+) : params.has('live') ? <LiveSessionClient sessionId={2} blocks={liveSteps} isDone={false} /> : <Fixture />);

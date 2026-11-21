@@ -14,7 +14,7 @@ for (const width of [390, 1440]) test(`Tempo controls preserve keyboard, focus, 
   try {
     await build({ entryPoints: ['tests/fixtures/ui-sdk.tsx'], bundle: true, outfile: join(directory, 'fixture.js'), jsx: 'automatic', define: { 'process.env.NODE_ENV': '"production"', 'process.env': '{}' }, plugins: [{ name: 'router', setup(builder) {
       builder.onResolve({ filter: /^next\/navigation$/ }, () => ({ path: 'router', namespace: 'fixture' }));
-      builder.onLoad({ filter: /.*/, namespace: 'fixture' }, () => ({ contents: 'export const useRouter = () => ({});' }));
+      builder.onLoad({ filter: /.*/, namespace: 'fixture' }, () => ({ contents: 'export const useRouter = () => ({ refresh() {} });' }));
     } }] });
     await writeFile(join(directory, 'index.html'), '<div id="root"></div><script src="fixture.js"></script>');
     browser = await chromium.launch({ headless: true });
@@ -106,6 +106,36 @@ for (const width of [390, 1440]) test(`Tempo controls preserve keyboard, focus, 
     });
     await page.getByRole('button', { name: 'Try again', exact: true }).click();
     await page.getByText('Saved. The session is marked complete.').waitFor();
+
+    await page.goto(`${pathToFileURL(join(directory, 'index.html')).href}?live`);
+    const warmup = page.getByRole('region', { name: 'Warm-up' });
+    await warmup.getByText('50% FTP').waitFor();
+    const workoutSteps = page.getByRole('list');
+    assert.equal(await workoutSteps.isVisible(), false);
+    await page.getByText('Workout steps', { exact: true }).click();
+    assert.equal(await workoutSteps.locator('[aria-current="step"]').count(), 1);
+    await page.getByText('Workout steps', { exact: true }).click();
+    await warmup.getByRole('button', { name: 'Start timer', exact: true }).click();
+    await warmup.getByRole('button', { name: 'Pause timer', exact: true }).click();
+    await page.reload();
+    await warmup.getByRole('button', { name: 'Resume timer', exact: true }).waitFor();
+    const next = page.getByRole('button', { name: 'Next block', exact: true });
+    await next.click();
+    await page.getByText('This step has no timed duration.').waitFor();
+    await page.getByRole('button', { name: 'Previous block' }).click();
+    await warmup.getByRole('button', { name: 'Start timer', exact: true }).click();
+    await page.getByRole('button', { name: 'More workout options' }).focus();
+    await page.keyboard.press('Enter');
+    const restart = page.getByRole('menuitem', { name: 'Restart workout' });
+    await restart.waitFor();
+    await restart.press('Enter');
+    await warmup.getByRole('button', { name: 'Start timer', exact: true }).waitFor();
+    await next.click();
+    await next.click();
+    await page.getByRole('heading', { name: 'All blocks complete' }).waitFor();
+    assert.equal(await page.getByText('Session marked complete.').isVisible(), false);
+    await page.getByRole('button', { name: 'Mark session complete' }).click();
+    await page.getByText('Session marked complete.').waitFor();
     assert.deepEqual(errors, []);
   } finally {
     await browser?.close();
