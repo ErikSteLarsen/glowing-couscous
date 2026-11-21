@@ -3,7 +3,6 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { PageShell } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth-session';
-import { athletePlannerService } from '@/lib/athlete-planner-service';
 import { athleteService } from '@/lib/athlete-service';
 import {
   CALENDAR_TOTALS_COOKIE,
@@ -20,12 +19,11 @@ import { todayInZone } from '@/lib/user-time';
 import { workoutLibraryService } from '@/lib/workout-library-service';
 import { AthleteCalendar, type CalendarDay, type CalendarWeek } from './AthleteCalendar';
 import { CalendarPlacement, type PlacementRoutine } from './CalendarPlacement';
-import { addMonths, startOfMonth } from 'date-fns';
-import { parsePlacedCount, type ExistingSessionsByDate } from '@/lib/calendar-placement';
+import { parsePlacedCount } from '@/lib/calendar-placement';
 import { derivePlannerSourceDurationSec } from '@/lib/planner-source-metrics';
 import { getTemplateCadence } from '@/lib/template-cadence';
 import { parseTemplateRoutine } from '@/lib/template-routine';
-import { fromDayKey, toDayKey } from '@/lib/training-load';
+import { loadPlacementWorkspace } from './placement-existing';
 
 export const metadata: Metadata = { title: 'Calendar' };
 
@@ -94,10 +92,8 @@ async function PlacementPage({ userId, view, day, placement, source }: {
   placement: PlacementKind;
   source?: string;
 }) {
-  const nextMonth = toDayKey(addMonths(startOfMonth(fromDayKey(day)), 1));
-  const [workspace, followingMonth, workouts] = await Promise.all([
-    athletePlannerService.loadWorkspace(userId, day, { includeWeek: false }),
-    athletePlannerService.loadWorkspace(userId, nextMonth, { includeWeek: false }),
+  const [{ workspace, existing }, workouts] = await Promise.all([
+    loadPlacementWorkspace(userId, day),
     workoutLibraryService.listForOwner('athlete', userId),
   ]);
   const initialSource = resolvePlannerSourceSelection(source, {
@@ -105,10 +101,6 @@ async function PlacementPage({ userId, view, day, placement, source }: {
     templateIds: workspace.templates.map((template) => template.id),
   });
   const initialMessage = source && !initialSource ? 'That saved item is no longer available in your library.' : '';
-  const existing: ExistingSessionsByDate = {};
-  for (const entry of [...workspace.calendarDays, ...followingMonth.calendarDays]) {
-    existing[entry.isoDate] = entry.sessions.map((session) => ({ title: session.title, sport: session.sport }));
-  }
   const routines: PlacementRoutine[] = workspace.templates.map((template) => ({
     id: template.id,
     name: template.name,

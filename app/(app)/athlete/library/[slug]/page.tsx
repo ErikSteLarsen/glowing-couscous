@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { CatalogProfile, pctColor } from '@/components/library/CatalogProfile';
 import { LibraryWorkoutActions } from '@/components/library/LibraryWorkoutActions';
-import { Badge, PageShell, StatTile, Surface, TopBar, sectionHeadingClassName } from '@/components/ui';
+import { ChevronDown } from 'lucide-react';
+import { Badge, PageShell, StatTile, Surface, TopBar, buttonFocusClassName, sectionHeadingClassName } from '@/components/ui';
 import { accountService } from '@/lib/account-service';
 import { parseBackOrigin, resolveBackTarget } from '@/lib/app-navigation';
 import { getCurrentUser } from '@/lib/auth-session';
@@ -48,9 +49,7 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
       <div className="-mt-2 flex flex-wrap items-center gap-2">
         <Badge tone="brand">{categoryLabel(workout.category)}</Badge>
         <Badge>{levelLabel(workout.level)}</Badge>
-        {workout.tags.map((tag) => (
-          <Link key={tag} href={`/athlete/library?tag=${encodeURIComponent(tag)}`} className="rounded-full text-[12px] text-[var(--text-muted)] underline-offset-4 hover:text-[var(--text)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--brand)]">#{tag}</Link>
-        ))}
+        <span className="data text-[13px] text-[var(--text-secondary)]">{formatDuration(metrics.durationSec)}</span>
       </div>
 
       <LibraryWorkoutActions slug={workout.slug} name={workout.name} durationSec={metrics.durationSec} hasSteps={steps.length > 0} from={origin} />
@@ -71,40 +70,12 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
         />
       </Surface>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <StatTile label="Duration" value={formatDuration(metrics.durationSec)} />
-        <StatTile label="Training load" value={String(metrics.tss)} unit="TSS" />
-        <StatTile label="Intensity factor" value={metrics.intensityFactor.toFixed(2)} unit="IF" />
-        <StatTile label="Normalized power, est." value={pct(metrics.npPct)} unit={pctUnit} />
-        <StatTile label="Peak target" value={pct(metrics.maxPct)} unit={pctUnit} />
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <section aria-labelledby="library-about" className="min-w-0">
-          <h2 id="library-about" className={sectionHeadingClassName}>How to ride it</h2>
-          <div className="mt-3 max-w-[68ch] space-y-3 text-[14px] leading-relaxed text-[var(--text-secondary)]">
-            {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-          </div>
-        </section>
-        <section aria-labelledby="library-zones" className="min-w-0">
-          <h2 id="library-zones" className={sectionHeadingClassName}>Time in zone</h2>
-          <ul className="mt-3 space-y-2.5">
-            {metrics.zoneSec.map((seconds, index) => {
-              const zone = getTempoZoneMeta(index + 1);
-              const share = metrics.durationSec ? seconds / metrics.durationSec : 0;
-              return (
-                <li key={zone.label} className="grid grid-cols-[6.5rem_minmax(0,1fr)_3.5rem] items-center gap-3 text-[13px]">
-                  <span className="text-[var(--text-secondary)]"><span className="data text-[var(--text)]">{zone.label}</span> {zone.name}</span>
-                  <span className="h-2 overflow-hidden rounded-full bg-[var(--raised)]" aria-hidden="true">
-                    <span className="block h-full rounded-full" style={{ width: `${share * 100}%`, backgroundColor: `var(--color-zone-${index + 1})` }} />
-                  </span>
-                  <span className="data text-right text-[var(--text-secondary)]">{seconds ? formatDuration(seconds) : '—'}</span>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      </div>
+      <section aria-labelledby="library-about" className="min-w-0">
+        <h2 id="library-about" className={sectionHeadingClassName}>How to ride it</h2>
+        <div className="mt-3 max-w-[68ch] space-y-3 text-[14px] leading-relaxed text-[var(--text-secondary)]">
+          {paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+        </div>
+      </section>
 
       <section aria-labelledby="library-intervals" className="min-w-0">
         <div className="flex items-baseline justify-between gap-3">
@@ -124,6 +95,52 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
           ))}
         </ol>
       </section>
+
+      <details className="group border-y border-[var(--border)]">
+        <summary className={`flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-[var(--text)] [&::-webkit-details-marker]:hidden ${buttonFocusClassName}`}>
+          Workout details
+          <ChevronDown aria-hidden="true" size={16} className="text-[var(--text-muted)] transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="flex flex-col gap-6 pb-5 pt-2">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            <StatTile label="Duration" value={formatDuration(metrics.durationSec)} />
+            <StatTile label="Training load" value={String(metrics.tss)} unit="TSS" />
+            <StatTile label="Intensity factor" value={metrics.intensityFactor.toFixed(2)} unit="IF" />
+            <StatTile label="Normalized power, est." value={pct(metrics.npPct)} unit={pctUnit} />
+            <StatTile label="Peak target" value={pct(metrics.maxPct)} unit={pctUnit} />
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <section aria-labelledby="library-zones" className="min-w-0">
+              <h2 id="library-zones" className={sectionHeadingClassName}>Time in zone</h2>
+              <ul className="mt-3 space-y-2.5">
+                {metrics.zoneSec.map((seconds, index) => {
+                  const zone = getTempoZoneMeta(index + 1);
+                  const share = metrics.durationSec ? seconds / metrics.durationSec : 0;
+                  return (
+                    <li key={zone.label} className="grid grid-cols-[6.5rem_minmax(0,1fr)_3.5rem] items-center gap-3 text-[13px]">
+                      <span className="text-[var(--text-secondary)]"><span className="data text-[var(--text)]">{zone.label}</span> {zone.name}</span>
+                      <span className="h-2 overflow-hidden rounded-full bg-[var(--raised)]" aria-hidden="true">
+                        <span className="block h-full rounded-full" style={{ width: `${share * 100}%`, backgroundColor: `var(--color-zone-${index + 1})` }} />
+                      </span>
+                      <span className="data text-right text-[var(--text-secondary)]">{seconds ? formatDuration(seconds) : '—'}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+            {workout.tags.length ? (
+              <section aria-labelledby="library-tags" className="min-w-0">
+                <h2 id="library-tags" className={sectionHeadingClassName}>Tags</h2>
+                <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-2">
+                  {workout.tags.map((tag) => (
+                    <li key={tag}><Link href={`/athlete/library?tag=${encodeURIComponent(tag)}`} className="rounded-full text-[13px] text-[var(--text-muted)] underline-offset-4 hover:text-[var(--text)] hover:underline focus-visible:outline-2 focus-visible:outline-[var(--brand)]">#{tag}</Link></li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+          </div>
+        </div>
+      </details>
     </PageShell>
   );
 }

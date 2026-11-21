@@ -125,6 +125,26 @@ test('the workout editor replaces the list and its header, returning to the list
   assert.match(focusSource, /listIntro=\{listIntro\}/);
 });
 
+test('Library detail keeps Start workout and Schedule visible and schedules through Calendar placement', async () => {
+  const actionsSource = await read('components/library/LibraryWorkoutActions.tsx');
+  const detailSource = await read('app/(app)/athlete/library/[slug]/page.tsx');
+  const scheduleSource = await read('app/(app)/athlete/library/[slug]/schedule/page.tsx');
+  const placementSource = await read('app/(app)/athlete/calendar/CalendarPlacement.tsx');
+
+  assert.match(actionsSource, /<WorkoutStartChooser/);
+  assert.match(actionsSource, /\/schedule`/);
+  assert.doesNotMatch(actionsSource, /type="date"/);
+  assert.match(actionsSource, /<MenuItem[^>]*onSelect=\{\(\) => void addToWorkouts\(\)\}/);
+  assert.match(actionsSource, /Edit copy/);
+  assert.match(detailSource, /Workout details/);
+  assert.ok(detailSource.indexOf('library-intervals') < detailSource.indexOf('Workout details'));
+  assert.ok(detailSource.indexOf('Workout details') < detailSource.indexOf('Intensity factor'));
+  assert.match(scheduleSource, /<CalendarPlacement/);
+  assert.match(scheduleSource, /addDayKeys\(todayInZone\(/);
+  assert.match(scheduleSource, /catalog=\{\{/);
+  assert.match(placementSource, /\/api\/athlete\/library\/\$\{encodeURIComponent\(catalog\.slug\)\}\/schedule/);
+});
+
 test('Calendar placement only places defined sources on selected dates', async () => {
   const plannerPageSource = await read('app/(app)/athlete/calendar/page.tsx');
   const retiredPlannerSource = await read('app/(app)/athlete/planner/page.tsx');
@@ -133,7 +153,8 @@ test('Calendar placement only places defined sources on selected dates', async (
   const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
   const templatesClientSource = await read('components/TrainingTemplatesClient.tsx');
 
-  assert.match(plannerPageSource, /athletePlannerService\.loadWorkspace/);
+  assert.match(plannerPageSource, /loadPlacementWorkspace\(userId, day\)/);
+  assert.match(await read('app/(app)/athlete/calendar/placement-existing.ts'), /athletePlannerService\.loadWorkspace/);
   assert.match(plannerPageSource, /workoutLibraryService\.listForOwner\('athlete', userId\)/);
   assert.match(plannerPageSource, /resolvePlannerSourceSelection\(source/);
   assert.match(plannerPageSource, /<CalendarPlacement/);

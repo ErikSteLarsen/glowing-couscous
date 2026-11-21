@@ -17,6 +17,7 @@ import {
   TopBar,
   buttonFocusClassName,
 } from '@/components/ui';
+import type { BackTarget } from '@/lib/app-navigation';
 import { getCalendarHref, type CalendarView } from '@/lib/calendar-navigation';
 import {
   addPlacementDate,
@@ -45,11 +46,18 @@ export type PlacementRoutine = {
   entries: Array<{ weekday: number; title: string; sport: string }>;
 };
 
+/** A built-in Library workout placed as dated copies through the catalog schedule route. */
+export type PlacementCatalogSource = { slug: string; title: string; durationSec: number; back: BackTarget };
+
 type Item = { key: string; id: number; title: string; detail: string };
+
+const CATALOG_KEY = 'catalog';
 
 /**
  * Athlete placement: pick one saved workout or routine, pick when, confirm.
  * Placement goes through /api/athlete/planner/assignments with a stable retry key.
+ * With `catalog`, the built-in workout is fixed and copies go through the Library
+ * schedule route, which keeps catalog ownership and the same retry key contract.
  */
 export function CalendarPlacement({
   view,
@@ -60,6 +68,7 @@ export function CalendarPlacement({
   initialDate,
   initialSourceKey,
   initialMessage,
+  catalog,
 }: {
   view: CalendarView;
   placement: PlacementKind;
@@ -71,6 +80,7 @@ export function CalendarPlacement({
   initialDate: string;
   initialSourceKey: string;
   initialMessage: string;
+  catalog?: PlacementCatalogSource;
 }) {
   const router = useRouter();
   const ids = useId();
@@ -78,7 +88,9 @@ export function CalendarPlacement({
   const calendarHref = getCalendarHref(view, initialDate);
   const isRoutine = placement === 'template';
 
-  const items: Item[] = isRoutine
+  const items: Item[] = catalog
+    ? [{ key: CATALOG_KEY, id: 0, title: catalog.title, detail: [getSportLabel('BIKING'), formatDuration(catalog.durationSec)].join(' · ') }]
+    : isRoutine
     ? routines.map((routine) => ({
         key: `template:${routine.id}`,
         id: routine.id,
@@ -92,7 +104,7 @@ export function CalendarPlacement({
         detail: [getSportLabel(workout.sport), workout.durationSec > 0 ? formatDuration(workout.durationSec) : null].filter(Boolean).join(' · '),
       }));
 
-  const [selectedKey, setSelectedKey] = useState(items.some((item) => item.key === initialSourceKey) ? initialSourceKey : '');
+  const [selectedKey, setSelectedKey] = useState(catalog ? CATALOG_KEY : items.some((item) => item.key === initialSourceKey) ? initialSourceKey : '');
   const [picking, setPicking] = useState(!selectedKey);
   const [query, setQuery] = useState('');
   const [dates, setDates] = useState([initialDate]);
@@ -107,7 +119,9 @@ export function CalendarPlacement({
   const request = useRef<{ signature: string; requestKey: string } | null>(null);
 
   const selected = items.find((item) => item.key === selectedKey) ?? null;
-  const selectedWorkout = isRoutine ? null : workouts.find((workout) => `workout:${workout.id}` === selectedKey) ?? null;
+  const selectedWorkout = catalog
+    ? { title: catalog.title, sport: 'BIKING' }
+    : isRoutine ? null : workouts.find((workout) => `workout:${workout.id}` === selectedKey) ?? null;
   const selectedRoutine = isRoutine ? routineForKey(selectedKey) : null;
 
   const needle = query.trim().toLowerCase();
@@ -143,7 +157,10 @@ export function CalendarPlacement({
   function place() {
     if (inFlight.current || !selected || !targetDates.length) return;
     if (!plannedTime.ok) { setError(plannedTime.error); return; }
-    const body = { sourceKind: placement, sourceId: selected.id, dates: targetDates, timeLabel: plannedTime.timeLabel };
+    const body = catalog
+      ? { dates: targetDates, timeLabel: plannedTime.timeLabel }
+      : { sourceKind: placement, sourceId: selected.id, dates: targetDates, timeLabel: plannedTime.timeLabel };
+    const endpoint = catalog ? `/api/athlete/library/${encodeURIComponent(catalog.slug)}/schedule` : '/api/athlete/planner/assignments';
     const signature = JSON.stringify(body);
     // Retries of the same placement reuse one key, so the server never places it twice.
     if (request.current?.signature !== signature) request.current = { signature, requestKey: crypto.randomUUID() };
@@ -152,7 +169,7 @@ export function CalendarPlacement({
     setError('');
     startTransition(async () => {
       try {
-        const response = await fetch('/api/athlete/planner/assignments', {
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...body, requestKey }),
@@ -173,8 +190,8 @@ export function CalendarPlacement({
   }
 
   const noun = isRoutine ? 'routine' : 'workout';
-  const title = isRoutine ? 'Apply a routine' : 'Add workout';
-  const back = { href: calendarHref, destination: 'Calendar', label: 'Back to Calendar' };
+  const title = catalog ? 'Schedule workout' : isRoutine ? 'Apply a routine' : 'Add workout';
+  const back = catalog?.back ?? { href: calendarHref, destination: 'Calendar', label: 'Back to Calendar' };
 
   if (!items.length) {
     return (
@@ -201,7 +218,7 @@ export function CalendarPlacement({
               <p className="truncate text-sm font-medium text-[var(--text)]">{selected.title}</p>
               <p className="data truncate text-[13px] text-[var(--text-secondary)]">{selected.detail}</p>
             </div>
-            <button type="button" onClick={() => setPicking(true)} className={`${secondaryButtonClassName} max-md:min-h-11`}>Change</button>
+            {catalog ? null : <button type="button" onClick={() => setPicking(true)} className={`${secondaryButtonClassName} max-md:min-h-11`}>Change</button>}
           </div>
         ) : (
           <>
