@@ -244,6 +244,20 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   `pnpm typecheck` and `next build` regenerate it. A persistent local preview
   runs from the main checkout at http://localhost:3100 against `tempo_dev`
   (log in `.preview/dev.log`).
+- Home is a compact overview (DESIGN.md "Home overview"). At 1440×900 the
+  whole page fits without scrolling: a compact Today card with Start workout
+  and Details, Coming up (next 3), This week, and three summary tiles
+  (Training trends, Weekly volume, Last activity) with sparklines. Each tile
+  opens `HomeSummaryDialog` with the full chart and details. The missed
+  workouts row and its unused overdue query are removed. `pnpm test:db` 590
+  passed.
+- Workouts' two tabs share one `WorkoutCard` grid and `CollectionToolbar`;
+  Activity uses the same compact cards in a responsive grid. Workout drafts
+  show as an "N unsaved draft(s)" chip with a popover on the tabs row, plus an
+  inline restore prompt in the editor. Drafts identical to the saved workout
+  are dropped on load. Profile keeps its inline draft notice. On phones the
+  drafts chip wraps below the tabs. The coach Workouts page also renders the
+  new cards and was not browser-checked.
 
 ## Remaining risks and acceptance gates
 
