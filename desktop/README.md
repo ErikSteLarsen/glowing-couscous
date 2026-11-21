@@ -57,9 +57,17 @@ TEMPO_URL=https://tempo.example pnpm dev
 
 In PowerShell, set `$env:TEMPO_URL = 'https://tempo.example'`, then run
 `pnpm dev`. `TEMPO_URL` trusts the given origin for that app process and
-prefills the start page unless a site is already saved. Launching without a ride
-link opens the start page with the last saved address. For a local Tempo
-instance, select **Use http://localhost:3000**, then **Open Tempo**. Chromium
+prefills the start page unless a site is already saved. With neither, the start
+page is prefilled with the production site from `tempoDefaultSite` in
+`package.json`; that site is only trusted once you choose **Open Tempo**.
+
+The last site you opened, from the start page or a ride link, is saved as the
+current site. Launching without a ride link then goes straight to that site's
+ride home; the start page appears only on first run. To switch sites, choose
+**File → Change Tempo site…** (press Alt to show the hidden menu on Linux and
+Windows). For a local Tempo instance in a source build, select
+**Use http://localhost:3000**, then **Open Tempo**; packaged builds hide that
+option. Chromium
 requires HTTPS or a trustworthy local development origin such as localhost for
 Web Bluetooth.
 
@@ -101,5 +109,15 @@ page can detect the shell with `window.tempoDesktop?.isDesktop` and read its
 `deleteRecording(key)` for crash recovery. Each save takes up to 20 MiB of
 UTF-8 JSON. The ride page uses `tempo:ride:v1:<sessionId>` as its checkpoint key.
 The store also accepts 1–120 character keys made of letters, digits,
-underscores and hyphens. Backups stay in the app's `recordings/` folder.
-Trusted Tempo origins share access to that folder.
+underscores and hyphens.
+
+Backups are scoped to the page's origin: they live in
+`recordings/origins/<hex of origin>/`, and a page only lists, saves and deletes
+its own origin's backups. A ride started against a local server never appears
+on production, and the reverse. Backups written by 0.2.1 and earlier sit
+directly in `recordings/` and record no origin. On first start, the app moves
+them to the folder of the site saved in `settings.json` at that moment, which
+is where they were most likely written. If no site is saved, or a file with the
+same name already exists there, it moves them to `recordings/legacy/`, which no
+origin lists. Recover those by hand. The app never deletes backup files during
+this move.

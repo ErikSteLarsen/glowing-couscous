@@ -12,7 +12,7 @@ if (process.isMainFrame) {
     })
   } else if (location.protocol === 'file:' && location.pathname.endsWith('/start.html')) {
     contextBridge.exposeInMainWorld('tempoSetup', {
-      getSite: () => ipcRenderer.invoke('setup:get-site'),
+      getSetup: () => ipcRenderer.invoke('setup:get'),
       openSite: (url) => ipcRenderer.invoke('setup:open-site', url)
     })
   }

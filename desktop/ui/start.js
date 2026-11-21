@@ -4,8 +4,10 @@ const error = document.querySelector('#error')
 const submit = document.querySelector('button[type="submit"]')
 const quickOption = document.querySelector('.quick-option')
 
-window.tempoSetup.getSite().then((value) => {
+window.tempoSetup.getSetup().then(({ site: value, offerLocalhost, error: loadError }) => {
   if (!site.value) site.value = value
+  error.textContent = loadError
+  quickOption.hidden = !offerLocalhost
 }).catch(() => {})
 
 quickOption.addEventListener('click', () => {

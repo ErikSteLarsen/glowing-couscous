@@ -1,10 +1,11 @@
-const { app, BrowserWindow, dialog, powerSaveBlocker, shell } = require('electron')
+const { app, BrowserWindow, dialog, Menu, powerSaveBlocker, shell } = require('electron')
 const { registerAppImage } = require('./linux-integration.cjs')
 const { readFileSync, renameSync, writeFileSync } = require('node:fs')
 const path = require('node:path')
 const { pathToFileURL } = require('node:url')
 const { wireBluetooth } = require('./bluetooth.cjs')
 const { openDesktopDialog } = require('./dialog.cjs')
+const { launchTarget, parseSettings, rememberSite, startPageSite } = require('./launch.cjs')
 const { createRecordingStore } = require('./recordings.cjs')
 const { SCHEME, isTrustedWebUrl, parseRideLink, parseWebUrl } = require('./urls.cjs')
 
@@ -13,6 +14,9 @@ const START_URL = pathToFileURL(START_FILE).href
 const LINK_PREFIX = `${SCHEME}:`
 const isLinux = process.platform === 'linux'
 const RIDE_SIZE = [1200, 800]
+const START_SIZE = [500, 390]
+// Chromium's ERR_ABORTED: a navigation replaced by another one, not a failure.
+const ABORTED = -3
 const environmentOrigin = parseWebUrl(process.env.TEMPO_URL)?.origin
 const trustedOrigins = new Set(environmentOrigin ? [environmentOrigin] : [])
 
@@ -21,21 +25,13 @@ let settingsPath
 let settings
 let recordings
 let pendingLink = Promise.resolve()
+let loadError = ''
 
 function readSettings() {
   try {
-    const saved = JSON.parse(readFileSync(settingsPath, 'utf8'))
-    return {
-      site: parseWebUrl(saved?.site)?.origin,
-      origins: Array.isArray(saved?.origins)
-        ? saved.origins.flatMap((value) => {
-            const url = parseWebUrl(value)
-            return url ? [url.origin] : []
-          })
-        : []
-    }
+    return parseSettings(JSON.parse(readFileSync(settingsPath, 'utf8')))
   } catch (error) {
-    if (error.code === 'ENOENT') return { origins: [] }
+    if (error.code === 'ENOENT') return parseSettings(undefined)
     throw error
   }
 }
@@ -58,6 +54,35 @@ function openSite(window, url) {
     window.center()
   }
   window.loadURL(url.href).catch(() => {})
+}
+
+/** Opens a site the user chose and remembers it as the last used site. */
+function openChosenSite(window, url) {
+  trustedOrigins.add(url.origin)
+  saveSettings(rememberSite(settings, url.origin))
+  openSite(window, url)
+}
+
+function showStartPage(window, error = '') {
+  loadError = error
+  window.setSize(...START_SIZE)
+  window.center()
+  window.loadFile(START_FILE).catch(() => {})
+}
+
+function buildMenu() {
+  const changeSite = {
+    label: 'Change Tempo site…',
+    click: () => showStartPage(showMainWindow())
+  }
+  const isMac = process.platform === 'darwin'
+  Menu.setApplicationMenu(Menu.buildFromTemplate([
+    ...(isMac ? [{ role: 'appMenu' }] : []),
+    { label: 'File', submenu: [changeSite, { type: 'separator' }, isMac ? { role: 'close' } : { role: 'quit' }] },
+    { role: 'editMenu' },
+    { role: 'viewMenu' },
+    { role: 'windowMenu' }
+  ]))
 }
 
 function wireNavigation(window) {
@@ -115,40 +140,44 @@ function wireIpc(window) {
     }
   }
 
+  // Backups are scoped to the page's origin so one Tempo server never sees another's rides.
+  const senderOrigin = (event) => new URL(event.senderFrame.url).origin
   const isStart = (url) => url === START_URL
-  ipc.handle('setup:get-site', (event) => {
+  ipc.handle('setup:get', (event) => {
     assertMainPage(event, isStart)
-    return settings.site ?? environmentOrigin ?? ''
+    const error = loadError
+    loadError = ''
+    return { site: startPageSite({ settings, environmentOrigin }), offerLocalhost: !app.isPackaged, error }
   })
   ipc.handle('setup:open-site', (event, value) => {
     assertMainPage(event, isStart)
     const url = parseWebUrl(value)
     if (!url) throw new Error('Enter a full Tempo site URL starting with https:// or http://.')
 
-    saveSettings({ ...settings, site: url.origin })
-    trustedOrigins.add(url.origin)
-    openSite(window, new URL('/athlete/ride', url.origin))
+    openChosenSite(window, new URL('/athlete/ride', url.origin))
   })
   ipc.handle('recording:save', (event, key, json) => {
     assertMainPage(event, isTrusted)
-    return recordings.save(key, json)
+    return recordings.save(senderOrigin(event), key, json)
   })
   ipc.handle('recording:list', (event) => {
     assertMainPage(event, isTrusted)
-    return recordings.list()
+    return recordings.list(senderOrigin(event))
   })
   ipc.handle('recording:delete', (event, key) => {
     assertMainPage(event, isTrusted)
-    return recordings.delete(key)
+    return recordings.delete(senderOrigin(event), key)
   })
 }
 
 function showMainWindow() {
   if (!mainWindow) {
+    const home = launchTarget(settings)
+    const [width, height] = home ? RIDE_SIZE : START_SIZE
     const window = new BrowserWindow({
       title: 'Tempo Ride',
-      width: 500,
-      height: 390,
+      width,
+      height,
       minWidth: 400,
       minHeight: 300,
       autoHideMenuBar: true,
@@ -175,7 +204,14 @@ function showMainWindow() {
       powerSaveBlocker.stop(blocker)
       mainWindow = undefined
     })
-    window.loadFile(START_FILE).catch(() => {})
+    // A site that cannot load (offline, server down) returns to the start page instead of a blank window.
+    window.webContents.on('did-fail-load', (_event, code, _description, url, isMainFrame) => {
+      const origin = parseWebUrl(url)?.origin
+      if (!isMainFrame || code === ABORTED || !origin) return
+      showStartPage(window, `Tempo Ride could not reach ${origin}. Check your connection and try again.`)
+    })
+    if (home) window.loadURL(home.href).catch(() => {})
+    else window.loadFile(START_FILE).catch(() => {})
   }
 
   if (mainWindow.isMinimized()) mainWindow.restore()
@@ -200,11 +236,9 @@ async function openLink(value) {
       openDesktopDialog(window, { mode: 'trust', origin: url.origin }, resolve)
     })
     if (response !== 'confirm' || window.isDestroyed()) return
-    saveSettings({ ...settings, origins: [...settings.origins, url.origin] })
-    trustedOrigins.add(url.origin)
   }
 
-  openSite(window, url)
+  openChosenSite(window, url)
 }
 
 function findLink(argv) {
@@ -249,6 +283,9 @@ function start(startupLink) {
     if (settings.site) trustedOrigins.add(settings.site)
     for (const origin of settings.origins) trustedOrigins.add(origin)
     recordings = createRecordingStore(path.join(userData, 'recordings'))
+    // Backups written before origin scoping have no known origin; see README.
+    recordings.migrateLegacy(settings.site).catch(() => {})
+    buildMenu()
     if (isLinux) {
       registerAppImage({ iconPath: path.join(__dirname, 'build', 'icon.png') }).catch(() => {})
     }

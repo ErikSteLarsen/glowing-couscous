@@ -1,6 +1,6 @@
 # Current status
 
-Last verified locally on **2026-11-17**. Source code and tests are authoritative.
+Last verified locally on **2026-11-21**. Source code and tests are authoritative.
 This is the current snapshot; ownership is in [WORK-INDEX.md](WORK-INDEX.md),
 contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 [VERIFICATION.md](../VERIFICATION.md).
@@ -170,14 +170,24 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   released 0.2.1 AppImage against production on Hyprland. Cold start with a
   ride link showed the trust prompt, then signed-out login with the ride
   callback, then the ride. A link sent with `xdg-open` to the already running
-  app navigated to it and focused the window. Open: a plain launch forgets the
-  site after a deep link, and desktop ride backups are shared across origins.
-  A localhost backup appeared on production. Fixes are in progress.
+  app navigated to it and focused the window.
+- Tempo Ride 0.2.2 (2026-11-21): the app remembers the last opened site (start
+  page, or an accepted ride link). A plain launch opens its ride home directly,
+  and the File menu has **Change Tempo site…**. Packaged builds prefill the
+  production site and hide the localhost option. A site that fails to load
+  returns to the start page with an error. Desktop ride backups are scoped per
+  origin, so a localhost backup no longer appears on production. Older loose
+  backups move to the saved site's folder, or to `recordings/legacy/` when no
+  site is saved. A packaged AppImage was checked against production for fresh
+  prefill, Open Tempo, a relaunch straight to ride home with the sign-in kept,
+  the trust prompt for a new site through the running app, and the offline
+  fallback. Desktop tests passed (19). The menu was not clicked by hand, and
+  macOS and Windows were not run.
 - Tempo Ride still needs browser and physical-device acceptance for reconnect,
   FTMS Free Ride support, wake lock, and desktop picker/deep-link behavior.
   A fully suspended renderer can recover elapsed time and sample slots, with gaps
   for telemetry that never arrived. Browser backups are keyed by session within
-  an origin, and trusted Tempo origins use a shared desktop backup directory.
+  an origin. Desktop backups are scoped per origin.
 - Physical iOS/Android, assistive technology, complete authenticated editing
   journeys and session-correction layout at 1440px remain distinct gates.
   Component fixture viewports do not establish route layout acceptance.

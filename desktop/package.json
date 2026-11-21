@@ -5,6 +5,7 @@
   "description": "Desktop companion for Tempo indoor bike workouts",
   "homepage": "https://github.com/ErikSteLarsen/glowing-couscous",
   "desktopName": "tempo-ride.desktop",
+  "tempoDefaultSite": "https://glowing-couscous-delta.vercel.app",
   "private": true,
   "main": "main.cjs",
   "packageManager": "pnpm@10.26.0",
