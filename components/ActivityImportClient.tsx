@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { formatStravaMetadata, StravaImportPanel } from '@/components/StravaImportPanel';
-import { EmptyState, Surface, dangerButtonClassName, dangerTextClassName, formFieldClassName, formLabelClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { EmptyState, Surface, buttonFocusClassName, dangerButtonClassName, dangerTextClassName, formFieldClassName, formLabelClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { parseActivityFile, type ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { ImportableSession, ImportedActivityHistory } from '@/lib/activity-import-service';
 import type { StravaConnectionSummary } from '@/lib/strava-service';
@@ -290,7 +290,7 @@ export function ActivityImportClient({
                   });
                 }}
               >
-                <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 rounded-[3px] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-liquid)] [&::-webkit-details-marker]:hidden">
+                <summary className={`flex min-h-11 cursor-pointer list-none flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg px-2 py-2 text-left transition-colors hover:bg-[var(--raised)] [&::-webkit-details-marker]:hidden ${buttonFocusClassName}`}>
                   <span className="min-w-0">
                     <span className="block break-words text-[15px] font-semibold text-[var(--text)]">{activity.title}</span>
                     <span className="mt-1 block text-[12px] text-[var(--text-secondary)]">
