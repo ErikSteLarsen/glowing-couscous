@@ -215,7 +215,7 @@ export function CalendarPlacement({
         {selected && !picking ? (
           <div className="flex items-center gap-3 rounded-xl border border-[var(--field-selected-border)] bg-[var(--brand-tint)] px-4 py-3">
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-[var(--text)]">{selected.title}</p>
+              <p className="text-sm font-medium text-[var(--text)] [overflow-wrap:anywhere]">{selected.title}</p>
               <p className="data truncate text-[13px] text-[var(--text-secondary)]">{selected.detail}</p>
             </div>
             {catalog ? null : <button type="button" onClick={() => setPicking(true)} className={`${secondaryButtonClassName} max-md:min-h-11`}>Change</button>}
@@ -229,7 +229,7 @@ export function CalendarPlacement({
                 <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${noun}s`} className={`${formFieldClassName} pl-9 max-md:min-h-11`} />
               </label>
             ) : null}
-            <ul className="flex flex-col divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)]" aria-label={`Saved ${noun}s`}>
+            <ul className="flex flex-col divide-y divide-[var(--border)] max-h-[280px] overflow-y-auto rounded-xl border border-[var(--border)]" aria-label={`Saved ${noun}s`}>
               {visibleItems.map((item) => (
                 <li key={item.key}>
                   <button
@@ -239,14 +239,14 @@ export function CalendarPlacement({
                     className={`flex min-h-14 w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--raised)] ${buttonFocusClassName} focus-visible:ring-inset focus-visible:ring-offset-0`}
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium text-[var(--text)]">{item.title}</span>
+                      <span className="block text-sm font-medium text-[var(--text)] [overflow-wrap:anywhere]">{item.title}</span>
                       <span className="data block truncate text-[13px] text-[var(--text-muted)]">{item.detail}</span>
                     </span>
                     {item.key === selectedKey ? <Check aria-hidden="true" size={16} className="text-[var(--brand)]" /> : null}
                   </button>
                 </li>
               ))}
-              {!visibleItems.length ? <li className="px-4 py-3 text-sm text-[var(--text-muted)]">No {noun}s match “{query.trim()}”.</li> : null}
+              {!visibleItems.length ? <li className="px-4 py-3 text-sm text-[var(--text-muted)] [overflow-wrap:anywhere]">No {noun}s match “{query.trim()}”.</li> : null}
             </ul>
           </>
         )}
