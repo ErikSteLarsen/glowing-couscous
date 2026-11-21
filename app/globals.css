@@ -1854,51 +1854,6 @@ body[data-workspace-theme="dark"] .profile-savebar {
   .training-calendar__grid--month .training-calendar__date { min-height: 72px; }
 }
 
-/* Home training setup reuses Profile fields and the shared Monolith palette. */
-.training-setup { background: var(--surface); border: 1px solid var(--nav-signal); border-radius: var(--radius-surface, 16px); padding: 24px; margin-bottom: 24px; }
-.training-setup__intro { display: flex; align-items: flex-start; gap: 16px; }
-.training-setup__intro > div { flex: 1; min-width: 0; }
-.training-setup__intro h2 { color: var(--text); font-size: 20px; font-weight: 600; line-height: 1.3; margin: 0 0 8px; }
-.training-setup__intro p, .training-setup__body > p { color: var(--text-secondary); font-size: 14px; line-height: 1.6; max-width: 68ch; }
-.training-setup__icon { color: var(--nav-signal); flex-shrink: 0; margin-top: 2px; }
-.training-setup__note { color: var(--text-secondary); font-size: 12px; line-height: 1.6; margin-top: 12px; }
-.training-setup__form { margin-top: 24px; }
-.training-setup__fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
-.training-setup__steps { display: flex; flex-wrap: wrap; gap: 8px 16px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
-.training-setup__steps button { display: flex; align-items: center; gap: 8px; min-height: 44px; color: var(--text-secondary); font-size: 13px; padding: 4px; }
-.training-setup__steps button[aria-current] { color: var(--text); font-weight: 600; }
-.training-setup__steps span { display: grid; place-items: center; border: 1px solid var(--border); border-radius: 9999px; height: 24px; width: 24px; font-variant-numeric: tabular-nums; }
-.training-setup__steps button[aria-current] span { background: var(--nav-active); border-color: var(--nav-signal); }
-.training-setup__body { display: grid; gap: 16px; padding-block: 24px; max-width: 760px; }
-.training-setup__body h3 { color: var(--text); font-size: 18px; font-weight: 600; line-height: 1.35; }
-.training-setup__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.training-setup__field { display: grid; gap: 8px; max-width: 360px; }
-.training-setup__fields > label { display: grid; gap: 8px; }
-.training-setup__sports { display: flex; flex-wrap: wrap; gap: 8px 24px; }
-.training-setup__sports label { display: flex; align-items: center; gap: 10px; min-height: 44px; color: var(--text); font-size: 15px; cursor: pointer; }
-.training-setup__sports input { width: 18px; height: 18px; accent-color: var(--nav-signal); }
-.training-setup__zones { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
-.training-setup__zones > div { display: grid; gap: 6px; border-top: 1px solid var(--border); padding-top: 12px; }
-.training-setup__zones span { font-size: 12px; color: var(--text-secondary); }
-.training-setup__zones strong { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text); }
-.training-setup__actions { display: flex; flex-wrap: wrap; gap: 12px; }
-.training-setup__error { color: var(--status-danger); margin-top: 16px; font-size: 14px; line-height: 1.6; }
-.training-setup__success { color: var(--text); display: flex; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 24px; }
-.training-setup button:focus-visible, .training-setup input:focus-visible { outline: 2px solid var(--field-focus); outline-offset: 3px; }
-@media (max-width: 640px) {
-  .training-setup { padding: 16px; }
-  .training-setup__intro { flex-wrap: wrap; gap: 12px; }
-  .training-setup__intro > div { flex-basis: calc(100% - 36px); }
-  .training-setup__intro > button { width: 100%; }
-  .training-setup__fields { grid-template-columns: minmax(0, 1fr); }
-  .training-setup__zones { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .training-setup__actions > button { min-height: 44px; }
-}
-.training-setup__manual summary { color: var(--text); cursor: pointer; font-size: 14px; min-height: 44px; padding-block: 12px; }
-.training-setup__manual summary:focus-visible { outline: 2px solid var(--field-focus); outline-offset: 3px; }
-.training-setup__steps button:hover { color: var(--text); }
-.training-setup__steps button:disabled { cursor: wait; opacity: 0.6; }
-
 /* SDK alert dialogs use the native top layer; retain Tempo's visual tokens. */
 .tempo-alert-dialog {
   position: fixed;

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDown } from 'lucide-react';
 import type { BackTarget } from '@/lib/app-navigation';
 import { ReactNode } from 'react';
 
@@ -216,6 +216,18 @@ export function Surface({ children, className = '', id }: { children: ReactNode;
     <section id={id} className={`tile rounded-2xl p-5 ${className}`}>
       {children}
     </section>
+  );
+}
+
+export function Disclosure({ summary, children }: { summary: ReactNode; children: ReactNode }) {
+  return (
+    <details className="group rounded-xl border border-[var(--border)]">
+      <summary className={`flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--raised)] [&::-webkit-details-marker]:hidden ${buttonFocusClassName}`}>
+        {summary}
+        <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-[var(--text-muted)] group-open:rotate-180" />
+      </summary>
+      <div className="space-y-3 border-t border-[var(--border)] p-4">{children}</div>
+    </details>
   );
 }
 

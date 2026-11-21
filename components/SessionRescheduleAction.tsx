@@ -3,11 +3,14 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { CalendarDays, Ellipsis } from 'lucide-react';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
 import {
   compactSecondaryButtonClassName,
   dangerTextClassName,
   formFieldClassName,
   formLabelClassName,
+  iconButtonClassName,
   secondaryButtonClassName,
   successTextClassName,
 } from '@/components/ui';
@@ -68,9 +71,17 @@ function QuickMoveAction({ sessionId, title, targetDay, onMoved }: ActionProps &
 
   return (
     <div className="flex flex-col items-start gap-1">
-      <button type="button" className={`${secondaryButtonClassName} min-h-11`} disabled={isPending} onClick={() => void moveToToday()}>
-        {isPending ? 'Moving…' : 'Move to today'}
-      </button>
+      <Menu>
+        <MenuTrigger className={iconButtonClassName} aria-label={`More actions for ${title}`} disabled={isPending}>
+          <Ellipsis size={16} aria-hidden="true" />
+        </MenuTrigger>
+        <MenuContent align="end">
+          <MenuItem onSelect={moveToToday}>
+            <CalendarDays size={16} aria-hidden="true" />
+            {isPending ? 'Moving…' : 'Move to today'}
+          </MenuItem>
+        </MenuContent>
+      </Menu>
       {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
     </div>
   );

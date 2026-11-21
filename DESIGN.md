@@ -593,21 +593,11 @@ bottom navigation and Profile save actions; sync errors do not overlap notices.
 
 ### Home training setup
 
-Incomplete personal training targets appear in an inline, neutral-surface section
-above Today. Keep the Night Instrument treatment: a restrained cobalt outline and icon,
-shared field and button classes, rounded surface corners, and wrapping controls.
-Choose sports first, then maximum heart rate, then only the selected sports'
-targets. Show calculated heart-rate and running-pace previews beside their inputs;
-identify running estimates as estimates and disclose manual pace bounds on demand.
-Keep units and optional values explicit. Narrow layouts stack paired fields and
-retain readable zone labels and keyboard focus.
-
-Each successful step saves through Profile and announces the result. Preserve
-entries on failure, distinguish unsaved edits, and offer Continue later with a
-discard safeguard. Unknown values may remain blank and keep setup incomplete;
-never require guesses. Once the selected sports' targets and maximum heart rate
-are saved, hide the setup section and leave subsequent editing in Profile.
-
+Show incomplete training targets in a compact link directly below Today. Name
+the missing target and open its Profile row. Profile keeps units explicit and
+shows calculated previews and advanced targets with the fields they affect.
+The link disappears when maximum heart rate and the selected sports’ targets
+are saved. Unknown values may remain blank.
 
 ### Personal training templates
 

@@ -115,62 +115,25 @@ export default async function AthletePage() {
         title={`${greetingFor(hourInZone(timeZone))}, ${firstName}`}
         actions={<Link href="/athlete/events" className={ghostButtonClassName('default')}>Events</Link>}
       />
-      <UnsavedRidesNotice userId={user.id} />
-      <HomeTrainingSetup key={account.updatedAt.toISOString()} profile={account.performanceProfile} sports={parseTrainingSports(parsePrefsJson(account.prefsJson).trainingSports)} revision={account.updatedAt.toISOString()} />
+      <section aria-labelledby="today-heading" className="tile flex flex-col rounded-2xl p-5 xl:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="today-heading" className={sectionHeadingClassName}>Today</h2>
+          {doneToday.length > 0 ? (
+            <span className="text-xs text-[var(--text-muted)]">
+              {doneToday.length} done today
+            </span>
+          ) : null}
+        </div>
 
-      {dashboard.nextEvent ? (
-        <section aria-labelledby="next-event-heading" className="flex flex-col gap-3 rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-[var(--brand)]">{dashboard.nextEvent.daysUntil === 0 ? 'Today' : dashboard.nextEvent.daysUntil === 1 ? 'Tomorrow' : `In ${dashboard.nextEvent.daysUntil} days`} · {format(new Date(`${dashboard.nextEvent.eventDate}T12:00:00`), 'EEE d MMM yyyy')}</p>
-            <h2 id="next-event-heading" className="mt-1 text-lg font-medium text-[var(--text)]">{dashboard.nextEvent.title}</h2>
-            <p className="mt-0.5 text-sm text-[var(--text-muted)]">{getSportLabel(dashboard.nextEvent.sport)}{dashboard.nextEvent.targetFinishSec ? ` · Goal ${formatDuration(dashboard.nextEvent.targetFinishSec)}` : ''}</p>
-          </div>
-          <Link href="/athlete/events" className={`${secondaryButtonClassName} shrink-0`}>Manage events</Link>
-        </section>
-      ) : null}
-
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatTile
-          label={hasHistory ? `Form · ${formZoneLabels[load.current.formZone]}` : 'Form'}
-          value={signed(load.current.form)}
-          detail={hasHistory ? formAdvice[load.current.formZone] : 'Builds as you complete sessions'}
-          tone={formTone}
-        />
-        <StatTile
-          label="Fitness"
-          value={String(Math.round(load.current.fitness))}
-          detail={unknownLoadSessions ? `Estimate; excludes ${unknownLoadSessions} activities with unavailable load` : fitnessChange === null ? '42-day load' : `${signed(fitnessChange)} over 4 weeks`}
-          tone={fitnessChange !== null && fitnessChange > 0 ? 'good' : 'neutral'}
-        />
-        <StatTile label="Fatigue" value={String(Math.round(load.current.fatigue))} detail={unknownLoadSessions ? 'Estimate; some activity load is unavailable' : '7-day load'} />
-        <StatTile
-          label="Ramp rate"
-          value={load.current.rampRate === null ? '–' : signed(load.current.rampRate)}
-          unit={load.current.rampRate === null ? undefined : '/wk'}
-          detail={unknownLoadSessions ? 'Estimate; some activity load is unavailable' : rampTone === 'watch' ? 'Fitness rising fast' : 'Fitness change per week'}
-          tone={rampTone}
-        />
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-12">
-        <section aria-labelledby="today-heading" className={`tile flex flex-col rounded-2xl p-5 xl:p-6 ${cards.has('trend') ? 'xl:col-span-5' : 'xl:col-span-12'}`}>
-          <div className="flex items-center justify-between gap-3">
-            <h2 id="today-heading" className={sectionHeadingClassName}>Today</h2>
-            {doneToday.length > 0 ? (
-              <span className="text-xs text-[var(--text-muted)]">
-                {doneToday.length} done today
-              </span>
-            ) : null}
-          </div>
-
+        <div className={`mt-4 grid gap-5 ${upcoming.length > 0 ? 'lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-6' : ''}`}>
           {nextAction ? (
-            <div className="mt-4 flex flex-1 flex-col gap-4">
+            <div className="flex min-w-0 flex-col gap-4">
               <div>
                 <p className="data text-[13px] text-[var(--text-muted)]">
                   {[nextAction.timeLabel, getSportLabel(nextAction.sport)].filter(Boolean).join(' · ')}
                 </p>
                 <p className="mt-1 text-2xl font-medium tracking-[-0.02em] text-[var(--text)]">{nextAction.title}</p>
-                {nextAction.summary ? <p className="mt-1.5 line-clamp-2 text-sm text-[var(--text-secondary)]">{nextAction.summary}</p> : null}
+                {nextAction.summary ? <p className="mt-1.5 line-clamp-2 max-w-[68ch] text-sm text-[var(--text-secondary)]">{nextAction.summary}</p> : null}
               </div>
               <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
                 <p className="data text-[1.75rem] font-medium leading-none tracking-[-0.02em] text-[var(--text)]">
@@ -199,7 +162,7 @@ export default async function AthletePage() {
               </div>
             </div>
           ) : (
-            <div className="mt-4 flex flex-1 flex-col gap-4">
+            <div className="flex min-w-0 flex-col gap-4">
               <div>
                 <p className="text-2xl font-medium tracking-[-0.02em] text-[var(--text)]">
                   {restState.title}
@@ -223,7 +186,7 @@ export default async function AthletePage() {
           )}
 
           {upcoming.length > 0 ? (
-            <div className="mt-5 border-t border-[var(--border)] pt-4">
+            <div className="min-w-0 border-t border-[var(--border)] pt-4 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
               <h3 className="text-xs text-[var(--text-muted)]">Coming up</h3>
               <ul className="mt-2 space-y-1">
                 {upcoming.map(({ day, session }) => (
@@ -242,31 +205,26 @@ export default async function AthletePage() {
               </ul>
             </div>
           ) : null}
+        </div>
+      </section>
+
+      <HomeTrainingSetup
+        profile={account.performanceProfile}
+        sports={parseTrainingSports(parsePrefsJson(account.prefsJson).trainingSports)}
+        workoutSport={nextAction?.sport}
+      />
+      <UnsavedRidesNotice userId={user.id} />
+
+      {dashboard.nextEvent ? (
+        <section aria-labelledby="next-event-heading" className="flex flex-col gap-3 rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-[var(--brand)]">{dashboard.nextEvent.daysUntil === 0 ? 'Today' : dashboard.nextEvent.daysUntil === 1 ? 'Tomorrow' : `In ${dashboard.nextEvent.daysUntil} days`} · {format(new Date(`${dashboard.nextEvent.eventDate}T12:00:00`), 'EEE d MMM yyyy')}</p>
+            <h2 id="next-event-heading" className="mt-1 text-lg font-medium text-[var(--text)]">{dashboard.nextEvent.title}</h2>
+            <p className="mt-0.5 text-sm text-[var(--text-muted)]">{getSportLabel(dashboard.nextEvent.sport)}{dashboard.nextEvent.targetFinishSec ? ` · Goal ${formatDuration(dashboard.nextEvent.targetFinishSec)}` : ''}</p>
+          </div>
+          <Link href="/athlete/events" className={`${secondaryButtonClassName} shrink-0`}>Manage events</Link>
         </section>
-        {cards.has('trend') ? (
-          <section aria-labelledby="performance-heading" className="tile min-w-0 rounded-2xl p-5 xl:col-span-7 xl:p-6">
-            <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-              <div>
-                <h2 id="performance-heading" className={sectionHeadingClassName}>Fitness and form</h2>
-                <p className="mt-1 text-[13px] text-[var(--text-muted)]">Last 12 weeks and the next two, from your plan</p>
-                {unknownLoadSessions > 0 ? <p className="mt-1 text-xs text-[var(--text-muted)]">Load is unavailable for {unknownLoadSessions} activities. The fitness and fatigue estimates omit them; marked chart days are not measured as zero.</p> : null}
-              </div>
-              <Link href="/athlete/activity" className={ghostButtonClassName('compact')}>
-                All activity
-                <ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />
-              </Link>
-            </div>
-            {hasHistory ? (
-              <PerformanceChart series={load.series} today={load.today} />
-            ) : (
-              <div className="tile-empty rounded-xl px-5 py-10 text-center">
-                <p className="text-sm text-[var(--text)]">Your fitness line starts with training load data.</p>
-                <p className="mt-1 text-[13px] text-[var(--text-muted)]">Manually logged work counts toward duration history; load needs a defensible TSS value.</p>
-              </div>
-            )}
-          </section>
-        ) : null}
-      </div>
+      ) : null}
 
       <OverdueSessions sessions={dashboard.overdue} today={dashboard.todayKey} />
 
@@ -375,6 +333,54 @@ export default async function AthletePage() {
             </section>
           ) : null}
         </div>
+      ) : null}
+      {cards.has('trend') ? (
+        <section aria-labelledby="training-trends-heading" className="space-y-3">
+          <h2 id="training-trends-heading" className={sectionHeadingClassName}>Training trends</h2>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatTile
+              label={hasHistory ? `Form · ${formZoneLabels[load.current.formZone]}` : 'Form'}
+              value={signed(load.current.form)}
+              detail={hasHistory ? formAdvice[load.current.formZone] : 'Builds as you complete sessions'}
+              tone={formTone}
+            />
+            <StatTile
+              label="Fitness"
+              value={String(Math.round(load.current.fitness))}
+              detail={unknownLoadSessions ? `Estimate; excludes ${unknownLoadSessions} activities with unavailable load` : fitnessChange === null ? '42-day load' : `${signed(fitnessChange)} over 4 weeks`}
+              tone={fitnessChange !== null && fitnessChange > 0 ? 'good' : 'neutral'}
+            />
+            <StatTile label="Fatigue" value={String(Math.round(load.current.fatigue))} detail={unknownLoadSessions ? 'Estimate; some activity load is unavailable' : '7-day load'} />
+            <StatTile
+              label="Ramp rate"
+              value={load.current.rampRate === null ? '–' : signed(load.current.rampRate)}
+              unit={load.current.rampRate === null ? undefined : '/wk'}
+              detail={unknownLoadSessions ? 'Estimate; some activity load is unavailable' : rampTone === 'watch' ? 'Fitness rising fast' : 'Fitness change per week'}
+              tone={rampTone}
+            />
+          </div>
+          <section aria-labelledby="performance-heading" className="tile min-w-0 rounded-2xl p-5 xl:p-6">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <h3 id="performance-heading" className={sectionHeadingClassName}>Fitness and form</h3>
+                <p className="mt-1 text-[13px] text-[var(--text-muted)]">Last 12 weeks and the next two, from your plan</p>
+                {unknownLoadSessions > 0 ? <p className="mt-1 text-xs text-[var(--text-muted)]">Load is unavailable for {unknownLoadSessions} activities. The fitness and fatigue estimates omit them; marked chart days are not measured as zero.</p> : null}
+              </div>
+              <Link href="/athlete/activity" className={ghostButtonClassName('compact')}>
+                All activity
+                <ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />
+              </Link>
+            </div>
+            {hasHistory ? (
+              <PerformanceChart series={load.series} today={load.today} />
+            ) : (
+              <div className="tile-empty rounded-xl px-5 py-10 text-center">
+                <p className="text-sm text-[var(--text)]">Your fitness line starts with training load data.</p>
+                <p className="mt-1 text-[13px] text-[var(--text-muted)]">Manually logged work counts toward duration history; load needs a defensible TSS value.</p>
+              </div>
+            )}
+          </section>
+        </section>
       ) : null}
     </PageShell>
   );

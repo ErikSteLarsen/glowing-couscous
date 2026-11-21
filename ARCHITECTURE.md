@@ -182,13 +182,11 @@ account drafts. Browser recovery never claims server persistence.
 
 `account-service.updateProfile` validates the complete request before one
 compare-and-swap write of name, performance profile and supplied preferences.
-Home's `HomeTrainingSetup` reads through `account-service.getAccount` and saves
-through the same Profile endpoint with `expectedUpdatedAt`. Selected endurance
-sports live in `prefsJson.trainingSports`, separately from performance metrics;
-the service validates the selection and merges unrelated preferences. The pure
-`training-setup` helpers determine completeness using shared running-zone
-calculations, HRmax, FTP and CSS. No onboarding-completed flag substitutes for
-actual targets, and no schema change is required.
+Home's `HomeTrainingSetup` reads through `account-service.getAccount` and
+links to the missing target in Profile. The `training-setup` helpers use
+shared running-zone calculations, HRmax, FTP and CSS, and honor any saved
+endurance-sport selection in `prefsJson.trainingSports`. Profile owns target
+editing and revision-aware saves.
 `WorkoutSaveRequest` owns user/owner/request uniqueness and normalized-payload
 hashes for transactional workout creation. Keep the identity after workout
 deletion to refuse accidental recreation on retry. Edits claim the expected

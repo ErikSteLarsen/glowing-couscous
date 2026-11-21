@@ -17,8 +17,8 @@ const overviewLabels: Record<(typeof personalOverviewCardIds)[number], { title: 
     description: 'Show scheduled training and completed outcomes separately for the current week.',
   },
   trend: {
-    title: 'Recent session load',
-    description: 'Show estimated load for the latest four completed activities. This is not a fitness measurement.',
+    title: 'Training trends',
+    description: 'Show estimated fitness, fatigue, form, and ramp rate with the training load chart.',
   },
 };
 
