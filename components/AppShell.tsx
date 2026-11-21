@@ -268,7 +268,9 @@ export function AppShell({
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
                 className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-medium transition-colors ${buttonFocusClassName} ${
-                  isActive ? 'text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                  isActive
+                    ? 'bg-[var(--nav-active)] text-[var(--text)]'
+                    : 'text-[var(--nav-muted)] hover:bg-[var(--nav-active)] hover:text-[var(--text)]'
                 }`}
               >
                 <Icon aria-hidden="true" size={18} strokeWidth={1.5} className={isActive ? 'text-[var(--brand)]' : ''} />
