@@ -164,24 +164,23 @@ export function LibraryBrowser({
         </div>
       </dialog>
 
-      <div className="flex min-h-8 items-center justify-between gap-3 border-b border-[var(--border)] pb-3">
+      <div className="flex min-h-8 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-[var(--border)] pb-3">
         <p aria-live="polite" className="data text-[13px] text-[var(--text-muted)]">
           {results.length === entries.length ? `${entries.length} workouts` : `${results.length} of ${entries.length} workouts`}
           {query.sort === 'name' ? null : ` · ${sortLabel(query.sort)}`}
         </p>
-        {filtered ? (
+        {filtered && results.length > 0 ? (
           <button type="button" className={`${ghostButtonClassName('compact')} max-md:min-h-11`} onClick={clearFilters}>
-            <X aria-hidden="true" size={14} strokeWidth={1.7} />Clear filters
+            <X aria-hidden="true" size={14} strokeWidth={1.7} />Clear search and filters
           </button>
         ) : null}
       </div>
 
-
       {results.length === 0 ? (
         <EmptyState
           title="No workouts match"
-          description="Try a broader length or level, or clear the search."
-          action={<button type="button" className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={clearFilters}>Clear filters</button>}
+          description="Try a different search or adjust your filters."
+          action={<button type="button" className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={clearFilters}>Clear search and filters</button>}
         />
       ) : (
         <div className="flex flex-col gap-8">
