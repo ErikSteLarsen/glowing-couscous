@@ -356,6 +356,30 @@ fill and ink 1 when active, with a trace icon or marker for the current page. Th
 profile menu sits at the sidebar foot and collapses to an avatar in the rail.
 Page headers do not repeat sibling destinations.
 
+### Back navigation
+
+- **Top-level destinations have no back control.** These are the main nav items,
+  Profile, Settings, the coach roster, planner and workouts, and the Tempo Ride
+  home (`/athlete/ride`).
+- **Every page below them has exactly one**, the shared `BackLink`
+  (`components/ui.tsx`), passed as `TopBar`'s `back`. It sits top-left of the
+  header, above the title: a 16px arrow and the destination name ("Calendar"),
+  with "Back to Calendar" as its accessible name. It is 40px tall, 44px on
+  mobile, and uses the shared focus ring.
+- **The destination is deterministic.** `resolveBackTarget` in
+  `lib/app-navigation.ts` maps (route, `from`) to `{ href, label, destination }`.
+  It uses the `from=` origin when the route's allowlist accepts it, otherwise
+  the route's parent. Origins are allowlisted keys, never URLs. Links into a
+  detail page add `from=` with `withBackOrigin`. Never rely on `router.back()`:
+  deep links, new tabs and Tempo Ride have no useful history.
+- **Chrome-less screens** (the ride page) use `BackLink variant="compact"`, the
+  icon-only form with the same target and accessible name.
+- **In-page views** that replace a list, such as the workout editor, use
+  `BackButton` with the same look and the list's name.
+- A page's own links ("View session", "Start live") and in-flow step controls
+  ("Back to preview") are not back controls. Error and not-found pages offer a
+  recovery action, not a `BackLink`.
+
 ### Charts and data
 
 Charts are hand-written SVG, not a charting library.

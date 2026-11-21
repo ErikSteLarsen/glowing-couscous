@@ -40,7 +40,7 @@ export function AccountControls({ userId, controls }: { userId: number; controls
     </dl>
     <div className="flex flex-wrap gap-3">
       {controls.hasPassword ? <Link href="/forgot-password" className={secondaryButtonClassName}>Reset password</Link> : null}
-      <Link href="/athlete/import#strava" className={secondaryButtonClassName}>Manage Strava access</Link>
+      <Link href="/athlete/import?from=profile#strava" className={secondaryButtonClassName}>Manage Strava access</Link>
     </div>
     <p className="text-sm text-[var(--text-secondary)]">Disconnecting Strava removes its imported outcomes from Tempo and restores matched planned sessions. Review the connection controls before disconnecting.</p>
     <div className="flex flex-wrap items-start gap-3"><SignOutButton /><button type="button" disabled={pending} onClick={endSessions} className={secondaryButtonClassName}>{pending ? 'Signing out everywhere…' : 'Sign out everywhere'}</button></div>

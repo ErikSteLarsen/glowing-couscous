@@ -188,6 +188,14 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   (recorded outcomes), 265b48c (per-user checkpoints, write races, planner,
   %FTP). The production checkpoint endpoint returns 401 when signed out. The
   demo test session made during deep-link verification was removed.
+- Back navigation is unified (DESIGN.md "Back navigation"): top-level pages
+  have none. Every detail page has one `BackLink`, top-left above the title,
+  showing "← <Destination>". It resolves through `resolveBackTarget` in
+  `lib/app-navigation.ts`, which uses an allowlisted `from=` origin or else the
+  page's parent and never `router.back()`. The ride page uses the compact form.
+  Checked in a local browser at 390 and 1440 px across origins and deep links.
+  The coach athlete page has unit tests only, because coach routes redirect.
+  `pnpm test` 505 passed.
 
 ## Remaining risks and acceptance gates
 

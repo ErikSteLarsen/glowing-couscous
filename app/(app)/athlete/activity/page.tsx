@@ -35,7 +35,7 @@ export default async function AthleteActivityPage({ searchParams }: {
       <TopBar
         title="Completed work"
         description="Find past sessions, review planned outcomes, and log completed work from outside your plan."
-        actions={<div className="flex flex-wrap gap-2"><ActionLink href="#import-activity" tone="primary">Import activity file</ActionLink><ActionLink href="#log-activity" tone="secondary">Log completed workout</ActionLink><ActionLink href="/athlete/import" tone="ghost">Review Strava imports</ActionLink></div>}
+        actions={<div className="flex flex-wrap gap-2"><ActionLink href="#import-activity" tone="primary">Import activity file</ActionLink><ActionLink href="#log-activity" tone="secondary">Log completed workout</ActionLink><ActionLink href="/athlete/import?from=activity" tone="ghost">Review Strava imports</ActionLink></div>}
       />
 
       <ActivityImportForm />

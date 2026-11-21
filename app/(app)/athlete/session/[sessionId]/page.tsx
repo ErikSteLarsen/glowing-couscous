@@ -9,7 +9,7 @@ import { athleteService } from '@/lib/athlete-service';
 import { formatDuration, formatDurationExact } from '@/lib/format-duration';
 import { formatDistance } from '@/lib/format-distance';
 import { formatTcxDateTime } from '@/lib/tcx-time';
-import { getSessionOrigin, getSessionReturnTarget } from '@/lib/app-navigation';
+import { parseBackOrigin, resolveBackTarget, withBackOrigin } from '@/lib/app-navigation';
 import { SessionDetailClient } from './SessionDetailClient';
 import { isRecordedOutcome } from '@/lib/athlete-completion-service';
 import { SessionStatusControl } from './SessionStatusControl';
@@ -52,8 +52,8 @@ export default async function AthleteSessionPage({
     );
   }
 
-  const sessionOrigin = getSessionOrigin(from);
-  const returnTarget = getSessionReturnTarget(sessionOrigin);
+  const sessionOrigin = parseBackOrigin('session', from);
+  const returnTarget = resolveBackTarget({ route: 'session', from });
   const isOverdue = detail.session.isOverdue;
   const displayStatus = isOverdue ? 'missed' : detail.session.status;
   const isSkipped = detail.session.status === 'skipped';
@@ -69,7 +69,7 @@ export default async function AthleteSessionPage({
     ? '#recorded-activity'
     : detail.session.status === 'completed'
       ? '#session-outcome'
-      : `/athlete/live/${detail.session.id}?from=${sessionOrigin}`;
+      : withBackOrigin(`/athlete/live/${detail.session.id}`, sessionOrigin);
   const manualCorrectionDraft: ManualActivityCorrectionDraft | null = detail.session.metricsSource === 'manual-unplanned'
     ? {
         kind: 'manual-unplanned',
@@ -122,16 +122,14 @@ export default async function AthleteSessionPage({
   return (
     <PageShell size="wide">
       <TopBar
+        back={returnTarget}
         title={detail.session.title}
         description={detail.session.summary ?? (importedWithoutWorkout ? 'Imported activity.' : 'Session details.')}
         actions={
           <>
-            <ActionLink href={returnTarget.href} tone="secondary">
-              {returnTarget.label}
-            </ActionLink>
             {isSkipped ? null : <ActionLink href={sessionActionHref}>{sessionAction}</ActionLink>}
             {detail.session.sport === 'BIKING' && !isSkipped && !importedWithoutWorkout && detail.session.status !== 'completed' ? (
-              <RideEntryLinks sessionId={detail.session.id} from={sessionOrigin} />
+              <RideEntryLinks sessionId={detail.session.id} from={sessionOrigin ?? undefined} />
             ) : null}
             {isOverdue ? (
               <SessionRescheduleAction

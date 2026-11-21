@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Maximize, Minimize, Minus, Pause, Play, Plus, SkipForward, Square } from 'lucide-react';
-import { buttonFocusClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { Maximize, Minimize, Minus, Pause, Play, Plus, SkipForward, Square } from 'lucide-react';
+import { BackLink, buttonFocusClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import type { BackTarget } from '@/lib/app-navigation';
 import { Toggle } from '@/components/tempo/Toggle';
 import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
 import { MAX_ACTIVITY_IMPORT_DURATION_SEC } from '@/lib/activity-import-limits';
@@ -149,14 +150,14 @@ function ProgressBar({ value, label, color = 'var(--brand)', className = 'h-2' }
   );
 }
 
-export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, steps, backHref, heartRateMaxBpm }: {
+export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, steps, back, heartRateMaxBpm }: {
   userId: number;
   sessionId: number;
   sessionTitle: string;
   plan: RidePlan;
   plannedTss: number;
   steps: ExecutionStep[];
-  backHref: string;
+  back: BackTarget;
   heartRateMaxBpm: number | null;
 }) {
   const [manager] = useState(() => new RideDeviceManager());
@@ -425,11 +426,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   const stepLabel = (index: number) => steps[index]?.label ?? (index >= plan.steps.length ? 'Free ride' : `Step ${index + 1}`);
   const connect = (role: RideDeviceRole) => void manager.connect(role);
 
-  const backLink = (
-    <Link href={backHref} className={`inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--raised)] hover:text-[var(--text)] ${buttonFocusClassName}`} aria-label="Back to session" title="Back to session">
-      <ArrowLeft aria-hidden="true" size={20} strokeWidth={1.6} />
-    </Link>
-  );
+  const backLink = <BackLink target={back} variant="compact" />;
   const fullscreenButton = fullscreenSupported ? (
     <button type="button" className={iconControlClassName} onClick={toggleFullscreen} aria-label={fullscreen ? 'Exit full screen' : 'Full screen'} title={`${fullscreen ? 'Exit full screen' : 'Full screen'} (F)`} aria-pressed={fullscreen}>
       {fullscreen ? <Minimize aria-hidden="true" size={18} strokeWidth={1.6} /> : <Maximize aria-hidden="true" size={18} strokeWidth={1.6} />}
@@ -511,7 +508,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   if (status === 'finished') {
     const lapRows = summarizeLaps(recording).filter((entry) => entry.durationSec > 0);
     const saveButton = saveState.kind === 'saved' ? (
-      <Link href={backHref} className={primaryButtonClassName}>View session</Link>
+      <Link href={back.href} className={primaryButtonClassName}>View session</Link>
     ) : (
       <button type="button" className={primaryButtonClassName} disabled={saveState.kind === 'saving'} onClick={() => void save()}>
         {saveState.kind === 'saving' ? (saveState.attempt > 1 ? `Retrying (${saveState.attempt})…` : 'Saving…') : saveState.kind === 'failed' ? 'Try again' : 'Save to Tempo'}

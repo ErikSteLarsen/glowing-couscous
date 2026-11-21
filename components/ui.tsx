@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import type { BackTarget } from '@/lib/app-navigation';
 import { ReactNode } from 'react';
 
 const pageShellWidthClasses = {
@@ -98,33 +99,44 @@ export function AuthPageShell({ children }: { children: ReactNode }) {
 }
 
 
-const backControlClassName = `inline-flex h-10 w-10 max-md:h-11 max-md:w-11 flex-none items-center justify-center rounded-[10px] text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] ${buttonFocusClassName}`;
+const backTextClassName = `-ml-2 inline-flex min-h-10 max-w-full items-center gap-1.5 self-start rounded-lg px-2 text-[13px] font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-md:min-h-11 ${buttonFocusClassName}`;
+const backIconClassName = `inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-md:size-11 ${buttonFocusClassName}`;
 
-type BackControlProps =
-  | { href: string; label: string; onClick?: never; disabled?: never }
-  | { onClick: () => void; label: string; disabled?: boolean; href?: never };
+function BackLinkContent({ destination }: { destination: string }) {
+  return (
+    <>
+      <ArrowLeft aria-hidden="true" size={16} strokeWidth={1.6} className="shrink-0" />
+      <span className="truncate"><span className="sr-only">Back to </span>{destination}</span>
+    </>
+  );
+}
 
-export function BackControl(props: BackControlProps) {
-  const icon = <ArrowLeft aria-hidden="true" size={18} strokeWidth={1.75} />;
-
-  if (props.href) {
+/**
+ * The one back control for pages below a top-level destination. Resolve the
+ * target with `resolveBackTarget` in `lib/app-navigation.ts`. `compact` is the
+ * icon-only form for chrome-less screens such as the ride page.
+ */
+export function BackLink({ target, variant = 'default' }: { target: BackTarget; variant?: 'default' | 'compact' }) {
+  if (variant === 'compact') {
     return (
-      <Link href={props.href} aria-label={props.label} title={props.label} className={backControlClassName}>
-        {icon}
+      <Link href={target.href} aria-label={target.label} title={target.label} className={backIconClassName}>
+        <ArrowLeft aria-hidden="true" size={20} strokeWidth={1.6} />
       </Link>
     );
   }
 
   return (
-    <button
-      type="button"
-      aria-label={props.label}
-      title={props.label}
-      disabled={props.disabled}
-      onClick={props.onClick}
-      className={`${backControlClassName} disabled:cursor-not-allowed disabled:opacity-50`}
-    >
-      {icon}
+    <Link href={target.href} className={backTextClassName}>
+      <BackLinkContent destination={target.destination} />
+    </Link>
+  );
+}
+
+/** BackLink's look for an in-page view that closes back to its list, such as the workout editor. */
+export function BackButton({ destination, onClick, disabled }: { destination: string; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} className={`${backTextClassName} disabled:cursor-not-allowed disabled:opacity-50`}>
+      <BackLinkContent destination={destination} />
     </button>
   );
 }
@@ -141,7 +153,7 @@ export function TopBar({
   description?: string;
   eyebrow?: ReactNode;
   actions?: ReactNode;
-  back?: { href: string; label: string };
+  back?: BackTarget;
   align?: 'left' | 'center';
 }) {
   const isCentered = align === 'center';
@@ -160,8 +172,8 @@ export function TopBar({
   return (
     <header className={`min-h-[64px] ${isCentered ? 'text-center' : 'flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'}`}>
       {back ? (
-        <div className="flex min-w-0 items-start gap-3">
-          <BackControl href={back.href} label={back.label} />
+        <div className="flex min-w-0 flex-col gap-1">
+          <BackLink target={back} />
           {titleBlock}
         </div>
       ) : titleBlock}

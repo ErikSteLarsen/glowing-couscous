@@ -5,6 +5,7 @@ import { CatalogProfile, pctColor } from '@/components/library/CatalogProfile';
 import { LibraryWorkoutActions } from '@/components/library/LibraryWorkoutActions';
 import { Badge, PageShell, StatTile, Surface, TopBar, sectionHeadingClassName } from '@/components/ui';
 import { accountService } from '@/lib/account-service';
+import { parseBackOrigin, resolveBackTarget } from '@/lib/app-navigation';
 import { getCurrentUser } from '@/lib/auth-session';
 import { formatDuration, formatDurationExact } from '@/lib/format-duration';
 import { getTempoZoneMeta } from '@/lib/tempo-blocks';
@@ -34,8 +35,8 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
   const ftp = account?.performanceProfile.cycling.ftpWatts ?? null;
   const metrics = catalogWorkoutMetrics(workout);
   const steps = expandCatalogItems(workout.items);
-  const origin = from === 'ride' ? 'ride' : 'library';
-  const back = origin === 'ride' ? { href: '/athlete/ride', label: 'Back to Ride' } : { href: '/athlete/library', label: 'Back to Library' };
+  const origin = parseBackOrigin('library-workout', from) ?? 'library';
+  const back = resolveBackTarget({ route: 'library-workout', from });
   const paragraphs = workout.description.split(/\n\s*\n/).map((paragraph) => paragraph.trim()).filter(Boolean);
   const pct = (value: number) => ftp ? `${wattsForPct(value, ftp)}` : `${Math.round(value)}`;
   const pctUnit = ftp ? 'W' : '% FTP';

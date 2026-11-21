@@ -189,7 +189,7 @@ export default async function AthletePage() {
                 </blockquote>
               ) : null}
               <div className="mt-auto flex flex-wrap gap-2 pt-1">
-                <Link href={`/athlete/live/${nextAction.id}`} className={primaryButtonClassName}>
+                <Link href={`/athlete/live/${nextAction.id}?from=home`} className={primaryButtonClassName}>
                   <Play aria-hidden="true" size={15} strokeWidth={1.8} />
                   Start session
                 </Link>

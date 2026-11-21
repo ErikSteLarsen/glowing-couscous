@@ -78,39 +78,80 @@ export function isProfileActionActive(
   return pathname === action.href || pathname.startsWith(action.matchPrefix + '/');
 }
 
-const sessionReturnTargets = {
-  home: { href: '/athlete', label: 'Back to Home' },
-  calendar: { href: '/athlete/calendar', label: 'Back to Calendar' },
-  activity: { href: '/athlete/activity', label: 'Back to Activity' },
-  imports: { href: '/athlete/import', label: 'Back to Import' },
-  planner: { href: '/athlete/planner', label: 'Back to Planner' },
-  library: { href: '/athlete/library', label: 'Back to Library' },
-  ride: { href: '/athlete/ride', label: 'Back to Ride' },
+/**
+ * Back navigation: one resolver for every page below a top-level destination.
+ * The target is the validated `from=` origin when the route allows it,
+ * otherwise the route's hierarchical parent. Origins are an allowlist of keys,
+ * never URLs, so `from=` cannot redirect off the app.
+ */
+const backDestinations = {
+  home: { href: '/athlete', destination: 'Home' },
+  calendar: { href: '/athlete/calendar', destination: 'Calendar' },
+  planner: { href: '/athlete/planner', destination: 'Planner' },
+  activity: { href: '/athlete/activity', destination: 'Activity' },
+  imports: { href: '/athlete/import', destination: 'Import' },
+  library: { href: '/athlete/library', destination: 'Library' },
+  ride: { href: '/athlete/ride', destination: 'Ride' },
+  profile: { href: '/profile', destination: 'Profile' },
+  roster: { href: '/coach', destination: 'Athletes' },
 } as const;
 
-export type SessionOrigin = keyof typeof sessionReturnTargets;
+export type BackOrigin = keyof typeof backDestinations;
 
-export function getSessionOrigin(origin?: string): SessionOrigin {
-  if (origin && Object.prototype.hasOwnProperty.call(sessionReturnTargets, origin)) {
-    return origin as SessionOrigin;
-  }
+const sessionOrigins = ['calendar', 'home', 'planner', 'activity', 'imports', 'library', 'ride'] as const satisfies readonly BackOrigin[];
 
-  return 'calendar';
+/** Allowed origins per route; the first entry is the hierarchical parent used without a valid origin. */
+const backRoutes = {
+  session: sessionOrigins,
+  'session-live': sessionOrigins,
+  'session-ride': sessionOrigins,
+  'library-workout': ['library', 'ride'],
+  import: ['activity', 'profile'],
+  'coach-athlete': ['roster', 'planner'],
+} as const satisfies Record<string, readonly [BackOrigin, ...BackOrigin[]]>;
+
+export type BackRoute = keyof typeof backRoutes;
+
+export type BackRouteInput =
+  | { route: 'session' | 'library-workout' | 'import'; from?: string }
+  | { route: 'session-live' | 'session-ride'; sessionId: number; from?: string }
+  | { route: 'coach-athlete'; athleteId: number; from?: string; date?: string };
+
+export type BackTarget = { href: string; label: string; destination: string };
+
+/** The origin when it is allowed for this route, otherwise null. */
+export function parseBackOrigin<R extends BackRoute>(route: R, from: string | undefined): (typeof backRoutes)[R][number] | null {
+  const allowed: readonly string[] = backRoutes[route];
+  return from && allowed.includes(from) ? (from as (typeof backRoutes)[R][number]) : null;
 }
 
-export function getSessionReturnTarget(origin?: string) {
-  return sessionReturnTargets[getSessionOrigin(origin)];
+/** Adds `from=` to an in-app link (before any hash) when an origin is known. */
+export function withBackOrigin(href: string, origin: BackOrigin | null): string {
+  if (!origin) return href;
+  const hashIndex = href.indexOf('#');
+  const [path, hash] = hashIndex === -1 ? [href, ''] : [href.slice(0, hashIndex), href.slice(hashIndex)];
+  return `${path}${path.includes('?') ? '&' : '?'}from=${origin}${hash}`;
 }
 
-export function getCoachAthleteReturnTarget(origin: string | undefined, athleteId: number, date?: string) {
-  if (origin !== 'planner') {
-    return { href: '/coach', label: 'Back to your athletes' };
+function target(href: string, destination: string): BackTarget {
+  return { href, destination, label: `Back to ${destination}` };
+}
+
+export function resolveBackTarget(input: BackRouteInput): BackTarget {
+  const origin = parseBackOrigin(input.route, input.from);
+
+  if (input.route === 'session-live' || input.route === 'session-ride') {
+    return target(withBackOrigin(`/athlete/session/${input.sessionId}`, origin), 'Session');
   }
 
-  const params = new URLSearchParams({ athleteId: String(athleteId) });
-  if (date && isCalendarDate(date)) params.set('date', date);
+  if (input.route === 'coach-athlete' && origin === 'planner') {
+    const params = new URLSearchParams({ athleteId: String(input.athleteId) });
+    if (isCalendarDate(input.date)) params.set('date', input.date!);
+    return target(`/coach/planner?${params.toString()}`, 'Planner');
+  }
 
-  return { href: `/coach/planner?${params.toString()}`, label: 'Back to Planner' };
+  const { href, destination } = backDestinations[origin ?? backRoutes[input.route][0]];
+  return target(href, destination);
 }
 
 function isCalendarDate(value?: string) {

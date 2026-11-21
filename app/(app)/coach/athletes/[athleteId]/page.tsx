@@ -8,7 +8,7 @@ import { getCurrentUser } from '@/lib/auth-session';
 import { getCoachAthleteDetail } from '@/lib/coach-service';
 import { getRequestTimeZone } from '@/lib/request-time-zone';
 import { todayInZone } from '@/lib/user-time';
-import { getCoachAthleteReturnTarget } from '@/lib/app-navigation';
+import { resolveBackTarget } from '@/lib/app-navigation';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
 import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
@@ -40,7 +40,7 @@ export default async function CoachAthleteDetailPage({
     notFound();
   }
 
-  const returnTarget = getCoachAthleteReturnTarget(from, parsedAthleteId, date);
+  const returnTarget = resolveBackTarget({ route: 'coach-athlete', athleteId: parsedAthleteId, from, date });
   const todayIso = todayInZone(await getRequestTimeZone());
 
   return (

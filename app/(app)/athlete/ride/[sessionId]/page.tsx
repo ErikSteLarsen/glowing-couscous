@@ -8,7 +8,7 @@ import { rideSessionPath } from '@/lib/ride/launch';
 import { athleteService } from '@/lib/athlete-service';
 import { accountService } from '@/lib/account-service';
 import { createExecutionSteps } from '@/lib/athlete-execution';
-import { getSessionOrigin } from '@/lib/app-navigation';
+import { parseBackOrigin, resolveBackTarget, withBackOrigin } from '@/lib/app-navigation';
 import { createRidePlan } from '@/lib/ride/ride-plan';
 import { RideClient } from './RideClient';
 
@@ -41,18 +41,16 @@ export default async function AthleteRidePage({
     );
   }
 
-  const sessionOrigin = getSessionOrigin(from);
-  const sessionHref = `/athlete/session/${detail.session.id}?from=${sessionOrigin}`;
-  const back = <ActionLink href={sessionHref} tone="secondary">Back to session</ActionLink>;
+  const back = resolveBackTarget({ route: 'session-ride', sessionId: detail.session.id, from });
 
   if (detail.session.sport !== 'BIKING') {
     return (
       <PageShell size="wide">
-        <TopBar title={`Ride ${detail.session.title}`} actions={back} />
+        <TopBar back={back} title={`Ride ${detail.session.title}`} />
         <EmptyState
           title="Trainer rides are for bike sessions"
           description="Use live guidance to follow this workout step by step."
-          action={<ActionLink href={`/athlete/live/${detail.session.id}?from=${sessionOrigin}`}>Start live</ActionLink>}
+          action={<ActionLink href={withBackOrigin(`/athlete/live/${detail.session.id}`, parseBackOrigin('session-live', from))}>Start live</ActionLink>}
         />
       </PageShell>
     );
@@ -60,12 +58,11 @@ export default async function AthleteRidePage({
   if (detail.session.status === 'skipped' || detail.session.status === 'completed') {
     return (
       <PageShell size="wide">
-        <TopBar title={`Ride ${detail.session.title}`} actions={back} />
+        <TopBar back={back} title={`Ride ${detail.session.title}`} />
         <UnsavedRidesNotice userId={user.id} />
         <EmptyState
           title={detail.session.status === 'skipped' ? 'Session skipped' : 'Session already completed'}
           description={detail.session.status === 'skipped' ? 'Plan this session again before riding it.' : 'This session already has a saved outcome.'}
-          action={back}
         />
       </PageShell>
     );
@@ -83,7 +80,7 @@ export default async function AthleteRidePage({
       plan={plan}
       plannedTss={detail.session.plannedTss}
       steps={steps}
-      backHref={sessionHref}
+      back={back}
       heartRateMaxBpm={profile?.heartRateMaxBpm ?? null}
     />
   );

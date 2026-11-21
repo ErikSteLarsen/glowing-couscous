@@ -6,7 +6,7 @@ import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
-import { getSessionOrigin } from '@/lib/app-navigation';
+import { parseBackOrigin, resolveBackTarget } from '@/lib/app-navigation';
 import { accountService } from '@/lib/account-service';
 import { createExecutionSteps } from '@/lib/athlete-execution';
 import { formatSessionWhen } from '@/lib/session-display';
@@ -39,15 +39,15 @@ export default async function AthleteLivePage({
     );
   }
 
-  const sessionOrigin = getSessionOrigin(from);
+  const sessionOrigin = parseBackOrigin('session-live', from);
+  const back = resolveBackTarget({ route: 'session-live', sessionId: detail.session.id, from });
   if (detail.session.status === 'skipped') {
     return (
       <PageShell size="wide">
-        <TopBar title={`Execute ${detail.session.title}`} />
+        <TopBar back={back} title={`Execute ${detail.session.title}`} />
         <EmptyState
           title="Session skipped"
           description="Plan this session again before running it live."
-          action={<ActionLink href={`/athlete/session/${detail.session.id}?from=${sessionOrigin}`} tone="secondary">Back to session</ActionLink>}
         />
       </PageShell>
     );
@@ -57,13 +57,9 @@ export default async function AthleteLivePage({
   return (
     <PageShell size="wide">
       <TopBar
+        back={back}
         title={`Execute ${detail.session.title}`}
-        actions={
-          <>
-            <ActionLink href={`/athlete/session/${detail.session.id}?from=${sessionOrigin}`} tone="secondary">Back to session</ActionLink>
-            {detail.session.sport === 'BIKING' && detail.session.status !== 'completed' ? <RideEntryLinks sessionId={detail.session.id} from={sessionOrigin} /> : null}
-          </>
-        }
+        actions={detail.session.sport === 'BIKING' && detail.session.status !== 'completed' ? <RideEntryLinks sessionId={detail.session.id} from={sessionOrigin ?? undefined} /> : undefined}
       />
 
       <div className="flex flex-wrap items-center gap-3 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">

@@ -86,7 +86,7 @@ test('Workouts is a standalone library destination and session detail keeps its 
   assert.match(workoutsPageSource, /workoutLibraryService\.listForOwner\('athlete', user\.id\)/);
   assert.doesNotMatch(workoutsPageSource, /athleteService\.loadWorkoutList|Scheduled work|SessionRow|from=workouts/);
   assert.doesNotMatch(navigationSource, /activeMatchPrefixes: \['\/athlete\/session', '\/athlete\/live'\]/);
-  assert.match(sessionPageSource, /getSessionReturnTarget/);
+  assert.match(sessionPageSource, /resolveBackTarget\(\{ route: 'session', from \}\)/);
   assert.match(sessionPageSource, /searchParams/);
   assert.match(calendarSource, /from=calendar/);
   assert.match(profileMenuSource, /isProfileActionActive/);
