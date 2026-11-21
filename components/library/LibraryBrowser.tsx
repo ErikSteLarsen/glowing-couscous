@@ -1,15 +1,11 @@
 'use client';
 
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
-import { CatalogProfile } from '@/components/library/CatalogProfile';
-import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
+import { LibraryCard } from '@/components/library/LibraryCard';
 import { buttonFocusClassName, compactSecondaryButtonClassName, EmptyState, formFieldClassName, formLabelClassName, formSelectClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
-import { formatDuration } from '@/lib/format-duration';
-import { expandCatalogItems } from '@/lib/workout-catalog/metrics';
 import {
-  CATALOG_CATEGORIES, CATALOG_LEVELS, CATALOG_SORTS, categoryLabel, DURATION_BUCKETS, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, levelLabel, listCatalogFilters, serializeCatalogQuery,
+  CATALOG_CATEGORIES, CATALOG_LEVELS, CATALOG_SORTS, DURATION_BUCKETS, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, serializeCatalogQuery,
   type CatalogEntry, type CatalogQuery, type CatalogSort, type DurationBucket,
 } from '@/lib/workout-catalog/query';
 import type { CatalogCategory, CatalogLevel } from '@/lib/workout-catalog/types';
@@ -23,12 +19,9 @@ const chipClassName = (selected: boolean) => `inline-flex min-h-8 shrink-0 items
 export function LibraryBrowser({
   entries,
   initialQuery,
-  variant = 'page',
 }: {
   entries: CatalogEntry[];
   initialQuery: CatalogQuery;
-  /** `hub` adds a start action to every card. */
-  variant?: 'page' | 'hub';
 }) {
   const [query, setQuery] = useState(initialQuery);
   const deferredQuery = useDeferredValue(query);
@@ -38,7 +31,6 @@ export function LibraryBrowser({
     for (const entry of filterCatalog(entries, { ...deferredQuery, categories: [] })) counts.set(entry.workout.category, (counts.get(entry.workout.category) ?? 0) + 1);
     return counts;
   }, [entries, deferredQuery]);
-  const from = variant === 'hub' ? 'ride' : 'library';
   const filtered = isCatalogQueryFiltered(query);
   const activeFilters = listCatalogFilters(query);
   const firstRender = useRef(true);
@@ -63,7 +55,6 @@ export function LibraryBrowser({
   const groups = query.sort === 'name'
     ? CATALOG_CATEGORIES.map((category) => ({ ...category, entries: results.filter((entry) => entry.workout.category === category.id) })).filter((group) => group.entries.length > 0)
     : [{ id: 'all', label: '', entries: results }];
-  const detailQuery = from === 'ride' ? '?from=ride' : '';
 
   if (entries.length === 0) {
     return <EmptyState title="The library is being written" description="Built-in workouts will appear here as soon as they ship." />;
@@ -200,11 +191,7 @@ export function LibraryBrowser({
               <ul className="grid grid-cols-1 gap-3 @xl:grid-cols-2 @4xl:grid-cols-3 @7xl:grid-cols-4">
                 {group.entries.map((entry) => (
                   <li key={entry.workout.slug} className="min-w-0">
-                    <LibraryCard
-                      entry={entry}
-                      href={`/athlete/library/${entry.workout.slug}${detailQuery}`}
-                      showStart={variant === 'hub'}
-                    />
+                    <LibraryCard entry={entry} />
                   </li>
                 ))}
               </ul>
@@ -213,39 +200,5 @@ export function LibraryBrowser({
         </div>
       )}
     </div>
-  );
-}
-
-function LibraryCard({ entry, href, showStart }: { entry: CatalogEntry; href: string; showStart: boolean }) {
-  const { workout, metrics } = entry;
-  const steps = useMemo(() => expandCatalogItems(workout.items), [workout.items]);
-
-  return (
-    <article className="tile tile--interactive group relative flex h-full flex-col rounded-2xl p-4 [--profile-gap:var(--surface)] hover:[--profile-gap:var(--raised)] has-[a:focus-visible]:border-[var(--brand)]">
-      <CatalogProfile steps={steps} idPrefix={`card-${workout.slug}`} label={`${workout.name} intensity profile, ${formatDuration(metrics.durationSec)}, peak ${Math.round(metrics.maxPct)}% FTP`} className="h-14" />
-      <div className="mt-3 flex items-baseline justify-between gap-3">
-        <h3 className="min-w-0 text-base font-medium leading-snug text-[var(--text)]">
-          <Link href={href} className="rounded-sm outline-none after:absolute after:inset-0 after:rounded-2xl after:content-['']">
-            {workout.name}
-          </Link>
-        </h3>
-        <span className="data shrink-0 text-[13px] text-[var(--text-secondary)]">{formatDuration(metrics.durationSec)}</span>
-      </div>
-      <p className="mt-0.5 text-[12px] text-[var(--text-muted)]">{categoryLabel(workout.category)} · {levelLabel(workout.level)}</p>
-      <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[var(--text-secondary)]">{workout.summary}</p>
-      <div className="mt-auto flex items-center justify-between gap-3 pt-3">
-        <dl className="data flex gap-4 text-[12px] text-[var(--text-muted)]">
-          <div className="flex gap-1"><dt>TSS</dt><dd className="text-[var(--text)]">{metrics.tss}</dd></div>
-          <div className="flex gap-1"><dt>IF</dt><dd className="text-[var(--text)]">{metrics.intensityFactor.toFixed(2)}</dd></div>
-        </dl>
-        {showStart ? (
-          <WorkoutStartChooser
-            workout={{ title: workout.name, durationSec: metrics.durationSec, sport: 'BIKING', status: 'planned', hasSteps: steps.length > 0 }}
-            source={{ kind: 'catalog', slug: workout.slug, from: 'ride' }}
-            triggerClassName={`${compactSecondaryButtonClassName} relative z-10 max-md:min-h-11`}
-          />
-        ) : null}
-      </div>
-    </article>
   );
 }
