@@ -1,12 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   Activity,
   CalendarDays,
-  ChevronsLeft,
-  ChevronsRight,
   Circle,
   ClipboardList,
   Dumbbell,
@@ -24,7 +22,6 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { getPrimaryNavigation, isNavigationItemActive } from '@/lib/app-navigation';
-import { readSidebarMode, subscribeSidebarMode, writeSidebarMode } from '@/lib/sidebar-state';
 import { AppProfileMenu } from '@/components/AppProfileMenu';
 import { BrandMark } from '@/components/BrandMark';
 import { buttonFocusClassName } from '@/components/ui';
@@ -63,8 +60,6 @@ export function AppSidebar(props: {
   const navItems = getPrimaryNavigation();
   const sidebarRef = useRef<HTMLElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const mode = useSyncExternalStore(subscribeSidebarMode, readSidebarMode, () => 'full' as const);
-  const isRail = mode === 'rail' && !props.isMobileViewport;
   const onNavigate = props.onNavigate ?? props.onClose;
 
   useEffect(() => {
@@ -128,9 +123,9 @@ export function AppSidebar(props: {
               aria-label="Tempo home"
             >
               <BrandMark />
-              <span className="rail:hidden text-[15px] font-semibold tracking-[-0.01em] text-[var(--text)]">Tempo</span>
+              <span className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--text)]">Tempo</span>
               {props.user.role === 'COACH' ? (
-                <span className="rail:hidden rounded-full border border-[var(--border-strong)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-muted)]">
+                <span className="rounded-full border border-[var(--border-strong)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-muted)]">
                   Coach
                 </span>
               ) : null}
@@ -171,8 +166,7 @@ export function AppSidebar(props: {
                   href={item.href}
                   onClick={onNavigate}
                   aria-current={isActive ? 'page' : undefined}
-                  title={isRail ? item.label : undefined}
-                  className={`rail:justify-center flex min-h-11 items-center gap-3 whitespace-nowrap rounded-lg px-2.5 text-sm transition-colors md:min-h-9 ${buttonFocusClassName} ${
+                  className={`flex min-h-11 items-center gap-3 whitespace-nowrap rounded-lg px-2.5 text-sm transition-colors md:min-h-9 ${buttonFocusClassName} ${
                     isActive
                       ? 'bg-[var(--nav-active)] text-[var(--text)]'
                       : 'text-[var(--nav-muted)] hover:bg-[var(--nav-active)] hover:text-[var(--text)]'
@@ -184,7 +178,7 @@ export function AppSidebar(props: {
                     strokeWidth={1.5}
                     className={`shrink-0 ${isActive ? 'text-[var(--nav-signal)]' : ''}`}
                   />
-                  <span className="rail:sr-only">{item.label}</span>
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
@@ -197,26 +191,13 @@ export function AppSidebar(props: {
                 onClick={props.onToggleTheme}
                 aria-label={`Switch to ${props.theme === 'dark' ? 'light' : 'dark'} theme`}
                 title={props.theme === 'dark' ? 'Light theme' : 'Dark theme'}
-                className={`rail:justify-center hidden min-h-9 w-full items-center gap-3 rounded-lg px-2.5 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--nav-active)] hover:text-[var(--text)] md:flex ${buttonFocusClassName}`}
+                className={`hidden min-h-9 w-full items-center gap-3 rounded-lg px-2.5 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--nav-active)] hover:text-[var(--text)] md:flex ${buttonFocusClassName}`}
               >
                 {props.theme === 'dark' ? <Sun aria-hidden="true" size={16} strokeWidth={1.5} /> : <Moon aria-hidden="true" size={16} strokeWidth={1.5} />}
-                <span className="rail:sr-only">{props.theme === 'dark' ? 'Light theme' : 'Dark theme'}</span>
+                <span>{props.theme === 'dark' ? 'Light theme' : 'Dark theme'}</span>
               </button>
             ) : null}
-            <AppProfileMenu user={props.user} pathname={props.pathname} onNavigate={onNavigate} compact={isRail} previewMode={props.previewMode} />
-            <button
-              type="button"
-              onClick={() => writeSidebarMode(isRail ? 'full' : 'rail')}
-              title={isRail ? 'Expand sidebar' : 'Collapse sidebar'}
-              className={`rail:justify-center hidden min-h-9 w-full items-center gap-3 rounded-lg px-2.5 text-sm text-[var(--text-muted)] transition-colors hover:bg-[var(--nav-active)] hover:text-[var(--text)] md:flex ${buttonFocusClassName}`}
-            >
-              {isRail ? (
-                <ChevronsRight aria-hidden="true" size={16} strokeWidth={1.5} />
-              ) : (
-                <ChevronsLeft aria-hidden="true" size={16} strokeWidth={1.5} />
-              )}
-              <span className="rail:sr-only">{isRail ? 'Expand sidebar' : 'Collapse sidebar'}</span>
-            </button>
+            <AppProfileMenu user={props.user} pathname={props.pathname} onNavigate={onNavigate} previewMode={props.previewMode} />
           </div>
         </div>
       </aside>

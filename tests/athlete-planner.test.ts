@@ -321,16 +321,16 @@ test('athlete planner rejects incomplete template ranges before any session writ
 
 test('athlete placement API and UI carry a stable retry key', async () => {
   const route = await readFile(path.join(process.cwd(), 'app/api/athlete/planner/assignments/route.ts'), 'utf8');
-  const planner = await readFile(path.join(process.cwd(), 'components/PlannerDesk.tsx'), 'utf8');
+  const planner = await readFile(path.join(process.cwd(), 'app/(app)/athlete/calendar/CalendarPlacement.tsx'), 'utf8');
 
   assert.match(route, /requestKey: body\.value\.requestKey/);
   assert.match(route, /timeLabel: body\.value\.timeLabel/);
   assert.match(planner, /crypto\.randomUUID\(\)/);
   assert.match(planner, /formLabelClassName\}>Start time<\/span>/);
   assert.match(planner, /parsePlannedTime\(startTime\.trim\(\)\)/);
-  assert.match(planner, /Some selected days already have this/);
-  assert.match(planner, /placementRequest\.current\?\.signature !== signature/);
-  assert.match(planner, /if \(role === 'athlete'\) placementRequest\.current = null/);
+  assert.match(planner, /Already planned on/);
+  assert.match(planner, /request\.current\?\.signature !== signature/);
+  assert.match(planner, /request\.current = null;/);
 });
 
 

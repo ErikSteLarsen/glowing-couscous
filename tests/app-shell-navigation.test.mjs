@@ -114,8 +114,10 @@ test('Calendar placement only places defined sources on selected dates', async (
   assert.match(plannerPageSource, /<CalendarPlacement/);
   assert.match(retiredPlannerSource, /redirect\(getPlannerRedirectHref\(/);
   assert.doesNotMatch(plannerClientSource, /WorkoutBuilder|Start from scratch|Create session/);
-  assert.match(plannerClientSource, /PlannerDesk/);
-  assert.match(plannerClientSource, /initialSourceKey=\{initialSourceKey\}/);
+  // Athlete placement is its own short flow; PlannerDesk stays the coach desk.
+  assert.doesNotMatch(plannerClientSource, /PlannerDesk/);
+  assert.match(plannerClientSource, /\/api\/athlete\/planner\/assignments/);
+  assert.match(plannerPageSource, /initialSourceKey=\{initialSource\?\.key \?\? ''\}/);
   assert.match(plannerDeskSource, /templateDatesForSelection\(initialSource\.cadence \?\? 'day', initialDate\)/);
   assert.match(plannerDeskSource, /setSelectedDates\(dates\)/);
   assert.match(plannerDeskSource, /Month navigation/);

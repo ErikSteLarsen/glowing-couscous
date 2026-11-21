@@ -152,15 +152,6 @@
  * tabular numbers everywhere a value is read. DESIGN.md is the contract.
  */
 
-/* `rail:` applies while the desktop sidebar is collapsed to its icon rail. */
-@custom-variant rail {
-  @media (min-width: 768px) {
-    html[data-sidebar='rail'] & {
-      @slot;
-    }
-  }
-}
-
 @theme {
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
 
@@ -259,9 +250,6 @@
   --sidebar: 14rem;
 }
 
-html[data-sidebar='rail'] {
-  --sidebar: 3.75rem;
-}
 .ink-studio-app .study-home__today { border-radius: 24px; }
 .ink-studio-app .study-home__week, .ink-studio-app .study-home__readout { border-radius: 20px; }
 .ink-studio-app .study-workouts__library, .ink-studio-app .study-workouts__editor { border-radius: 22px; }

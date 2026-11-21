@@ -19,19 +19,25 @@ import { getRequestTimeZone } from '@/lib/request-time-zone';
 import { todayInZone } from '@/lib/user-time';
 import { workoutLibraryService } from '@/lib/workout-library-service';
 import { AthleteCalendar, type CalendarDay, type CalendarWeek } from './AthleteCalendar';
-import { CalendarPlacement } from './CalendarPlacement';
+import { CalendarPlacement, type PlacementRoutine } from './CalendarPlacement';
+import { addMonths, startOfMonth } from 'date-fns';
+import { parsePlacedCount, type ExistingSessionsByDate } from '@/lib/calendar-placement';
+import { derivePlannerSourceDurationSec } from '@/lib/planner-source-metrics';
+import { getTemplateCadence } from '@/lib/template-cadence';
+import { parseTemplateRoutine } from '@/lib/template-routine';
+import { fromDayKey, toDayKey } from '@/lib/training-load';
 
 export const metadata: Metadata = { title: 'Calendar' };
 
 export default async function AthleteCalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ weekStart?: string; date?: string; view?: string; place?: string; source?: string }>;
+  searchParams: Promise<{ weekStart?: string; date?: string; view?: string; place?: string; source?: string; placed?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user || user.role !== 'ATHLETE') redirect('/login');
 
-  const { weekStart, date, view, place, source } = await searchParams;
+  const { weekStart, date, view, place, source, placed } = await searchParams;
   const selectedView = parseCalendarView(view);
   const timeZone = await getRequestTimeZone();
   const today = todayInZone(timeZone);
@@ -39,7 +45,7 @@ export default async function AthleteCalendarPage({
   const day = parseCalendarDay(date) ?? parseCalendarDay(weekStart) ?? today;
   const placement = parseCalendarPlacement(place);
   if (placement) {
-    return <PlacementPage userId={user.id} view={selectedView} day={day} today={today} placement={placement} source={source} />;
+    return <PlacementPage userId={user.id} view={selectedView} day={day} placement={placement} source={source} />;
   }
   const showTotals = parseCalendarTotals((await cookies()).get(CALENDAR_TOTALS_COOKIE)?.value);
   const calendar = await athleteService.loadCalendarView(user.id, day, selectedView, { timeZone });
@@ -75,22 +81,23 @@ export default async function AthleteCalendarPage({
 
   return (
     <PageShell size="wall">
-      <AthleteCalendar key={`${selectedView}:${day}`} view={selectedView} day={day} today={today} weeks={weeks} initialShowTotals={showTotals} />
+      <AthleteCalendar key={`${selectedView}:${day}`} view={selectedView} day={day} today={today} weeks={weeks} initialShowTotals={showTotals} placedCount={parsePlacedCount(placed)} />
     </PageShell>
   );
 }
 
-/** Placement: choose a saved workout or routine and its dates, through the planner service. */
-async function PlacementPage({ userId, view, day, today, placement, source }: {
+/** Placement: choose a saved workout or routine and when, through the planner service. */
+async function PlacementPage({ userId, view, day, placement, source }: {
   userId: number;
   view: CalendarView;
   day: string;
-  today: string;
   placement: PlacementKind;
   source?: string;
 }) {
-  const [workspace, workouts] = await Promise.all([
+  const nextMonth = toDayKey(addMonths(startOfMonth(fromDayKey(day)), 1));
+  const [workspace, followingMonth, workouts] = await Promise.all([
     athletePlannerService.loadWorkspace(userId, day, { includeWeek: false }),
+    athletePlannerService.loadWorkspace(userId, nextMonth, { includeWeek: false }),
     workoutLibraryService.listForOwner('athlete', userId),
   ]);
   const initialSource = resolvePlannerSourceSelection(source, {
@@ -98,20 +105,30 @@ async function PlacementPage({ userId, view, day, today, placement, source }: {
     templateIds: workspace.templates.map((template) => template.id),
   });
   const initialMessage = source && !initialSource ? 'That saved item is no longer available in your library.' : '';
+  const existing: ExistingSessionsByDate = {};
+  for (const entry of [...workspace.calendarDays, ...followingMonth.calendarDays]) {
+    existing[entry.isoDate] = entry.sessions.map((session) => ({ title: session.title, sport: session.sport }));
+  }
+  const routines: PlacementRoutine[] = workspace.templates.map((template) => ({
+    id: template.id,
+    name: template.name,
+    summary: template.summary,
+    defaultPeriod: getTemplateCadence(template.cadence) === 'month' ? 'month' : 'week',
+    entries: (parseTemplateRoutine(template.routineJson)?.entries ?? []).map((entry) => ({ weekday: entry.weekday, title: entry.title, sport: entry.sport })),
+  }));
 
   return (
-    <PageShell size="wall">
+    <PageShell>
       <CalendarPlacement
         view={view}
-        placement={placement}
-        templates={workspace.templates}
-        workouts={workouts}
-        calendarDays={workspace.calendarDays}
-        calendarLabel={workspace.calendar.label}
+        placement={initialSource?.tab === 'template' ? 'template' : initialSource?.tab === 'workout' ? 'workout' : placement}
+        workouts={[...workouts]
+          .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+          .map((workout) => ({ id: workout.id, title: workout.title, sport: workout.sport, summary: workout.summary, durationSec: derivePlannerSourceDurationSec(workout.blocks) }))}
+        routines={routines}
+        existing={existing}
         initialDate={day}
-        today={today}
         initialSourceKey={initialSource?.key ?? ''}
-        initialSourceTab={initialSource?.tab ?? placement}
         initialMessage={initialMessage}
       />
     </PageShell>

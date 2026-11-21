@@ -210,6 +210,20 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   routine, move, remove and the redirect. Drag-and-drop with mouse or touch and
   a real 409 double submit were not exercised. `pnpm test` 509 passed;
   `pnpm test:db` 561 passed.
+- Add workout and Apply a routine use a short single-column flow
+  (`CalendarPlacement.tsx`, rules in `lib/calendar-placement.ts`). Pick the
+  workout or routine; pick when (date chip plus "Add more dates", or for
+  routines One week / Whole month, the only ranges the server accepts); start
+  time under Advanced; one confirm button ("Add to Tue 24 Nov", "Apply to
+  December"). The athlete flow no longer uses PlannerDesk; coach still does.
+  The repeated-placement warning covers the starting month and the next one.
+- The desktop sidebar has only the top-right Hide menu control. The icon-rail
+  collapse mode, its bottom button, the stored mode and the pre-paint script
+  were removed.
+- `next-env.d.ts` is untracked and gitignored, because `next dev` rewrites it;
+  `pnpm typecheck` and `next build` regenerate it. A persistent local preview
+  runs from the main checkout at http://localhost:3100 against `tempo_dev`
+  (log in `.preview/dev.log`).
 
 ## Remaining risks and acceptance gates
 

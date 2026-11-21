@@ -152,18 +152,22 @@ export function AthleteCalendar({
   today,
   weeks,
   initialShowTotals,
+  placedCount = null,
 }: {
   view: CalendarView;
   day: string;
   today: string;
   weeks: CalendarWeek[];
   initialShowTotals: boolean;
+  /** Sessions just added by the placement flow, confirmed once on arrival. */
+  placedCount?: number | null;
 }) {
   const router = useRouter();
   const [isRefreshing, startTransition] = useTransition();
   const saving = useRef(false);
   const [pendingIds, setPendingIds] = useState<number[]>([]);
-  const [feedback, setFeedback] = useState<Feedback>(null);
+  const [feedback, setFeedback] = useState<Feedback>(() =>
+    placedCount ? { tone: 'status', text: `Added ${placedCount} session${placedCount === 1 ? '' : 's'} to your calendar.` } : null);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [selectedDay, setSelectedDay] = useState<string | null>(() =>
     weeks.some((week) => week.days.some((entry) => entry.isoDate === day && entry.isCurrentMonth)) ? day : null,
@@ -202,6 +206,14 @@ export function AthleteCalendar({
 
   const allDays = useMemo(() => weeks.flatMap((week) => week.days), [weeks]);
   const busyIds = isRefreshing || pendingIds.length > 0 ? [...sessionsById.keys()] : [];
+
+  // Drop the one-time `placed=` flag from the address so a reload doesn't repeat the confirmation.
+  useEffect(() => {
+    if (!placedCount) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('placed');
+    window.history.replaceState(window.history.state, '', url);
+  }, [placedCount]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {

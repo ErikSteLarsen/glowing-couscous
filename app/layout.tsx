@@ -3,7 +3,6 @@ import localFont from 'next/font/local';
 import './globals.css';
 import './monolith.css';
 import { SessionProviderWrapper } from '@/components/SessionProviderWrapper';
-import { SIDEBAR_STORAGE_KEY } from '@/lib/sidebar-state';
 
 // Self-hosted so builds never depend on reaching Google Fonts (SIL Open Font License).
 const instrumentSans = localFont({
@@ -24,15 +23,12 @@ export const viewport: Viewport = {
   colorScheme: 'dark',
 };
 
-// Applies the remembered sidebar width before paint so the rail never flashes open.
-const sidebarScript = `try{if(localStorage.getItem('${SIDEBAR_STORAGE_KEY}')==='rail')document.documentElement.dataset.sidebar='rail'}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: "try{document.documentElement.dataset.workspaceTheme=localStorage.getItem('tempo-theme')==='light'?'light':'dark'}catch(e){document.documentElement.dataset.workspaceTheme='dark'}" }} />
-        <script dangerouslySetInnerHTML={{ __html: sidebarScript }} />
       </head>
       <body className={instrumentSans.variable}>
         <SessionProviderWrapper>{children}</SessionProviderWrapper>
