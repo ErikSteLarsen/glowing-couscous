@@ -226,7 +226,7 @@ export function CalendarPlacement({
               <label className="relative block">
                 <span className="sr-only">Search {noun}s</span>
                 <Search aria-hidden="true" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${noun}s`} className={`${formFieldClassName} pl-9`} />
+                <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${noun}s`} className={`${formFieldClassName} pl-9 max-md:min-h-11`} />
               </label>
             ) : null}
             <ul className="flex flex-col divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)]" aria-label={`Saved ${noun}s`}>
@@ -258,18 +258,18 @@ export function CalendarPlacement({
           <>
             <div className="flex gap-2" role="group" aria-label="Apply for">
               {(['week', 'month'] as const).map((option) => (
-                <button key={option} type="button" aria-pressed={period === option} onClick={() => setPeriod(option)} className={getSegmentedChoiceClassName(period === option)}>
+                <button key={option} type="button" aria-pressed={period === option} onClick={() => setPeriod(option)} className={`${getSegmentedChoiceClassName(period === option)} max-md:min-h-11`}>
                   {option === 'week' ? 'One week' : 'Whole month'}
                 </button>
               ))}
             </div>
             <label className="block">
               <span className={formLabelClassName}>{period === 'week' ? 'Any day in the week' : 'Any day in the month'}</span>
-              <input type="date" required value={routineDate} onChange={(event) => setRoutineDate(event.target.value || routineDate)} className={formFieldClassName} />
+              <input type="date" required value={routineDate} onChange={(event) => setRoutineDate(event.target.value || routineDate)} className={`${formFieldClassName} max-md:min-h-11`} />
             </label>
             {targetDates.length ? (
-              <details className="group rounded-xl border border-[var(--border)] px-4 py-3">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm">
+              <details className="group rounded-xl border border-[var(--border)]">
+                <summary className={`flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-2 text-sm hover:bg-[var(--raised)] max-md:min-h-11 ${buttonFocusClassName}`}>
                   <span className="data text-[var(--text)]">{getRoutineRangeLabel(targetDates)}</span>
                   <span className="flex items-center gap-1 text-[13px] text-[var(--text-secondary)]">
                     {selectedRoutine ? `${routinePlacements.length} workout${routinePlacements.length === 1 ? '' : 's'}` : null}
@@ -277,13 +277,13 @@ export function CalendarPlacement({
                   </span>
                 </summary>
                 {selectedRoutine ? (
-                  <ul className="data mt-3 flex flex-col gap-1 text-[13px] text-[var(--text-secondary)]">
+                  <ul className="data mt-2 flex flex-col gap-1 px-4 text-[13px] text-[var(--text-secondary)]">
                     {routinePlacements.map((entry, index) => (
                       <li key={`${entry.date}:${index}`} className="flex gap-3"><span className="w-24 shrink-0 text-[var(--text-muted)]">{formatPlacementDate(entry.date)}</span><span className="truncate">{entry.title}</span></li>
                     ))}
                   </ul>
                 ) : null}
-                <p className="mt-3 text-[13px] text-[var(--text-muted)]">Existing sessions stay. Days without a workout add nothing. Each session is an independent copy.</p>
+                <p className="mt-3 px-4 pb-3 text-[13px] text-[var(--text-muted)]">Existing sessions stay. Days without a workout add nothing. Each session is an independent copy.</p>
               </details>
             ) : null}
           </>
@@ -293,7 +293,7 @@ export function CalendarPlacement({
               {dates.map((date) => (
                 <li key={date} className="data inline-flex min-h-10 items-center gap-1 rounded-lg border border-[var(--field-selected-border)] bg-[var(--brand-tint)] pl-3 pr-1 text-sm text-[var(--field-selected-text)]">
                   {formatPlacementDate(date)}
-                  <button type="button" aria-label={`Remove ${formatPlacementDate(date)}`} onClick={() => setDates((current) => removePlacementDate(current, date))} className={`inline-flex size-8 items-center justify-center rounded-md hover:bg-[var(--raised)] ${buttonFocusClassName}`}>
+                  <button type="button" aria-label={`Remove ${formatPlacementDate(date)}`} onClick={() => setDates((current) => removePlacementDate(current, date))} className={`inline-flex size-8 items-center justify-center rounded-md hover:bg-[var(--raised)] max-md:size-11 ${buttonFocusClassName}`}>
                     <X aria-hidden="true" size={14} />
                   </button>
                 </li>
@@ -304,12 +304,12 @@ export function CalendarPlacement({
               <div className="flex items-end gap-2">
                 <label className="block min-w-0 flex-1">
                   <span className={formLabelClassName}>Add a date</span>
-                  <input type="date" value={extraDate} onChange={(event) => setExtraDate(event.target.value)} className={formFieldClassName} />
+                  <input type="date" value={extraDate} onChange={(event) => setExtraDate(event.target.value)} className={`${formFieldClassName} max-md:min-h-11`} />
                 </label>
-                <button type="button" onClick={addExtraDate} disabled={!extraDate} className={secondaryButtonClassName}>Add</button>
+                <button type="button" onClick={addExtraDate} disabled={!extraDate} className={`${secondaryButtonClassName} max-md:min-h-11`}>Add</button>
               </div>
             ) : (
-              <button type="button" onClick={() => setShowMoreDates(true)} className={`${secondaryButtonClassName} self-start`}>
+              <button type="button" onClick={() => setShowMoreDates(true)} className={`${secondaryButtonClassName} self-start max-md:min-h-11`}>
                 <Plus aria-hidden="true" size={16} />Add more dates
               </button>
             )}
@@ -318,12 +318,12 @@ export function CalendarPlacement({
       </section>
 
       <details className="group">
-        <summary className={`inline-flex min-h-10 cursor-pointer list-none items-center gap-1 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] ${buttonFocusClassName}`}>
+        <summary className={`inline-flex min-h-10 cursor-pointer list-none items-center gap-1 max-md:min-h-11 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] ${buttonFocusClassName}`}>
           Advanced<ChevronDown aria-hidden="true" size={16} className="transition-transform group-open:rotate-180" />
         </summary>
         <label className="mt-2 block max-w-48">
           <span className={formLabelClassName}>Start time</span>
-          <input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} className={formFieldClassName} />
+          <input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} className={`${formFieldClassName} max-md:min-h-11`} />
         </label>
       </details>
 
