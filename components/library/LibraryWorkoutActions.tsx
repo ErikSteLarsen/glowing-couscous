@@ -11,7 +11,7 @@ export function LibraryWorkoutActions({ slug, name, durationSec, hasSteps, from 
         workout={{ title: name, durationSec, sport: 'BIKING', status: 'planned', hasSteps }}
         source={{ kind: 'catalog', slug, from }}
       />
-      <Link href={catalogScheduleHref(slug, from)} className={secondaryButtonClassName}>
+      <Link href={catalogScheduleHref(slug, from)} className={`${secondaryButtonClassName} max-md:min-h-11`}>
         <CalendarPlus aria-hidden="true" size={16} strokeWidth={1.6} />Schedule
       </Link>
       <LibraryWorkoutMenu slug={slug} name={name} from={from} />
