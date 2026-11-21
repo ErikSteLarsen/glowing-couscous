@@ -238,10 +238,11 @@ test('summary-only activity outcomes do not offer structured comparison or editi
   const coachDetail = await read('app/(app)/coach/athletes/[athleteId]/page.tsx');
 
   assert.match(activityPage, /\['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'\]\.includes\(activity\.metricsSource\) \? null : <SessionComparisonDialog/);
-  assert.match(athleteSession, /\['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'\]\.includes\(detail\.session\.metricsSource \?\? ''\) \? null : <ShareLinkButton/);
+  assert.match(athleteSession, /const isImportOrLogged = IMPORTED_OR_LOGGED_SOURCES\.includes\(detail\.session\.metricsSource \?\? ''\);/);
+  assert.match(athleteSession, /shareable=\{!isImportOrLogged\}/);
   assert.match(athleteSession, /<Surface id="session-outcome" className="space-y-3">/);
-  assert.match(athleteSession, /\['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'\]\.includes\(detail\.session\.metricsSource \?\? ''\) \? null : <SessionDetailClient/);
-  assert.match(athleteSession, /\['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'\]\.includes\(detail\.session\.metricsSource \?\? ''\) && detail\.session\.blocks\.length === 0/);
+  assert.match(athleteSession, /isImportOrLogged \? null : <SessionDetailClient/);
+  assert.match(athleteSession, /isImportOrLogged && detail\.session\.blocks\.length === 0/);
   assert.match(athleteSession, /Summary-only activity has no recorded workout blocks\./);
   assert.match(coachDetail, /function hasNoPlannedBaseline\(metricsSource: string \| null \| undefined\)/);
   assert.match(coachDetail, /hasNoPlannedBaseline\(session\.metricsSource\) \? null : <SessionComparisonDialog/);
@@ -404,4 +405,24 @@ test('template and detail entry points validate dynamic ids before loading data'
   assert.match(athleteLivePageSource, /notFound\(\)/);
   assert.match(coachAthletePageSource, /const parsedAthleteId = Number\(athleteId\)/);
   assert.match(coachAthletePageSource, /notFound\(\)/);
+});
+
+test('session detail leads with the work or the outcome and keeps secondary actions in one menu', async () => {
+  const page = await read('app/(app)/athlete/session/[sessionId]/page.tsx');
+  const actions = await read('app/(app)/athlete/session/[sessionId]/SessionActions.tsx');
+
+  // Open sessions: structure, then description; completed sessions: outcome first.
+  assert.match(page, /const leadsWithOutcome = isCompleted \|\| importedWithoutWorkout;/);
+  assert.match(page, /\{recordedOutcome\}\s*\{completion\}\s*\{recordedActivity\}\s*\{structure\}/);
+  assert.ok(page.indexOf('{structure}\n                {recordedOutcome}') < page.indexOf('id="session-description"'));
+  assert.doesNotMatch(page, /<TopBar[^>]*description=/);
+  assert.match(page, /Log completion/);
+  // Rights come from the server-side session detail, never from the client.
+  assert.match(page, /move=\{detail\.session\.canReschedule \?/);
+  assert.match(page, /canDelete=\{detail\.session\.canDelete\}/);
+  assert.match(page, /statusAction=\{detail\.session\.statusAction\}/);
+  for (const label of ['Adjust planned session', 'Move to another day…', 'Skip session', 'Edit source workout', 'Create share link', 'Remove session']) {
+    assert.ok(actions.includes(label), label);
+  }
+  assert.match(actions, /statusAction === 'plan-again'/);
 });

@@ -13,12 +13,13 @@ import {
   formTextareaClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
+  sectionHeadingClassName,
   successTextClassName,
   Surface,
 } from '@/components/ui';
 import { updateSessionEditorFields, type SessionEditorDraft } from '@/lib/session-editor';
 import type { PerformanceProfile } from '@/lib/performance-profile';
-import { SessionDeleteAction } from '@/components/SessionDeleteAction';
+import { useAdjustRequest } from './SessionActions';
 
 export function SessionDetailClient({
   sessionId,
@@ -28,8 +29,6 @@ export function SessionDetailClient({
   initialDraft,
   id,
   performanceProfile = null,
-  canDelete = false,
-  returnHref,
   compliancePct = null,
   isRecorded = false,
 }: {
@@ -40,8 +39,6 @@ export function SessionDetailClient({
   initialDraft: SessionEditorDraft;
   id?: string;
   performanceProfile?: PerformanceProfile | null;
-  canDelete?: boolean;
-  returnHref?: string;
   compliancePct?: number | null;
   /** The outcome holds measured data owned by its recording or import; only its note is editable here. */
   isRecorded?: boolean;
@@ -54,6 +51,17 @@ export function SessionDetailClient({
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(initialDraft);
   const [isPending, startTransition] = useTransition();
+
+  // The header ⋯ menu asks for the planned-adjustment editor; open it once per request.
+  const adjustRequest = useAdjustRequest();
+  const [handledAdjustRequest, setHandledAdjustRequest] = useState(adjustRequest);
+  if (adjustRequest !== handledAdjustRequest) {
+    setHandledAdjustRequest(adjustRequest);
+    if (!isDone && !isSkipped && !isRecorded) {
+      setDraft(updateSessionEditorFields(initialDraft, { athleteNotes: notes }));
+      setIsEditing(true);
+    }
+  }
 
   function save(nextDone: boolean) {
     setMessage('');
@@ -121,24 +129,19 @@ export function SessionDetailClient({
   if (isSkipped) {
     return (
       <Surface id={id} className="space-y-3">
-        <p className="text-xs font-medium text-[var(--text-muted)]">
-          Completion
-        </p>
+        <h2 className={sectionHeadingClassName}>Completion</h2>
         <p className="text-[13px] text-[var(--text-secondary)]">
-          This session is skipped, so there is no outcome to record. Plan it again to adjust it, go live, or mark it complete.
+          This session is skipped, so there is no outcome to record. Plan it again to adjust it, start it, or mark it complete.
         </p>
-        {canDelete ? <div><SessionDeleteAction sessionId={sessionId} title={initialDraft.title} returnHref={returnHref} disabled={isPending} /></div> : null}
       </Surface>
     );
   }
 
   return (
     <Surface id={id} className="space-y-4">
-      <div>
-        <p className="text-xs font-medium text-[var(--text-muted)]">
-          Completion
-        </p>
-        <p className="mt-2 text-[13px] text-[var(--text-secondary)]">
+      {isEditing ? null : <div>
+        <h2 className={sectionHeadingClassName}>{isDone ? 'Outcome' : 'Log completion'}</h2>
+        <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
           {isRecorded ? (
             <>
               This outcome comes from a recorded activity. You can edit its note; the measured data stays as recorded.
@@ -148,23 +151,22 @@ export function SessionDetailClient({
           ) : isDone ? 'Review the outcome or correct what was recorded.' : 'Add a note, then complete the session.'}
           {isDone && compliancePct !== null ? ` Plan compliance: ${Math.round(compliancePct)}%.` : ''}
         </p>
-      </div>
+      </div>}
 
-      {!isEditing ? (
+      {!isEditing && isDone ? (
         <div className="flex flex-wrap gap-3">
+          <SessionComparisonDialog
+            sessionId={sessionId}
+            endpoint={`/api/athlete/sessions/${sessionId}/comparison`}
+          />
           {isRecorded ? null : (
             <button type="button" className={compactSecondaryButtonClassName} disabled={isPending} onClick={() => {
               setDraft(updateSessionEditorFields(initialDraft, { athleteNotes: notes }));
               setIsEditing(true);
             }}>
-              {isDone ? 'Correct completed outcome' : 'Adjust planned session'}
+              Correct completed outcome
             </button>
           )}
-          <SessionComparisonDialog
-            sessionId={sessionId}
-            endpoint={`/api/athlete/sessions/${sessionId}/comparison`}
-          />
-          {canDelete ? <SessionDeleteAction sessionId={sessionId} title={initialDraft.title} returnHref={returnHref} disabled={isPending} /> : null}
         </div>
       ) : null}
 
@@ -249,6 +251,12 @@ export function SessionDetailClient({
                 Mark planned again
               </button>
             ) : null}
+            {isDone ? null : (
+              <SessionComparisonDialog
+                sessionId={sessionId}
+                endpoint={`/api/athlete/sessions/${sessionId}/comparison`}
+              />
+            )}
           </div>
         </>
       ) : null}

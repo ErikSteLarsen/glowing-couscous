@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { CalendarDays, Ellipsis } from 'lucide-react';
@@ -22,7 +22,14 @@ type ActionProps = {
   onMoved?: (title: string, date: string) => void;
 } & (
   | { mode: 'quick'; targetDay: string }
-  | { mode: 'dialog'; currentDay: string; today: string }
+  | {
+      mode: 'dialog';
+      currentDay: string;
+      today: string;
+      /** Controlled from another control, such as a menu item; no trigger is rendered. */
+      open?: boolean;
+      onOpenChange?: (open: boolean) => void;
+    }
 );
 
 type MoveResult = { ok: true } | { ok: false; error: string };
@@ -87,13 +94,29 @@ function QuickMoveAction({ sessionId, title, targetDay, onMoved }: ActionProps &
   );
 }
 
-function RescheduleDialog({ sessionId, title, currentDay, today }: ActionProps & { mode: 'dialog'; currentDay: string; today: string }) {
+function RescheduleDialog({ sessionId, title, currentDay, today, open, onOpenChange }: ActionProps & { mode: 'dialog' }) {
   const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [date, setDate] = useState(today);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const controlled = open !== undefined;
+
+  function showDialog() {
+    setDate(today);
+    setError('');
+    dialogRef.current?.showModal();
+  }
+
+  // The native dialog is an external system: mirror the controlled open state into it.
+  useEffect(() => {
+    if (!controlled) return;
+    const dialog = dialogRef.current;
+    if (open && !dialog?.open) showDialog();
+    if (!open && dialog?.open) dialog.close();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [controlled, open]);
 
   async function moveTo(day: string) {
     if (day === currentDay) {
@@ -117,17 +140,11 @@ function RescheduleDialog({ sessionId, title, currentDay, today }: ActionProps &
 
   return (
     <>
-      <button
-        type="button"
-        className={`${secondaryButtonClassName} min-h-11`}
-        onClick={() => {
-          setDate(today);
-          setError('');
-          dialogRef.current?.showModal();
-        }}
-      >
-        Reschedule…
-      </button>
+      {controlled ? null : (
+        <button type="button" className={`${secondaryButtonClassName} min-h-11`} onClick={showDialog}>
+          Reschedule…
+        </button>
+      )}
       {notice ? <p role="status" className={successTextClassName}>{notice}</p> : null}
       <dialog
         ref={dialogRef}
@@ -138,6 +155,7 @@ function RescheduleDialog({ sessionId, title, currentDay, today }: ActionProps &
         onCancel={(event) => {
           if (isPending) event.preventDefault();
         }}
+        onClose={() => onOpenChange?.(false)}
       >
         <div className="space-y-2">
           <h2 id={`reschedule-session-title-${sessionId}`} className="text-base font-medium">Reschedule session</h2>

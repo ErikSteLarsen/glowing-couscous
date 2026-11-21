@@ -799,6 +799,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
           ...summary,
           source: session.source,
           canDelete: isSelfPlanned(session) && !session.activity && session.status !== 'completed',
+          canReschedule: isSelfPlanned(session) && !session.activity && session.status !== 'completed',
           statusAction: getSessionStatusAction(session, userId),
           importedActivityId: session.activity && ['file-import', 'strava-import'].includes(session.activity.metricsSource)
             ? session.activity.id

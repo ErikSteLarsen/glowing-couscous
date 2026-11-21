@@ -2,35 +2,23 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  dangerTextClassName,
-  secondaryButtonClassName,
-  successTextClassName,
-} from '@/components/ui';
+import { dangerTextClassName, successTextClassName } from '@/components/ui';
 
-export function SessionStatusControl({
-  sessionId,
-  action,
-}: {
-  sessionId: number;
-  action: 'skip' | 'plan-again' | null;
-}) {
+export type SessionStatusAction = 'skip' | 'plan-again';
+
+/** Skips an open session or plans a skipped one again, with feedback for the page. */
+export function useSessionStatusAction(sessionId: number) {
   const router = useRouter();
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
   const [isPending, startTransition] = useTransition();
 
-  if (!action) return null;
-
-  const isSkip = action === 'skip';
-  const endpoint = `/api/athlete/planner/sessions/${sessionId}/${isSkip ? 'skip' : 'plan-again'}`;
-
-  function runAction() {
+  function run(action: SessionStatusAction) {
     setMessage('');
     setMessageTone('success');
     startTransition(async () => {
       try {
-        const response = await fetch(endpoint, { method: 'POST' });
+        const response = await fetch(`/api/athlete/planner/sessions/${sessionId}/${action}`, { method: 'POST' });
         if (!response.ok) {
           const payload = await response.json().catch(() => ({ error: 'Failed to update session status' }));
           setMessageTone('danger');
@@ -39,7 +27,9 @@ export function SessionStatusControl({
         }
 
         setMessageTone('success');
-        setMessage(isSkip ? 'Session skipped.' : 'Session planned again.');
+        setMessage(action === 'skip'
+          ? 'Session skipped. It no longer counts as planned or completed.'
+          : 'Session planned again. It counts toward your planned load.');
         router.refresh();
       } catch {
         setMessageTone('danger');
@@ -48,23 +38,14 @@ export function SessionStatusControl({
     });
   }
 
+  return { run, isPending, message, messageTone };
+}
+
+export function SessionStatusMessage({ status }: { status: ReturnType<typeof useSessionStatusAction> }) {
+  if (!status.message) return null;
   return (
-    <div className="space-y-2 border-t border-[var(--border)] pt-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <button type="button" className={`${secondaryButtonClassName} min-h-11`} onClick={runAction} disabled={isPending}>
-          {isPending ? 'Saving...' : isSkip ? 'Skip session' : 'Plan again'}
-        </button>
-        <p className="text-[13px] text-[var(--text-secondary)]">
-          {isSkip
-            ? 'Skipped sessions are not counted as planned or completed.'
-            : 'Planning this session again returns it to your planned load.'}
-        </p>
-      </div>
-      {message ? (
-        <p role={messageTone === 'success' ? 'status' : 'alert'} aria-live="polite" className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>
-          {message}
-        </p>
-      ) : null}
-    </div>
+    <p role={status.messageTone === 'success' ? 'status' : 'alert'} aria-live="polite" className={status.messageTone === 'success' ? successTextClassName : dangerTextClassName}>
+      {status.message}
+    </p>
   );
 }

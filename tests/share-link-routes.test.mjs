@@ -78,7 +78,10 @@ test('supported source surfaces expose share controls with copy and failure stat
   assert.match(button, /Copy link/);
   assert.match(button, /Link created\. Copy it from the field/);
   assert.doesNotMatch(templateClient, /ShareLinkButton/);
-  assert.match(athleteSession, /ShareLinkButton/);
+  const athleteSessionActions = await read('app/(app)/athlete/session/[sessionId]/SessionActions.tsx');
+  assert.match(athleteSession, /shareable=\{!isImportOrLogged\}/);
+  assert.match(athleteSessionActions, /useShareLink\('session', sessionId\)/);
+  assert.match(athleteSessionActions, /<ShareLinkResult share=\{share\} showAudience \/>/);
   assert.match(coachDetail, /ShareLinkButton/);
   assert.doesNotMatch(planner, /ShareLinkButton/);
   assert.match(planner, /PlannerDesk/);

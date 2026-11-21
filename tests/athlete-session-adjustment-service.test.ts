@@ -260,7 +260,11 @@ test('athlete session detail keeps the overview read-only, exposes the shared ad
   // The merged detail keeps the shared editor for planned adjustments and actual corrections.
   // The scheduled overview stays read-only (asserted below).
   assert.match(client, /WorkoutBuilder/);
-  assert.match(client, /Adjust planned session/);
+  const actions = await readFile(path.join(process.cwd(), 'app/(app)/athlete/session/[sessionId]/SessionActions.tsx'), 'utf8');
+  // Planned adjustment opens from the header ⋯ menu; the editor stays in the completion section.
+  assert.match(actions, /Adjust planned session/);
+  assert.match(client, /useAdjustRequest\(\)/);
+  assert.match(page, /canAdjust=\{logCompletion\}/);
   assert.match(client, /showSchedule/);
   assert.match(client, /\/actual/);
   assert.match(client, /SessionComparisonDialog/);

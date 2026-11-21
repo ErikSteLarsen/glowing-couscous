@@ -298,7 +298,8 @@ test('actual outcome routes keep role guards while session detail stays read-onl
   // are read-only here and are corrected through their own forms.
   assert.match(detailClient, /isDone \? '\/actual' : ''/);
   assert.doesNotMatch(detailClient, /ManualActivityCorrectionForm/);
-  assert.match(detailPage, /\['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'\]\.includes\(detail\.session\.metricsSource/);
+  assert.match(detailPage, /IMPORTED_OR_LOGGED_SOURCES = \['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'\]/);
+  assert.match(detailPage, /IMPORTED_OR_LOGGED_SOURCES\.includes\(detail\.session\.metricsSource/);
 });
 
 
