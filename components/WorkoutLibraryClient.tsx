@@ -459,12 +459,14 @@ export function WorkoutLibraryClient({
 
       {showEditor ? <div className="page-back -mb-4"><BackButton destination="Workouts" onClick={() => requestDraftAction({ kind: 'close' })} disabled={isPending} /></div> : null}
       {showEditor ? <Surface className="study-workouts__editor min-w-0 space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--border)] pb-3">
-          <div className="flex min-w-0 flex-col gap-1">
-          <div className="flex min-w-0 flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-[var(--border)] pb-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <h2 className="min-w-0 text-lg font-semibold text-[var(--text)]">{selectedWorkoutId ? 'Edit workout' : 'Create workout'}</h2>
-            {!selectedWorkoutId || isDirty ? <span className="inline-flex min-h-8 items-center rounded-[3px] border border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] px-3 text-xs font-semibold text-[var(--status-warning)]" role="status">{isPending ? 'Saving…' : selectedWorkoutId ? 'Unsaved changes' : 'Unsaved draft'}</span> : null}
-          </div>
+            {!selectedWorkoutId || isDirty ? (
+              <span role="status">
+                <Badge tone="warning">{isPending ? 'Saving…' : selectedWorkoutId ? 'Unsaved changes' : 'Unsaved draft'}</Badge>
+              </span>
+            ) : null}
           </div>
           <div className="flex items-center gap-2">
             <Badge tone="brand">{formatDurationExact(metrics.durationSec)}</Badge>
