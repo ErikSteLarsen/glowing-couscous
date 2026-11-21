@@ -68,7 +68,7 @@ export function SessionHeaderActions({
 
   return (
     <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 max-md:[&>:is(a,button)]:min-h-11">
         {primary}
         {statusAction === 'plan-again' ? (
           <button type="button" className={secondaryButtonClassName} disabled={status.isPending} onClick={() => status.run('plan-again')}>

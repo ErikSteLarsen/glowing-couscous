@@ -154,7 +154,7 @@ export function SessionDetailClient({
       </div>}
 
       {!isEditing && isDone ? (
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 max-md:[&>button]:min-h-11">
           <SessionComparisonDialog
             sessionId={sessionId}
             endpoint={`/api/athlete/sessions/${sessionId}/comparison`}
@@ -208,7 +208,7 @@ export function SessionDetailClient({
               className={formFieldClassName}
             />
           </label>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 max-md:[&>button]:min-h-11">
             <button type="button" className={secondaryButtonClassName} onClick={() => { setDraft(initialDraft); setIsEditing(false); }} disabled={isPending}>
               Cancel
             </button>
@@ -232,7 +232,7 @@ export function SessionDetailClient({
             />
           </label>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 max-md:[&>button]:min-h-11">
             <button
               type="button"
               onClick={() => save(true)}
