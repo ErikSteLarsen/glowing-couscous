@@ -37,7 +37,7 @@ type DurationParts = { hours: string; minutes: string; seconds: string };
 const blankDuration: DurationParts = { hours: '', minutes: '', seconds: '' };
 const sports = ['RUNNING', 'BIKING', 'SWIMMING', 'TRIATHLON'];
 const dialogClassName = 'tempo-alert-dialog z-50 h-fit w-[calc(100%-2rem)] max-w-lg space-y-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]';
-const dialogButtonClassName = 'min-h-11 sm:min-h-8';
+const dialogButtonClassName = 'max-md:min-h-11';
 
 function dateValue(value: string) { return value.slice(0, 10); }
 function formatDay(day: string, pattern = 'EEE d MMM yyyy') { return format(new Date(`${day}T12:00:00`), pattern); }
@@ -116,8 +116,8 @@ function EventForm({ initial, today, onSaved, onCancel, onPendingChange }: { ini
     <div className="sm:col-span-2">
       {showGoal ? <div className="space-y-2">
         <DurationFields label="Goal finish time" value={target} onChange={setTarget} disabled={saving} />
-        <button type="button" className={ghostButtonClassName('compact')} disabled={saving} onClick={() => { setShowGoal(false); setTarget(blankDuration); }}>Remove goal time</button>
-      </div> : <button type="button" className={`${ghostButtonClassName('compact')} -ml-2`} disabled={saving} onClick={() => setShowGoal(true)}><Plus aria-hidden="true" size={14} strokeWidth={1.8} />Add goal time</button>}
+        <button type="button" className={`${ghostButtonClassName('compact')} max-md:min-h-11`} disabled={saving} onClick={() => { setShowGoal(false); setTarget(blankDuration); }}>Remove goal time</button>
+      </div> : <button type="button" className={`${ghostButtonClassName('compact')} -ml-2 max-md:min-h-11`} disabled={saving} onClick={() => setShowGoal(true)}><Plus aria-hidden="true" size={14} strokeWidth={1.8} />Add goal time</button>}
     </div>
     {error ? <p role="alert" className={`${dangerTextClassName} sm:col-span-2`}>{error}</p> : null}
     <div className="flex flex-wrap justify-end gap-2 sm:col-span-2">
@@ -219,9 +219,9 @@ function LinkedActivitiesPanel({ event, onChange, onPendingChange }: { event: Ev
       {linked.length ? <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] px-3">{linked.map((activity) => <li key={activity.id} className="flex items-center justify-between gap-3 py-2.5"><ActivitySummary activity={activity} /><button type="button" disabled={saving} className={`${compactSecondaryButtonClassName} ${dialogButtonClassName} shrink-0`} onClick={() => void unlinkActivity(activity.id)}>Unlink</button></li>)}</ul> : <p className="text-sm text-[var(--text-muted)]">No activities linked yet.</p>}
     </section>
     <section aria-label="Link a completed activity" className="space-y-3 border-t border-[var(--border)] pt-4">
-      <form className="flex flex-col gap-2 sm:flex-row sm:items-end" onSubmit={(e) => { e.preventDefault(); void searchActivities(0); }}><label className="min-w-0 flex-1"><span className={formLabelClassName}>Find a completed activity</span><input value={activityQuery} onChange={(e) => setActivityQuery(e.target.value)} className={formFieldClassName} placeholder="Search title or sport" /></label><button disabled={saving} className={secondaryButtonClassName}>Search</button></form>
+      <form className="flex flex-col gap-2 sm:flex-row sm:items-end" onSubmit={(e) => { e.preventDefault(); void searchActivities(0); }}><label className="min-w-0 flex-1"><span className={formLabelClassName}>Find a completed activity</span><input value={activityQuery} onChange={(e) => setActivityQuery(e.target.value)} className={formFieldClassName} placeholder="Search title or sport" /></label><button disabled={saving} className={`${secondaryButtonClassName} max-md:min-h-11`}>Search</button></form>
       {searched ? candidates.length ? <ul className="max-h-72 divide-y divide-[var(--border)] overflow-y-auto rounded-xl border border-[var(--border)] px-3">{candidates.map((activity) => <li key={activity.id} className="flex items-center justify-between gap-3 py-2.5"><ActivitySummary activity={activity} /><button type="button" disabled={saving} className={`${compactPrimaryButtonClassName} ${dialogButtonClassName} shrink-0`} onClick={() => void linkActivity(activity.id)}>Link</button></li>)}</ul> : <p className="text-sm text-[var(--text-muted)]">No matching unlinked completed activities.</p> : null}
-      {candidateTotal > 30 ? <div className="flex items-center gap-2"><button type="button" disabled={saving || candidatePage === 0} className={compactSecondaryButtonClassName} onClick={() => void searchActivities(candidatePage - 1)}>Previous</button><span className="data text-xs text-[var(--text-muted)]">Page {candidatePage + 1} of {Math.ceil(candidateTotal / 30)}</span><button type="button" disabled={saving || (candidatePage + 1) * 30 >= candidateTotal} className={compactSecondaryButtonClassName} onClick={() => void searchActivities(candidatePage + 1)}>Next</button></div> : null}
+      {candidateTotal > 30 ? <div className="flex items-center gap-2"><button type="button" disabled={saving || candidatePage === 0} className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={() => void searchActivities(candidatePage - 1)}>Previous</button><span className="data text-xs text-[var(--text-muted)]">Page {candidatePage + 1} of {Math.ceil(candidateTotal / 30)}</span><button type="button" disabled={saving || (candidatePage + 1) * 30 >= candidateTotal} className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={() => void searchActivities(candidatePage + 1)}>Next</button></div> : null}
     </section>
     {message ? <p aria-live="polite" className="text-sm text-[var(--text-muted)]">{message}</p> : null}
   </div>;
@@ -257,14 +257,14 @@ function EventCard({ event, today, onChange, onDelete }: { event: EventRow; toda
         <p className="mt-1 text-sm text-[var(--text-muted)]"><span className="data">{formatDay(day)}</span> · {getSportLabel(event.sport)}{countdown ? <> · <span className="text-[var(--text-secondary)]">{countdown}</span></> : null}</p>
         {event.targetFinishSec || event.resultFinishSec !== null ? <p className="mt-1.5 text-sm text-[var(--text-secondary)]">{event.targetFinishSec ? <>Goal <span className="data">{formatDuration(event.targetFinishSec)}</span></> : null}{event.targetFinishSec && event.resultFinishSec !== null ? ' · ' : null}{event.resultFinishSec !== null ? <>Result <span className="data text-[var(--text)]">{formatDuration(event.resultFinishSec)}</span></> : null}</p> : null}
         {event.resultNote ? <p className="mt-1 whitespace-pre-wrap text-sm text-[var(--text-muted)]">{event.resultNote}</p> : null}
-        {linkedCount ? <button type="button" className={`${ghostButtonClassName('compact')} -ml-2 mt-1`} onClick={() => openPanel('activities')}><Link2 aria-hidden="true" size={14} strokeWidth={1.8} />Linked activities <span className="data">{linkedCount}</span></button> : null}
+        {linkedCount ? <button type="button" className={`${ghostButtonClassName('compact')} -ml-2 max-md:min-h-11 mt-1`} onClick={() => openPanel('activities')}><Link2 aria-hidden="true" size={14} strokeWidth={1.8} />Linked activities <span className="data">{linkedCount}</span></button> : null}
         {notice ? <p role="status" className="mt-1 text-sm text-[var(--status-success)]">{notice}</p> : null}
         {deleteError && panel !== 'delete' ? <p role="alert" className={`${dangerTextClassName} mt-1`}>{deleteError}</p> : null}
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
-        {canRecord ? <button type="button" className={`${event.resultFinishSec === null ? compactPrimaryButtonClassName : compactSecondaryButtonClassName} max-md:min-h-10`} onClick={() => openPanel('result')}>{event.resultFinishSec === null ? 'Record result' : 'Edit result'}</button> : null}
+        {canRecord ? <button type="button" className={`${event.resultFinishSec === null ? compactPrimaryButtonClassName : compactSecondaryButtonClassName} max-md:min-h-11`} onClick={() => openPanel('result')}>{event.resultFinishSec === null ? 'Record result' : 'Edit result'}</button> : null}
         <Menu>
-          <MenuTrigger aria-label={`Actions for ${event.title}`} className={`inline-flex size-8 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-md:size-10 ${buttonFocusClassName}`}>
+          <MenuTrigger aria-label={`Actions for ${event.title}`} className={`inline-flex size-8 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-md:size-11 ${buttonFocusClassName}`}>
             <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
           </MenuTrigger>
           <MenuContent align="end">
@@ -320,7 +320,7 @@ export function EventsClient({ initialEvents, today }: { initialEvents: EventRow
   const openAdd = () => { setNotice(''); setAdding(true); };
   return <PageShell size="default">
     <TopBar title="Events" description="Plan race days, set goal times, and record results." actions={<>
-      <button type="button" className={primaryButtonClassName} onClick={openAdd}><Plus aria-hidden="true" size={16} strokeWidth={1.8} />Add event</button>
+      <button type="button" className={`${primaryButtonClassName} max-md:min-h-11`} onClick={openAdd}><Plus aria-hidden="true" size={16} strokeWidth={1.8} />Add event</button>
       <Menu>
         <MenuTrigger aria-label="More event options" className={iconButtonClassName}><Ellipsis aria-hidden="true" size={18} strokeWidth={1.8} /></MenuTrigger>
         <MenuContent align="end">
