@@ -4,6 +4,7 @@ import { getProviders, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
+  buttonFocusClassName,
   dangerTextClassName,
   formFieldClassName,
   formLabelClassName,
@@ -77,7 +78,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className={formFieldClassName}
+              className={`${formFieldClassName} max-md:min-h-11`}
             />
           </div>
           <div>
@@ -89,17 +90,17 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className={formFieldClassName}
+              className={`${formFieldClassName} max-md:min-h-11`}
             />
-            <p className="mt-2 text-right text-sm">
-              <Link href="/forgot-password" className="font-medium text-[var(--brand)] underline-offset-4 hover:underline">Forgot password?</Link>
+            <p className="mt-2 flex justify-end text-sm">
+              <Link href="/forgot-password" className={`inline-flex items-center rounded-sm font-medium text-[var(--brand)] underline-offset-4 hover:underline max-md:min-h-11 ${buttonFocusClassName}`}>Forgot password?</Link>
             </p>
           </div>
           {error && <p className={dangerTextClassName} role="alert">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className={`${primaryButtonClassName} w-full`}
+            className={`${primaryButtonClassName} w-full max-md:min-h-11`}
           >
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
@@ -114,13 +115,13 @@ export default function LoginPage() {
             <button
               onClick={() => signIn('google', { callbackUrl: readCallbackUrl() ?? '/' })}
               disabled={loading}
-              className={`${secondaryButtonClassName} w-full`}
+              className={`${secondaryButtonClassName} w-full max-md:min-h-11`}
             >
               Continue with Google
             </button>
           </>
         )}
-        <p className="mt-5 text-center text-sm text-[var(--text-secondary)]">
+        <p className="mt-5 flex flex-wrap items-center justify-center gap-x-1 text-sm text-[var(--text-secondary)]">
           No account?{' '}
            <a
              href="/signup"
@@ -130,7 +131,7 @@ export default function LoginPage() {
                event.preventDefault();
                router.push(`/signup?callbackUrl=${encodeURIComponent(callbackUrl)}`);
              }}
-             className="font-medium text-[var(--brand)] hover:text-[var(--text)]"
+             className={`inline-flex items-center rounded-sm font-medium text-[var(--brand)] underline-offset-4 hover:underline max-md:min-h-11 ${buttonFocusClassName}`}
            >
             Sign up
           </a>
