@@ -28,6 +28,14 @@ way. See [operations](OPERATIONS.md) for dependency preflight and DLL locks.
 Prose-only edits need reference/source checks and `git diff --check`, not a
 migration-bearing build or application tests.
 
+A whole test file can fail at `1:1` with only `'test failed'` and no failed
+subtests. Rerun with `--test-reporter=tap`. If it shows `signal: 'SIGKILL'`, the
+environment killed the process; no test failed. Inside agent sessions on the
+maintainer's T3 host, busy test process trees are sometimes SIGKILLed: about 2
+in 10 `pnpm test` runs, more with parallel suites. The same suites pass from a
+standalone systemd service. Rerun and record the rerun. Do not lower the test
+concurrency to hide it.
+
 Use an isolated disposable **PostgreSQL** database with current migrations for
 persistence, missing-record, rollback, uniqueness and concurrency checks.
 Historical SQLite evidence does not certify current PostgreSQL behavior;
