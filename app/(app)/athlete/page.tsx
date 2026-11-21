@@ -11,7 +11,6 @@ import { SessionRow } from '@/components/tempo/SessionRow';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { OverdueSessions } from '@/components/OverdueSessions';
 import {
-  ActionLink,
   ghostButtonClassName,
   PageShell,
   secondaryButtonClassName,
@@ -113,7 +112,7 @@ export default async function AthletePage() {
       <TopBar
         eyebrow={`${format(today, 'EEEE d MMMM')} · Week ${getISOWeek(today)}`}
         title={`${greetingFor(hourInZone(timeZone))}, ${firstName}`}
-        actions={<Link href="/athlete/events" className={ghostButtonClassName('default')}>Events</Link>}
+        actions={<Link href="/athlete/events" className={`${ghostButtonClassName('default')} max-md:min-h-11`}>Events</Link>}
       />
       <section aria-labelledby="today-heading" className="tile flex flex-col rounded-2xl p-5 xl:p-6">
         <div className="flex items-center justify-between gap-3">
@@ -156,7 +155,7 @@ export default async function AthletePage() {
                   workout={{ title: nextAction.title, sport: nextAction.sport, status: nextAction.status, durationSec: nextAction.durationSec, hasSteps: nextAction.hasSteps }}
                   source={{ kind: 'session', id: nextAction.id, from: 'home' }}
                 />
-                <Link href={`/athlete/session/${nextAction.id}?from=home`} className={secondaryButtonClassName}>
+                <Link href={`/athlete/session/${nextAction.id}?from=home`} className={`${secondaryButtonClassName} max-md:min-h-11`}>
                   Details
                 </Link>
               </div>
@@ -177,10 +176,10 @@ export default async function AthletePage() {
                 <SessionRow session={skippedToday[0]} href={`/athlete/session/${skippedToday[0].id}?from=home`} actionLabel="Details" variant="compact" />
               ) : null}
               <div className="mt-auto flex flex-wrap gap-2 pt-1">
-                <ActionLink href="/athlete/calendar?place=workout" tone="secondary">
+                <Link href="/athlete/calendar?place=workout" className={`${secondaryButtonClassName} max-md:min-h-11`}>
                   <CalendarPlus aria-hidden="true" size={15} strokeWidth={1.8} />
                   Plan a session
-                </ActionLink>
+                </Link>
               </div>
             </div>
           )}
@@ -193,7 +192,7 @@ export default async function AthletePage() {
                   <li key={session.id}>
                     <Link
                       href={`/athlete/session/${session.id}?from=home`}
-                      className="group -mx-2 flex min-h-10 items-center gap-3 rounded-lg px-2 text-sm transition-colors hover:bg-[var(--raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+                      className="group -mx-2 flex min-h-10 items-center gap-3 rounded-lg px-2 text-sm transition-colors hover:bg-[var(--raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] max-md:min-h-11"
                     >
                       <span className="data w-16 shrink-0 text-[var(--text-muted)]">{day.label} {day.dateLabel}</span>
                       <span className="min-w-0 flex-1 truncate text-[var(--text)]">{session.title}</span>
@@ -222,7 +221,7 @@ export default async function AthletePage() {
             <h2 id="next-event-heading" className="mt-1 text-lg font-medium text-[var(--text)]">{dashboard.nextEvent.title}</h2>
             <p className="mt-0.5 text-sm text-[var(--text-muted)]">{getSportLabel(dashboard.nextEvent.sport)}{dashboard.nextEvent.targetFinishSec ? ` · Goal ${formatDuration(dashboard.nextEvent.targetFinishSec)}` : ''}</p>
           </div>
-          <Link href="/athlete/events" className={`${secondaryButtonClassName} shrink-0`}>Manage events</Link>
+          <Link href="/athlete/events" className={`${secondaryButtonClassName} shrink-0 max-md:min-h-11`}>Manage events</Link>
         </section>
       ) : null}
 
@@ -239,7 +238,7 @@ export default async function AthletePage() {
               </p>
             ) : null}
           </div>
-          <Link href="/athlete/calendar" className={ghostButtonClassName('compact')}>
+          <Link href="/athlete/calendar" className={`${ghostButtonClassName('compact')} max-md:min-h-11`}>
             Calendar
             <ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />
           </Link>
@@ -274,7 +273,7 @@ export default async function AthletePage() {
                   </span>
                 ) : null}
               </div>
-              <div className="mt-2 space-y-1.5">
+              <div className="mt-2 space-y-1.5 max-md:[&>a]:min-h-11">
                 {day.sessions.length > 0 ? (
                   day.sessions.map((session) => (
                     <SessionRow key={session.id} session={session} href={`/athlete/session/${session.id}?from=home`} variant="month" />
@@ -322,7 +321,7 @@ export default async function AthletePage() {
                   {dashboard.lastActivity.notes ? (
                     <p className="line-clamp-3 text-sm text-[var(--text-secondary)]">&ldquo;{dashboard.lastActivity.notes}&rdquo;</p>
                   ) : null}
-                  <Link href={`/athlete/session/${dashboard.lastActivity.sessionId}?from=home`} className={`${ghostButtonClassName('compact')} mt-auto self-start`}>
+                  <Link href={`/athlete/session/${dashboard.lastActivity.sessionId}?from=home`} className={`${ghostButtonClassName('compact')} mt-auto self-start max-md:min-h-11`}>
                     Review outcome
                     <ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />
                   </Link>
@@ -366,7 +365,7 @@ export default async function AthletePage() {
                 <p className="mt-1 text-[13px] text-[var(--text-muted)]">Last 12 weeks and the next two, from your plan</p>
                 {unknownLoadSessions > 0 ? <p className="mt-1 text-xs text-[var(--text-muted)]">Load is unavailable for {unknownLoadSessions} activities. The fitness and fatigue estimates omit them; marked chart days are not measured as zero.</p> : null}
               </div>
-              <Link href="/athlete/activity" className={ghostButtonClassName('compact')}>
+              <Link href="/athlete/activity" className={`${ghostButtonClassName('compact')} max-md:min-h-11`}>
                 All activity
                 <ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />
               </Link>
