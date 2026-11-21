@@ -88,7 +88,8 @@ export function PerformanceChart({ series, today }: Props) {
     const moves: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, PageUp: -7, PageDown: 7 };
     if (event.key === 'Home') setActive(0);
     else if (event.key === 'End') setActive(lastIndex);
-    else if (event.key === 'Escape') setActive(null);
+    // Escape clears a selection first; with none, it falls through to close an enclosing dialog.
+    else if (event.key === 'Escape' && active !== null) setActive(null);
     else if (event.key in moves) setActive(Math.max(0, Math.min(lastIndex, shown + moves[event.key])));
     else return;
     event.preventDefault();

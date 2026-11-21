@@ -35,7 +35,8 @@ export function WeeklyVolumeChart({ weeks }: { weeks: VolumeWeek[] }) {
     else if (event.key === 'ArrowRight') setActive(Math.min(weeks.length - 1, shown + 1));
     else if (event.key === 'Home') setActive(0);
     else if (event.key === 'End') setActive(weeks.length - 1);
-    else if (event.key === 'Escape') setActive(null);
+    // Escape clears a selection first; with none, it falls through to close an enclosing dialog.
+    else if (event.key === 'Escape' && active !== null) setActive(null);
     else return;
     event.preventDefault();
   }
