@@ -192,7 +192,7 @@ export function StravaImportPanel({
         <div className="flex flex-wrap gap-2">
           {connection.connected ? (
             <>
-              <button type="button" className={secondaryButtonClassName} disabled={refreshing || syncing} onClick={() => void syncActivities()}>
+              <button type="button" className={`${secondaryButtonClassName} max-md:min-h-11`} disabled={refreshing || syncing} onClick={() => void syncActivities()}>
                 {syncing ? 'Checking Strava…' : 'Check Strava now'}
               </button>
               <Menu>
@@ -208,7 +208,7 @@ export function StravaImportPanel({
               </Menu>
             </>
           ) : (
-            <Link href="/settings#connections" className={secondaryButtonClassName}>Manage connections</Link>
+            <Link href="/settings#connections" className={`${secondaryButtonClassName} max-md:min-h-11`}>Manage connections</Link>
           )}
         </div>
       </div>
@@ -282,7 +282,7 @@ export function StravaImportPanel({
                 <button
                   ref={closeButtonRef}
                   type="button"
-                  className={secondaryButtonClassName}
+                  className={`${secondaryButtonClassName} max-md:min-h-11`}
                   aria-label="Close activity details"
                   onClick={() => dialogRef.current?.close()}
                 >
@@ -339,7 +339,7 @@ export function StravaImportPanel({
                 <p className="text-[12px] text-[var(--text-secondary)]">
                   {activeDraft?.plannedSessionId ? 'The planned workout stays available for comparison.' : 'Tempo will create a completed session from the recorded activity.'}
                 </p>
-                {!activeActivity.imported ? <button type="button" className={secondaryButtonClassName} disabled={Boolean(importing[activeActivity.id])} onClick={() => void reviewActivity(activeActivity.id, activeActivity.dismissed ? 'restore' : 'discard')}>
+                {!activeActivity.imported ? <button type="button" className={`${secondaryButtonClassName} max-md:min-h-11`} disabled={Boolean(importing[activeActivity.id])} onClick={() => void reviewActivity(activeActivity.id, activeActivity.dismissed ? 'restore' : 'discard')}>
                   {activeActivity.dismissed ? 'Restore to inbox' : 'Dismiss for now'}
                 </button> : null}
                 <button type="button" className={primaryButtonClassName} disabled={Boolean(importing[activeActivity.id]) || activeActivity.imported || !activeDraft?.title.trim()} onClick={() => void importActivity(activeActivity.id)}>

@@ -112,12 +112,12 @@ export function ActivityImportForm() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="min-w-0 flex-1 space-y-2">
           <span className="text-[13px] font-medium text-[var(--text-secondary)]">TCX, FIT, or GPX file (5 MB maximum)</span>
-          <input ref={inputRef} type="file" accept=".tcx,.fit,.gpx,application/vnd.garmin.tcx+xml,application/gpx+xml,application/xml,text/xml,application/octet-stream" disabled={pending} onChange={(event) => { const selected = event.currentTarget.files?.[0]; setGpxSelected(selected?.name.toLowerCase().endsWith('.gpx') ?? false); setGpxSport(''); setPreview(null); setPairingChoice(''); setSavedHref(''); setError(''); }} className={`${formFieldClassName} h-auto min-h-10 py-2 file:mr-3 file:rounded-md file:border-0 file:bg-[var(--raised)] file:px-3 file:py-1 file:text-sm file:text-[var(--text)]`} />
+          <input ref={inputRef} type="file" accept=".tcx,.fit,.gpx,application/vnd.garmin.tcx+xml,application/gpx+xml,application/xml,text/xml,application/octet-stream" disabled={pending} onChange={(event) => { const selected = event.currentTarget.files?.[0]; setGpxSelected(selected?.name.toLowerCase().endsWith('.gpx') ?? false); setGpxSport(''); setPreview(null); setPairingChoice(''); setSavedHref(''); setError(''); }} className={`${formFieldClassName} h-auto min-h-10 py-2 max-md:min-h-11 file:mr-3 file:rounded-md file:border-0 file:bg-[var(--raised)] file:px-3 file:py-1 file:text-sm file:text-[var(--text)]`} />
         </label>
         {gpxSelected ? (
           <label className="min-w-0 space-y-2 sm:w-48">
             <span className="text-[13px] font-medium text-[var(--text-secondary)]">Activity type</span>
-            <select value={gpxSport} onChange={(event) => { setGpxSport(event.target.value); setPreview(null); setPairingChoice(''); setError(''); }} disabled={pending} className={formFieldClassName} required>
+            <select value={gpxSport} onChange={(event) => { setGpxSport(event.target.value); setPreview(null); setPairingChoice(''); setError(''); }} disabled={pending} className={`${formFieldClassName} max-md:min-h-11`} required>
               <option value="">Choose a sport</option>
               <option value="RUNNING">Running</option>
               <option value="BIKING">Cycling</option>
@@ -125,7 +125,7 @@ export function ActivityImportForm() {
             </select>
           </label>
         ) : null}
-        <button type="button" onClick={previewFile} disabled={pending || (gpxSelected && !gpxSport)} className={primaryButtonClassName}>{pending && !preview ? 'Reading file…' : 'Review activity'}</button>
+        <button type="button" onClick={previewFile} disabled={pending || (gpxSelected && !gpxSport)} className={`${primaryButtonClassName} max-md:min-h-11`}>{pending && !preview ? 'Reading file…' : 'Review activity'}</button>
       </div>
       {gpxSelected ? <p className="text-xs text-[var(--text-muted)]">GPX does not reliably identify sport. Choose the activity type before review.</p> : null}
       {preview ? (
@@ -157,7 +157,7 @@ export function ActivityImportForm() {
           </fieldset> : null}
           {preview.duplicate ? (
             <p role="status" className="text-sm text-[var(--text-secondary)]">This file was already imported. <ActionLink href={`/athlete/session/${preview.sessionId}?from=activity`} tone="ghost">Review saved activity</ActionLink></p>
-          ) : <button type="button" onClick={confirmImport} disabled={pending || !pairingChoice} className={primaryButtonClassName}>{pending ? 'Saving activity…' : 'Confirm and import activity'}</button>}
+          ) : <button type="button" onClick={confirmImport} disabled={pending || !pairingChoice} className={`${primaryButtonClassName} max-md:min-h-11`}>{pending ? 'Saving activity…' : 'Confirm and import activity'}</button>}
         </section>
       ) : null}
       {savedHref ? <p role="status" className="text-sm text-[var(--status-success)]">Activity imported. <ActionLink href={savedHref} tone="ghost">Review outcome</ActionLink></p> : null}

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { formatStravaMetadata, StravaImportPanel } from '@/components/StravaImportPanel';
-import { EmptyState, Surface, buttonFocusClassName, dangerButtonClassName, dangerTextClassName, formFieldClassName, formLabelClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { EmptyState, Surface, buttonFocusClassName, dangerButtonClassName, dangerTextClassName, formFieldClassName, formLabelClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { parseActivityFile, type ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { ImportableSession, ImportedActivityHistory } from '@/lib/activity-import-service';
 import type { StravaConnectionSummary } from '@/lib/strava-service';
@@ -174,7 +174,7 @@ export function ActivityImportClient({
             className="sr-only"
             onChange={(event) => void addFiles(event.currentTarget.files)}
           />
-          <button type="button" className={primaryButtonClassName} disabled={parsing} onClick={() => fileInput.current?.click()}>
+          <button type="button" className={`${primaryButtonClassName} max-md:min-h-11`} disabled={parsing} onClick={() => fileInput.current?.click()}>
             {parsing ? 'Reading files…' : 'Choose activity files'}
           </button>
           <p className="text-[12px] text-[var(--text-secondary)]">Up to 10 files at a time, 20 MB each</p>
@@ -198,7 +198,7 @@ export function ActivityImportClient({
                 </div>
                 <button
                   type="button"
-                  className={secondaryButtonClassName}
+                  className={`${secondaryButtonClassName} max-md:min-h-11`}
                   onClick={() => setDrafts((current) => current.filter((item) => item.key !== draft.key))}
                 >
                   Remove
@@ -220,7 +220,7 @@ export function ActivityImportClient({
                   <label className="block">
                     <span className={formLabelClassName}>Activity name</span>
                     <input
-                      className={formFieldClassName}
+                      className={`${formFieldClassName} max-md:min-h-11`}
                       value={draft.activity.title}
                       maxLength={140}
                       onChange={(event) => updateDraft(draft.key, { activity: { ...draft.activity, title: event.target.value } })}
@@ -229,7 +229,7 @@ export function ActivityImportClient({
                   <label className="block">
                   <span className={formLabelClassName}>Same-sport session to complete</span>
                     <select
-                      className={formFieldClassName}
+                      className={`${formFieldClassName} max-md:min-h-11`}
                       value={draft.plannedSessionId ?? ''}
                       onChange={(event) => updateDraft(draft.key, { plannedSessionId: event.target.value ? Number(event.target.value) : null })}
                     >
@@ -253,7 +253,7 @@ export function ActivityImportClient({
                     <p className="text-[12px] text-[var(--text-secondary)]">
                       {draft.plannedSessionId ? 'The selected session’s planned workout stays available for comparison.' : 'Tempo will create a completed session with this activity data.'}
                     </p>
-                    <button type="button" className={primaryButtonClassName} disabled={draft.importing} onClick={() => void importActivity(draft)}>
+                    <button type="button" className={`${primaryButtonClassName} max-md:min-h-11`} disabled={draft.importing} onClick={() => void importActivity(draft)}>
                       {draft.importing ? 'Importing…' : 'Import activity'}
                     </button>
                   </div>
@@ -327,12 +327,12 @@ export function ActivityImportClient({
                       </div>
                     </section>
                   ) : null}
-                  <Link className="inline-flex min-h-10 items-center rounded-[3px] px-2 text-[13px] font-medium text-[var(--brand)] hover:bg-[var(--brand-tint)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-liquid)]" href={`/athlete/session/${activity.sessionId}?from=imports`}>
+                  <Link className={`${ghostButtonClassName('default')} max-md:min-h-11`} href={`/athlete/session/${activity.sessionId}?from=imports`}>
                     Review completed session
                   </Link>
                   <button
                     type="button"
-                    className={dangerButtonClassName}
+                    className={`${dangerButtonClassName} max-md:min-h-11`}
                     disabled={deletingActivityId !== null}
                     onClick={() => void deleteImportedActivity(activity)}
                   >
