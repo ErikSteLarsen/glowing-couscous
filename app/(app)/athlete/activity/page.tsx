@@ -1,7 +1,8 @@
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ActionLink, EmptyState, PageShell, TopBar, formFieldClassName, formLabelClassName, formSelectClassName, ghostButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { ActionLink, EmptyState, PageShell, TopBar, formFieldClassName, formLabelClassName, formSelectClassName, secondaryButtonClassName } from '@/components/ui';
+import { WorkoutCard, WorkoutCardFooter, WorkoutCardGrid, WorkoutCardHeader, WorkoutCardMeta, WorkoutCardProfile, WorkoutCardSummary } from '@/components/library/WorkoutCard';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { getCurrentUser } from '@/lib/auth-session';
@@ -15,6 +16,8 @@ import { getSportLabel, SPORT_OPTIONS } from '@/lib/sport';
 import { ACTIVITY_PAGE_SIZE, getActivityHref, parseActivityFilters } from '@/lib/activity-navigation';
 import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
 import { AddActivity } from './AddActivity';
+
+const IMPORT_SOURCES = ['tcx-import', 'fit-import', 'gpx-import'];
 
 export default async function AthleteActivityPage({ searchParams }: {
   searchParams: Promise<{ q?: string | string[]; sport?: string | string[]; page?: string | string[] }>;
@@ -86,64 +89,45 @@ export default async function AthleteActivityPage({ searchParams }: {
       ) : (
         <>
           <p className="data text-sm text-[var(--text-secondary)]">Showing {firstResult}–{lastResult} of {activityFeed.count} completed sessions</p>
-          <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
-            {activityFeed.activities.map((activity) => (
-              <article key={activity.id} className="min-w-0 space-y-3 py-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <h2 className="break-words text-base font-medium text-[var(--text)] [overflow-wrap:anywhere]">{activity.title}</h2>
-                    <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
-                      {['tcx-import', 'fit-import', 'gpx-import'].includes(activity.metricsSource) && activity.sourceTimezoneOffsetMinutes !== null
-                        ? <>{activity.metricsSource === 'tcx-import' ? 'Estimated finish' : 'Recorded finish'} {formatActivityDateTime(activity.completedAt, activity.sourceTimezoneOffsetMinutes)} · {getSportLabel(activity.sport)} · Imported {activity.metricsSource === 'fit-import' ? 'FIT' : activity.metricsSource === 'gpx-import' ? 'GPX' : 'TCX'}</>
-                        : <>{format(activity.completedAt, 'EEE d MMM yyyy')} · {getSportLabel(activity.sport)}{activity.metricsSource === 'manual-unplanned' ? ' · Logged activity' : ''}</>}
-                    </p>
-                    {['tcx-import', 'fit-import', 'gpx-import'].includes(activity.metricsSource) && activity.startedAt && activity.sourceTimezoneOffsetMinutes !== null ? (
-                      <p className="mt-1 text-xs text-[var(--text-muted)]">Started {formatActivityDateTime(activity.startedAt, activity.sourceTimezoneOffsetMinutes)}{activity.metricsSource === 'tcx-import' ? ' · finish estimated from duration' : activity.metricsSource === 'fit-import' ? ' · timezone from FIT Activity local timestamp' : ' · timed trackpoints; coordinates not stored'}</p>
-                    ) : null}
-                  </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-3 max-md:[&>:is(a,button)]:min-h-11">
-                    <Link
-                      href={`/athlete/session/${activity.sessionId}?from=activity`}
-                      aria-label={`Review outcome: ${activity.title}`}
-                      className={ghostButtonClassName('default')}
-                    >
-                      Review outcome
-                    </Link>
-                    {['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'].includes(activity.metricsSource) ? null : <SessionComparisonDialog
-                      sessionId={activity.sessionId}
-                      endpoint={`/api/athlete/sessions/${activity.sessionId}/comparison`}
-                      label="Compare"
-                    />}
-                  </div>
-                </div>
-                <SessionBlockBar segments={activity.segments} />
-                <div className="flex flex-wrap gap-4 text-[13px] text-[var(--text-secondary)]">
-                  <MetricText>{formatDuration(activity.durationSec)}</MetricText>
-                  {activity.distanceMeters === null ? null : <MetricText>{formatDistance(activity.distanceMeters)}</MetricText>}
-                  <MetricText>{activity.tss === null ? 'Load unavailable' : `${activity.tss} TSS`}</MetricText>
-                  <MetricText>
-                  {['tcx-import', 'fit-import', 'gpx-import', 'manual-paired'].includes(activity.metricsSource)
-                    ? activity.plannedDurationSec > 0
-                      ? `Actual ${formatDuration(activity.durationSec)} · planned ${formatDuration(activity.plannedDurationSec)}`
-                      : 'No planned comparison'
-                    : activity.metricsSource === 'manual-unplanned'
-                      ? 'No planned comparison'
-                      : activity.compliancePct === null ? 'Compliance unavailable' : `${activity.compliancePct}% compliance`}
-                  </MetricText>
-                </div>
-                {activity.metricsSource === 'gpx-import' && activity.distanceMeters !== null ? (
-                  <p className="text-[13px] text-[var(--text-secondary)]">Distance summed from timed trackpoints; GPS coordinates are not stored.</p>
-                ) : null}
-                {activity.metricsSource === 'manual-planned' || activity.metricsSource === 'manual-actual' ? (
-                  <p className="text-[13px] text-[var(--text-secondary)]">Manual outcome; no performed sensor metrics recorded.</p>
-                ) : null}
-                {activity.notes ? (
-                  <p className="whitespace-pre-wrap break-words text-sm text-[var(--text-secondary)] [overflow-wrap:anywhere]">
-                    {activity.notes}
-                  </p>
-                ) : null}
-              </article>
-            ))}
+          <div className="@container">
+            <WorkoutCardGrid label="Completed sessions">
+              {activityFeed.activities.map((activity) => {
+                const imported = IMPORT_SOURCES.includes(activity.metricsSource);
+                const comparable = !['manual-unplanned', 'manual-paired', ...IMPORT_SOURCES].includes(activity.metricsSource);
+                const outcome = imported || activity.metricsSource === 'manual-paired'
+                  ? activity.plannedDurationSec > 0 ? `${formatDuration(activity.plannedDurationSec)} planned` : 'No plan'
+                  : activity.metricsSource === 'manual-unplanned' ? 'No plan'
+                    : activity.compliancePct === null ? 'Unavailable' : `${activity.compliancePct}%`;
+                return (
+                  <li key={activity.id} className="min-w-0">
+                    <WorkoutCard>
+                      <WorkoutCardHeader href={`/athlete/session/${activity.sessionId}?from=activity`} aside={formatDuration(activity.durationSec)}>
+                        {activity.title}
+                      </WorkoutCardHeader>
+                      <WorkoutCardMeta>
+                        {imported && activity.sourceTimezoneOffsetMinutes !== null
+                          ? <>{formatActivityDateTime(activity.completedAt, activity.sourceTimezoneOffsetMinutes)} · {getSportLabel(activity.sport)} · {activity.metricsSource === 'fit-import' ? 'FIT' : activity.metricsSource === 'gpx-import' ? 'GPX' : 'TCX'}</>
+                          : <>{format(activity.completedAt, 'EEE d MMM yyyy')} · {getSportLabel(activity.sport)}{activity.metricsSource === 'manual-unplanned' ? ' · Logged' : ''}</>}
+                      </WorkoutCardMeta>
+                      <WorkoutCardProfile position="inline">
+                        {activity.segments.length
+                          ? <SessionBlockBar segments={activity.segments} size="card" />
+                          : <div aria-hidden="true" className="h-[32px] border-b border-dashed border-[var(--border)]" />}
+                      </WorkoutCardProfile>
+                      {activity.notes ? <WorkoutCardSummary lines={1}>{activity.notes}</WorkoutCardSummary> : null}
+                      <WorkoutCardFooter
+                        metrics={[
+                          { label: 'TSS', value: activity.tss ?? '—' },
+                          ...(activity.distanceMeters === null ? [] : [{ label: 'Distance', value: formatDistance(activity.distanceMeters), hideLabel: true }]),
+                          { label: comparable ? 'Compliance' : 'Plan', value: outcome },
+                        ]}
+                        actions={comparable ? <SessionComparisonDialog sessionId={activity.sessionId} endpoint={`/api/athlete/sessions/${activity.sessionId}/comparison`} label="Compare" /> : null}
+                      />
+                    </WorkoutCard>
+                  </li>
+                );
+              })}
+            </WorkoutCardGrid>
           </div>
           {activityFeed.totalPages > 1 ? (
             <nav aria-label="Activity pages" className="flex flex-wrap items-center justify-between gap-3 max-md:[&>a]:min-h-11">

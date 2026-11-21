@@ -117,11 +117,12 @@ test('the workout editor replaces the list and its header, returning to the list
   const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
   const focusSource = await read('components/FocusWorkouts.tsx');
 
-  assert.match(workoutsClientSource, /\{editorOpen \? null : listIntro\}/);
+  assert.match(workoutsClientSource, /\{editorOpen \? null : typeof listIntro === 'function' \? listIntro\(\{ drafts: draftsControl \}\) : listIntro\}/);
   assert.match(workoutsClientSource, /\{!editorOpen && showMine \? <section/);
   assert.match(workoutsClientSource, /<BackButton destination="Workouts" onClick=\{\(\) => requestDraftAction\(\{ kind: 'close' \}\)\}/);
   assert.match(workoutsClientSource, /rememberListPosition/);
-  assert.match(workoutsClientSource, /<MenuItem destructive onSelect=\{deleteWorkout\}>/);
+  assert.match(workoutsClientSource, /<MenuItem destructive onSelect=\{\(\) => deleteWorkout\(\)\}>/);
+  assert.match(workoutsClientSource, /onDelete=\{\(\) => deleteWorkout\(workout\.id, workout\.title\)\}/);
   assert.match(workoutsClientSource, /window\.confirm\(`Delete "\$\{workoutName\}"/);
   assert.match(focusSource, /listIntro=\{listIntro\}/);
 });
@@ -240,7 +241,9 @@ test('summary-only activity outcomes do not offer structured comparison or editi
   const athleteSession = await read('app/(app)/athlete/session/[sessionId]/page.tsx');
   const coachDetail = await read('app/(app)/coach/athletes/[athleteId]/page.tsx');
 
-  assert.match(activityPage, /\['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'\]\.includes\(activity\.metricsSource\) \? null : <SessionComparisonDialog/);
+  assert.match(activityPage, /const IMPORT_SOURCES = \['tcx-import', 'fit-import', 'gpx-import'\];/);
+  assert.match(activityPage, /const comparable = !\['manual-unplanned', 'manual-paired', \.\.\.IMPORT_SOURCES\]\.includes\(activity\.metricsSource\);/);
+  assert.match(activityPage, /actions=\{comparable \? <SessionComparisonDialog/);
   assert.match(athleteSession, /const isImportOrLogged = IMPORTED_OR_LOGGED_SOURCES\.includes\(detail\.session\.metricsSource \?\? ''\);/);
   assert.match(athleteSession, /shareable=\{!isImportOrLogged\}/);
   assert.match(athleteSession, /<Surface id="session-outcome" className="space-y-3">/);
