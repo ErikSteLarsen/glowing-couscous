@@ -356,7 +356,7 @@ export function ProfileClient({ account }: { account: Account }) {
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-3">
                       <p className="max-w-[52ch] text-xs leading-5 text-[var(--text-secondary)]">Race results fill the editable ranges; reset to return to those calculated values. Pace is stored as seconds per kilometre.</p>
-                      <button type="button" disabled={saving} className="min-h-10 text-sm font-medium text-[var(--text-secondary)] underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--text)] disabled:cursor-wait disabled:opacity-60" onClick={() => { resetPaceZones(); setError(''); setMessage(''); }}>{performanceProfile.running.raceDistanceMeters && performanceProfile.running.raceTimeSec ? 'Reset to calculated paces' : 'Clear pace overrides'}</button>
+                      <button type="button" disabled={saving} className="min-h-10 text-sm font-medium text-[var(--text-secondary)] underline max-md:min-h-11 decoration-[var(--border)] underline-offset-4 hover:text-[var(--text)] disabled:cursor-wait disabled:opacity-60" onClick={() => { resetPaceZones(); setError(''); setMessage(''); }}>{performanceProfile.running.raceDistanceMeters && performanceProfile.running.raceTimeSec ? 'Reset to calculated paces' : 'Clear pace overrides'}</button>
                     </div>
                   </div>
                 </AdvancedTargets>
@@ -407,7 +407,7 @@ export function ProfileClient({ account }: { account: Account }) {
               </>
             )}
           </div>
-          <button form="profile-form" type="submit" disabled={saving || !hasUnsavedChanges} className={`${primaryButtonClassName} profile-savebar__button`}>
+          <button form="profile-form" type="submit" disabled={saving || !hasUnsavedChanges} className={`${primaryButtonClassName} profile-savebar__button max-md:min-h-11`}>
             {saving ? 'Saving…' : 'Save changes'}
           </button>
         </div>
@@ -441,7 +441,7 @@ function TargetRow({ id, title, metric, value, detail, open, onToggle, children 
 function AdvancedTargets({ id, open, onToggle, note, children }: { id: SportSection; open: boolean; onToggle: () => void; note?: string; children: ReactNode }) {
   const panelId = `${id}-advanced-targets`;
   return <div className="border-t border-[var(--border)] pt-3">
-    <button type="button" aria-expanded={open} aria-controls={panelId} onClick={onToggle} className={`-ml-2 inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-[13px] font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] ${buttonFocusClassName}`}>
+    <button type="button" aria-expanded={open} aria-controls={panelId} onClick={onToggle} className={`-ml-2 inline-flex min-h-10 items-center max-md:min-h-11 gap-1.5 rounded-lg px-2 text-[13px] font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] ${buttonFocusClassName}`}>
       <ChevronDown aria-hidden="true" size={16} strokeWidth={1.8} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       Advanced targets{note ? <span className="font-normal text-[var(--text-muted)]"> · {note}</span> : null}
     </button>
