@@ -343,6 +343,7 @@ export function WorkoutLibraryClient({
   const metrics = deriveSessionEditorMetrics(draft, performanceProfile?.cycling.ftpWatts);
   const showEditor = editorOpen && (!designDirection || clientMounted);
   const showMine = !collections || collections.tab === 'mine';
+  const EditorHeading = listIntro ? 'h1' : 'h2';
 
   return (
     <>
@@ -461,7 +462,7 @@ export function WorkoutLibraryClient({
       {showEditor ? <Surface className="study-workouts__editor min-w-0 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-[var(--border)] pb-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <h2 className="min-w-0 text-lg font-semibold text-[var(--text)]">{selectedWorkoutId ? 'Edit workout' : 'Create workout'}</h2>
+            <EditorHeading className="min-w-0 text-lg font-semibold text-[var(--text)]">{selectedWorkoutId ? 'Edit workout' : 'Create workout'}</EditorHeading>
             {!selectedWorkoutId || isDirty ? (
               <span role="status">
                 <Badge tone="warning">{isPending ? 'Saving…' : selectedWorkoutId ? 'Unsaved changes' : 'Unsaved draft'}</Badge>
