@@ -1,10 +1,12 @@
 'use client';
 
-import { useId, useState, useSyncExternalStore, type FormEvent } from 'react';
+import { useEffect, useId, useState, useSyncExternalStore, type FormEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { ChevronDown } from 'lucide-react';
 import {
+  buttonFocusClassName,
   dangerTextClassName,
   formFieldClassName,
   formLabelClassName,
@@ -33,7 +35,11 @@ type PaceDraft = { fastest: string; slowest: string };
 type PaceDrafts = Record<TempoZone, PaceDraft>;
 type CustomizedZones = Record<TempoZone, boolean>;
 
+type TargetSection = 'heart-rate' | 'running' | 'cycling' | 'swimming';
+type SportSection = Exclude<TargetSection, 'heart-rate'>;
+
 const zones: TempoZone[] = [1, 2, 3, 4, 5];
+const targetSections: TargetSection[] = ['heart-rate', 'running', 'cycling', 'swimming'];
 const subscribePortalReady = () => () => {};
 const getPortalClientSnapshot = () => true;
 const getPortalServerSnapshot = () => false;
@@ -56,12 +62,53 @@ export function ProfileClient({ account }: { account: Account }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [openSections, setOpenSections] = useState<Set<TargetSection>>(() => new Set());
+  const [openAdvanced, setOpenAdvanced] = useState<Set<SportSection>>(() => new Set());
   const savebarPortalReady = useSyncExternalStore(subscribePortalReady, getPortalClientSnapshot, getPortalServerSnapshot);
   const router = useRouter();
   const { update } = useSession();
   const [revision, setRevision] = useState(() => new Date(account.updatedAt).toISOString());
   const recoveryPayload = getDraftSnapshot(name, performanceProfile, raceTimeDraft, customizedZones, paceDrafts);
   const recovery = useDraftRecovery({ userId: account.id, surface: 'profile', resource: 'profile', baseline: revision, payload: recoveryPayload, dirty: recoveryPayload !== savedSnapshot });
+
+  // Deep links such as /profile#cycling open that sport's targets.
+  useEffect(() => {
+    function openFromHash() {
+      const section = window.location.hash.slice(1) as TargetSection;
+      if (targetSections.includes(section)) setOpenSections((current) => new Set(current).add(section));
+    }
+    openFromHash();
+    window.addEventListener('hashchange', openFromHash);
+    return () => window.removeEventListener('hashchange', openFromHash);
+  }, []);
+
+  function toggleSection(section: TargetSection) {
+    setOpenSections((current) => {
+      const next = new Set(current);
+      if (next.has(section)) next.delete(section); else next.add(section);
+      return next;
+    });
+  }
+
+  function toggleAdvanced(section: SportSection) {
+    setOpenAdvanced((current) => {
+      const next = new Set(current);
+      if (next.has(section)) next.delete(section); else next.add(section);
+      return next;
+    });
+  }
+
+  /** Validation and recovery must never hide the fields they refer to. */
+  function reveal(sections: TargetSection[], advanced: SportSection[] = []) {
+    if (sections.length) setOpenSections((current) => new Set([...current, ...sections]));
+    if (advanced.length) setOpenAdvanced((current) => new Set([...current, ...advanced]));
+  }
+
+  function showError(message: string) {
+    setError(message);
+    const location = sectionForProfileError(message);
+    if (location) reveal([location.section], location.advanced ? [location.section as SportSection] : []);
+  }
 
   function restoreProfile(record: RecoveryDraft) {
     const recovered = parseProfileRecovery(record.payload);
@@ -73,6 +120,8 @@ export function ProfileClient({ account }: { account: Account }) {
     setRaceTimeDraft(recovered.raceTimeDraft);
     setCustomizedZones(recovered.customizedZones);
     setPaceDrafts(recovered.paceDrafts);
+    const changed = changedTargetSections(savedSnapshot, recovered);
+    reveal(changed.sections, changed.advanced);
     recovery.restored(record);
     setMessage('Profile draft restored. Review your changes, then save.');
   }
@@ -147,7 +196,7 @@ export function ProfileClient({ account }: { account: Account }) {
 
     const parsedRaceTime = raceTimeDraft.trim() ? parseRaceTime(raceTimeDraft) : null;
     if (raceTimeDraft.trim() && parsedRaceTime === null) {
-      setError('Enter race time as mm:ss or h:mm:ss.');
+      showError('Enter race time as mm:ss or h:mm:ss.');
       setSaving(false);
       return;
     }
@@ -160,7 +209,7 @@ export function ProfileClient({ account }: { account: Account }) {
     })) as PerformanceProfile['running']['paceZoneOverrides'];
     const incompleteZone = zones.find((zone) => customizedZones[zone] && (overrides[zone].fastestSecPerKm === null || overrides[zone].slowestSecPerKm === null));
     if (incompleteZone) {
-      setError(`Enter both Zone ${incompleteZone} paces as m:ss per kilometre, or reset the pace zones to their calculated defaults.`);
+      showError(`Enter both Zone ${incompleteZone} paces as m:ss per kilometre, or reset the pace zones to their calculated defaults.`);
       setSaving(false);
       return;
     }
@@ -177,7 +226,7 @@ export function ProfileClient({ account }: { account: Account }) {
     const submittedSnapshot = getDraftSnapshot(name, profileToSave, raceTimeDraft, customizedZones, paceDrafts);
     const profileError = validatePerformanceProfile(profileToSave);
     if (profileError) {
-      setError(profileError);
+      showError(profileError);
       setSaving(false);
       return;
     }
@@ -192,7 +241,7 @@ export function ProfileClient({ account }: { account: Account }) {
 
       if (!res.ok) {
         const payload = await res.json().catch(() => ({ error: 'Could not save profile' }));
-        setError(payload.error ?? 'Could not save profile');
+        showError(payload.error ?? 'Could not save profile');
         setSaving(false);
         return;
       }
@@ -219,6 +268,11 @@ export function ProfileClient({ account }: { account: Account }) {
   const heartRateZones = calculateOlympiatoppenHeartRateZones(performanceProfile.heartRateMaxBpm);
   const currentSnapshot = getDraftSnapshot(name, performanceProfile, raceTimeDraft, customizedZones, paceDrafts);
   const hasUnsavedChanges = currentSnapshot !== savedSnapshot;
+  const thresholdZone = paceDrafts[4];
+  const runningThresholdPace = thresholdZone.fastest && thresholdZone.slowest ? `${thresholdZone.fastest}–${thresholdZone.slowest} /km` : null;
+  const hasCustomPaces = zones.some((zone) => customizedZones[zone]);
+  const raceDistanceLabel = raceDistances.find((distance) => distance.value === performanceProfile.running.raceDistanceMeters)?.label;
+  const runningSource = hasCustomPaces ? 'Custom pace zones' : raceDistanceLabel && raceTimeDraft ? `From ${raceDistanceLabel} in ${raceTimeDraft}` : undefined;
 
   return (
     <div className="page-content--compact">
@@ -230,75 +284,105 @@ export function ProfileClient({ account }: { account: Account }) {
               <span className={formLabelClassName}>Display name</span>
               <input value={name} onChange={(event) => setName(event.target.value)} disabled={saving} className={`${formFieldClassName} disabled:cursor-wait disabled:opacity-60`} />
             </label>
-            <div className="flex min-h-10 items-center rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] px-3 text-sm text-[var(--text-secondary)]">
-              <span>Email: {account.email}</span>
+            <div className="flex min-h-10 items-center rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] px-3 text-sm text-[var(--text-secondary)] sm:self-end">
+              <span className="truncate">Email: {account.email}</span>
             </div>
           </div>
 
-          <fieldset id="training-metrics" disabled={saving} className="scroll-mt-20 space-y-4 border-t border-[var(--border)] pt-5">
+          <fieldset id="training-metrics" disabled={saving} className="scroll-mt-20 space-y-3 border-t border-[var(--border)] pt-5">
             <legend className="text-base font-semibold text-[var(--text)]">Training metrics</legend>
-            <p className="max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">These details are optional. New blocks use them for default zone targets. Saved workout settings stay the same, while profile-based targets use your latest values.</p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <MetricInput label="Maximum heart rate (bpm)" value={performanceProfile.heartRateMaxBpm} min={100} max={250} onChange={(heartRateMaxBpm) => setPerformanceProfile((current) => ({ ...current, heartRateMaxBpm }))} />
-              <MetricInput label="Cycling threshold power (FTP, W)" value={performanceProfile.cycling.ftpWatts} onChange={(ftpWatts) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, ftpWatts } }))} />
-              <MetricInput label="Cycling threshold HR (bpm)" value={performanceProfile.cycling.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, thresholdHrBpm } }))} />
-              <MetricInput label="Running threshold HR (bpm)" value={performanceProfile.running.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, running: { ...current.running, thresholdHrBpm } }))} />
-              <MetricInput label="Swimming threshold pace (CSS, sec/100 m)" value={performanceProfile.swimming.cssSecPer100m} onChange={(cssSecPer100m) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, cssSecPer100m } }))} />
-              <MetricInput label="Swimming threshold HR (bpm)" value={performanceProfile.swimming.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, thresholdHrBpm } }))} />
+            <p className="max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">Optional. New workout blocks use these for zone targets. Leave anything blank you don’t know.</p>
+            <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
+              <TargetRow id="heart-rate" title="Heart rate" metric="Maximum heart rate" value={performanceProfile.heartRateMaxBpm ? `${performanceProfile.heartRateMaxBpm} bpm` : null} open={openSections.has('heart-rate')} onToggle={() => toggleSection('heart-rate')}>
+                <div className="sm:max-w-xs">
+                  <MetricInput label="Maximum heart rate (bpm)" value={performanceProfile.heartRateMaxBpm} min={100} max={250} onChange={(heartRateMaxBpm) => setPerformanceProfile((current) => ({ ...current, heartRateMaxBpm }))} />
+                </div>
+                {heartRateZones ? <div className="space-y-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-[var(--text)]">Olympiatoppen heart-rate zones</h3>
+                    <p className="mt-1 text-sm leading-5 text-[var(--text-secondary)]">Calculated from your maximum heart rate. I-1 to I-5 are Olympiatoppen&apos;s effort levels; see the <a className="underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--text)]" href="https://olt-skala.nif.no/" target="_blank" rel="noreferrer">Olympiatoppen calculator</a>.</p>
+                  </div>
+                  <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
+                    {zones.map((zone) => {
+                      const range = heartRateZones[zone];
+                      const percentages = OLYMPIATOPPEN_HEART_RATE_PERCENT_BANDS[zone];
+                      return <div key={zone} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 py-2 text-sm">
+                        <span className="font-medium text-[var(--text)]">Zone {zone} · {zoneNames[zone]}</span>
+                        <span className="tabular-nums text-[var(--text-secondary)]">I-{zone} · {percentages.low}–{percentages.high}%</span>
+                        <span className="tabular-nums text-[var(--text-secondary)]">{range.low}–{range.high} bpm</span>
+                      </div>;
+                    })}
+                  </div>
+                </div> : <p className="text-sm text-[var(--text-secondary)]">Add maximum heart rate to calculate your Olympiatoppen heart-rate zones.</p>}
+              </TargetRow>
+
+              <TargetRow id="running" title="Running" metric="Threshold pace" value={runningThresholdPace} detail={runningSource} open={openSections.has('running')} onToggle={() => toggleSection('running')}>
+                <p className="max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">Enter a recent race result to estimate your pace for each zone.</p>
+                <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(10rem,0.8fr)]">
+                  <label className="block space-y-2">
+                    <span className={formLabelClassName}>Race distance</span>
+                    <select className={formSelectClassName} value={performanceProfile.running.raceDistanceMeters ?? ''} onChange={(event) => changeRaceDistance(event.target.value)}>
+                      <option value="">Choose distance</option>
+                      {raceDistances.map((distance) => <option key={distance.value} value={distance.value}>{distance.label}</option>)}
+                    </select>
+                  </label>
+                  <label className="block space-y-2">
+                    <span className={formLabelClassName}>Finish time</span>
+                    <input className={formFieldClassName} inputMode="numeric" autoComplete="off" placeholder="45:00 or 1:45:00" aria-describedby="profile-race-time-help" value={raceTimeDraft} onChange={(event) => changeRaceTime(event.target.value)} />
+                  </label>
+                </div>
+                <p id="profile-race-time-help" className="text-xs leading-5 text-[var(--text-secondary)]">Use mm:ss for races under an hour or h:mm:ss for longer races. You can also set pace ranges under Advanced targets.</p>
+                <AdvancedTargets id="running" open={openAdvanced.has('running')} onToggle={() => toggleAdvanced('running')} note={hasCustomPaces ? 'Custom pace zones' : undefined}>
+                  <div className="sm:max-w-xs">
+                    <MetricInput label="Running threshold HR (bpm)" value={performanceProfile.running.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, running: { ...current.running, thresholdHrBpm } }))} />
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-[var(--text)]">Running pace zones</h3>
+                      <p className="mt-1 max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">Starting bands use 65–75%, 75–85%, 85–93%, 93–103%, and 103–115% of race speed. These are editable Tempo estimates, not Olympiatoppen pace bands.</p>
+                    </div>
+                    <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2 border-b border-[var(--border)] pb-2 text-xs font-semibold text-[var(--text-secondary)] sm:gap-4">
+                      <span>Zone</span><span>Fastest /km</span><span>Slowest /km</span>
+                    </div>
+                    <div className="space-y-3">
+                      {zones.map((zone) => <div key={zone} className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-2 sm:gap-4">
+                        <span className="text-sm font-medium text-[var(--text)]">Zone {zone}<span className="hidden text-[var(--text-secondary)] sm:inline"> · {zoneNames[zone]}</span></span>
+                        <PaceInput label={`Zone ${zone} fastest pace per kilometre`} value={paceDrafts[zone].fastest} onChange={(value) => changePaceBound(zone, 'fastest', value)} />
+                        <PaceInput label={`Zone ${zone} slowest pace per kilometre`} value={paceDrafts[zone].slowest} onChange={(value) => changePaceBound(zone, 'slowest', value)} />
+                      </div>)}
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-3">
+                      <p className="max-w-[52ch] text-xs leading-5 text-[var(--text-secondary)]">Race results fill the editable ranges; reset to return to those calculated values. Pace is stored as seconds per kilometre.</p>
+                      <button type="button" disabled={saving} className="min-h-10 text-sm font-medium text-[var(--text-secondary)] underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--text)] disabled:cursor-wait disabled:opacity-60" onClick={() => { resetPaceZones(); setError(''); setMessage(''); }}>{performanceProfile.running.raceDistanceMeters && performanceProfile.running.raceTimeSec ? 'Reset to calculated paces' : 'Clear pace overrides'}</button>
+                    </div>
+                  </div>
+                </AdvancedTargets>
+              </TargetRow>
+
+              <TargetRow id="cycling" title="Cycling" metric="Threshold power (FTP)" value={performanceProfile.cycling.ftpWatts ? `${performanceProfile.cycling.ftpWatts} W` : null} open={openSections.has('cycling')} onToggle={() => toggleSection('cycling')}>
+                <div className="sm:max-w-xs">
+                  <MetricInput label="Cycling threshold power (FTP, W)" value={performanceProfile.cycling.ftpWatts} onChange={(ftpWatts) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, ftpWatts } }))} />
+                </div>
+                <AdvancedTargets id="cycling" open={openAdvanced.has('cycling')} onToggle={() => toggleAdvanced('cycling')}>
+                  <div className="sm:max-w-xs">
+                    <MetricInput label="Cycling threshold HR (bpm)" value={performanceProfile.cycling.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, thresholdHrBpm } }))} />
+                  </div>
+                </AdvancedTargets>
+              </TargetRow>
+
+              <TargetRow id="swimming" title="Swimming" metric="Threshold pace (CSS)" value={performanceProfile.swimming.cssSecPer100m ? `${formatSwimPace(performanceProfile.swimming.cssSecPer100m)} /100 m` : null} open={openSections.has('swimming')} onToggle={() => toggleSection('swimming')}>
+                <div className="sm:max-w-xs">
+                  <MetricInput label="Swimming threshold pace (CSS, sec/100 m)" value={performanceProfile.swimming.cssSecPer100m} onChange={(cssSecPer100m) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, cssSecPer100m } }))} />
+                </div>
+                <AdvancedTargets id="swimming" open={openAdvanced.has('swimming')} onToggle={() => toggleAdvanced('swimming')}>
+                  <div className="sm:max-w-xs">
+                    <MetricInput label="Swimming threshold HR (bpm)" value={performanceProfile.swimming.thresholdHrBpm} onChange={(thresholdHrBpm) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, thresholdHrBpm } }))} />
+                  </div>
+                </AdvancedTargets>
+              </TargetRow>
             </div>
-            {heartRateZones ? <div className="space-y-3 border-t border-[var(--border)] pt-4">
-              <div>
-                <h3 className="text-sm font-semibold text-[var(--text)]">Olympiatoppen heart-rate zones</h3>
-                <p className="mt-1 text-sm leading-5 text-[var(--text-secondary)]">Calculated from your maximum heart rate. I-1 to I-5 are Olympiatoppen&apos;s effort levels; see the <a className="underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--text)]" href="https://olt-skala.nif.no/" target="_blank" rel="noreferrer">Olympiatoppen calculator</a>.</p>
-              </div>
-              <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
-                {zones.map((zone) => {
-                    const range = heartRateZones[zone];
-                    const percentages = OLYMPIATOPPEN_HEART_RATE_PERCENT_BANDS[zone];
-                    return <div key={zone} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 py-2 text-sm">
-                    <span className="font-medium text-[var(--text)]">Zone {zone} · {zoneNames[zone]}</span>
-                    <span className="tabular-nums text-[var(--text-secondary)]">I-{zone} · {percentages.low}–{percentages.high}%</span>
-                    <span className="tabular-nums text-[var(--text-secondary)]">{range.low}–{range.high} bpm</span>
-                  </div>;
-                })}
-              </div>
-            </div> : <p className="text-sm text-[var(--text-secondary)]">Add maximum heart rate to calculate your Olympiatoppen heart-rate zones.</p>}
+            <p className="max-w-[68ch] text-xs leading-5 text-[var(--text-secondary)]">Saved workouts keep their settings; profile-based targets use your latest values.</p>
           </fieldset>
-
-          <fieldset disabled={saving} className="space-y-4 border-t border-[var(--border)] pt-5">
-            <legend className="text-base font-semibold text-[var(--text)]">Running pace zones</legend>
-            <p className="max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">Enter a recent race result to estimate pace ranges for each zone. Starting bands use 65–75%, 75–85%, 85–93%, 93–103%, and 103–115% of race speed. These are editable Tempo estimates, not Olympiatoppen pace bands.</p>
-            <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(10rem,0.8fr)]">
-              <label className="block space-y-2">
-                <span className={formLabelClassName}>Race distance</span>
-                <select className={formSelectClassName} value={performanceProfile.running.raceDistanceMeters ?? ''} onChange={(event) => changeRaceDistance(event.target.value)}>
-                  <option value="">Choose distance</option>
-                  {raceDistances.map((distance) => <option key={distance.value} value={distance.value}>{distance.label}</option>)}
-                </select>
-              </label>
-              <label className="block space-y-2">
-                <span className={formLabelClassName}>Finish time</span>
-                <input className={formFieldClassName} inputMode="numeric" autoComplete="off" placeholder="45:00 or 1:45:00" aria-describedby="profile-race-time-help" value={raceTimeDraft} onChange={(event) => changeRaceTime(event.target.value)} />
-              </label>
-            </div>
-            <p id="profile-race-time-help" className="text-xs leading-5 text-[var(--text-secondary)]">Use mm:ss for races under an hour or h:mm:ss for longer races. You can also enter pace ranges manually.</p>
-
-            <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2 border-b border-[var(--border)] pb-2 text-xs font-semibold text-[var(--text-secondary)] sm:gap-4">
-              <span>Zone</span><span>Fastest /km</span><span>Slowest /km</span>
-            </div>
-            <div className="space-y-3">
-              {zones.map((zone) => <div key={zone} className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-                <span className="text-sm font-medium text-[var(--text)]">Zone {zone}<span className="hidden text-[var(--text-secondary)] sm:inline"> · {zoneNames[zone]}</span></span>
-                <PaceInput label={`Zone ${zone} fastest pace per kilometre`} value={paceDrafts[zone].fastest} onChange={(value) => changePaceBound(zone, 'fastest', value)} />
-                <PaceInput label={`Zone ${zone} slowest pace per kilometre`} value={paceDrafts[zone].slowest} onChange={(value) => changePaceBound(zone, 'slowest', value)} />
-              </div>)}
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-3">
-              <p className="max-w-[52ch] text-xs leading-5 text-[var(--text-secondary)]">Race results fill the editable ranges; reset to return to those calculated values. Pace is stored as seconds per kilometre.</p>
-              <button type="button" disabled={saving} className="min-h-10 text-sm font-medium text-[var(--text-secondary)] underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--text)] disabled:cursor-wait disabled:opacity-60" onClick={() => { resetPaceZones(); setError(''); setMessage(''); }}>{performanceProfile.running.raceDistanceMeters && performanceProfile.running.raceTimeSec ? 'Reset to calculated paces' : 'Clear pace overrides'}</button>
-            </div>
-          </fieldset>
-
         </form>
       </Surface>
 
@@ -331,6 +415,70 @@ export function ProfileClient({ account }: { account: Account }) {
 
 function getDraftSnapshot(name: string, profile: PerformanceProfile, raceTimeDraft: string, customizedZones: CustomizedZones, paceDrafts: PaceDrafts): string {
   return JSON.stringify({ name, profile, raceTimeDraft, customizedZones, paceDrafts });
+}
+
+/** One sport (or heart rate) with its key value; tapping the row opens its fields. */
+function TargetRow({ id, title, metric, value, detail, open, onToggle, children }: { id: TargetSection; title: string; metric: string; value: string | null; detail?: string; open: boolean; onToggle: () => void; children: ReactNode }) {
+  const panelId = `${id}-targets`;
+  return <section id={id} aria-labelledby={`${id}-heading`} className="scroll-mt-20">
+    <h3 id={`${id}-heading`} className="m-0">
+      <button type="button" aria-expanded={open} aria-controls={panelId} onClick={onToggle} className={`flex min-h-14 w-full items-center gap-3 rounded-lg py-3 text-left transition-colors hover:bg-[var(--raised)] max-md:min-h-16 sm:-mx-2 sm:w-[calc(100%+1rem)] sm:px-2 ${buttonFocusClassName}`}>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium text-[var(--text)]">{title}</span>
+          <span className="block text-xs text-[var(--text-muted)]">{metric}{detail ? ` · ${detail}` : ''}</span>
+        </span>
+        {value ? <span className="data shrink-0 text-sm text-[var(--text)]">{value}</span> : <span className="shrink-0 text-sm font-medium text-[var(--brand)]">Add</span>}
+        <ChevronDown aria-hidden="true" size={16} strokeWidth={1.8} className={`shrink-0 text-[var(--text-muted)] transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+    </h3>
+    {open ? <div id={panelId} className="space-y-4 pb-5 pt-1">{children}</div> : null}
+  </section>;
+}
+
+function AdvancedTargets({ id, open, onToggle, note, children }: { id: SportSection; open: boolean; onToggle: () => void; note?: string; children: ReactNode }) {
+  const panelId = `${id}-advanced-targets`;
+  return <div className="border-t border-[var(--border)] pt-3">
+    <button type="button" aria-expanded={open} aria-controls={panelId} onClick={onToggle} className={`-ml-2 inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-[13px] font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] ${buttonFocusClassName}`}>
+      <ChevronDown aria-hidden="true" size={16} strokeWidth={1.8} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+      Advanced targets{note ? <span className="font-normal text-[var(--text-muted)]"> · {note}</span> : null}
+    </button>
+    {open ? <div id={panelId} className="mt-3 space-y-5">{children}</div> : null}
+  </div>;
+}
+
+/** Maps a profile validation message to the section, and whether its Advanced targets, holding that field. */
+function sectionForProfileError(message: string): { section: TargetSection; advanced: boolean } | null {
+  if (/Maximum heart rate/.test(message)) return { section: 'heart-rate', advanced: false };
+  if (/^Cycling/.test(message)) return { section: 'cycling', advanced: /heart rate/.test(message) };
+  if (/^Swimming/.test(message)) return { section: 'swimming', advanced: /heart rate/.test(message) };
+  if (/Zone \d|pace zones|^Running threshold/.test(message)) return { section: 'running', advanced: true };
+  if (/race|Race/.test(message)) return { section: 'running', advanced: false };
+  return null;
+}
+
+/** Sections a recovered draft changes relative to the saved profile, so restored values are visible. */
+function changedTargetSections(savedSnapshot: string, recovered: { profile: PerformanceProfile; raceTimeDraft: string; customizedZones: CustomizedZones; paceDrafts: PaceDrafts }) {
+  const saved = JSON.parse(savedSnapshot) as { profile: PerformanceProfile; raceTimeDraft: string; customizedZones: CustomizedZones; paceDrafts: PaceDrafts };
+  const differs = (a: unknown, b: unknown) => JSON.stringify(a) !== JSON.stringify(b);
+  const sections: TargetSection[] = [];
+  const advanced: SportSection[] = [];
+  if (differs(saved.profile.heartRateMaxBpm, recovered.profile.heartRateMaxBpm)) sections.push('heart-rate');
+  const runningAdvanced = differs(saved.profile.running.thresholdHrBpm, recovered.profile.running.thresholdHrBpm) || differs(saved.customizedZones, recovered.customizedZones) || zones.some((zone) => recovered.customizedZones[zone] && differs(saved.paceDrafts[zone], recovered.paceDrafts[zone]));
+  if (runningAdvanced || differs(saved.raceTimeDraft, recovered.raceTimeDraft) || differs(saved.profile.running.raceDistanceMeters, recovered.profile.running.raceDistanceMeters)) sections.push('running');
+  if (runningAdvanced) advanced.push('running');
+  for (const sport of ['cycling', 'swimming'] as const) {
+    const before = saved.profile[sport] as Record<string, unknown>;
+    const after = recovered.profile[sport] as Record<string, unknown>;
+    const hrChanged = differs(before.thresholdHrBpm, after.thresholdHrBpm);
+    if (hrChanged || differs({ ...before, thresholdHrBpm: null }, { ...after, thresholdHrBpm: null })) sections.push(sport);
+    if (hrChanged) advanced.push(sport);
+  }
+  return { sections, advanced };
+}
+
+function formatSwimPace(secondsPer100m: number): string {
+  const rounded = Math.round(secondsPer100m);
+  return `${Math.floor(rounded / 60)}:${String(rounded % 60).padStart(2, '0')}`;
 }
 
 function MetricInput({ label, value, onChange, min = 1, max = 1000000 }: { label: string; value: number | null; onChange: (value: number | null) => void; min?: number; max?: number }) {

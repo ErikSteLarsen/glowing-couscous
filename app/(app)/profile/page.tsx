@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { PageShell, TopBar } from '@/components/ui';
+import { ActionLink, PageShell, TopBar } from '@/components/ui';
 import { ProfileClient } from './ProfileClient';
 import { getCurrentUser } from '@/lib/auth-session';
 import { accountService } from '@/lib/account-service';
@@ -17,10 +17,15 @@ export default async function ProfilePage() {
     <PageShell className="profile-page__content">
       <TopBar
         title={account.name ?? 'Your profile'}
-        description="Manage the optional heart-rate, power, and pace values used for workout targets. Leave any value blank if you don’t know it."
+        description="Your name and the heart-rate, power and pace values Tempo uses for workout targets."
+        actions={controls ? <ActionLink href="#account" tone="secondary">Account</ActionLink> : undefined}
       />
       <ProfileClient account={account} />
-      {controls ? <AccountControls userId={user.id} controls={controls} /> : null}
+      {controls ? (
+        <div id="account" className="scroll-mt-20">
+          <AccountControls userId={user.id} controls={controls} />
+        </div>
+      ) : null}
     </PageShell>
   );
 }
