@@ -316,18 +316,20 @@ export function AthleteCalendar({
               <Link href={getCalendarHref(view, stepCalendarPeriod(view, day, -1))} aria-label={`Previous ${periodNoun}`} aria-keyshortcuts="ArrowLeft" className={iconButtonClassName}>
                 <ChevronLeft aria-hidden="true" size={18} strokeWidth={1.8} />
               </Link>
-              <Link href={getCalendarHref(view, today)} aria-keyshortcuts="T" className={`${secondaryButtonClassName} min-h-10`}>
+              <Link href={getCalendarHref(view, today)} aria-keyshortcuts="T" className={`${secondaryButtonClassName} max-md:min-h-11`}>
                 Today
               </Link>
               <Link href={getCalendarHref(view, stepCalendarPeriod(view, day, 1))} aria-label={`Next ${periodNoun}`} aria-keyshortcuts="ArrowRight" className={iconButtonClassName}>
                 <ChevronRight aria-hidden="true" size={18} strokeWidth={1.8} />
               </Link>
             </nav>
-            <Link href={addHref(selectedDay ?? day)} className={`${primaryButtonClassName} max-md:min-h-11 max-sm:px-3`}>
-              <Plus aria-hidden="true" size={16} strokeWidth={2} />
-              Add workout
-            </Link>
-            <CalendarMoreMenu view={view} day={day} showTotals={showTotals} onShowTotalsChange={changeShowTotals} />
+            <div className="flex items-center gap-2">
+              <Link href={addHref(selectedDay ?? day)} className={`${primaryButtonClassName} max-md:min-h-11 max-sm:px-3`}>
+                <Plus aria-hidden="true" size={16} strokeWidth={2} />
+                Add workout
+              </Link>
+              <CalendarMoreMenu view={view} day={day} showTotals={showTotals} onShowTotalsChange={changeShowTotals} />
+            </div>
           </>
         }
       />
