@@ -522,3 +522,40 @@ test('personal rescheduling persists calendar days, preserves content, and enfor
     else process.env.TZ = originalTimezone;
   }
 });
+
+test('planner month view selects only activity summary fields and can skip the week query', async () => {
+  const queries: Array<Record<string, any>> = [];
+  const completed = {
+    id: 71, athleteId: 5, templateId: null, date: new Date('2026-06-24T00:00:00.000Z'), timeLabel: '07:00',
+    sport: 'CYCLING', title: 'Tempo ride', summary: null, status: 'completed', source: 'athlete', adjusted: false,
+    sportMetricsJson: null, blocks: sourceBlocks,
+    activity: { durationSec: 3605, distanceMeters: 30123.5, tss: 61, segmentsJson: '[]' },
+    athlete: { performanceProfileJson: null },
+  };
+  const db: any = {
+    session: { findMany: async (args: Record<string, any>) => { queries.push(args); return [completed]; } },
+    template: { findMany: async () => [] },
+  };
+  const service = createAthletePlannerService({ db });
+
+  const monthOnly = await service.loadWorkspace(5, '2026-06-25', { includeWeek: false });
+  assert.equal(queries.length, 1);
+  assert.deepEqual(queries[0].include.activity, {
+    select: { durationSec: true, distanceMeters: true, tss: true, segmentsJson: true },
+  });
+  assert.deepEqual(monthOnly.days, []);
+  const entry = monthOnly.calendarDays.find((day) => day.isoDate === '2026-06-24')?.sessions[0];
+  assert.deepEqual({ ...entry, blocks: undefined }, {
+    id: 71, athleteId: 5, templateId: null, scheduledDate: '2026-06-24', timeLabel: '07:00', sport: 'CYCLING',
+    title: 'Tempo ride', summary: null, status: 'completed', source: 'athlete', adjusted: false,
+    sportMetricsJson: null, durationSec: 3605, distanceMeters: 30123.5, tss: 61, segments: [], blocks: undefined,
+  });
+  assert.equal(monthOnly.calendarDays.length, 35);
+
+  queries.length = 0;
+  const full = await service.loadWorkspace(5, '2026-06-25');
+  assert.equal(queries.length, 2);
+  assert.ok(queries.every((query) => query.include.activity.select.telemetryJson === undefined));
+  assert.equal(full.days.length, 7);
+  assert.equal(full.days[2].sessions[0].id, 71);
+});

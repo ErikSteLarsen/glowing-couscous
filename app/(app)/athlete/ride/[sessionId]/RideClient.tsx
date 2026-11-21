@@ -43,6 +43,13 @@ const SAMPLE_INTERVAL_MS = 250;
 const SAVE_RETRY_LIMIT = 5;
 const ROLES = ['trainer', 'heartRate', 'cadence'] as const;
 const subscribeNever = () => () => undefined;
+const PROFILE_FTP_HREF = '/profile#training-metrics';
+
+/** "90.5-100% FTP" → ["90.5-100", "% FTP"], so the number can carry the hero size. */
+function splitPrescription(label: string | null): [string, string] {
+  const match = label?.match(/^([\d.\-–]+)\s*(.*)$/);
+  return match ? [match[1], match[2]] : [label ?? '', ''];
+}
 
 type SaveState =
   | { kind: 'idle' }
@@ -142,7 +149,8 @@ function ProgressBar({ value, label, color = 'var(--brand)', className = 'h-2' }
   );
 }
 
-export function RideClient({ sessionId, sessionTitle, plan, plannedTss, steps, backHref, heartRateMaxBpm }: {
+export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, steps, backHref, heartRateMaxBpm }: {
+  userId: number;
   sessionId: number;
   sessionTitle: string;
   plan: RidePlan;
@@ -173,19 +181,19 @@ export function RideClient({ sessionId, sessionTitle, plan, plannedTss, steps, b
     setRecording(next);
     if (persist && next.timerSec > 0) {
       lastCheckpointRef.current = Date.now();
-      saveRideCheckpoint(next);
+      saveRideCheckpoint(userId, next);
     }
-  }, []);
+  }, [userId]);
 
   // Look for an unfinished ride for this session in this browser or the desktop store.
   useEffect(() => {
     let active = true;
-    void listStoredRides(sessionId).then(([match]) => {
+    void listStoredRides(userId, sessionId).then(([match]) => {
       if (!active || !match || recordingRef.current.status !== 'ready') return;
       setRecovered({ recording: match.recording, savedAtMs: match.savedAtMs, compatible: match.recording.planSignature === planSignature(plan) });
     });
     return () => { active = false; };
-  }, [plan, sessionId]);
+  }, [userId, plan, sessionId]);
 
   useEffect(() => {
     manager.activate();
@@ -230,10 +238,10 @@ export function RideClient({ sessionId, sessionTitle, plan, plannedTss, steps, b
       if (current.status === 'running' || current.status === 'paused') {
         const now = Date.now();
         const next = tick(current, plan, now, manager.getReading(now));
-        if (next.timerSec > 0) saveRideCheckpoint(next);
+        if (next.timerSec > 0) saveRideCheckpoint(userId, next);
       }
     };
-  }, [active, commit, manager, plan]);
+  }, [userId, active, commit, manager, plan]);
 
   // Keep the screen awake while riding; the lock is dropped when the tab hides, so re-acquire.
   useEffect(() => {
@@ -335,7 +343,7 @@ export function RideClient({ sessionId, sessionTitle, plan, plannedTss, steps, b
         if (signal.aborted) return;
         if (response?.ok && payload?.sessionId === sessionId) {
           savedRef.current = true;
-          clearRideCheckpoint(sessionId);
+          clearRideCheckpoint(userId, sessionId);
           setSaveState({ kind: 'saved', note: payload.duplicate === true ? 'Tempo already had this ride.' : null });
           return;
         }
@@ -362,7 +370,7 @@ export function RideClient({ sessionId, sessionTitle, plan, plannedTss, steps, b
     } finally {
       pendingSaveRef.current = null;
     }
-  }, [sessionId]);
+  }, [userId, sessionId]);
 
   const finish = useCallback(() => {
     const current = recordingRef.current;
@@ -375,11 +383,11 @@ export function RideClient({ sessionId, sessionTitle, plan, plannedTss, steps, b
 
   const discard = useCallback(() => {
     if (pendingSaveRef.current || savedRef.current) return;
-    clearRideCheckpoint(sessionId);
+    clearRideCheckpoint(userId, sessionId);
     setRecovered(null);
     setSaveState({ kind: 'idle' });
     commit(createRecording(sessionId, sessionTitle, plan));
-  }, [commit, plan, sessionId, sessionTitle]);
+  }, [userId, commit, plan, sessionId, sessionTitle]);
 
   // Keyboard: space pause/resume, N next step, E toggle ERG, +/- intensity, F fullscreen.
   useEffect(() => {
@@ -602,7 +610,7 @@ export function RideClient({ sessionId, sessionTitle, plan, plannedTss, steps, b
     return frame('Ready to ride', null, (
       <div className="grid flex-1 lg:grid-cols-[minmax(0,1fr)_400px]">
         <div className="flex min-w-0 flex-col gap-8 px-4 py-8 sm:px-8">
-          <UnsavedRidesNotice excludeSessionId={sessionId} />
+          <UnsavedRidesNotice userId={userId} excludeSessionId={sessionId} />
           <div>
             <h2 className="text-[clamp(1.75rem,1.3rem+1.6vw,3rem)] font-medium leading-tight tracking-[-0.025em] text-[var(--text)]">{sessionTitle}</h2>
             <div className="mt-6 grid max-w-2xl grid-cols-2 gap-6 sm:grid-cols-4">
@@ -617,7 +625,7 @@ export function RideClient({ sessionId, sessionTitle, plan, plannedTss, steps, b
           </section>
           {!planHasPowerTargets(plan) ? (
             <p className="text-[14px] text-[var(--status-warning)]">
-              {plan.ftpWatts ? 'This workout has no power targets, so the trainer stays in free ride.' : 'Add FTP in Profile to turn %FTP targets into watts. Until then the trainer stays in free ride.'}
+              {plan.ftpWatts ? 'This workout has no power targets, so the trainer stays in free ride.' : <><Link href={PROFILE_FTP_HREF} className="underline underline-offset-2">Add FTP in Profile</Link> to turn %FTP targets into watts. Until then the trainer stays in free ride.</>}
             </p>
           ) : null}
         </div>
@@ -652,11 +660,15 @@ export function RideClient({ sessionId, sessionTitle, plan, plannedTss, steps, b
   const tone = complianceTone(threeSecond, targetWatts);
   const toneColor = TONE_VAR[tone];
   const delta = threeSecond !== null && targetWatts !== null ? threeSecond - targetWatts : null;
-  const toneText = tone === 'on' ? 'On target' : tone === 'over' ? 'Above target' : tone === 'under' ? 'Below target' : targetWatts === null ? 'Free ride' : 'No power';
+  // Without FTP there are no watts, but the %FTP prescription is still the target to ride.
+  const prescribedTarget = targetWatts === null ? steps[recording.stepIndex]?.prescribedTarget ?? null : null;
+  const [prescribedValue, prescribedUnit] = splitPrescription(prescribedTarget);
+  const toneText = tone === 'on' ? 'On target' : tone === 'over' ? 'Above target' : tone === 'under' ? 'Below target' : targetWatts === null ? (prescribedTarget ? `Target ${prescribedTarget}` : 'Free ride') : 'No power';
   const stepRemaining = currentStep ? currentStep.durationSec - recording.stepElapsedSec : null;
   const stepProgress = currentStep && currentStep.durationSec > 0 ? recording.stepElapsedSec / currentStep.durationSec : 0;
   const nextStep = plan.steps[recording.stepIndex + 1];
   const nextTarget = targetWattsAt(nextStep, 0, recording.biasPct);
+  const nextPrescription = steps[recording.stepIndex + 1]?.prescribedTarget ?? null;
   const remainingSec = Math.max(0, plan.totalSec - positionSec);
   const hrZone = live.heartRateBpm !== null ? zoneForHeartRateBpm(live.heartRateBpm, heartRateMaxBpm) : null;
   const deviation = delta !== null && targetWatts ? Math.max(-1, Math.min(1, delta / Math.max(20, targetWatts * 0.25))) : null;
@@ -714,7 +726,7 @@ export function RideClient({ sessionId, sessionTitle, plan, plannedTss, steps, b
               <div className="mt-auto space-y-3">
                 <div className="flex items-baseline gap-3">
                   <Label>{recording.ergEnabled && devices.ergAvailable ? 'Target · ERG' : 'Target'}</Label>
-                  <p className="ride-numeral text-[clamp(2.25rem,min(4.1vw,7.5vh),4.5rem)]">{display(targetWatts)}<span className="ml-1.5 text-[0.4em] font-normal tracking-normal text-[var(--text-muted)]">W</span></p>
+                  <p className="ride-numeral text-[clamp(2.25rem,min(4.1vw,7.5vh),4.5rem)]">{prescribedTarget ? prescribedValue : display(targetWatts)}<span className="ml-1.5 text-[0.4em] font-normal tracking-normal text-[var(--text-muted)]">{prescribedTarget ? prescribedUnit : 'W'}</span></p>
                 </div>
                 {deviation !== null ? (
                   <div className="relative h-2 rounded-full bg-[var(--raised)]" role="meter" aria-label="Power versus target" aria-valuemin={-100} aria-valuemax={100} aria-valuenow={Math.round(deviation * 100)}>
@@ -727,12 +739,16 @@ export function RideClient({ sessionId, sessionTitle, plan, plannedTss, steps, b
           ) : (
             <>
               <div className="flex items-baseline justify-between gap-3">
-                <Label>{targetWatts === null ? 'Free ride' : 'Target'}</Label>
+                <Label>{targetWatts === null && !prescribedTarget ? 'Free ride' : 'Target'}</Label>
                 <p className="text-[13px] text-[var(--text-muted)]">{anyDevice ? 'Waiting for power' : 'Targets only'}</p>
               </div>
-              <p className={heroNumeral}>{targetWatts === null ? (currentStep ? `Z${currentStep.zone}` : '--') : targetWatts}{targetWatts !== null ? <span className="ml-2 text-[0.22em] font-normal tracking-normal text-[var(--text-muted)]">W</span> : null}</p>
+              {prescribedTarget ? (
+                <p className={heroNumeral}>{prescribedValue}<span className="ml-2 text-[0.22em] font-normal tracking-normal text-[var(--text-muted)]">{prescribedUnit}</span></p>
+              ) : (
+                <p className={heroNumeral}>{targetWatts === null ? (currentStep ? `Z${currentStep.zone}` : '--') : targetWatts}{targetWatts !== null ? <span className="ml-2 text-[0.22em] font-normal tracking-normal text-[var(--text-muted)]">W</span> : null}</p>
+              )}
               <p className="mt-auto text-[14px] text-[var(--text-secondary)]">
-                {targetWatts === null ? 'Ride by feel in this zone.' : plan.ftpWatts ? `${Math.round((targetWatts / plan.ftpWatts) * 100)}% of FTP. Hold this on your trainer.` : 'Hold this on your trainer.'}
+                {prescribedTarget ? <>Ride this by feel in Z{currentStep?.zone}. <Link href={PROFILE_FTP_HREF} className="text-[var(--text)] underline underline-offset-2">Add FTP in Profile</Link> to see watts.</> : targetWatts === null ? 'Ride by feel in this zone.' : plan.ftpWatts ? `${Math.round((targetWatts / plan.ftpWatts) * 100)}% of FTP. Hold this on your trainer.` : 'Hold this on your trainer.'}
                 {recording.biasPct !== 0 ? <span className="data"> Intensity {recording.biasPct > 0 ? '+' : '−'}{Math.abs(recording.biasPct)}%.</span> : null}
               </p>
             </>
@@ -759,7 +775,7 @@ export function RideClient({ sessionId, sessionTitle, plan, plannedTss, steps, b
           <div className="flex items-baseline justify-between gap-3 border-t border-[var(--border)] pt-3 text-[14px]">
             <span className="text-[var(--text-muted)]">Next</span>
             <span className="min-w-0 truncate text-right text-[var(--text)]">
-              {nextStep ? <>{stepLabel(recording.stepIndex + 1)}<span className="data text-[var(--text-secondary)]">{nextTarget !== null ? ` · ${nextTarget} W` : ` · Z${nextStep.zone}`} · {formatClock(nextStep.durationSec)}</span></> : currentStep ? 'Finish' : 'Free ride continues'}
+              {nextStep ? <>{stepLabel(recording.stepIndex + 1)}<span className="data text-[var(--text-secondary)]">{nextTarget !== null ? ` · ${nextTarget} W` : nextPrescription ? ` · ${nextPrescription}` : ` · Z${nextStep.zone}`} · {formatClock(nextStep.durationSec)}</span></> : currentStep ? 'Finish' : 'Free ride continues'}
             </span>
           </div>
         </section>

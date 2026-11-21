@@ -56,7 +56,7 @@ export default async function RideHubPage({ searchParams }: { searchParams: Prom
 
       <main id="ride-hub" className="mx-auto grid max-w-[1880px] gap-10 px-5 py-6 sm:px-7 lg:grid-cols-[minmax(20rem,24rem)_minmax(0,1fr)] lg:gap-12 lg:px-10 lg:py-8 2xl:grid-cols-[26rem_minmax(0,1fr)]">
         <aside className="flex min-w-0 flex-col gap-8 lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:self-start lg:overflow-y-auto lg:pr-1">
-          <UnsavedRidesNotice />
+          <UnsavedRidesNotice userId={user.id} />
           <section aria-labelledby="ride-today" className="flex flex-col gap-3">
             <h2 id="ride-today" className={sectionHeadingClassName}>Today</h2>
             {firstToday ? (

@@ -235,7 +235,7 @@ export function ProfileClient({ account }: { account: Account }) {
             </div>
           </div>
 
-          <fieldset disabled={saving} className="space-y-4 border-t border-[var(--border)] pt-5">
+          <fieldset id="training-metrics" disabled={saving} className="scroll-mt-20 space-y-4 border-t border-[var(--border)] pt-5">
             <legend className="text-base font-semibold text-[var(--text)]">Training metrics</legend>
             <p className="max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">These details are optional. New blocks use them for default zone targets. Saved workout settings stay the same, while profile-based targets use your latest values.</p>
             <div className="grid gap-4 sm:grid-cols-2">

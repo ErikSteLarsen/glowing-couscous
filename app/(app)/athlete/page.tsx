@@ -115,7 +115,7 @@ export default async function AthletePage() {
         title={`${greetingFor(hourInZone(timeZone))}, ${firstName}`}
         actions={<Link href="/athlete/events" className={ghostButtonClassName('default')}>Events</Link>}
       />
-      <UnsavedRidesNotice />
+      <UnsavedRidesNotice userId={user.id} />
       <HomeTrainingSetup key={account.updatedAt.toISOString()} profile={account.performanceProfile} sports={parseTrainingSports(parsePrefsJson(account.prefsJson).trainingSports)} revision={account.updatedAt.toISOString()} />
 
       {dashboard.nextEvent ? (

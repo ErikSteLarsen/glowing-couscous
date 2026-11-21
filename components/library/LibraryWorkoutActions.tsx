@@ -33,6 +33,8 @@ export function LibraryWorkoutActions({ slug, name, from }: { slug: string; name
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleDate, setScheduleDate] = useState(() => addDayKeys(toDayKey(new Date()), 1));
   const [schedule, setSchedule] = useState<Status>({ kind: 'idle' });
+  // One key per submission: a retry after a lost response replays it instead of adding a copy.
+  const [scheduleKey, setScheduleKey] = useState(newRequestKey);
   const base = `/api/athlete/library/${encodeURIComponent(slug)}`;
   const ridingWeb = rides.pending?.target === 'web';
   const ridingApp = rides.pending?.target === 'app' || rides.app.state === 'launching';
@@ -51,7 +53,8 @@ export function LibraryWorkoutActions({ slug, name, from }: { slug: string; name
     event.preventDefault();
     setSchedule({ kind: 'pending' });
     try {
-      await post(`${base}/schedule`, { dates: [scheduleDate] });
+      await post(`${base}/schedule`, { dates: [scheduleDate], requestKey: scheduleKey });
+      setScheduleKey(newRequestKey());
       setSchedule({ kind: 'done', message: `Scheduled for ${format(fromDayKey(scheduleDate), 'EEEE d MMMM')}.`, href: getCalendarHref('week', scheduleDate), linkLabel: 'Open calendar' });
     } catch (error) {
       setSchedule({ kind: 'error', message: error instanceof Error ? error.message : 'Could not schedule. Try again.' });
@@ -108,7 +111,7 @@ export function LibraryWorkoutActions({ slug, name, from }: { slug: string; name
         <form id={scheduleId} onSubmit={scheduleWorkout} className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:flex-row sm:items-end">
           <label className="min-w-0 sm:w-56">
             <span className={formLabelClassName}>Date for {name}</span>
-            <input type="date" required className={formFieldClassName} value={scheduleDate} min={toDayKey(new Date())} onChange={(event) => { setScheduleDate(event.target.value); setSchedule({ kind: 'idle' }); }} />
+            <input type="date" required className={formFieldClassName} value={scheduleDate} min={toDayKey(new Date())} onChange={(event) => { setScheduleDate(event.target.value); setScheduleKey(newRequestKey()); setSchedule({ kind: 'idle' }); }} />
           </label>
           <button type="submit" className={secondaryButtonClassName} disabled={schedule.kind === 'pending' || !scheduleDate}>
             {schedule.kind === 'pending' ? 'Scheduling…' : 'Add to calendar'}

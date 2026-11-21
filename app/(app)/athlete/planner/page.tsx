@@ -23,7 +23,7 @@ export default async function AthletePlannerPage({
   const today = todayInZone(await getRequestTimeZone());
   const initialDate = parseCalendarDay(date) ?? today;
   const [workspace, workouts] = await Promise.all([
-    athletePlannerService.loadWorkspace(user.id, initialDate),
+    athletePlannerService.loadWorkspace(user.id, initialDate, { includeWeek: false }),
     workoutLibraryService.listForOwner('athlete', user.id),
   ]);
   const initialSource = resolvePlannerSourceSelection(source, {

@@ -102,8 +102,8 @@ test('saved live progress resumes only for the same ordered workout steps', () =
 
 test('timed steps use timestamps for start, pause, resume, and expiration', () => {
   const steps = [
-    { id: 'interval:0', label: 'Work', durationSec: 5, targetLabel: null, note: '' },
-    { id: 'interval:1', label: 'Work', durationSec: 5, targetLabel: null, note: '' },
+    { id: 'interval:0', label: 'Work', durationSec: 5, targetLabel: null, prescribedTarget: null, note: '' },
+    { id: 'interval:1', label: 'Work', durationSec: 5, targetLabel: null, prescribedTarget: null, note: '' },
   ];
   const state = createExecutionState(steps.length);
   const started = startExecutionTimer(idleExecutionTimer, steps[0].durationSec, 10_000);
@@ -170,4 +170,17 @@ test('live heart-rate previews use the session sport and never borrow another th
   assert.equal(createExecutionSteps(blocks, 'SWIMMING', profile)[0].targetLabel, '90-100% threshold HR · 144-160 bpm');
   profile.running.thresholdHrBpm = null;
   assert.equal(createExecutionSteps(blocks, 'RUNNING', profile)[0].targetLabel, '90-100% threshold HR');
+});
+
+test('execution steps keep the bare prescription so a rider without FTP can still ride to %FTP', () => {
+  const blocks = [
+    createSessionEditorBlock({ clientId: 'work', durationSec: 300, target: { metric: 'power', mode: 'relative', reference: 'ftp', low: 75, high: 75 } }),
+    createSessionEditorBlock({ clientId: 'easy', durationSec: 300 }),
+  ];
+  const [work, easy] = createExecutionSteps(blocks, 'BIKING');
+  assert.equal(work.prescribedTarget, '75% FTP');
+  assert.equal(easy.prescribedTarget, null);
+  const profile = createEmptyPerformanceProfile();
+  profile.cycling.ftpWatts = 200;
+  assert.equal(createExecutionSteps(blocks, 'BIKING', profile)[0].prescribedTarget, '75% FTP');
 });

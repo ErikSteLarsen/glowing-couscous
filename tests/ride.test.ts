@@ -525,11 +525,7 @@ test('desktop launch preserves the same encoded return destination as the browse
   assert.equal(rideSessionPath(7, 'home&device=hr'), '/athlete/ride/7?from=home%26device%3Dhr');
 });
 
-test('recovery keeps the newest matching checkpoint and ignores records under the wrong session key', async (t) => {
-  const { listStoredRides, rideStorageKey } = await import('../lib/ride/recording-store.ts');
-  const ride = plan();
-  const rec = tick(startRecording(createRecording(7, 'Threshold', ride), ride, 0), ride, 1000, reading(150));
-  const entries = new Map([[rideStorageKey(7), serializeCheckpoint(rec, 1000)], [rideStorageKey(8), serializeCheckpoint(rec, 3000)]]);
+function installStorage(t: TestContext, local: Map<string, string>, desktop: Array<{ key: string; json: string }> = []) {
   const replace = (key: string, value: unknown) => {
     const previous = Object.getOwnPropertyDescriptor(globalThis, key);
     Object.defineProperty(globalThis, key, { configurable: true, value });
@@ -538,13 +534,92 @@ test('recovery keeps the newest matching checkpoint and ignores records under th
       else Reflect.deleteProperty(globalThis, key);
     });
   };
+  const deleted: string[] = [];
   replace('localStorage', {
-    length: entries.size, key: (index: number) => [...entries.keys()][index], getItem: (key: string) => entries.get(key),
+    get length() { return local.size; },
+    key: (index: number) => [...local.keys()][index] ?? null,
+    getItem: (key: string) => local.get(key) ?? null,
+    setItem: (key: string, value: string) => { local.set(key, value); },
+    removeItem: (key: string) => { local.delete(key); },
   });
-  replace('window', { tempoDesktop: { listRecordings: async () => [
-    { key: rideStorageKey(7), json: serializeCheckpoint(rec, 2000) },
-  ] } });
-  assert.deepEqual((await listStoredRides()).map(({ key, savedAtMs }) => [key, savedAtMs]), [[rideStorageKey(7), 2000]]);
+  replace('window', { tempoDesktop: {
+    listRecordings: async () => desktop,
+    saveRecording: async () => undefined,
+    deleteRecording: async (key: string) => { deleted.push(key); },
+  } });
+  return { deleted };
+}
+
+function recordedRide(sessionId: number, title = 'Threshold') {
+  const ride = plan();
+  return tick(startRecording(createRecording(sessionId, title, ride), ride, 0), ride, 1000, reading(150));
+}
+
+test('ride checkpoint keys are scoped per user and fit the desktop store key rule', async () => {
+  const { rideStorageKey } = await import('../lib/ride/recording-store.ts');
+  const key = rideStorageKey(2147483647, Number.MAX_SAFE_INTEGER);
+  assert.match(key, /^[A-Za-z0-9_-]{1,120}$/);
+  assert.notEqual(rideStorageKey(1, 7), rideStorageKey(2, 7));
+});
+
+test('recovery keeps the newest matching checkpoint and ignores records under the wrong session key', async (t) => {
+  const { listStoredRides, rideStorageKey } = await import('../lib/ride/recording-store.ts');
+  const rec = recordedRide(7);
+  installStorage(t, new Map([[rideStorageKey(1, 7), serializeCheckpoint(rec, 1000)], [rideStorageKey(1, 8), serializeCheckpoint(rec, 3000)]]), [
+    { key: rideStorageKey(1, 7), json: serializeCheckpoint(rec, 2000) },
+  ]);
+  assert.deepEqual((await listStoredRides(1)).map(({ key, savedAtMs }) => [key, savedAtMs]), [[rideStorageKey(1, 7), 2000]]);
+});
+
+test('another user\'s checkpoints are never listed, and legacy checkpoints are flagged for ownership checks', async (t) => {
+  const { listStoredRides, rideStorageKey, legacyRideStorageKey } = await import('../lib/ride/recording-store.ts');
+  installStorage(t, new Map([
+    [rideStorageKey(1, 7), serializeCheckpoint(recordedRide(7, 'Mine'), 1000)],
+    [rideStorageKey(2, 9), serializeCheckpoint(recordedRide(9, 'Theirs'), 2000)],
+    [legacyRideStorageKey(11), serializeCheckpoint(recordedRide(11, 'Unknown owner'), 3000)],
+  ]));
+  assert.deepEqual((await listStoredRides(1)).map(({ recording, legacy }) => [recording.sessionTitle, legacy]), [['Unknown owner', true], ['Mine', false]]);
+  assert.deepEqual((await listStoredRides(1, 9)), []);
+});
+
+test('the notice shows owned legacy rides only after the server confirms them and offers backup for orphaned rides', async () => {
+  const { classifyStoredRides } = await import('../lib/ride/recording-store.ts');
+  const stored = (sessionId: number, legacy: boolean) => ({ key: `k${sessionId}`, savedAtMs: sessionId, legacy, recording: recordedRide(sessionId) });
+  const visible = classifyStoredRides(
+    [stored(1, false), stored(2, false), stored(3, true), stored(4, true), stored(5, false)],
+    new Map([[1, 'planned'], [3, 'planned'], [5, 'completed']]),
+  );
+  assert.deepEqual(visible.map(({ ride, state }) => [ride.recording.sessionId, state]), [[1, 'open'], [2, 'closed'], [3, 'open'], [5, 'closed']]);
+});
+
+test('clearing a checkpoint removes this user\'s copy and a legacy copy of the session but not another user\'s', async (t) => {
+  const { clearRideCheckpoint, rideStorageKey, legacyRideStorageKey } = await import('../lib/ride/recording-store.ts');
+  const local = new Map([
+    [rideStorageKey(1, 7), 'a'], [legacyRideStorageKey(7), 'b'], [rideStorageKey(2, 7), 'c'],
+  ]);
+  const { deleted } = installStorage(t, local);
+  clearRideCheckpoint(1, 7);
+  assert.deepEqual([...local.keys()], [rideStorageKey(2, 7)]);
+  assert.deepEqual(deleted, [rideStorageKey(1, 7), legacyRideStorageKey(7)]);
+});
+
+test('ride session states only include sessions owned by the signed-in athlete', async () => {
+  const { createAthleteService } = await import('../lib/athlete-service.ts');
+  let where: unknown;
+  const db = { session: { findMany: async (args: { where: unknown }) => {
+    where = args.where;
+    return [
+      { id: 3, status: 'planned', activity: null },
+      { id: 4, status: 'skipped', activity: null },
+      { id: 5, status: 'planned', activity: { id: 1 } },
+    ];
+  } } };
+  const service = createAthleteService({ db: db as never });
+  assert.deepEqual(await service.listRideSessionStates(1, [3, 4, 5, 6]), [
+    { id: 3, status: 'planned' }, { id: 4, status: 'skipped' }, { id: 5, status: 'completed' },
+  ]);
+  assert.deepEqual(where, { id: { in: [3, 4, 5, 6] }, athleteId: 1, date: { not: null } });
+  assert.deepEqual(await service.listRideSessionStates(1, []), []);
 });
 
 test('CSC wheel event time rolls over, while a decreasing wheel counter is never a forward speed', () => {

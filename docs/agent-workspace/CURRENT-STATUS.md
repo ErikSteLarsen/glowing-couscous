@@ -154,6 +154,28 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   Import for deletion. A database regression test covers a 25-minute ride on a
   60-minute plan, and it was checked in a local browser before and after.
   `pnpm test` 486 passed; `pnpm test:db` 530 passed.
+- Ride checkpoints are per user (`tempo-ride-v2-<userId>-<sessionId>`), so
+  another account on the same browser or desktop app no longer sees them. Old
+  v1 checkpoints appear only after `GET /api/athlete/ride-checkpoints` confirms
+  that the session is the rider's own. Rides whose session was deleted, skipped
+  or completed show Download backup and Discard on Ride home and on the
+  "Ride unavailable" page. Saving an orphaned ride as a standalone activity is
+  not built.
+- Write races: a planned edit (session adjustment and planner edit) claims the
+  validated row (status, `updatedAt`, no Activity) inside its transaction and
+  returns 409 if a ride or completion committed first. Ride now is serialized
+  per athlete + workout + day with `pg_advisory_xact_lock`. Library Schedule
+  requires a client `requestKey` stored in `PlacementRequest`, and retries
+  replay the original result. No migration. Still read-then-write:
+  `saveActualForSession` and `reopenSession` in the completion service.
+- Planner reads only the activity summary fields and skips the unused week
+  query. Riders without FTP see the %FTP target (for example "40–50 % FTP")
+  instead of "Free ride", with a link to `/profile#training-metrics`.
+- Combined verification: `pnpm test` 494 passed; `pnpm test:db` 541 passed;
+  lint and typecheck passed. A local browser smoke test passed: Ride now twice
+  reused one session, the targets-only ride showed %FTP, the checkpoint was
+  saved under the v2 key and listed on Ride home, and library Schedule returned
+  201.
 
 ## Remaining risks and acceptance gates
 

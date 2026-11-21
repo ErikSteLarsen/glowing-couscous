@@ -235,8 +235,11 @@ test('planned edits keep a skipped session skipped instead of silently restoring
           activity: null,
         };
       },
-      async update(args: { data: Record<string, unknown> }) {
+      async updateMany(args: { data: Record<string, unknown> }) {
         updates.push(args.data);
+        return { count: 1 };
+      },
+      async update() {
         return {};
       },
     },
@@ -246,8 +249,8 @@ test('planned edits keep a skipped session skipped instead of silently restoring
     },
     block: { async deleteMany() { return {}; } },
     assignment: { async updateMany() { return {}; } },
-    async $transaction(operations: Array<Promise<unknown>>) {
-      return Promise.all(operations);
+    async $transaction(run: (tx: unknown) => Promise<unknown>) {
+      return run(db);
     },
   };
   const adjustment = createAthleteSessionAdjustmentService({ db: db as never });

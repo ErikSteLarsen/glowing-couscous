@@ -4,7 +4,7 @@ import { requireAthlete } from '@/lib/api-auth';
 import { readJsonObject } from '@/lib/route-params';
 import { workoutCatalogService } from '@/lib/workout-catalog-service';
 
-/** Places copies on chosen dates; body: `{ dates: ['yyyy-MM-dd'], timeLabel? }`. */
+/** Places copies on chosen dates; body: `{ dates: ['yyyy-MM-dd'], timeLabel?, requestKey }`. Retrying a requestKey replays the first result. */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const { user, error } = await requireAthlete();

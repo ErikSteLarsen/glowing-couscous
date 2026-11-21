@@ -104,6 +104,12 @@ function calendarDayDistance(from: string, to: string) {
   return Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(fy, fm - 1, fd)) / 86_400_000);
 }
 
+function rideSessionState(session: { status: string; activity: { id: number } | null }): 'planned' | 'skipped' | 'completed' {
+  if (session.activity || session.status === 'completed') return 'completed';
+  if (session.status === SKIPPED_SESSION_STATUS) return 'skipped';
+  return 'planned';
+}
+
 export function createAthleteService({ db = prisma, now = () => new Date() }: AthleteServiceDeps = {}) {
   /** The user's calendar day; without a zone, the server clock's local day. */
   const currentDayKey = (timeZone?: string) => (timeZone ? todayInZone(timeZone, now()) : toDayKey(now()));
@@ -700,6 +706,16 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
           })),
         };
       });
+    },
+
+    /** Statuses of the given sessions that are the athlete's own scheduled sessions; others are omitted. */
+    async listRideSessionStates(userId: number, sessionIds: number[]): Promise<Array<{ id: number; status: 'planned' | 'skipped' | 'completed' }>> {
+      if (sessionIds.length === 0) return [];
+      const sessions = await db.session.findMany({
+        where: { id: { in: sessionIds }, athleteId: userId, date: { not: null } },
+        select: { id: true, status: true, activity: { select: { id: true } } },
+      });
+      return sessions.map((session) => ({ id: session.id, status: rideSessionState(session) }));
     },
 
     async loadSessionDetail(userId: number, sessionId: number, { timeZone }: { timeZone?: string } = {}) {

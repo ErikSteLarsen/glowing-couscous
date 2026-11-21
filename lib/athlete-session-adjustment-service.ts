@@ -29,6 +29,7 @@ type AdjustmentSession = {
   sportMetricsJson: string | null;
   rpe: number | null;
   status: string;
+  updatedAt: Date;
   source: string;
   adjusted: boolean;
   coachBaselineJson: string | null;
@@ -52,14 +53,10 @@ type AdjustmentSession = {
   activity: { id: number } | null;
 };
 
-type AdjustmentDatabase = {
+type AdjustmentTransaction = {
   session: {
-    findUnique(args: unknown): Promise<AdjustmentSession | null>;
     update(args: unknown): Promise<unknown>;
-  };
-  plan: {
-    findFirst(args: unknown): Promise<{ id: number } | null>;
-    create(args: unknown): Promise<{ id: number }>;
+    updateMany(args: unknown): Promise<{ count: number }>;
   };
   block: {
     deleteMany(args: unknown): Promise<unknown>;
@@ -67,8 +64,20 @@ type AdjustmentDatabase = {
   assignment: {
     updateMany(args: unknown): Promise<unknown>;
   };
-  $transaction(operations: Array<Promise<unknown>>): Promise<unknown>;
 };
+
+type AdjustmentDatabase = {
+  session: {
+    findUnique(args: unknown): Promise<AdjustmentSession | null>;
+  };
+  plan: {
+    findFirst(args: unknown): Promise<{ id: number } | null>;
+    create(args: unknown): Promise<{ id: number }>;
+  };
+  $transaction<T>(run: (tx: AdjustmentTransaction) => Promise<T>): Promise<T>;
+};
+
+export const SESSION_CHANGED_ERROR = 'This session changed while you were editing it (it may have been ridden or completed). Refresh to see the latest version.';
 
 type AdjustmentResult =
   | { ok: true; sessionId: number }
@@ -136,10 +145,18 @@ export function createAthleteSessionAdjustmentService({
       const baselineJson = session.coachBaselineJson;
       const blocks = createSessionEditorBlockData(serialized.blocks);
 
-      await db.$transaction([
-        db.block.deleteMany({ where: { sessionId } }),
-        db.session.update({
-          where: { id: sessionId },
+      // Claim the exact row we validated: if a ride, completion or other edit
+      // committed after the read above, updatedAt or status no longer match and
+      // nothing is written. The claim also locks the row for the block swap.
+      const claimed = await db.$transaction(async (tx) => {
+        const claim = await tx.session.updateMany({
+          where: {
+            id: sessionId,
+            athleteId,
+            status: session.status,
+            updatedAt: session.updatedAt,
+            activity: { is: null },
+          },
           data: {
             templateId: session.templateId,
             assignedById: session.assignedById,
@@ -160,14 +177,18 @@ export function createAthleteSessionAdjustmentService({
             status: session.status === SKIPPED_SESSION_STATUS ? SKIPPED_SESSION_STATUS : 'planned',
             adjusted: true,
             coachBaselineJson: baselineJson,
-            blocks: { create: blocks },
           },
-        }),
-        db.assignment.updateMany({
+        });
+        if (claim.count !== 1) return false;
+        await tx.block.deleteMany({ where: { sessionId } });
+        await tx.session.update({ where: { id: sessionId }, data: { blocks: { create: blocks } } });
+        await tx.assignment.updateMany({
           where: { sessionId, athleteId },
           data: { targetDate: scheduledDate },
-        }),
-      ]);
+        });
+        return true;
+      });
+      if (!claimed) return { ok: false, status: 409, error: SESSION_CHANGED_ERROR };
 
       return { ok: true, sessionId };
     },

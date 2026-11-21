@@ -9,6 +9,8 @@ export type ExecutionStep = {
   label: string;
   durationSec: number;
   targetLabel: string | null;
+  /** The target as written (e.g. "75% FTP"), without any profile-resolved value. */
+  prescribedTarget: string | null;
   note: string;
 };
 
@@ -23,6 +25,7 @@ export function createExecutionSteps(blocks: SessionEditorBlock[], sport: string
       label: `${block.kind === 'warmup' ? 'Warm-up' : block.kind === 'cooldown' ? 'Cool-down' : `${meta.label} ${meta.name}`}${block.repetitionCount > 1 ? ` · Rep ${block.occurrence + 1} of ${block.repetitionCount}` : ''}`,
       durationSec: block.durationSec,
       targetLabel: resolvedTarget ? `${genericTarget} · ${resolvedTarget}` : genericTarget,
+      prescribedTarget: genericTarget,
       note: block.note,
     };
   });

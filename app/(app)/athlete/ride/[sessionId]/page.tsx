@@ -33,7 +33,10 @@ export default async function AthleteRidePage({
   if (!detail) {
     return (
       <PageShell size="wide">
-        <EmptyState title="Ride unavailable" description="This session could not be loaded." />
+        <div className="flex flex-col gap-6">
+          <UnsavedRidesNotice userId={user.id} />
+          <EmptyState title="Ride unavailable" description="This session could not be loaded. It may have been removed from your calendar." />
+        </div>
       </PageShell>
     );
   }
@@ -58,7 +61,7 @@ export default async function AthleteRidePage({
     return (
       <PageShell size="wide">
         <TopBar title={`Ride ${detail.session.title}`} actions={back} />
-        <UnsavedRidesNotice closedSessionId={detail.session.id} />
+        <UnsavedRidesNotice userId={user.id} />
         <EmptyState
           title={detail.session.status === 'skipped' ? 'Session skipped' : 'Session already completed'}
           description={detail.session.status === 'skipped' ? 'Plan this session again before riding it.' : 'This session already has a saved outcome.'}
@@ -74,6 +77,7 @@ export default async function AthleteRidePage({
 
   return (
     <RideClient
+      userId={user.id}
       sessionId={detail.session.id}
       sessionTitle={detail.session.title}
       plan={plan}

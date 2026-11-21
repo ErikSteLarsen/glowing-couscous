@@ -18,36 +18,40 @@ import {
   validateSessionEditorDraft,
 } from './session-editor.ts';
 
+// Planner cards only need activity summaries; telemetry and measurement series stay unloaded.
+const plannerSessionInclude = {
+  blocks: { orderBy: { sortOrder: 'asc' } },
+  activity: { select: { durationSec: true, distanceMeters: true, tss: true, segmentsJson: true } },
+  athlete: { select: { performanceProfileJson: true } },
+} satisfies Prisma.SessionInclude;
+
 type AthletePlannerDeps = {
   db?: typeof prisma;
 };
 
 export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps = {}) {
   return {
-    async loadWorkspace(athleteId: number, referenceDateInput?: string) {
+    async loadWorkspace(athleteId: number, referenceDateInput?: string, { includeWeek = true }: { includeWeek?: boolean } = {}) {
       const referenceDate = parseReferenceDate(referenceDateInput);
       const weekStart = startOfWeek(referenceDate, { weekStartsOn: 1 });
       const weekEnd = endOfWeek(referenceDate, { weekStartsOn: 1 });
       const calendarStart = startOfWeek(startOfMonth(referenceDate), { weekStartsOn: 1 });
       const calendarEnd = endOfWeek(endOfMonth(referenceDate), { weekStartsOn: 1 });
+      const loadSessions = (start: Date, end: Date) => db.session.findMany({
+        where: { athleteId, date: { gte: start, lte: end } },
+        include: plannerSessionInclude,
+        orderBy: [{ date: 'asc' }, { title: 'asc' }],
+      });
       const [sessions, templates, calendarSessions] = await Promise.all([
-        db.session.findMany({
-          where: { athleteId, date: { gte: weekStart, lte: weekEnd } },
-          include: { blocks: { orderBy: { sortOrder: 'asc' } }, activity: true, athlete: { select: { performanceProfileJson: true } } },
-          orderBy: [{ date: 'asc' }, { title: 'asc' }],
-        }),
+        includeWeek ? loadSessions(weekStart, weekEnd) : Promise.resolve([] as Awaited<ReturnType<typeof loadSessions>>),
         db.template.findMany({
           where: { ownerId: athleteId },
           orderBy: [{ name: 'asc' }, { id: 'asc' }],
         }),
-        db.session.findMany({
-          where: { athleteId, date: { gte: calendarStart, lte: calendarEnd } },
-          include: { blocks: { orderBy: { sortOrder: 'asc' } }, activity: true, athlete: { select: { performanceProfileJson: true } } },
-          orderBy: [{ date: 'asc' }, { title: 'asc' }],
-        }),
+        loadSessions(calendarStart, calendarEnd),
       ]);
 
-      const shapeSession = (session: typeof sessions[number]) => {
+      const shapeSession = (session: typeof calendarSessions[number]) => {
         const ftpWatts = parsePerformanceProfileJson(session.athlete?.performanceProfileJson).cycling.ftpWatts;
         const metrics = derivePlannerSessionMetrics(session.blocks, session.sport, { ftpWatts });
 
@@ -72,7 +76,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
         };
       };
 
-      const days = Array.from({ length: 7 }, (_, index) => {
+      const days = !includeWeek ? [] : Array.from({ length: 7 }, (_, index) => {
         const date = addDays(weekStart, index);
         const isoDate = formatISO(date, { representation: 'date' });
 
@@ -316,21 +320,29 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       if (sessionId !== undefined) {
         const existing = await db.session.findFirst({
           where: { id: sessionId, athleteId },
-          select: { id: true, activity: { select: { id: true } } },
+          select: { id: true, status: true, updatedAt: true, activity: { select: { id: true } } },
         });
         if (!existing) return { ok: false as const, error: 'Session not found.', status: 404 };
-        if (existing.activity) {
+        if (existing.activity || existing.status === 'completed') {
           return { ok: false as const, error: 'Completed sessions are immutable.', status: 409 };
         }
 
         const plan = await findOrCreatePlan(db, athleteId, dates[0]);
-        await db.$transaction([
-          db.block.deleteMany({ where: { sessionId } }),
-          db.session.update({
-            where: { id: sessionId },
-            data: createSessionData(athleteId, plan.id, serialized, blocks, dates[0]),
-          }),
-        ]);
+        const { blocks: blockWrite, ...sessionData } = createSessionData(athleteId, plan.id, serialized, blocks, dates[0]);
+        // Claim the revision read above so a ride or completion that commits in between wins.
+        const claimed = await db.$transaction(async (tx) => {
+          const claim = await tx.session.updateMany({
+            where: { id: sessionId, athleteId, status: existing.status, updatedAt: existing.updatedAt, activity: { is: null } },
+            data: sessionData,
+          });
+          if (claim.count !== 1) return false;
+          await tx.block.deleteMany({ where: { sessionId } });
+          await tx.session.update({ where: { id: sessionId }, data: { blocks: blockWrite } });
+          return true;
+        });
+        if (!claimed) {
+          return { ok: false as const, error: 'This session changed while you were editing it. Refresh and try again.', status: 409 };
+        }
 
         return { ok: true as const, sessionIds: [sessionId] };
       }
