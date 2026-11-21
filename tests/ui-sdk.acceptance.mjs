@@ -8,7 +8,7 @@ import { build } from 'esbuild';
 import { chromium } from '@playwright/test';
 
 // Isolated real components: router navigation is outside this interaction test.
-for (const width of [390, 1440]) test(`SDK controls preserve keyboard, focus, disabled and failed-delete behavior at ${width}px`, async () => {
+for (const width of [390, 1440]) test(`Tempo controls preserve keyboard, focus, and workout actions at ${width}px`, async () => {
   const directory = await mkdtemp(join(tmpdir(), 'tempo-ui-'));
   let browser;
   try {
@@ -60,6 +60,52 @@ for (const width of [390, 1440]) test(`SDK controls preserve keyboard, focus, di
     await dialog.getByRole('button', { name: 'Remove session', exact: true }).click();
     await dialog.waitFor({ state: 'hidden' });
     assert.equal(await page.locator('output').textContent(), 'Morning run');
+
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'bluetooth', {
+        value: {
+          requestDevice() {
+            if (!navigator.userActivation.isActive) throw new Error('Missing user activation');
+            throw new DOMException('Pairing denied', 'NotAllowedError');
+          },
+        },
+      });
+    });
+    await page.goto(`${pathToFileURL(join(directory, 'index.html')).href}?ride`);
+    const connections = page.getByRole('button', { name: 'Connections' });
+    const connectionsDialog = page.getByRole('dialog', { name: 'Connections' });
+    await connections.focus();
+    await page.keyboard.press('Enter');
+    await connectionsDialog.getByRole('button', { name: 'Connect trainer / power' }).click();
+    await connectionsDialog.getByText('Pairing denied').waitFor();
+    assert.equal(await connectionsDialog.getByRole('button', { name: 'Connect heart rate' }).isVisible(), true);
+    assert.equal(await connectionsDialog.getByRole('button', { name: 'Connect cadence' }).isVisible(), true);
+    await page.keyboard.press('Escape');
+    await connectionsDialog.waitFor({ state: 'hidden' });
+    assert.equal(await connections.evaluate(el => el === document.activeElement), true);
+    await page.getByRole('button', { name: 'Start with targets only' }).click();
+    await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
+    const intensity = page.getByRole('button', { name: 'Increase intensity 1%' });
+    assert.equal(await intensity.isVisible(), false);
+    await page.getByText('Advanced options', { exact: true }).click();
+    await intensity.click();
+    assert.equal(await page.getByRole('group', { name: 'Intensity' }).getByText('+1%').isVisible(), true);
+    await page.getByRole('region', { name: 'Workout', exact: true }).getByText('0:01', { exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    await page.reload();
+    await page.getByRole('button', { name: 'Resume ride', exact: true }).click();
+    await page.getByRole('button', { name: 'Resume', exact: true }).waitFor();
+    await page.evaluate(() => {
+      window.fetch = async () => new Response(JSON.stringify({ error: 'Save rejected' }), { status: 409 });
+    });
+    page.once('dialog', dialog => dialog.accept());
+    await page.getByRole('button', { name: 'Finish', exact: true }).click();
+    await page.getByRole('alert').filter({ hasText: 'Save rejected' }).waitFor();
+    await page.evaluate(() => {
+      window.fetch = async () => new Response(JSON.stringify({ sessionId: 1 }));
+    });
+    await page.getByRole('button', { name: 'Try again', exact: true }).click();
+    await page.getByText('Saved. The session is marked complete.').waitFor();
     assert.deepEqual(errors, []);
   } finally {
     await browser?.close();

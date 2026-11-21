@@ -4,6 +4,8 @@ import { SessionComparisonDialog } from '../../components/SessionComparisonDialo
 import { createEmptySessionEditorDraft } from '../../lib/session-editor';
 import { Toggle } from '../../components/tempo/Toggle';
 import { SessionDeleteAction } from '../../components/SessionDeleteAction';
+import { RideClient } from '../../app/(app)/athlete/ride/[sessionId]/RideClient';
+import { resolveBackTarget } from '../../lib/app-navigation';
 
 window.fetch = async () => new Response(JSON.stringify({
   baseline: createEmptySessionEditorDraft({ title: 'Planned run', mode: 'planned' }),
@@ -23,4 +25,16 @@ function Fixture() {
   </>;
 }
 const root = document.getElementById('root');
-if (root) createRoot(root).render(<Fixture />);
+const ride = new URLSearchParams(location.search).has('ride');
+if (root) createRoot(root).render(ride ? (
+  <RideClient
+    userId={1}
+    sessionId={1}
+    sessionTitle="Indoor ride"
+    plan={{ steps: [], totalSec: 0, ftpWatts: null }}
+    plannedTss={0}
+    steps={[]}
+    back={resolveBackTarget({ route: 'session-ride', sessionId: 1 })}
+    heartRateMaxBpm={null}
+  />
+) : <Fixture />);

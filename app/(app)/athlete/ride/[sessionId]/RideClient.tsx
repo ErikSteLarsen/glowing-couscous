@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import Link from 'next/link';
-import { Maximize, Minimize, Minus, Pause, Play, Plus, SkipForward, Square } from 'lucide-react';
+import { ChevronDown, Maximize, Minimize, Minus, Pause, Play, Plus, SkipForward, Square } from 'lucide-react';
 import { BackLink, buttonFocusClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import type { BackTarget } from '@/lib/app-navigation';
 import { Toggle } from '@/components/tempo/Toggle';
@@ -76,7 +76,6 @@ function subscribeFullscreen(onChange: () => void) {
 }
 
 const ROLE_LABEL: Record<RideDeviceRole, string> = { trainer: 'Trainer / power', heartRate: 'Heart rate', cadence: 'Cadence' };
-const ROLE_SHORT: Record<RideDeviceRole, string> = { trainer: 'Trainer', heartRate: 'HR', cadence: 'Cadence' };
 
 function deviceDot(state: RideDeviceState) {
   return state.status === 'connected' ? 'bg-[var(--status-success)]'
@@ -86,28 +85,11 @@ function deviceDot(state: RideDeviceState) {
 
 function deviceStatusText(state: RideDeviceState) {
   return state.status === 'connected'
-    ? `${state.name ?? 'Connected'}${state.protocol === 'ftms' ? ' · ERG' : state.protocol === 'cycling-power' ? ' · power only' : ''}`
+    ? `${state.name ?? 'Connected'}${state.protocol === 'cycling-power' ? ' · power only' : ''}`
     : state.status === 'connecting' ? 'Connecting…' : state.status === 'reconnecting' ? state.message ?? 'Reconnecting…' : state.status === 'error' ? state.message ?? 'Connection failed' : 'Not connected';
 }
 
-const chipClassName = `inline-flex h-9 items-center gap-2 rounded-full border border-[var(--border)] px-3 text-[12px] font-medium text-[var(--text-secondary)] ${buttonFocusClassName}`;
 const iconControlClassName = `inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-[var(--border-strong)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-40 ${buttonFocusClassName}`;
-
-function DeviceChip({ role, state, canConnect, onConnect }: { role: RideDeviceRole; state: RideDeviceState; canConnect: boolean; onConnect: () => void }) {
-  const short = state.status === 'connected' ? 'On' : state.status === 'reconnecting' ? 'Reconnecting' : state.status === 'connecting' ? 'Connecting' : state.status === 'error' ? 'Failed' : 'Off';
-  const content = (
-    <>
-      <span aria-hidden="true" className={`size-2 rounded-full ${deviceDot(state)}`} />
-      <span className="text-[var(--text)]">{ROLE_SHORT[role]}</span>
-      <span className="hidden xl:inline">{short}</span>
-    </>
-  );
-  const title = `${ROLE_LABEL[role]}: ${deviceStatusText(state)}`;
-  if (canConnect && (state.status === 'disconnected' || state.status === 'error')) {
-    return <button type="button" className={`${chipClassName} hover:border-[var(--border-strong)] hover:text-[var(--text)]`} title={`Connect ${ROLE_LABEL[role].toLowerCase()}`} aria-label={`${title}. Connect`} onClick={onConnect}>{content}</button>;
-  }
-  return <span className={chipClassName} title={title} role="status" aria-label={title}>{content}</span>;
-}
 
 function DeviceRow({ role, state, onConnect, onDisconnect }: { role: RideDeviceRole; state: RideDeviceState; onConnect: () => void; onDisconnect: () => void }) {
   const idle = state.status === 'disconnected' || state.status === 'error';
@@ -115,9 +97,9 @@ function DeviceRow({ role, state, onConnect, onDisconnect }: { role: RideDeviceR
     <li className="flex items-center justify-between gap-3 py-3">
       <div className="min-w-0">
         <p className="text-[14px] font-medium text-[var(--text)]">{ROLE_LABEL[role]}</p>
-        <p className="mt-0.5 flex items-center gap-1.5 truncate text-[12px] text-[var(--text-secondary)]"><span aria-hidden="true" className={`inline-block size-2 shrink-0 rounded-full ${deviceDot(state)}`} />{deviceStatusText(state)}</p>
+        <p className="mt-0.5 flex items-center gap-1.5 break-words text-[12px] text-[var(--text-secondary)]"><span aria-hidden="true" className={`inline-block size-2 shrink-0 rounded-full ${deviceDot(state)}`} />{deviceStatusText(state)}</p>
       </div>
-      <button type="button" className={`${secondaryButtonClassName} !h-9 !min-h-9 px-3 text-[13px]`} onClick={idle ? onConnect : onDisconnect}>{idle ? 'Connect' : 'Disconnect'}</button>
+      <button type="button" className={`${secondaryButtonClassName} shrink-0`} aria-label={`${idle ? 'Connect' : 'Disconnect'} ${ROLE_LABEL[role].toLowerCase()}`} onClick={idle ? onConnect : onDisconnect}>{idle ? 'Connect' : 'Disconnect'}</button>
     </li>
   );
 }
@@ -174,6 +156,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   const lastCommandRef = useRef<{ stepIndex: number; watts: number | null; erg: boolean; biasPct: number } | null>(null);
   const pendingSaveRef = useRef<AbortController | null>(null);
   const savedRef = useRef(false);
+  const connectionsRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => () => pendingSaveRef.current?.abort(), []);
 
@@ -394,7 +377,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
-      if (event.metaKey || event.ctrlKey || event.altKey || target?.closest('input, textarea, select, button, a, [contenteditable="true"]')) return;
+      if (connectionsRef.current?.open || event.metaKey || event.ctrlKey || event.altKey || target?.closest('input, textarea, select, button, a, summary, [contenteditable="true"]')) return;
       if ((event.key === 'f' || event.key === 'F') && document.fullscreenEnabled) { toggleFullscreen(); return; }
       if (!active) return;
       if (event.key === ' ') { event.preventDefault(); togglePause(); }
@@ -421,10 +404,10 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     [samples, recordedLaps, timerSec, plan, domainSec], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  const anyDevice = ROLES.some((role) => devices[role].status !== 'disconnected');
+  const connectedCount = ROLES.filter((role) => devices[role].status === 'connected').length;
+  const anyDevice = connectedCount > 0;
   const lostDevices = ROLES.filter((role) => devices[role].status === 'reconnecting');
   const stepLabel = (index: number) => steps[index]?.label ?? (index >= plan.steps.length ? 'Free ride' : `Step ${index + 1}`);
-  const connect = (role: RideDeviceRole) => void manager.connect(role);
 
   const backLink = <BackLink target={back} variant="compact" />;
   const fullscreenButton = fullscreenSupported ? (
@@ -432,10 +415,70 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       {fullscreen ? <Minimize aria-hidden="true" size={18} strokeWidth={1.6} /> : <Maximize aria-hidden="true" size={18} strokeWidth={1.6} />}
     </button>
   ) : null;
-  const deviceChips = (
-    <div className="flex items-center gap-1.5" aria-label="Devices">
-      {ROLES.map((role) => <DeviceChip key={role} role={role} state={devices[role]} canConnect={bluetoothAvailable} onConnect={() => connect(role)} />)}
+  const connectionsRow = (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <p role="status" className="text-sm text-[var(--text-secondary)]">
+        {connectedCount === 0 ? 'No devices connected' : `${connectedCount} ${connectedCount === 1 ? 'device' : 'devices'} connected`}
+      </p>
+      <button type="button" className={secondaryButtonClassName} aria-haspopup="dialog" onClick={() => connectionsRef.current?.showModal()}>
+        Connections
+      </button>
     </div>
+  );
+
+  const connectionsDialog = (
+    <dialog
+      ref={connectionsRef}
+      aria-labelledby="ride-connections-title"
+      className="tempo-alert-dialog w-[calc(100%-2rem)] max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <h2 id="ride-connections-title" className="text-base font-medium">Connections</h2>
+        <button type="button" className={secondaryButtonClassName} autoFocus onClick={() => connectionsRef.current?.close()}>Close</button>
+      </div>
+      {bluetoothAvailable ? (
+        <ul className="mt-3 divide-y divide-[var(--border)]">
+          {ROLES.map((role) => (
+            <DeviceRow key={role} role={role} state={devices[role]} onConnect={() => void manager.connect(role)} onDisconnect={() => manager.disconnect(role)} />
+          ))}
+        </ul>
+      ) : (
+        <p role="status" className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
+          Bluetooth pairing is unavailable in this browser. You can ride with targets only or pair devices in the Tempo Ride desktop app.
+        </p>
+      )}
+    </dialog>
+  );
+
+  const advancedOptions = (
+    <details className="group">
+      <summary className={`${secondaryButtonClassName} w-fit cursor-pointer list-none gap-2`}>
+        Advanced options
+        <ChevronDown aria-hidden="true" size={16} className="group-open:rotate-180" />
+      </summary>
+      <div className="mt-3 space-y-4">
+        {active ? (
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+            <div className="flex items-center gap-2" role="group" aria-label="Intensity">
+              <span className="text-sm text-[var(--text-secondary)]">Intensity</span>
+              <button type="button" className={iconControlClassName} onClick={() => bias(-1)} aria-label="Decrease intensity 1%" aria-keyshortcuts="-"><Minus aria-hidden="true" size={16} strokeWidth={1.8} /></button>
+              <span className="data min-w-12 text-center text-sm font-medium text-[var(--text)]" aria-live="polite">{recording.biasPct > 0 ? '+' : recording.biasPct < 0 ? '−' : ''}{Math.abs(recording.biasPct)}%</span>
+              <button type="button" className={iconControlClassName} onClick={() => bias(1)} aria-label="Increase intensity 1%" aria-keyshortcuts="+"><Plus aria-hidden="true" size={16} strokeWidth={1.8} /></button>
+            </div>
+            {devices.ergAvailable ? (
+              <span className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)]">ERG<Toggle checked={recording.ergEnabled} onChange={toggleErg} label="ERG mode" /></span>
+            ) : null}
+          </div>
+        ) : null}
+        <dl className="grid w-fit grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 text-[13px] text-[var(--text-secondary)]">
+          <dt><Kbd>Space</Kbd></dt><dd>Pause or resume</dd>
+          <dt><Kbd>N</Kbd></dt><dd>Skip to next interval</dd>
+          <dt><Kbd>E</Kbd></dt><dd>Toggle ERG</dd>
+          <dt className="flex gap-1"><Kbd>+</Kbd><Kbd>−</Kbd></dt><dd>Adjust intensity 1%</dd>
+          {fullscreenSupported ? <><dt><Kbd>F</Kbd></dt><dd>Full screen</dd></> : null}
+        </dl>
+      </div>
+    </details>
   );
 
   const frame = (stateLabel: string, controls: ReactNode, body: ReactNode, label: string) => (
@@ -448,7 +491,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
             <p className="truncate text-[12px] text-[var(--text-muted)]">{stateLabel}</p>
           </div>
         </div>
-        {deviceChips}
+        {(active || (recovered && status === 'ready')) ? connectionsRow : null}
         {controls ? (
           <div className="flex flex-wrap items-center gap-2 max-xl:basis-full sm:gap-3">
             {controls}
@@ -457,17 +500,8 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         ) : fullscreenButton}
       </header>
       <main id="ride" aria-label={label} className="flex min-h-0 flex-1 flex-col">{body}</main>
+      {connectionsDialog}
     </div>
-  );
-
-  const devicePanel = bluetoothAvailable ? (
-    <ul className="divide-y divide-[var(--border)]">
-      {ROLES.map((role) => <DeviceRow key={role} role={role} state={devices[role]} onConnect={() => connect(role)} onDisconnect={() => manager.disconnect(role)} />)}
-    </ul>
-  ) : (
-    <p role="status" className="py-3 text-[13px] leading-relaxed text-[var(--text-secondary)]">
-      This browser cannot connect to Bluetooth trainers (Safari and Firefox do not support Web Bluetooth). Use Chrome or Edge on desktop or Android, or the Tempo Ride desktop app. You can still ride with targets only.
-    </p>
   );
 
   if (recovered && status === 'ready') {
@@ -605,48 +639,35 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   if (status === 'ready') {
     const intervalCount = plan.steps.filter((step) => step.kind !== 'pause' && step.durationSec > 0).length;
     return frame('Ready to ride', null, (
-      <div className="grid flex-1 lg:grid-cols-[minmax(0,1fr)_400px]">
-        <div className="flex min-w-0 flex-col gap-8 px-4 py-8 sm:px-8">
-          <UnsavedRidesNotice userId={userId} excludeSessionId={sessionId} />
+      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-4 py-6 sm:px-8 sm:py-8">
+        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-10">
           <div>
             <h2 className="text-[clamp(1.75rem,1.3rem+1.6vw,3rem)] font-medium leading-tight tracking-[-0.025em] text-[var(--text)]">{sessionTitle}</h2>
-            <div className="mt-6 grid max-w-2xl grid-cols-2 gap-6 sm:grid-cols-4">
+            <div className="mt-4 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
               <Stat label="Duration" value={formatClock(plan.totalSec)} />
               <Stat label="Intervals" value={String(intervalCount)} />
               <Stat label="FTP" value={display(plan.ftpWatts)} unit={plan.ftpWatts ? 'W' : undefined} />
               <Stat label="Planned TSS" value={display(plannedTss)} />
             </div>
           </div>
-          <section aria-label="Workout profile" className="flex min-h-[220px] flex-1 flex-col pb-6">
-            <WorkoutProfileChart plan={plan} positionSec={null} buckets={[]} domainSec={plan.totalSec} heartRateMaxBpm={heartRateMaxBpm} className="min-h-[200px] flex-1" />
-          </section>
-          {!planHasPowerTargets(plan) ? (
-            <p className="text-[14px] text-[var(--status-warning)]">
-              {plan.ftpWatts ? 'This workout has no power targets, so the trainer stays in free ride.' : <><Link href={PROFILE_FTP_HREF} className="underline underline-offset-2">Add FTP in Profile</Link> to turn %FTP targets into watts. Until then the trainer stays in free ride.</>}
-            </p>
-          ) : null}
-        </div>
-        <aside className="flex flex-col gap-8 border-t border-[var(--border)] bg-[var(--surface)] px-4 py-8 sm:px-8 lg:border-l lg:border-t-0">
-          <section aria-labelledby="ride-devices">
-            <h2 id="ride-devices" className="text-[16px] font-medium text-[var(--text)]">Devices</h2>
-            <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Connect a smart trainer for ERG control, or ride to the targets on your own.</p>
-            <div className="mt-3">{devicePanel}</div>
-          </section>
-          <div className="space-y-3">
-            <button type="button" className={`${primaryButtonClassName} !h-14 w-full gap-2 text-[16px]`} onClick={start}>
+          <div className="flex flex-col gap-3">
+            <button type="button" className={`${primaryButtonClassName} min-h-11 gap-2`} onClick={start}>
               <Play aria-hidden="true" size={18} strokeWidth={1.8} />
               {anyDevice ? 'Start ride' : 'Start with targets only'}
             </button>
-            {!anyDevice ? <p className="text-[13px] text-[var(--text-muted)]">Without a trainer, Tempo times each interval and shows its target. Connect devices any time from the top bar.</p> : null}
+            {connectionsRow}
           </div>
-          <dl className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 text-[13px] text-[var(--text-secondary)] lg:mt-auto">
-            <dt><Kbd>Space</Kbd></dt><dd>Pause or resume</dd>
-            <dt><Kbd>N</Kbd></dt><dd>Skip to next interval</dd>
-            <dt><Kbd>E</Kbd></dt><dd>Toggle ERG</dd>
-            <dt className="flex gap-1"><Kbd>+</Kbd><Kbd>−</Kbd></dt><dd>Adjust intensity 1%</dd>
-            <dt><Kbd>F</Kbd></dt><dd>Full screen</dd>
-          </dl>
-        </aside>
+        </div>
+        <UnsavedRidesNotice userId={userId} excludeSessionId={sessionId} />
+        <section aria-label="Workout profile" className="flex flex-col pb-4">
+          <WorkoutProfileChart plan={plan} positionSec={null} buckets={[]} domainSec={plan.totalSec} heartRateMaxBpm={heartRateMaxBpm} className="h-[clamp(180px,35dvh,360px)]" />
+        </section>
+        {!planHasPowerTargets(plan) ? (
+          <p className="text-[14px] text-[var(--status-warning)]">
+            {plan.ftpWatts ? 'This workout has no power targets, so the trainer stays in free ride.' : <><Link href={PROFILE_FTP_HREF} className="underline underline-offset-2">Add FTP in Profile</Link> to turn %FTP targets into watts. Until then the trainer stays in free ride.</>}
+          </p>
+        ) : null}
+        {advancedOptions}
       </div>
     ), 'Ride setup');
   }
@@ -674,16 +695,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
 
   const controls = (
     <>
-      <div className="flex items-center gap-1" role="group" aria-label="Intensity">
-        <button type="button" className={iconControlClassName} onClick={() => bias(-1)} aria-label="Decrease intensity 1%" aria-keyshortcuts="-" title="Decrease intensity (−)"><Minus aria-hidden="true" size={16} strokeWidth={1.8} /></button>
-        <span className="data min-w-[3.75rem] text-center text-[14px] font-medium text-[var(--text)]" aria-live="polite" title="Intensity bias">{recording.biasPct > 0 ? '+' : recording.biasPct < 0 ? '−' : ''}{Math.abs(recording.biasPct)}%</span>
-        <button type="button" className={iconControlClassName} onClick={() => bias(1)} aria-label="Increase intensity 1%" aria-keyshortcuts="+" title="Increase intensity (+)"><Plus aria-hidden="true" size={16} strokeWidth={1.8} /></button>
-      </div>
-      {devices.ergAvailable ? (
-        <span className="inline-flex items-center gap-1 text-[13px] font-medium text-[var(--text-secondary)]">ERG<Toggle checked={recording.ergEnabled} onChange={toggleErg} label="ERG mode" /></span>
-      ) : null}
-      <span aria-hidden="true" className="hidden h-6 w-px bg-[var(--border)] xl:block" />
-      <button type="button" className={`${iconControlClassName} sm:max-xl:ml-auto`} onClick={skip} disabled={!currentStep} aria-label="Skip to next interval" aria-keyshortcuts="N" title="Skip interval (N)"><SkipForward aria-hidden="true" size={17} strokeWidth={1.7} /></button>
+      <button type="button" className={iconControlClassName} onClick={skip} disabled={!currentStep} aria-label="Skip to next interval" aria-keyshortcuts="N" title="Skip interval (N)"><SkipForward aria-hidden="true" size={17} strokeWidth={1.7} /></button>
       <button type="button" className={`${status === 'paused' ? primaryButtonClassName : secondaryButtonClassName} !h-10 gap-2`} onClick={togglePause} aria-keyshortcuts="Space">
         {status === 'paused' ? <Play aria-hidden="true" size={16} strokeWidth={1.8} /> : <Pause aria-hidden="true" size={16} strokeWidth={1.8} />}
         {status === 'paused' ? 'Resume' : 'Pause'}
@@ -702,7 +714,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         </p>
       ) : null}
       {status === 'paused' ? (
-        <p role="status" className="border-b border-[var(--border)] bg-[var(--raised)] px-5 py-2 text-[13px] text-[var(--text)] sm:px-7">Paused. The timer is stopped; press <Kbd>Space</Kbd> to resume.</p>
+        <p role="status" className="border-b border-[var(--border)] bg-[var(--raised)] px-5 py-2 text-[13px] text-[var(--text)] sm:px-7">Paused. The timer is stopped.</p>
       ) : null}
 
       <div className="grid gap-px bg-[var(--border)] md:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,0.72fr)]">
@@ -737,7 +749,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
             <>
               <div className="flex items-baseline justify-between gap-3">
                 <Label>{targetWatts === null && !prescribedTarget ? 'Free ride' : 'Target'}</Label>
-                <p className="text-[13px] text-[var(--text-muted)]">{anyDevice ? 'Waiting for power' : 'Targets only'}</p>
+                <p className="text-[13px] text-[var(--text-muted)]">{devices.trainer.status === 'connected' ? 'Waiting for power' : 'Targets only'}</p>
               </div>
               {prescribedTarget ? (
                 <p className={heroNumeral}>{prescribedValue}<span className="ml-2 text-[0.22em] font-normal tracking-normal text-[var(--text-muted)]">{prescribedUnit}</span></p>
@@ -813,6 +825,8 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
           <Stat label="Avg HR" value={display(summary.averageHeartRateBpm)} unit="bpm" />
         </div>
       </section>
+
+      <div className="border-b border-[var(--border)] px-5 py-3 sm:px-7">{advancedOptions}</div>
 
       {/* Profile */}
       <section aria-label="Workout profile" className="flex min-h-[180px] flex-1 flex-col px-5 pb-8 pt-4 sm:px-7">

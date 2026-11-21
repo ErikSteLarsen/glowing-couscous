@@ -43,18 +43,6 @@ export default async function AthleteRidePage({
 
   const back = resolveBackTarget({ route: 'session-ride', sessionId: detail.session.id, from });
 
-  if (detail.session.sport !== 'BIKING') {
-    return (
-      <PageShell size="wide">
-        <TopBar back={back} title={`Ride ${detail.session.title}`} />
-        <EmptyState
-          title="Trainer rides are for bike sessions"
-          description="Use live guidance to follow this workout step by step."
-          action={<ActionLink href={withBackOrigin(`/athlete/live/${detail.session.id}`, parseBackOrigin('session-live', from))}>Start live</ActionLink>}
-        />
-      </PageShell>
-    );
-  }
   if (detail.session.status === 'skipped' || detail.session.status === 'completed') {
     return (
       <PageShell size="wide">
@@ -70,6 +58,19 @@ export default async function AthleteRidePage({
 
   const profile = account?.performanceProfile;
   const steps = createExecutionSteps(detail.session.editor.blocks, detail.session.sport, profile);
+  if (detail.session.sport !== 'BIKING') {
+    return (
+      <PageShell size="wide">
+        <TopBar back={back} title={`Ride ${detail.session.title}`} />
+        <EmptyState
+          title="Trainer rides are for bike sessions"
+          description={steps.length > 0 ? 'Use live guidance to follow this workout step by step.' : 'This workout has no steps to follow.'}
+          action={steps.length > 0 ? <ActionLink href={withBackOrigin(`/athlete/live/${detail.session.id}`, parseBackOrigin('session-live', from))}>Follow along</ActionLink> : undefined}
+        />
+      </PageShell>
+    );
+  }
+
   const plan = createRidePlan(detail.session.editor.blocks, profile);
 
   return (
