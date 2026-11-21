@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition, type CSSProperties
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { CalendarPlus, CalendarRange, Check, ChevronLeft, ChevronRight, Ellipsis, ExternalLink, Flag, MoveRight, Plus, Trash2, Upload } from 'lucide-react';
+import { CalendarPlus, CalendarRange, Check, ChevronLeft, ChevronRight, Ellipsis, Flag, MoveRight, Plus, Trash2, Upload } from 'lucide-react';
 import {
   DndContext,
   DragOverlay,
@@ -323,10 +323,9 @@ export function AthleteCalendar({
                 <ChevronRight aria-hidden="true" size={18} strokeWidth={1.8} />
               </Link>
             </nav>
-            <Link href={addHref(selectedDay ?? day)} aria-label="Add workout" className={`${primaryButtonClassName} max-md:min-h-11 max-sm:px-3`}>
+            <Link href={addHref(selectedDay ?? day)} className={`${primaryButtonClassName} max-md:min-h-11 max-sm:px-3`}>
               <Plus aria-hidden="true" size={16} strokeWidth={2} />
-              <span className="max-sm:hidden">Add workout</span>
-              <span aria-hidden="true" className="sm:hidden">Add</span>
+              Add workout
             </Link>
             <CalendarMoreMenu view={view} day={day} showTotals={showTotals} onShowTotalsChange={changeShowTotals} />
           </>
@@ -577,10 +576,6 @@ function SessionCard({
             <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
           </MenuTrigger>
           <MenuContent align="end">
-            <MenuItem render={<Link href={`/athlete/session/${session.id}?from=calendar`} />}>
-              <ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />
-              Open session
-            </MenuItem>
             {session.canReschedule ? (
               <MenuItem onSelect={() => setMoving(true)}>
                 <MoveRight aria-hidden="true" size={16} strokeWidth={1.8} />
@@ -589,7 +584,7 @@ function SessionCard({
             ) : null}
             {session.canDelete ? (
               <>
-                <MenuSeparator />
+                {session.canReschedule ? <MenuSeparator /> : null}
                 <MenuItem destructive onSelect={() => setRemoving(true)}>
                   <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />
                   Remove…

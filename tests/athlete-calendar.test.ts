@@ -262,6 +262,14 @@ test('calendar UI reschedules through the narrow schedule route with drag, keybo
   assert.doesNotMatch(source, /#[0-9a-fA-F]{3,8}\b/);
 });
 
+test('calendar cards open from the card itself; the overflow menu only moves or removes', async () => {
+  const source = await readFile(path.join(process.cwd(), 'app/(app)/athlete/calendar/AthleteCalendar.tsx'), 'utf8');
+
+  assert.doesNotMatch(source, /Open session/);
+  assert.match(source, /Remove…/);
+  assert.match(source, /<Plus aria-hidden="true" size=\{16\} strokeWidth=\{2\} \/>\s*Add workout\s*<\/Link>/);
+});
+
 
 test('calendar never offers movement for completed status without an Activity', async () => {
   const service = createAthleteService({
