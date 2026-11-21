@@ -131,7 +131,7 @@ export default async function AthletePage() {
                 <p className="data text-[13px] text-[var(--text-muted)]">
                   {[nextAction.timeLabel, getSportLabel(nextAction.sport)].filter(Boolean).join(' · ')}
                 </p>
-                <p className="mt-1 text-2xl font-medium tracking-[-0.02em] text-[var(--text)]">{nextAction.title}</p>
+                <p className="mt-1 text-2xl font-medium tracking-[-0.02em] text-[var(--text)] [overflow-wrap:anywhere]">{nextAction.title}</p>
                 {nextAction.summary ? <p className="mt-1.5 line-clamp-2 max-w-[68ch] text-sm text-[var(--text-secondary)]">{nextAction.summary}</p> : null}
               </div>
               <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
@@ -195,7 +195,7 @@ export default async function AthletePage() {
                       className="group -mx-2 flex min-h-10 items-center gap-3 rounded-lg px-2 text-sm transition-colors hover:bg-[var(--raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] max-md:min-h-11"
                     >
                       <span className="data w-16 shrink-0 text-[var(--text-muted)]">{day.label} {day.dateLabel}</span>
-                      <span className="min-w-0 flex-1 truncate text-[var(--text)]">{session.title}</span>
+                      <span className="min-w-0 flex-1 py-1.5 text-[var(--text)] [overflow-wrap:anywhere]">{session.title}</span>
                       {session.status === 'skipped' ? <span className="shrink-0 text-xs text-[var(--text-secondary)]">Skipped</span> : null}
                       <span className="data shrink-0 text-[var(--text-muted)]">{formatDuration(session.durationSec)}</span>
                     </Link>
@@ -218,7 +218,7 @@ export default async function AthletePage() {
         <section aria-labelledby="next-event-heading" className="flex flex-col gap-3 rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <div className="min-w-0">
             <p className="text-xs font-medium text-[var(--brand)]">{dashboard.nextEvent.daysUntil === 0 ? 'Today' : dashboard.nextEvent.daysUntil === 1 ? 'Tomorrow' : `In ${dashboard.nextEvent.daysUntil} days`} · {format(new Date(`${dashboard.nextEvent.eventDate}T12:00:00`), 'EEE d MMM yyyy')}</p>
-            <h2 id="next-event-heading" className="mt-1 text-lg font-medium text-[var(--text)]">{dashboard.nextEvent.title}</h2>
+            <h2 id="next-event-heading" className="mt-1 text-lg font-medium text-[var(--text)] [overflow-wrap:anywhere]">{dashboard.nextEvent.title}</h2>
             <p className="mt-0.5 text-sm text-[var(--text-muted)]">{getSportLabel(dashboard.nextEvent.sport)}{dashboard.nextEvent.targetFinishSec ? ` · Goal ${formatDuration(dashboard.nextEvent.targetFinishSec)}` : ''}</p>
           </div>
           <Link href="/athlete/events" className={`${secondaryButtonClassName} shrink-0 max-md:min-h-11`}>Manage events</Link>
@@ -304,7 +304,7 @@ export default async function AthletePage() {
                     <p className="data text-[13px] text-[var(--text-muted)]">
                       {format(dashboard.lastActivity.completedAt, 'EEE d MMM')} · {getSportLabel(dashboard.lastActivity.sport)}
                     </p>
-                    <p className="mt-1 text-lg font-medium text-[var(--text)]">{dashboard.lastActivity.title}</p>
+                    <p className="mt-1 text-lg font-medium text-[var(--text)] [overflow-wrap:anywhere]">{dashboard.lastActivity.title}</p>
                   </div>
                   <dl className="grid grid-cols-3 gap-3">
                     {[
