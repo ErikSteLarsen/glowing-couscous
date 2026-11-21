@@ -117,7 +117,7 @@ export function AppSidebar(props: {
             <Link
               href={navItems[0]?.href ?? '/'}
               onClick={onNavigate}
-              className={`flex min-w-0 items-center gap-2.5 rounded-lg ${buttonFocusClassName}`}
+              className={`flex min-w-0 items-center gap-2.5 rounded-lg max-md:min-h-11 ${buttonFocusClassName}`}
               aria-label="Tempo home"
             >
               <BrandMark />
@@ -132,7 +132,7 @@ export function AppSidebar(props: {
               type="button"
               ref={closeButtonRef}
               aria-label="Close menu"
-              className={`inline-flex size-9 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--raised)] hover:text-[var(--text)] md:hidden ${buttonFocusClassName}`}
+              className={`inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--raised)] hover:text-[var(--text)] md:hidden ${buttonFocusClassName}`}
               onClick={props.onClose}
             >
               <X aria-hidden="true" size={16} strokeWidth={1.6} />

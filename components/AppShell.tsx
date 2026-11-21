@@ -216,7 +216,7 @@ export function AppShell({
         inert={mobileOpen && isMobileViewport ? true : undefined}
       >
         <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/90 px-4 backdrop-blur-md md:hidden">
-          <Link href={navItems[0]?.href ?? '/'} className={`flex items-center gap-2.5 rounded-lg ${buttonFocusClassName}`}>
+          <Link href={navItems[0]?.href ?? '/'} aria-label="Tempo home" className={`flex min-h-11 items-center gap-2.5 rounded-lg ${buttonFocusClassName}`}>
             <BrandMark />
             <span className="text-[15px] font-semibold text-[var(--text)]">Tempo</span>
           </Link>
