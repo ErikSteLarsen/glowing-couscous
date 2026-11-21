@@ -284,8 +284,11 @@ export function ProfileClient({ account }: { account: Account }) {
               <span className={formLabelClassName}>Display name</span>
               <input value={name} onChange={(event) => setName(event.target.value)} disabled={saving} className={`${formFieldClassName} disabled:cursor-wait disabled:opacity-60`} />
             </label>
-            <div className="flex min-h-10 items-center rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] px-3 text-sm text-[var(--text-secondary)] sm:self-end">
-              <span className="truncate">Email: {account.email}</span>
+            <div className="min-w-0 space-y-2">
+              <p className={formLabelClassName}>Email</p>
+              <p className="flex min-h-10 items-center rounded-lg border border-[var(--border)] bg-[var(--field-surface)] px-3 py-2 text-sm text-[var(--text-secondary)]">
+                <span className="min-w-0 wrap-anywhere">{account.email}</span>
+              </p>
             </div>
           </div>
 
