@@ -92,6 +92,7 @@ const backDestinations = {
   library: { href: '/athlete/library', destination: 'Library' },
   ride: { href: '/athlete/ride', destination: 'Ride' },
   profile: { href: '/profile', destination: 'Profile' },
+  settings: { href: '/settings#connections', destination: 'Settings' },
   roster: { href: '/coach', destination: 'Athletes' },
 } as const;
 
@@ -105,7 +106,7 @@ const backRoutes = {
   'session-live': sessionOrigins,
   'session-ride': sessionOrigins,
   'library-workout': ['library', 'ride'],
-  import: ['activity', 'profile'],
+  import: ['activity', 'profile', 'settings'],
   'coach-athlete': ['roster', 'planner'],
 } as const satisfies Record<string, readonly [BackOrigin, ...BackOrigin[]]>;
 

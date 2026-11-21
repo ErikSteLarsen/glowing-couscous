@@ -4,10 +4,12 @@ import { SegmentedControl, SegmentedControlItem } from '@ui-sdk/react/segmented-
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { format } from 'date-fns';
+import { Ellipsis } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
-import { Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, getSegmentedChoiceClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
+import { Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, getSegmentedChoiceClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import type { ImportableSession } from '@/lib/activity-import-service';
 import type { ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { StravaConnectionSummary, StravaInboxActivitySummary } from '@/lib/strava-service';
@@ -177,30 +179,37 @@ export function StravaImportPanel({
     : [];
 
   return (
-    <Surface id="strava" className="space-y-4">
+    <Surface id="strava" className="scroll-mt-20 space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Strava inbox</h2>
-          <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
-            {connection.connected
-              ? connection.webhookConfigured
-                ? `Connected${connection.athleteName ? ` as ${connection.athleteName}` : ''} · visit Import to review synced activities.`
-                : `Connected${connection.athleteName ? ` as ${connection.athleteName}` : ''} · webhooks are not configured, so use Sync now to check for activities.`
-              : connection.canConnect ? 'Strava is not connected.' : 'Strava is currently unavailable.'}
-          </p>
+          {!connection.connected ? (
+            <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
+              {connection.canConnect ? 'Strava is not connected.' : 'Strava is currently unavailable.'}
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
           {connection.connected ? (
             <>
-              <button type="button" className={secondaryButtonClassName} disabled={refreshing || syncing} onClick={() => startRefresh(() => router.refresh())}>
-                {refreshing ? 'Refreshing…' : 'Refresh inbox'}
-              </button>
               <button type="button" className={secondaryButtonClassName} disabled={refreshing || syncing} onClick={() => void syncActivities()}>
-                {syncing ? 'Syncing…' : 'Sync now'}
+                {syncing ? 'Checking Strava…' : 'Check Strava now'}
               </button>
+              <Menu>
+                <MenuTrigger aria-label="Strava inbox options" className={iconButtonClassName}>
+                  <Ellipsis size={18} aria-hidden="true" />
+                </MenuTrigger>
+                <MenuContent align="end">
+                  <MenuItem disabled={refreshing || syncing} onSelect={() => startRefresh(() => router.refresh())}>
+                    {refreshing ? 'Refreshing…' : 'Refresh inbox'}
+                  </MenuItem>
+                  <MenuItem render={<Link href="/settings#connections" />}>Manage connections</MenuItem>
+                </MenuContent>
+              </Menu>
             </>
-          ) : null}
-          <Link href="/settings#connections" className={secondaryButtonClassName}>Manage connections</Link>
+          ) : (
+            <Link href="/settings#connections" className={secondaryButtonClassName}>Manage connections</Link>
+          )}
         </div>
       </div>
 
@@ -208,7 +217,6 @@ export function StravaImportPanel({
       {notice ? <p role="status" className="text-[13px] text-[var(--status-success)]">{notice}</p> : null}
       {connection.connected ? (
         <div className="space-y-3">
-          <p className="text-[13px] text-[var(--text-secondary)]">Newest first. Refresh inbox checks synced activities; Sync now checks Strava directly.</p>
           <SegmentedControl value={showAllActivities ? 'all' : 'review'} onValueChange={(value) => { if (value) setShowAllActivities(value === 'all'); }} aria-label="Strava inbox filter" className="flex w-full max-w-sm gap-2">
             <SegmentedControlItem ref={inboxFilterRef} value="review" className={getSegmentedChoiceClassName(!showAllActivities)}>Needs review ({pendingActivities.length})</SegmentedControlItem>
             <SegmentedControlItem value="all" className={getSegmentedChoiceClassName(showAllActivities)}>All activities</SegmentedControlItem>
@@ -243,7 +251,7 @@ export function StravaImportPanel({
         </div>
       ) : (
         <p className="border-y border-[var(--border)] py-4 text-[13px] text-[var(--text-secondary)]">
-          {showAllActivities ? 'No synced Strava activities yet.' : 'No activities need review.'} Use Refresh inbox if you are expecting an activity, or Sync now to check Strava.
+          {showAllActivities ? 'No synced Strava activities yet.' : 'No activities need review.'}
         </p>
       ) : null}
 

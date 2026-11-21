@@ -4,13 +4,14 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, Dia
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { ActionLink, Surface, dangerButtonClassName, dangerTextClassName, primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName, successTextClassName } from '@/components/ui';
+import { withBackOrigin } from '@/lib/app-navigation';
 import type { StravaConnectionSummary } from '@/lib/strava-service';
 
 const oauthNotices: ReadonlyMap<string, string> = new Map([
   ['connected', 'Strava is connected. Recent activities are ready to review.'],
-  ['connected:sync-error', 'Strava is connected, but the first check failed. Open the inbox and choose Sync now to retry.'],
+  ['connected:sync-error', 'Strava is connected, but the first check failed. Open the inbox and choose Check Strava now to retry.'],
   ['connected:revoke-error', 'Strava is connected, but Tempo could not confirm revocation of the previous Strava account.'],
-  ['connected:sync-revoke-error', 'The first activity check failed and Tempo could not confirm revocation of the previous account. Open the inbox and choose Sync now to retry.'],
+  ['connected:sync-revoke-error', 'The first activity check failed and Tempo could not confirm revocation of the previous account. Open the inbox and choose Check Strava now to retry.'],
   ['cancelled', 'Strava connection was cancelled.'],
   ['error:state', 'The Strava sign-in expired. Start the connection again.'],
   ['error:account-linked', 'That Strava account is already linked to another Tempo account.'],
@@ -91,9 +92,9 @@ export function StravaConnectionSettings({
             <>
               <p className="text-sm text-[var(--text-secondary)]">
                 Review synced activities before adding them to Tempo.
-                {webhookConfigured ? null : ' Use Sync now in the inbox to fetch recent activities.'}
+                {webhookConfigured ? null : ' Use Check Strava now in the inbox to fetch recent activities.'}
               </p>
-              <ActionLink href="/athlete/import#strava">Review Strava activities</ActionLink>
+              <ActionLink href={withBackOrigin('/athlete/import#strava', 'settings')}>Review Strava activities</ActionLink>
               <div className="space-y-3 border-t border-[var(--border)] pt-4">
                 <p className="text-sm text-[var(--text-secondary)]">Disconnecting removes Strava imports from Tempo and restores any matched sessions to their previous state. Other imports stay in Tempo.</p>
                 <button type="button" className={dangerButtonClassName} disabled={disconnecting} onClick={() => void disconnect()}>

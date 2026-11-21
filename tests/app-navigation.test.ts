@@ -55,9 +55,9 @@ test('library workout returns to Ride from Tempo Ride, otherwise to Library', ()
   assert.deepEqual(resolveBackTarget({ route: 'library-workout', from: 'calendar' }), back('/athlete/library', 'Library'));
 });
 
-test('import returns to Profile or Activity', () => {
+test('import returns to Settings, Profile or Activity', () => {
   assert.deepEqual(resolveBackTarget({ route: 'import', from: 'profile' }), back('/profile', 'Profile'));
-  assert.deepEqual(resolveBackTarget({ route: 'import', from: 'settings' }), back('/athlete/activity', 'Activity'));
+  assert.deepEqual(resolveBackTarget({ route: 'import', from: 'settings' }), back('/settings#connections', 'Settings'));
   assert.deepEqual(resolveBackTarget({ route: 'import', from: 'activity' }), back('/athlete/activity', 'Activity'));
   assert.deepEqual(resolveBackTarget({ route: 'import' }), back('/athlete/activity', 'Activity'));
   assert.deepEqual(resolveBackTarget({ route: 'import', from: 'ride' }), back('/athlete/activity', 'Activity'));

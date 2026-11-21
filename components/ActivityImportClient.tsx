@@ -156,12 +156,11 @@ export function ActivityImportClient({
 
   return (
     <>
-      <StravaImportPanel initialConnection={initialStravaConnection} plannedSessions={plannedSessions} />
       <Surface id="activity-files" className="scroll-mt-20 space-y-4">
         <div>
-          <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Add activity files</h2>
+          <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Activity files</h2>
           <p className="mt-1 max-w-[72ch] text-[13px] leading-[1.5] text-[var(--text-secondary)]">
-            Choose FIT, TCX, or GPX files from your device. You can review each activity and optionally match it to an unfinished planned session before importing.
+            Choose FIT, TCX, or GPX files, then review them before saving. You can match them to planned sessions.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -170,7 +169,8 @@ export function ActivityImportClient({
             type="file"
             accept=".fit,.FIT,.tcx,.TCX,.gpx,.GPX"
             multiple
-            aria-label="Choose activity files"
+            tabIndex={-1}
+            aria-hidden="true"
             className="sr-only"
             onChange={(event) => void addFiles(event.currentTarget.files)}
           />
@@ -263,6 +263,8 @@ export function ActivityImportClient({
           ))}
         </section>
       ) : null}
+
+      <StravaImportPanel initialConnection={initialStravaConnection} plannedSessions={plannedSessions} />
 
       <section aria-labelledby="import-history-heading" className="space-y-4">
         <div>

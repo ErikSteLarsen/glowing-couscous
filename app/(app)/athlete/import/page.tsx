@@ -39,7 +39,6 @@ export default async function ImportPage({
       <TopBar
         back={resolveBackTarget({ route: 'import', from: query.from })}
         title="Import"
-        description="Review activities from Strava or an activity file, match them to a planned session, and add the completed result to Tempo."
       />
       <div className="page-content--library space-y-5">
         <ActivityImportClient

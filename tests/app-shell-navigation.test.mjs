@@ -302,10 +302,23 @@ test('Settings owns Strava connection management and Import retains the inbox', 
   assert.match(connections, /id="connections"/);
   assert.match(connections, /href="\/api\/strava\/connect"/);
   assert.match(connections, /fetch\('\/api\/strava\/connection', \{ method: 'DELETE' \}/);
-  assert.match(connections, /href="\/athlete\/import#strava"/);
+  assert.match(connections, /withBackOrigin\('\/athlete\/import#strava', 'settings'\)/);
   assert.match(imports, /redirect\(`\/settings\?strava=\$\{encodeURIComponent\(query\.strava\)\}#connections`\)/);
   assert.match(inbox, /href="\/settings#connections"/);
   assert.doesNotMatch(inbox, /\/api\/strava\/(connect|connection)\b/);
+});
+
+test('Import leads with file intake and keeps local inbox refresh in the options menu', async () => {
+  const [imports, inbox] = await Promise.all([
+    'components/ActivityImportClient.tsx',
+    'components/StravaImportPanel.tsx',
+  ].map(read));
+
+  assert.match(imports, /Choose activity files[\s\S]*<StravaImportPanel[\s\S]*Import history/);
+  assert.match(inbox, /Check Strava now/);
+  assert.match(inbox, /<MenuItem disabled=\{refreshing \|\| syncing\} onSelect=\{\(\) => startRefresh\(\(\) => router\.refresh\(\)\)\}>[\s\S]*Refresh inbox[\s\S]*<\/MenuItem>/);
+  assert.match(inbox, /Needs review \(\{pendingActivities\.length\}\)/);
+  assert.doesNotMatch(inbox, /server environment|webhooks are not configured/);
 });
 
 test('legacy coach planner surfaces were removed after Tempo convergence', async () => {
