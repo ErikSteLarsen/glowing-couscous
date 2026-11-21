@@ -50,7 +50,7 @@ export default async function AthleteActivityPage({ searchParams }: {
           </select>
         </label>
         <button type="submit" className={secondaryButtonClassName}>Apply filters</button>
-        {isFiltered ? <ActionLink href="/athlete/activity" tone="ghost">Clear filters</ActionLink> : null}
+        {isFiltered && activityFeed.activities.length > 0 ? <ActionLink href="/athlete/activity" tone="ghost">Clear filters</ActionLink> : null}
       </form>
 
       <dl aria-label={totalsLabel} className="flex flex-wrap gap-x-6 gap-y-2 border-y border-[var(--border)] py-3 text-sm">
@@ -74,9 +74,13 @@ export default async function AthleteActivityPage({ searchParams }: {
 
       {activityFeed.activities.length === 0 ? (
         <EmptyState
-          title={isFiltered ? 'No matching completed sessions' : 'No completed sessions yet'}
-          description={isFiltered ? 'Try a different workout name or sport.' : 'Log work you have already completed, or plan a session in Calendar and record its outcome afterward.'}
-          action={<ActionLink href={isFiltered ? '/athlete/activity' : '/athlete/calendar'} tone="secondary">{isFiltered ? 'Clear filters' : 'Open Calendar'}</ActionLink>}
+          title={isFiltered ? 'No activities match these filters' : 'No completed activities yet'}
+          description={isFiltered ? 'Try a different name or sport.' : 'Use Add activity to log or import a workout you’ve completed.'}
+          action={
+            <Link href={isFiltered ? '/athlete/activity' : '/athlete/calendar'} className={`${secondaryButtonClassName} max-md:min-h-11`}>
+              {isFiltered ? 'Clear filters' : 'Open Calendar'}
+            </Link>
+          }
         />
       ) : (
         <>
