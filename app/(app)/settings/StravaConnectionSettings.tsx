@@ -3,7 +3,8 @@
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@ui-sdk/react/dialog';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { ActionLink, Surface, dangerButtonClassName, dangerTextClassName, primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName, successTextClassName } from '@/components/ui';
+import Link from 'next/link';
+import { Surface, dangerButtonClassName, dangerTextClassName, primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName, successTextClassName } from '@/components/ui';
 import { withBackOrigin } from '@/lib/app-navigation';
 import type { StravaConnectionSummary } from '@/lib/strava-service';
 
@@ -73,7 +74,7 @@ export function StravaConnectionSettings({
             <p className="text-sm font-medium text-[var(--text)]">Strava</p>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">{status}</p>
           </div>
-          <DialogTrigger className={secondaryButtonClassName}>Manage Strava</DialogTrigger>
+          <DialogTrigger className={`${secondaryButtonClassName} max-md:min-h-11`}>Manage Strava</DialogTrigger>
         </div>
         <DialogContent className="tempo-alert-dialog h-fit w-[calc(100%-2rem)] max-w-md space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]">
           <div>
@@ -94,19 +95,19 @@ export function StravaConnectionSettings({
                 Review synced activities before adding them to Tempo.
                 {webhookConfigured ? null : ' Use Check Strava now in the inbox to fetch recent activities.'}
               </p>
-              <ActionLink href={withBackOrigin('/athlete/import#strava', 'settings')}>Review Strava activities</ActionLink>
+              <Link href={withBackOrigin('/athlete/import#strava', 'settings')} className={`${primaryButtonClassName} max-md:min-h-11`}>Review Strava activities</Link>
               <div className="space-y-3 border-t border-[var(--border)] pt-4">
                 <p className="text-sm text-[var(--text-secondary)]">Disconnecting removes Strava imports from Tempo and restores any matched sessions to their previous state. Other imports stay in Tempo.</p>
-                <button type="button" className={dangerButtonClassName} disabled={disconnecting} onClick={() => void disconnect()}>
+                <button type="button" className={`${dangerButtonClassName} max-md:min-h-11`} disabled={disconnecting} onClick={() => void disconnect()}>
                   {disconnecting ? 'Disconnecting…' : 'Disconnect Strava'}
                 </button>
               </div>
             </>
           ) : canConnect ? (
-            <a href="/api/strava/connect" className={primaryButtonClassName}>Connect Strava</a>
+            <a href="/api/strava/connect" className={`${primaryButtonClassName} max-md:min-h-11`}>Connect Strava</a>
           ) : null}
           <div className="flex justify-end">
-            <DialogClose className={secondaryButtonClassName} disabled={disconnecting}>Close</DialogClose>
+            <DialogClose className={`${secondaryButtonClassName} max-md:min-h-11`} disabled={disconnecting}>Close</DialogClose>
           </div>
         </DialogContent>
       </Dialog>
