@@ -48,7 +48,10 @@ See `.env.example`; the Resend account must allow sending from that address.
 
 For a fresh, disposable development database only, run `pnpm db:seed` after
 the migration to create demo accounts. Seeding deletes existing application
-data; it is not needed to fix the connection error.
+data. If demo sign-in stops working on a previously seeded local database,
+check the host and port in `DATABASE_URL` with `pg_isready -h <host> -p <port>`.
+If its PostgreSQL container is stopped, start the existing container to restore
+access to the seeded accounts and their data.
 
 ## Tempo Ride (indoor trainer)
 

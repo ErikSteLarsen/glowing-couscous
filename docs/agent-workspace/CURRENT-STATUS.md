@@ -7,6 +7,14 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- Demo login on 2026-11-21 passed against the existing local `tempo_dev`
+  database after its PostgreSQL container was restarted. The advertised Mara
+  credentials created an Athlete session through Auth.js and `/athlete`
+  returned HTTP 200. No reseeding was needed.
+- Production demo login on 2026-11-21 initially returned `CredentialsSignin`.
+  The advertised account was missing. The live signup endpoint created it as a
+  self-coached Athlete, and an HTTP check verified the Auth.js session and
+  authenticated `/athlete` response. No deployment or database seeding was needed.
 - `pnpm test:db`: **455 tests passed, zero skips**, using the disposable local
   PostgreSQL database. Tests use isolated schemas and synthetic records.
 - `pnpm test:ui`: **2 Chromium component checks passed**, at 390px and 1440px.
@@ -155,6 +163,10 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   its desktop Exec to `/usr/bin/tempo-ride` because xdg-open cannot parse the
   quoted `/opt/Tempo Ride` path. Windows/macOS link handoff and an in-browser
   click into the installed app remain unverified.
+- Ride sign-in return (2026-11-21): logged-out visits to `/athlete/ride` and
+  `/athlete/ride/<id>` now go to `/login?callbackUrl=…`, and login, signup and
+  setup return there, so a deep link into a signed-out desktop app still opens
+  its workout. Verified locally in a browser; not yet deployed.
 - Tempo Ride still needs browser and physical-device acceptance for reconnect,
   FTMS Free Ride support, wake lock, and desktop picker/deep-link behavior.
   A fully suspended renderer can recover elapsed time and sample slots, with gaps
@@ -164,7 +176,7 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   journeys and session-correction layout at 1440px remain distinct gates.
   Component fixture viewports do not establish route layout acceptance.
 - Webpack is the verified production bundler. Previous Turbopack stalls were not
-  investigated in this maintenance run. Production was not reverified; prior
-  anonymous checks encountered deployment protection.
+  investigated in this maintenance run. The production check above covers demo
+  sign-in and Athlete Home.
 - The separate [account/recovery task](tasks/2026-09-30-account-recovery-home.md)
   retains its rollout/trust gates. Downloads and email verification are deferred.
