@@ -320,12 +320,12 @@ export function WorkoutBuilder({
         } }}
       >
         <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(13rem,0.72fr)_minmax(0,1.45fr)_minmax(15rem,0.8fr)]">
-          <aside className={`space-y-4 rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-4 ${draft.blocks.length ? 'max-xl:order-3' : ''}`} aria-label="Block preset palette">
+          <aside className={`@container space-y-4 rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-4 ${draft.blocks.length ? 'max-xl:order-3' : ''}`} aria-label="Block preset palette">
             <div>
               <h2 className="text-sm font-semibold text-[var(--text)]">Block library</h2>
               <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">Drag a preset into the sequence, or click to add it.</p>
             </div>
-            <div className="grid grid-cols-5 gap-1.5" role="group" aria-label="Intensity zones">
+            <div className="grid grid-cols-3 gap-1.5 @xs:grid-cols-5" role="group" aria-label="Intensity zones">
               {ZONES.map((zone) => {
                 const meta = TEMPO_ZONE_META[zone];
                 const selectedZone = paletteZone === zone;
@@ -341,7 +341,7 @@ export function WorkoutBuilder({
                   >
                     <span className={`mx-auto mb-1 block h-1.5 w-7 ink-zone-${zone}`} aria-hidden="true" />
                     <span className="block text-[11px] font-semibold leading-none">{meta.label}</span>
-                    <span className="mt-1 block truncate text-[10px] leading-none">{meta.name}</span>
+                    <span className="mt-1 block text-[10px] leading-tight">{meta.name}</span>
                   </button>
                 );
               })}
