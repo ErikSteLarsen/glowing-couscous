@@ -176,6 +176,10 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   reused one session, the targets-only ride showed %FTP, the checkpoint was
   saved under the v2 key and listed on Ride home, and library Schedule returned
   201.
+- Deployed and confirmed live on Vercel: e3dfe88 (ride save), 31b0120
+  (recorded outcomes), 265b48c (per-user checkpoints, write races, planner,
+  %FTP). The production checkpoint endpoint returns 401 when signed out. The
+  demo test session made during deep-link verification was removed.
 
 ## Remaining risks and acceptance gates
 
