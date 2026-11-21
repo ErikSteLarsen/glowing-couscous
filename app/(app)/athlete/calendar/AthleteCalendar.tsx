@@ -738,7 +738,7 @@ function MonthCell({ day, selected, onSelect, pendingIds }: { day: CalendarDay; 
   return (
     <div
       ref={setNodeRef}
-      className={`flex min-h-[4.5rem] min-w-0 flex-col gap-1 rounded-lg border p-1 transition-colors sm:min-h-[7.5rem] sm:p-1.5 ${
+      className={`flex min-h-[4.5rem] min-w-0 flex-col gap-1 rounded-lg border transition-colors sm:min-h-[7.5rem] sm:p-1.5 ${
         isOver
           ? 'border-[var(--brand)] bg-[var(--brand-tint)]'
           : selected
@@ -753,7 +753,7 @@ function MonthCell({ day, selected, onSelect, pendingIds }: { day: CalendarDay; 
         aria-pressed={selected}
         aria-label={`${formatDay(day.isoDate)}${day.isToday ? ', today' : ''}, ${count} ${count === 1 ? 'session' : 'sessions'}${day.events.length ? `, ${day.events.length} ${day.events.length === 1 ? 'event' : 'events'}: ${day.events.map((event) => event.title).join(', ')}` : ''}`}
         onClick={() => onSelect(day.isoDate)}
-        className={`flex min-h-11 w-full items-start justify-between rounded-md px-1 pt-0.5 text-left sm:min-h-7 ${buttonFocusClassName}`}
+        className={`flex min-h-11 w-full items-start justify-between rounded-md px-1 pt-0.5 text-left transition-colors hover:bg-[var(--raised)] sm:min-h-7 ${buttonFocusClassName}`}
       >
         <span
           className={`data inline-flex min-w-6 items-center justify-center rounded-full px-1 text-[13px] font-medium ${
