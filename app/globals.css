@@ -378,6 +378,14 @@ body {
   }
 }
 
+/* Back control: one fixed spot at the content area's left edge, next to the sidebar.
+   The wrapper keeps its row in flow; the control keeps its vertical position. */
+.page-back { display: flex; min-height: 2.5rem; }
+@media (min-width: 768px) {
+  .page-back > * { position: absolute; left: calc(var(--sidebar) + var(--page-gutter)); }
+  .tempo-shell[data-menu-hidden="true"] .page-back > * { left: var(--page-gutter); }
+}
+
 .app-sidebar {
   transition: width 200ms var(--ease-out-expo), transform 200ms ease-out;
 }

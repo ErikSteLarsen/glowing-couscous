@@ -173,7 +173,7 @@ export function TopBar({
     <header className={`min-h-[64px] ${isCentered ? 'text-center' : 'flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'}`}>
       {back ? (
         <div className="flex min-w-0 flex-col gap-1">
-          <BackLink target={back} />
+          <div className="page-back"><BackLink target={back} /></div>
           {titleBlock}
         </div>
       ) : titleBlock}

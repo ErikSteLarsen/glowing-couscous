@@ -362,8 +362,10 @@ Page headers do not repeat sibling destinations.
   Profile, Settings, the coach roster, planner and workouts, and the Tempo Ride
   home (`/athlete/ride`).
 - **Every page below them has exactly one**, the shared `BackLink`
-  (`components/ui.tsx`), passed as `TopBar`'s `back`. It sits top-left of the
-  header, above the title: a 16px arrow and the destination name ("Calendar"),
+  (`components/ui.tsx`), passed as `TopBar`'s `back`. It sits on its own row
+  above the title, pinned to the content area's left edge next to the sidebar
+  (the `.page-back` wrapper in `app/globals.css`), not to the centered column, so
+  it is in the same place on every page: a 16px arrow and the destination name ("Calendar"),
   with "Back to Calendar" as its accessible name. It is 40px tall, 44px on
   mobile, and uses the shared focus ring.
 - **The destination is deterministic.** `resolveBackTarget` in
