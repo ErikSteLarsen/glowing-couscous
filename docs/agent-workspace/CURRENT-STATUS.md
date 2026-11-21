@@ -166,7 +166,13 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 - Ride sign-in return (2026-11-21): logged-out visits to `/athlete/ride` and
   `/athlete/ride/<id>` now go to `/login?callbackUrl=…`, and login, signup and
   setup return there, so a deep link into a signed-out desktop app still opens
-  its workout. Verified locally in a browser; not yet deployed.
+  its workout. Deployed in 85fdee6 and verified on 2026-11-21 with the
+  released 0.2.1 AppImage against production on Hyprland. Cold start with a
+  ride link showed the trust prompt, then signed-out login with the ride
+  callback, then the ride. A link sent with `xdg-open` to the already running
+  app navigated to it and focused the window. Open: a plain launch forgets the
+  site after a deep link, and desktop ride backups are shared across origins.
+  A localhost backup appeared on production. Fixes are in progress.
 - Tempo Ride still needs browser and physical-device acceptance for reconnect,
   FTMS Free Ride support, wake lock, and desktop picker/deep-link behavior.
   A fully suspended renderer can recover elapsed time and sample slots, with gaps
