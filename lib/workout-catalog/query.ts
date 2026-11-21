@@ -200,3 +200,19 @@ export function serializeCatalogQuery(query: CatalogQuery): string {
 export function isCatalogQueryFiltered(query: CatalogQuery): boolean {
   return serializeCatalogQuery({ ...query, sort: 'name' }) !== '';
 }
+
+export type CatalogFilterChip = { key: string; label: string; remove: Partial<CatalogQuery> };
+
+/** Active narrowing choices other than search and sort, each with the patch that removes it. */
+export function listCatalogFilters(query: CatalogQuery): CatalogFilterChip[] {
+  const range = (min: number | null, max: number | null, unit: string, format: (value: number) => string) =>
+    min !== null && max !== null ? `${unit} ${format(min)}–${format(max)}` : min !== null ? `${unit} ≥ ${format(min)}` : `${unit} ≤ ${format(max!)}`;
+  return [
+    ...query.categories.map((id) => ({ key: `category:${id}`, label: categoryLabel(id), remove: { categories: query.categories.filter((value) => value !== id) } })),
+    ...query.durations.map((id) => ({ key: `duration:${id}`, label: DURATION_BUCKETS.find((bucket) => bucket.id === id)?.label ?? id, remove: { durations: query.durations.filter((value) => value !== id) } })),
+    ...query.levels.map((id) => ({ key: `level:${id}`, label: levelLabel(id), remove: { levels: query.levels.filter((value) => value !== id) } })),
+    ...query.tags.map((tag) => ({ key: `tag:${tag}`, label: `#${tag}`, remove: { tags: query.tags.filter((value) => value !== tag) } })),
+    ...(query.tssMin !== null || query.tssMax !== null ? [{ key: 'tss', label: range(query.tssMin, query.tssMax, 'TSS', String), remove: { tssMin: null, tssMax: null } }] : []),
+    ...(query.ifMin !== null || query.ifMax !== null ? [{ key: 'if', label: range(query.ifMin, query.ifMax, 'IF', (value) => value.toFixed(2)), remove: { ifMin: null, ifMax: null } }] : []),
+  ];
+}

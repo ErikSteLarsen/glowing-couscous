@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { Bike } from 'lucide-react';
+import Link from 'next/link';
+import { Bike, Ellipsis } from 'lucide-react';
 import { LibraryBrowser } from '@/components/library/LibraryBrowser';
-import { ActionLink, PageShell, TopBar } from '@/components/ui';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
+import { iconButtonClassName, PageShell, TopBar } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth-session';
 import { workoutCatalog } from '@/lib/workout-catalog';
 import { createCatalogListEntries, parseCatalogQuery } from '@/lib/workout-catalog/query';
@@ -20,7 +22,19 @@ export default async function AthleteLibraryPage({ searchParams }: { searchParam
       <TopBar
         title="Workout library"
         description="Structured indoor bike workouts, targeted in % of FTP. Ride one now, schedule it, or copy it into your workouts to edit."
-        actions={<ActionLink href="/athlete/ride" tone="secondary"><Bike aria-hidden="true" size={16} strokeWidth={1.6} />Ride home</ActionLink>}
+        actions={
+          <Menu>
+            <MenuTrigger aria-label="More library actions" className={iconButtonClassName}>
+              <Ellipsis aria-hidden="true" size={18} strokeWidth={1.8} />
+            </MenuTrigger>
+            <MenuContent align="end">
+              <MenuItem render={<Link href="/athlete/ride" />}>
+                <Bike aria-hidden="true" size={16} strokeWidth={1.6} />
+                Ride home
+              </MenuItem>
+            </MenuContent>
+          </Menu>
+        }
       />
       <LibraryBrowser entries={createCatalogListEntries(workoutCatalog)} initialQuery={query} />
     </PageShell>

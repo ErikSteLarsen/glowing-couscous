@@ -5,7 +5,7 @@ import { workoutCatalog } from '../lib/workout-catalog/index.ts';
 import type { CatalogWorkout } from '../lib/workout-catalog/types.ts';
 import { computeCatalogMetrics, expandCatalogItems, zoneForPct } from '../lib/workout-catalog/metrics.ts';
 import {
-  createCatalogEntries, durationBucketFor, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, matchesCatalogSearch, parseCatalogQuery, serializeCatalogQuery,
+  createCatalogEntries, durationBucketFor, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, matchesCatalogSearch, parseCatalogQuery, serializeCatalogQuery,
 } from '../lib/workout-catalog/query.ts';
 import { catalogStepNote, catalogWorkoutToEditorBlocks, catalogWorkoutToSessionInput } from '../lib/workout-catalog/session.ts';
 import { validateCatalog, validateCatalogWorkout } from '../lib/workout-catalog/validate.ts';
@@ -109,6 +109,15 @@ test('query state round-trips through URL params and drops unknown values', () =
   assert.equal(serializeCatalogQuery(EMPTY_CATALOG_QUERY), '');
   assert.equal(isCatalogQueryFiltered({ ...EMPTY_CATALOG_QUERY, sort: 'tss-asc' }), false);
   assert.deepEqual(parseCatalogQuery({ category: ['sprint'], sort: 'bogus' }).categories, ['sprint']);
+});
+
+test('active filters list every narrowing choice except search and sort, each removable', () => {
+  const query = parseCatalogQuery(new URLSearchParams('q=over&category=threshold,vo2max&level=advanced&duration=45-75&tag=climb&tssMin=40&sort=tss-desc'));
+  const chips = listCatalogFilters(query);
+  assert.deepEqual(chips.map((chip) => chip.label), ['Threshold', 'VO2 max', '45–75 min', 'Advanced', '#climb', 'TSS ≥ 40']);
+  assert.deepEqual(chips[0].remove, { categories: ['vo2max'] });
+  assert.deepEqual(chips.at(-1)?.remove, { tssMin: null, tssMax: null });
+  assert.deepEqual(listCatalogFilters({ ...EMPTY_CATALOG_QUERY, q: 'sweet', sort: 'duration-asc' }), []);
 });
 
 test('conversion produces valid canonical relative-FTP blocks with notes', () => {
