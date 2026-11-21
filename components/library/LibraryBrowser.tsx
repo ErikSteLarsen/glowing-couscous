@@ -10,7 +10,7 @@ import {
 } from '@/lib/workout-catalog/query';
 import type { CatalogCategory, CatalogLevel } from '@/lib/workout-catalog/types';
 
-const chipClassName = (selected: boolean) => `inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium transition-colors max-md:min-h-10 ${buttonFocusClassName} ${
+const chipClassName = (selected: boolean) => `inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium transition-colors max-md:min-h-11 ${buttonFocusClassName} ${
   selected
     ? 'border-[var(--brand)] bg-[var(--brand-tint)] text-[var(--text)]'
     : 'border-[var(--border-strong)] text-[var(--text-secondary)] hover:bg-[var(--raised)] hover:text-[var(--text)]'
@@ -76,7 +76,7 @@ export function LibraryBrowser({
               onChange={(event) => update({ q: event.target.value })}
               placeholder="Search workouts"
               maxLength={80}
-              className={`${formFieldClassName} pl-9`}
+              className={`${formFieldClassName} pl-9 max-md:min-h-11`}
               autoComplete="off"
             />
           </label>
@@ -151,14 +151,14 @@ export function LibraryBrowser({
           </fieldset>
           <label className="flex flex-col gap-2.5">
             <span className={formLabelClassName}>Sort</span>
-            <select className={formSelectClassName} value={query.sort} onChange={(event) => update({ sort: event.target.value as CatalogSort })}>
+            <select className={`${formSelectClassName} max-md:min-h-11`} value={query.sort} onChange={(event) => update({ sort: event.target.value as CatalogSort })}>
               {CATALOG_SORTS.map((sort) => <option key={sort.id} value={sort.id}>{sortLabel(sort.id)}</option>)}
             </select>
           </label>
         </div>
         <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-          <button type="button" className={ghostButtonClassName('default')} disabled={activeFilters.length === 0} onClick={() => update({ ...EMPTY_CATALOG_QUERY, q: query.q, sort: query.sort })}>Clear filters</button>
-          <button type="button" className={primaryButtonClassName} onClick={() => filtersDialog.current?.close()}>
+          <button type="button" className={`${ghostButtonClassName('default')} max-md:min-h-11`} disabled={activeFilters.length === 0} onClick={() => update({ ...EMPTY_CATALOG_QUERY, q: query.q, sort: query.sort })}>Clear filters</button>
+          <button type="button" className={`${primaryButtonClassName} max-md:min-h-11`} onClick={() => filtersDialog.current?.close()}>
             {`Show ${results.length} ${results.length === 1 ? 'workout' : 'workouts'}`}
           </button>
         </div>
@@ -170,7 +170,7 @@ export function LibraryBrowser({
           {query.sort === 'name' ? null : ` · ${sortLabel(query.sort)}`}
         </p>
         {filtered ? (
-          <button type="button" className={ghostButtonClassName('compact')} onClick={clearFilters}>
+          <button type="button" className={`${ghostButtonClassName('compact')} max-md:min-h-11`} onClick={clearFilters}>
             <X aria-hidden="true" size={14} strokeWidth={1.7} />Clear filters
           </button>
         ) : null}
@@ -181,7 +181,7 @@ export function LibraryBrowser({
         <EmptyState
           title="No workouts match"
           description="Try a broader length or level, or clear the search."
-          action={<button type="button" className={compactSecondaryButtonClassName} onClick={clearFilters}>Clear filters</button>}
+          action={<button type="button" className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={clearFilters}>Clear filters</button>}
         />
       ) : (
         <div className="flex flex-col gap-8">
