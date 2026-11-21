@@ -1,5 +1,8 @@
 'use client';
 
+import Link from 'next/link';
+import { TopBar, secondaryButtonClassName } from '@/components/ui';
+import { getCalendarHref, type CalendarPlacement as PlacementKind, type CalendarView } from '@/lib/calendar-navigation';
 import { derivePlannerSourceDurationSec, type PlannerSourceMetricBlock } from '@/lib/planner-source-metrics';
 import { getTemplateCadence } from '@/lib/template-cadence';
 import { PlannerDesk, type PlannerDeskCalendarDay, type PlannerDeskSource, type PlannerDeskSourceKind } from '@/components/PlannerDesk';
@@ -20,7 +23,9 @@ type AthletePlannerTemplate = {
   cadence?: string | null;
 };
 
-export function AthletePlannerClient({
+export function CalendarPlacement({
+  view,
+  placement,
   templates,
   workouts,
   calendarDays,
@@ -31,6 +36,8 @@ export function AthletePlannerClient({
   initialSourceTab,
   initialMessage,
 }: {
+  view: CalendarView;
+  placement: PlacementKind;
   templates: AthletePlannerTemplate[];
   workouts: AthletePlannerWorkout[];
   calendarDays: PlannerDeskCalendarDay[];
@@ -58,12 +65,20 @@ export function AthletePlannerClient({
       title: template.name,
       sport: template.sport,
       summary: template.summary,
-      cadence: getTemplateCadence(template.cadence),
+      // Routines apply to a Monday week or a whole month (athlete-planner-service);
+      // the legacy "day" column default would offer a range the service refuses.
+      cadence: getTemplateCadence(template.cadence) === 'month' ? 'month' as const : 'week' as const,
     })),
   ];
 
   return (
-    <PlannerDesk
+    <div className="flex flex-col gap-6">
+      <TopBar
+        back={{ href: getCalendarHref(view, initialDate), destination: 'Calendar', label: 'Back to Calendar' }}
+        title={placement === 'template' ? 'Apply a routine' : 'Add to calendar'}
+        actions={<Link href={getCalendarHref(view, initialDate)} className={secondaryButtonClassName}>Done</Link>}
+      />
+      <PlannerDesk
       key={`${initialDate}:${initialSourceKey}`}
       role="athlete"
       initialDate={initialDate}
@@ -74,6 +89,11 @@ export function AthletePlannerClient({
       initialSourceKey={initialSourceKey}
       initialSourceTab={initialSourceTab}
       initialMessage={initialMessage}
+      getNavigationHref={(date, sourceKey) => {
+        const href = getCalendarHref(view, date, { place: placement });
+        return sourceKey ? `${href}&${new URLSearchParams({ source: sourceKey })}` : href;
+      }}
     />
+    </div>
   );
 }

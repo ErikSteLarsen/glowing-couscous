@@ -23,7 +23,7 @@ test('session detail returns to every allowed origin', () => {
   const expected = {
     home: back('/athlete', 'Home'),
     calendar: back('/athlete/calendar', 'Calendar'),
-    planner: back('/athlete/planner', 'Planner'),
+    planner: back('/athlete/calendar', 'Calendar'),
     activity: back('/athlete/activity', 'Activity'),
     imports: back('/athlete/import', 'Import'),
     library: back('/athlete/library', 'Library'),

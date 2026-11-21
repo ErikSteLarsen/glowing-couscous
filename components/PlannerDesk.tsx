@@ -92,6 +92,7 @@ export function PlannerDesk({
   initialSourceKey = '',
   initialSourceTab = 'workout',
   initialMessage = '',
+  getNavigationHref,
 }: {
   role: PlannerDeskRole;
   initialDate: string;
@@ -105,6 +106,8 @@ export function PlannerDesk({
   initialSourceKey?: string;
   initialSourceTab?: PlannerDeskSourceKind;
   initialMessage?: string;
+  /** Athlete placement lives inside Calendar, which owns the month URL. */
+  getNavigationHref?: (date: string, sourceKey: string | null) => string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -258,10 +261,15 @@ export function PlannerDesk({
     const referenceDate = parseISO(`${offset === 0 ? today : initialDate}T00:00:00`);
     const nextMonth = offset === 0 ? referenceDate : offset > 0 ? addMonths(referenceDate, 1) : subMonths(referenceDate, 1);
     const nextDate = format(startOfMonth(nextMonth), 'yyyy-MM-dd');
+    if (getNavigationHref) {
+      router.push(getNavigationHref(nextDate, selectedSource?.key ?? null));
+      return;
+    }
     const params = new URLSearchParams({ date: nextDate });
     if (role === 'coach' && selectedAthleteId) params.set('athleteId', String(selectedAthleteId));
+    if (role === 'athlete') params.set('place', selectedSource?.kind === 'template' ? 'template' : 'workout');
     if (role === 'athlete' && selectedSource) params.set('source', selectedSource.key);
-    router.push(`${role === 'coach' ? '/coach/planner' : '/athlete/planner'}?${params.toString()}`);
+    router.push(`${role === 'coach' ? '/coach/planner' : '/athlete/calendar'}?${params.toString()}`);
   }
 
   function assignSource() {
@@ -473,7 +481,11 @@ function AssignmentSummary({ role, source, selectedDates, selectedTemplateDays, 
             {source?.kind === 'template' ? (valid ? 'Range length matches the template.' : `Select exactly ${selectedTemplateDays} days.`) : 'Click dates to toggle the selection.'}
           </p>
           {role === 'athlete' ? (
-            <div className="min-w-0 sm:w-40">
+            <details className="group min-w-0 sm:w-40">
+              <summary className="min-h-10 cursor-pointer list-none rounded-lg py-2 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">
+                <span aria-hidden="true" className="mr-1 inline-block transition-transform group-open:rotate-90">›</span>
+                Advanced{startTime && !timeError ? ` · ${startTime}` : ''}
+              </summary>
               <label className="block">
                 <span className={formLabelClassName}>Start time</span>
                 <input
@@ -492,7 +504,7 @@ function AssignmentSummary({ role, source, selectedDates, selectedTemplateDays, 
               <p id="planner-start-time-hint" className={`mt-1 text-xs ${timeError ? 'text-[var(--status-danger)]' : 'text-[var(--text-muted)]'}`}>
                 {timeError ?? 'Optional. Leave empty for an untimed session.'}
               </p>
-            </div>
+            </details>
           ) : null}
           <div className="flex flex-col gap-2 sm:items-end">
             {duplicateWarning ? (
@@ -546,7 +558,7 @@ function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSo
         {visibleSources.length ? visibleSources.map((source) => <SourceResult key={source.key} source={source} selected={source.key === selectedSource?.key} selectedDate={selectedDate} onSelect={onSelectSource} />) : <p className="border border-dashed border-[var(--nav-border)] px-3 py-4 text-sm text-[var(--nav-muted)]">No {sourceTab === 'training-plan' ? 'plans' : `${sourceTab}s`} match “{query}”.</p>}
       </div>
       <div className="mt-4 border-t border-[var(--nav-border)] pt-3 text-xs leading-5 text-[var(--nav-muted)]">
-        <p>Planner places independent copies. Editing stays in the library.</p>
+        <p>{role === 'coach' ? 'Planner places' : 'Calendar places'} independent copies. Editing stays in the library.</p>
         <div className="mt-2 flex flex-wrap gap-2">
           <ActionLink href={role === 'coach' ? '/coach/workouts' : '/athlete/workouts'} tone="ghost" size="compact">Manage workouts</ActionLink>
           {role === 'athlete' ? <ActionLink href="/athlete/templates" tone="ghost" size="compact">Manage templates</ActionLink> : null}
@@ -649,7 +661,7 @@ function SelectedDaySessions({ role, date, sessions, isPending, removingId, onRe
 }
 
 function SessionDetail({ role, session, isPending, removingId, onRemoveSession }: { role: PlannerDeskRole; session: PlannerDeskSession; isPending: boolean; removingId: number | null; onRemoveSession: (session: PlannerDeskSession) => void }) {
-  const sessionHref = role === 'athlete' ? `/athlete/session/${session.id}?from=planner` : session.athleteId ? `/coach/athletes/${session.athleteId}?date=${session.scheduledDate}` : '/coach/planner';
+  const sessionHref = role === 'athlete' ? `/athlete/session/${session.id}?from=calendar` : session.athleteId ? `/coach/athletes/${session.athleteId}?date=${session.scheduledDate}` : '/coach/planner';
   return (
     <div className="border border-[var(--field-selected-border)] bg-[var(--surface)] p-3">
       <div className="flex items-start justify-between gap-2">

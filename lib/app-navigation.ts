@@ -26,7 +26,6 @@ export function getPrimaryNavigation(): NavItem[] {
   return [
     { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete', exact: true },
     { label: 'Calendar', description: 'See scheduled work', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
-    { label: 'Planner', description: 'Place on dates', href: '/athlete/planner', matchPrefix: '/athlete/planner' },
     { label: 'Workouts', description: 'Create & manage', href: '/athlete/workouts', matchPrefix: '/athlete/workouts' },
     { label: 'Library', description: 'Built-in bike workouts', href: '/athlete/library', matchPrefix: '/athlete/library' },
     { label: 'Templates', description: 'Reuse & assign', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
@@ -47,7 +46,6 @@ export function getMobileNavigation(role: AppRole): NavItem[] {
   return [
     { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete', exact: true },
     { label: 'Calendar', description: 'Schedule & view training', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
-    { label: 'Planner', description: 'Place on dates', href: '/athlete/planner', matchPrefix: '/athlete/planner' },
     { label: 'Workouts', description: 'Create & manage', href: '/athlete/workouts', matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/templates', '/athlete/library'] },
     { label: 'Activity', description: 'Review completed work', href: '/athlete/activity', matchPrefix: '/athlete/activity', activeMatchPrefixes: ['/athlete/import'] },
   ];
@@ -87,7 +85,8 @@ export function isProfileActionActive(
 const backDestinations = {
   home: { href: '/athlete', destination: 'Home' },
   calendar: { href: '/athlete/calendar', destination: 'Calendar' },
-  planner: { href: '/athlete/planner', destination: 'Planner' },
+  // Planner merged into Calendar; links that still say from=planner return there.
+  planner: { href: '/athlete/calendar', destination: 'Calendar' },
   activity: { href: '/athlete/activity', destination: 'Activity' },
   imports: { href: '/athlete/import', destination: 'Import' },
   library: { href: '/athlete/library', destination: 'Library' },

@@ -57,11 +57,11 @@ and ownership guards; page visibility is not API authorization.
 ### Athlete
 
 - `/athlete` - Home week overview
-- `/athlete/calendar` - unified week/month calendar with inline workout/template scheduling
+- `/athlete/calendar` - unified week/month calendar; `place=workout|template` (with optional `source`) opens placement through the shared planner desk; view settings live in the URL and the `tempo-calendar-totals` cookie
 - `/athlete/workouts` - owner-scoped unscheduled workout library
 - `/athlete/library`, `/athlete/library/[slug]` - built-in, code-shipped indoor bike workout catalog with URL-synced filters, profile, metrics and copy actions
 - `/athlete/ride` - Ride home (no app chrome; Tempo Ride's default page): today's and recent open bike sessions, recent rides, and the library with Ride now
-- `/athlete/planner` - source-aware scheduling desk for assigning saved workouts and templates to calendar dates; workout and template library handoffs can preselect an owned source
+- `/athlete/planner` - retired; redirects `date`/`source` to Calendar placement (`getPlannerRedirectHref`)
 - `/athlete/templates` - private weekly routines composed from saved workouts
 - `/athlete/session/[sessionId]` - compact read-only workout structure, block inspector and outcome review; `lib/session-structure.ts` groups identical instructions and `components/SessionWorkoutOverview.tsx` owns selection/disclosure
 - `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion
@@ -105,7 +105,7 @@ navigation.
 | Coach reads | `lib/coach-service.ts` | Roster and athlete-detail read models |
 | Coach requests | `lib/coach-request-service.ts` | Search, request creation, approval, rejection, and pending uniqueness |
 | Athlete reads | `lib/athlete-service.ts`, `lib/home-summary.ts` | Home, Calendar, Activity, profile, discovery, and session reads; Home reads current-week outcomes separately from the latest four activities and uses pure outcome/load summaries |
-| Athlete planning | `app/(app)/athlete/calendar/AthleteCalendar.tsx`, `lib/athlete-service.ts`, `lib/athlete-planner-service.ts`, `lib/template-service.ts`, `lib/workout-library-service.ts` | Week/month calendar review and rescheduling, date-aware handoff to the separate personal Planner desk, private dated copies and existing planner API mutations |
+| Athlete planning | `app/(app)/athlete/calendar/AthleteCalendar.tsx`, `lib/athlete-service.ts`, `lib/athlete-planner-service.ts`, `lib/template-service.ts`, `lib/workout-library-service.ts` | Week/month calendar review and rescheduling, in-page placement mode (`CalendarPlacement`), private dated copies and existing planner API mutations |
 | Coach planning | `lib/coach-planner-service.ts`, `components/PlannerDesk.tsx` | Month-grid workspace, dated sessions, source search, and roster-scoped planner writes |
 | Shared planning contracts and metrics | `lib/planner-view.ts`, `lib/planner-source-metrics.ts` | UI-independent source/session/day contracts; personal sources exclude coach training plans; persisted planner block conversion and canonical repeated source durations |
 | Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |

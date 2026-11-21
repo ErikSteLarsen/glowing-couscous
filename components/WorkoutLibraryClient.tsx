@@ -36,6 +36,7 @@ import {
   type PersistedSessionBlock,
 } from '@/lib/session-editor';
 import { getSportLabel } from '@/lib/sport';
+import { getCalendarPlacementHref } from '@/lib/calendar-navigation';
 import type { PerformanceProfile } from '@/lib/performance-profile';
 import { useDraftRecovery } from '@/components/useDraftRecovery';
 import { DraftRecoveryNotice } from '@/components/DraftRecoveryNotice';
@@ -355,7 +356,7 @@ export function WorkoutLibraryClient({
                   </button>
                   <div className="mt-2 flex flex-wrap items-center gap-3 px-2">
                     {role === 'ATHLETE' ? (
-                      <Link href={`/athlete/planner?source=workout:${workout.id}`} className={`${compactSecondaryButtonClassName} min-h-11`}>
+                      <Link href={getCalendarPlacementHref(`workout:${workout.id}`)} className={`${compactSecondaryButtonClassName} min-h-11`}>
                         Plan this
                       </Link>
                     ) : null}

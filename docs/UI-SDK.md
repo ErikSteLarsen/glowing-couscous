@@ -15,6 +15,9 @@ global SDK stylesheet, or agent access to private account actions is needed.
   server error. Successful deletion closes it through existing callbacks.
 - `components/SessionComparisonDialog.tsx`: SDK segmented radios for the
   Planned/Actual snapshot choice.
+- `components/tempo/Menu.tsx`: Tempo-styled SDK Menu parts (content, items,
+  checkbox/radio items, indicator, label, separator). Calendar uses it for the
+  header More menu and each session's overflow actions.
 - `components/StravaImportPanel.tsx`: SDK segmented radios for the Needs
   review/All activities filter. Existing inbox focus-return ref is preserved.
 

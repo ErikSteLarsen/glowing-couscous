@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition, type CSSProperties
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { CalendarPlus, ChevronLeft, ChevronRight, MoveRight, Plus } from 'lucide-react';
+import { CalendarPlus, CalendarRange, Check, ChevronLeft, ChevronRight, Ellipsis, ExternalLink, Flag, MoveRight, Plus, Trash2, Upload } from 'lucide-react';
 import {
   DndContext,
   DragOverlay,
@@ -27,18 +27,31 @@ import { ComplianceMark, complianceColors } from '@/components/tempo/ComplianceM
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { SessionDeleteAction } from '@/components/SessionDeleteAction';
 import {
+  Menu,
+  MenuCheckboxItem,
+  MenuContent,
+  MenuGroup,
+  MenuGroupLabel,
+  MenuItem,
+  MenuItemIndicator,
+  MenuRadioGroup,
+  MenuRadioItem,
+  MenuSeparator,
+  MenuTrigger,
+} from '@/components/tempo/Menu';
+import {
   buttonFocusClassName,
   compactPrimaryButtonClassName,
   compactSecondaryButtonClassName,
   formFieldClassName,
-  getSwitchOptionClassName,
   ghostButtonClassName,
   iconButtonClassName,
+  primaryButtonClassName,
   secondaryButtonClassName,
-  switchTrackClassName,
   TopBar,
 } from '@/components/ui';
 import {
+  CALENDAR_TOTALS_COOKIE,
   getCalendarHref,
   getCalendarPeriodLabel,
   getCalendarShortcut,
@@ -138,11 +151,13 @@ export function AthleteCalendar({
   day,
   today,
   weeks,
+  initialShowTotals,
 }: {
   view: CalendarView;
   day: string;
   today: string;
   weeks: CalendarWeek[];
+  initialShowTotals: boolean;
 }) {
   const router = useRouter();
   const [isRefreshing, startTransition] = useTransition();
@@ -154,6 +169,12 @@ export function AthleteCalendar({
     weeks.some((week) => week.days.some((entry) => entry.isoDate === day && entry.isCurrentMonth)) ? day : null,
   );
   const dragging = useRef(false);
+  const [showTotals, setShowTotals] = useState(initialShowTotals);
+
+  function changeShowTotals(next: boolean) {
+    setShowTotals(next);
+    document.cookie = `${CALENDAR_TOTALS_COOKIE}=${next ? 'show' : 'hide'}; path=/; max-age=31536000; samesite=lax`;
+  }
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -269,7 +290,8 @@ export function AthleteCalendar({
     startTransition(() => router.refresh());
   }
 
-  const shared = { pendingIds: busyIds, onMove: moveSession, onSessionDeleted: handleSessionDeleted };
+  const addHref = (entry: string) => getCalendarHref(view, entry, { place: 'workout' });
+  const shared = { pendingIds: busyIds, onMove: moveSession, onSessionDeleted: handleSessionDeleted, addHref };
 
   return (
     <div className="flex flex-col gap-6">
@@ -278,7 +300,6 @@ export function AthleteCalendar({
         title="Calendar"
         actions={
           <>
-            <Link href="/athlete/events" className={ghostButtonClassName('default')}>Events</Link>
             <nav aria-label={`${view === 'week' ? 'Week' : 'Month'} navigation`} className="flex items-center gap-2">
               <Link href={getCalendarHref(view, stepCalendarPeriod(view, day, -1))} aria-label={`Previous ${periodNoun}`} aria-keyshortcuts="ArrowLeft" className={iconButtonClassName}>
                 <ChevronLeft aria-hidden="true" size={18} strokeWidth={1.8} />
@@ -290,14 +311,12 @@ export function AthleteCalendar({
                 <ChevronRight aria-hidden="true" size={18} strokeWidth={1.8} />
               </Link>
             </nav>
-            <div role="group" aria-label="Calendar view" className={switchTrackClassName}>
-              <Link href={getCalendarHref('week', day)} aria-current={view === 'week' ? 'page' : undefined} aria-keyshortcuts="W" className={`${getSwitchOptionClassName(view === 'week')} min-h-9`}>
-                Week
-              </Link>
-              <Link href={getCalendarHref('month', day)} aria-current={view === 'month' ? 'page' : undefined} aria-keyshortcuts="M" className={`${getSwitchOptionClassName(view === 'month')} min-h-9`}>
-                Month
-              </Link>
-            </div>
+            <Link href={addHref(selectedDay ?? day)} aria-label="Add workout" className={`${primaryButtonClassName} max-md:min-h-11 max-sm:px-3`}>
+              <Plus aria-hidden="true" size={16} strokeWidth={2} />
+              <span className="max-sm:hidden">Add workout</span>
+              <span aria-hidden="true" className="sm:hidden">Add</span>
+            </Link>
+            <CalendarMoreMenu view={view} day={day} showTotals={showTotals} onShowTotalsChange={changeShowTotals} />
           </>
         }
       />
@@ -316,6 +335,8 @@ export function AthleteCalendar({
       </div>
 
       <DndContext
+        // A fixed id keeps dnd-kit's describedby ids equal on server and client.
+        id="athlete-calendar"
         sensors={sensors}
         collisionDetection={detectDayCollision}
         accessibility={{
@@ -332,9 +353,9 @@ export function AthleteCalendar({
         }}
       >
         {view === 'week' ? (
-          <WeekBoard week={weeks[0]} {...shared} />
+          <WeekBoard week={weeks[0]} showTotals={showTotals} {...shared} />
         ) : (
-          <MonthBoard weeks={weeks} selectedDay={selectedDay} onSelectDay={setSelectedDay} pendingIds={busyIds} />
+          <MonthBoard weeks={weeks} showTotals={showTotals} selectedDay={selectedDay} onSelectDay={setSelectedDay} pendingIds={busyIds} />
         )}
         <DragOverlay dropAnimation={null}>
           {activeSession ? (
@@ -353,20 +374,76 @@ type MoveProps = {
   pendingIds: number[];
   onMove: (sessionId: number, toDay: string) => Promise<void>;
   onSessionDeleted: (title: string) => void;
+  addHref: (day: string) => string;
 };
 
-function WeekBoard({ week, pendingIds, onMove, onSessionDeleted }: { week: CalendarWeek } & MoveProps) {
+/** Secondary calendar controls: view, display settings and less frequent jobs. */
+function CalendarMoreMenu({ view, day, showTotals, onShowTotalsChange }: {
+  view: CalendarView;
+  day: string;
+  showTotals: boolean;
+  onShowTotalsChange: (next: boolean) => void;
+}) {
+  const router = useRouter();
   return (
-    <section aria-label="Week" className="grid gap-3 xl:grid-cols-[repeat(7,minmax(0,1fr))_13rem]">
-      <WeekSummaryPanel summary={week.summary} className="xl:order-last" />
+    <Menu>
+      <MenuTrigger aria-label="More calendar options" className={iconButtonClassName}>
+        <Ellipsis aria-hidden="true" size={18} strokeWidth={1.8} />
+      </MenuTrigger>
+      <MenuContent align="end">
+        <MenuRadioGroup
+          value={view}
+          onValueChange={(next) => {
+            if (next !== view) router.push(getCalendarHref(next === 'month' ? 'month' : 'week', day));
+          }}
+        >
+          <MenuGroupLabel>View</MenuGroupLabel>
+          <MenuRadioItem value="week" closeOnSelect>
+            <MenuItemIndicator><Check aria-hidden="true" size={16} /></MenuItemIndicator>
+            Week<span className="data ml-auto text-xs text-[var(--text-muted)]">W</span>
+          </MenuRadioItem>
+          <MenuRadioItem value="month" closeOnSelect>
+            <MenuItemIndicator><Check aria-hidden="true" size={16} /></MenuItemIndicator>
+            Month<span className="data ml-auto text-xs text-[var(--text-muted)]">M</span>
+          </MenuRadioItem>
+        </MenuRadioGroup>
+        <MenuSeparator />
+        <MenuCheckboxItem value="totals" checked={showTotals} onCheckedChange={onShowTotalsChange}>
+          <MenuItemIndicator><Check aria-hidden="true" size={16} /></MenuItemIndicator>
+          Show load totals
+        </MenuCheckboxItem>
+        <MenuSeparator />
+        <MenuGroup>
+          <MenuItem render={<Link href={getCalendarHref(view, day, { place: 'template' })} />}>
+            <CalendarRange aria-hidden="true" size={16} strokeWidth={1.8} />
+            Apply a routine
+          </MenuItem>
+          <MenuItem render={<Link href="/athlete/events" />}>
+            <Flag aria-hidden="true" size={16} strokeWidth={1.8} />
+            Events
+          </MenuItem>
+          <MenuItem render={<Link href="/athlete/import" />}>
+            <Upload aria-hidden="true" size={16} strokeWidth={1.8} />
+            Import an activity
+          </MenuItem>
+        </MenuGroup>
+      </MenuContent>
+    </Menu>
+  );
+}
+
+function WeekBoard({ week, showTotals, ...moveProps }: { week: CalendarWeek; showTotals: boolean } & MoveProps) {
+  return (
+    <section aria-label="Week" className={`grid gap-3 ${showTotals ? 'xl:grid-cols-[repeat(7,minmax(0,1fr))_13rem]' : 'xl:grid-cols-7'}`}>
+      {showTotals ? <WeekSummaryPanel summary={week.summary} className="xl:order-last" /> : null}
       {week.days.map((entry) => (
-        <DayColumn key={entry.isoDate} day={entry} pendingIds={pendingIds} onMove={onMove} onSessionDeleted={onSessionDeleted} />
+        <DayColumn key={entry.isoDate} day={entry} {...moveProps} />
       ))}
     </section>
   );
 }
 
-function DayColumn({ day, pendingIds, onMove, onSessionDeleted }: { day: CalendarDay } & MoveProps) {
+function DayColumn({ day, pendingIds, onMove, onSessionDeleted, addHref }: { day: CalendarDay } & MoveProps) {
   const { setNodeRef, isOver } = useDroppable({ id: dayDropId(day.isoDate), data: { day: day.isoDate } });
   const headingId = `calendar-day-${day.isoDate}`;
 
@@ -390,8 +467,8 @@ function DayColumn({ day, pendingIds, onMove, onSessionDeleted }: { day: Calenda
         </h2>
         {day.sessions.length > 0 ? (
           <Link
-            href={`/athlete/planner?date=${day.isoDate}`}
-            aria-label={`Plan a session on ${formatDay(day.isoDate)}`}
+            href={addHref(day.isoDate)}
+            aria-label={`Add a workout on ${formatDay(day.isoDate)}`}
             className={`inline-flex size-11 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--raised)] hover:text-[var(--text)] xl:size-8 ${buttonFocusClassName}`}
           >
             <Plus aria-hidden="true" size={16} strokeWidth={1.8} />
@@ -407,12 +484,12 @@ function DayColumn({ day, pendingIds, onMove, onSessionDeleted }: { day: Calenda
 
       {day.sessions.length === 0 && day.events.length === 0 ? (
         <Link
-          href={`/athlete/planner?date=${day.isoDate}`}
-          aria-label={`Plan here, ${formatDay(day.isoDate)}`}
+          href={addHref(day.isoDate)}
+          aria-label={`Add a workout on ${formatDay(day.isoDate)}`}
           className={`group flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg border border-dashed border-[var(--border)] px-2 text-[13px] text-[var(--text-muted)] transition-colors hover:border-[var(--brand)] hover:text-[var(--brand)] ${buttonFocusClassName}`}
         >
           <CalendarPlus aria-hidden="true" size={15} strokeWidth={1.8} />
-          Plan here
+          Add
         </Link>
       ) : null}
     </section>
@@ -455,14 +532,16 @@ function SessionCard({
 }) {
   const { setNodeRef, setActivatorNodeRef, dragProps, isDragging } = useSessionDrag(session, pending, draggable);
   const [moving, setMoving] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const hasActions = session.canReschedule || session.canDelete;
 
   return (
-    <div ref={setNodeRef} className={`min-w-0 ${isDragging ? 'opacity-40' : ''}`}>
+    <div ref={setNodeRef} className={`relative min-w-0 ${isDragging ? 'opacity-40' : ''}`}>
       <Link
         ref={setActivatorNodeRef}
         href={`/athlete/session/${session.id}?from=calendar`}
         aria-label={`Open ${sessionLabel(session, day)}`}
-        className={`block space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2.5 pl-3.5 pr-3 transition-colors hover:border-[var(--border-strong)] ${
+        className={`block space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2.5 pl-3.5 ${hasActions ? 'pr-9' : 'pr-3'} transition-colors hover:border-[var(--border-strong)] ${
           draggable && session.canReschedule ? 'cursor-grab active:cursor-grabbing' : ''
         } ${pending ? 'opacity-70' : ''} ${buttonFocusClassName}`}
         style={complianceStyle(session.compliance)}
@@ -475,29 +554,47 @@ function SessionCard({
         <ComplianceMark state={session.compliance} showLabel />
         <SessionBlockBar segments={session.segments} size="compact" />
       </Link>
-      {session.canReschedule ? (
-        moving ? (
-          <MoveToForm session={session} day={day} onCancel={() => setMoving(false)} onMove={async (toDay) => {
-            setMoving(false);
-            await onMove(session.id, toDay);
-          }} />
-        ) : (
-          <button
-            type="button"
+      {hasActions ? (
+        // A sibling of the link: popups must stay outside clickable cards.
+        <Menu>
+          <MenuTrigger
             disabled={pending}
-            aria-label={`Move ${session.title} to another day`}
-            className={`${ghostButtonClassName('compact')} mt-1 min-h-11 w-full justify-start xl:min-h-8`}
-            onClick={() => setMoving(true)}
+            aria-label={`Actions for ${session.title}`}
+            className={`absolute right-1 top-1 inline-flex size-8 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-xl:size-10 disabled:opacity-50 ${buttonFocusClassName}`}
           >
-            <MoveRight aria-hidden="true" size={14} strokeWidth={1.8} />
-            Move to…
-          </button>
-        )
+            <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
+          </MenuTrigger>
+          <MenuContent align="end">
+            <MenuItem render={<Link href={`/athlete/session/${session.id}?from=calendar`} />}>
+              <ExternalLink aria-hidden="true" size={16} strokeWidth={1.8} />
+              Open session
+            </MenuItem>
+            {session.canReschedule ? (
+              <MenuItem onSelect={() => setMoving(true)}>
+                <MoveRight aria-hidden="true" size={16} strokeWidth={1.8} />
+                Move to…
+              </MenuItem>
+            ) : null}
+            {session.canDelete ? (
+              <>
+                <MenuSeparator />
+                <MenuItem destructive onSelect={() => setRemoving(true)}>
+                  <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />
+                  Remove…
+                </MenuItem>
+              </>
+            ) : null}
+          </MenuContent>
+        </Menu>
+      ) : null}
+      {moving ? (
+        <MoveToForm session={session} day={day} onCancel={() => setMoving(false)} onMove={async (toDay) => {
+          setMoving(false);
+          await onMove(session.id, toDay);
+        }} />
       ) : null}
       {session.canDelete ? (
-        <div className="mt-1">
-          <SessionDeleteAction sessionId={session.id} title={session.title} onDeleted={onSessionDeleted} disabled={pending} />
-        </div>
+        <SessionDeleteAction sessionId={session.id} title={session.title} onDeleted={onSessionDeleted} open={removing} onOpenChange={setRemoving} />
       ) : null}
     </div>
   );
@@ -594,29 +691,31 @@ function WeekSummaryPanel({ summary, className = '', compact = false }: { summar
 
 function MonthBoard({
   weeks,
+  showTotals,
   selectedDay,
   onSelectDay,
   pendingIds,
 }: {
   weeks: CalendarWeek[];
+  showTotals: boolean;
   pendingIds: number[];
   selectedDay: string | null;
   onSelectDay: (day: string) => void;
 }) {
   return (
     <section aria-label="Month" className="min-w-0 space-y-2">
-      <div aria-hidden="true" className="grid grid-cols-7 gap-1 sm:gap-1.5 xl:grid-cols-[repeat(7,minmax(0,1fr))_12rem]">
+      <div aria-hidden="true" className={`grid grid-cols-7 gap-1 sm:gap-1.5 ${showTotals ? 'xl:grid-cols-[repeat(7,minmax(0,1fr))_12rem]' : ''}`}>
         {WEEKDAY_LABELS.map((label) => (
           <p key={label} className="px-1 text-xs font-medium text-[var(--text-muted)]">{label}</p>
         ))}
-        <p className="hidden px-1 text-xs font-medium text-[var(--text-muted)] xl:block">Week</p>
+        {showTotals ? <p className="hidden px-1 text-xs font-medium text-[var(--text-muted)] xl:block">Week</p> : null}
       </div>
       {weeks.map((week) => (
-        <div key={week.weekStart} className="grid grid-cols-7 gap-1 sm:gap-1.5 xl:grid-cols-[repeat(7,minmax(0,1fr))_12rem]">
+        <div key={week.weekStart} className={`grid grid-cols-7 gap-1 sm:gap-1.5 ${showTotals ? 'xl:grid-cols-[repeat(7,minmax(0,1fr))_12rem]' : ''}`}>
           {week.days.map((entry) => (
             <MonthCell key={entry.isoDate} day={entry} selected={entry.isoDate === selectedDay} onSelect={onSelectDay} pendingIds={pendingIds} />
           ))}
-          <WeekSummaryPanel summary={week.summary} compact className="col-span-7 xl:col-span-1" />
+          {showTotals ? <WeekSummaryPanel summary={week.summary} compact className="col-span-7 xl:col-span-1" /> : null}
         </div>
       ))}
     </section>
@@ -702,15 +801,15 @@ function MonthChip({ session, day, pending }: { session: CalendarSession; day: s
   );
 }
 
-function DayDetail({ day, onClose, pendingIds, onMove, onSessionDeleted }: { day: CalendarDay; onClose: () => void } & MoveProps) {
+function DayDetail({ day, onClose, pendingIds, onMove, onSessionDeleted, addHref }: { day: CalendarDay; onClose: () => void } & MoveProps) {
   return (
     <section aria-labelledby="calendar-day-detail" className="tile space-y-3 rounded-2xl p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="calendar-day-detail" className="text-base font-medium text-[var(--text)]">{format(fromDayKey(day.isoDate), 'EEEE d MMMM')}</h2>
         <div className="flex gap-2">
-          <Link href={`/athlete/planner?date=${day.isoDate}`} className={`${compactSecondaryButtonClassName} min-h-11 sm:min-h-8`}>
+          <Link href={addHref(day.isoDate)} className={`${compactSecondaryButtonClassName} min-h-11 sm:min-h-8`}>
             <CalendarPlus aria-hidden="true" size={14} strokeWidth={1.8} />
-            Plan here
+            Add workout
           </Link>
           <button type="button" onClick={onClose} className={`${ghostButtonClassName('compact')} min-h-11 sm:min-h-8`}>
             Close
@@ -725,7 +824,7 @@ function DayDetail({ day, onClose, pendingIds, onMove, onSessionDeleted }: { day
           ))}
         </div>
       ) : day.events.length === 0 ? (
-        <p className="text-sm text-[var(--text-muted)]">Nothing planned. Rest, or plan a session for this day.</p>
+        <p className="text-sm text-[var(--text-muted)]">Nothing planned. Rest, or add a workout for this day.</p>
       ) : null}
     </section>
   );

@@ -26,7 +26,7 @@ test('root route and app navigation define one signed-in personal workspace', as
   assert.doesNotMatch(navSource, /label: 'Coach'/);
   assert.doesNotMatch(navSource, /label: 'Athletes'/);
   assert.match(navSource, /label: 'Calendar'/);
-  assert.match(navSource, /label: 'Planner'/);
+  assert.doesNotMatch(navSource, /label: 'Planner'/);
   assert.match(navSource, /label: 'Workouts'/);
   assert.match(navSource, /href: '\/athlete\/workouts'/);
   assert.match(navSource, /href: '\/athlete\/calendar'/);
@@ -62,10 +62,9 @@ test('mobile navigation keeps the main personal training jobs directly reachable
 
 test('mobile navigation maps task routes by role without leaking athlete destinations to coaches', () => {
   const athleteItems = getMobileNavigation('ATHLETE');
-  assert.deepEqual(athleteItems.map((item) => item.label), ['Home', 'Calendar', 'Planner', 'Workouts', 'Activity']);
-  assert.equal(isNavigationItemActive('/athlete/templates', athleteItems[3], athleteItems), true);
-  assert.equal(isNavigationItemActive('/athlete/import', athleteItems[4], athleteItems), true);
-  assert.equal(isNavigationItemActive('/athlete/planner', athleteItems[2], athleteItems), true);
+  assert.deepEqual(athleteItems.map((item) => item.label), ['Home', 'Calendar', 'Workouts', 'Activity']);
+  assert.equal(isNavigationItemActive('/athlete/templates', athleteItems[2], athleteItems), true);
+  assert.equal(isNavigationItemActive('/athlete/import', athleteItems[3], athleteItems), true);
   assert.equal(isNavigationItemActive('/athlete/workouts', athleteItems[0], athleteItems), false);
 
   const coachItems = getMobileNavigation('COACH');
@@ -101,17 +100,19 @@ test('Workouts is a standalone library destination and session detail keeps its 
   assert.match(workoutsClientSource, /md:bottom-0/);
 });
 
-test('athlete planner only places defined sources on selected dates', async () => {
-  const plannerPageSource = await read('app/(app)/athlete/planner/page.tsx');
-  const plannerClientSource = await read('app/(app)/athlete/planner/AthletePlannerClient.tsx');
+test('Calendar placement only places defined sources on selected dates', async () => {
+  const plannerPageSource = await read('app/(app)/athlete/calendar/page.tsx');
+  const retiredPlannerSource = await read('app/(app)/athlete/planner/page.tsx');
+  const plannerClientSource = await read('app/(app)/athlete/calendar/CalendarPlacement.tsx');
   const plannerDeskSource = await read('components/PlannerDesk.tsx');
   const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
   const templatesClientSource = await read('components/TrainingTemplatesClient.tsx');
 
   assert.match(plannerPageSource, /athletePlannerService\.loadWorkspace/);
-  assert.match(plannerPageSource, /workoutLibraryService\.listForOwner\('athlete', user\.id\)/);
+  assert.match(plannerPageSource, /workoutLibraryService\.listForOwner\('athlete', userId\)/);
   assert.match(plannerPageSource, /resolvePlannerSourceSelection\(source/);
-  assert.match(plannerPageSource, /AthletePlannerClient/);
+  assert.match(plannerPageSource, /<CalendarPlacement/);
+  assert.match(retiredPlannerSource, /redirect\(getPlannerRedirectHref\(/);
   assert.doesNotMatch(plannerClientSource, /WorkoutBuilder|Start from scratch|Create session/);
   assert.match(plannerClientSource, /PlannerDesk/);
   assert.match(plannerClientSource, /initialSourceKey=\{initialSourceKey\}/);
@@ -119,8 +120,8 @@ test('athlete planner only places defined sources on selected dates', async () =
   assert.match(plannerDeskSource, /setSelectedDates\(dates\)/);
   assert.match(plannerDeskSource, /Month navigation/);
   assert.match(plannerDeskSource, /params\.set\('source', selectedSource\.key\)/);
-  assert.match(workoutsClientSource, /source=workout:\$\{workout\.id\}/);
-  assert.match(templatesClientSource, /source=template:\$\{template\.id\}/);
+  assert.match(workoutsClientSource, /getCalendarPlacementHref\(`workout:\$\{workout\.id\}`\)/);
+  assert.match(templatesClientSource, /getCalendarPlacementHref\(`template:\$\{template\.id\}`\)/);
   assert.doesNotMatch(templatesClientSource, /\/athlete\/calendar\?add=1&template=/);
 });
 

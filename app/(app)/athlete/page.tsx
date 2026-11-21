@@ -214,7 +214,7 @@ export default async function AthletePage() {
                 <SessionRow session={skippedToday[0]} href={`/athlete/session/${skippedToday[0].id}?from=home`} actionLabel="Details" variant="compact" />
               ) : null}
               <div className="mt-auto flex flex-wrap gap-2 pt-1">
-                <ActionLink href="/athlete/planner" tone="secondary">
+                <ActionLink href="/athlete/calendar?place=workout" tone="secondary">
                   <CalendarPlus aria-hidden="true" size={15} strokeWidth={1.8} />
                   Plan a session
                 </ActionLink>

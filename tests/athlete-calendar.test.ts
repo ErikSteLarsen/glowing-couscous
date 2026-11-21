@@ -254,7 +254,8 @@ test('calendar UI reschedules through the narrow schedule route with drag, keybo
   assert.match(source, /Move to…/);
   assert.match(source, /role="alert"/);
   assert.match(source, /router\.refresh\(\)/);
-  assert.match(source, /\/athlete\/planner\?date=/);
+  assert.match(source, /getCalendarHref\(view, entry, \{ place: 'workout' \}\)/);
+  assert.doesNotMatch(source, /\/athlete\/planner\?/);
   assert.match(source, /<ComplianceMark/);
   assert.doesNotMatch(source, /aria-label=\{`Focus /);
   assert.doesNotMatch(source, /router\.replace/);

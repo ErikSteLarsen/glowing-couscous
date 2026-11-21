@@ -49,7 +49,7 @@ test('planner editor adapter preserves ownership modes while using canonical blo
 test('libraries and session detail own editing while planners place sources', async () => {
   const [coachPlannerSource, athletePlannerSource, templatesSource, composerSource] = await Promise.all([
     read('app/(app)/coach/planner/PlannerClient.tsx'),
-    read('app/(app)/athlete/planner/AthletePlannerClient.tsx'),
+    read('app/(app)/athlete/calendar/CalendarPlacement.tsx'),
     read('components/TrainingTemplatesClient.tsx'),
     read('components/WorkoutBuilder.tsx'),
   ]);

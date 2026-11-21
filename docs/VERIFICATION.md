@@ -132,7 +132,7 @@ keyboard/focus, names/labels, landmarks, contrast, reduced motion and non-color
 feedback. Shell checks include drawer focus return/containment, Escape, inert
 content, scroll lock, resize/history cleanup and desktop menu/theme persistence.
 
-Phone navigation groups Home, Plan (Calendar/Planner), Workouts (Templates), and
+Phone navigation groups Home, Calendar, Workouts (Templates), and
 History (Import). Verify date handoff, week strip/sticky placement, tap-first
 editing, History filters and pinned Profile save state. Check coach navigation
 against existing role boundaries after shared changes.

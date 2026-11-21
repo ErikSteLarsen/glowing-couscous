@@ -422,7 +422,7 @@ test('planner API routes and navigation use the coach planner service', async ()
   assert.doesNotMatch(desktopNavigation, /href: '\/coach\/planner'/);
   assert.match(navigation, /label: 'Plan', description: 'Assign training', href: '\/coach\/planner'/);
   assert.match(oldBuilderPage, /redirect\('\/coach\/planner/);
-  assert.match(templatesClient, /athlete\/planner\?source=template:\$\{template\.id\}/);
+  assert.match(templatesClient, /getCalendarPlacementHref\(`template:\$\{template\.id\}`\)/);
   assert.doesNotMatch(templatesClient, /\$\{plannerHref\}\?templateId=/);
 });
 

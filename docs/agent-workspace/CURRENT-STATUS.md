@@ -196,6 +196,20 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   Checked in a local browser at 390 and 1440 px across origins and deep links.
   The coach athlete page has unit tests only, because coach routes redirect.
   `pnpm test` 505 passed.
+- Calendar and Planner are one page at `/athlete/calendar`. The default shows
+  the week or month with prev/Today/next, **Add workout** and a ⋯ More menu
+  (Week/Month, Show load totals (off by default, cookie), Apply a routine,
+  Events, Import an activity). Each session card has a ⋯ menu with Open, Move
+  to… and Remove…. Add workout opens the existing placement desk
+  (`?place=workout|template`) with "← Calendar" and Done. Start time is under
+  Advanced. `/athlete/planner?date&source` redirects to the same state, the
+  Planner nav entries are gone, and `from=planner` returns to Calendar. Routine
+  apply now treats day-cadence routines as one week; before, this was rejected
+  by the server on both old pages. There is still no whole-month routine
+  option. Checked in a local browser at 390 and 1440 px: add, start time,
+  routine, move, remove and the redirect. Drag-and-drop with mouse or touch and
+  a real 409 double submit were not exercised. `pnpm test` 509 passed;
+  `pnpm test:db` 561 passed.
 
 ## Remaining risks and acceptance gates
 

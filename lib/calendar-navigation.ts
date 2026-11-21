@@ -57,8 +57,46 @@ export function getCalendarPeriodLabel(view: CalendarView, day: DayKey): string 
   return `Week ${getISOWeek(start)} · ${range}`;
 }
 
-export function getCalendarHref(view: CalendarView, day: DayKey) {
-  return `/athlete/calendar?${new URLSearchParams({ view, date: day }).toString()}`;
+/** Which source list the Calendar's placement flow opens on. */
+export type CalendarPlacement = 'workout' | 'template';
+
+const PLACEMENT_SOURCE_PATTERN = /^(workout|template):\d+$/;
+
+export function parseCalendarPlacement(value: unknown): CalendarPlacement | null {
+  return value === 'workout' || value === 'template' ? value : null;
+}
+
+/** The "Show load totals" view setting, kept in a cookie so it survives visits. */
+export const CALENDAR_TOTALS_COOKIE = 'tempo-calendar-totals';
+
+export function parseCalendarTotals(value: unknown): boolean {
+  return value === 'show';
+}
+
+export function getCalendarHref(view: CalendarView, day: DayKey, options: { place?: CalendarPlacement } = {}) {
+  const params = new URLSearchParams({ view, date: day });
+  if (options.place) params.set('place', options.place);
+  return `/athlete/calendar?${params.toString()}`;
+}
+
+/** Opens Calendar placement with a saved workout or template already chosen. */
+export function getCalendarPlacementHref(source: `${CalendarPlacement}:${number}`) {
+  const place = source.startsWith('template:') ? 'template' : 'workout';
+  return `/athlete/calendar?${new URLSearchParams({ place, source }).toString()}`;
+}
+
+/**
+ * Maps a retired /athlete/planner URL to the same state on Calendar: the
+ * month around `date`, with placement open on the preselected source.
+ */
+export function getPlannerRedirectHref(params: { date?: string | string[]; source?: string | string[] }) {
+  const date = parseCalendarDay(params.date);
+  const source = typeof params.source === 'string' && PLACEMENT_SOURCE_PATTERN.test(params.source) ? params.source : null;
+  const next = new URLSearchParams({ view: 'month' });
+  if (date) next.set('date', date);
+  next.set('place', source?.startsWith('template:') ? 'template' : 'workout');
+  if (source) next.set('source', source);
+  return `/athlete/calendar?${next.toString()}`;
 }
 
 export type CalendarShortcut = { type: 'step'; direction: -1 | 1 } | { type: 'today' } | { type: 'view'; view: CalendarView };

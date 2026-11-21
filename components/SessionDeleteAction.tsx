@@ -11,15 +11,26 @@ export function SessionDeleteAction({
   returnHref,
   onDeleted,
   disabled = false,
+  open,
+  onOpenChange,
 }: {
   sessionId: number;
   title: string;
   returnHref?: string;
   onDeleted?: (title: string) => void;
   disabled?: boolean;
+  /** Controlled from another control, such as a menu item; no trigger is rendered. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const controlled = open !== undefined;
+  const isOpen = controlled ? open : uncontrolledOpen;
+  const setIsOpen = (next: boolean) => {
+    if (!controlled) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  };
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState('');
 
@@ -54,9 +65,11 @@ export function SessionDeleteAction({
       setError('');
       setIsOpen(open);
     }}>
-      <AlertDialogTrigger className={dangerButtonClassName} disabled={disabled}>
-        Remove session
-      </AlertDialogTrigger>
+      {controlled ? null : (
+        <AlertDialogTrigger className={dangerButtonClassName} disabled={disabled}>
+          Remove session
+        </AlertDialogTrigger>
+      )}
       {error && !isOpen ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
       <AlertDialogContent className="tempo-alert-dialog w-[calc(100%-2rem)] max-w-md space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]">
         <div>
