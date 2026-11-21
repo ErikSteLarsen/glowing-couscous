@@ -192,7 +192,7 @@ export function ActivityImportClient({
           {drafts.map((draft) => (
             <Surface key={draft.key} className="space-y-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0">
+                <div className="min-w-0 [overflow-wrap:anywhere]">
                   <p className="break-words text-[15px] font-semibold text-[var(--text)]">{draft.activity.title || draft.filename}</p>
                   <p className="mt-1 text-[12px] text-[var(--text-secondary)]">{draft.filename}</p>
                 </div>
@@ -291,7 +291,7 @@ export function ActivityImportClient({
                 }}
               >
                 <summary className={`flex min-h-11 cursor-pointer list-none flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg px-2 py-2 text-left transition-colors hover:bg-[var(--raised)] [&::-webkit-details-marker]:hidden ${buttonFocusClassName}`}>
-                  <span className="min-w-0">
+                  <span className="min-w-0 [overflow-wrap:anywhere]">
                     <span className="block break-words text-[15px] font-semibold text-[var(--text)]">{activity.title}</span>
                     <span className="mt-1 block text-[12px] text-[var(--text-secondary)]">
                       {format(new Date(activity.completedAt), 'EEE d MMM yyyy · HH:mm')} · {getSportLabel(activity.sport)} · {formatDuration(activity.durationSec)} · {activity.source === 'strava' ? 'Strava' : 'File'}
