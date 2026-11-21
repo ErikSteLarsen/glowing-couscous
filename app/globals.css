@@ -513,7 +513,7 @@ button.tile:hover,
 
 .ink-day-channel {
   position: relative;
-  min-height: 150px;
+  min-height: 120px;
   border-color: var(--border);
 }
 
@@ -611,7 +611,8 @@ button.tile:hover,
   }
 
   .ink-week-track > .ink-day-channel {
-    flex: 0 0 min(82vw, 292px);
+    flex: 0 0 min(62vw, 240px);
+    min-height: 96px;
     scroll-snap-align: start;
   }
 }

@@ -162,6 +162,9 @@ test('athlete home uses the overhaul composition with explicit session actions',
   assert.match(athleteRouteSource, /HomeTrainingSetup/);
   assert.match(athleteRouteSource, /next-event-heading/);
   assert.doesNotMatch(athleteRouteSource, /OverdueSessions|See missed workouts/);
+  assert.match(athleteRouteSource, /<HomeSummaryDialog[\s\S]*<PerformanceChart[\s\S]*<\/HomeSummaryDialog>/);
+  assert.match(athleteRouteSource, /<HomeSummaryDialog[\s\S]*<WeeklyVolumeChart[\s\S]*<\/HomeSummaryDialog>/);
+  assert.match(athleteRouteSource, /<WorkoutStartChooser/);
   assert.match(athleteRouteSource, /Rest day|Done for today/);
   assert.match(athleteRouteSource, /athlete\/session/);
   assert.doesNotMatch(athleteRouteSource, /find-coach/);
