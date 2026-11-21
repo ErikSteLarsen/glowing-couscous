@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { redirect } from 'next/navigation';
-import { ActionLink, EmptyState, PageShell, StatTile, TopBar, formFieldClassName, formLabelClassName, formSelectClassName, secondaryButtonClassName } from '@/components/ui';
+import { ActionLink, EmptyState, PageShell, TopBar, formFieldClassName, formLabelClassName, formSelectClassName, secondaryButtonClassName } from '@/components/ui';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { getCurrentUser } from '@/lib/auth-session';
@@ -13,8 +13,7 @@ import { formatActivityDateTime } from '@/lib/tcx-time';
 import { getSportLabel, SPORT_OPTIONS } from '@/lib/sport';
 import { ACTIVITY_PAGE_SIZE, getActivityHref, parseActivityFilters } from '@/lib/activity-navigation';
 import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
-import { ManualActivityForm } from './ManualActivityForm';
-import { ActivityImportForm } from './ActivityImportForm';
+import { AddActivity } from './AddActivity';
 
 export default async function AthleteActivityPage({ searchParams }: {
   searchParams: Promise<{ q?: string | string[]; sport?: string | string[]; page?: string | string[] }>;
@@ -35,11 +34,8 @@ export default async function AthleteActivityPage({ searchParams }: {
       <TopBar
         title="Completed work"
         description="Find past sessions, review planned outcomes, and log completed work from outside your plan."
-        actions={<div className="flex flex-wrap gap-2"><ActionLink href="#import-activity" tone="primary">Import activity file</ActionLink><ActionLink href="#log-activity" tone="secondary">Log completed workout</ActionLink><ActionLink href="/athlete/import?from=activity" tone="ghost">Review Strava imports</ActionLink></div>}
+        actions={<AddActivity today={todayInZone(await getRequestTimeZone())} />}
       />
-
-      <ActivityImportForm />
-      <ManualActivityForm today={todayInZone(await getRequestTimeZone())} />
 
       <form action="/athlete/activity" className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="min-w-0 flex-1 space-y-2">
@@ -57,11 +53,24 @@ export default async function AthleteActivityPage({ searchParams }: {
         {isFiltered ? <ActionLink href="/athlete/activity" tone="ghost">Clear filters</ActionLink> : null}
       </form>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <StatTile label="Completed sessions" value={String(activityFeed.count)} detail={totalsLabel} />
-        <StatTile label="Duration" value={formatDuration(activityFeed.totals.durationSec)} detail={totalsLabel} />
-        <StatTile label={activityFeed.totals.unknownLoad ? 'Load unavailable' : 'Load'} value={activityFeed.totals.unknownLoad ? '—' : `${activityFeed.totals.tss}`} detail={activityFeed.totals.unknownLoad ? `${activityFeed.totals.unknownLoad} activities have no defensible TSS` : totalsLabel} />
-      </div>
+      <dl aria-label={totalsLabel} className="flex flex-wrap gap-x-6 gap-y-2 border-y border-[var(--border)] py-3 text-sm">
+        <div className="flex items-baseline gap-2">
+          <dt className="text-[var(--text-muted)]">Completed</dt>
+          <dd><MetricText>{activityFeed.count}</MetricText></dd>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <dt className="text-[var(--text-muted)]">Duration</dt>
+          <dd><MetricText>{formatDuration(activityFeed.totals.durationSec)}</MetricText></dd>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <dt className="text-[var(--text-muted)]">Load</dt>
+          <dd>
+            {activityFeed.totals.unknownLoad
+              ? <span>Unavailable for {activityFeed.totals.unknownLoad} {activityFeed.totals.unknownLoad === 1 ? 'activity' : 'activities'}</span>
+              : <MetricText>{activityFeed.totals.tss} TSS</MetricText>}
+          </dd>
+        </div>
+      </dl>
 
       {activityFeed.activities.length === 0 ? (
         <EmptyState

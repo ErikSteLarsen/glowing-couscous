@@ -157,7 +157,7 @@ export function ActivityImportClient({
   return (
     <>
       <StravaImportPanel initialConnection={initialStravaConnection} plannedSessions={plannedSessions} />
-      <Surface className="space-y-4">
+      <Surface id="activity-files" className="scroll-mt-20 space-y-4">
         <div>
           <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Add activity files</h2>
           <p className="mt-1 max-w-[72ch] text-[13px] leading-[1.5] text-[var(--text-secondary)]">

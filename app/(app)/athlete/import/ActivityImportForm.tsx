@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { ActionLink, formFieldClassName, primaryButtonClassName, Surface } from '@/components/ui';
+import { ActionLink, formFieldClassName, primaryButtonClassName } from '@/components/ui';
 import { getSportLabel } from '@/lib/sport';
 import { formatDuration } from '@/lib/format-duration';
 import { formatActivityDateTime } from '@/lib/tcx-time';
@@ -104,10 +104,10 @@ export function ActivityImportForm() {
   }
 
   return (
-    <Surface id="import-activity" className="space-y-4">
+    <div className="space-y-4 border-t border-[var(--border)] pt-4">
       <div>
-        <h2 className="text-base font-medium text-[var(--text)]">Import activity file</h2>
-        <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">Review the recorded details before saving. Tempo keeps activity metrics and file provenance, not GPS route data. Load stays unavailable unless the file provides a defensible value.</p>
+        <h2 className="text-base font-medium text-[var(--text)]">Import activity summary</h2>
+        <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">Save the activity summary and file source. For sensor samples and running workout analysis, use Choose activity files above.</p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="min-w-0 flex-1 space-y-2">
@@ -162,6 +162,6 @@ export function ActivityImportForm() {
       ) : null}
       {savedHref ? <p role="status" className="text-sm text-[var(--status-success)]">Activity imported. <ActionLink href={savedHref} tone="ghost">Review outcome</ActionLink></p> : null}
       {error ? <p role="alert" className="text-sm text-[var(--status-danger)]">{error}</p> : null}
-    </Surface>
+    </div>
   );
 }

@@ -1,18 +1,20 @@
 import { redirect } from 'next/navigation';
 import { after } from 'next/server';
 import { ActivityImportClient } from '@/components/ActivityImportClient';
-import { PageShell, TopBar } from '@/components/ui';
+import { PageShell, TopBar, buttonFocusClassName } from '@/components/ui';
 import { activityImportService } from '@/lib/activity-import-service';
 import { stravaService } from '@/lib/strava-service';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { resolveBackTarget } from '@/lib/app-navigation';
+
+import { ActivityImportForm } from './ActivityImportForm';
 
 export const maxDuration = 60;
 
 export default async function ImportPage({
   searchParams,
 }: {
-  searchParams: Promise<{ strava?: string; from?: string }>;
+  searchParams: Promise<{ strava?: string; from?: string; summary?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user) redirect('/login');
@@ -45,6 +47,13 @@ export default async function ImportPage({
           plannedSessions={imports.plannedSessions}
           initialStravaConnection={strava}
         />
+        <details open={query.summary === '1' || undefined} className="rounded-2xl border border-[var(--border)] px-5">
+          <summary className={`min-h-11 cursor-pointer rounded-lg py-3 text-sm font-medium text-[var(--text)] ${buttonFocusClassName}`}>Advanced options</summary>
+          <details id="import-summary" open={query.summary === '1' || undefined} className="mb-3 scroll-mt-20">
+            <summary className={`min-h-11 cursor-pointer rounded-lg py-3 text-sm text-[var(--text)] ${buttonFocusClassName}`}>Import summary only</summary>
+            <div className="pb-2"><ActivityImportForm /></div>
+          </details>
+        </details>
       </div>
     </PageShell>
   );

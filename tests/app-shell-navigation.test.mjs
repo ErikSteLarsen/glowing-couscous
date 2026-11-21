@@ -189,9 +189,26 @@ test('workspace pages keep shared navigation while Activity exposes its primary 
     assert.doesNotMatch(source, /actions=\{/);
   }
   assert.match(pageSources[0], /href="\/athlete\/events"/);
-  assert.match(pageSources[1], /href="#import-activity"/);
-  assert.match(pageSources[1], /href="#log-activity"/);
+  assert.match(pageSources[1], /actions=\{<AddActivity/);
+  assert.doesNotMatch(pageSources[1], /<ManualActivityForm|<ActivityImportForm/);
   assert.doesNotMatch(pageSources[1], /ActionLink href="\/(athlete\/calendar|athlete\/planner)"/);
+});
+
+test('Add activity offers all three intake paths and preserves prior entry hashes', async () => {
+  const [chooser, manual, imports] = await Promise.all([
+    'app/(app)/athlete/activity/AddActivity.tsx',
+    'app/(app)/athlete/activity/ManualActivityForm.tsx',
+    'app/(app)/athlete/import/page.tsx',
+  ].map(read));
+
+  assert.match(chooser, /Log manually/);
+  assert.match(chooser, /href="\/athlete\/import\?from=activity#activity-files"/);
+  assert.match(chooser, /href="\/athlete\/import\?from=activity#strava"/);
+  assert.match(chooser, /hash === '#log-activity'/);
+  assert.match(chooser, /hash === '#import-activity'.*summary=1#import-summary/);
+  assert.match(manual, /<details.*>[\s\S]*More details[\s\S]*name="distanceKm"[\s\S]*name="rpe"[\s\S]*name="notes"[\s\S]*<\/details>/);
+  assert.match(manual, /Keep as a separate activity/);
+  assert.match(imports, /Advanced options[\s\S]*Import summary only/);
 });
 
 test('summary-only activity outcomes do not offer structured comparison or editing', async () => {
