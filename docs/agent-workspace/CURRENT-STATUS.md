@@ -258,6 +258,11 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   are dropped on load. Profile keeps its inline draft notice. On phones the
   drafts chip wraps below the tabs. The coach Workouts page also renders the
   new cards and was not browser-checked.
+- The light theme is light: `:root[data-workspace-theme="light"]` in
+  `app/globals.css` overrides every night-palette token. Checked in a local
+  browser across Home (with dialog), Calendar, Workouts, Activity, Library,
+  session, Templates, Events, Import, Profile, Settings and phone Home. Dark
+  mode is unchanged; Ride stays dark by design.
 
 ## Remaining risks and acceptance gates
 
