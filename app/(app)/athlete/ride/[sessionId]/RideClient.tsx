@@ -44,7 +44,7 @@ const SAMPLE_INTERVAL_MS = 250;
 const SAVE_RETRY_LIMIT = 5;
 const ROLES = ['trainer', 'heartRate', 'cadence'] as const;
 const subscribeNever = () => () => undefined;
-const PROFILE_FTP_HREF = '/profile#training-metrics';
+const PROFILE_FTP_HREF = '/profile#cycling';
 
 /** "90.5-100% FTP" → ["90.5-100", "% FTP"], so the number can carry the hero size. */
 function splitPrescription(label: string | null): [string, string] {
