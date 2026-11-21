@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DRAFT_TTL_MS, clearUserRecovery, listRecoveryDrafts, parseRecoveryDraft, recoveryKey, removeRecoveryDraftIfUnchanged, saveRecoveryDraft, type DraftStorage, type RecoveryDraft } from '../lib/draft-recovery.ts';
+import { DRAFT_TTL_MS, clearUserRecovery, formatDraftAge, listRecoveryDrafts, parseRecoveryDraft, recoveryKey, removeRecoveryDraftIfUnchanged, saveRecoveryDraft, type DraftStorage, type RecoveryDraft } from '../lib/draft-recovery.ts';
 import { parseProfileRecovery } from '../lib/profile-recovery.ts';
 import { createEmptyPerformanceProfile } from '../lib/performance-profile.ts';
-import { parseWorkoutRecovery } from '../lib/workout-recovery.ts';
+import { describeWorkoutDraft, isWorkoutDraftRedundant, parseWorkoutRecovery } from '../lib/workout-recovery.ts';
+import { createSessionEditorDraftFromPersisted } from '../lib/session-editor.ts';
 
 function storage(): DraftStorage {
   const map = new Map<string, string>();
@@ -65,4 +66,24 @@ test('profile recovery preserves unfinished pace/time input but rejects malforme
   assert.equal(parseProfileRecovery('{"profile":{}}'), null);
   assert.equal(parseProfileRecovery('null'), null);
   assert.equal(parseWorkoutRecovery('{"draft":{"blocks":"bad"}}'), null);
+});
+
+test('draft age reads as recent minutes or hours before falling back to a date', () => {
+  assert.equal(formatDraftAge(now - 20_000, now), 'just now');
+  assert.equal(formatDraftAge(now - 12 * 60_000, now), '12 min ago');
+  assert.equal(formatDraftAge(now - 3 * 60 * 60_000, now), '3 hr ago');
+  assert.doesNotMatch(formatDraftAge(now - 2 * 24 * 60 * 60_000, now, 'en-GB'), /ago/);
+});
+
+test('workout drafts are named by their title and drop out when they match the saved workout', () => {
+  const saved = { id: 5, title: 'Gentle Spin', sport: 'BIKING', summary: null, sportMetricsJson: null, templateId: null, updatedAt: '2026-11-20T10:00:00.000Z', blocks: [] };
+  const payload = (title: string) => JSON.stringify({ draft: createSessionEditorDraftFromPersisted('create', { ...saved, title, date: null, scheduledDate: null }), requestKey: '' });
+  const baseline = '2026-11-20T10:00:00.000Z';
+  assert.deepEqual(describeWorkoutDraft({ resource: '5', payload: payload('Gentle Spin v2') }, [saved]), { name: 'Gentle Spin v2', kind: 'Unsaved changes' });
+  assert.deepEqual(describeWorkoutDraft({ resource: 'new', payload: payload('  ') }, [saved]), { name: 'Untitled workout', kind: 'New workout' });
+  assert.deepEqual(describeWorkoutDraft({ resource: '9', payload: 'broken' }, [saved]), { name: 'Untitled workout', kind: 'Edits to a removed workout' });
+  assert.equal(isWorkoutDraftRedundant({ resource: '5', baseline, payload: payload('Gentle Spin') }, [saved]), true);
+  assert.equal(isWorkoutDraftRedundant({ resource: '5', baseline, payload: payload('Gentle Spin v2') }, [saved]), false);
+  assert.equal(isWorkoutDraftRedundant({ resource: '5', baseline: 'older', payload: payload('Gentle Spin') }, [saved]), false);
+  assert.equal(isWorkoutDraftRedundant({ resource: 'new', baseline: '', payload: payload('Gentle Spin') }, [saved]), false);
 });

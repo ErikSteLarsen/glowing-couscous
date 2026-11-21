@@ -65,3 +65,13 @@ export function removeRecoveryDraftIfUnchanged(storage: DraftStorage, draft: Rec
   storage.removeItem(key);
   return true;
 }
+
+/** "just now", "12 min ago", "3 hr ago", then a short date: drafts live at most a week. */
+export function formatDraftAge(savedAt: number, now: number, locale?: string) {
+  const minutes = Math.round((now - savedAt) / 60_000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  return new Date(savedAt).toLocaleString(locale, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+}

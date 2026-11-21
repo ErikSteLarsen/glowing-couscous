@@ -3,11 +3,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { listRecoveryDrafts, recoveryKey, removeRecoveryDraftIfUnchanged, saveRecoveryDraft, type RecoveryDraft } from '@/lib/draft-recovery';
 
-export function useDraftRecovery({ userId, surface, resource, baseline, payload, dirty }: {
+export function useDraftRecovery({ userId, surface, resource, baseline, payload, dirty, isRedundant }: {
   userId: number | null; surface: RecoveryDraft['surface']; resource: string;
   baseline: string; payload: string; dirty: boolean;
+  /** Drafts that match what is already saved are removed instead of offered. */
+  isRedundant?: (draft: RecoveryDraft) => boolean;
 }) {
   const [candidates, setCandidates] = useState<RecoveryDraft[]>([]);
+  const [checkedAt, setCheckedAt] = useState(0);
+  const redundant = useRef(isRedundant);
+  useEffect(() => { redundant.current = isRedundant; });
   const [status, setStatus] = useState<'idle' | 'kept' | 'unavailable'>('idle');
   const writer = useRef('');
   const latest = useRef({ userId, surface, resource, baseline, payload, dirty });
@@ -18,8 +23,15 @@ export function useDraftRecovery({ userId, surface, resource, baseline, payload,
 
   const refresh = useCallback(() => {
     if (userId === null) return;
-    try { setCandidates(listRecoveryDrafts(window.localStorage, userId, surface).filter((draft) => draft.writer !== writer.current)); }
-    catch { setStatus('unavailable'); }
+    try {
+      const storage = window.localStorage;
+      const offered = listRecoveryDrafts(storage, userId, surface).filter((draft) => {
+        if (draft.writer === writer.current) return false;
+        return !(redundant.current?.(draft) && removeRecoveryDraftIfUnchanged(storage, draft));
+      });
+      setCandidates(offered);
+      setCheckedAt(Date.now());
+    } catch { setStatus('unavailable'); }
   }, [userId, surface]);
 
   useEffect(() => {
@@ -100,5 +112,5 @@ export function useDraftRecovery({ userId, surface, resource, baseline, payload,
     restoredRecord.current = draft;
     setCandidates((current) => current.filter((entry) => recoveryKey(entry) !== recoveryKey(draft)));
   }, []);
-  return { candidates, status, discard, flush, restored };
+  return { candidates, checkedAt, status, discard, flush, restored };
 }
