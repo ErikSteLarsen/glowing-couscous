@@ -68,7 +68,6 @@ function buildActivityIntensityTimeline(
   };
 }
 
-const HOME_OVERDUE_SESSION_LIMIT = 3;
 
 /** Sessions the athlete placed themselves; coach-owned work keeps its coach's schedule. */
 export function isSelfPlanned(session: { coachOwnerId?: number | null; assignedById?: number | null; trainingPlanId?: number | null }) {
@@ -341,28 +340,6 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       }
 
       const ftpWatts = parsePerformanceProfileJson(athlete.performanceProfileJson).cycling.ftpWatts;
-      const overdueRecords = await db.session.findMany({
-        where: {
-          athleteId: userId,
-          date: { lt: startOfDay(today) },
-          status: { notIn: ['completed', SKIPPED_SESSION_STATUS] },
-          coachOwnerId: null,
-          assignedById: null,
-          trainingPlanId: null,
-          activity: { is: null },
-        },
-        include: {
-          blocks: { orderBy: { sortOrder: 'asc' } },
-          activity: true,
-        },
-        orderBy: [{ date: 'desc' }, { id: 'desc' }],
-        take: HOME_OVERDUE_SESSION_LIMIT,
-      });
-      const overdue = overdueRecords
-        .filter((session): session is typeof session & { date: Date } => session.date !== null)
-        .map((session) => mapSessionSummary(session, { today, ftpWatts }))
-        .filter((session) => session.isOverdue);
-
       const overviewCards = readOverviewCardsFromPrefsJson(athlete.prefsJson);
 
       const completedActivities = await db.activity.findMany({
@@ -449,7 +426,6 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
           daysUntil: calendarDayDistance(todayKey, utcDayKey(upcomingEvents[0].eventDate)),
           targetFinishSec: upcomingEvents[0].targetFinishSec,
         } : null,
-        overdue,
         todaySessions,
         weekDays,
         nextDays,
