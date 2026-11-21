@@ -250,6 +250,89 @@
   --sidebar: 14rem;
 }
 
+/*
+ * Day instrument: the light workspace theme. It mirrors every token the night
+ * ground above sets, so light mode never inherits dark surfaces. Dark mode is
+ * untouched; Ride mode stays on the night instrument in both themes.
+ */
+:root[data-workspace-theme="light"] {
+  color-scheme: light;
+  --color-zone-1: #5B7A99;
+  --color-zone-2: #2B9478;
+  --color-zone-3: #B3891A;
+  --color-zone-4: #CF6A2A;
+  --color-zone-5: #CC4862;
+  --color-liquid: #5B7A99;
+
+  --background: #F4F6F8;
+  --raised: #FFFFFF;
+  --surface: #FBFCFD;
+  --sunken: #ECEFF3;
+  --border: #DCE2E8;
+  --border-strong: #C2CBD5;
+
+  --text: #111821;
+  --text-secondary: #3B4655;
+  --text-muted: #5D6978;
+
+  --brand: #1C7BA2;
+  --brand-tint: color-mix(in srgb, #1C7BA2 10%, transparent);
+  --signal-hover: #166586;
+  --signal-ink: #FFFFFF;
+  --band: color-mix(in srgb, #1C7BA2 12%, transparent);
+
+  --field-surface: #FFFFFF;
+  --field-border: #C2CBD5;
+  --field-border-hover: #98A4B2;
+  --field-focus: #1C7BA2;
+  --field-selected-border: #1C7BA2;
+  --field-selected-text: #111821;
+
+  --selection: #CBE5F1;
+  --scrollbar-thumb: #C2CBD5;
+  --scrollbar-thumb-hover: #98A4B2;
+
+  --status-success: #1D8259;
+  --status-success-tint: color-mix(in srgb, #1D8259 10%, transparent);
+  --status-success-border: color-mix(in srgb, #1D8259 35%, transparent);
+  --status-warning: #9A5E0E;
+  --status-warning-tint: color-mix(in srgb, #D98A1F 12%, transparent);
+  --status-warning-border: color-mix(in srgb, #D98A1F 40%, transparent);
+  --status-danger: #B83E31;
+  --danger-tint: color-mix(in srgb, #B83E31 9%, transparent);
+  --danger-tint-strong: color-mix(in srgb, #B83E31 16%, transparent);
+  --danger-border: color-mix(in srgb, #B83E31 38%, transparent);
+  --status-planned: #1C7BA2;
+  --status-planned-tint: color-mix(in srgb, #1C7BA2 10%, transparent);
+  --status-planned-border: color-mix(in srgb, #1C7BA2 35%, transparent);
+  --status-adjusted: #9A5E0E;
+  --status-adjusted-tint: color-mix(in srgb, #D98A1F 12%, transparent);
+  --status-adjusted-border: color-mix(in srgb, #D98A1F 40%, transparent);
+  --status-missed: #B2445A;
+  --status-missed-tint: color-mix(in srgb, #B2445A 10%, transparent);
+  --status-missed-border: color-mix(in srgb, #B2445A 35%, transparent);
+
+  --compliance-good: #1D8259;
+  --compliance-partial: #B9740F;
+  --compliance-off: #B83E31;
+
+  --metric-fitness: #1C7BA2;
+  --metric-fatigue: #8048BF;
+  --metric-form: #B9740F;
+
+  --overlay: rgb(17 24 33 / 0.38);
+  --nav-surface: #FFFFFF;
+  --nav-text: #111821;
+  --nav-muted: #3B4655;
+  --nav-border: #DCE2E8;
+  --nav-active: #E3F0F6;
+  --nav-signal: #1C7BA2;
+
+  --shadow-raised: 0 10px 28px -12px rgb(17 24 33 / 0.18);
+  --shadow-overlay: 0 18px 44px -16px rgb(17 24 33 / 0.28);
+  --shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.7);
+}
+
 .ink-studio-app .study-home__today { border-radius: 24px; }
 .ink-studio-app .study-home__week, .ink-studio-app .study-home__readout { border-radius: 20px; }
 .ink-studio-app .study-workouts__library, .ink-studio-app .study-workouts__editor { border-radius: 22px; }
