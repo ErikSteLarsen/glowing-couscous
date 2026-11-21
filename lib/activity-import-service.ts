@@ -10,10 +10,13 @@ import { validateActivityLaps, type ActivityLap } from './activity-laps.ts';
 import { newActivityAnalysisJob } from './activity-analysis-job.ts';
 import type { ActivityTelemetry } from './activity-metrics.ts';
 import {
+  ACTIVITY_IMPORT_FINISH_TOLERANCE_SEC,
   MAX_ACTIVITY_IMPORT_DISTANCE_METERS,
   MAX_ACTIVITY_IMPORT_DURATION_SEC,
   MAX_ACTIVITY_IMPORT_POINTS,
+  MAX_ACTIVITY_IMPORT_SPAN_SEC,
 } from './activity-import-limits.ts';
+import { measuredPowerTssFromPoints } from './measured-power-load.ts';
 
 const MAX_TITLE_LENGTH = 140;
 
@@ -21,6 +24,8 @@ export type ActivityImportInput = {
   title: string;
   sport: string;
   startedAt: string;
+  /** Wall-clock finish when the recorder knows it; otherwise completion is start + duration. */
+  finishedAt?: string;
   durationSec: number;
   distanceMeters: number | null;
   elevationGainMeters: number | null;
@@ -93,6 +98,15 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
   if (!Number.isInteger(durationSec) || (durationSec as number) < 1 || (durationSec as number) > MAX_ACTIVITY_IMPORT_DURATION_SEC) {
     return { ok: false, error: 'Activity duration must be between one second and 36 hours.' };
   }
+  let finishedAt: string | undefined;
+  if (value.finishedAt !== undefined && value.finishedAt !== null) {
+    const finishedAtDate = typeof value.finishedAt === 'string' ? new Date(value.finishedAt) : new Date(Number.NaN);
+    const spanSec = (finishedAtDate.getTime() - startedAtDate.getTime()) / 1000;
+    if (!Number.isFinite(spanSec) || spanSec < (durationSec as number) - ACTIVITY_IMPORT_FINISH_TOLERANCE_SEC || spanSec > MAX_ACTIVITY_IMPORT_SPAN_SEC) {
+      return { ok: false, error: 'Activity finish time must follow its start by at least the recorded duration and at most 48 hours.' };
+    }
+    finishedAt = finishedAtDate.toISOString();
+  }
   if (!Array.isArray(points) || points.length < 1 || points.length > MAX_ACTIVITY_IMPORT_POINTS) {
     return { ok: false, error: `Activity samples must contain between one and ${MAX_ACTIVITY_IMPORT_POINTS.toLocaleString()} points.` };
   }
@@ -147,6 +161,7 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
       title,
       sport,
       startedAt: startedAtDate.toISOString(),
+      ...(finishedAt ? { finishedAt } : {}),
       durationSec: durationSec as number,
       laps,
       analyzeWorkout: value.analyzeWorkout === true,
@@ -262,13 +277,16 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
       const fingerprint = createImportFingerprint(value);
       const user = await db.user.findUnique({ where: { id: userId }, select: { performanceProfileJson: true } });
       if (!user) return { ok: false, status: 404, error: 'Account not found.' };
-      const heartRateMax = parsePerformanceProfileJson(user.performanceProfileJson).heartRateMaxBpm;
-      const summary = summarizeTelemetry(value.points, value.durationSec, heartRateMax);
+      const profile = parsePerformanceProfileJson(user.performanceProfileJson);
+      const summary = summarizeTelemetry(value.points, value.durationSec, profile.heartRateMaxBpm);
+      const powerLoad = value.sport === 'BIKING' ? measuredPowerTssFromPoints(value.points, value.durationSec, profile.cycling.ftpWatts) : null;
+      const startedAt = new Date(value.startedAt);
       const activityData = {
         athleteId: userId,
-        completedAt: new Date(value.startedAt),
+        startedAt,
+        completedAt: value.finishedAt ? new Date(value.finishedAt) : new Date(startedAt.getTime() + value.durationSec * 1000),
         durationSec: value.durationSec,
-        tss: summary.tss,
+        tss: powerLoad ? Math.round(powerLoad.tss) : summary.tss,
         compliancePct: null,
         zoneDistributionJson: JSON.stringify(summary.zoneDistributionSec),
         segmentsJson: JSON.stringify(summary.segments),
@@ -377,9 +395,10 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
 function summarizeTelemetry(points: ActivitySeriesPoint[], durationSec: number, heartRateMax: number | null) {
   const ranges = calculateOlympiatoppenHeartRateZones(heartRateMax);
   const zoneDistributionSec = [0, 0, 0, 0, 0];
-  if (!ranges) return { zoneDistributionSec, tss: 0, segments: [] };
+  if (!ranges) return { zoneDistributionSec, tss: null, segments: [] };
   const segments: Array<{ key: string; zone: number; durationSec: number; label: string; color: string; tint: string }> = [];
   let tss = 0;
+  let hasHeartRate = false;
   const weights = [0.55, 0.7, 0.85, 0.98, 1.1];
   for (let index = 0; index < points.length; index += 1) {
     const point = points[index];
@@ -388,6 +407,7 @@ function summarizeTelemetry(points: ActivitySeriesPoint[], durationSec: number, 
     const next = points[index + 1]?.elapsedSec ?? durationSec;
     const seconds = Math.max(0, Math.min(15, next - point.elapsedSec));
     if (!seconds) continue;
+    hasHeartRate = true;
     const zone = ([1, 2, 3, 4, 5] as const).find((candidate) =>
       hr >= ranges[candidate].low && hr <= ranges[candidate].high,
     ) ?? (hr < ranges[1].low ? 1 : 5);
@@ -400,7 +420,7 @@ function summarizeTelemetry(points: ActivitySeriesPoint[], durationSec: number, 
       segments.push({ key: `zone-${zone}-${segments.length}`, zone, durationSec: seconds, label: `${meta.label} ${meta.name}`, color: meta.solid, tint: meta.tint });
     }
   }
-  return { zoneDistributionSec, tss: Math.round(tss), segments };
+  return { zoneDistributionSec, tss: hasHeartRate ? Math.round(tss) : null, segments };
 }
 
 function createActivitySummary(value: ActivityImportInput, sourceProvider?: string) {

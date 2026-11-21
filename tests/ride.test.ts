@@ -564,3 +564,36 @@ test('three hours of 1 Hz samples survive checkpoint and upload conversion', () 
   assert.equal(payload.points.at(-1)?.elapsedSec, 10799);
   assert.equal(validateActivityImport(payload).ok, true);
 });
+
+test('the finish screen and the saved ride agree on power load: 250 W for an hour at 250 W FTP is 100 TSS', async () => {
+  const { createActivityImportService } = await import('../lib/activity-import-service.ts');
+  const ride = plan();
+  const timerSec = 3600;
+  const samples = Array.from({ length: timerSec }, (_, t) => ({ t, p: 250, hr: null, cad: 90, spd: null, d: 0, tgt: 250 }));
+  const recording = { ...createRecording(7, 'Threshold', ride), status: 'finished' as const, timerSec, elapsedSec: timerSec, samples, startedAtMs: 0, finishedAtMs: timerSec * 1000 };
+  assert.equal(summarizeRecording(recording, 250).tss, 100);
+  let saved: Record<string, unknown> | null = null;
+  const session = { findFirst: async () => ({ id: 7, status: 'planned', sport: 'BIKING' }), update: async () => ({}) };
+  const activity = { findFirst: async () => null, create: async (args: { data: Record<string, unknown> }) => { saved = args.data; return { id: 1 }; } };
+  const db = {
+    user: { findUnique: async () => ({ performanceProfileJson: JSON.stringify({ cycling: { ftpWatts: 250 } }) }) },
+    session, activity,
+    $transaction: async <T>(operation: (tx: unknown) => Promise<T>) => operation({ session, activity }),
+  };
+  const result = await createActivityImportService({ db: db as never }).importForUser(1, toImportPayload(recording));
+  assert.equal(result.ok, true, result.ok ? '' : result.error);
+  assert.equal((saved as unknown as Record<string, unknown>).tss, 100);
+});
+
+test('a ride from Sunday 23:45 to Monday 00:45 uploads its real finish time', () => {
+  const ride = plan();
+  const startedAtMs = Date.parse('2026-11-15T23:45:00.000Z');
+  const finishedAtMs = Date.parse('2026-11-16T00:45:00.000Z');
+  const samples = Array.from({ length: 3600 }, (_, t) => ({ t, p: 200, hr: null, cad: 90, spd: null, d: 0, tgt: 200 }));
+  const recording = { ...createRecording(7, 'Threshold', ride), status: 'finished' as const, timerSec: 3600, elapsedSec: 3600, samples, startedAtMs, finishedAtMs };
+  const payload = toImportPayload(recording);
+  assert.equal(payload.startedAt, '2026-11-15T23:45:00.000Z');
+  assert.equal(payload.finishedAt, '2026-11-16T00:45:00.000Z');
+  const validated = validateActivityImport(payload);
+  assert.equal(validated.ok, true, validated.ok ? '' : validated.error);
+});

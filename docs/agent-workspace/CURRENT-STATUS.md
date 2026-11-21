@@ -136,6 +136,18 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   `pnpm typecheck`, and `pnpm build` passed. The build used the local
   disposable `tempo_acceptance` database.
 
+## Shipped log (2026-11-21)
+
+- Tempo Ride 0.2.2: remembered site, direct launch, per-origin backups (see below).
+- Ride save: the finish screen and the saved Activity share one power-load
+  calculation (`lib/measured-power-load.ts`), so a powered ride without heart
+  rate no longer saves 0 TSS. Imports with neither power nor heart rate save
+  `tss: null` (unknown, not zero). Rides upload their real finish time, and
+  `completedAt` is the finish (or start + duration), so a ride across midnight
+  counts on its finishing day. `pnpm test` 485 passed, 8 skipped;
+  `pnpm test:db` 528 passed; lint and typecheck passed. No live ride was
+  recorded against a trainer.
+
 ## Remaining risks and acceptance gates
 
 - Live Strava OAuth/delivery, retry, update/privacy/delete/deauthorization and

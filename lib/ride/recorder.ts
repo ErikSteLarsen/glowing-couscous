@@ -1,8 +1,11 @@
 import {
+  ACTIVITY_IMPORT_FINISH_TOLERANCE_SEC,
   MAX_ACTIVITY_IMPORT_DISTANCE_METERS,
   MAX_ACTIVITY_IMPORT_DURATION_SEC,
   MAX_ACTIVITY_IMPORT_POINTS,
+  MAX_ACTIVITY_IMPORT_SPAN_SEC,
 } from '../activity-import-limits.ts';
+import { measuredPowerTss, normalizedPowerFrom } from '../measured-power-load.ts';
 import { targetWattsAt, type RidePlan } from './ride-plan.ts';
 
 /** The latest value each sensor reported; null when absent or stale. */
@@ -304,21 +307,6 @@ function measure(
   return { sum, count, max, average: count > 0 ? sum / count : null };
 }
 
-function normalizedPowerFrom(length: number, powerAt: (index: number) => number | null): number | null {
-  let windowSum = 0;
-  let fourthPowerSum = 0;
-  let hasPower = false;
-  for (let index = 0; index < length; index += 1) {
-    const value = powerAt(index);
-    hasPower ||= value !== null;
-    windowSum += value ?? 0;
-    if (index >= 30) windowSum -= powerAt(index - 30) ?? 0;
-    if (index >= 29) fourthPowerSum += (windowSum / 30) ** 4;
-  }
-  if (!hasPower) return null;
-  return length < 30 ? windowSum / length : (fourthPowerSum / (length - 29)) ** 0.25;
-}
-
 export function normalizedPower(powers: Array<number | null>): number | null {
   return normalizedPowerFrom(powers.length, (index) => powers[index]);
 }
@@ -329,8 +317,9 @@ export function summarizeRecording(recording: RideRecording, ftpWatts: number | 
   const heartRate = measure(samples, 'hr');
   const cadence = measure(samples, 'cad');
   const np = normalizedPowerFrom(samples.length, (index) => samples[index].p);
-  const intensityFactor = np !== null && ftpWatts ? np / ftpWatts : null;
-  const tss = intensityFactor !== null && ftpWatts && np !== null ? (recording.timerSec * np * intensityFactor) / (ftpWatts * 3600) * 100 : null;
+  const load = measuredPowerTss(recording.timerSec, np, ftpWatts);
+  const intensityFactor = load?.intensityFactor ?? null;
+  const tss = load?.tss ?? null;
   return {
     timerSec: recording.timerSec,
     elapsedSec: recording.elapsedSec,
@@ -361,6 +350,7 @@ export type RideImportPayload = {
   title: string;
   sport: 'BIKING';
   startedAt: string;
+  finishedAt?: string;
   durationSec: number;
   distanceMeters: number | null;
   elevationGainMeters: null;
@@ -410,10 +400,17 @@ export function toImportPayload(recording: RideRecording): RideImportPayload {
     .filter((lap) => lap.endSec > lap.startSec)
     .slice(0, 500)
     .map((lap) => ({ ...lap, timerSec: lap.endSec - lap.startSec, origin: 'device' as const }));
+  const startedAtMs = recording.startedAtMs ?? recording.finishedAtMs ?? 0;
+  const spanSec = recording.finishedAtMs === null ? null : (recording.finishedAtMs - startedAtMs) / 1000;
+  // A finish outside the importer's bounds (e.g. a checkpoint recovered days later) falls back to start + duration.
+  const finishedAt = spanSec !== null && spanSec >= durationSec - ACTIVITY_IMPORT_FINISH_TOLERANCE_SEC && spanSec <= MAX_ACTIVITY_IMPORT_SPAN_SEC
+    ? new Date(recording.finishedAtMs!).toISOString()
+    : undefined;
   return {
     title: recording.sessionTitle.trim().slice(0, 140) || 'Indoor ride',
     sport: 'BIKING',
-    startedAt: new Date(recording.startedAtMs ?? recording.finishedAtMs ?? 0).toISOString(),
+    startedAt: new Date(startedAtMs).toISOString(),
+    ...(finishedAt ? { finishedAt } : {}),
     durationSec,
     distanceMeters: inRange(Math.round(recording.distanceMeters), 1, MAX_ACTIVITY_IMPORT_DISTANCE_METERS) ?? null,
     elevationGainMeters: null,

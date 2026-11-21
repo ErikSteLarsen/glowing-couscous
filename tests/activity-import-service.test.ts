@@ -93,6 +93,70 @@ test('creates a new completed session with its activity in one transaction', asy
   assert.equal((created.data.activity as { create: Record<string, unknown> }).create.metricsSource, 'file-import');
 });
 
+const powerProfile = JSON.stringify({ cycling: { ftpWatts: 250 } });
+const steadyHour = {
+  ...validInput,
+  title: 'Indoor ride',
+  sport: 'BIKING',
+  startedAt: '2026-11-15T23:45:00.000Z',
+  finishedAt: '2026-11-16T00:45:00.000Z',
+  durationSec: 3600,
+  distanceMeters: null,
+  elevationGainMeters: null,
+  points: Array.from({ length: 360 }, (_, index) => ({ elapsedSec: index * 10, powerWatts: 250 })),
+};
+
+function createdActivity(calls: Array<{ owner: string; args: Record<string, unknown> }>) {
+  const created = calls.find((call) => call.owner === 'session.create')?.args as { data: { activity: { create: Record<string, unknown> } } };
+  return created.data.activity.create;
+}
+
+test('saves power-based load for a ride without heart rate (250 W for an hour at 250 W FTP is 100 TSS)', async () => {
+  const calls: Array<{ owner: string; args: Record<string, unknown> }> = [];
+  const service = createActivityImportService({ db: fakeDatabase(calls, { performanceProfileJson: powerProfile }) as never });
+  assert.equal((await service.importForUser(7, steadyHour)).ok, true);
+  assert.equal(createdActivity(calls).tss, 100);
+});
+
+test('stores unavailable load as null rather than a measured zero', async () => {
+  const calls: Array<{ owner: string; args: Record<string, unknown> }> = [];
+  const service = createActivityImportService({ db: fakeDatabase(calls) as never });
+  assert.equal((await service.importForUser(7, steadyHour)).ok, true);
+  assert.equal(createdActivity(calls).tss, null);
+});
+
+test('falls back to heart-rate load when there is no FTP', async () => {
+  const calls: Array<{ owner: string; args: Record<string, unknown> }> = [];
+  const service = createActivityImportService({ db: fakeDatabase(calls, { performanceProfileJson: JSON.stringify({ heartRateMaxBpm: 190 }) }) as never });
+  const points = steadyHour.points.map((point) => ({ ...point, heartRateBpm: 150 }));
+  assert.equal((await service.importForUser(7, { ...steadyHour, points })).ok, true);
+  const tss = createdActivity(calls).tss as number;
+  assert.ok(tss > 0 && tss !== 100, `expected a heart-rate estimate, got ${tss}`);
+});
+
+test('a ride crossing midnight completes at its finish time, not its start', async () => {
+  const calls: Array<{ owner: string; args: Record<string, unknown> }> = [];
+  const service = createActivityImportService({ db: fakeDatabase(calls) as never });
+  assert.equal((await service.importForUser(7, steadyHour)).ok, true);
+  const activity = createdActivity(calls);
+  assert.equal((activity.startedAt as Date).toISOString(), '2026-11-15T23:45:00.000Z');
+  assert.equal((activity.completedAt as Date).toISOString(), '2026-11-16T00:45:00.000Z');
+});
+
+test('imports without a finish time complete at start plus duration, like device-file imports', async () => {
+  const calls: Array<{ owner: string; args: Record<string, unknown> }> = [];
+  const service = createActivityImportService({ db: fakeDatabase(calls) as never });
+  assert.equal((await service.importForUser(7, validInput)).ok, true);
+  assert.equal((createdActivity(calls).completedAt as Date).toISOString(), '2026-09-25T10:30:00.000Z');
+});
+
+test('rejects a finish time before the start, shorter than the duration, or implausibly late', () => {
+  for (const finishedAt of ['2026-11-15T23:00:00.000Z', '2026-11-16T00:30:00.000Z', '2026-11-18T00:00:00.000Z', 'not a date', 42]) {
+    assert.equal(validateActivityImport({ ...steadyHour, finishedAt }).ok, false, String(finishedAt));
+  }
+  assert.equal(validateActivityImport({ ...steadyHour, finishedAt: undefined }).ok, true);
+});
+
 test('imports Strava provenance with a locked connection and only approved summary metadata', async () => {
   const calls: Array<{ owner: string; args: Record<string, unknown> }> = [];
   const service = createActivityImportService({ db: fakeDatabase(calls) as never });
@@ -277,6 +341,7 @@ function fakeDatabase(
     findFirst?: (args: unknown) => Promise<{ id: number; status: string; sport: string } | null>;
     findActivityFirst?: (args: unknown) => Promise<Record<string, unknown> | null>;
     findInbox?: (args: unknown) => Promise<{ fetchedAt: Date } | null>;
+    performanceProfileJson?: string | null;
   } = {},
 ) {
   const session = {
@@ -293,7 +358,7 @@ function fakeDatabase(
     delete: async (args: unknown) => { calls.push({ owner: 'activity.delete', args: args as Record<string, unknown> }); return {}; },
   };
   return {
-    user: { findUnique: async () => ({ performanceProfileJson: null }) },
+    user: { findUnique: async () => ({ performanceProfileJson: overrides.performanceProfileJson ?? null }) },
     session,
     activity,
     $transaction: async <T>(operation: (transaction: { session: typeof session; activity: typeof activity; stravaInboxActivity: { findUnique: (args: unknown) => Promise<{ fetchedAt: Date } | null> }; $queryRaw: () => Promise<Array<{ id: string }>> }) => Promise<T>) => operation({
