@@ -37,7 +37,7 @@ export default async function RideHubPage({ searchParams }: { searchParams: Prom
   const libraryHref = publicLibraryHref(parseCatalogQuery(params));
   const ftpLink = (
     <Link href="/profile#cycling" className={`${ghostButtonClassName('compact')} max-md:min-h-11`}>
-      {ftp ? `FTP ${ftp} W` : 'Set FTP for watts'}
+      {ftp ? `FTP ${ftp} W` : 'Set cycling FTP'}
     </Link>
   );
 
