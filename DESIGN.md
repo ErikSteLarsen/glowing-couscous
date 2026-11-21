@@ -531,6 +531,28 @@ space within session rows for the removal target, increasing it to 44px on
 phones. Date selection, source selection, scheduling, and removal all have
 explicit keyboard and touch controls.
 
+### Athlete Workouts
+
+Keep **My workouts** and **Public library** visible together as a keyboard
+operable tablist with counts and 44px minimum touch targets. Describe the
+active collection in one line. Default to **My workouts** when the athlete
+has saved workouts and **Public library** otherwise. The URL carries the
+explicit tab and any catalog filters. The mobile navigation drawer links to
+Templates.
+
+Keep **New workout** on **My workouts**. Its menu includes **Start from
+public library**. Catalog cards open a read-only detail page and offer
+**Customize** and **Schedule** in their More options menu. On the detail
+page, keep **Start workout** and **Schedule** visible and **Customize** in
+More options. Catalog detail links opened from Workouts return to its
+Public library tab.
+
+Hide the header and tabs while the editor is open. **Customize** prefills an
+unsaved draft from the catalog workout. Show its source name and explain that
+Save creates an athlete-owned workout and leaves the public version intact.
+Use the existing unsaved draft status and recovery controls. Back returns
+to Public library. A clean draft closes without confirmation.
+
 ### Editing
 
 `WorkoutBuilder` is the canonical structured authoring surface. Reuse its

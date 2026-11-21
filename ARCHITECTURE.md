@@ -58,8 +58,12 @@ and ownership guards; page visibility is not API authorization.
 
 - `/athlete` - Home week overview
 - `/athlete/calendar` - unified week/month calendar; `place=workout|template` (with optional `source`) opens placement through the shared planner desk; view settings live in the URL and the `tempo-calendar-totals` cookie
-- `/athlete/workouts` - owner-scoped unscheduled workout library
-- `/athlete/library`, `/athlete/library/[slug]` - built-in, code-shipped indoor bike workout catalog with URL-synced filters, profile, metrics and copy actions
+- `/athlete/workouts` - owner-scoped unscheduled workouts and the read-only
+  Public library tab with URL-synced catalog filters. `?customize=<slug>` opens
+  an unsaved draft. Saving uses the owned-workout API.
+- `/athlete/library` - legacy redirect to the Public library tab with catalog filters
+- `/athlete/library/[slug]` and `/athlete/library/[slug]/schedule` - catalog
+  workout profile, start actions, and Calendar placement
 - `/athlete/ride` - Ride home (no app chrome; Tempo Ride's default page): today's and recent open bike sessions, recent rides, and the library with Ride now
 - `/athlete/planner` - retired; redirects `date`/`source` to Calendar placement (`getPlannerRedirectHref`)
 - `/athlete/templates` - private weekly routines composed from saved workouts
@@ -85,7 +89,7 @@ navigation.
 - `/api/coach/planner/*`, `/api/coach/assignments`, `/api/coach/sessions/*` - coach planning
 - `/api/coach/workouts/*`, `/api/athlete/workouts/*` - standalone libraries
 - `/api/athlete/templates/*` - saved-workout routines
-- `/api/athlete/library/[slug]/{ride,schedule,workouts}` - copy a catalog workout to today, chosen dates, or the Workouts library
+- `/api/athlete/library/[slug]/{ride,schedule}` - copy a catalog workout to today or chosen dates
 - `/api/athlete/planner/*`, `/api/athlete/sessions/*` - athlete planning and outcomes
 - `/api/athlete/workouts/generate` - private guided workout draft generation from bounded choices and recent completed training
 - `/api/athlete/workouts/ai-status` - private read of cached, app-wide model availability
@@ -124,7 +128,7 @@ navigation.
 | Activity file imports | `lib/activity-file-parser.ts`, `lib/activity-import-service.ts`, `lib/activity-series.ts` | Local FIT/TCX/GPX parsing, validated user-selected imports, planned-session matching, deduplication, telemetry persistence, and metric-specific bar buckets |
 | Strava sync | `lib/strava-service.ts`, `lib/strava-inbox-service.ts`, `app/api/strava/*`, `components/StravaImportPanel.tsx`, `prisma/schema.prisma` | User-scoped OAuth, durable inbox review state, leased webhook queue and retry recovery, explicit newest-first Import inbox review, server-side stream normalization, explicit import via the shared importer, and existing disconnect/revocation cleanup |
 | Indoor rides | `lib/ride/*`, `app/(app)/athlete/ride/[sessionId]/*` | Pure BLE characteristic parsers and FTMS control encoders, ride plan (ERG midpoint watts, warm-up/cool-down ramps, free ride without power target), recorder/summary/import payload/checkpoint; client-only Web Bluetooth manager with backoff reconnect and crash-safe local storage. No ride-specific server code: persistence reuses `activityImportService.importForUser` |
-| Workout catalog | `lib/workout-catalog/*`, `lib/workout-catalog-service.ts`, `lib/ride-hub-service.ts`, `components/library/*` | Read-only catalog data in code (not the database); pure expansion, %FTP metrics (NP estimate, IF, TSS, time in zone), duration buckets, filter/search/sort and URL state, schema validation, and conversion to canonical relative-FTP editor blocks (sets unrolled, cue and cadence in the block note, warm-up/cool-down ranges ridden as ramps). The service copies through `athletePlannerService.saveSession` and `workoutLibraryService.saveForOwner`; it never writes Prisma directly except the same-day Ride now reuse lookup. Slugs are stable URLs |
+| Workout catalog | `lib/workout-catalog/*`, `lib/workout-catalog-service.ts`, `lib/ride-hub-service.ts`, `components/library/*` | Read-only catalog data in code (not the database); pure expansion, %FTP metrics (NP estimate, IF, TSS, time in zone), duration buckets, filter/search/sort and URL state, schema validation, and conversion to canonical relative-FTP editor blocks (sets unrolled, cue and cadence in the block note, warm-up/cool-down ranges ridden as ramps). Ride now and Schedule copy through `athletePlannerService.saveSession`. Customize builds an unsaved editor draft. Saving goes through `workoutLibraryService.saveForOwner` without catalog lineage. Slugs are stable URLs |
 | Sharing | `lib/share-link.ts`, `lib/share-link-service.ts` | Sanitized snapshots, opaque tokens, public lookup, and explicit recipient copies |
 
 ## Data Ownership

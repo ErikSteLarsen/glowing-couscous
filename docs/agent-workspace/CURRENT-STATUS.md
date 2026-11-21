@@ -7,6 +7,19 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- Athlete Workouts tabs (2026-11-21). `pnpm typecheck`, `pnpm lint`, and
+  `pnpm test` passed (538 passed, 17 database cases skipped). `pnpm test:db`
+  passed all 590 tests against the disposable local database. `pnpm build`
+  passed against local `tempo_dev` with no pending migrations. Chromium at 1440px
+  and 390px covered both tab defaults, keyboard selection, browser Back,
+  search and filter URLs, the legacy redirect, catalog detail and schedule,
+  the Ride browse link, and Templates in the mobile drawer. Customize from the
+  card and detail opened a prefilled draft. Closing it clean created no row,
+  recovery restored local edits over the prefill, and Save created one owned
+  workout. Test workouts were deleted. The coach route still redirects
+  through the existing proxy, so the coach editor itself was outside browser
+  coverage.
+
 - UI simplicity pass P1–P17 (2026-11-21): one shared **Start workout** chooser
   (`components/WorkoutStartChooser.tsx`, options in `lib/workout-start.ts`)
   replaces every direct start on Home, session detail, Library detail, Ride home
@@ -128,16 +141,11 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   The build used local disposable PostgreSQL `tempo_acceptance`.
   `pnpm --dir desktop test` passed all eight Node tests.
 
-- Built-in workout library (`LIB-CATALOG-001`, 2026-11-20): code-shipped %FTP
-  catalog with derived NP/IF/TSS/time-in-zone, URL-synced filters, detail pages
-  and the chrome-less `/athlete/ride` home. Catalog actions copy into the
-  planner (Ride now, Schedule) or the Workouts library through their existing
-  owners; Ride now reuses an unridden same-day copy. A schema-contract test runs
-  over the real catalog. `pnpm test` passed 465 tests with seven database cases
-  skipped; `pnpm lint` and `pnpm typecheck` passed; `pnpm build` was not run.
-  Local Chromium on a fresh account checked the library, filters/URL state,
-  detail page, Add to my workouts, Schedule, Ride now into the ride page and
-  Ride home at 390, 1440 and 1920 px.
+- Public library (`LIB-CATALOG-001`) is the read-only tab on Athlete Workouts.
+  The 91 built-in bike workouts retain URL-synced filters, %FTP metrics, detailed
+  profiles, Ride now, and Schedule. Customize starts an unsaved draft in the
+  owned workout editor. The old library index redirects with its filters, and
+  the chrome-less Ride home links to the new tab.
 
 - Planned cycling load (2026-11-20) uses one power calculation for catalog and
   session TSS. All 91 catalog workouts match their converted session blocks.

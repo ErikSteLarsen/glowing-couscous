@@ -79,6 +79,24 @@ and limitations. Distinguish authenticated routes, synthetic fixtures,
 user-reported production behavior and live integrations. Screenshots support
 interaction/persistence checks; they do not replace them.
 
+## Athlete Workouts
+
+Check at 390px and 1440px with local Athlete accounts with and without saved
+workouts. Verify the default tab, arrow-key selection, explicit tab URLs, browser
+Back, and Templates access from the mobile drawer. Search and filter the Public
+library, then reload and check the selected tab and filters. Open a filtered
+legacy `/athlete/library` URL and verify it redirects to the same catalog results.
+Check that a catalog card opens its detail and that Schedule opens Calendar
+placement. From a detail opened through Workouts, Back returns to Public library.
+
+Open **Customize** from a card and a detail page. Check the title, sport, notes,
+blocks, and unsaved draft status. Close a clean draft and confirm the owned
+workout count stays the same. Edit a new draft, reload, and restore it. Verify the
+restored draft takes precedence over the initial catalog values. Save a
+customized workout and confirm the owned workout API created exactly one row.
+Check the `edit` URL, close the editor to Public library, and delete the test
+workout.
+
 ## Personal MVP journey
 
 1. Sign up without seed data or a coach. Verify login/logout, refresh, validation,

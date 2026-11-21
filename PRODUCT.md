@@ -137,7 +137,9 @@ expansion until personal use is complete or explicitly requested.
 - The performance profile stores maximum heart rate for Olympiatoppen I-1–I-5 boundaries and a recent running race distance/time to seed five editable pace ranges. Pace defaults use Tempo's race-speed bands, not Olympiatoppen-published pace bands; profile users can set the fastest and slowest min/km for each zone.
 - Short pause blocks sit between efforts or repeated sets. They count toward elapsed time but do not contribute training load.
 - Duration, training load, zones, and timelines are derived from structured blocks.
-- `Workouts` stores private reusable definitions without dates or assignments.
+- `Workouts` stores private reusable definitions without dates or assignments
+  in **My workouts**. **Public library** offers built-in indoor bike workouts.
+  **Customize** starts a draft that becomes an owned workout when saved.
 - Personal `Calendar` provides week/month review and rescheduling, handing selected dates to the separate `Planner` desk to schedule independent copies. Coach `Planner` places content onto athlete dates or training-plan weekdays. Workouts can target multiple dates; routines apply their weekday pattern to a complete week or calendar month.
 - Personal `Templates` groups saved workouts into a Monday–Sunday routine, with a name and optional purpose/notes. Multiple workouts may be ordered on a weekday; empty weekdays add nothing. Apply one routine to a Monday-starting week or repeat it through a whole calendar month. Template composition cannot author workout blocks.
 - Routine saves capture server-owned library workout snapshots. Later library edits/deletions do not change saved routines; saving the routine again captures the selected library versions. Scheduled sessions are independent copies. Relative targets resolve against the person's Profile; absolute targets remain fixed.
