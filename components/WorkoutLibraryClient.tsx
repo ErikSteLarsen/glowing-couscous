@@ -386,7 +386,7 @@ export function WorkoutLibraryClient({
               type="search"
               value={filterText}
               onChange={(event) => setFilterText(event.target.value)}
-              className={formFieldClassName}
+              className={`${formFieldClassName} max-md:min-h-11`}
               placeholder="Search by name or summary"
               aria-label="Search by name or summary"
             />
@@ -416,7 +416,7 @@ export function WorkoutLibraryClient({
           <EmptyState
             title="No matching workouts"
             description="Try a different name or summary, or clear your search."
-            action={<button type="button" className={secondaryButtonClassName} onClick={() => setFilterText('')}>Clear search</button>}
+            action={<button type="button" className={`${secondaryButtonClassName} max-md:min-h-11`} onClick={() => setFilterText('')}>Clear search</button>}
           />
         ) : (
           <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
@@ -555,7 +555,7 @@ export function WorkoutLibraryClient({
 function NewWorkoutMenu({ onGuided, onScratch, onBrowse }: { onGuided: () => void; onScratch: () => void; onBrowse?: () => void }) {
   return (
     <Menu>
-      <MenuTrigger className={primaryButtonClassName}>
+      <MenuTrigger className={`${primaryButtonClassName} max-md:min-h-11`}>
         <Plus aria-hidden="true" size={16} strokeWidth={2} />
         New workout
         <ChevronDown aria-hidden="true" size={16} strokeWidth={1.8} />
