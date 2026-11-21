@@ -86,7 +86,7 @@ export function PageShell({
 }) {
   return (
     <div className="mx-auto w-full max-w-[1440px] px-5 sm:px-7 lg:px-10">
-      <div className={`flex w-full flex-col gap-6 py-7 ${pageShellWidthClasses[size]} ${className}`}>
+      <div className={`mx-auto flex w-full flex-col gap-6 py-7 ${pageShellWidthClasses[size]} ${className}`}>
         {children}
       </div>
     </div>
