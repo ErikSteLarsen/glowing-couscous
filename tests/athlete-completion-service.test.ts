@@ -5,6 +5,7 @@ import path from 'node:path';
 
 import { createAthleteCompletionService } from '../lib/athlete-completion-service.ts';
 import { addSessionEditorBlock, createEmptySessionEditorDraft } from '../lib/session-editor.ts';
+import { disposableDatabaseSkip, withDisposableDatabase } from './disposable-postgres.ts';
 
 const blocks = [
   {
@@ -33,6 +34,7 @@ function createDb(session: Record<string, unknown> | null) {
   const calls = {
     activityUpsert: undefined as unknown,
     activityDelete: undefined as unknown,
+    activityUpdate: undefined as unknown,
     sessionUpdate: undefined as unknown,
     blockDeleteMany: undefined as unknown,
   };
@@ -55,6 +57,10 @@ function createDb(session: Record<string, unknown> | null) {
     activity: {
       async upsert(args: unknown) {
         calls.activityUpsert = args;
+        return { id: 20 };
+      },
+      async update(args: unknown) {
+        calls.activityUpdate = args;
         return { id: 20 };
       },
       async delete(args: unknown) {
@@ -92,18 +98,22 @@ function plannedSession(activity: Record<string, unknown> | null = null, overrid
     adjusted: false,
     coachBaselineJson: null,
     blocks,
-    activity,
+    activity: activity && { metricsSource: 'manual-actual', ...activity },
     athlete: { coachId: 2 },
     ...overrides,
   };
 }
 
 function actualDraft() {
+  return actualDraftFor(11, 7);
+}
+
+function actualDraftFor(id: number, athleteId: number) {
   return addSessionEditorBlock(
     createEmptySessionEditorDraft({
       mode: 'actual',
-      id: 11,
-      athleteId: 7,
+      id,
+      athleteId,
       scheduledDate: '2026-08-24',
       sport: 'RUNNING',
       title: 'Actual corrected run',
@@ -298,4 +308,89 @@ test('actual corrections preserve decimal targets in snapshots and integer compa
   const update = calls.activityUpsert.update;
   assert.ok(update && typeof update === 'object' && 'actualSnapshotJson' in update && typeof update.actualSnapshotJson === 'string');
   assert.partialDeepStrictEqual(JSON.parse(update.actualSnapshotJson), { blocks: [{ targetLow: 87.5, targetHigh: 92.5 }] });
+});
+
+test('updating the note on a recorded outcome keeps the recorded duration, source, measurements and load', { skip: disposableDatabaseSkip }, async () => {
+  await withDisposableDatabase(async (db) => {
+    const coach = await db.user.create({ data: { email: 'recorded-coach@example.test', role: 'COACH' } });
+    const athlete = await db.user.create({ data: { email: 'recorded@example.test', role: 'ATHLETE', coachId: coach.id } });
+    const completedAt = new Date('2026-11-20T08:25:00.000Z');
+    const session = await db.session.create({ data: {
+      athleteId: athlete.id,
+      date: new Date('2026-11-20T00:00:00.000Z'),
+      sport: 'BIKING',
+      title: 'Planned hour',
+      source: 'athlete-planner',
+      status: 'completed',
+      blocks: { create: [{ kind: 'work', zone: 2, durationSec: 3600, sortOrder: 0 }] },
+      activity: { create: {
+        athleteId: athlete.id,
+        completedAt,
+        durationSec: 1500,
+        tss: 21,
+        distanceMeters: 12000,
+        zoneDistributionJson: '{"2":1500}',
+        segmentsJson: '[{"durationSec":1500}]',
+        telemetryJson: '{"samples":[1,2,3]}',
+        metricsSource: 'file-import',
+      } },
+    } });
+    const service = createAthleteCompletionService({ db: db as never });
+
+    const result = await service.completeSession(athlete.id, session.id, { notes: 'Legs were flat' });
+
+    assert.equal(result.ok, true);
+    const saved = await db.session.findUniqueOrThrow({ where: { id: session.id }, include: { activity: true, blocks: true } });
+    assert.equal(saved.athleteNotes, 'Legs were flat');
+    assert.equal(saved.blocks.length, 1);
+    assert.equal(saved.blocks[0].durationSec, 3600);
+    assert.partialDeepStrictEqual(saved.activity, {
+      notes: 'Legs were flat',
+      completedAt,
+      durationSec: 1500,
+      tss: 21,
+      distanceMeters: 12000,
+      zoneDistributionJson: '{"2":1500}',
+      segmentsJson: '[{"durationSec":1500}]',
+      telemetryJson: '{"samples":[1,2,3]}',
+      metricsSource: 'file-import',
+      actualSnapshotJson: null,
+    });
+
+    const reopen = await service.reopenSession(athlete.id, session.id, {});
+    assert.equal(reopen.ok, false);
+    assert.equal(!reopen.ok && reopen.status, 409);
+    const coachCorrection = await service.saveActualOutcome({ role: 'COACH', userId: coach.id }, session.id, actualDraftFor(session.id, athlete.id));
+    assert.equal(!coachCorrection.ok && coachCorrection.status, 409);
+    const stillRecorded = await db.activity.findUniqueOrThrow({ where: { sessionId: session.id } });
+    assert.equal(stillRecorded.durationSec, 1500);
+    assert.equal(stillRecorded.metricsSource, 'file-import');
+  });
+});
+
+test('recorded outcomes accept note-only updates and reject rebuilds, removal and replacement for every recorded source', async () => {
+  for (const metricsSource of ['file-import', 'strava-import', 'tcx-import', 'fit-import', 'gpx-import', 'manual-paired']) {
+    const completedAt = new Date('2026-08-24T08:25:00.000Z');
+    const recorded = () => plannedSession({ completedAt, notes: null, metricsSource }, { status: 'completed' });
+    const notesOnly = createService(recorded());
+    const result = await notesOnly.service.completeSession(7, 11, { notes: 'Short ride' });
+    assert.deepEqual(result, { ok: true, sessionId: 11, isDone: true, notes: 'Short ride', completedAt }, metricsSource);
+    assert.deepEqual(notesOnly.calls.activityUpdate, { where: { sessionId: 11 }, data: { notes: 'Short ride' } });
+    assert.deepEqual(notesOnly.calls.sessionUpdate, { where: { id: 11 }, data: { athleteNotes: 'Short ride' } });
+    assert.equal(notesOnly.calls.activityUpsert, undefined);
+    assert.equal(notesOnly.calls.blockDeleteMany, undefined);
+
+    const reopen = createService(recorded());
+    assert.equal((await reopen.service.reopenSession(7, 11, {}) as { status?: number }).status, 409);
+    assert.equal(reopen.calls.activityDelete, undefined);
+
+    for (const actor of [{ role: 'ATHLETE' as const, userId: 7 }, { role: 'COACH' as const, userId: 2 }]) {
+      const replace = createService(recorded());
+      assert.equal((await replace.service.saveActualOutcome(actor, 11, actualDraft()) as { status?: number }).status, 409);
+      assert.equal(replace.calls.activityUpsert, undefined);
+    }
+    const foreignCoach = createService(recorded());
+    assert.equal((await foreignCoach.service.saveActualOutcome({ role: 'COACH', userId: 99 }, 11, actualDraft()) as { status?: number }).status, 404);
+    assert.equal((await createService(recorded()).service.completeSession(8, 11, { notes: 'x' }) as { status?: number }).status, 404);
+  }
 });

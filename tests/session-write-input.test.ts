@@ -20,7 +20,7 @@ const noSessionDatabase = {
   plan: { findFirst: databaseAccess, create: databaseAccess },
   block: { deleteMany: databaseAccess },
   assignment: { updateMany: databaseAccess },
-  activity: { upsert: databaseAccess, delete: databaseAccess },
+  activity: { upsert: databaseAccess, update: databaseAccess, delete: databaseAccess },
   $transaction: databaseAccess,
 };
 const adjustments = createAthleteSessionAdjustmentService({ db: noSessionDatabase });

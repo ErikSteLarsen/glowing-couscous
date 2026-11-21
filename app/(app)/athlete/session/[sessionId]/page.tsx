@@ -11,6 +11,7 @@ import { formatDistance } from '@/lib/format-distance';
 import { formatTcxDateTime } from '@/lib/tcx-time';
 import { getSessionOrigin, getSessionReturnTarget } from '@/lib/app-navigation';
 import { SessionDetailClient } from './SessionDetailClient';
+import { isRecordedOutcome } from '@/lib/athlete-completion-service';
 import { SessionStatusControl } from './SessionStatusControl';
 import { ManualActivityCorrectionForm, type ManualActivityCorrectionDraft } from './ManualActivityCorrectionForm';
 import { ShareLinkButton } from '@/components/ShareLinkButton';
@@ -280,6 +281,7 @@ export default async function AthleteSessionPage({
         canDelete={detail.session.canDelete}
         returnHref={returnTarget.href}
         compliancePct={detail.session.compliancePct}
+        isRecorded={detail.session.status === 'completed' && isRecordedOutcome(detail.session.metricsSource ? { metricsSource: detail.session.metricsSource } : null)}
       />}
     </PageShell>
   );

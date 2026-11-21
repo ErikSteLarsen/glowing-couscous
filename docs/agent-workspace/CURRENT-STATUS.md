@@ -147,6 +147,13 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   counts on its finishing day. `pnpm test` 485 passed, 8 skipped;
   `pnpm test:db` 528 passed; lint and typecheck passed. No live ride was
   recorded against a trainer.
+- Recorded outcomes keep their data: on a completed session whose outcome
+  came from a recording or import (any source other than `manual-actual` or
+  `manual-planned`), the completion service only updates the note. Rebuilding
+  from edited blocks and "Mark planned again" return 409, and the page points to
+  Import for deletion. A database regression test covers a 25-minute ride on a
+  60-minute plan, and it was checked in a local browser before and after.
+  `pnpm test` 486 passed; `pnpm test:db` 530 passed.
 
 ## Remaining risks and acceptance gates
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { WorkoutBuilder } from '@/components/WorkoutBuilder';
 import { SessionComparisonDialog } from '@/components/SessionComparisonDialog';
@@ -30,6 +31,7 @@ export function SessionDetailClient({
   canDelete = false,
   returnHref,
   compliancePct = null,
+  isRecorded = false,
 }: {
   sessionId: number;
   initialDone: boolean;
@@ -41,6 +43,8 @@ export function SessionDetailClient({
   canDelete?: boolean;
   returnHref?: string;
   compliancePct?: number | null;
+  /** The outcome holds measured data owned by its recording or import; only its note is editable here. */
+  isRecorded?: boolean;
 }) {
   const router = useRouter();
   const [notes, setNotes] = useState(initialNotes);
@@ -75,7 +79,7 @@ export function SessionDetailClient({
         }
 
         setMessageTone('success');
-        setMessage(nextDone ? 'Session marked complete.' : 'Session moved back to planned.');
+        setMessage(isRecorded ? 'Note saved.' : nextDone ? 'Session marked complete.' : 'Session moved back to planned.');
         router.refresh();
       } catch {
         setMessageTone('danger');
@@ -135,19 +139,27 @@ export function SessionDetailClient({
           Completion
         </p>
         <p className="mt-2 text-[13px] text-[var(--text-secondary)]">
-          {isDone ? 'Review the outcome or correct what was recorded.' : 'Add a note, then complete the session.'}
+          {isRecorded ? (
+            <>
+              This outcome comes from a recorded activity. You can edit its note; the measured data stays as recorded.
+              To remove the recording, delete it in{' '}
+              <Link href="/athlete/import" className="text-[var(--brand)] underline-offset-4 hover:underline">Import</Link>.
+            </>
+          ) : isDone ? 'Review the outcome or correct what was recorded.' : 'Add a note, then complete the session.'}
           {isDone && compliancePct !== null ? ` Plan compliance: ${Math.round(compliancePct)}%.` : ''}
         </p>
       </div>
 
       {!isEditing ? (
         <div className="flex flex-wrap gap-3">
-          <button type="button" className={compactSecondaryButtonClassName} disabled={isPending} onClick={() => {
-            setDraft(updateSessionEditorFields(initialDraft, { athleteNotes: notes }));
-            setIsEditing(true);
-          }}>
-            {isDone ? 'Correct completed outcome' : 'Adjust planned session'}
-          </button>
+          {isRecorded ? null : (
+            <button type="button" className={compactSecondaryButtonClassName} disabled={isPending} onClick={() => {
+              setDraft(updateSessionEditorFields(initialDraft, { athleteNotes: notes }));
+              setIsEditing(true);
+            }}>
+              {isDone ? 'Correct completed outcome' : 'Adjust planned session'}
+            </button>
+          )}
           <SessionComparisonDialog
             sessionId={sessionId}
             endpoint={`/api/athlete/sessions/${sessionId}/comparison`}
@@ -225,9 +237,9 @@ export function SessionDetailClient({
               disabled={isPending}
               className={primaryButtonClassName}
             >
-              {isDone ? 'Update completion' : 'Mark complete'}
+              {isRecorded ? 'Save note' : isDone ? 'Update completion' : 'Mark complete'}
             </button>
-            {isDone ? (
+            {isDone && !isRecorded ? (
               <button
                 type="button"
                 onClick={() => save(false)}

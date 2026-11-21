@@ -13,6 +13,15 @@ import {
 
 const MAX_NOTES_LENGTH = 2000;
 const SKIPPED_OUTCOME_ERROR = 'Skipped sessions cannot record an outcome. Plan the session again first.';
+const RECORDED_OUTCOME_ERROR = 'This outcome was recorded. Only its note can change here; delete the recorded activity to remove it.';
+// Outcomes this service derives from planned or edited blocks. Every other
+// source (ride recordings, file/Strava/TCX/FIT/GPX imports, manual activity
+// logs) carries measured data owned elsewhere, so only its note may change here.
+const COMPLETION_OWNED_SOURCES = new Set(['manual-actual', 'manual-planned']);
+
+export function isRecordedOutcome(activity: { metricsSource: string } | null | undefined) {
+  return Boolean(activity && !COMPLETION_OWNED_SOURCES.has(activity.metricsSource));
+}
 
 type OutcomeSession = {
   id: number;
@@ -50,6 +59,7 @@ type OutcomeSession = {
   activity: {
     completedAt: Date;
     notes: string | null;
+    metricsSource: string;
   } | null;
   athlete: { coachId: number | null } | null;
 };
@@ -64,6 +74,7 @@ type CompletionDatabase = {
   };
   activity: {
     upsert(args: unknown): Promise<unknown>;
+    update(args: unknown): Promise<unknown>;
     delete(args: unknown): Promise<unknown>;
   };
   $transaction(operations: Array<Promise<unknown>>): Promise<unknown>;
@@ -123,6 +134,9 @@ export function createAthleteCompletionService({
     }
     if (session.status === SKIPPED_SESSION_STATUS) {
       return { ok: false, status: 409, error: SKIPPED_OUTCOME_ERROR };
+    }
+    if (isRecordedOutcome(session.activity)) {
+      return { ok: false, status: 409, error: RECORDED_OUTCOME_ERROR };
     }
     if (draft.athleteId !== null && draft.athleteId !== session.athleteId) {
       return { ok: false, status: 404, error: 'Session not found' };
@@ -225,6 +239,13 @@ export function createAthleteCompletionService({
       if (session.status === SKIPPED_SESSION_STATUS) return { ok: false, status: 409, error: SKIPPED_OUTCOME_ERROR };
 
       const retainedNotes = notes ?? session.activity?.notes ?? session.athleteNotes ?? null;
+      if (session.activity && isRecordedOutcome(session.activity)) {
+        await db.$transaction([
+          db.activity.update({ where: { sessionId: session.id }, data: { notes: retainedNotes } }),
+          db.session.update({ where: { id: session.id }, data: { athleteNotes: retainedNotes } }),
+        ]);
+        return { ok: true, sessionId: session.id, isDone: true, notes: retainedNotes ?? '', completedAt: session.activity.completedAt };
+      }
       const draft = createSessionEditorDraftFromPersisted('actual', {
         ...session,
         status: 'completed',
@@ -244,6 +265,7 @@ export function createAthleteCompletionService({
       const session = await loadSessionForAthlete(athleteId, sessionId);
       if (!session) return { ok: false, status: 404, error: 'Session not found' };
       if (session.status === SKIPPED_SESSION_STATUS) return { ok: false, status: 409, error: SKIPPED_OUTCOME_ERROR };
+      if (isRecordedOutcome(session.activity)) return { ok: false, status: 409, error: RECORDED_OUTCOME_ERROR };
 
       const retainedNotes = notes ?? session.activity?.notes ?? session.athleteNotes ?? null;
       await db.$transaction([
