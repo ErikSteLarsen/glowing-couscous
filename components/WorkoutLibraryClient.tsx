@@ -498,10 +498,10 @@ export function WorkoutLibraryClient({
               <p className="mt-1 text-sm text-[var(--text-secondary)]">Your changes to this workout will be lost.</p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <button type="button" className={secondaryButtonClassName} onClick={() => setPendingDraftAction(null)}>
+              <button type="button" className={`${secondaryButtonClassName} max-md:min-h-11`} onClick={() => setPendingDraftAction(null)}>
                 Keep editing
               </button>
-              <button type="button" className={dangerButtonClassName} onClick={() => applyDraftAction(pendingDraftAction)}>
+              <button type="button" className={`${dangerButtonClassName} max-md:min-h-11`} onClick={() => applyDraftAction(pendingDraftAction)}>
                 Discard changes
               </button>
             </div>
@@ -541,7 +541,7 @@ export function WorkoutLibraryClient({
           performanceProfile={performanceProfile}
           />
         <div className="sticky bottom-[var(--mobile-nav-clearance)] z-10 -mx-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3 md:bottom-0 max-md:z-20">
-          <button type="button" className={primaryButtonClassName} disabled={isPending || !draft.blocks.some((block) => !block.skipped && block.kind !== 'pause')} onClick={saveWorkout}>
+          <button type="button" className={`${primaryButtonClassName} max-md:min-h-11`} disabled={isPending || !draft.blocks.some((block) => !block.skipped && block.kind !== 'pause')} onClick={saveWorkout}>
             {isPending ? 'Saving…' : selectedWorkoutId ? 'Save changes' : 'Save workout'}
           </button>
           {!draft.blocks.some((block) => !block.skipped && block.kind !== 'pause') ? <span className="text-xs text-[var(--text-secondary)]">Add an active block to save.</span> : null}
