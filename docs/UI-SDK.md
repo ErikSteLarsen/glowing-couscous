@@ -15,6 +15,10 @@ global SDK stylesheet, or agent access to private account actions is needed.
   server error. Successful deletion closes it through existing callbacks.
 - `components/SessionComparisonDialog.tsx`: SDK segmented radios for the
   Planned/Actual snapshot choice.
+- `components/HomeSummaryDialog.tsx`: SDK Dialog for Home summary tiles. The
+  tile is the trigger, so focus returns to it; Escape, a labelled title,
+  contained scrolling, a bottom sheet on phones and a centered panel from
+  `md`. Charts inside only consume Escape while a point is selected.
 - `components/tempo/Menu.tsx`: Tempo-styled SDK Menu parts (content, items,
   checkbox/radio items, indicator, label, separator). Calendar uses it for the
   header More menu and each session's overflow actions.

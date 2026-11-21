@@ -630,6 +630,17 @@ available content column. Use 12px inline / 8px block padding, a 12px gap,
 and an icon-only dismiss control with a 44px mobile target. Feedback clears
 bottom navigation and Profile save actions; sync errors do not overlap notices.
 
+### Home overview
+
+Home is a compact overview that fits one desktop screen: Today (sport, title,
+duration · TSS · target, a compact block bar, Start workout and Details) beside
+the next three Coming up sessions, then This week, then a row of summary tiles.
+The long description lives on the session page. Training trends, Weekly volume
+and Last activity are tiles with one value line and a word-sized sparkline;
+each opens its full chart and explanation in `HomeSummaryDialog`. Settings
+switches hide their tiles and the row reflows. Missed sessions appear only in
+the week strip summary and on Calendar. Phones stack in the same order.
+
 ### Home training setup
 
 Show incomplete training targets in a compact link directly below Today. Name
