@@ -9,7 +9,6 @@ import { ComplianceMark } from '@/components/tempo/ComplianceMark';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { SessionRow } from '@/components/tempo/SessionRow';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
-import { OverdueSessions } from '@/components/OverdueSessions';
 import {
   ghostButtonClassName,
   PageShell,
@@ -224,8 +223,6 @@ export default async function AthletePage() {
           <Link href="/athlete/events" className={`${secondaryButtonClassName} shrink-0 max-md:min-h-11`}>Manage events</Link>
         </section>
       ) : null}
-
-      <OverdueSessions sessions={dashboard.overdue} today={dashboard.todayKey} />
 
       <section aria-labelledby="week-heading" className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-2">
