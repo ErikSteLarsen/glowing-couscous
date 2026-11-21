@@ -98,33 +98,33 @@ export function ManualActivityForm({ today }: { today: string }) {
     <form onSubmit={(event) => void submit(event)} className="grid gap-4 sm:grid-cols-2">
       <label className="space-y-2">
         <span className={formLabelClassName}>Sport</span>
-        <select name="sport" value={selectedSport} onChange={(event) => { setSelectedSport(event.target.value); void loadCandidates(event.target.value, completedOn); }} className={formSelectClassName} required>
+        <select name="sport" value={selectedSport} onChange={(event) => { setSelectedSport(event.target.value); void loadCandidates(event.target.value, completedOn); }} className={`${formSelectClassName} max-md:min-h-11`} required>
           {SPORT_OPTIONS.filter((sport) => sport !== 'REST').map((sport) => <option key={sport} value={sport}>{getSportLabel(sport)}</option>)}
         </select>
       </label>
       <label className="space-y-2">
         <span className={formLabelClassName}>{selectedCandidate ? 'Planned workout title' : 'Title'}</span>
-        <input name="title" value={selectedCandidate?.title ?? title} onChange={(event) => setTitle(event.target.value)} className={formFieldClassName} maxLength={120} required readOnly={Boolean(selectedCandidate)} placeholder="Easy morning run" />
+        <input name="title" value={selectedCandidate?.title ?? title} onChange={(event) => setTitle(event.target.value)} className={`${formFieldClassName} max-md:min-h-11`} maxLength={120} required readOnly={Boolean(selectedCandidate)} placeholder="Easy morning run" />
         {selectedCandidate ? <span className="text-xs text-[var(--text-muted)]">The planned workout title and content stay unchanged.</span> : null}
       </label>
       <label className="space-y-2">
         <span className={formLabelClassName}>Completion date</span>
-        <input name="completedOn" type="date" value={completedOn} onChange={(event) => { setSelectedDate(event.target.value); void loadCandidates(selectedSport, event.target.value); }} className={formFieldClassName} required />
+        <input name="completedOn" type="date" value={completedOn} onChange={(event) => { setSelectedDate(event.target.value); void loadCandidates(selectedSport, event.target.value); }} className={`${formFieldClassName} max-md:min-h-11`} required />
       </label>
       <label className="space-y-2">
         <span className={formLabelClassName}>Time spent (minutes)</span>
-        <input name="durationMinutes" type="number" min={1} max={1440} step={1} className={formFieldClassName} required />
+        <input name="durationMinutes" type="number" min={1} max={1440} step={1} className={`${formFieldClassName} max-md:min-h-11`} required />
       </label>
       <details className="border-y border-[var(--border)] sm:col-span-2" onInvalid={(event) => { event.currentTarget.open = true; }}>
         <summary className={`min-h-11 cursor-pointer rounded-lg py-3 text-sm font-medium text-[var(--text)] ${buttonFocusClassName}`}>More details</summary>
         <div className="grid gap-4 pb-4 sm:grid-cols-2">
           <label className="space-y-2">
             <span className={formLabelClassName}>Distance (km, optional)</span>
-            <input name="distanceKm" type="number" min={0.01} max={1000} step={0.01} className={formFieldClassName} placeholder="5.2" />
+            <input name="distanceKm" type="number" min={0.01} max={1000} step={0.01} className={`${formFieldClassName} max-md:min-h-11`} placeholder="5.2" />
           </label>
           <label className="space-y-2">
             <span className={formLabelClassName}>Effort (RPE, optional)</span>
-            <select name="rpe" defaultValue="" className={formSelectClassName}>
+            <select name="rpe" defaultValue="" className={`${formSelectClassName} max-md:min-h-11`}>
               <option value="">Not recorded</option>
               {Array.from({ length: 10 }, (_, index) => index + 1).map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
@@ -142,12 +142,12 @@ export function ManualActivityForm({ today }: { today: string }) {
         {candidateState === 'loading' ? <p className="text-sm text-[var(--text-muted)]">Checking planned sessions…</p> : null}
         {candidateState === 'error' ? <p role="alert" className="text-sm text-[var(--status-danger)]">Could not check planned sessions. Retry or keep this activity separate.</p> : null}
         {candidateState === 'ready' && candidates.length === 0 ? <p className="text-sm text-[var(--text-muted)]">No eligible planned session for this sport and date.</p> : null}
-        {candidates.map((candidate) => <label key={candidate.id} className="flex items-start gap-2 text-sm text-[var(--text-secondary)]"><input type="radio" name="pairing-choice" value={`session:${candidate.id}`} checked={pairingChoice === String(candidate.id)} onChange={() => setPairingChoice(String(candidate.id))} /><span>{candidate.title} · {candidate.date} · {candidate.plannedDurationSec > 0 ? `Planned ${formatDuration(candidate.plannedDurationSec)}` : 'No planned duration'}</span></label>)}
-        <label className="flex items-start gap-2 text-sm text-[var(--text-secondary)]"><input type="radio" name="pairing-choice" value="separate" checked={pairingChoice === 'separate'} onChange={() => setPairingChoice('separate')} /><span>Keep as a separate activity</span></label>
+        {candidates.map((candidate) => <label key={candidate.id} className="flex items-center gap-2 text-sm text-[var(--text-secondary)] max-md:min-h-11"><input type="radio" name="pairing-choice" value={`session:${candidate.id}`} checked={pairingChoice === String(candidate.id)} onChange={() => setPairingChoice(String(candidate.id))} /><span>{candidate.title} · {candidate.date} · {candidate.plannedDurationSec > 0 ? `Planned ${formatDuration(candidate.plannedDurationSec)}` : 'No planned duration'}</span></label>)}
+        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] max-md:min-h-11"><input type="radio" name="pairing-choice" value="separate" checked={pairingChoice === 'separate'} onChange={() => setPairingChoice('separate')} /><span>Keep as a separate activity</span></label>
         {selectedCandidate ? <p className="text-sm text-[var(--text-muted)]">Saving will complete this planned session and record a duration-only result.</p> : null}
       </fieldset>
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
-        <button type="submit" disabled={pending || !pairingChoice || candidateState === 'loading'} className={primaryButtonClassName}>{pending ? 'Saving activity…' : pairingChoice === 'separate' ? 'Save separate activity' : selectedCandidate ? 'Complete planned session' : 'Choose how to save'}</button>
+        <button type="submit" disabled={pending || !pairingChoice || candidateState === 'loading'} className={`${primaryButtonClassName} max-md:min-h-11`}>{pending ? 'Saving activity…' : pairingChoice === 'separate' ? 'Save separate activity' : selectedCandidate ? 'Complete planned session' : 'Choose how to save'}</button>
         {saved ? <span role="status" className={successTextClassName}>Saved. <ActionLink href={saved.href} tone="ghost">Review {saved.title}</ActionLink></span> : null}
         {error ? <p role="alert" className="text-sm text-[var(--status-danger)]">{error}</p> : null}
       </div>
