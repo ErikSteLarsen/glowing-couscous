@@ -1,6 +1,8 @@
 import { prisma } from './prisma.ts';
 
 export const SKIPPED_SESSION_STATUS = 'skipped';
+/** Returned with 409 when a write's claim finds the session changed since it was read. */
+export const SESSION_CHANGED_ERROR = 'This session changed while you were editing it (it may have been ridden or completed). Refresh to see the latest version.';
 
 type StatusSession = {
   id: number;

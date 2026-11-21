@@ -166,8 +166,11 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   returns 409 if a ride or completion committed first. Ride now is serialized
   per athlete + workout + day with `pg_advisory_xact_lock`. Library Schedule
   requires a client `requestKey` stored in `PlacementRequest`, and retries
-  replay the original result. No migration. Still read-then-write:
-  `saveActualForSession` and `reopenSession` in the completion service.
+  replay the original result. No migration. Completion, actual correction and
+  "Mark planned again" use the same claim, which also checks the outcome
+  source. A ride attaching to a planned session claims it too.
+  `tests/athlete-completion-race.test.ts` runs five DB races; four failed before
+  the fix. `pnpm test` 494 passed; `pnpm test:db` 546 passed.
 - Planner reads only the activity summary fields and skips the unused week
   query. Riders without FTP see the %FTP target (for example "40–50 % FTP")
   instead of "Free ride", with a link to `/profile#training-metrics`.

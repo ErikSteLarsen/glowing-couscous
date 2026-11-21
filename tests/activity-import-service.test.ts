@@ -59,8 +59,8 @@ test('imports into a selected unfinished session without replacing its planned w
   const result = await service.importForUser(7, { ...validInput, plannedSessionId: 27 });
 
   assert.deepEqual(result, { ok: true, activityId: 71, sessionId: 27, duplicate: false });
-  assert.deepEqual(calls.find((call) => call.owner === 'session.update')?.args, {
-    where: { id: 27 },
+  assert.deepEqual(calls.find((call) => call.owner === 'session.updateMany')?.args, {
+    where: { id: 27, status: 'planned', activity: { is: null } },
     data: { status: 'completed' },
   });
   const activity = calls.find((call) => call.owner === 'activity.create')?.args as { data: Record<string, unknown> };
@@ -348,6 +348,7 @@ function fakeDatabase(
     findMany: async (_args: unknown) => [],
     findFirst: overrides.findFirst ?? (async () => ({ id: 27, status: 'planned', sport: 'RUNNING' })),
     update: async (args: unknown) => { calls.push({ owner: 'session.update', args: args as Record<string, unknown> }); return {}; },
+    updateMany: async (args: unknown) => { calls.push({ owner: 'session.updateMany', args: args as Record<string, unknown> }); return { count: 1 }; },
     delete: async (args: unknown) => { calls.push({ owner: 'session.delete', args: args as Record<string, unknown> }); return {}; },
     create: async (args: unknown) => { calls.push({ owner: 'session.create', args: args as Record<string, unknown> }); return { id: 27, activity: { id: 71 } }; },
   };

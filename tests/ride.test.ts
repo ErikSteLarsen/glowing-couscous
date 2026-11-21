@@ -648,7 +648,7 @@ test('the finish screen and the saved ride agree on power load: 250 W for an hou
   const recording = { ...createRecording(7, 'Threshold', ride), status: 'finished' as const, timerSec, elapsedSec: timerSec, samples, startedAtMs: 0, finishedAtMs: timerSec * 1000 };
   assert.equal(summarizeRecording(recording, 250).tss, 100);
   let saved: Record<string, unknown> | null = null;
-  const session = { findFirst: async () => ({ id: 7, status: 'planned', sport: 'BIKING' }), update: async () => ({}) };
+  const session = { findFirst: async () => ({ id: 7, status: 'planned', sport: 'BIKING' }), updateMany: async () => ({ count: 1 }) };
   const activity = { findFirst: async () => null, create: async (args: { data: Record<string, unknown> }) => { saved = args.data; return { id: 1 }; } };
   const db = {
     user: { findUnique: async () => ({ performanceProfileJson: JSON.stringify({ cycling: { ftpWatts: 250 } }) }) },

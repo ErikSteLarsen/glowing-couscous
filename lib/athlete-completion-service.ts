@@ -2,7 +2,7 @@ import { sessionEditorInput } from './session-write-input.ts';
 import { isValid, parseISO } from 'date-fns';
 
 import { prisma } from './prisma.ts';
-import { SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
+import { SESSION_CHANGED_ERROR, SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
 import { createSessionEditorBlockData, createSessionEditorDraftFromPersisted, serializeSessionEditorDraft, type SessionEditorDraft } from './session-editor.ts';
 import { deriveSessionEditorMetrics } from './session-editor.ts';
 import {
@@ -36,6 +36,7 @@ type OutcomeSession = {
   sportMetricsJson: string | null;
   rpe: number | null;
   status: string;
+  updatedAt: Date;
   source: string;
   adjusted: boolean;
   coachBaselineJson: string | null;
@@ -64,21 +65,46 @@ type OutcomeSession = {
   athlete: { coachId: number | null } | null;
 };
 
-type CompletionDatabase = {
+type CompletionTransaction = {
   session: {
-    findUnique(args: unknown): Promise<OutcomeSession | null>;
     update(args: unknown): Promise<unknown>;
+    updateMany(args: unknown): Promise<{ count: number }>;
   };
   block: {
     deleteMany(args: unknown): Promise<unknown>;
   };
   activity: {
     upsert(args: unknown): Promise<unknown>;
-    update(args: unknown): Promise<unknown>;
+    updateMany(args: unknown): Promise<{ count: number }>;
     delete(args: unknown): Promise<unknown>;
   };
-  $transaction(operations: Array<Promise<unknown>>): Promise<unknown>;
 };
+
+type CompletionDatabase = {
+  session: {
+    findUnique(args: unknown): Promise<OutcomeSession | null>;
+  };
+  $transaction<T>(run: (tx: CompletionTransaction) => Promise<T>): Promise<T>;
+};
+
+const SESSION_CHANGED: { ok: false; status: 409; error: string } = { ok: false, status: 409, error: SESSION_CHANGED_ERROR };
+
+// Claim the exact row the caller validated: if a ride upload, completion or
+// other edit committed after that read, updatedAt, status or the outcome no
+// longer match and nothing is written. The claim also locks the row for the
+// rest of the transaction.
+function claimValidatedSession(tx: CompletionTransaction, session: OutcomeSession, data: Record<string, unknown>) {
+  return tx.session.updateMany({
+    where: {
+      id: session.id,
+      athleteId: session.athleteId,
+      status: session.status,
+      updatedAt: session.updatedAt,
+      activity: session.activity ? { is: { metricsSource: session.activity.metricsSource } } : { is: null },
+    },
+    data,
+  });
+}
 
 export type CompletionInput = { notes?: string };
 export type ActualActor = { role: 'ATHLETE' | 'COACH'; userId: number };
@@ -158,11 +184,8 @@ export function createAthleteCompletionService({
     const blocks = createSessionEditorBlockData(serialized.blocks);
 
     const sessionDate = session.date ?? parseSessionDate(draft.scheduledDate);
-    await db.$transaction([
-      db.block.deleteMany({ where: { sessionId: session.id } }),
-      db.session.update({
-        where: { id: session.id },
-        data: {
+    const claimed = await db.$transaction(async (tx) => {
+      const claim = await claimValidatedSession(tx, session, {
           date: sessionDate,
           timeLabel: serialized.timeLabel ?? session.timeLabel,
           sport: serialized.sport,
@@ -175,10 +198,11 @@ export function createAthleteCompletionService({
           status: 'completed',
           adjusted: session.adjusted,
           coachBaselineJson: plannedBaselineJson,
-          blocks: { create: blocks },
-        },
-      }),
-      db.activity.upsert({
+      });
+      if (claim.count !== 1) return false;
+      await tx.block.deleteMany({ where: { sessionId: session.id } });
+      await tx.session.update({ where: { id: session.id }, data: { blocks: { create: blocks } } });
+      await tx.activity.upsert({
         where: { sessionId: session.id },
         update: {
           completedAt,
@@ -206,8 +230,10 @@ export function createAthleteCompletionService({
           actualSnapshotJson,
           rpe: serialized.rpe,
         },
-      }),
-    ]);
+      });
+      return true;
+    });
+    if (!claimed) return SESSION_CHANGED;
 
     return { ok: true, sessionId: session.id, isDone: true, completedAt };
   }
@@ -240,10 +266,18 @@ export function createAthleteCompletionService({
 
       const retainedNotes = notes ?? session.activity?.notes ?? session.athleteNotes ?? null;
       if (session.activity && isRecordedOutcome(session.activity)) {
-        await db.$transaction([
-          db.activity.update({ where: { sessionId: session.id }, data: { notes: retainedNotes } }),
-          db.session.update({ where: { id: session.id }, data: { athleteNotes: retainedNotes } }),
-        ]);
+        // Only notes change, so a stale read cannot clobber measured data; the
+        // conditional update just turns a concurrently deleted activity into a 409.
+        const updated = await db.$transaction(async (tx) => {
+          const activity = await tx.activity.updateMany({
+            where: { sessionId: session.id, metricsSource: session.activity!.metricsSource },
+            data: { notes: retainedNotes },
+          });
+          if (activity.count !== 1) return false;
+          await tx.session.update({ where: { id: session.id }, data: { athleteNotes: retainedNotes } });
+          return true;
+        });
+        if (!updated) return SESSION_CHANGED;
         return { ok: true, sessionId: session.id, isDone: true, notes: retainedNotes ?? '', completedAt: session.activity.completedAt };
       }
       const draft = createSessionEditorDraftFromPersisted('actual', {
@@ -268,13 +302,13 @@ export function createAthleteCompletionService({
       if (isRecordedOutcome(session.activity)) return { ok: false, status: 409, error: RECORDED_OUTCOME_ERROR };
 
       const retainedNotes = notes ?? session.activity?.notes ?? session.athleteNotes ?? null;
-      await db.$transaction([
-        ...(session.activity ? [db.activity.delete({ where: { sessionId: session.id } })] : []),
-        db.session.update({
-          where: { id: session.id },
-          data: { status: 'planned', athleteNotes: retainedNotes },
-        }),
-      ]);
+      const claimed = await db.$transaction(async (tx) => {
+        const claim = await claimValidatedSession(tx, session, { status: 'planned', athleteNotes: retainedNotes });
+        if (claim.count !== 1) return false;
+        if (session.activity) await tx.activity.delete({ where: { sessionId: session.id } });
+        return true;
+      });
+      if (!claimed) return SESSION_CHANGED;
 
       return { ok: true, sessionId: session.id, isDone: false, notes: retainedNotes ?? '', completedAt: null };
     },

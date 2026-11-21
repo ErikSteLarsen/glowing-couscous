@@ -43,8 +43,15 @@ function createDb(session: Record<string, unknown> | null) {
       async findUnique() {
         return session;
       },
-      async update(args: unknown) {
-        calls.sessionUpdate = args;
+      // The service claims the row with updateMany, then attaches blocks with
+      // update; record both as one merged session write.
+      async updateMany(args: { where: { id: number }; data: Record<string, unknown> }) {
+        calls.sessionUpdate = { where: { id: args.where.id }, data: args.data };
+        return { count: 1 };
+      },
+      async update(args: { where: { id: number }; data: Record<string, unknown> }) {
+        const prior = calls.sessionUpdate as { data: Record<string, unknown> } | undefined;
+        calls.sessionUpdate = { where: args.where, data: { ...prior?.data, ...args.data } };
         return { id: 11 };
       },
     },
@@ -59,17 +66,17 @@ function createDb(session: Record<string, unknown> | null) {
         calls.activityUpsert = args;
         return { id: 20 };
       },
-      async update(args: unknown) {
+      async updateMany(args: unknown) {
         calls.activityUpdate = args;
-        return { id: 20 };
+        return { count: 1 };
       },
       async delete(args: unknown) {
         calls.activityDelete = args;
         return { id: 20 };
       },
     },
-    async $transaction(operations: Promise<unknown>[]) {
-      return Promise.all(operations);
+    async $transaction<T>(run: (tx: unknown) => Promise<T>): Promise<T> {
+      return run(db);
     },
   };
   return { db, calls };
@@ -375,7 +382,7 @@ test('recorded outcomes accept note-only updates and reject rebuilds, removal an
     const notesOnly = createService(recorded());
     const result = await notesOnly.service.completeSession(7, 11, { notes: 'Short ride' });
     assert.deepEqual(result, { ok: true, sessionId: 11, isDone: true, notes: 'Short ride', completedAt }, metricsSource);
-    assert.deepEqual(notesOnly.calls.activityUpdate, { where: { sessionId: 11 }, data: { notes: 'Short ride' } });
+    assert.deepEqual(notesOnly.calls.activityUpdate, { where: { sessionId: 11, metricsSource }, data: { notes: 'Short ride' } });
     assert.deepEqual(notesOnly.calls.sessionUpdate, { where: { id: 11 }, data: { athleteNotes: 'Short ride' } });
     assert.equal(notesOnly.calls.activityUpsert, undefined);
     assert.equal(notesOnly.calls.blockDeleteMany, undefined);

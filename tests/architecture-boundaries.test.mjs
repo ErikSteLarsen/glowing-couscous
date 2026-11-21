@@ -251,7 +251,7 @@ test('completion writes planned status through the completion service', async ()
 
   assert.match(completionRouteSource, /athleteCompletionService\.reopenSession/);
   assert.match(completionRouteSource, /typeof isDone !== 'boolean'/);
-  assert.match(completionServiceSource, /data: \{ status: 'planned', athleteNotes: retainedNotes \}/);
+  assert.match(completionServiceSource, /\{ status: 'planned', athleteNotes: retainedNotes \}/);
   assert.match(completionServiceSource, /metricsSource: 'manual-actual'/);
   assert.doesNotMatch(completionRouteSource, /prisma\./);
   assert.doesNotMatch(completionRouteSource, /session\.adjusted \? 'planned' : 'planned'/);

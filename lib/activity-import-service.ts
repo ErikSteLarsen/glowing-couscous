@@ -60,6 +60,7 @@ type ImportDatabase = {
     findFirst(args: unknown): Promise<{ id: number; status: string; sport: string } | null>;
     create(args: unknown): Promise<{ id: number; activity: { id: number } }>;
     update(args: unknown): Promise<unknown>;
+    updateMany(args: unknown): Promise<{ count: number }>;
     delete(args: unknown): Promise<unknown>;
   };
   activity: {
@@ -354,7 +355,13 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
             });
             if (!planned) return { ok: false as const, status: 409 as const, error: 'That planned session is no longer available for this activity type.' };
             sessionId = planned.id;
-            await transaction.session.update({ where: { id: sessionId }, data: { status: 'completed' } });
+            // Claim the row checked above: a completion committed in between changes
+            // its status, so the claim matches nothing instead of attaching.
+            const claim = await transaction.session.updateMany({
+              where: { id: sessionId, status: planned.status, activity: { is: null } },
+              data: { status: 'completed' },
+            });
+            if (claim.count !== 1) return { ok: false as const, status: 409 as const, error: 'That planned session is no longer available for this activity type.' };
             const activity = await transaction.activity.create({
               data: { ...activityData, sessionId, importedSessionStatus: planned.status },
             });

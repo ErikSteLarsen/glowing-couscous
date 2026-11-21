@@ -8,7 +8,7 @@ import {
   validateSessionEditorDraft,
 } from './session-editor.ts';
 import { validateSessionSnapshotDraft } from './session-snapshot-service.ts';
-import { SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
+import { SESSION_CHANGED_ERROR, SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
 
 type AdjustmentSession = {
   id: number;
@@ -77,7 +77,6 @@ type AdjustmentDatabase = {
   $transaction<T>(run: (tx: AdjustmentTransaction) => Promise<T>): Promise<T>;
 };
 
-export const SESSION_CHANGED_ERROR = 'This session changed while you were editing it (it may have been ridden or completed). Refresh to see the latest version.';
 
 type AdjustmentResult =
   | { ok: true; sessionId: number }
