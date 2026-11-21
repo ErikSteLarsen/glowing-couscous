@@ -18,10 +18,16 @@ export default async function ImportPage({
   if (!user) redirect('/login');
   if (!hasAppRole(user)) redirect('/setup');
 
-  const [imports, strava, query] = await Promise.all([
+  const query = await searchParams;
+  if (typeof query.strava === 'string' && query.strava) {
+    redirect(`/settings?strava=${encodeURIComponent(query.strava)}#connections`);
+  }
+  // Preserve the original account-management shortcut from Profile.
+  if (query.from === 'profile') redirect('/settings#connections');
+
+  const [imports, strava] = await Promise.all([
     activityImportService.listForUser(user.id),
     stravaService.connectionForUser(user.id),
-    searchParams,
   ]);
   // Visiting Import also recovers this owner's due webhook work. The worker
   // remains responsible for retries while nobody is reviewing the inbox.
@@ -38,7 +44,6 @@ export default async function ImportPage({
           initialActivities={imports.activities}
           plannedSessions={imports.plannedSessions}
           initialStravaConnection={strava}
-          stravaResult={query.strava ?? null}
         />
       </div>
     </PageShell>

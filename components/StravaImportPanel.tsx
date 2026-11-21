@@ -4,6 +4,7 @@ import { SegmentedControl, SegmentedControlItem } from '@ui-sdk/react/segmented-
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { format } from 'date-fns';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, getSegmentedChoiceClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
@@ -21,11 +22,9 @@ const sportOptions = ['RUNNING', 'BIKING', 'SWIMMING', 'STRENGTH', 'STRETCHING',
 export function StravaImportPanel({
   initialConnection,
   plannedSessions,
-  oauthResult,
 }: {
   initialConnection: StravaConnectionSummary;
   plannedSessions: ImportableSession[];
-  oauthResult: string | null;
 }) {
   const router = useRouter();
   const [connection, setConnection] = useState(initialConnection);
@@ -38,33 +37,13 @@ export function StravaImportPanel({
   const [importErrors, setImportErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [providerRevocationFailed, setProviderRevocationFailed] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [disconnecting, setDisconnecting] = useState(false);
   const [showAllActivities, setShowAllActivities] = useState(false);
   const [refreshing, startRefresh] = useTransition();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const inboxFilterRef = useRef<HTMLButtonElement>(null);
   const activityButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-
-  const oauthNotice = oauthResult === 'connected'
-    ? 'Strava is connected. Recent activities are ready to review.'
-    : oauthResult === 'connected:sync-error'
-      ? 'Strava is connected, but the first activity sync failed. Use Sync now to retry.'
-      : oauthResult === 'connected:revoke-error'
-        ? 'Strava is connected, but Tempo could not confirm revocation of the previous Strava account. Remove Tempo from that account’s Strava settings.'
-        : oauthResult === 'connected:sync-revoke-error'
-          ? 'Strava is connected, but the first sync failed and Tempo could not confirm revocation of the previous account. Retry sync and remove Tempo from the previous account’s Strava settings.'
-    : oauthResult === 'cancelled'
-      ? 'Strava connection was cancelled.'
-      : oauthResult === 'error:state'
-        ? 'The Strava sign-in expired. Start the connection again.'
-        : oauthResult === 'error:account-linked'
-          ? 'That Strava account is already linked to another Tempo account.'
-          : oauthResult?.startsWith('error:')
-            ? 'Strava could not be connected. Check the app settings and try again.'
-            : null;
 
   useEffect(() => {
     setConnection(initialConnection);
@@ -103,25 +82,6 @@ export function StravaImportPanel({
       setError(reason instanceof Error ? reason.message : 'Strava activities could not be synced.');
     } finally {
       setSyncing(false);
-    }
-  }
-
-  async function disconnect() {
-    if (!window.confirm('Disconnect Strava and remove Strava activities from Tempo? Your planned sessions and file imports will stay.')) return;
-    setDisconnecting(true);
-    setError(null);
-    setNotice(null);
-    try {
-      const response = await fetch('/api/strava/connection', { method: 'DELETE' });
-      const result = await response.json() as { error?: string; removedActivities?: number; providerRevoked?: boolean };
-      if (!response.ok) throw new Error(result.error || 'Strava could not be disconnected.');
-      setNotice(`Strava disconnected and ${result.removedActivities ?? 0} Strava-imported session${result.removedActivities === 1 ? '' : 's'} removed.`);
-      setProviderRevocationFailed(result.providerRevoked === false);
-      router.refresh();
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Strava could not be disconnected.');
-    } finally {
-      setDisconnecting(false);
     }
   }
 
@@ -226,46 +186,26 @@ export function StravaImportPanel({
               ? connection.webhookConfigured
                 ? `Connected${connection.athleteName ? ` as ${connection.athleteName}` : ''} · visit Import to review synced activities.`
                 : `Connected${connection.athleteName ? ` as ${connection.athleteName}` : ''} · webhooks are not configured, so use Sync now to check for activities.`
-              : 'Connect your Strava account to review activities before adding them to Tempo.'}
+              : connection.canConnect ? 'Strava is not connected.' : 'Strava is currently unavailable.'}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           {connection.connected ? (
             <>
-              <button type="button" className={secondaryButtonClassName} disabled={refreshing || syncing || disconnecting} onClick={() => startRefresh(() => router.refresh())}>
+              <button type="button" className={secondaryButtonClassName} disabled={refreshing || syncing} onClick={() => startRefresh(() => router.refresh())}>
                 {refreshing ? 'Refreshing…' : 'Refresh inbox'}
               </button>
-              <button type="button" className={secondaryButtonClassName} disabled={refreshing || syncing || disconnecting} onClick={() => void syncActivities()}>
+              <button type="button" className={secondaryButtonClassName} disabled={refreshing || syncing} onClick={() => void syncActivities()}>
                 {syncing ? 'Syncing…' : 'Sync now'}
               </button>
-              <button type="button" className={secondaryButtonClassName} disabled={refreshing || syncing || disconnecting} onClick={() => void disconnect()}>
-                {disconnecting ? 'Disconnecting…' : 'Disconnect Strava'}
-              </button>
             </>
-          ) : connection.canConnect ? (
-            <a className={primaryButtonClassName} href="/api/strava/connect">Connect Strava</a>
-          ) : (
-            <span className="max-w-64 text-right text-[12px] text-[var(--text-secondary)]">Add the Strava app credentials in the server environment to connect an account.</span>
-          )}
+          ) : null}
+          <Link href="/settings#connections" className={secondaryButtonClassName}>Manage connections</Link>
         </div>
       </div>
 
       {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
       {notice ? <p role="status" className="text-[13px] text-[var(--status-success)]">{notice}</p> : null}
-      {providerRevocationFailed ? (
-        <p role="status" className="text-[13px] leading-[1.5] text-[var(--text-secondary)]">
-          Strava did not confirm remote revocation. <a className="font-medium text-[var(--brand)] underline underline-offset-2" href="https://www.strava.com/settings/apps" target="_blank" rel="noreferrer">Remove Tempo in Strava settings</a> to finish disconnecting.
-        </p>
-      ) : null}
-      {oauthNotice ? (
-        <p role="status" className="text-[13px] leading-[1.5] text-[var(--text-secondary)]">
-          {oauthNotice}
-          {oauthResult === 'connected:revoke-error' || oauthResult === 'connected:sync-revoke-error' ? (
-            <> <a className="font-medium text-[var(--brand)] underline underline-offset-2" href="https://www.strava.com/settings/apps" target="_blank" rel="noreferrer">Open Strava settings</a></>
-          ) : null}
-        </p>
-      ) : null}
-
       {connection.connected ? (
         <div className="space-y-3">
           <p className="text-[13px] text-[var(--text-secondary)]">Newest first. Refresh inbox checks synced activities; Sync now checks Strava directly.</p>

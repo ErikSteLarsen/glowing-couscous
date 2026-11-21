@@ -30,12 +30,10 @@ export function ActivityImportClient({
   initialActivities,
   plannedSessions,
   initialStravaConnection,
-  stravaResult,
 }: {
   initialActivities: ImportedActivityHistory[];
   plannedSessions: ImportableSession[];
   initialStravaConnection: StravaConnectionSummary;
-  stravaResult: string | null;
 }) {
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -158,7 +156,7 @@ export function ActivityImportClient({
 
   return (
     <>
-      <StravaImportPanel initialConnection={initialStravaConnection} plannedSessions={plannedSessions} oauthResult={stravaResult} />
+      <StravaImportPanel initialConnection={initialStravaConnection} plannedSessions={plannedSessions} />
       <Surface className="space-y-4">
         <div>
           <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Add activity files</h2>

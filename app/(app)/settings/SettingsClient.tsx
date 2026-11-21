@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { OVERVIEW_CARD_IDS, type OverviewCardId } from '@/lib/overview-preferences';
 import { Toggle } from '@/components/tempo/Toggle';
-import { Surface, sectionHeadingClassName } from '@/components/ui';
+import { Surface, buttonFocusClassName, sectionHeadingClassName } from '@/components/ui';
 
 const personalOverviewCardIds = ['lastActivity', 'weekLoad', 'trend'] as const satisfies readonly OverviewCardId[];
 
@@ -67,57 +67,55 @@ export function SettingsClient({
   }
 
   return (
-    <div className="page-content--compact settings-preferences grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-      <Surface>
-          <h2 className={sectionHeadingClassName}>
-            Overview
-          </h2>
-          <div className="mt-4 divide-y divide-[var(--border)]">
-            {personalOverviewCardIds.map((cardId) => {
-              const meta = overviewLabels[cardId];
-              const checked = overviewCards.includes(cardId);
+    <Surface>
+      <h2 className={sectionHeadingClassName}>
+        Home display
+      </h2>
+      <div className="mt-4 divide-y divide-[var(--border)]">
+        {personalOverviewCardIds.map((cardId) => {
+          const meta = overviewLabels[cardId];
+          const checked = overviewCards.includes(cardId);
 
-              return (
-                <div
-                  key={cardId}
-                  className="flex min-h-11 items-center justify-between gap-4 py-4 first:pt-0 last:pb-0"
-                >
-                  <div className="min-w-0">
-                    <p className="text-[13.5px] font-semibold text-[var(--text)]">{meta.title}</p>
-                    <p className="mt-1 text-[13px] leading-[1.5] text-[var(--text-secondary)]">
-                      {meta.description}
-                    </p>
-                  </div>
-                  <Toggle
-                    checked={checked}
-                    label={`${meta.title} on Home`}
-                    onChange={(enabled) => updateCard(cardId, enabled)}
-                    disabled={isPending}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </Surface>
+          return (
+            <div
+              key={cardId}
+              className="flex min-h-11 items-center justify-between gap-4 py-4 first:pt-0 last:pb-0"
+            >
+              <div className="min-w-0">
+                <p className="text-[13.5px] font-semibold text-[var(--text)]">{meta.title}</p>
+                <p className="mt-1 text-[13px] leading-[1.5] text-[var(--text-secondary)]">
+                  {meta.description}
+                </p>
+              </div>
+              <Toggle
+                checked={checked}
+                label={`${meta.title} on Home`}
+                onChange={(enabled) => updateCard(cardId, enabled)}
+                disabled={isPending}
+              />
+            </div>
+          );
+        })}
+      </div>
       {message ? (
-        <p className={`text-sm ${messageTone === 'success' ? 'text-[var(--status-success)]' : 'text-[var(--status-danger)]'}`} role="status">
+        <p className={`mt-4 text-sm ${messageTone === 'success' ? 'text-[var(--status-success)]' : 'text-[var(--status-danger)]'}`} role="status">
           {message}
         </p>
       ) : null}
-      <div className="space-y-6">
-        <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
-          <p className="text-[15px] font-semibold text-[var(--text)]">Units</p>
-          <p className="mt-2 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
-            Metric remains the active default for distance and pace across Tempo screens.
-          </p>
-        </section>
-        <section className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-raised)]">
-          <p className="text-[15px] font-semibold text-[var(--text)]">Notifications</p>
-          <p className="mt-2 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
-            Email and push notifications are not available yet.
-          </p>
-        </section>
+    </Surface>
+  );
+}
+
+export function AboutSettings() {
+  return (
+    <details className="rounded-2xl border border-[var(--border)] px-5">
+      <summary className={`min-h-11 cursor-pointer rounded-lg py-3 text-sm font-medium text-[var(--text)] ${buttonFocusClassName}`}>
+        About these settings
+      </summary>
+      <div className="space-y-2 pb-4 text-sm text-[var(--text-secondary)]">
+        <p>Tempo uses metric units for distance and pace.</p>
+        <p>Email and push notifications are not available yet.</p>
       </div>
-    </div>
+    </details>
   );
 }

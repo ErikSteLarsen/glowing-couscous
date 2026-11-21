@@ -273,6 +273,24 @@ test('profile and settings routes use shared account service and profile alias r
   assert.match(authSource, /select: \{ role: true, name: true, email: true, sessionVersion: true \}/);
 });
 
+test('Settings owns Strava connection management and Import retains the inbox', async () => {
+  const [settings, connections, imports, inbox] = await Promise.all([
+    'app/(app)/settings/page.tsx',
+    'app/(app)/settings/StravaConnectionSettings.tsx',
+    'app/(app)/athlete/import/page.tsx',
+    'components/StravaImportPanel.tsx',
+  ].map(read));
+
+  assert.match(settings, /<StravaConnectionSettings/);
+  assert.match(connections, /id="connections"/);
+  assert.match(connections, /href="\/api\/strava\/connect"/);
+  assert.match(connections, /fetch\('\/api\/strava\/connection', \{ method: 'DELETE' \}/);
+  assert.match(connections, /href="\/athlete\/import#strava"/);
+  assert.match(imports, /redirect\(`\/settings\?strava=\$\{encodeURIComponent\(query\.strava\)\}#connections`\)/);
+  assert.match(inbox, /href="\/settings#connections"/);
+  assert.doesNotMatch(inbox, /\/api\/strava\/(connect|connection)\b/);
+});
+
 test('legacy coach planner surfaces were removed after Tempo convergence', async () => {
   const plannerServiceSource = await read('lib/planner-service.ts');
 
