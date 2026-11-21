@@ -213,7 +213,7 @@ export default async function AthleteSessionPage({
   const leadsWithOutcome = isCompleted || importedWithoutWorkout;
 
   return (
-    <PageShell size="wide">
+    <PageShell size="wide" className="[overflow-wrap:anywhere]">
       <SessionAdjustProvider>
         <TopBar
           back={returnTarget}
