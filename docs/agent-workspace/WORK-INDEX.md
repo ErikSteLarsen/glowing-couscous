@@ -42,6 +42,7 @@ means compatibility code, not the extension point for new work.
 ## Active work
 
 
+- [UI simplicity pass P1–P17](tasks/2026-11-21-ui-simplicity-proposal.md) — approved 2026-11-21: one Start workout chooser and per-page simplification. P1 uses Ask each time with no saved preference.
 - [Trustworthy account controls, recoverable work and truthful Home](tasks/2026-09-30-account-recovery-home.md) — Home, workout/Profile/Live recovery, Account controls and safe deletion implemented; public trust facts, auth hardening and remaining acceptance are open. Downloads and email verification are deferred.
 
 ## Capability specifications
