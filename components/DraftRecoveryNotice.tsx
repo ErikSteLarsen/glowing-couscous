@@ -18,6 +18,12 @@ export function DraftRecoveryNotice({ candidates, status, onRestore, onDiscard, 
         <div className="flex flex-wrap gap-3"><button type="button" disabled={disabled} className={secondaryButtonClassName} onClick={() => onRestore(draft)}>{onElapsed ? 'Restore paused' : 'Restore'}</button>{onElapsed ? <button type="button" disabled={disabled} className={secondaryButtonClassName} onClick={() => onElapsed(draft)}>Count elapsed time</button> : null}<button type="button" disabled={disabled} className={secondaryButtonClassName} onClick={() => onDiscard(draft)}>Discard draft</button></div>
       </div>)}
     </section> : null}
-    {status !== 'idle' ? <p role="status" className="text-sm text-[var(--text-secondary)]">{status === 'kept' ? onElapsed ? 'Checkpoint kept on this browser. Finish workout saves the session outcome.' : 'Draft kept on this browser. Save to update your account.' : onElapsed ? 'Local recovery is unavailable. Keep this page open to preserve Live progress.' : 'Local recovery is unavailable. Keep this page open and save your changes before leaving.'}</p> : null}
+    <DraftRecoveryStatus status={status} live={Boolean(onElapsed)} />
   </div>;
+}
+
+/** Where local recovery stands for the open form: kept on this browser, or unavailable. */
+export function DraftRecoveryStatus({ status, live = false }: { status: 'idle' | 'kept' | 'unavailable'; live?: boolean }) {
+  if (status === 'idle') return null;
+  return <p role="status" className="text-sm text-[var(--text-secondary)]">{status === 'kept' ? live ? 'Checkpoint kept on this browser. Finish workout saves the session outcome.' : 'Draft kept on this browser. Save to update your account.' : live ? 'Local recovery is unavailable. Keep this page open to preserve Live progress.' : 'Local recovery is unavailable. Keep this page open and save your changes before leaving.'}</p>;
 }

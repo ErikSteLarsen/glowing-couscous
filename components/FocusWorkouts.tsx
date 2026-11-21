@@ -1,6 +1,6 @@
 'use client';
 
-import type { ComponentProps, KeyboardEvent } from 'react';
+import type { ComponentProps, KeyboardEvent, ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { LibraryBrowser } from '@/components/library/LibraryBrowser';
 import { WorkoutLibraryClient } from '@/components/WorkoutLibraryClient';
@@ -9,7 +9,7 @@ import { athleteWorkoutsHref, resolveWorkoutTab, type WorkoutTab } from '@/lib/a
 import { parseCatalogQuery, type CatalogEntry } from '@/lib/workout-catalog/query';
 
 const labels = {
-  mine: { title: 'My workouts', hint: 'Yours to edit, schedule and share.' },
+  mine: { title: 'My workouts', hint: 'Workouts you saved. Open one to edit it, or schedule a copy.' },
   library: { title: 'Public library', hint: 'Ready-made workouts for everyone. Customize one to make it yours.' },
 } satisfies Record<WorkoutTab, { title: string; hint: string }>;
 
@@ -47,7 +47,7 @@ export function FocusWorkouts({ catalogEntries, ...libraryProps }: Props) {
     selectTab(tabs[next].id, true);
   }
 
-  const listIntro = (
+  const listIntro = ({ drafts }: { drafts: ReactNode }) => (
     <>
       <header className="study-workouts__header">
         <div>
@@ -57,26 +57,30 @@ export function FocusWorkouts({ catalogEntries, ...libraryProps }: Props) {
             : 'Reusable workouts. Scheduling one adds a copy to your Calendar and keeps this version unchanged.'}</p>
         </div>
       </header>
-      {catalogEntries ? <div className="space-y-2 max-md:mb-3">
-        <div role="tablist" aria-label="Workout collections" className={`${switchTrackClassName} w-full sm:w-fit`}>
-          {tabs.map(({ id, count }, index) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              id={`workout-tab-${id}`}
-              aria-selected={tab === id}
-              aria-controls={`workout-panel-${id}`}
-              aria-describedby={tab === id ? 'workout-tab-hint' : undefined}
-              tabIndex={tab === id ? 0 : -1}
-              onClick={() => selectTab(id)}
-              onKeyDown={(event) => handleTabKey(event, index)}
-              className={`${getSwitchOptionClassName(tab === id)} flex-1 cursor-pointer gap-2 whitespace-nowrap min-h-11`}
-            >
-              {labels[id].title}
-              <span className="data text-xs font-medium text-[var(--text-secondary)]">{count}</span>
-            </button>
-          ))}
+      {catalogEntries ? null : <div className="flex justify-end empty:hidden">{drafts}</div>}
+      {catalogEntries ? <div className="mb-5 space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div role="tablist" aria-label="Workout collections" className={`${switchTrackClassName} w-full sm:w-fit`}>
+            {tabs.map(({ id, count }, index) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                id={`workout-tab-${id}`}
+                aria-selected={tab === id}
+                aria-controls={`workout-panel-${id}`}
+                aria-describedby={tab === id ? 'workout-tab-hint' : undefined}
+                tabIndex={tab === id ? 0 : -1}
+                onClick={() => selectTab(id)}
+                onKeyDown={(event) => handleTabKey(event, index)}
+                className={`${getSwitchOptionClassName(tab === id)} flex-1 cursor-pointer gap-2 whitespace-nowrap min-h-11`}
+              >
+                {labels[id].title}
+                <span className="data text-xs font-medium text-[var(--text-secondary)]">{count}</span>
+              </button>
+            ))}
+          </div>
+          {drafts}
         </div>
         <p id="workout-tab-hint" className="text-sm text-[var(--text-secondary)]">{labels[tab].hint}</p>
       </div> : null}

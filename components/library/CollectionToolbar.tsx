@@ -6,12 +6,12 @@ import { formFieldClassName } from '@/components/ui';
 
 /** One toolbar for every workout collection: search on the left, the tab's own controls beside it. */
 export function CollectionToolbar({ search, children }: { search: ReactNode; children?: ReactNode }) {
-  return <div className="flex items-center gap-2">{search}{children}</div>;
+  return <div className="flex flex-wrap items-center gap-2">{search}{children}</div>;
 }
 
 export function CollectionSearch({ value, onChange, label, placeholder }: { value: string; onChange: (value: string) => void; label: string; placeholder: string }) {
   return (
-    <label className="relative min-w-0 flex-1 @2xl:max-w-md">
+    <label className="relative min-w-48 flex-1 @2xl:max-w-md">
       <span className="sr-only">{label}</span>
       <Search aria-hidden="true" size={16} strokeWidth={1.6} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
       <input

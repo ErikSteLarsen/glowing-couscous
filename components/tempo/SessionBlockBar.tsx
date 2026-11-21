@@ -10,7 +10,7 @@ type Segment = {
   kind?: 'warmup' | 'work' | 'recovery' | 'cooldown' | 'pause' | 'unknown';
 };
 
-type SessionBlockBarSize = 'authoring' | 'full' | 'card' | 'compact' | 'calendar';
+type SessionBlockBarSize = 'authoring' | 'tile' | 'full' | 'card' | 'compact' | 'calendar';
 
 export function SessionBlockBar({
   segments,
@@ -28,6 +28,7 @@ export function SessionBlockBar({
   const summary = segments.map((segment) => `${segment.zone === null ? 'Unknown intensity' : `Zone ${segment.zone}`}: ${segment.label}, ${segment.durationSec} seconds`).join('; ');
   const height = {
     authoring: 'h-40 px-1 pt-2',
+    tile: 'h-14',
     full: 'h-[26px]',
     card: 'h-[32px]',
     compact: 'h-[24px]',
