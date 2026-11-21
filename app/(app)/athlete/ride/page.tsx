@@ -9,7 +9,7 @@ import { publicLibraryHref } from '@/lib/athlete-workouts-navigation';
 import { LibraryCard } from '@/components/library/LibraryCard';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
-import { compactSecondaryButtonClassName, Disclosure, ghostButtonClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
+import { buttonFocusClassName, compactSecondaryButtonClassName, Disclosure, ghostButtonClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
 import { accountService } from '@/lib/account-service';
@@ -168,12 +168,10 @@ function SessionLine({ session }: { session: RideHubSession }) {
   return (
     <article className="flex flex-col gap-2.5 rounded-xl border border-[var(--border)] p-3">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-[14px] font-medium text-[var(--text)]">
-            <Link href={`/athlete/session/${session.id}?from=ride`} className="rounded-sm hover:underline hover:underline-offset-4">{session.title}</Link>
-          </p>
-          <p className="data mt-0.5 text-[12px] text-[var(--text-muted)]">{sessionMeta(session)}</p>
-        </div>
+        <Link href={`/athlete/session/${session.id}?from=ride`} className={`group flex min-w-0 flex-1 flex-col justify-center rounded-sm max-md:min-h-11 ${buttonFocusClassName}`}>
+          <span className="wrap-anywhere text-[14px] font-medium text-[var(--text)] underline-offset-4 group-hover:underline">{session.title}</span>
+          <span className="data mt-0.5 text-[12px] text-[var(--text-muted)]">{sessionMeta(session)}</span>
+        </Link>
         <WorkoutStartChooser
           workout={{ title: session.title, durationSec: session.durationSec, hasSteps: session.hasSteps, sport: 'BIKING', status: 'planned' }}
           source={{ kind: 'session', id: session.id, from: 'ride' }}
@@ -188,12 +186,12 @@ function SessionLine({ session }: { session: RideHubSession }) {
 function RecentLine({ ride }: { ride: RideHubRecent }) {
   return (
     <li className="flex items-center justify-between gap-3 py-2.5">
-      <div className="min-w-0">
-        <Link href={`/athlete/session/${ride.sessionId}?from=ride`} className="block truncate rounded-sm text-[13px] font-medium text-[var(--text)] hover:underline hover:underline-offset-4">{ride.title}</Link>
-        <p className="data mt-0.5 text-[12px] text-[var(--text-muted)]">
+      <Link href={`/athlete/session/${ride.sessionId}?from=ride`} className={`group flex min-w-0 flex-1 flex-col justify-center rounded-sm max-md:min-h-11 ${buttonFocusClassName}`}>
+        <span className="wrap-anywhere text-[13px] font-medium text-[var(--text)] underline-offset-4 group-hover:underline">{ride.title}</span>
+        <span className="data mt-0.5 text-[12px] text-[var(--text-muted)]">
           {format(parseISO(ride.completedAt), 'EEE d MMM')} · {formatDuration(ride.durationSec)}{ride.tss !== null ? ` · ${ride.tss} TSS` : ''}
-        </p>
-      </div>
+        </span>
+      </Link>
       {ride.catalogSlug ? (
         <Link href={`/athlete/library/${ride.catalogSlug}?from=ride`} className={`${compactSecondaryButtonClassName} shrink-0 max-md:min-h-11`} aria-label={`Ride ${ride.title} again`}>
           <RotateCcw aria-hidden="true" size={13} strokeWidth={1.7} />Again
