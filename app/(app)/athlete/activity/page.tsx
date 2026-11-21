@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ActionLink, EmptyState, PageShell, TopBar, formFieldClassName, formLabelClassName, formSelectClassName, secondaryButtonClassName } from '@/components/ui';
+import { ActionLink, EmptyState, PageShell, TopBar, formFieldClassName, formLabelClassName, formSelectClassName, ghostButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { MetricText } from '@/components/tempo/MetricText';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { getCurrentUser } from '@/lib/auth-session';
@@ -99,11 +100,15 @@ export default async function AthleteActivityPage({ searchParams }: {
                     {['tcx-import', 'fit-import', 'gpx-import'].includes(activity.metricsSource) && activity.startedAt && activity.sourceTimezoneOffsetMinutes !== null ? (
                       <p className="mt-1 text-xs text-[var(--text-muted)]">Started {formatActivityDateTime(activity.startedAt, activity.sourceTimezoneOffsetMinutes)}{activity.metricsSource === 'tcx-import' ? ' · finish estimated from duration' : activity.metricsSource === 'fit-import' ? ' · timezone from FIT Activity local timestamp' : ' · timed trackpoints; coordinates not stored'}</p>
                     ) : null}
-                    </div>
+                  </div>
                   <div className="flex shrink-0 flex-wrap items-center gap-3 max-md:[&>:is(a,button)]:min-h-11">
-                      <ActionLink href={`/athlete/session/${activity.sessionId}?from=activity`} tone="ghost">
-                    Review outcome
-                    </ActionLink>
+                    <Link
+                      href={`/athlete/session/${activity.sessionId}?from=activity`}
+                      aria-label={`Review outcome: ${activity.title}`}
+                      className={ghostButtonClassName('default')}
+                    >
+                      Review outcome
+                    </Link>
                     {['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'].includes(activity.metricsSource) ? null : <SessionComparisonDialog
                       sessionId={activity.sessionId}
                       endpoint={`/api/athlete/sessions/${activity.sessionId}/comparison`}
