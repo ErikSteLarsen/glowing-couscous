@@ -118,7 +118,7 @@ export default async function AthletePage() {
   const showInsights = cards.has('trend') || cards.has('weekLoad') || cards.has('lastActivity');
 
   return (
-    <PageShell size="wall" className="gap-5">
+    <PageShell size="wall">
       <TopBar
         eyebrow={`${format(today, 'EEEE d MMMM')} · Week ${getISOWeek(today)}`}
         title={`${greetingFor(hourInZone(timeZone))}, ${firstName}`}
