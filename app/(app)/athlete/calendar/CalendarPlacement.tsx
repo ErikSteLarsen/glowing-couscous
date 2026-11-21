@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState, useTransition } from 'react';
 import { Check, ChevronDown, CircleAlert, Plus, Search, X } from 'lucide-react';
@@ -7,7 +8,7 @@ import { Check, ChevronDown, CircleAlert, Plus, Search, X } from 'lucide-react';
 import {
   dangerTextClassName,
   EmptyState,
-  ActionLink,
+  compactSecondaryButtonClassName,
   formFieldClassName,
   formLabelClassName,
   getSegmentedChoiceClassName,
@@ -200,7 +201,11 @@ export function CalendarPlacement({
         <EmptyState
           title={isRoutine ? 'No routines yet' : 'No saved workouts yet'}
           description={isRoutine ? 'Build a weekly routine from your saved workouts, then apply it here.' : 'Save a workout first, then add it to any day.'}
-          action={<ActionLink href={isRoutine ? '/athlete/templates' : '/athlete/workouts'} tone="secondary" size="compact">{isRoutine ? 'Open Templates' : 'Open Workouts'}</ActionLink>}
+          action={
+            <Link href={isRoutine ? '/athlete/templates' : '/athlete/workouts'} className={`${compactSecondaryButtonClassName} max-md:min-h-11`}>
+              {isRoutine ? 'Open Templates' : 'Open Workouts'}
+            </Link>
+          }
         />
       </div>
     );
