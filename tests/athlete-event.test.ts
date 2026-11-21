@@ -149,3 +149,12 @@ test('athlete events validate and persist owner-scoped goals and post-event resu
     });
   });
 });
+
+test('Events lists events first and keeps forms and management behind explicit actions', async () => {
+  const eventsClient = await readFile(path.join(process.cwd(), 'app/(app)/athlete/events/EventsClient.tsx'), 'utf8');
+  assert.match(eventsClient, /id=\{`event-\$\{event\.id\}`\}/, 'Calendar event links keep their #event-<id> anchor');
+  assert.match(eventsClient, /open=\{adding\}/, 'the create form opens from Add event instead of always showing');
+  assert.match(eventsClient, /Add goal time/, 'goal time is optional behind Add goal time');
+  assert.match(eventsClient, /Linked activities/, 'activity management stays under Linked activities');
+  assert.match(eventsClient, /Delete this event\?/, 'deleting an event asks for confirmation');
+});
