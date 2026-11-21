@@ -112,6 +112,19 @@ test('Workouts has one New workout entry, a visible Schedule action and sharing 
   assert.doesNotMatch(workoutsClientSource, /<ShareLinkButton/);
 });
 
+test('the workout editor replaces the list and its header, returning to the list position on Back', async () => {
+  const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
+  const focusSource = await read('components/FocusWorkouts.tsx');
+
+  assert.match(workoutsClientSource, /\{editorOpen \? null : listIntro\}/);
+  assert.match(workoutsClientSource, /\{!editorOpen \? <section/);
+  assert.match(workoutsClientSource, /<BackButton destination="Workouts" onClick=\{\(\) => requestDraftAction\(\{ kind: 'close' \}\)\}/);
+  assert.match(workoutsClientSource, /rememberListPosition/);
+  assert.match(workoutsClientSource, /<MenuItem destructive onSelect=\{deleteWorkout\}>/);
+  assert.match(workoutsClientSource, /window\.confirm\(`Delete "\$\{workoutName\}"/);
+  assert.match(focusSource, /listIntro=\{listIntro\}/);
+});
+
 test('Calendar placement only places defined sources on selected dates', async () => {
   const plannerPageSource = await read('app/(app)/athlete/calendar/page.tsx');
   const retiredPlannerSource = await read('app/(app)/athlete/planner/page.tsx');

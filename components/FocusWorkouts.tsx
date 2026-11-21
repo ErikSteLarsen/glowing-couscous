@@ -7,8 +7,9 @@ import { WorkoutLibraryClient } from '@/components/WorkoutLibraryClient';
 type LibraryProps = ComponentProps<typeof WorkoutLibraryClient>;
 
 export function FocusWorkouts(libraryProps: LibraryProps) {
-  return (
-    <main className="study-workouts study-workouts--nocturne">
+  // The page header belongs to the list: the editor replaces both when it opens.
+  const listIntro = (
+    <>
       <header className="study-workouts__header">
         <div>
           <h1>Workouts</h1>
@@ -22,7 +23,12 @@ export function FocusWorkouts(libraryProps: LibraryProps) {
         <div className="study-workouts__header-count"><strong>{libraryProps.workouts.length}</strong><span>saved {libraryProps.workouts.length === 1 ? 'workout' : 'workouts'}</span><ArrowUpRight size={18} aria-hidden="true" /></div>
       </header>
       <MobileLibrarySwitch active="workouts" />
-      <WorkoutLibraryClient {...libraryProps} designDirection="nocturne" />
+    </>
+  );
+
+  return (
+    <main className="study-workouts study-workouts--nocturne">
+      <WorkoutLibraryClient {...libraryProps} designDirection="nocturne" listIntro={listIntro} />
     </main>
   );
 }

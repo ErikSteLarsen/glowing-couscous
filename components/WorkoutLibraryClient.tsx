@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from 'react';
 import Link from 'next/link';
-import { ChevronDown, Ellipsis, Link2, Plus } from 'lucide-react';
+import { ChevronDown, Ellipsis, Link2, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -75,6 +75,7 @@ export function WorkoutLibraryClient({
   previewMode = false,
   designDirection = null,
   ownerId = null,
+  listIntro = null,
 }: {
   role: 'COACH' | 'ATHLETE';
   workouts: WorkoutRecord[];
@@ -84,6 +85,8 @@ export function WorkoutLibraryClient({
   previewMode?: boolean;
   designDirection?: 'nocturne' | null;
   ownerId?: number | null;
+  /** Page header shown with the list; the editor replaces it while open. */
+  listIntro?: ReactNode;
 }) {
   const router = useRouter();
   const initialWorkout = initialWorkoutId === null ? null : workouts.find((workout) => workout.id === initialWorkoutId) ?? null;
@@ -106,6 +109,25 @@ export function WorkoutLibraryClient({
   const recovery = useDraftRecovery({ userId: previewMode ? null : ownerId, surface: 'workout', resource: selectedWorkoutId === null ? 'new' : String(selectedWorkoutId), baseline: revision, payload: JSON.stringify({ draft, requestKey }), dirty: editorOpen && isDirty });
   const draftRef = useRef(draft);
   useEffect(() => { draftRef.current = draft; }, [draft]);
+  // The editor replaces the list, so remember where the list was and return there on Back.
+  const listScroll = useRef<{ top: number; workoutId: number | null } | null>(null);
+  const wasEditorOpen = useRef(editorOpen);
+  useLayoutEffect(() => {
+    if (wasEditorOpen.current === editorOpen) return;
+    wasEditorOpen.current = editorOpen;
+    if (editorOpen) {
+      window.scrollTo({ top: 0 });
+      return;
+    }
+    const saved = listScroll.current;
+    listScroll.current = null;
+    window.scrollTo({ top: saved?.top ?? 0 });
+    if (saved?.workoutId != null) document.querySelector<HTMLElement>(`[data-workout-row="${saved.workoutId}"]`)?.focus({ preventScroll: true });
+  }, [editorOpen]);
+
+  function rememberListPosition(workoutId: number | null) {
+    if (!editorOpen) listScroll.current = { top: window.scrollY, workoutId };
+  }
 
   function restoreWorkout(record: RecoveryDraft) {
     const recovered = parseWorkoutRecovery(record.payload);
@@ -119,6 +141,7 @@ export function WorkoutLibraryClient({
     setRevision(original && !asCopy ? currentRevision : '');
     setDraft({ ...recovered.draft, id: original && !asCopy ? original.id : null, mode: 'create', scheduledDate: null, planWeekday: null });
     setRequestKey(asCopy || !recovered.requestKey ? crypto.randomUUID() : recovered.requestKey);
+    rememberListPosition(null);
     setIsDirty(true); setEditorOpen(true);
     recovery.restored(record);
     setMessageTone('success');
@@ -139,6 +162,7 @@ export function WorkoutLibraryClient({
     setRevision(action.kind === 'workout' && action.workout.updatedAt ? new Date(action.workout.updatedAt).toISOString() : '');
     setGuidedInfo(null);
     setGuidedFormOpen(false);
+    if (action.kind !== 'close') rememberListPosition(action.kind === 'workout' ? action.workout.id : null);
     if (action.kind === 'new') {
       setSelectedWorkoutId(null);
       setDraft(createNewDraft());
@@ -273,9 +297,11 @@ export function WorkoutLibraryClient({
   const showEditor = editorOpen && (!designDirection || clientMounted);
 
   return (
+    <>
+    {editorOpen ? null : listIntro}
     <div className={designDirection ? 'study-workouts__body' : editorOpen ? 'min-w-0' : 'page-content--library workout-library'}>
       <DraftRecoveryNotice candidates={recovery.candidates} status={recovery.status} disabled={isPending} onRestore={restoreWorkout} onDiscard={recovery.discard} />
-      {designDirection || !editorOpen ? <section aria-labelledby="workout-library-title" className="study-workouts__library min-w-0 space-y-5">
+      {!editorOpen ? <section aria-labelledby="workout-library-title" className="study-workouts__library min-w-0 space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 id="workout-library-title" className="text-lg font-semibold text-[var(--text)]">Workout library</h2>
           {newWorkoutAction}
@@ -283,6 +309,7 @@ export function WorkoutLibraryClient({
         {role === 'ATHLETE' && guidedFormOpen ? <GuidedWorkoutForm onCancel={() => setGuidedFormOpen(false)} onGenerated={(nextDraft, info) => {
           if (editorOpen && isDirty && !window.confirm('Replace the open unsaved workout with this generated draft?')) return;
           recovery.discard();
+          rememberListPosition(null);
           setRequestKey(crypto.randomUUID()); setRevision('');
           setSelectedWorkoutId(null);
           setDraft(nextDraft);
@@ -337,6 +364,7 @@ export function WorkoutLibraryClient({
                 <div key={workout.id} className={`py-4 ${selected ? 'bg-[var(--brand-tint)]' : ''}`}>
                   <button
                     type="button"
+                    data-workout-row={workout.id}
                     aria-current={selected ? 'true' : undefined}
                     onClick={() => requestDraftAction({ kind: 'workout', workout })}
                     className={`w-full rounded-lg px-2 text-left ${buttonFocusClassName} focus-visible:ring-inset`}
@@ -375,6 +403,23 @@ export function WorkoutLibraryClient({
           </div>
           <div className="flex items-center gap-2">
             <Badge tone="brand">{formatDurationExact(metrics.durationSec)}</Badge>
+            {selectedWorkoutId ? (
+              <Menu>
+                <MenuTrigger
+                  disabled={isPending}
+                  aria-label="More workout actions"
+                  className={`inline-flex size-10 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-md:size-11 disabled:opacity-50 ${buttonFocusClassName}`}
+                >
+                  <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
+                </MenuTrigger>
+                <MenuContent align="end">
+                  <MenuItem destructive onSelect={deleteWorkout}>
+                    <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />
+                    Delete from library…
+                  </MenuItem>
+                </MenuContent>
+              </Menu>
+            ) : null}
           </div>
         </div>
 
@@ -427,9 +472,9 @@ export function WorkoutLibraryClient({
           </button>
           {!draft.blocks.some((block) => !block.skipped && block.kind !== 'pause') ? <span className="text-xs text-[var(--text-secondary)]">Add an active block to save.</span> : null}
         </div>
-        {selectedWorkoutId ? <div className="border-t border-[var(--border)] pt-4"><button type="button" className={dangerButtonClassName} disabled={isPending} onClick={deleteWorkout}>Delete workout from library</button></div> : null}
       </Surface> : null}
     </div>
+    </>
   );
 }
 
