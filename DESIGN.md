@@ -610,8 +610,11 @@ workout (up to about eight rows) fits a 1440×900 screen with the save bar.
   once; editing a set step changes every repeat. Identical single steps stay
   separate rows. Row actions (duplicate, repeat with next step, move earlier
   or later, remove) live in the row ⋯ menu; Alt+↑/↓ moves the focused row and
-  the handle supports keyboard drag. On desktop the list scrolls inside the
-  page when long.
+  the handle supports keyboard drag. The whole row drags too: with a mouse
+  after 6px of movement (a click still selects), on touch after a short hold
+  (a swipe still scrolls). Buttons, fields, the open step editor and a set's
+  own steps never start a row drag; a set drags from its header row. On
+  desktop the list scrolls inside the page when long.
 - **Step editor.** A side panel from `lg`, otherwise inline under the selected
   row. By default only duration (free text such as 10, 90s or 1:30; arrow keys
   nudge) and intensity (Z1–Z5 plus −/+ on the target). More options holds step

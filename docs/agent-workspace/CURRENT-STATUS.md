@@ -361,6 +361,13 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   (week and month), Workouts, Library, Activity, Events, Templates, Import,
   Profile and Ride home; workout descriptions are prose and wrap normally.
   `pnpm test` 540 and `pnpm test:db` 592 passed; lint and typecheck passed.
+- Builder whole-row drag (2026-11-23): step and set rows drag from anywhere on
+  the row, not only the handle (mouse after 6px, touch after a hold).
+  Buttons, fields, the open editor and steps inside a set are excluded; a set
+  drags from its header. Checked in a local browser: a row dragged by its
+  name moved two places, a click still selected, a set step did not drag, the
+  set header moved the set, and pressing ⋯ opened its menu. Touch was not
+  tested on a device.
 
 ## Remaining risks and acceptance gates
 
