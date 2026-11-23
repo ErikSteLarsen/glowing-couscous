@@ -36,7 +36,7 @@ const navIcons: Record<string, LucideIcon> = {
   Home: House,
   Import: Upload,
   Planner: ClipboardList,
-  Templates: LayoutTemplate,
+  Routines: LayoutTemplate,
   Workouts: Dumbbell,
 };
 
