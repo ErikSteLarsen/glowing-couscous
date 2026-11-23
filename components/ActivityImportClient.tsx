@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { formatStravaMetadata, StravaImportPanel } from '@/components/StravaImportPanel';
+import { MetricPair } from '@/components/tempo/MetricPair';
 import { sectionHeadingClassName, EmptyState, Surface, buttonFocusClassName, dangerButtonClassName, dangerTextClassName, formFieldClassName, formLabelClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { parseActivityFile, type ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { ImportableSession, ImportedActivityHistory } from '@/lib/activity-import-service';
@@ -208,15 +209,15 @@ export function ActivityImportClient({
                 <p role="alert" className={dangerTextClassName}>{draft.error}</p>
               ) : (
                 <>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <SummaryValue label="Sport" value={getSportLabel(draft.activity.sport)} />
-                    <SummaryValue label="Started" value={format(new Date(draft.activity.startedAt), 'EEE d MMM · HH:mm')} />
-                    <SummaryValue label="Duration" value={formatDuration(draft.activity.durationSec)} />
-                    <SummaryValue label="Distance" value={draft.activity.distanceMeters === null ? 'Not recorded' : `${(draft.activity.distanceMeters / 1000).toFixed(2)}\u00A0km`} />
+                  <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <MetricPair label="Sport" value={getSportLabel(draft.activity.sport)} />
+                    <MetricPair label="Started" value={format(new Date(draft.activity.startedAt), 'EEE d MMM · HH:mm')} />
+                    <MetricPair label="Duration" value={formatDuration(draft.activity.durationSec)} />
+                    <MetricPair label="Distance" value={draft.activity.distanceMeters === null ? 'Not recorded' : `${(draft.activity.distanceMeters / 1000).toFixed(2)}\u00A0km`} />
                     {draft.activity.elevationGainMeters !== null ? (
-                      <SummaryValue label="Elevation gain" value={`${Math.round(draft.activity.elevationGainMeters)}\u00A0m`} />
+                      <MetricPair label="Elevation gain" value={`${Math.round(draft.activity.elevationGainMeters)}\u00A0m`} />
                     ) : null}
-                  </div>
+                  </dl>
                   <label className="block">
                     <span className={formLabelClassName}>Activity name</span>
                     <input
@@ -320,11 +321,11 @@ export function ActivityImportClient({
                   {activity.source === 'strava' && activity.sourceMetadata ? (
                     <section aria-label="Imported Strava activity details" className="space-y-3">
                       <h3 className="text-[13px] font-semibold text-[var(--text)]">Strava activity details</h3>
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         {formatStravaMetadata(activity.sourceMetadata).map(([label, value]) => (
-                          <SummaryValue key={label} label={label} value={value} />
+                          <MetricPair key={label} label={label} value={value} />
                         ))}
-                      </div>
+                      </dl>
                     </section>
                   ) : null}
                   <Link className={`${ghostButtonClassName('default')} max-md:min-h-11`} href={`/athlete/session/${activity.sessionId}?from=imports`}>
@@ -345,15 +346,6 @@ export function ActivityImportClient({
         )}
       </section>
     </>
-  );
-}
-
-function SummaryValue({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border-l-2 border-[var(--border)] pl-3">
-      <p className="text-[11px] font-medium text-[var(--text-muted)]">{label}</p>
-      <p className="metric-text mt-1 text-[15px] font-semibold text-[var(--text)]">{value}</p>
-    </div>
   );
 }
 

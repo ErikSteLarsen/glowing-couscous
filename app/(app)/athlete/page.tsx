@@ -7,6 +7,7 @@ import { PerformanceChart } from '@/components/charts/PerformanceChart';
 import { WeeklyVolumeChart, type VolumeWeek } from '@/components/charts/WeeklyVolumeChart';
 import { ComplianceMark } from '@/components/tempo/ComplianceMark';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { MetricPair } from '@/components/tempo/MetricPair';
 import { SessionRow } from '@/components/tempo/SessionRow';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { HomeSummaryDialog } from '@/components/HomeSummaryDialog';
@@ -413,10 +414,7 @@ export default async function AthletePage() {
                         ['TSS', String(dashboard.lastActivity.tss)],
                         ['RPE', dashboard.lastActivity.rpe ? `${dashboard.lastActivity.rpe}/10` : '–'],
                       ].map(([label, value]) => (
-                        <div key={label}>
-                          <dt className="text-xs text-[var(--text-muted)]">{label}</dt>
-                          <dd className="data mt-1 text-lg font-medium text-[var(--text)]">{value}</dd>
-                        </div>
+                        <MetricPair key={label} label={label} value={value} />
                       ))}
                     </dl>
                     {dashboard.lastActivity.notes ? (

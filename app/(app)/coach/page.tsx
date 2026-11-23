@@ -1,3 +1,4 @@
+import { MetricPair } from '@/components/tempo/MetricPair';
 import { redirect } from 'next/navigation';
 import { ActionLink, EmptyState, PageShell, StatTile, Surface, TopBar, Badge } from '@/components/ui';
 import { CoachRequestsPanel } from '@/components/CoachRequestsPanel';
@@ -63,14 +64,14 @@ export default async function CoachPage() {
                   <p className="mt-1 break-words text-sm text-[var(--text-secondary)]">{athlete.email}</p>
                 </a>
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">This week</p>
-                  <p className="metric-text mt-2 text-[18px] font-semibold text-[var(--text)]">{athlete.completedCount} / {athlete.plannedCount}</p>
+                  <dl>
+                    <MetricPair label="This week" value={`${athlete.completedCount} / ${athlete.plannedCount}`} />
+                  </dl>
                   <p className="mt-1 text-sm text-[var(--text-secondary)]">{athlete.compliancePct}% complete</p>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Next session</p>
-                  <p className="mt-2 break-words text-sm text-[var(--text-secondary)]">{athlete.nextSession}</p>
-                </div>
+                <dl>
+                  <MetricPair label="Next session" value={athlete.nextSession} />
+                </dl>
                 <ActionLink href={`/coach/planner?athleteId=${athlete.id}`} tone="secondary" size="compact">Plan next session</ActionLink>
               </article>
             ))}

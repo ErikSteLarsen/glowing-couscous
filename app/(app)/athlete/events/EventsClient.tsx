@@ -1,5 +1,6 @@
 'use client';
 
+import { MetricPair } from '@/components/tempo/MetricPair';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -256,7 +257,12 @@ function EventCard({ event, today, onChange, onDelete }: { event: EventRow; toda
       <div className="min-w-0 flex-1">
         <h3 id={`event-${event.id}-title`} className={`break-words ${sectionHeadingClassName}`}>{event.title}</h3>
         <p className="mt-1 text-sm text-[var(--text-muted)]"><span className="data">{formatDay(day)}</span> · {getSportLabel(event.sport)}{countdown ? <> · <span className="text-[var(--text-secondary)]">{countdown}</span></> : null}</p>
-        {event.targetFinishSec || event.resultFinishSec !== null ? <p className="mt-1.5 text-sm text-[var(--text-secondary)]">{event.targetFinishSec ? <>Goal <span className="data">{formatDuration(event.targetFinishSec)}</span></> : null}{event.targetFinishSec && event.resultFinishSec !== null ? ' · ' : null}{event.resultFinishSec !== null ? <>Result <span className="data text-[var(--text)]">{formatDuration(event.resultFinishSec)}</span></> : null}</p> : null}
+        {event.targetFinishSec || event.resultFinishSec !== null ? (
+          <dl className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+            {event.targetFinishSec ? <MetricPair inline label="Goal" value={formatDuration(event.targetFinishSec)} /> : null}
+            {event.resultFinishSec !== null ? <MetricPair inline label="Result" value={formatDuration(event.resultFinishSec)} /> : null}
+          </dl>
+        ) : null}
         {event.resultNote ? <p className="mt-1 whitespace-pre-wrap text-sm text-[var(--text-muted)]">{event.resultNote}</p> : null}
         {linkedCount ? <button type="button" className={`${ghostButtonClassName('compact')} -ml-2 max-md:min-h-11 mt-1`} onClick={() => openPanel('activities')}><Link2 aria-hidden="true" size={14} strokeWidth={1.8} />Linked activities <span className="data">{linkedCount}</span></button> : null}
         {notice ? <p role="status" className="mt-1 text-sm text-[var(--status-success)]">{notice}</p> : null}

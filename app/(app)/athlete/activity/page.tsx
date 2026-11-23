@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ActionLink, EmptyState, PageShell, TopBar, formFieldClassName, formLabelClassName, formSelectClassName, secondaryButtonClassName } from '@/components/ui';
 import { WorkoutCard, WorkoutCardFooter, WorkoutCardGrid, WorkoutCardHeader, WorkoutCardMeta, WorkoutCardProfile, WorkoutCardSummary } from '@/components/library/WorkoutCard';
-import { MetricText } from '@/components/tempo/MetricText';
+import { MetricPair } from '@/components/tempo/MetricPair';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { getCurrentUser } from '@/lib/auth-session';
 import { getRequestTimeZone } from '@/lib/request-time-zone';
@@ -58,22 +58,15 @@ export default async function AthleteActivityPage({ searchParams }: {
       </form>
 
       <dl aria-label={totalsLabel} className="flex flex-wrap gap-x-6 gap-y-2 border-y border-[var(--border)] py-3 text-sm">
-        <div className="flex items-baseline gap-2">
-          <dt className="text-[var(--text-muted)]">Completed</dt>
-          <dd><MetricText>{activityFeed.count}</MetricText></dd>
-        </div>
-        <div className="flex items-baseline gap-2">
-          <dt className="text-[var(--text-muted)]">Duration</dt>
-          <dd><MetricText>{formatDuration(activityFeed.totals.durationSec)}</MetricText></dd>
-        </div>
-        <div className="flex items-baseline gap-2">
-          <dt className="text-[var(--text-muted)]">Load</dt>
-          <dd>
-            {activityFeed.totals.unknownLoad
-              ? <span>Unavailable for {activityFeed.totals.unknownLoad} {activityFeed.totals.unknownLoad === 1 ? 'activity' : 'activities'}</span>
-              : <MetricText>{activityFeed.totals.tss}&nbsp;TSS</MetricText>}
-          </dd>
-        </div>
+        <MetricPair inline label="Completed" value={activityFeed.count} />
+        <MetricPair inline label="Duration" value={formatDuration(activityFeed.totals.durationSec)} />
+        <MetricPair
+          inline
+          label="Load"
+          value={activityFeed.totals.unknownLoad
+            ? `Unavailable for ${activityFeed.totals.unknownLoad} ${activityFeed.totals.unknownLoad === 1 ? 'activity' : 'activities'}`
+            : `${activityFeed.totals.tss}\u00A0TSS`}
+        />
       </dl>
 
       {activityFeed.activities.length === 0 ? (

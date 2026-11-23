@@ -1,5 +1,6 @@
 'use client';
 
+import { MetricPair } from '@/components/tempo/MetricPair';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -140,7 +141,7 @@ export function ActivityImportForm() {
               ['Timezone source', preview.sourceFormat === 'fit' ? 'FIT Activity local timestamp' : preview.sourceFormat === 'gpx' ? 'Timed GPX trackpoints' : 'TCX start timestamp offset'],
               ['Duration', formatDuration(preview.activity.durationSec)],
               [preview.sourceFormat === 'gpx' ? 'Track distance' : 'Distance', preview.activity.distanceMeters === null ? 'Not recorded' : distanceLabel(preview.activity.distanceMeters)],
-            ].map(([label, value]) => <div key={label}><dt className="text-xs text-[var(--text-muted)]">{label}</dt><dd className="mt-1 break-words text-sm text-[var(--text)]">{value}</dd></div>)}
+            ].map(([label, value]) => <MetricPair key={label} label={label} value={value} />)}
           </dl>
           <p className="text-sm text-[var(--text-muted)]">{preview.sourceFormat === 'fit' ? 'Finish time comes from the FIT Session summary. Calendar placement uses the local completion date derived from the FIT Activity local timestamp.' : preview.sourceFormat === 'gpx' ? 'Start, finish, duration, and track distance come from timed GPS points. Tempo discards their coordinates after import and uses the trackpoint UTC offset for Calendar placement.' : 'Finish time is estimated from the recorded start time and activity duration. Calendar placement uses the activity’s local completion date.'}</p>
           {!preview.duplicate ? <fieldset className="space-y-2" aria-label="Activity pairing choice">

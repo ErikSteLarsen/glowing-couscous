@@ -39,6 +39,7 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from '@/components/tempo/Menu';
+import { MetricPair } from '@/components/tempo/MetricPair';
 import {
   Surface,
   sectionHeadingClassName,
@@ -671,20 +672,18 @@ function WeekSummaryPanel({ summary, className = '', compact = false }: { summar
     <aside aria-label="Week summary" className={`tile min-w-0 rounded-xl ${compact ? 'p-2.5' : 'p-3.5'} ${className}`}>
       <div className={compact ? 'flex flex-wrap items-center gap-x-4 gap-y-1.5' : 'space-y-3'}>
         <dl className={compact ? 'contents' : 'grid grid-cols-2 gap-3 xl:grid-cols-1'}>
-          <div className={compact ? 'flex items-baseline gap-1.5' : ''}>
-            <dt className="text-xs text-[var(--text-muted)]">Duration</dt>
-            <dd className="data text-sm text-[var(--text)]">
+          <MetricPair inline={compact} label="Duration" value={
+            <>
               {formatDuration(completed.durationSec)}
               <span className="text-[var(--text-muted)]"> / {formatDuration(planned.durationSec)}</span>
-            </dd>
-          </div>
-          <div className={compact ? 'flex items-baseline gap-1.5' : ''}>
-            <dt className="text-xs text-[var(--text-muted)]">TSS</dt>
-            <dd className="data text-sm text-[var(--text)]">
+            </>
+          } />
+          <MetricPair inline={compact} label="TSS" value={
+            <>
               {completed.unknownLoadSessions ? '—' : Math.round(completed.tss)}
               <span className="text-[var(--text-muted)]"> / {Math.round(planned.tss)}</span>
-            </dd>
-          </div>
+            </>
+          } />
         </dl>
         {completed.unknownLoadSessions > 0 ? <p className="text-xs text-[var(--text-muted)]">Load unavailable for {completed.unknownLoadSessions} activities</p> : null}
         <div className={compact ? 'flex min-w-[8rem] flex-1 items-center gap-2' : 'space-y-1.5'}>

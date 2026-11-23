@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
+import { MetricPair } from '@/components/tempo/MetricPair';
 import { sectionHeadingClassName, Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, getSegmentedChoiceClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import type { ImportableSession } from '@/lib/activity-import-service';
 import type { ImportedActivityFile } from '@/lib/activity-file-parser';
@@ -296,13 +297,13 @@ export function StravaImportPanel({
               ) : null}
               {activeDetail ? (
                 <>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <SummaryValue label="Original Strava sport" value={activeActivity.sportType} />
-                    <SummaryValue label="Duration" value={formatDuration(activeDetail.durationSec)} />
-                    <SummaryValue label="Distance" value={activeDetail.distanceMeters === null ? 'Not recorded' : `${(activeDetail.distanceMeters / 1000).toFixed(2)}\u00A0km`} />
-                    <SummaryValue label="Elevation gain" value={activeDetail.elevationGainMeters === null ? 'Not recorded' : `${Math.round(activeDetail.elevationGainMeters)}\u00A0m`} />
-                    {formatStravaMetadata(activeDetail.metadata).map(([label, value]) => <SummaryValue key={label} label={label} value={value} />)}
-                  </div>
+                  <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <MetricPair label="Original Strava sport" value={activeActivity.sportType} />
+                    <MetricPair label="Duration" value={formatDuration(activeDetail.durationSec)} />
+                    <MetricPair label="Distance" value={activeDetail.distanceMeters === null ? 'Not recorded' : `${(activeDetail.distanceMeters / 1000).toFixed(2)}\u00A0km`} />
+                    <MetricPair label="Elevation gain" value={activeDetail.elevationGainMeters === null ? 'Not recorded' : `${Math.round(activeDetail.elevationGainMeters)}\u00A0m`} />
+                    {formatStravaMetadata(activeDetail.metadata).map(([label, value]) => <MetricPair key={label} label={label} value={value} />)}
+                  </dl>
                   <label className="block">
                     <span className={formLabelClassName}>Activity name in Tempo</span>
                     <input className={formFieldClassName} value={activeDraft?.title ?? activeDetail.title} maxLength={140} onChange={(event) => updateDraft(activeActivity.id, { title: event.target.value })} />
@@ -352,10 +353,6 @@ export function StravaImportPanel({
       </dialog>
     </Surface>
   );
-}
-
-function SummaryValue({ label, value }: { label: string; value: string }) {
-  return <div className="min-w-0 border-l-2 border-[var(--border)] pl-3"><p className="text-[11px] font-medium text-[var(--text-muted)]">{label}</p><p className="metric-text mt-1 wrap-anywhere text-[15px] font-semibold text-[var(--text)]">{value}</p></div>;
 }
 
 export function formatStravaMetadata(metadata: Record<string, unknown>) {
