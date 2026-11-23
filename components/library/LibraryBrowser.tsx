@@ -2,10 +2,11 @@
 
 import { useDeferredValue, useMemo, useRef, useState } from 'react';
 import { SlidersHorizontal, X } from 'lucide-react';
-import { CollectionSearch, CollectionSummary, CollectionToolbar } from '@/components/library/CollectionToolbar';
+import { SearchField } from '@/components/tempo/SearchField';
+import { CollectionSummary, CollectionToolbar } from '@/components/library/CollectionToolbar';
 import { LibraryCard } from '@/components/library/LibraryCard';
 import { WorkoutCardGrid } from '@/components/library/WorkoutCard';
-import { buttonFocusClassName, compactSecondaryButtonClassName, EmptyState, formLabelClassName, formSelectClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { nativeDialogClassName, iconButtonClassName, buttonFocusClassName, compactSecondaryButtonClassName, EmptyState, formLabelClassName, formSelectClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import {
   CATALOG_CATEGORIES, CATALOG_LEVELS, CATALOG_SORTS, DURATION_BUCKETS, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, serializeCatalogQuery, withCatalogQuery,
   type CatalogEntry, type CatalogQuery, type CatalogSort, type DurationBucket,
@@ -68,7 +69,7 @@ export function LibraryBrowser({
   return (
     <div className="@container flex min-w-0 flex-col gap-5">
       <div role="search" aria-label="Filter workouts" className="flex flex-col gap-3">
-        <CollectionToolbar search={<CollectionSearch value={query.q} onChange={(q) => update({ q })} label="Search by name, focus or tag" placeholder="Search workouts" />}>
+        <CollectionToolbar search={<SearchField value={query.q} onChange={(event) => update({ q: event.target.value })} label="Search by name, focus or tag" placeholder="Search workouts" labelClassName="min-w-48 flex-1 @2xl:max-w-md" className="max-md:min-h-11" maxLength={80} autoComplete="off" />}>
           <button
             type="button"
             aria-haspopup="dialog"
@@ -97,12 +98,12 @@ export function LibraryBrowser({
       <dialog
         ref={filtersDialog}
         aria-labelledby="library-filters-title"
-        className="fixed inset-0 z-50 m-auto max-h-[calc(100dvh-2rem)] w-[min(36rem,calc(100%-2rem))] overflow-y-auto rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] p-0 text-[var(--text)] shadow-[var(--shadow-overlay)] backdrop:bg-[var(--overlay)]"
+        className={`${nativeDialogClassName} w-[min(36rem,calc(100%-2rem))] border-[var(--border-strong)]`}
         onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close(); }}
       >
         <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4">
           <h2 id="library-filters-title" className="text-lg font-semibold text-[var(--text)]">Filters</h2>
-          <button type="button" aria-label="Close filters" className={`inline-flex size-10 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--raised)] hover:text-[var(--text)] max-md:size-11 ${buttonFocusClassName}`} onClick={() => filtersDialog.current?.close()}>
+          <button type="button" aria-label="Close filters" className={iconButtonClassName} onClick={() => filtersDialog.current?.close()}>
             <X aria-hidden="true" size={18} strokeWidth={1.7} />
           </button>
         </div>

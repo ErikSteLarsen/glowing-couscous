@@ -1,7 +1,8 @@
+import { SearchField } from '@/components/tempo/SearchField';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ActionLink, EmptyState, PageShell, TopBar, formFieldClassName, formLabelClassName, formSelectClassName, secondaryButtonClassName } from '@/components/ui';
+import { ActionLink, EmptyState, PageShell, TopBar, formLabelClassName, formSelectClassName, secondaryButtonClassName } from '@/components/ui';
 import { WorkoutCard, WorkoutCardFooter, WorkoutCardGrid, WorkoutCardHeader, WorkoutCardMeta, WorkoutCardProfile, WorkoutCardSummary } from '@/components/library/WorkoutCard';
 import { MetricPair } from '@/components/tempo/MetricPair';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
@@ -42,10 +43,7 @@ export default async function AthleteActivityPage({ searchParams }: {
       />
 
       <form action="/athlete/activity" className="flex flex-col gap-3 sm:flex-row sm:items-end max-md:[&_:is(input,select,button,a)]:min-h-11">
-        <label className="min-w-0 flex-1 space-y-2">
-          <span className={formLabelClassName}>Find a completed session</span>
-          <input key={filters.query} type="search" name="q" defaultValue={filters.query} maxLength={100} placeholder="Search by workout name" className={formFieldClassName} />
-        </label>
+        <SearchField key={filters.query} name="q" defaultValue={filters.query} maxLength={100} placeholder="Search by workout name" label="Find a completed session" visibleLabel labelClassName="min-w-0 flex-1 space-y-2" />
         <label className="space-y-2 sm:w-44">
           <span className={formLabelClassName}>Sport</span>
           <select key={filters.sport ?? ''} name="sport" defaultValue={filters.sport ?? ''} className={formSelectClassName}>

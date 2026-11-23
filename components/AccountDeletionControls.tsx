@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { signIn, signOut } from 'next-auth/react';
 import { clearClientRecovery, loadSignedOutDocument } from '@/lib/client-recovery-cleanup';
-import { dangerButtonClassName, formFieldClassName, secondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
+import { dangerTextClassName, dangerButtonClassName, formFieldClassName, secondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
 
 export function AccountDeletionControls({ userId, email, hasPassword, hasGoogle }: { userId: number; email: string; hasPassword: boolean; hasGoogle: boolean }) {
   const [open, setOpen] = useState(false);
@@ -89,7 +89,7 @@ export function AccountDeletionControls({ userId, email, hasPassword, hasGoogle 
       </div>
       {hasPassword ? <label className="block space-y-2 text-sm"><span>Current password</span><input autoComplete="current-password" type="password" required disabled={pending} value={password} onChange={(event) => setPassword(event.target.value)} className={formFieldClassName} /></label> : hasGoogle ? <div className="space-y-2"><p className="text-sm text-[var(--text-secondary)]">Confirm your identity with Google within five minutes of deletion. Choose this account, then return here and open account deletion again.</p><button type="button" className={secondaryButtonClassName} disabled={pending} onClick={confirmGoogle}>Confirm identity with Google</button></div> : <p role="alert">No supported identity confirmation method is available for this account.</p>}
       <label className="block space-y-2 text-sm"><span>Type DELETE to confirm permanent deletion</span><input autoComplete="off" spellCheck={false} required disabled={pending} value={confirmation} onChange={(event) => setConfirmation(event.target.value)} className={formFieldClassName} /></label>
-      {error ? <p role="alert" className="text-sm text-[var(--status-danger)]">{error}</p> : null}
+      {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
       <div className="flex flex-wrap gap-3"><button type="submit" disabled={pending || sharedLinks === null || confirmation !== 'DELETE' || (!hasPassword && !hasGoogle)} className={dangerButtonClassName}>{pending ? 'Working…' : 'Permanently delete my account'}</button><button type="button" disabled={pending} onClick={cancel} className={secondaryButtonClassName}>Cancel</button></div>
     </form>}
   </div>;

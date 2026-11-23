@@ -26,18 +26,20 @@ const standardButtonBaseClassName =
   `inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-[background-color,border-color,color,transform] active:scale-[0.98] ${buttonFocusClassName} ${buttonDisabledClassName}`;
 const compactButtonBaseClassName =
   `inline-flex min-h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-[background-color,border-color,color] ${buttonFocusClassName} ${buttonDisabledClassName}`;
-export const primaryButtonClassName =
-  `${standardButtonBaseClassName} bg-[var(--brand)] text-[var(--signal-ink)] control-hover:bg-[var(--signal-hover)]`;
-export const secondaryButtonClassName =
-  `${standardButtonBaseClassName} border border-[var(--border-strong)] bg-transparent text-[var(--text)] control-hover:bg-[var(--raised)]`;
-export const dangerButtonClassName =
-  `${standardButtonBaseClassName} border border-[var(--danger-border)] bg-[var(--danger-tint)] text-[var(--status-danger)] control-hover:bg-[var(--danger-tint-strong)] focus-visible:ring-[var(--status-danger)]`;
-export const compactPrimaryButtonClassName =
-  `${compactButtonBaseClassName} bg-[var(--brand)] text-[var(--signal-ink)] control-hover:bg-[var(--signal-hover)]`;
+const primaryButtonToneClassName =
+  'bg-[var(--brand)] text-[var(--signal-ink)] control-hover:bg-[var(--signal-hover)]';
+const secondaryButtonToneClassName =
+  'border border-[var(--border-strong)] bg-transparent control-hover:bg-[var(--raised)]';
+const dangerButtonToneClassName =
+  'border border-[var(--danger-border)] bg-[var(--danger-tint)] text-[var(--status-danger)] control-hover:bg-[var(--danger-tint-strong)] focus-visible:ring-[var(--status-danger)]';
+
+export const primaryButtonClassName = `${standardButtonBaseClassName} ${primaryButtonToneClassName}`;
+export const secondaryButtonClassName = `${standardButtonBaseClassName} ${secondaryButtonToneClassName} text-[var(--text)]`;
+export const dangerButtonClassName = `${standardButtonBaseClassName} ${dangerButtonToneClassName}`;
+export const compactPrimaryButtonClassName = `${compactButtonBaseClassName} ${primaryButtonToneClassName}`;
 export const compactSecondaryButtonClassName =
-  `${compactButtonBaseClassName} border border-[var(--border-strong)] bg-transparent text-[var(--text-secondary)] control-hover:bg-[var(--raised)] control-hover:text-[var(--text)]`;
-export const compactDangerButtonClassName =
-  `${compactButtonBaseClassName} border border-[var(--danger-border)] bg-[var(--danger-tint)] text-[var(--status-danger)] control-hover:bg-[var(--danger-tint-strong)] focus-visible:ring-[var(--status-danger)]`;
+  `${compactButtonBaseClassName} ${secondaryButtonToneClassName} text-[var(--text-secondary)] control-hover:text-[var(--text)]`;
+export const compactDangerButtonClassName = `${compactButtonBaseClassName} ${dangerButtonToneClassName}`;
 export const compactListButtonClassName =
   `flex min-h-8 w-full items-center justify-start rounded-lg px-2.5 py-1.5 text-left text-[13px] text-[var(--text)] transition-colors control-hover:bg-[var(--raised)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
 export const dangerTextClassName = 'text-sm text-[var(--status-danger)]';
@@ -49,11 +51,15 @@ export const noticeBoxClassNames = {
   warning: `${noticeBoxClassName} border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] text-[var(--text)]`,
   danger: `${noticeBoxClassName} border-[var(--danger-border)] bg-[var(--danger-tint)] text-[var(--status-danger)]`,
 } as const;
+export const overlayPanelClassName = 'bg-[var(--surface)] text-[var(--text)] shadow-[var(--shadow-overlay)]';
+export const centeredDialogClassName = `tempo-alert-dialog h-fit w-[calc(100%-2rem)] rounded-2xl border border-[var(--border)] p-5 ${overlayPanelClassName}`;
+export const nativeDialogClassName = `fixed inset-0 z-50 m-auto max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl border p-0 backdrop:bg-[var(--overlay)] ${overlayPanelClassName}`;
+export const sheetDialogClassName = `fixed inset-x-0 bottom-0 mx-auto grid max-h-[calc(100dvh-1rem)] w-full rounded-t-2xl border border-[var(--border)] outline-none md:inset-y-0 md:my-auto md:h-fit md:rounded-2xl ${overlayPanelClassName}`;
+export const dialogActionsClassName = 'flex flex-wrap justify-end gap-2';
 
 export function ghostButtonClassName(size: 'default' | 'compact') {
-  return size === 'compact'
-    ? `inline-flex min-h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-[13px] font-medium text-[var(--brand)] transition-colors control-hover:bg-[var(--brand-tint)] control-hover:text-[var(--text)] ${buttonFocusClassName}`
-    : `inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--brand)] transition-colors control-hover:bg-[var(--brand-tint)] control-hover:text-[var(--text)] ${buttonFocusClassName}`;
+  const sizing = size === 'compact' ? 'min-h-8 gap-1.5 px-2 py-1.5 text-[13px]' : 'min-h-10 gap-2 px-2.5 py-2 text-sm';
+  return `inline-flex items-center justify-center whitespace-nowrap rounded-lg font-medium text-[var(--brand)] transition-colors control-hover:bg-[var(--brand-tint)] control-hover:text-[var(--text)] ${sizing} ${buttonFocusClassName} ${buttonDisabledClassName}`;
 }
 
 /** Icon-only round step button, as used for period navigation. */

@@ -4,7 +4,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, Dia
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
-import { Surface, dangerButtonClassName, dangerTextClassName, primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName, successTextClassName } from '@/components/ui';
+import { centeredDialogClassName, Surface, dangerButtonClassName, dangerTextClassName, primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName, successTextClassName } from '@/components/ui';
 import { withBackOrigin } from '@/lib/app-navigation';
 import type { StravaConnectionSummary } from '@/lib/strava-service';
 
@@ -76,7 +76,7 @@ export function StravaConnectionSettings({
           </div>
           <DialogTrigger className={`${secondaryButtonClassName} max-md:min-h-11`}>Manage Strava</DialogTrigger>
         </div>
-        <DialogContent className="tempo-alert-dialog h-fit w-[calc(100%-2rem)] max-w-md space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]">
+        <DialogContent className={`${centeredDialogClassName} max-w-md space-y-4`}>
           <div>
             <DialogTitle className={sectionHeadingClassName}>Strava connection</DialogTitle>
             <DialogDescription className="mt-1 text-sm text-[var(--text-secondary)]">{status}</DialogDescription>

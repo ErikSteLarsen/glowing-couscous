@@ -10,7 +10,6 @@ import {
   sectionHeadingClassName,
   BackButton,
   Badge,
-  buttonFocusClassName,
   compactPrimaryButtonClassName,
   compactSecondaryButtonClassName,
   EmptyState,
@@ -27,7 +26,7 @@ import { WorkoutBuilder } from '@/components/WorkoutBuilder';
 import { GuidedWorkoutForm, type GuidedWorkoutInfo } from '@/components/GuidedWorkoutForm';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { ShareLinkResult, useShareLink } from '@/components/ShareLinkButton';
-import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
+import { Menu, MenuContent, MenuItem, MenuTrigger, OverflowMenuTrigger } from '@/components/tempo/Menu';
 import { formatDuration, formatDurationExact } from '@/lib/format-duration';
 import {
   createEmptySessionEditorDraft,
@@ -44,7 +43,8 @@ import type { PerformanceProfile } from '@/lib/performance-profile';
 import { useDraftRecovery } from '@/components/useDraftRecovery';
 import { DraftRecoveryStatus } from '@/components/DraftRecoveryNotice';
 import { DraftsPopover } from '@/components/DraftsPopover';
-import { CollectionSearch, CollectionSummary, CollectionToolbar } from '@/components/library/CollectionToolbar';
+import { SearchField } from '@/components/tempo/SearchField';
+import { CollectionSummary, CollectionToolbar } from '@/components/library/CollectionToolbar';
 import { WorkoutCard, WorkoutCardFooter, WorkoutCardGrid, WorkoutCardHeader, WorkoutCardMeta, WorkoutCardProfile, WorkoutCardSummary } from '@/components/library/WorkoutCard';
 import { describeWorkoutDraft, isWorkoutDraftRedundant, parseWorkoutRecovery } from '@/lib/workout-recovery';
 import { athleteWorkoutsHref, type WorkoutTab } from '@/lib/athlete-workouts-navigation';
@@ -386,7 +386,7 @@ export function WorkoutLibraryClient({
           <h2 id="workout-library-title" className={sectionHeadingClassName}>Workout library</h2>
           {typeof listIntro === 'function' ? null : draftsControl}
         </div>}
-        <CollectionToolbar search={<CollectionSearch value={filterText} onChange={setFilterText} label="Search by name or notes" placeholder="Search workouts" />}>
+        <CollectionToolbar search={<SearchField value={filterText} onChange={(event) => setFilterText(event.target.value)} label="Search by name or notes" placeholder="Search workouts" labelClassName="min-w-48 flex-1 @2xl:max-w-md" className="max-md:min-h-11" maxLength={80} autoComplete="off" />}>
           {newWorkoutAction}
         </CollectionToolbar>
         {role === 'ATHLETE' && guidedFormOpen ? <GuidedWorkoutForm onCancel={() => setGuidedFormOpen(false)} onGenerated={(nextDraft, info) => {
@@ -471,13 +471,9 @@ export function WorkoutLibraryClient({
             <Badge tone="brand">{formatDurationExact(metrics.durationSec)}</Badge>
             {selectedWorkoutId ? (
               <Menu>
-                <MenuTrigger
+                <OverflowMenuTrigger
                   disabled={isPending}
-                  aria-label="More workout actions"
-                  className={`inline-flex size-10 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors control-hover:bg-[var(--raised)] control-hover:text-[var(--text)] max-md:size-11 disabled:opacity-50 ${buttonFocusClassName}`}
-                >
-                  <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
-                </MenuTrigger>
+                  aria-label="More workout actions" />
                 <MenuContent align="end">
                   <MenuItem destructive onSelect={() => deleteWorkout()}>
                     <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />

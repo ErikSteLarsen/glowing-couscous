@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { formatStravaMetadata, StravaImportPanel } from '@/components/StravaImportPanel';
 import { MetricPair } from '@/components/tempo/MetricPair';
-import { successTextClassName, sectionHeadingClassName, EmptyState, Surface, buttonFocusClassName, dangerButtonClassName, dangerTextClassName, formFieldClassName, formLabelClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { successTextClassName, sectionHeadingClassName, EmptyState, Surface, buttonFocusClassName, dangerButtonClassName, dangerTextClassName, formFieldClassName, formLabelClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName, formSelectClassName } from '@/components/ui';
 import { parseActivityFile, type ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { ImportableSession, ImportedActivityHistory } from '@/lib/activity-import-service';
 import type { StravaConnectionSummary } from '@/lib/strava-service';
@@ -231,7 +231,7 @@ export function ActivityImportClient({
                   <label className="block">
                   <span className={formLabelClassName}>Same-sport session to complete</span>
                     <select
-                      className={`${formFieldClassName} max-md:min-h-11`}
+                      className={`${formSelectClassName} max-md:min-h-11`}
                       value={draft.plannedSessionId ?? ''}
                       onChange={(event) => updateDraft(draft.key, { plannedSessionId: event.target.value ? Number(event.target.value) : null })}
                     >

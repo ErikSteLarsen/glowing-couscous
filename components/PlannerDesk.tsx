@@ -1,5 +1,6 @@
 'use client';
 
+import { SearchField } from '@/components/tempo/SearchField';
 import { addMonths, format, parseISO, startOfMonth, startOfWeek, subMonths } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -26,9 +27,13 @@ import {
   formFieldClassName,
   formLabelClassName,
   formSelectClassName,
+  getSwitchOptionClassName,
+  ghostButtonClassName,
+  iconButtonClassName,
   primaryButtonClassName,
   Surface,
   successTextClassName,
+  switchTrackClassName,
 } from '@/components/ui';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { formatDuration } from '@/lib/format-duration';
@@ -544,15 +549,11 @@ function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSo
         </div>
         <Search aria-hidden="true" className="mt-1 h-5 w-5 text-[var(--color-liquid)]" />
       </div>
-      <label className="relative mt-3 block">
-        <span className="sr-only">Search workouts and templates</span>
-        <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
-        <input type="search" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Search by name or sport" className={`${formFieldClassName} pl-9`} />
-      </label>
-      <div role="tablist" aria-label="Planner source type" className="mt-3 flex overflow-x-auto border-b border-[var(--nav-border)]">
+      <SearchField label="Search workouts and templates" labelClassName="mt-3" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Search by name or sport" />
+      <div role="tablist" aria-label="Planner source type" className={`${switchTrackClassName} mt-3 max-w-full overflow-x-auto`}>
         {tabs.map((tab) => {
           const count = sources.filter((source) => source.kind === tab).length;
-          return <button key={tab} type="button" role="tab" aria-selected={sourceTab === tab} onClick={() => onTabChange(tab)} className={`min-h-9 shrink-0 border-b-2 px-2.5 text-xs font-semibold capitalize transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${sourceTab === tab ? 'border-[var(--brand)] text-[var(--brand)] hover:bg-[var(--raised)]' : 'border-transparent text-[var(--nav-muted)] hover:text-[var(--nav-text)]'}`}>{tab === 'training-plan' ? 'Plans' : `${tab}s`} <span className="font-normal">{count}</span></button>;
+          return <button key={tab} type="button" role="tab" aria-selected={sourceTab === tab} onClick={() => onTabChange(tab)} className={`${getSwitchOptionClassName(sourceTab === tab)} shrink-0 gap-1 capitalize`}>{tab === 'training-plan' ? 'Plans' : `${tab}s`} <span className="font-normal">{count}</span></button>;
         })}
       </div>
       <div className="mt-3 space-y-2">
@@ -593,9 +594,9 @@ function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, t
           <p className="mt-1 text-sm text-[var(--text-secondary)]">{calendarInstruction(selectedSource)}</p>
         </div>
         <div className="flex items-center gap-1" role="group" aria-label="Month navigation">
-          <button type="button" aria-label="Previous month" onClick={() => onNavigate(-1)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ChevronLeft aria-hidden="true" className="h-4 w-4" /></button>
-          <button type="button" onClick={() => onNavigate(0)} className="min-h-8 rounded-lg px-2.5 text-xs font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">This month</button>
-          <button type="button" aria-label="Next month" onClick={() => onNavigate(1)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ChevronRight aria-hidden="true" className="h-4 w-4" /></button>
+          <button type="button" aria-label="Previous month" onClick={() => onNavigate(-1)} className={iconButtonClassName}><ChevronLeft aria-hidden="true" className="h-4 w-4" /></button>
+          <button type="button" onClick={() => onNavigate(0)} className={ghostButtonClassName('compact')}>This month</button>
+          <button type="button" aria-label="Next month" onClick={() => onNavigate(1)} className={iconButtonClassName}><ChevronRight aria-hidden="true" className="h-4 w-4" /></button>
         </div>
       </div>
       {selectedSource?.kind === 'template' && selectedSource.cadence !== 'day' ? <div className="mt-3 flex flex-wrap items-center gap-3">

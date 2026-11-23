@@ -2,7 +2,7 @@
 
 import { History } from 'lucide-react';
 import { Popover, PopoverContent, PopoverDescription, PopoverTitle, PopoverTrigger } from '@ui-sdk/react/popover';
-import { buttonFocusClassName, compactSecondaryButtonClassName, ghostButtonClassName } from '@/components/ui';
+import { overlayPanelClassName, buttonFocusClassName, compactSecondaryButtonClassName, ghostButtonClassName } from '@/components/ui';
 import { formatDraftAge } from '@/lib/draft-recovery';
 
 export type DraftEntry = { key: string; name: string; kind: string; savedAt: number };
@@ -30,7 +30,7 @@ export function DraftsPopover({ drafts, now, disabled = false, onRestore, onDisc
         align="end"
         sideOffset={6}
         collisionPadding={12}
-        className="z-50 m-0 w-[min(24rem,calc(100vw-1.5rem))] rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] p-0 text-[var(--text)] shadow-[var(--shadow-overlay)]"
+        className="z-50 m-0 w-[min(24rem,calc(100vw-1.5rem))] rounded-xl border border-[var(--border-strong)] ${overlayPanelClassName} p-0"
       >
         <div className="border-b border-[var(--border)] px-4 py-3">
           <PopoverTitle className="text-sm font-semibold">{count}</PopoverTitle>

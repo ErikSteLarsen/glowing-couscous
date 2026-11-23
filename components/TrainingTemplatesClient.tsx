@@ -1,10 +1,13 @@
 'use client';
 
+import { AlertDialog } from '@ui-sdk/react/alert-dialog';
+import { ConfirmationDialogContent } from '@/components/tempo/ConfirmationDialogContent';
+import { SearchField } from '@/components/tempo/SearchField';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowDown, ArrowUp, Copy, Ellipsis, Plus, Trash2 } from 'lucide-react';
-import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/tempo/Menu';
-import { sectionHeadingClassName, ActionLink, buttonFocusClassName, Surface, EmptyState, primaryButtonClassName, secondaryButtonClassName, compactSecondaryButtonClassName, compactDangerButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, dangerTextClassName, successTextClassName } from '@/components/ui';
+import { ArrowDown, ArrowUp, Copy, Plus, Trash2 } from 'lucide-react';
+import { Menu, MenuContent, MenuItem, MenuSeparator, OverflowMenuTrigger } from '@/components/tempo/Menu';
+import { sectionHeadingClassName, ActionLink, buttonFocusClassName, Surface, EmptyState, primaryButtonClassName, secondaryButtonClassName, compactSecondaryButtonClassName, compactDangerButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, dangerTextClassName, successTextClassName, formTextareaClassName } from '@/components/ui';
 import { parseTemplateRoutine, ROUTINE_DAYS } from '@/lib/template-routine';
 import { getSportLabel } from '@/lib/sport';
 import { getCalendarPlacementHref } from '@/lib/calendar-navigation';
@@ -13,6 +16,7 @@ import { formatDuration } from '@/lib/format-duration';
 type Template = { id: number; name: string; summary: string | null; routineJson: string };
 type Workout = { id: number; title: string; sport: string; durationSec: number };
 type Selection = { key: number; weekday: number; workoutId: number };
+type Confirmation = { kind: 'discard' } | { kind: 'delete'; template: Template };
 type Draft = { id?: number; name: string; summary: string; entries: Selection[] };
 
 export function TrainingTemplatesClient({ templates, workouts }: { templates: Template[]; workouts: Workout[] }) {
@@ -20,6 +24,10 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
   const [draft, setDraft] = useState<Draft | null>(null);
   const [filter, setFilter] = useState('');
   const [busy, setBusy] = useState(false);
+  const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const confirmationTrigger = useRef<HTMLElement | null>(null);
+  const newTemplateButton = useRef<HTMLButtonElement>(null);
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
   const [workoutId, setWorkoutId] = useState(workouts[0]?.id ?? 0);
   const [weekdays, setWeekdays] = useState<number[]>([0]);
@@ -35,7 +43,6 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
   }, [draft]);
 
   function edit(template?: Template) {
-    if (draft && !window.confirm('Discard your unsaved template changes?')) return;
     const routine = parseTemplateRoutine(template?.routineJson);
     setDraft({ id: template?.id, name: template?.name ?? '', summary: template?.summary ?? '', entries: routine?.entries.map(entry => ({ key: nextKey.current++, weekday: entry.weekday, workoutId: entry.workoutId })) ?? [] });
     setNotice(null);
@@ -50,6 +57,10 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
       const response = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error ?? 'Could not save your changes. Try again.');
+      if (method === 'DELETE') {
+        confirmationTrigger.current = null;
+        setConfirmationOpen(false);
+      }
       if (method === 'PATCH' || (method === 'POST' && body)) setDraft(null);
       setNotice({ text: method === 'DELETE' ? 'Template deleted. Calendar sessions are kept.' : path.endsWith('/duplicate') ? 'Template duplicated.' : 'Template saved. Choose a week or month in Calendar to apply it.', error: false });
       router.refresh();
@@ -72,18 +83,22 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
 
   const visible = templates.filter(template => `${template.name} ${template.summary ?? ''}`.toLowerCase().includes(filter.toLowerCase().trim()));
   return <div className="space-y-6">
-    {notice && !draft && <p role={notice.error ? 'alert' : 'status'} className={notice.error ? dangerTextClassName : successTextClassName}>{notice.text}</p>}
+    {notice && !draft && !confirmationOpen && <p role={notice.error ? 'alert' : 'status'} className={notice.error ? dangerTextClassName : successTextClassName}>{notice.text}</p>}
     {draft ? <Surface className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 ref={editorHeading} tabIndex={-1} className={sectionHeadingClassName}>{draft.id ? 'Edit training template' : 'New training template'}</h2>
-        <button type="button" disabled={busy} className={`${secondaryButtonClassName} max-md:min-h-11`} onClick={() => { if (window.confirm('Discard your unsaved template changes?')) setDraft(null); }}>Cancel</button>
+        <button type="button" disabled={busy} className={`${secondaryButtonClassName} max-md:min-h-11`} onClick={(event) => {
+          confirmationTrigger.current = event.currentTarget;
+          setConfirmation({ kind: 'discard' });
+          setConfirmationOpen(true);
+        }}>Cancel</button>
       </div>
       <fieldset disabled={busy} className="space-y-6 min-w-0">
         <div className="space-y-3">
           <label className="block max-w-xl space-y-2"><span className={formLabelClassName}>Template name</span><input autoComplete="off" maxLength={160} value={draft.name} className={formFieldClassName} onChange={event => setDraft({ ...draft, name: event.target.value })} placeholder="Easy running and intervals" /></label>
           <details open={notesOpen} onToggle={event => setNotesOpen(event.currentTarget.open)}>
             <summary className={`-ml-2 inline-flex min-h-9 cursor-pointer list-none items-center rounded-lg px-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-md:min-h-11 [&::-webkit-details-marker]:hidden ${buttonFocusClassName}`}><span className="underline decoration-[var(--border)] underline-offset-4">Purpose or notes (optional)</span>{!notesOpen && draft.summary.trim() ? <span className="ml-1.5 font-normal text-[var(--text-muted)]">· Added</span> : null}</summary>
-            <label className="mt-2 block max-w-xl"><span className="sr-only">Purpose or notes (optional)</span><textarea maxLength={2000} value={draft.summary} rows={2} className={formFieldClassName} onChange={event => setDraft({ ...draft, summary: event.target.value })} placeholder="A relaxed base week with two interval days" /></label>
+            <label className="mt-2 block max-w-xl"><span className="sr-only">Purpose or notes (optional)</span><textarea maxLength={2000} value={draft.summary} rows={2} className={formTextareaClassName} onChange={event => setDraft({ ...draft, summary: event.target.value })} placeholder="A relaxed base week with two interval days" /></label>
           </details>
         </div>
         {workouts.length ? <div className="space-y-4 border-y border-[var(--border)] py-5">
@@ -110,7 +125,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
         {notice && <p role={notice.error ? 'alert' : 'status'} className={notice.error ? dangerTextClassName : successTextClassName}>{notice.text}</p>}
         <button type="button" disabled={!draft.name.trim() || !draft.entries.length || draft.entries.some(entry => !workouts.some(workout => workout.id === entry.workoutId))} className={`${primaryButtonClassName} max-md:min-h-11`} onClick={() => void mutate(draft.id ? `/api/athlete/templates/${draft.id}` : '/api/athlete/templates', draft.id ? 'PATCH' : 'POST', { name: draft.name, summary: draft.summary, entries: draft.entries.map(({ weekday, workoutId }) => ({ weekday, workoutId })) })}>{busy ? 'Saving…' : 'Save template'}</button>
       </fieldset>
-    </Surface> : <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">{templates.length ? <label className="flex-1 sm:max-w-md"><span className="sr-only">Search templates</span><input type="search" value={filter} onChange={event => setFilter(event.target.value)} className={formFieldClassName} placeholder="Search templates" /></label> : null}<button type="button" disabled={busy} className={`${primaryButtonClassName} max-md:min-h-11`} onClick={() => edit()}>New template</button></div>}
+    </Surface> : <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">{templates.length ? <SearchField label="Search templates" labelClassName="flex-1 sm:max-w-md" value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Search templates" /> : null}<button type="button" disabled={busy} className={`${primaryButtonClassName} max-md:min-h-11`} ref={newTemplateButton} onClick={() => edit()}>New template</button></div>}
     {!draft && (visible.length ? <div className="space-y-4">{visible.map(template => {
       const routine = parseTemplateRoutine(template.routineJson);
       const filledDays = routine ? ROUTINE_DAYS.flatMap((day, weekday) => {
@@ -125,16 +140,19 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
             <p className="text-sm text-[var(--text-muted)]">{routine ? `${routine.entries.length} ${routine.entries.length === 1 ? 'session' : 'sessions'} per week` : 'Invalid routine — edit and save again'}</p>
           </div>
           <Menu>
-            <MenuTrigger disabled={busy} aria-label={`More actions for ${template.name}`} className={`inline-flex size-10 shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors control-hover:bg-[var(--raised)] control-hover:text-[var(--text)] max-md:size-11 disabled:opacity-50 ${buttonFocusClassName}`}>
-              <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
-            </MenuTrigger>
+            <OverflowMenuTrigger id={`template-menu-${template.id}`} disabled={busy} aria-label={`More actions for ${template.name}`} />
             <MenuContent align="end">
               <MenuItem onSelect={() => void mutate(`/api/athlete/templates/${template.id}/duplicate`, 'POST')}>
                 <Copy aria-hidden="true" size={16} strokeWidth={1.8} />
                 Duplicate
               </MenuItem>
               <MenuSeparator />
-              <MenuItem destructive onSelect={() => { if (window.confirm(`Delete “${template.name}”? Sessions already on your calendar will remain.`)) void mutate(`/api/athlete/templates/${template.id}`, 'DELETE'); }}>
+              <MenuItem destructive onSelect={() => {
+                confirmationTrigger.current = document.getElementById(`template-menu-${template.id}`);
+                setNotice(null);
+                setConfirmation({ kind: 'delete', template });
+                setConfirmationOpen(true);
+              }}>
                 <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />
                 Delete…
               </MenuItem>
@@ -145,5 +163,35 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
         <div className="max-md:[&>a]:min-h-11"><ActionLink href={getCalendarPlacementHref(`template:${template.id}`)} size="compact">Apply to Calendar</ActionLink></div>
       </Surface>;
     })}</div> : <EmptyState title={templates.length ? 'No matching templates' : 'Build your first training routine'} description={templates.length ? 'Try a different search.' : 'Put saved workouts on the days you train. Days left empty add nothing when you apply it.'} />)}
+    <AlertDialog open={confirmationOpen} onOpenChange={(open, details) => {
+      if (busy) { details.cancel(); return; }
+      setConfirmationOpen(open);
+    }}>
+      {confirmation?.kind === 'discard' ? (
+        <ConfirmationDialogContent
+          title="Discard your unsaved template changes?"
+          description="Your changes will be lost."
+          cancelLabel="Keep editing"
+          confirmLabel="Discard changes"
+          finalFocus={() => confirmationTrigger.current ?? newTemplateButton.current}
+          onConfirm={() => {
+            confirmationTrigger.current = null;
+            setDraft(null);
+            setConfirmationOpen(false);
+          }}
+        />
+      ) : confirmation?.kind === 'delete' ? (
+        <ConfirmationDialogContent
+          title={`Delete “${confirmation.template.name}”?`}
+          description="Sessions already on your calendar will remain."
+          cancelLabel="Keep template"
+          confirmLabel={busy ? 'Deleting…' : 'Delete template'}
+          finalFocus={() => confirmationTrigger.current ?? newTemplateButton.current}
+          pending={busy}
+          error={notice?.error ? notice.text : undefined}
+          onConfirm={() => void mutate(`/api/athlete/templates/${confirmation.template.id}`, 'DELETE')}
+        />
+      ) : null}
+    </AlertDialog>
   </div>;
 }

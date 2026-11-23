@@ -1,6 +1,8 @@
 'use client';
 
 import type { ComponentProps } from 'react';
+import { Ellipsis } from 'lucide-react';
+import { overlayPanelClassName, buttonFocusClassName } from '@/components/ui';
 import {
   MenuCheckboxItem as SdkCheckboxItem,
   MenuContent as SdkContent,
@@ -9,9 +11,21 @@ import {
   MenuItemIndicator as SdkItemIndicator,
   MenuRadioItem as SdkRadioItem,
   MenuSeparator as SdkSeparator,
+  MenuTrigger as SdkTrigger,
 } from '@ui-sdk/react/menu';
 
 export { Menu, MenuGroup, MenuRadioGroup, MenuTrigger } from '@ui-sdk/react/menu';
+
+export function OverflowMenuTrigger({ compact = false, className = '', ...props }: Omit<ComponentProps<typeof SdkTrigger>, 'children'> & { compact?: boolean }) {
+  return (
+    <SdkTrigger
+      className={`inline-flex ${compact ? 'size-8' : 'size-10'} shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors control-hover:bg-[var(--raised)] control-hover:text-[var(--text)] max-md:size-11 disabled:opacity-50 ${buttonFocusClassName} ${className}`}
+      {...props}
+    >
+      <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
+    </SdkTrigger>
+  );
+}
 
 /**
  * Tempo styling for the UI SDK Menu: a raised overlay with hairline rules,
@@ -25,7 +39,7 @@ export function MenuContent({ className = '', ...props }: ComponentProps<typeof 
     <SdkContent
       sideOffset={6}
       collisionPadding={12}
-      className={`z-50 m-0 min-w-56 rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] p-1.5 text-[var(--text)] shadow-[var(--shadow-overlay)] ${className}`}
+      className={`z-50 m-0 min-w-56 rounded-xl border border-[var(--border-strong)] ${overlayPanelClassName} p-1.5 ${className}`}
       {...props}
     />
   );

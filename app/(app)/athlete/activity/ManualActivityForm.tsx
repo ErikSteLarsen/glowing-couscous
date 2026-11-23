@@ -2,7 +2,7 @@
 
 import { useRef, useState, useSyncExternalStore, type SubmitEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { ActionLink, buttonFocusClassName, formFieldClassName, formLabelClassName, formSelectClassName, formTextareaClassName, primaryButtonClassName, successTextClassName } from '@/components/ui';
+import { dangerTextClassName, ActionLink, buttonFocusClassName, formFieldClassName, formLabelClassName, formSelectClassName, formTextareaClassName, primaryButtonClassName, successTextClassName } from '@/components/ui';
 import { formatDuration } from '@/lib/format-duration';
 import { SPORT_OPTIONS, getSportLabel } from '@/lib/sport';
 
@@ -140,7 +140,7 @@ export function ManualActivityForm({ today }: { today: string }) {
         {candidateState === 'idle' ? <p className="text-sm text-[var(--text-muted)]">Check for a planned session on this date, or keep the activity separate.</p> : null}
         {candidateState === 'idle' || candidateState === 'error' ? <button type="button" onClick={() => void loadCandidates(selectedSport, completedOn)} className={`min-h-11 rounded-lg text-sm text-[var(--brand)] underline underline-offset-4 hover:text-[var(--text)] ${buttonFocusClassName}`}>Check planned sessions</button> : null}
         {candidateState === 'loading' ? <p className="text-sm text-[var(--text-muted)]">Checking planned sessions…</p> : null}
-        {candidateState === 'error' ? <p role="alert" className="text-sm text-[var(--status-danger)]">Could not check planned sessions. Retry or keep this activity separate.</p> : null}
+        {candidateState === 'error' ? <p role="alert" className={dangerTextClassName}>Could not check planned sessions. Retry or keep this activity separate.</p> : null}
         {candidateState === 'ready' && candidates.length === 0 ? <p className="text-sm text-[var(--text-muted)]">No eligible planned session for this sport and date.</p> : null}
         {candidates.map((candidate) => <label key={candidate.id} className="flex items-center gap-2 text-sm text-[var(--text-secondary)] max-md:min-h-11"><input type="radio" name="pairing-choice" value={`session:${candidate.id}`} checked={pairingChoice === String(candidate.id)} onChange={() => setPairingChoice(String(candidate.id))} /><span>{candidate.title}&nbsp;· {candidate.date}&nbsp;· {candidate.plannedDurationSec > 0 ? `Planned ${formatDuration(candidate.plannedDurationSec)}` : 'No planned duration'}</span></label>)}
         <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] max-md:min-h-11"><input type="radio" name="pairing-choice" value="separate" checked={pairingChoice === 'separate'} onChange={() => setPairingChoice('separate')} /><span>Keep as a separate activity</span></label>
@@ -149,7 +149,7 @@ export function ManualActivityForm({ today }: { today: string }) {
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
         <button type="submit" disabled={pending || !pairingChoice || candidateState === 'loading'} className={`${primaryButtonClassName} max-md:min-h-11`}>{pending ? 'Saving activity…' : pairingChoice === 'separate' ? 'Save separate activity' : selectedCandidate ? 'Complete planned session' : 'Choose how to save'}</button>
         {saved ? <span role="status" className={successTextClassName}>Saved. <ActionLink href={saved.href} tone="ghost">Review {saved.title}</ActionLink></span> : null}
-        {error ? <p role="alert" className="text-sm text-[var(--status-danger)]">{error}</p> : null}
+        {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
       </div>
     </form>
   );

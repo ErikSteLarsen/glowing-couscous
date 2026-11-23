@@ -38,6 +38,7 @@ import {
   MenuRadioItem,
   MenuSeparator,
   MenuTrigger,
+  OverflowMenuTrigger,
 } from '@/components/tempo/Menu';
 import { MetricPair } from '@/components/tempo/MetricPair';
 import { SessionRowText } from '@/components/tempo/SessionRowText';
@@ -579,13 +580,9 @@ function SessionCard({
       {hasActions ? (
         // A sibling of the link: popups must stay outside clickable cards.
         <Menu>
-          <MenuTrigger
+          <OverflowMenuTrigger
             disabled={pending}
-            aria-label={`Actions for ${session.title}`}
-            className={`absolute right-1 top-1 inline-flex size-8 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors control-hover:bg-[var(--raised)] control-hover:text-[var(--text)] max-xl:size-10 max-md:size-11 disabled:opacity-50 ${buttonFocusClassName}`}
-          >
-            <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
-          </MenuTrigger>
+            aria-label={`Actions for ${session.title}`} compact className="absolute right-1 top-1 max-xl:size-10" />
           <MenuContent align="end">
             {session.canReschedule ? (
               <MenuItem onSelect={() => setMoving(true)}>

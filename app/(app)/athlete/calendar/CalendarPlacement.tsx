@@ -1,9 +1,10 @@
 'use client';
 
+import { SearchField } from '@/components/tempo/SearchField';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useRef, useState, useTransition } from 'react';
-import { Check, ChevronDown, CircleAlert, Plus, Search, X } from 'lucide-react';
+import { Check, ChevronDown, CircleAlert, Plus, X } from 'lucide-react';
 
 import {
   dangerTextClassName,
@@ -228,11 +229,7 @@ export function CalendarPlacement({
         ) : (
           <>
             {items.length > 5 ? (
-              <label className="relative block">
-                <span className="sr-only">Search {noun}s</span>
-                <Search aria-hidden="true" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${noun}s`} className={`${formFieldClassName} pl-9 max-md:min-h-11`} />
-              </label>
+              <SearchField label={`Search ${noun}s`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${noun}s`} className="max-md:min-h-11" />
             ) : null}
             <ul className="flex flex-col divide-y divide-[var(--border)] max-h-[280px] overflow-y-auto rounded-xl border border-[var(--border)]" aria-label={`Saved ${noun}s`}>
               {visibleItems.map((item) => (

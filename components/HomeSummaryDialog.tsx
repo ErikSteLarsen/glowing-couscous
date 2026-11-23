@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { ChevronRight, X } from 'lucide-react';
 import { Dialog, DialogBackdrop, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@ui-sdk/react/dialog';
-import { buttonFocusClassName, iconButtonClassName, sectionHeadingClassName } from '@/components/ui';
+import { sheetDialogClassName, buttonFocusClassName, iconButtonClassName, sectionHeadingClassName } from '@/components/ui';
 
 /**
  * A Home summary tile that opens its full view in a dialog. The tile is the
@@ -46,7 +46,7 @@ export function HomeSummaryDialog({
         {summary}
       </DialogTrigger>
       <DialogBackdrop className="fixed inset-0 bg-black/60" />
-      <DialogContent className="fixed inset-x-0 bottom-0 mx-auto grid max-h-[calc(100dvh-1rem)] w-full max-w-3xl grid-rows-[auto_minmax(0,1fr)] rounded-t-2xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] shadow-[var(--shadow-overlay)] outline-none md:inset-y-0 md:my-auto md:h-fit md:max-h-[calc(100dvh-4rem)] md:w-[calc(100%-4rem)] md:rounded-2xl">
+      <DialogContent className={`${sheetDialogClassName} max-w-3xl grid-rows-[auto_minmax(0,1fr)] md:max-h-[calc(100dvh-4rem)] md:w-[calc(100%-4rem)]`}>
         <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-5 pt-5 pb-4">
           <div className="min-w-0">
             <DialogTitle className={sectionHeadingClassName}>{title ?? label}</DialogTitle>

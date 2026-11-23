@@ -9,6 +9,8 @@ import { getRideOs, GetTempoRideLink, RideAppInstallHelp, useRideAppLaunch } fro
 import { useCatalogRide } from '@/components/library/useCatalogRide';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
 import {
+  dangerTextClassName,
+  sheetDialogClassName,
   compactSecondaryButtonClassName, ghostButtonClassName, iconButtonClassName,
   primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName,
 } from '@/components/ui';
@@ -141,7 +143,7 @@ function StartControl({ workout, source, triggerClassName }: Props) {
             id={dialogId}
             initialFocus="content"
             finalFocus={() => triggerRef.current}
-            className="fixed inset-x-0 bottom-0 mx-auto grid max-h-[calc(100dvh-1rem)] w-full max-w-md grid-rows-[auto_minmax(0,1fr)_auto] rounded-t-2xl border border-[var(--border)] bg-[var(--surface)] px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-[var(--text)] shadow-[var(--shadow-overlay)] outline-none md:inset-y-0 md:my-auto md:h-fit md:max-h-[calc(100dvh-2rem)] md:rounded-2xl"
+            className={`${sheetDialogClassName} max-w-md grid-rows-[auto_minmax(0,1fr)_auto] px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:max-h-[calc(100dvh-2rem)]`}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
@@ -177,7 +179,7 @@ function StartControl({ workout, source, triggerClassName }: Props) {
               ))}
               {busy ? <p role="status" className="text-sm text-[var(--text-secondary)]">Adding workout to today…</p> : null}
               {catalog.preparation.kind === 'error' ? (
-                <p role="alert" className="text-sm text-[var(--status-danger)]">{catalog.preparation.message}</p>
+                <p role="alert" className={dangerTextClassName}>{catalog.preparation.message}</p>
               ) : null}
               {preparedId !== null ? (
                 <p role="status" className="flex flex-wrap items-center gap-x-1.5 text-sm text-[var(--text-secondary)]">
