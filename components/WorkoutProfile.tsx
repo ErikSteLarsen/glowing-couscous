@@ -20,7 +20,9 @@ const ZONE_STEP = 0.155;
 
 function clockLabel(totalSec: number): string {
   const minutes = Math.round(totalSec / 60);
-  return minutes >= 60 ? `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}` : `${minutes}m`;
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  return minutes % 60 === 0 ? `${hours}h` : `${hours}h\u00A0${minutes % 60}m`;
 }
 
 /** Width of an element in CSS pixels, or null until it has been measured on the client. */
