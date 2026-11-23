@@ -116,7 +116,7 @@ export function ManualActivityForm({ today }: { today: string }) {
         <input name="durationMinutes" type="number" min={1} max={1440} step={1} className={`${formFieldClassName} max-md:min-h-11`} required />
       </label>
       <details className="border-y border-[var(--border)] sm:col-span-2" onInvalid={(event) => { event.currentTarget.open = true; }}>
-        <summary className={`min-h-11 cursor-pointer rounded-lg py-3 text-sm font-medium text-[var(--text)] ${buttonFocusClassName}`}>More details</summary>
+        <summary className={`min-h-11 rounded-lg py-3 text-sm font-medium text-[var(--text)] hover:bg-[var(--raised)] ${buttonFocusClassName}`}>More details</summary>
         <div className="grid gap-4 pb-4 sm:grid-cols-2">
           <label className="space-y-2">
             <span className={formLabelClassName}>Distance (km, optional)</span>
@@ -138,7 +138,7 @@ export function ManualActivityForm({ today }: { today: string }) {
       <fieldset className="space-y-2 sm:col-span-2" aria-label="Planned session choice">
         <legend className={formLabelClassName}>Planned session</legend>
         {candidateState === 'idle' ? <p className="text-sm text-[var(--text-muted)]">Check for a planned session on this date, or keep the activity separate.</p> : null}
-        {candidateState === 'idle' || candidateState === 'error' ? <button type="button" onClick={() => void loadCandidates(selectedSport, completedOn)} className={`min-h-11 rounded-lg text-sm text-[var(--brand)] underline underline-offset-4 ${buttonFocusClassName}`}>Check planned sessions</button> : null}
+        {candidateState === 'idle' || candidateState === 'error' ? <button type="button" onClick={() => void loadCandidates(selectedSport, completedOn)} className={`min-h-11 rounded-lg text-sm text-[var(--brand)] underline underline-offset-4 hover:text-[var(--text)] ${buttonFocusClassName}`}>Check planned sessions</button> : null}
         {candidateState === 'loading' ? <p className="text-sm text-[var(--text-muted)]">Checking planned sessions…</p> : null}
         {candidateState === 'error' ? <p role="alert" className="text-sm text-[var(--status-danger)]">Could not check planned sessions. Retry or keep this activity separate.</p> : null}
         {candidateState === 'ready' && candidates.length === 0 ? <p className="text-sm text-[var(--text-muted)]">No eligible planned session for this sport and date.</p> : null}

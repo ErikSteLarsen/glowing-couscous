@@ -86,7 +86,7 @@ export function StravaConnectionSettings({
           {feedback && 'notice' in feedback ? <p role="status" className={successTextClassName}>{feedback.notice}</p> : null}
           {previousRevocationFailed || (feedback && 'providerRevoked' in feedback && !feedback.providerRevoked) ? (
             <p className="text-sm text-[var(--text-secondary)]">
-              Strava did not confirm revocation. <a href="https://www.strava.com/settings/apps" target="_blank" rel="noreferrer" className="text-[var(--brand)] underline underline-offset-2">Remove Tempo in Strava settings</a>.
+              Strava did not confirm revocation. <a href="https://www.strava.com/settings/apps" target="_blank" rel="noreferrer" className="text-[var(--brand)] underline underline-offset-2 hover:text-[var(--text)]">Remove Tempo in Strava settings</a>.
             </p>
           ) : null}
           {isConnected ? (

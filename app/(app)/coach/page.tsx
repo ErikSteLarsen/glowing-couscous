@@ -54,7 +54,7 @@ export default async function CoachPage() {
               <article key={athlete.id} className="grid gap-4 border-b border-[var(--border)] py-4 last:border-b-0 lg:grid-cols-[1.4fr_0.8fr_1fr_auto] lg:items-center">
                 <a
                   href={`/coach/athletes/${athlete.id}?from=roster`}
-                  className="min-w-0 rounded-[8px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+                  className="min-w-0 rounded-[8px] hover:bg-[var(--raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     <h2 className="break-words text-[15px] font-semibold text-[var(--text)]">{athlete.name}</h2>

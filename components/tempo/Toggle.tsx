@@ -19,7 +19,7 @@ export function Toggle({
       aria-label={label}
       onCheckedChange={onChange}
       disabled={disabled}
-      className={`inline-flex min-h-11 w-[52px] shrink-0 items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
+      className={`inline-flex min-h-11 w-[52px] shrink-0 items-center justify-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] ${disabled ? 'opacity-50' : ''} ${checked ? 'control-hover:[&>span]:bg-[var(--signal-hover)]' : 'control-hover:[&>span]:bg-[var(--field-border-hover)]'}`}
     >
       <span
         className={`inline-flex h-7 w-12 items-center rounded-full p-1 transition ${checked ? 'bg-[var(--brand)]' : 'bg-[var(--field-border)]'}`}

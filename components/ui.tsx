@@ -15,7 +15,7 @@ export const sectionHeadingClassName = 'text-base font-medium tracking-[-0.01em]
 export const eyebrowClassName = 'text-xs font-medium text-[var(--text-muted)]';
 export const formLabelClassName = 'mb-1.5 block text-[13px] font-medium text-[var(--text-secondary)]';
 const fieldBaseClassName =
-  'w-full rounded-lg border border-[var(--field-border)] bg-[var(--field-surface)] px-3 text-sm text-[var(--text)] outline-none transition-colors placeholder:text-[var(--text-muted)] hover:border-[var(--field-border-hover)] focus:border-[var(--field-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--field-focus)]/40 disabled:cursor-not-allowed disabled:opacity-60';
+  'w-full rounded-lg border border-[var(--field-border)] bg-[var(--field-surface)] px-3 text-sm text-[var(--text)] outline-none transition-colors placeholder:text-[var(--text-muted)] control-hover:border-[var(--field-border-hover)] focus:border-[var(--field-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--field-focus)]/40 disabled:cursor-not-allowed disabled:opacity-60';
 export const formFieldClassName = `min-h-10 py-2 ${fieldBaseClassName}`;
 export const formSelectClassName = `${formFieldClassName} pr-10`;
 export const formTextareaClassName = `py-2.5 leading-relaxed ${fieldBaseClassName}`;
@@ -27,31 +27,31 @@ const standardButtonBaseClassName =
 const compactButtonBaseClassName =
   `inline-flex min-h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-[background-color,border-color,color] ${buttonFocusClassName} ${buttonDisabledClassName}`;
 export const primaryButtonClassName =
-  `${standardButtonBaseClassName} bg-[var(--brand)] text-[var(--signal-ink)] hover:bg-[var(--signal-hover)]`;
+  `${standardButtonBaseClassName} bg-[var(--brand)] text-[var(--signal-ink)] control-hover:bg-[var(--signal-hover)]`;
 export const secondaryButtonClassName =
-  `${standardButtonBaseClassName} border border-[var(--border-strong)] bg-transparent text-[var(--text)] hover:bg-[var(--raised)]`;
+  `${standardButtonBaseClassName} border border-[var(--border-strong)] bg-transparent text-[var(--text)] control-hover:bg-[var(--raised)]`;
 export const dangerButtonClassName =
-  `${standardButtonBaseClassName} border border-[var(--danger-border)] bg-[var(--danger-tint)] text-[var(--status-danger)] hover:bg-[var(--danger-tint-strong)] focus-visible:ring-[var(--status-danger)]`;
+  `${standardButtonBaseClassName} border border-[var(--danger-border)] bg-[var(--danger-tint)] text-[var(--status-danger)] control-hover:bg-[var(--danger-tint-strong)] focus-visible:ring-[var(--status-danger)]`;
 export const compactPrimaryButtonClassName =
-  `${compactButtonBaseClassName} bg-[var(--brand)] text-[var(--signal-ink)] hover:bg-[var(--signal-hover)]`;
+  `${compactButtonBaseClassName} bg-[var(--brand)] text-[var(--signal-ink)] control-hover:bg-[var(--signal-hover)]`;
 export const compactSecondaryButtonClassName =
-  `${compactButtonBaseClassName} border border-[var(--border-strong)] bg-transparent text-[var(--text-secondary)] hover:bg-[var(--raised)] hover:text-[var(--text)]`;
+  `${compactButtonBaseClassName} border border-[var(--border-strong)] bg-transparent text-[var(--text-secondary)] control-hover:bg-[var(--raised)] control-hover:text-[var(--text)]`;
 export const compactDangerButtonClassName =
-  `${compactButtonBaseClassName} border border-[var(--danger-border)] bg-[var(--danger-tint)] text-[var(--status-danger)] hover:bg-[var(--danger-tint-strong)] focus-visible:ring-[var(--status-danger)]`;
+  `${compactButtonBaseClassName} border border-[var(--danger-border)] bg-[var(--danger-tint)] text-[var(--status-danger)] control-hover:bg-[var(--danger-tint-strong)] focus-visible:ring-[var(--status-danger)]`;
 export const compactListButtonClassName =
-  `flex min-h-8 w-full items-center justify-start rounded-lg px-2.5 py-1.5 text-left text-[13px] text-[var(--text)] transition-colors hover:bg-[var(--raised)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `flex min-h-8 w-full items-center justify-start rounded-lg px-2.5 py-1.5 text-left text-[13px] text-[var(--text)] transition-colors control-hover:bg-[var(--raised)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
 export const dangerTextClassName = 'text-sm text-[var(--status-danger)]';
 export const successTextClassName = 'text-sm text-[var(--status-success)]';
 
 export function ghostButtonClassName(size: 'default' | 'compact') {
   return size === 'compact'
-    ? `inline-flex min-h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-[13px] font-medium text-[var(--brand)] transition-colors hover:bg-[var(--brand-tint)] hover:text-[var(--text)] ${buttonFocusClassName}`
-    : `inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--brand)] transition-colors hover:bg-[var(--brand-tint)] hover:text-[var(--text)] ${buttonFocusClassName}`;
+    ? `inline-flex min-h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-[13px] font-medium text-[var(--brand)] transition-colors control-hover:bg-[var(--brand-tint)] control-hover:text-[var(--text)] ${buttonFocusClassName}`
+    : `inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--brand)] transition-colors control-hover:bg-[var(--brand-tint)] control-hover:text-[var(--text)] ${buttonFocusClassName}`;
 }
 
 /** Icon-only round step button, as used for period navigation. */
 export const iconButtonClassName =
-  `inline-flex size-10 max-md:size-11 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[var(--text-secondary)] transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--raised)] hover:text-[var(--text)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
+  `inline-flex size-10 max-md:size-11 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[var(--text-secondary)] transition-colors control-hover:border-[var(--border-strong)] control-hover:bg-[var(--raised)] control-hover:text-[var(--text)] ${buttonFocusClassName} ${buttonDisabledClassName}`;
 
 export function getSegmentedChoiceClassName(selected: boolean, size: 'default' | 'compact' = 'default') {
   const sizeClassName =
@@ -61,15 +61,15 @@ export function getSegmentedChoiceClassName(selected: boolean, size: 'default' |
 
   return `flex min-w-0 flex-1 items-center justify-center border transition-colors ${sizeClassName} ${buttonFocusClassName} ${
     selected
-      ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)] text-[var(--field-selected-text)]'
-      : 'border-[var(--field-border)] bg-[var(--field-surface)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text)]'
+      ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)] text-[var(--field-selected-text)] control-hover:border-[var(--field-focus)]'
+      : 'border-[var(--field-border)] bg-[var(--field-surface)] text-[var(--text-secondary)] control-hover:border-[var(--border-strong)] control-hover:text-[var(--text)]'
   }`;
 }
 
 /** Segmented switch in the instrument style: a raised track with a lifted active option. */
 export function getSwitchOptionClassName(selected: boolean) {
   return `inline-flex min-h-8 items-center justify-center rounded-md px-3 text-[13px] font-medium transition-colors ${buttonFocusClassName} ${
-    selected ? 'bg-[var(--border-strong)] text-[var(--text)]' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+    selected ? 'bg-[var(--border-strong)] text-[var(--text)] control-hover:bg-[var(--selection)]' : 'text-[var(--text-muted)] control-hover:text-[var(--text)]'
   }`;
 }
 
@@ -99,8 +99,8 @@ export function AuthPageShell({ children }: { children: ReactNode }) {
 }
 
 
-const backTextClassName = `-ml-2 inline-flex min-h-10 max-w-full items-center gap-1.5 self-start rounded-lg px-2 text-[13px] font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-md:min-h-11 ${buttonFocusClassName}`;
-const backIconClassName = `inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-md:size-11 ${buttonFocusClassName}`;
+const backTextClassName = `-ml-2 inline-flex min-h-10 max-w-full items-center gap-1.5 self-start rounded-lg px-2 text-[13px] font-medium text-[var(--text-secondary)] transition-colors control-hover:bg-[var(--raised)] control-hover:text-[var(--text)] max-md:min-h-11 ${buttonFocusClassName}`;
+const backIconClassName = `inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors control-hover:bg-[var(--raised)] control-hover:text-[var(--text)] max-md:size-11 ${buttonFocusClassName}`;
 
 function BackLinkContent({ destination }: { destination: string }) {
   return (
@@ -222,7 +222,7 @@ export function Surface({ children, className = '', id }: { children: ReactNode;
 export function Disclosure({ summary, children }: { summary: ReactNode; children: ReactNode }) {
   return (
     <details className="group rounded-xl border border-[var(--border)]">
-      <summary className={`flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--raised)] [&::-webkit-details-marker]:hidden ${buttonFocusClassName}`}>
+      <summary className={`flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--text)] control-hover:bg-[var(--raised)] [&::-webkit-details-marker]:hidden ${buttonFocusClassName}`}>
         {summary}
         <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-[var(--text-muted)] group-open:rotate-180" />
       </summary>

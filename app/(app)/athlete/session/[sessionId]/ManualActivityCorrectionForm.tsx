@@ -200,7 +200,7 @@ export function ManualActivityCorrectionForm({
             <button type="submit" className={primaryButtonClassName} disabled={isPending}>{isPending ? 'Saving correction…' : 'Save correction'}</button>
           </div>
           {error ? <p role="alert" className="text-sm text-[var(--status-danger)]">{error}</p> : null}
-          {isConflict ? <button type="button" className="text-sm text-[var(--accent)] underline underline-offset-4" onClick={() => window.location.reload()}>Discard draft and reload saved activity</button> : null}
+          {isConflict ? <button type="button" className="text-sm text-[var(--accent)] underline underline-offset-4 hover:text-[var(--text)]" onClick={() => window.location.reload()}>Discard draft and reload saved activity</button> : null}
         </form>
       )}
     </div>

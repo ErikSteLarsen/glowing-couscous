@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@custom-variant control-hover {
+  @media (hover: hover) {
+    &:where(:not(:disabled, [aria-disabled="true"], [data-disabled])):hover {
+      @slot;
+    }
+  }
+}
+
 /* Shared navigation: collapsed desktop gives its entire column to the page. */
 .tempo-menu-bar {
   position: sticky;
@@ -356,9 +364,9 @@
 .study-workouts__library > div:first-child > h2,
 .study-home__today .study-home__section-heading > span { color: var(--nav-signal); }
 :root[data-workspace-theme="dark"] #tempo-sidebar nav a:hover,
-:root[data-workspace-theme="dark"] #tempo-sidebar button:hover { background: var(--nav-active); }
+:root[data-workspace-theme="dark"] #tempo-sidebar button:where(:not(:disabled, [aria-disabled="true"], [data-disabled])):hover { background: var(--nav-active); }
 :root[data-workspace-theme="light"] #tempo-sidebar nav a:hover,
-:root[data-workspace-theme="light"] #tempo-sidebar button:hover { background: var(--nav-active); }
+:root[data-workspace-theme="light"] #tempo-sidebar button:where(:not(:disabled, [aria-disabled="true"], [data-disabled])):hover { background: var(--nav-active); }
 
 * {
   box-sizing: border-box;
@@ -392,10 +400,33 @@ body {
     text-decoration: none;
   }
 
-  button,
-  a,
-  [role="button"] {
+  :where(
+    button, a, summary, select, label[for],
+    label:has(> :is(input[type="checkbox"], input[type="radio"], [role="switch"])),
+    input:is([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]),
+    [role="button"], [role="tab"], [role="option"], [role="menuitem"],
+    [role="menuitemradio"], [role="menuitemcheckbox"], [role="switch"], [role="checkbox"], [role="radio"]
+  ) {
     cursor: pointer;
+  }
+
+  input[type="file"]::file-selector-button {
+    cursor: inherit;
+  }
+
+  :disabled,
+  [aria-disabled="true"],
+  [data-disabled],
+  fieldset:disabled label[for],
+  label:has(> :is(input[type="checkbox"], input[type="radio"], [role="switch"]):is(:disabled, [aria-disabled="true"], [data-disabled])) {
+    cursor: not-allowed;
+  }
+
+  @media (hover: hover) {
+    label[for]:not(fieldset:disabled *, [aria-disabled="true"], [data-disabled]):hover,
+    label:has(> :is(input[type="checkbox"], input[type="radio"], [role="switch"]):not(:disabled, [aria-disabled="true"], [data-disabled])):hover {
+      background-color: var(--raised);
+    }
   }
 
   h1,
@@ -502,12 +533,18 @@ body {
     transform 180ms var(--ease-out-expo);
 }
 
-a.tile:hover,
-button.tile:hover,
-.tile--interactive:hover {
+.tile--interactive { --profile-gap: var(--surface); }
+
+a.tile:where(:not([aria-disabled="true"], [data-disabled])):hover,
+button.tile:where(:not(:disabled, [aria-disabled="true"], [data-disabled])):hover,
+.tile--interactive:has([data-card-target]:where(:not(:disabled, [aria-disabled="true"], [data-disabled])):hover) {
   background: var(--raised);
   border-color: var(--border-strong);
   box-shadow: var(--shadow-raised);
+}
+
+.tile--interactive:has([data-card-target]:where(:not(:disabled, [aria-disabled="true"], [data-disabled])):hover) {
+  --profile-gap: var(--raised);
 }
 
 .tile-empty {
@@ -1793,8 +1830,9 @@ body[data-workspace-theme="dark"] .profile-savebar {
   .planner-desk__month-nav { width: 44px; height: 44px; }
   .planner-desk__month-current { min-height: 44px; }
   .activity-history__mobile-filters > summary,
-  .activity-history__mobile-breakdown > summary { display: flex; min-height: 44px; align-items: center; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--brand); }
+  .activity-history__mobile-breakdown > summary { display: flex; min-height: 44px; align-items: center; font-size: 13px; font-weight: 600; color: var(--brand); }
   .activity-history__mobile-filters > summary:focus-visible,
+  .activity-history__mobile-breakdown > summary:hover { color: var(--text); }
   .activity-history__mobile-breakdown > summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 }
 

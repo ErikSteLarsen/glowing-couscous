@@ -48,7 +48,7 @@ export function SignOutButton({ tone = 'secondary', size = 'default', variant = 
           onClick={handleSignOut}
           disabled={isSigningOut}
           title="Sign out"
-          className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-2.5 text-sm text-[var(--nav-muted)] transition-colors hover:bg-[var(--nav-active)] hover:text-[var(--text)] disabled:opacity-50 md:min-h-9 ${buttonFocusClassName}`}
+          className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-2.5 text-sm text-[var(--nav-muted)] transition-colors control-hover:bg-[var(--nav-active)] control-hover:text-[var(--text)] disabled:opacity-50 md:min-h-9 ${buttonFocusClassName}`}
         >
           <LogOut aria-hidden="true" size={16} strokeWidth={1.5} className="shrink-0" />
           <span>{isSigningOut ? 'Signing out…' : 'Sign out'}</span>

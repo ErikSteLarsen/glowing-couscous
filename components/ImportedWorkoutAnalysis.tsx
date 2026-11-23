@@ -73,7 +73,7 @@ export function ImportedWorkoutAnalysis({ activityId }: { activityId: number }) 
       <p className="text-sm text-[var(--text-secondary)]">{result.emphasis} · {result.confidence === 'moderate' ? 'Moderate' : 'Limited'} support · {result.source === 'ai' ? 'AI explanation with calculated measurements' : 'Calculated interpretation'}</p>
       {view?.profileChanged ? <p className="text-sm text-[var(--text-secondary)]">Your training profile has changed since this interpretation. Analyze again to use your current zones.</p> : null}
       <details className="border-t border-[var(--border)] pt-3">
-        <summary className="cursor-pointer rounded-[var(--radius-control)] py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--brand)]">Repetitions and supporting evidence</summary>
+        <summary className="rounded-[var(--radius-control)] py-2 hover:bg-[var(--raised)] text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--brand)]">Repetitions and supporting evidence</summary>
         <div tabIndex={0} role="region" aria-label="Workout evidence, scroll horizontally to see all columns" className="mt-3 overflow-x-auto rounded-[var(--radius-control)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--brand)]">
           <table className="w-full text-left text-xs"><caption className="sr-only">Detected segments and measured metrics; pace excludes missing spans.</caption>
             <thead><tr className="border-b border-[var(--border)]">{['Segment', 'Time', 'Duration', 'Pace /km', 'HR', 'Zones', 'Coverage'].map(label => <th key={label} scope="col" className="whitespace-nowrap px-2 py-3 font-medium">{label}</th>)}</tr></thead>
@@ -90,7 +90,7 @@ export function ImportedWorkoutAnalysis({ activityId }: { activityId: number }) 
 function AnalysisCorrectionForm({ activityId, saved, suggested, onSaved }: { activityId: number; saved: AnalysisCorrection | null; suggested: AnalysisCorrection | null; onSaved: () => void }) {
   const [busy, setBusy] = useState(false), [message, setMessage] = useState('');
   return <details className="border-t border-[var(--border)] pt-3">
-    <summary className="cursor-pointer py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--brand)]">{saved ? `Your intended workout: ${saved.repetitions} × ${formatAnalysisDuration(saved.durationSec)}` : 'Confirm or correct intended workout'}</summary>
+    <summary className="py-2 text-sm font-medium hover:bg-[var(--raised)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--brand)]">{saved ? `Your intended workout: ${saved.repetitions} × ${formatAnalysisDuration(saved.durationSec)}` : 'Confirm or correct intended workout'}</summary>
     <p className="my-3 text-xs text-[var(--text-secondary)]">Your confirmation is saved separately from the interpretation and recorded measurements.</p>
     <form key={JSON.stringify(saved)} className="space-y-3" onSubmit={async event => {
       event.preventDefault(); const form = new FormData(event.currentTarget);

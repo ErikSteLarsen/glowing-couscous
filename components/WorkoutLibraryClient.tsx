@@ -472,7 +472,7 @@ export function WorkoutLibraryClient({
                 <MenuTrigger
                   disabled={isPending}
                   aria-label="More workout actions"
-                  className={`inline-flex size-10 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-md:size-11 disabled:opacity-50 ${buttonFocusClassName}`}
+                  className={`inline-flex size-10 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors control-hover:bg-[var(--raised)] control-hover:text-[var(--text)] max-md:size-11 disabled:opacity-50 ${buttonFocusClassName}`}
                 >
                   <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
                 </MenuTrigger>

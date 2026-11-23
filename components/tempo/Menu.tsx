@@ -18,7 +18,7 @@ export { Menu, MenuGroup, MenuRadioGroup, MenuTrigger } from '@ui-sdk/react/menu
  * 40px rows (44px on touch), and the trace for the highlighted row.
  */
 const itemClassName =
-  'flex min-h-10 max-md:min-h-11 w-full cursor-default select-none items-center gap-2.5 rounded-lg px-2.5 text-left text-sm text-[var(--text)] outline-none data-[highlighted]:bg-[var(--raised)] data-[disabled]:opacity-50 data-[destructive]:text-[var(--status-danger)] [&_svg]:shrink-0 [&_svg]:text-[var(--text-muted)] data-[destructive]:[&_svg]:text-[var(--status-danger)]';
+  'flex min-h-10 max-md:min-h-11 w-full select-none items-center gap-2.5 rounded-lg px-2.5 text-left text-sm text-[var(--text)] outline-none control-hover:bg-[var(--raised)] [&[data-highlighted]:not([aria-disabled=true],[data-disabled])]:bg-[var(--raised)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] data-[disabled]:opacity-50 data-[destructive]:text-[var(--status-danger)] [&_svg]:shrink-0 [&_svg]:text-[var(--text-muted)] data-[destructive]:[&_svg]:text-[var(--status-danger)]';
 
 export function MenuContent({ className = '', ...props }: ComponentProps<typeof SdkContent>) {
   return (

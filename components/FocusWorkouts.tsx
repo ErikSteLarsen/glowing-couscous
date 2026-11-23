@@ -73,7 +73,7 @@ export function FocusWorkouts({ catalogEntries, ...libraryProps }: Props) {
                 tabIndex={tab === id ? 0 : -1}
                 onClick={() => selectTab(id)}
                 onKeyDown={(event) => handleTabKey(event, index)}
-                className={`${getSwitchOptionClassName(tab === id)} flex-1 cursor-pointer gap-2 whitespace-nowrap min-h-11`}
+                className={`${getSwitchOptionClassName(tab === id)} flex-1 gap-2 whitespace-nowrap min-h-11`}
               >
                 {labels[id].title}
                 <span className="data text-xs font-medium text-[var(--text-secondary)]">{count}</span>

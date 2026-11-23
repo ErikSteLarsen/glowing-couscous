@@ -112,7 +112,7 @@ export function ActivityImportForm() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="min-w-0 flex-1 space-y-2">
           <span className="text-[13px] font-medium text-[var(--text-secondary)]">TCX, FIT, or GPX file (5 MB maximum)</span>
-          <input ref={inputRef} type="file" accept=".tcx,.fit,.gpx,application/vnd.garmin.tcx+xml,application/gpx+xml,application/xml,text/xml,application/octet-stream" disabled={pending} onChange={(event) => { const selected = event.currentTarget.files?.[0]; setGpxSelected(selected?.name.toLowerCase().endsWith('.gpx') ?? false); setGpxSport(''); setPreview(null); setPairingChoice(''); setSavedHref(''); setError(''); }} className={`${formFieldClassName} h-auto min-h-10 py-2 max-md:min-h-11 file:mr-3 file:rounded-md file:border-0 file:bg-[var(--raised)] file:px-3 file:py-1 file:text-sm file:text-[var(--text)]`} />
+          <input ref={inputRef} type="file" accept=".tcx,.fit,.gpx,application/vnd.garmin.tcx+xml,application/gpx+xml,application/xml,text/xml,application/octet-stream" disabled={pending} onChange={(event) => { const selected = event.currentTarget.files?.[0]; setGpxSelected(selected?.name.toLowerCase().endsWith('.gpx') ?? false); setGpxSport(''); setPreview(null); setPairingChoice(''); setSavedHref(''); setError(''); }} className={`${formFieldClassName} h-auto min-h-10 py-2 max-md:min-h-11 file:mr-3 file:rounded-md file:border-0 file:bg-[var(--raised)] control-hover:file:bg-[var(--selection)] file:px-3 file:py-1 file:text-sm file:text-[var(--text)]`} />
         </label>
         {gpxSelected ? (
           <label className="min-w-0 space-y-2 sm:w-48">

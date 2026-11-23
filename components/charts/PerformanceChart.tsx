@@ -128,7 +128,7 @@ export function PerformanceChart({ series, today }: Props) {
         aria-valuetext={`${formatDayLong(point.day)}: fitness ${Math.round(point.fitness)}, fatigue ${Math.round(point.fatigue)}, form ${signed(point.form)}, stress ${stressLabel}`}
         tabIndex={0}
         aria-label="Training load by day. Use arrow keys to move between days."
-        className="relative cursor-crosshair touch-pan-y select-none rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--background)]"
+        className="relative cursor-pointer hover:bg-[var(--field-surface)] touch-pan-y select-none rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--background)]"
         onPointerMove={(event) => setActive(indexFromPointer(event))}
         onPointerDown={(event) => setActive(indexFromPointer(event))}
         onPointerLeave={(event) => {

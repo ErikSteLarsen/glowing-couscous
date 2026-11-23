@@ -194,7 +194,7 @@ export function AppShell({
     >
       <Link
         href="#main"
-        className="sr-only z-50 rounded-lg bg-[var(--brand)] px-3 py-2 text-sm font-medium text-[var(--signal-ink)] focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
+        className="sr-only z-50 rounded-lg bg-[var(--brand)] px-3 py-2 text-sm hover:bg-[var(--signal-hover)] font-medium text-[var(--signal-ink)] focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
       >
         Skip to content
       </Link>
@@ -216,7 +216,7 @@ export function AppShell({
         inert={mobileOpen && isMobileViewport ? true : undefined}
       >
         <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/90 px-4 backdrop-blur-md md:hidden">
-          <Link href={navItems[0]?.href ?? '/'} aria-label="Tempo home" className={`flex min-h-11 items-center gap-2.5 rounded-lg ${buttonFocusClassName}`}>
+          <Link href={navItems[0]?.href ?? '/'} aria-label="Tempo home" className={`flex min-h-11 items-center gap-2.5 rounded-lg hover:bg-[var(--raised)] ${buttonFocusClassName}`}>
             <BrandMark />
             <span className="text-[15px] font-semibold text-[var(--text)]">Tempo</span>
           </Link>
@@ -269,7 +269,7 @@ export function AppShell({
                 aria-current={isActive ? 'page' : undefined}
                 className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-medium transition-colors ${buttonFocusClassName} ${
                   isActive
-                    ? 'bg-[var(--nav-active)] text-[var(--text)]'
+                    ? 'bg-[var(--nav-active)] text-[var(--text)] hover:bg-[var(--selection)]'
                     : 'text-[var(--nav-muted)] hover:bg-[var(--nav-active)] hover:text-[var(--text)]'
                 }`}
               >

@@ -61,7 +61,7 @@ export function ActivityMetricBars({
       </div>
 
       <details className="mt-3 text-[12px] text-[var(--text-secondary)]">
-        <summary className="w-fit cursor-pointer rounded-[3px] py-1 font-medium text-[var(--text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-liquid)]">
+        <summary className="w-fit rounded-[3px] py-1 font-medium text-[var(--text)] hover:bg-[var(--raised)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-liquid)]">
           View interval data
         </summary>
         <div className="mt-2 max-h-56 min-w-0 overflow-x-hidden overflow-y-auto border-y border-[var(--border)]">

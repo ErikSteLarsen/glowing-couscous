@@ -120,12 +120,12 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
       return <Surface key={template.id} className="space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
-            <h2 className="text-lg font-semibold break-words"><button type="button" disabled={busy} aria-label={`Edit ${template.name}`} className={`rounded-sm text-left underline-offset-4 max-md:min-h-11 hover:underline disabled:opacity-60 ${buttonFocusClassName}`} onClick={() => edit(template)}>{template.name}</button></h2>
+            <h2 className="text-lg font-semibold break-words"><button type="button" disabled={busy} aria-label={`Edit ${template.name}`} className={`rounded-sm text-left underline-offset-4 max-md:min-h-11 control-hover:text-[var(--brand)] control-hover:underline disabled:opacity-60 ${buttonFocusClassName}`} onClick={() => edit(template)}>{template.name}</button></h2>
             {template.summary && <p className="text-sm leading-6 text-[var(--text-secondary)] break-words">{template.summary}</p>}
             <p className="text-sm text-[var(--text-muted)]">{routine ? `${routine.entries.length} ${routine.entries.length === 1 ? 'session' : 'sessions'} per week` : 'Invalid routine — edit and save again'}</p>
           </div>
           <Menu>
-            <MenuTrigger disabled={busy} aria-label={`More actions for ${template.name}`} className={`inline-flex size-10 shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-md:size-11 disabled:opacity-50 ${buttonFocusClassName}`}>
+            <MenuTrigger disabled={busy} aria-label={`More actions for ${template.name}`} className={`inline-flex size-10 shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors control-hover:bg-[var(--raised)] control-hover:text-[var(--text)] max-md:size-11 disabled:opacity-50 ${buttonFocusClassName}`}>
               <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
             </MenuTrigger>
             <MenuContent align="end">
