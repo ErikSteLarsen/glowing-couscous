@@ -67,7 +67,7 @@ function DurationFields({ label, value, onChange, disabled }: { label: string; v
   return <fieldset className="min-w-0"><legend className={formLabelClassName}>{label}</legend><div className="grid grid-cols-3 gap-2">
     {(['hours', 'minutes', 'seconds'] as const).map((part) => (
       <label key={part} className="min-w-0">
-        <span className="mb-1 block text-xs capitalize text-[var(--text-secondary)]">{part}</span>
+        <span className={`${formLabelClassName} capitalize`}>{part}</span>
         <input inputMode="numeric" type="number" min="0" max={part === 'hours' ? 48 : 59} value={value[part]} onChange={(event) => onChange({ ...value, [part]: event.target.value })} className={`data ${formFieldClassName}`} disabled={disabled} />
       </label>
     ))}

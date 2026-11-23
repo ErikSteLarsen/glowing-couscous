@@ -282,7 +282,7 @@ export function ProfileClient({ account }: { account: Account }) {
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block space-y-2">
               <span className={formLabelClassName}>Display name</span>
-              <input value={name} onChange={(event) => setName(event.target.value)} disabled={saving} className={`${formFieldClassName} disabled:opacity-60`} />
+              <input value={name} onChange={(event) => setName(event.target.value)} disabled={saving} className={formFieldClassName} />
             </label>
             <div className="min-w-0 space-y-2">
               <p className={formLabelClassName}>Email</p>
