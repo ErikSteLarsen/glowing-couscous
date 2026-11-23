@@ -597,9 +597,13 @@ function asRecord(input: unknown): Record<string, unknown> {
   return input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
 }
 
+// The counter restarts on every page load while drafts restored from browser storage keep
+// their ids, so a per-load prefix keeps new ids from colliding with restored ones.
+const clientIdPrefix = Math.random().toString(36).slice(2, 8);
+
 function createClientId() {
   nextClientId += 1;
-  return `session-block-${nextClientId}`;
+  return `session-block-${clientIdPrefix}-${nextClientId}`;
 }
 
 function isCalendarDate(input: string) {
