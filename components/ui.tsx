@@ -296,11 +296,11 @@ export function Badge({
   );
 }
 
-export function EmptyState({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
+export function EmptyState({ title, description, action }: { title: string; description?: ReactNode; action?: ReactNode }) {
   return (
     <div className="tile-empty rounded-2xl px-5 py-10 text-center">
       <p className="text-base font-medium text-[var(--text)]">{title}</p>
-      <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--text-muted)]">{description}</p>
+      {description ? <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--text-muted)]">{description}</p> : null}
       {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
     </div>
   );

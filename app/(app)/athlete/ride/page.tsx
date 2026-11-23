@@ -9,7 +9,7 @@ import { publicLibraryHref } from '@/lib/athlete-workouts-navigation';
 import { LibraryCard } from '@/components/library/LibraryCard';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
-import { buttonFocusClassName, compactSecondaryButtonClassName, Disclosure, ghostButtonClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
+import { EmptyState, buttonFocusClassName, compactSecondaryButtonClassName, Disclosure, ghostButtonClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
 import { accountService } from '@/lib/account-service';
@@ -86,13 +86,15 @@ export default async function RideHubPage({ searchParams }: { searchParams: Prom
               ) : null}
             </>
           ) : (
-            <div className="tile-empty rounded-2xl px-5 py-6">
-              <p className="text-base font-medium text-[var(--text)]">Nothing planned for today</p>
-              <Link href={libraryHref} className={`${secondaryButtonClassName} mt-3 max-md:min-h-11`}>
-                Browse bike workouts
-                <ArrowRight aria-hidden="true" size={16} strokeWidth={1.6} />
-              </Link>
-            </div>
+            <EmptyState
+              title="Nothing planned for today"
+              action={
+                <Link href={libraryHref} className={`${secondaryButtonClassName} max-md:min-h-11`}>
+                  Browse bike workouts
+                  <ArrowRight aria-hidden="true" size={16} strokeWidth={1.6} />
+                </Link>
+              }
+            />
           )}
         </section>
 

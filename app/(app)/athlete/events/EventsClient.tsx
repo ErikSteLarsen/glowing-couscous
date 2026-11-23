@@ -343,7 +343,7 @@ export function EventsClient({ initialEvents, today }: { initialEvents: EventRow
       }} />
     </FormDialog>
     {events.length === 0 ? <EmptyState title="No events yet" description="Add a race or goal day to see it on your Calendar." /> : <>
-      <section aria-labelledby="upcoming-events"><h2 id="upcoming-events" className={`mb-2 ${sectionHeadingClassName}`}>Upcoming</h2>{upcoming.length ? <EventList events={upcoming} today={today} onChange={updateEvent} onDelete={deleteEvent} /> : <p className="rounded-xl border border-dashed border-[var(--border)] px-4 py-5 text-sm text-[var(--text-muted)]">Nothing coming up. Use <span className="text-[var(--text-secondary)]">Add event</span> for your next race or goal day.</p>}</section>
+      <section aria-labelledby="upcoming-events"><h2 id="upcoming-events" className={`mb-2 ${sectionHeadingClassName}`}>Upcoming</h2>{upcoming.length ? <EventList events={upcoming} today={today} onChange={updateEvent} onDelete={deleteEvent} /> : <EmptyState title="Nothing coming up" description="Use Add event for your next race or goal day." />}</section>
       {past.length ? <section aria-labelledby="past-events"><h2 id="past-events" className={`mb-2 ${sectionHeadingClassName}`}>Past events</h2><EventList events={past} today={today} onChange={updateEvent} onDelete={deleteEvent} /></section> : null}
     </>}
   </PageShell>;

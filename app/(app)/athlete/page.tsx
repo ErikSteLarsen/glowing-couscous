@@ -13,6 +13,7 @@ import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { HomeSummaryDialog } from '@/components/HomeSummaryDialog';
 import { MiniBars, Sparkline, type MiniBar } from '@/components/charts/Sparklines';
 import {
+  EmptyState,
   Surface,
   ghostButtonClassName,
   PageShell,
@@ -357,10 +358,10 @@ export default async function AthletePage() {
                   {hasHistory ? (
                     <PerformanceChart series={load.series} today={load.today} />
                   ) : (
-                    <div className="tile-empty rounded-xl px-5 py-10 text-center">
-                      <p className="text-sm text-[var(--text)]">Your fitness line starts with training load data.</p>
-                      <p className="mt-1 text-[13px] text-[var(--text-muted)]">Manually logged work counts toward duration history; load needs a defensible TSS value.</p>
-                    </div>
+                    <EmptyState
+                      title="Your fitness line starts with training load data."
+                      description="Manually logged work counts toward duration history. Load requires a TSS value."
+                    />
                   )}
                   <Link href="/athlete/activity" className={`${ghostButtonClassName('compact')} max-md:min-h-11`}>
                     All activity
