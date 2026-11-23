@@ -64,22 +64,22 @@ export function rideInstallHints(os: RideOs): string[] {
   switch (os) {
     case 'windows':
       return [
-        'Run the installer. Windows SmartScreen may warn about an unrecognized app: choose More info, then Run anyway.',
-        'Tempo Ride registers itself to open tempo-ride:// links.',
+        'Run the installer. If Windows warns about an unrecognized app, choose More info, then Run anyway.',
+        'After that, Tempo can open Tempo Ride for you.',
       ];
     case 'macos':
       return [
         'Open the .dmg and drag Tempo Ride to Applications.',
-        'The app is unsigned: the first time, Control-click it in Applications and choose Open, then Open again.',
+        'The app isn’t signed yet. The first time, Control-click it in Applications, choose Open, then choose Open again.',
       ];
     case 'linux':
       return [
-        'AppImage: move it somewhere permanent (e.g. ~/Applications), chmod +x Tempo-Ride-Linux.AppImage, then open it once. It registers the tempo-ride:// link handler itself.',
-        'Or install the .deb with sudo apt install ./Tempo-Ride-Linux.deb, which registers the handler for you.',
-        'Allow Bluetooth access when asked (your user may need to be in the bluetooth group).',
+        'AppImage: move it to a folder you keep (for example ~/Applications), make it executable with chmod +x Tempo-Ride-Linux.AppImage, then open it once. After that, Tempo can open it for you.',
+        'Or install the .deb with sudo apt install ./Tempo-Ride-Linux.deb.',
+        'Allow Bluetooth access when asked. Your Linux user may need to be in the bluetooth group.',
       ];
     default:
-      return ['Tempo Ride runs on Windows, macOS and Linux. On this device, ride in the browser instead.'];
+      return ['Tempo Ride runs on Windows, macOS and Linux. On this device, ride in your browser instead.'];
   }
 }
 

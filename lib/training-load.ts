@@ -237,7 +237,7 @@ export const complianceLabels: Record<ComplianceState, string> = {
   missed: 'Missed',
   planned: 'Planned',
   unplanned: 'Unplanned',
-  'duration-only': 'Duration recorded',
+  'duration-only': 'Time logged',
   skipped: 'Skipped',
 };
 

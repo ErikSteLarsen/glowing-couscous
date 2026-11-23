@@ -100,10 +100,10 @@ async function saveSession({
   });
 
   if (!existing || existing.athleteId !== athleteId) {
-    return { ok: false, error: 'Session not found.', status: 404 };
+    return { ok: false, error: 'Workout not found.', status: 404 };
   }
   if (existing.activity) {
-    return { ok: false, error: 'Completed sessions are immutable.', status: 409 };
+    return { ok: false, error: 'Workouts marked as done can’t be changed.', status: 409 };
   }
 
   await db.$transaction([
@@ -138,10 +138,10 @@ async function deleteSession({
   });
 
   if (!session || session.athleteId !== athleteId) {
-    return { ok: false, error: 'Session not found.', status: 404 };
+    return { ok: false, error: 'Workout not found.', status: 404 };
   }
   if (session.activity) {
-    return { ok: false, error: 'Completed sessions are immutable.', status: 409 };
+    return { ok: false, error: 'Workouts marked as done can’t be changed.', status: 409 };
   }
 
   await db.session.delete({ where: { id: command.sessionId } });

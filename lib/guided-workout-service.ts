@@ -44,7 +44,7 @@ export function createGuidedWorkoutService({ db = prisma, llm = workoutLlm, now 
   return {
     async generateForAthlete(userId: number, rawInput: unknown) {
       const input = parseGuidedWorkoutInput(rawInput);
-      if (!input) return { ok: false as const, status: 400 as const, error: 'Choose a sport, a listed duration, effort, and interval preference.' };
+      if (!input) return { ok: false as const, status: 400 as const, error: 'Choose a sport, a length, an effort and whether you want intervals.' };
       const started = now();
       const [user, activities] = await Promise.all([
         db.user.findUnique({ where: { id: userId }, select: { performanceProfileJson: true } }),

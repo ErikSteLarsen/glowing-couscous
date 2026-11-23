@@ -25,10 +25,10 @@ function getMatchSpecificity(item: NavItem) {
 export function getPrimaryNavigation(): NavItem[] {
   return [
     { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete', exact: true },
-    { label: 'Calendar', description: 'See scheduled work', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
+    { label: 'Calendar', description: 'Your planned workouts', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
     { label: 'Workouts', description: 'Yours & public library', href: '/athlete/workouts', matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/library'] },
-    { label: 'Templates', description: 'Reuse & assign', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
-    { label: 'Activity', description: 'Review completed work', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
+    { label: 'Routines', description: 'Weekly training patterns', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
+    { label: 'Activity', description: 'Everything you’ve done', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
     { label: 'Events', description: 'Goals and results', href: '/athlete/events', matchPrefix: '/athlete/events' },
   ];
 }
@@ -44,9 +44,9 @@ export function getMobileNavigation(role: AppRole): NavItem[] {
 
   return [
     { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete', exact: true },
-    { label: 'Calendar', description: 'Schedule & view training', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
+    { label: 'Calendar', description: 'Plan and see your training', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
     { label: 'Workouts', description: 'Yours & public library', href: '/athlete/workouts', matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/templates', '/athlete/library'] },
-    { label: 'Activity', description: 'Review completed work', href: '/athlete/activity', matchPrefix: '/athlete/activity', activeMatchPrefixes: ['/athlete/import'] },
+    { label: 'Activity', description: 'Everything you’ve done', href: '/athlete/activity', matchPrefix: '/athlete/activity', activeMatchPrefixes: ['/athlete/import'] },
   ];
 }
 
@@ -140,7 +140,7 @@ export function resolveBackTarget(input: BackRouteInput): BackTarget {
   const origin = parseBackOrigin(input.route, input.from);
 
   if (input.route === 'session-live' || input.route === 'session-ride') {
-    return target(withBackOrigin(`/athlete/session/${input.sessionId}`, origin), 'Session');
+    return target(withBackOrigin(`/athlete/session/${input.sessionId}`, origin), 'Workout');
   }
 
   if (input.route === 'coach-athlete' && origin === 'planner') {

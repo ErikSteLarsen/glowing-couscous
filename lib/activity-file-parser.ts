@@ -35,10 +35,10 @@ export function parseActivityFile(filename: string, input: ArrayBuffer | string)
         : invalidFile();
 
   if (parsed.points.length === 0) {
-    throw new Error('This file has no recorded activity samples.');
+    throw new Error('This file has no recorded data.');
   }
   if (parsed.points.length > MAX_ACTIVITY_POINTS) {
-    throw new Error('This activity has too many samples to import safely.');
+    throw new Error('This activity has too much recorded data to import.');
   }
 
   const ordered = parsed.points
@@ -81,7 +81,7 @@ function parseTcx(xml: string) {
   const records: RawPoint[] = [];
 
   for (const trackpoint of elements(activity, 'Trackpoint')) {
-    if (records.length >= MAX_ACTIVITY_POINTS) throw new Error('This activity has too many samples to import safely.');
+    if (records.length >= MAX_ACTIVITY_POINTS) throw new Error('This activity has too much recorded data to import.');
     const timestampMs = Date.parse(textTag(trackpoint, 'Time') || '');
     if (!Number.isFinite(timestampMs)) continue;
     const position = findElement(trackpoint, 'Position');
@@ -134,7 +134,7 @@ function parseGpx(xml: string) {
   const trackName = textTag(findElement(xml, 'trk'), 'name') || textTag(xml, 'name') || '';
   const records: RawPoint[] = [];
   for (const trackpoint of elements(xml, 'trkpt')) {
-    if (records.length >= MAX_ACTIVITY_POINTS) throw new Error('This activity has too many samples to import safely.');
+    if (records.length >= MAX_ACTIVITY_POINTS) throw new Error('This activity has too much recorded data to import.');
     const timestampMs = Date.parse(textTag(trackpoint, 'time') || '');
     if (!Number.isFinite(timestampMs)) continue;
     const point: RawPoint = {
@@ -172,7 +172,7 @@ function parseGpx(xml: string) {
 
 function parseFit(view: DataView) {
   if (view.byteLength < 14 || view.getUint8(8) !== 0x2e || view.getUint8(9) !== 0x46 || view.getUint8(10) !== 0x49 || view.getUint8(11) !== 0x54) {
-    throw new Error('This is not a valid FIT activity file.');
+    throw new Error('This isn’t a FIT activity file Tempo can read.');
   }
 
   const headerSize = view.getUint8(0);
@@ -180,16 +180,16 @@ function parseFit(view: DataView) {
   const dataStart = headerSize;
   const dataEnd = dataStart + dataSize;
   if (headerSize < 12 || dataEnd + 2 !== view.byteLength) {
-    throw new Error('The FIT file is incomplete or damaged.');
+    throw new Error('This FIT file is incomplete or damaged. Export it again from your device or app.');
   }
   if (headerSize >= 14) {
     const headerCrc = view.getUint16(headerSize - 2, true);
     if (headerCrc !== 0 && fitCrc(view, 0, headerSize - 2) !== headerCrc) {
-      throw new Error('The FIT file header checksum is invalid.');
+      throw new Error('This FIT file is damaged. Export it again from your device or app.');
     }
   }
   if (fitCrc(view, 0, dataEnd) !== view.getUint16(dataEnd, true)) {
-    throw new Error('The FIT file checksum is invalid.');
+    throw new Error('This FIT file is damaged. Export it again from your device or app.');
   }
 
   const definitions = new Map<number, FitDefinition>();
@@ -211,7 +211,7 @@ function parseFit(view: DataView) {
     const localNumber = compressed ? (header >> 5) & 0x03 : header & 0x0f;
 
     if (isDefinition) {
-      if (cursor + 5 > dataEnd) throw new Error('The FIT file has an incomplete message definition.');
+      if (cursor + 5 > dataEnd) throw new Error('This FIT file is incomplete or damaged. Export it again from your device or app.');
       cursor += 1;
       const architecture = view.getUint8(cursor++);
       const bigEndian = architecture === 1;
@@ -220,7 +220,7 @@ function parseFit(view: DataView) {
       const fieldCount = view.getUint8(cursor++);
       const fields: FitField[] = [];
       for (let index = 0; index < fieldCount; index += 1) {
-        if (cursor + 3 > dataEnd) throw new Error('The FIT file has an incomplete field definition.');
+        if (cursor + 3 > dataEnd) throw new Error('This FIT file is incomplete or damaged. Export it again from your device or app.');
         fields.push({ number: view.getUint8(cursor), size: view.getUint8(cursor + 1), baseType: view.getUint8(cursor + 2) });
         cursor += 3;
       }
@@ -233,21 +233,21 @@ function parseFit(view: DataView) {
     }
 
     const definition = definitions.get(localNumber);
-    if (!definition) throw new Error('The FIT file is missing a message definition.');
+    if (!definition) throw new Error('This FIT file is incomplete or damaged. Export it again from your device or app.');
     const message: Record<number, number | null> = {};
     for (const field of definition.fields) {
       if (compressed && definition.globalMessage === 20 && field.number === 253) {
         message[field.number] = null;
         continue;
       }
-      if (cursor + field.size > dataEnd) throw new Error('The FIT file ends in the middle of a sample.');
+      if (cursor + field.size > dataEnd) throw new Error('This FIT file is incomplete or damaged. Export it again from your device or app.');
       message[field.number] = readFitValue(view, cursor, field.size, field.baseType, definition.bigEndian);
       cursor += field.size;
     }
     if (header & 0x20 && !compressed) {
       const developerCount = view.getUint8(cursor++);
       for (let index = 0; index < developerCount; index += 1) {
-        if (cursor + 2 > dataEnd) throw new Error('The FIT file has incomplete developer data.');
+        if (cursor + 2 > dataEnd) throw new Error('This FIT file is incomplete or damaged. Export it again from your device or app.');
         cursor += 2;
         const size = view.getUint8(cursor++);
         cursor += size;
@@ -274,7 +274,7 @@ function parseFit(view: DataView) {
         ? advanceCompressedTimestamp(lastFitTimestamp, header & 0x1f)
         : message[253] ?? null;
       if (typeof fitTimestamp !== 'number') continue;
-      if (records.length >= MAX_ACTIVITY_POINTS) throw new Error('This activity has too many samples to import safely.');
+      if (records.length >= MAX_ACTIVITY_POINTS) throw new Error('This activity has too much recorded data to import.');
       lastFitTimestamp = fitTimestamp;
       message[253] = fitTimestamp;
       if (startedAtMs === null) startedAtMs = fitTime(fitTimestamp);
@@ -437,7 +437,7 @@ function displaySport(input: string) {
 function boundedDuration(primary: number, fallback: number) {
   const value = Number.isFinite(primary) && primary > 0 ? primary : fallback;
   if (!Number.isFinite(value) || value <= 0 || value > MAX_ACTIVITY_DURATION_SEC) {
-    throw new Error('Activity duration must be between one second and 36 hours.');
+    throw new Error('Activities must last between 1 second and 36 hours.');
   }
   return Math.round(value);
 }

@@ -120,7 +120,7 @@ async function assignLibrarySession(db: SourceAssignmentDb, command: AssignSourc
     },
     include: { blocks: { orderBy: { sortOrder: 'asc' } } },
   }) as SourceSession | null;
-  if (!source || !('blocks' in source)) return { ok: false, error: 'Library session not found.', status: 404 };
+  if (!source || !('blocks' in source)) return { ok: false, error: 'Workout not found.', status: 404 };
 
   const weekStart = startOfWeek(scheduledDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(scheduledDate, { weekStartsOn: 1 });

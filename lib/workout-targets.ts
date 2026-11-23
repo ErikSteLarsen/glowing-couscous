@@ -45,18 +45,18 @@ export function normalizeWorkoutTarget(input: unknown): WorkoutTarget | null {
 }
 
 export function validateWorkoutTarget(target: WorkoutTarget, sport?: string): string | null {
-  if (!Number.isFinite(target.low) || !Number.isFinite(target.high) || target.low < 0 || target.high < 0) return 'Target values must be non-negative numbers.';
-  if (target.low > target.high) return 'Target low must be less than or equal to target high.';
+  if (!Number.isFinite(target.low) || !Number.isFinite(target.high) || target.low < 0 || target.high < 0) return 'Targets can’t be negative.';
+  if (target.low > target.high) return 'The low target can’t be higher than the high target.';
   if (target.metric === 'rpe') {
-    if (target.mode !== 'absolute' || target.reference !== null) return 'RPE targets are direct and cannot use a reference.';
+    if (target.mode !== 'absolute' || target.reference !== null) return 'RPE targets can’t be based on your Profile.';
     if (target.low < 1 || target.high > 10) return 'RPE targets must be between 1 and 10.';
   } else if (target.mode === 'absolute') {
-    if (target.reference !== null) return 'Absolute targets cannot use a reference.';
+    if (target.reference !== null) return 'Fixed targets can’t be based on your Profile.';
   } else if (!target.reference) {
-    return 'Relative targets need a reference.';
+    return 'Choose what this target is a percentage of.';
   }
   if (isProfilePaceZoneReference(target.reference) && (target.metric !== 'pace' || target.mode !== 'relative' || (sport && sport !== 'RUNNING'))) {
-    return 'Profile pace zones are only valid for relative running targets.';
+    return 'Profile pace zones only work for running.';
   }
   if (sport && target.mode === 'relative' && !isProfilePaceZoneReference(target.reference) && !getAvailableWorkoutTargets(sport).some((option) => option.metric === target.metric && option.mode === target.mode && option.reference === target.reference)) {
     return 'This target is not available for the selected sport.';

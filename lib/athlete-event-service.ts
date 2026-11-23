@@ -35,7 +35,7 @@ function parseEvent(input: EventInput): { error: string } | { value: { title: st
   const eventDate = parseDate(input.eventDate);
   if (!eventDate) return { error: 'Choose a valid event date.' };
   const target = parseFinishTime(input.targetFinishSec, true);
-  if (!target.ok) return { error: 'Goal finish time must be a whole number of seconds from 1 to 48 hours.' };
+  if (!target.ok) return { error: 'Goal time must be between 1 second and 48 hours.' };
   return { value: { title: input.title.trim(), sport: input.sport as string, eventDate, targetFinishSec: target.value } };
 }
 
@@ -56,7 +56,7 @@ export function createAthleteEventService({ db = prisma, now = () => new Date() 
     async create(athleteId: number, input: EventInput): Promise<EventError | EventSuccess<AthleteEvent>> {
       const parsed = parseEvent(input);
       if ('error' in parsed) return { ok: false, status: 400, error: parsed.error };
-      if (!await athleteExists(athleteId)) return { ok: false, status: 404, error: 'Athlete not found.' };
+      if (!await athleteExists(athleteId)) return { ok: false, status: 404, error: 'Account not found.' };
       return { ok: true, value: await db.athleteEvent.create({ data: { athleteId, ...parsed.value } }) };
     },
     async update(athleteId: number, eventId: number, input: EventInput, { timeZone = DEFAULT_TIME_ZONE }: { timeZone?: string } = {}): Promise<EventError | EventSuccess<AthleteEvent>> {
@@ -64,15 +64,15 @@ export function createAthleteEventService({ db = prisma, now = () => new Date() 
       if ('error' in parsed) return { ok: false, status: 400, error: parsed.error };
       const current = await ownedEvent(athleteId, eventId);
       if (!current) return { ok: false, status: 404, error: 'Event not found.' };
-      if (current.resultFinishSec !== null && dateKey(parsed.value.eventDate) > todayInZone(timeZone, now())) return { ok: false, status: 400, error: 'An event with a recorded result cannot be moved into the future.' };
+      if (current.resultFinishSec !== null && dateKey(parsed.value.eventDate) > todayInZone(timeZone, now())) return { ok: false, status: 400, error: 'An event with a result can’t be moved to a future date.' };
       return { ok: true, value: await db.athleteEvent.update({ where: { id: current.id }, data: parsed.value }) };
     },
     async recordResult(athleteId: number, eventId: number, input: ResultInput, { timeZone = DEFAULT_TIME_ZONE }: { timeZone?: string } = {}): Promise<EventError | EventSuccess<AthleteEvent>> {
       const current = await ownedEvent(athleteId, eventId);
       if (!current) return { ok: false, status: 404, error: 'Event not found.' };
-      if (dateKey(current.eventDate) > todayInZone(timeZone, now())) return { ok: false, status: 400, error: 'Results can be recorded on or after the event date.' };
+      if (dateKey(current.eventDate) > todayInZone(timeZone, now())) return { ok: false, status: 400, error: 'You can add a result on or after the event date.' };
       const finish = parseFinishTime(input.resultFinishSec, false);
-      if (!finish.ok) return { ok: false, status: 400, error: 'Result finish time must be a whole number of seconds from 1 to 48 hours.' };
+      if (!finish.ok) return { ok: false, status: 400, error: 'Result time must be between 1 second and 48 hours.' };
       if (input.resultNote !== null && input.resultNote !== undefined && (typeof input.resultNote !== 'string' || input.resultNote.length > MAX_NOTE_LENGTH)) return { ok: false, status: 400, error: `Result note must be ${MAX_NOTE_LENGTH} characters or fewer.` };
       const resultNote = typeof input.resultNote === 'string' && input.resultNote.trim() ? input.resultNote.trim() : null;
       return { ok: true, value: await db.athleteEvent.update({ where: { id: current.id }, data: { resultFinishSec: finish.value, resultNote } }) };
@@ -94,7 +94,7 @@ export function createAthleteEventService({ db = prisma, now = () => new Date() 
       if (!event) return { ok: false, status: 404, error: 'Event not found.' };
       const activity = await db.activity.findFirst({ where: { id: Number(activityId), athleteId }, include: { session: { select: { athleteId: true, status: true } } } });
       if (!activity) return { ok: false, status: 404, error: 'Activity not found.' };
-      if (activity.session.athleteId !== athleteId || activity.session.status !== 'completed') return { ok: false, status: 400, error: 'Only your completed activities can be linked.' };
+      if (activity.session.athleteId !== athleteId || activity.session.status !== 'completed') return { ok: false, status: 400, error: 'You can only link your own activities.' };
       if (activity.eventId !== null && activity.eventId !== eventId) return { ok: false, status: 400, error: 'This activity is already linked to another event.' };
       if (activity.eventId === eventId) return { ok: true, value: activity };
       const linked = await db.activity.updateMany({ where: { id: activity.id, athleteId, eventId: null, session: { status: 'completed' } }, data: { eventId } });

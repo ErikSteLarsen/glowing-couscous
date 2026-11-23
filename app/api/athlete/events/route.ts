@@ -6,7 +6,7 @@ export async function GET() {
   const { user, error } = await requireAthlete();
   if (error) return error;
   const events = await athleteEventService.list(user.id);
-  if (!events) return NextResponse.json({ error: 'Athlete not found.' }, { status: 404 });
+  if (!events) return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
   return NextResponse.json({ events });
 }
 

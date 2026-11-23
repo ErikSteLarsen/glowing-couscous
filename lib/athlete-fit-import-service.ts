@@ -17,7 +17,7 @@ export function createAthleteFitImportService({ db = prisma }: { db?: Database }
 
   return {
     async preview(athleteId: number, bytes: Uint8Array): Promise<FitImportResult> {
-      if (!(await isAthlete(athleteId))) return { ok: false, status: 404, error: 'Athlete not found.' };
+      if (!(await isAthlete(athleteId))) return { ok: false, status: 404, error: 'Account not found.' };
       const parsed = parseFitActivity(bytes);
       if (!parsed.ok) return { ok: false, status: 400, error: parsed.error };
       const fingerprint = createHash('sha256').update(bytes).digest('hex');
@@ -27,8 +27,8 @@ export function createAthleteFitImportService({ db = prisma }: { db?: Database }
     },
 
     async import(athleteId: number, bytes: Uint8Array, confirmed: boolean, pairingSessionId?: number | null): Promise<FitImportResult> {
-      if (!confirmed) return { ok: false, status: 400, error: 'Review the activity and confirm before saving.' };
-      if (!(await isAthlete(athleteId))) return { ok: false, status: 404, error: 'Athlete not found.' };
+      if (!confirmed) return { ok: false, status: 400, error: 'Check the activity, then choose Import activity.' };
+      if (!(await isAthlete(athleteId))) return { ok: false, status: 404, error: 'Account not found.' };
       const parsed = parseFitActivity(bytes);
       if (!parsed.ok) return { ok: false, status: 400, error: parsed.error };
       const fingerprint = createHash('sha256').update(bytes).digest('hex');
@@ -48,15 +48,15 @@ export function createAthleteFitImportService({ db = prisma }: { db?: Database }
           if (attached === 'stale') {
             const retry = await db.activity.findFirst({ where: { athleteId, importFingerprint: fingerprint }, select: { sessionId: true } });
             if (retry) return { ok: true, activity: parsed.activity, duplicate: true, sessionId: retry.sessionId };
-            return { ok: false, status: 409, error: 'That planned session is no longer available for this import. Review the file again and choose an available session.' };
+            return { ok: false, status: 409, error: 'That planned workout is no longer available. Check the file again and choose another workout.' };
           }
           return { ok: true, activity: parsed.activity, duplicate: false, sessionId: pairingSessionId };
         } catch {
           const retry = await db.activity.findFirst({ where: { athleteId, importFingerprint: fingerprint }, select: { sessionId: true } });
           if (retry) return { ok: true, activity: parsed.activity, duplicate: true, sessionId: retry.sessionId };
           const paired = await db.activity.findUnique({ where: { sessionId: pairingSessionId }, select: { id: true } });
-          if (paired) return { ok: false, status: 409, error: 'That planned session already has an activity. Review the file again and choose an available session.' };
-          throw new Error('Failed to save imported activity transactionally.');
+          if (paired) return { ok: false, status: 409, error: 'That planned workout already has an activity. Check the file again and choose another workout.' };
+          throw new Error('Could not save this activity. Try again.');
         }
       }
 
@@ -94,7 +94,7 @@ export function createAthleteFitImportService({ db = prisma }: { db?: Database }
       } catch {
         const retry = await db.activity.findFirst({ where: { athleteId, importFingerprint: fingerprint }, select: { sessionId: true } });
         if (retry) return { ok: true, activity: parsed.activity, duplicate: true, sessionId: retry.sessionId };
-        throw new Error('Failed to save imported activity transactionally.');
+        throw new Error('Could not save this activity. Try again.');
       }
     },
   };

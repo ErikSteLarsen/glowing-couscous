@@ -13,14 +13,14 @@ export async function PATCH(
   const { requestId } = await params;
   const parsedRequestId = parsePositiveInteger(requestId);
   if (parsedRequestId === null) {
-    return NextResponse.json({ error: 'Invalid requestId' }, { status: 400 });
+    return NextResponse.json({ error: 'Request not found.' }, { status: 400 });
   }
 
   const body = await readJsonObject(req);
-  if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  if (!body.ok) return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
   const { action } = body.value;
   if (action !== 'accept' && action !== 'reject') {
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
   }
 
   const result = await coachRequestService.decideForCoach(user.id, parsedRequestId, action);

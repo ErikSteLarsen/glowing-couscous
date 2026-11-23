@@ -94,11 +94,11 @@ function parseManualActivityFields(input: Pick<ManualActivityInput, 'sport' | 't
     return { ok: false, error: `Title must be between 1 and ${MAX_TITLE_LENGTH} characters.` };
   }
   if (typeof input.completedOn !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(input.completedOn)) {
-    return { ok: false, error: 'Choose a valid completion date.' };
+    return { ok: false, error: 'Choose a valid date.' };
   }
   const completedAt = parseISO(`${input.completedOn}T12:00:00.000Z`);
   if (!isValid(completedAt) || completedAt.toISOString().slice(0, 10) !== input.completedOn) {
-    return { ok: false, error: 'Choose a valid completion date.' };
+    return { ok: false, error: 'Choose a valid date.' };
   }
   const metrics = parseManualMetrics(input);
   if (!metrics.ok) return metrics;
@@ -118,9 +118,9 @@ function parseManualActivity(input: ManualActivityInput): ParsedManualActivity {
   const fields = parseManualActivityFields(input);
   if (!fields.ok) return fields;
   if (typeof input.requestKey !== 'string' || !/^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i.test(input.requestKey)) {
-    return { ok: false, error: 'Refresh the form and try again.' };
+    return { ok: false, error: 'Reload the page and try again.' };
   }
-  if (input.pairingChoice !== 'separate' && !(typeof input.pairingChoice === 'number' && Number.isSafeInteger(input.pairingChoice) && input.pairingChoice > 0)) return { ok: false, error: 'Choose a planned session or keep this activity separate.' };
+  if (input.pairingChoice !== 'separate' && !(typeof input.pairingChoice === 'number' && Number.isSafeInteger(input.pairingChoice) && input.pairingChoice > 0)) return { ok: false, error: 'Choose a planned workout, or save this on its own.' };
   return {
     ok: true,
     value: {
@@ -139,7 +139,7 @@ function parseExpectedUpdatedAt(value: unknown) {
 
 function parseManualCorrection(input: ManualActivityCorrectionInput, kind: string): { ok: false; error: string } | { ok: true; value: ParsedManualCorrection } {
   const expectedUpdatedAt = parseExpectedUpdatedAt(input.expectedUpdatedAt);
-  if (!expectedUpdatedAt) return { ok: false, error: 'Refresh this activity and try again.' };
+  if (!expectedUpdatedAt) return { ok: false, error: 'Reload the page and try again.' };
 
   if (kind === 'manual-unplanned') {
     const fields = parseManualActivityFields({
@@ -156,9 +156,9 @@ function parseManualCorrection(input: ManualActivityCorrectionInput, kind: strin
       : fields;
   }
 
-  if (kind !== 'manual-paired') return { ok: false, error: 'This activity cannot be corrected here.' };
+  if (kind !== 'manual-paired') return { ok: false, error: 'This activity can’t be edited here.' };
   if (Object.hasOwn(input, 'sport') || Object.hasOwn(input, 'title') || Object.hasOwn(input, 'completedOn')) {
-    return { ok: false, error: 'The planned workout details cannot be changed from an activity correction.' };
+    return { ok: false, error: 'You can’t change the planned workout from here.' };
   }
   const fields = parseManualMetrics({
     durationMinutes: input.durationMinutes,
@@ -197,13 +197,13 @@ export function createAthleteManualActivityService({ db = prisma }: { db?: Manua
             return { ok: false as const, status: 404 as const, error: 'Activity not found.' };
           }
           if (activity.metricsSource !== 'manual-unplanned' && activity.metricsSource !== 'manual-paired') {
-            return { ok: false as const, status: 409 as const, error: 'Only manually logged activities can be corrected here.' };
+            return { ok: false as const, status: 409 as const, error: 'Only activities you logged by hand can be edited here.' };
           }
 
           const parsed = parseManualCorrection(input, activity.metricsSource);
           if (!parsed.ok) return { ok: false as const, status: 400 as const, error: parsed.error };
           if (activity.updatedAt.getTime() !== parsed.value.expectedUpdatedAt.getTime()) {
-            return { ok: false as const, status: 409 as const, error: 'This activity changed after you opened it. Reload the latest outcome before correcting it.' };
+            return { ok: false as const, status: 409 as const, error: 'This activity changed after you opened it. Reload the page before you edit it.' };
           }
 
           const session = activity.session;
@@ -213,12 +213,12 @@ export function createAthleteManualActivityService({ db = prisma }: { db?: Manua
             && session.assignedById === null
             && session.trainingPlanId === null;
           if (!isSelfOwnedCompletedSession || activity.actualSnapshotJson !== null || activity.importFingerprint !== null) {
-            return { ok: false as const, status: 409 as const, error: 'This activity can no longer be corrected here.' };
+            return { ok: false as const, status: 409 as const, error: 'This activity can’t be edited here anymore.' };
           }
 
           if (parsed.value.kind === 'manual-unplanned') {
             if (session.source !== 'athlete-manual' || session.planId !== null || session.coachBaselineJson !== null || session.blocks.length > 0) {
-              return { ok: false as const, status: 409 as const, error: 'This activity can no longer be corrected here.' };
+              return { ok: false as const, status: 409 as const, error: 'This activity can’t be edited here anymore.' };
             }
 
             const updatedSession = await tx.session.updateMany({
@@ -243,7 +243,7 @@ export function createAthleteManualActivityService({ db = prisma }: { db?: Manua
             });
             if (updatedSession.count !== 1) throw new ManualActivityCorrectionConflict();
           } else if (session.source === 'athlete-manual') {
-            return { ok: false as const, status: 409 as const, error: 'This paired activity can no longer be corrected here.' };
+            return { ok: false as const, status: 409 as const, error: 'This activity can’t be edited here anymore.' };
           }
 
           const updatedActivity = await tx.activity.updateMany({
@@ -281,7 +281,7 @@ export function createAthleteManualActivityService({ db = prisma }: { db?: Manua
         });
       } catch (error) {
         if (error instanceof ManualActivityCorrectionConflict) {
-          return { ok: false, status: 409, error: 'This activity changed while you were correcting it. Reload the latest outcome before trying again.' };
+          return { ok: false, status: 409, error: 'This activity changed while you were editing it. Reload the page and try again.' };
         }
         throw error;
       }
@@ -290,7 +290,7 @@ export function createAthleteManualActivityService({ db = prisma }: { db?: Manua
       const parsed = parseManualActivity(input);
       if (!parsed.ok) return { ok: false, status: 400, error: parsed.error };
       const athlete = await db.user.findUnique({ where: { id: athleteId }, select: { id: true, role: true } });
-      if (!athlete || athlete.role !== 'ATHLETE') return { ok: false, status: 404, error: 'Athlete not found.' };
+      if (!athlete || athlete.role !== 'ATHLETE') return { ok: false, status: 404, error: 'Account not found.' };
 
       const existing = await db.activity.findUnique({ where: { manualEntryKey: parsed.value.requestKey }, select: { sessionId: true, athleteId: true, completedAt: true } });
       if (existing) {
@@ -304,10 +304,10 @@ export function createAthleteManualActivityService({ db = prisma }: { db?: Manua
           const dayRange = dateRangeForDay(parsed.value.completedAt.toISOString().slice(0, 10));
           return await db.$transaction(async (tx) => {
             const session = await tx.session.findUnique({ where: { id: pairingSessionId }, include: { blocks: { orderBy: { sortOrder: 'asc' } }, activity: true } });
-            if (!session || session.athleteId !== athleteId || session.sport !== parsed.value.sport || !session.date || session.date < dayRange.gte || session.date >= dayRange.lt || (session.status !== 'planned' && session.status !== 'adjusted') || session.activity || session.coachOwnerId !== null || session.assignedById !== null || session.trainingPlanId !== null) return { ok: false as const, status: 409 as const, error: 'That session is no longer eligible. Choose another session or keep this activity separate.' };
+            if (!session || session.athleteId !== athleteId || session.sport !== parsed.value.sport || !session.date || session.date < dayRange.gte || session.date >= dayRange.lt || (session.status !== 'planned' && session.status !== 'adjusted') || session.activity || session.coachOwnerId !== null || session.assignedById !== null || session.trainingPlanId !== null) return { ok: false as const, status: 409 as const, error: 'That planned workout is no longer available. Choose another, or save this on its own.' };
             const baseline = snapshotPlannedSession(session);
             const updated = await tx.session.updateMany({ where: { id: session.id, athleteId, sport: parsed.value.sport, date: dayRange, status: { in: ['planned', 'adjusted'] }, coachOwnerId: null, assignedById: null, trainingPlanId: null, activity: { is: null } }, data: { status: 'completed', ...(session.coachBaselineJson === null ? { coachBaselineJson: baseline } : {}) } });
-            if (updated.count !== 1) return { ok: false as const, status: 409 as const, error: 'That session is no longer eligible. Choose another session or keep this activity separate.' };
+            if (updated.count !== 1) return { ok: false as const, status: 409 as const, error: 'That planned workout is no longer available. Choose another, or save this on its own.' };
             const saved = await tx.activity.create({ data: { athleteId, sessionId: session.id, completedAt: parsed.value.completedAt, durationSec: parsed.value.durationSec, distanceMeters: parsed.value.distanceMeters, tss: null, compliancePct: null, zoneDistributionJson: '{}', segmentsJson: '[]', metricsSource: 'manual-paired', manualEntryKey: parsed.value.requestKey, notes: parsed.value.notes, rpe: parsed.value.rpe }, select: { completedAt: true } });
             return { ok: true as const, sessionId: session.id, completedAt: saved.completedAt };
           });
@@ -348,7 +348,7 @@ export function createAthleteManualActivityService({ db = prisma }: { db?: Manua
       } catch {
         const retry = await db.activity.findUnique({ where: { manualEntryKey: parsed.value.requestKey }, select: { sessionId: true, athleteId: true, completedAt: true } });
         if (retry?.athleteId === athleteId) return { ok: true, sessionId: retry.sessionId, completedAt: retry.completedAt };
-        throw new Error('Failed to save manual activity transactionally.');
+        throw new Error('Could not save this activity. Try again.');
       }
     },
   };

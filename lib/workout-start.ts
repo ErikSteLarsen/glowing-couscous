@@ -6,25 +6,25 @@ export type WorkoutStartRuntime = { os: RideOs; webBluetooth: boolean; inTempoRi
 const followAlong = {
   mode: 'live',
   label: 'Follow along',
-  description: 'Use a step timer and advance through the workout yourself.',
+  description: 'A timer for each step. You move on to the next step yourself.',
 } as const;
 
 const openApp = {
   mode: 'app',
   label: 'Open in Tempo Ride',
-  description: 'Use Bluetooth devices in the desktop app.',
+  description: 'Connect your trainer and sensors in the desktop app.',
 } as const;
 
 const browserRide = {
   mode: 'ride',
   label: 'Ride in this browser',
-  description: 'Use Bluetooth devices or ride to the targets.',
+  description: 'Connect your trainer and sensors over Bluetooth, or ride without them.',
 } as const;
 
 const targetsOnly = {
   mode: 'ride',
-  label: 'Ride with targets only',
-  description: 'Time bike intervals automatically and save your ride duration.',
+  label: 'Ride without devices',
+  description: 'Tempo times each interval and shows its target. Your ride time is saved at the end.',
 } as const;
 
 type WorkoutStartOption = { mode: 'live' | 'ride' | 'app'; label: string; description: string };

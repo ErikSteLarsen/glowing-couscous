@@ -92,15 +92,15 @@ export function createAthleteSessionAdjustmentService({
       input: unknown,
     ): Promise<AdjustmentResult> {
       const parsed = sessionEditorInput.safeParse(input);
-      if (!parsed.success) return { ok: false as const, status: 400, error: 'Invalid session draft.' };
+      if (!parsed.success) return { ok: false as const, status: 400, error: 'Some details are missing or wrong. Check them and try again.' };
       const draft = parsed.data;
       if (draft.mode !== 'planned') {
-        return { ok: false, status: 400, error: 'Planned session edits require planned mode.' };
+        return { ok: false, status: 400, error: 'Could not save your changes. Reload the page and try again.' };
       }
 
       const validationError = validateSessionSnapshotDraft(draft) ?? validateSessionEditorDraft(draft);
       if (validationError) return { ok: false, status: 400, error: validationError };
-      if (draft.athleteId !== athleteId) return { ok: false, status: 404, error: 'Session not found.' };
+      if (draft.athleteId !== athleteId) return { ok: false, status: 404, error: 'Workout not found.' };
 
       const session = await db.session.findUnique({
         where: { id: sessionId },
@@ -110,18 +110,18 @@ export function createAthleteSessionAdjustmentService({
         },
       });
       if (!session || session.athleteId !== athleteId) {
-        return { ok: false, status: 404, error: 'Session not found.' };
+        return { ok: false, status: 404, error: 'Workout not found.' };
       }
       if (session.activity || session.status === 'completed') {
-        return { ok: false, status: 409, error: 'Completed sessions cannot be adjusted.' };
+        return { ok: false, status: 409, error: 'Workouts marked as done can’t be changed. Use Fix result instead.' };
       }
       if (!draft.scheduledDate) {
-        return { ok: false, status: 400, error: 'A valid scheduled date is required.' };
+        return { ok: false, status: 400, error: 'Choose a valid date.' };
       }
 
       const scheduledDate = parseISO(`${draft.scheduledDate}T00:00:00.000Z`);
       if (!isValid(scheduledDate)) {
-        return { ok: false, status: 400, error: 'A valid scheduled date is required.' };
+        return { ok: false, status: 400, error: 'Choose a valid date.' };
       }
 
       const weekStart = startOfWeek(scheduledDate, { weekStartsOn: 1 });

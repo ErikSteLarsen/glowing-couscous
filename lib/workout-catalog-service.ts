@@ -39,7 +39,7 @@ function isUniqueViolation(error: unknown) {
 
 function replaySchedule(request: { payloadHash: string; sessionIdsJson: string }, payloadHash: string): { ok: true; sessionIds: number[] } | Failure {
   if (request.payloadHash !== payloadHash) {
-    return { ok: false, error: 'This schedule request was already used for different dates or workout.', status: 409 };
+    return { ok: false, error: 'Something went wrong. Reload the page and try again.', status: 409 };
   }
   let ids: unknown = null;
   try {
@@ -48,12 +48,12 @@ function replaySchedule(request: { payloadHash: string; sessionIdsJson: string }
     // A malformed row cannot safely be replayed.
   }
   if (Array.isArray(ids) && ids.length > 0 && ids.every((id) => Number.isInteger(id) && id > 0)) return { ok: true, sessionIds: ids as number[] };
-  return { ok: false, error: 'Could not confirm the earlier schedule request.', status: 409 };
+  return { ok: false, error: 'Could not confirm that this was added. Check your Calendar before you try again.', status: 409 };
 }
 
 type Failure = { ok: false; error: string; status: 400 | 404 | 409 | 500 };
 
-const notFound: Failure = { ok: false, error: 'Workout not found in the library.', status: 404 };
+const notFound: Failure = { ok: false, error: 'Workout not found in the public library.', status: 404 };
 const MAX_SCHEDULE_DATES = 31;
 
 function asRecord(input: unknown): Record<string, unknown> {
@@ -85,7 +85,7 @@ export function createWorkoutCatalogService({
       const workout = find(slug);
       if (!workout) return notFound;
       const date = parseCalendarDay(asRecord(input).date);
-      if (!date) return { ok: false, error: 'Send the local date to ride on (yyyy-MM-dd).', status: 400 };
+      if (!date) return { ok: false, error: 'Choose a date.', status: 400 };
 
       const sessionInput = catalogWorkoutToSessionInput(workout);
       try {
@@ -132,7 +132,7 @@ export function createWorkoutCatalogService({
 
       const requestKey = record.requestKey;
       if (typeof requestKey !== 'string' || !REQUEST_KEY_PATTERN.test(requestKey)) {
-        return { ok: false, error: 'Invalid schedule request identity. Refresh and try again.', status: 400 };
+        return { ok: false, error: 'Something went wrong. Reload the page and try again.', status: 400 };
       }
       const sortedDates = (dates as string[]).sort();
       const payloadHash = createHash('sha256').update(JSON.stringify({ catalog: slug, dates: sortedDates, timeLabel })).digest('hex');

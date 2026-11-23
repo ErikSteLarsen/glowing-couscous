@@ -24,7 +24,7 @@ export function describeWorkoutDraft(record: Pick<RecoveryDraft, 'resource' | 'p
   const recovered = parseWorkoutRecovery(record.payload);
   const original = record.resource === 'new' ? null : workouts.find((workout) => String(workout.id) === record.resource) ?? null;
   const name = recovered?.draft.title.trim() || original?.title.trim() || 'Untitled workout';
-  const kind = record.resource === 'new' ? 'New workout' : original ? 'Unsaved changes' : 'Edits to a removed workout';
+  const kind = record.resource === 'new' ? 'New workout' : original ? 'Unsaved changes' : 'Changes to a deleted workout';
   return { name, kind };
 }
 

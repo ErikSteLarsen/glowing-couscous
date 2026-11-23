@@ -194,12 +194,12 @@ export function createGuidedCandidates(input: GuidedWorkoutInput, profile: Perfo
   }
   if (!input.intervals) {
     const zone: TempoZone = input.intensity === 'easy' ? 2 : input.intensity === 'steady' ? 3 : 4;
-    add('even', input.intensity === 'hard' ? 'Controlled finish' : 'Even effort', input.intensity === 'hard' ? 'Steady preparation followed by a limited strong finish.' : 'A simple, predictable session.', `${input.durationMinutes}-minute ${input.intensity} ${sport}`, `A ${input.intensity} continuous ${sport}. Use the targets as guides and adjust for how you feel.`, continuousBlocks(input, zone, false));
+    add('even', input.intensity === 'hard' ? 'Controlled finish' : 'Even effort', input.intensity === 'hard' ? 'Steady preparation followed by a limited strong finish.' : 'A simple, even workout.', `${input.durationMinutes}-minute ${input.intensity} ${sport}`, `A ${input.intensity} continuous ${sport}. Use the targets as guides and adjust for how you feel.`, continuousBlocks(input, zone, false));
     add('progressive', 'Build gently', 'Starts below the selected effort, then settles into it.', `Progressive ${input.intensity} ${sport}`, `Begin gently, then move toward a controlled ${input.intensity} effort.`, continuousBlocks(input, zone, true));
   } else {
     const zone: TempoZone = input.intensity === 'easy' ? 2 : input.intensity === 'steady' ? 3 : 4;
     add('regular', 'Longer efforts', 'More time at the chosen effort with easy movement between repetitions.', `${input.intensity} intervals · ${input.durationMinutes} min`, `Controlled ${input.intensity} intervals with active recovery. Short interval heart-rate targets can lag behind effort.`, intervalBlocks(input, zone, false));
-    add('short', 'Shorter efforts', 'Short repeats make the session easier to pace and adjust.', `Short ${input.intensity} intervals · ${input.durationMinutes} min`, `Short controlled efforts with active recovery. Keep each repetition repeatable.`, intervalBlocks(input, zone, true));
+    add('short', 'Shorter efforts', 'Short repeats make the workout easier to pace and adjust.', `Short ${input.intensity} intervals · ${input.durationMinutes} min`, `Short controlled efforts with active recovery. Keep each repetition repeatable.`, intervalBlocks(input, zone, true));
   }
   if (sparse || recentHard) return candidates.slice().reverse();
   return candidates;
@@ -214,11 +214,11 @@ export function fallbackGuidedChoice(candidates: GuidedCandidate[], history: Gui
 }
 
 export function guidedContextExplanation(history: GuidedHistory, input: GuidedWorkoutInput): string {
-  if (history.completedLast28Days === 0) return 'No completed training is recorded in the last four weeks. This is a general starting draft; review the effort before saving.';
-  if (history.sameSportLast28Days === 0) return `You have ${history.completedLast28Days} completed session${history.completedLast28Days === 1 ? '' : 's'} in the last four weeks, but none in this sport. Review the targets before saving.`;
+  if (history.completedLast28Days === 0) return 'You have no completed training in the last four weeks, so this is a general starting point. Check the effort before saving.';
+  if (history.sameSportLast28Days === 0) return `You completed ${history.completedLast28Days} workout${history.completedLast28Days === 1 ? '' : 's'} in the last four weeks, but none in this sport. Check the targets before saving.`;
   const details = [`${history.sameSportLast28Days} completed ${input.sport === 'RUNNING' ? 'runs' : input.sport === 'BIKING' ? 'rides' : 'swims'} in the last four weeks`];
-  if (history.sameSportMedianMinutes !== null) details.push(`typical recorded duration ${history.sameSportMedianMinutes} minutes`);
-  if (history.sameSportMedianMinutes !== null && input.durationMinutes > history.sameSportMedianMinutes * 1.25) details.push('the requested length is longer than your recent typical session');
-  if (history.recentHighRpeDaysAgo !== null && history.recentHighRpeDaysAgo <= 2) details.push('a high-effort session was recorded recently');
-  return `${details.join('; ')}. Training history may be incomplete, so review this draft before saving.`;
+  if (history.sameSportMedianMinutes !== null) details.push(`usually ${history.sameSportMedianMinutes} minutes long`);
+  if (history.sameSportMedianMinutes !== null && input.durationMinutes > history.sameSportMedianMinutes * 1.25) details.push('this is longer than your usual workout');
+  if (history.recentHighRpeDaysAgo !== null && history.recentHighRpeDaysAgo <= 2) details.push('you did a hard workout in the last two days');
+  return `${details.join('; ')}. Your history may be incomplete, so check this workout before saving.`;
 }

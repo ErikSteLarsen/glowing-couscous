@@ -138,7 +138,7 @@ export class RideDeviceManager {
   async connect(role: RideDeviceRole): Promise<void> {
     if (this.disposed || this.chooser || this.snapshot[role].status === 'connecting') return;
     if (!isWebBluetoothAvailable()) {
-      this.update(role, { status: 'error', message: 'Bluetooth is not available in this browser.' });
+      this.update(role, { status: 'error', message: 'This browser can’t use Bluetooth.' });
       return;
     }
     const chooser = Symbol();
@@ -150,7 +150,7 @@ export class RideDeviceManager {
       if (this.chooser !== chooser) return;
       this.chooser = null;
       if (error instanceof DOMException && error.name === 'NotFoundError') return;
-      this.update(role, { status: 'error', message: error instanceof Error ? error.message : 'Could not open the Bluetooth chooser.' });
+      this.update(role, { status: 'error', message: error instanceof Error ? error.message : 'Could not open the list of Bluetooth devices.' });
       return;
     }
     if (this.chooser !== chooser) return;
@@ -231,7 +231,7 @@ export class RideDeviceManager {
       } catch {
         if (connection.lifetime.signal.aborted || connection.notifications?.signal.aborted) return;
         this.clearConnection(role, connection);
-        this.update(role, { status: 'reconnecting', message: 'Could not reconnect. Retrying…' });
+        this.update(role, { status: 'reconnecting', message: 'Could not reconnect. Trying again…' });
         this.scheduleReconnect(role, connection);
       }
     }, delay);
@@ -244,7 +244,7 @@ export class RideDeviceManager {
     const server = await connection.device.gatt?.connect();
     if (signal.aborted && !this.connections[role]) connection.device.gatt?.disconnect();
     signal.throwIfAborted();
-    if (!server) throw new Error('This device does not support GATT connections.');
+    if (!server) throw new Error('This device can’t connect to Tempo.');
     const protocol = await this.setup(role, server, signal);
     signal.throwIfAborted();
     this.reconnectAttempts[role] = 0;
@@ -342,7 +342,7 @@ export class RideDeviceManager {
     signal.throwIfAborted();
     const { promise, resolve, reject } = Promise.withResolvers<FtmsControlResponse['result']>();
     const abort = () => reject(signal.reason);
-    const timer = setTimeout(() => reject(new Error('Trainer did not acknowledge the FTMS command.')), CONTROL_RESPONSE_TIMEOUT_MS);
+    const timer = setTimeout(() => reject(new Error('The trainer didn’t respond, so ERG may not work.')), CONTROL_RESPONSE_TIMEOUT_MS);
     signal.addEventListener('abort', abort, { once: true });
     control.onResponse = (response) => {
       if (response.requestOpcode === bytes[0]) resolve(response.result);
@@ -376,15 +376,15 @@ export class RideDeviceManager {
       try {
         if (!control.granted) {
           const request = await this.procedure(control, encodeRequestControl());
-          if (request !== 'success') throw new Error('Trainer did not grant FTMS control.');
+          if (request !== 'success') throw new Error('The trainer didn’t let Tempo control it.');
           const start = await this.procedure(control, encodeStartOrResume());
-          if (start === 'control-not-permitted') throw new Error('Trainer revoked FTMS control.');
+          if (start === 'control-not-permitted') throw new Error('The trainer stopped letting Tempo control it.');
           control.granted = true;
         }
         command = this.desiredCommand;
         if (!command) return;
         const result = await this.procedure(control, command.mode === 'erg' ? encodeSetTargetPower(command.watts) : encodeSetIndoorBikeSimulation());
-        if (result !== 'success') throw new Error('Trainer rejected the FTMS target.');
+        if (result !== 'success') throw new Error('The trainer didn’t accept the target power.');
       } catch {
         control.granted = false;
         if (this.control === control && this.desiredCommand === command && attempt + 1 < WRITE_RETRY_LIMIT) {

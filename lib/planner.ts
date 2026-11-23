@@ -31,13 +31,13 @@ export function normalizeSessionDraft(input: unknown): SessionDraft {
 
 export function validateSessionDraft(draft: SessionDraft) {
   if (!draft.scheduledDate || Number.isNaN(new Date(draft.scheduledDate).getTime())) {
-    return 'A valid scheduled date is required.';
+    return 'Choose a valid date.';
   }
   if (!draft.title) {
-    return 'Session title is required.';
+    return 'Add a name.';
   }
   if (!SPORT_OPTIONS.includes(draft.sportType as (typeof SPORT_OPTIONS)[number])) {
-    return 'Sport type is invalid.';
+    return 'Choose a sport.';
   }
 
   return validateWorkoutBlocks(draft.blocks, BLOCK_OPTIONS);

@@ -14,7 +14,7 @@ export async function POST(
 
     const { sessionId: rawSessionId } = await params;
     const sessionId = parsePositiveInteger(rawSessionId);
-    if (sessionId === null) return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
+    if (sessionId === null) return NextResponse.json({ error: 'Workout not found.' }, { status: 400 });
 
     const result = await athleteSessionStatusService.skipSession(user.id, sessionId);
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
@@ -22,6 +22,6 @@ export async function POST(
     return NextResponse.json({ ok: true, sessionId: result.sessionId, status: result.status });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to skip session' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not skip this workout. Try again.' }, { status: 500 });
   }
 }

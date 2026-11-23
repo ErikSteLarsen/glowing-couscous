@@ -11,10 +11,10 @@ export async function PATCH(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
   }
   if (!isJsonObject(body)) {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
   }
   const result = await accountService.updateProfile(user.id, body);
   return NextResponse.json(result.ok ? result : { error: result.error }, { status: result.ok ? 200 : result.status });

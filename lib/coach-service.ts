@@ -161,7 +161,7 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
                 : { label: 'Needs attention', tone: 'warning' as const },
           nextSession: nextSession
             ? `${nextSession.title} · ${format(nextSession.date, 'EEE\u00A0d\u00A0MMM')}`
-            : 'No session scheduled',
+            : 'No workout planned',
           sessions,
         };
       });
@@ -331,7 +331,7 @@ export function createCoachService({ db = prisma, now = () => new Date() }: Coac
           weekTss,
           nextSession: nextSession
             ? `${nextSession.title} · ${format(nextSession.date, 'EEE\u00A0d\u00A0MMM')}`
-            : 'No session scheduled',
+            : 'No workout planned',
         },
         week: {
           start: weekStart,

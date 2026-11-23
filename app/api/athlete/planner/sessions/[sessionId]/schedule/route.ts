@@ -15,15 +15,15 @@ export async function PATCH(
 
     const { sessionId } = await params;
     const parsedSessionId = parsePositiveInteger(sessionId);
-    if (parsedSessionId === null) return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
+    if (parsedSessionId === null) return NextResponse.json({ error: 'Workout not found.' }, { status: 400 });
     const body = await readJsonObject(request);
-    if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    if (!body.ok) return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
 
     const result = await athletePlannerService.rescheduleSession(user.id, parsedSessionId, body.value);
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
     return NextResponse.json({ ok: true, sessionId: result.sessionId, date: result.date });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to move session' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not move this workout. Try again.' }, { status: 500 });
   }
 }

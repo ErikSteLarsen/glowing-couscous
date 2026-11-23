@@ -165,7 +165,7 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
 
     async saveSession(coachId: number, input: unknown, sessionId?: number) {
       const parsed = plannerSessionInput.safeParse(input);
-      if (!parsed.success) return { ok: false as const, status: 400, error: 'Invalid session draft.' };
+      if (!parsed.success) return { ok: false as const, status: 400, error: 'Some details are missing or wrong. Check them and try again.' };
       const draft = parsed.data;
       const validationError = validatePlannerSessionDraft(draft);
       if (validationError) {
@@ -194,10 +194,10 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
           select: { id: true, athleteId: true, adjusted: true, activity: { select: { id: true } } },
         });
         if (!existing || existing.athleteId !== draft.athleteId) {
-          return { ok: false as const, error: 'Session not found.', status: 404 };
+          return { ok: false as const, error: 'Workout not found.', status: 404 };
         }
         if (existing.activity) {
-          return { ok: false as const, error: 'Completed sessions are immutable.', status: 409 };
+          return { ok: false as const, error: 'Workouts marked as done can’t be changed.', status: 409 };
         }
       }
 
@@ -283,10 +283,10 @@ export function createCoachPlannerService({ db = prisma, now = () => new Date() 
         },
       });
       if (!session || !session.athlete || session.athlete.coachId !== coachId) {
-        return { ok: false as const, error: 'Session not found.', status: 404 };
+        return { ok: false as const, error: 'Workout not found.', status: 404 };
       }
       if (session.activity) {
-        return { ok: false as const, error: 'Completed sessions are immutable.', status: 409 };
+        return { ok: false as const, error: 'Workouts marked as done can’t be changed.', status: 409 };
       }
 
       await db.session.delete({ where: { id: sessionId } });

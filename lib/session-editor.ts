@@ -343,26 +343,26 @@ export function deriveSessionEditorMetrics(draft: SessionEditorDraft, ftpWatts?:
 }
 
 export function validateSessionEditorDraft(draft: SessionEditorDraft): string | null {
-  if (!draft.title.trim()) return 'Session title is required.';
-  if (!SPORT_OPTIONS.includes(draft.sport as SportType)) return 'Sport is required.';
+  if (!draft.title.trim()) return 'Add a name.';
+  if (!SPORT_OPTIONS.includes(draft.sport as SportType)) return 'Choose a sport.';
   if (draft.scheduledDate !== null && !isCalendarDate(draft.scheduledDate)) {
-    return 'Scheduled date must be a valid calendar date.';
+    return 'Choose a valid date.';
   }
   if (draft.planWeekday !== null && (!Number.isInteger(draft.planWeekday) || draft.planWeekday < 1 || draft.planWeekday > 7)) {
-    return 'Plan weekday must be an integer from 1 through 7.';
+    return 'Choose a day of the week.';
   }
-  if (draft.blocks.length === 0) return 'At least one block is required.';
-  if (!draft.blocks.some((block) => block.kind !== 'pause' && !block.skipped)) return 'Add an active workout block before saving.';
+  if (draft.blocks.length === 0) return 'Add at least one step.';
+  if (!draft.blocks.some((block) => block.kind !== 'pause' && !block.skipped)) return 'Add at least one training step before saving. Pauses don’t count.';
 
   for (const block of draft.blocks) {
     if (!Number.isInteger(block.durationSec) || block.durationSec <= 0) {
-      return 'Every block needs a positive integer duration.';
+      return 'Every step needs a duration.';
     }
     if (block.reps !== null && (!Number.isInteger(block.reps) || block.reps <= 0)) {
-      return 'Repetitions must be a positive integer when provided.';
+      return 'Repeats must be a whole number of 1 or more.';
     }
     if (block.kind === 'pause' && (block.target !== null || block.reps !== null)) {
-      return 'Pause blocks cannot have a training target or repetitions.';
+      return 'Pauses can’t have a target or repeats.';
     }
     if (block.target !== null) {
       const targetError = validateWorkoutTarget(block.target, draft.sport);
@@ -371,7 +371,7 @@ export function validateSessionEditorDraft(draft: SessionEditorDraft): string | 
   }
 
   if (draft.rpe !== null && (!Number.isInteger(draft.rpe) || draft.rpe < 1 || draft.rpe > 10)) {
-    return 'RPE must be an integer from 1 through 10.';
+    return 'RPE must be a whole number from 1 to 10.';
   }
 
   return null;

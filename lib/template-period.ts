@@ -11,19 +11,19 @@ export function validateTemplateDateRange(dates: string[], period: TemplatePerio
   if (!dates.length || dates.some((date) => !isAssignmentDate(date))) return 'Choose valid calendar dates.';
   const expectedDays = getTemplateDurationDays(period, dates[0]);
   if (dates.length !== expectedDays) {
-    return `${period === 'week' ? 'Week' : 'Month'} templates require exactly ${expectedDays} consecutive days.`;
+    return `Choose ${expectedDays} days in a row for a ${period}.`;
   }
 
   const first = parseISO(`${dates[0]}T00:00:00`);
   const expectedDates = dates.map((_, index) => format(addDays(first, index), 'yyyy-MM-dd'));
   if (expectedDates.some((date, index) => date !== dates[index])) {
-    return `${period === 'week' ? 'Week' : 'Month'} templates require consecutive dates.`;
+    return `Choose days in a row for a ${period}.`;
   }
   if (period === 'week' && first.getDay() !== 1) {
-    return 'Week templates must start on a Monday.';
+    return 'A week starts on Monday. Choose a Monday.';
   }
   if (period === 'month' && (first.getDate() !== 1 || startOfMonth(first).getTime() !== first.getTime() || endOfMonth(first).getDate() !== dates.length)) {
-    return 'Month templates must cover the full calendar month.';
+    return 'Choose a whole calendar month.';
   }
   return null;
 }

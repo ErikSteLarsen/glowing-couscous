@@ -10,10 +10,10 @@ export async function POST(request: NextRequest) {
     if (error) return error;
 
     const body = await readJsonObject(request);
-    if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    if (!body.ok) return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
     const parsedAthleteId = parsePositiveInteger(body.value.athleteId);
     if (parsedAthleteId === null) {
-      return NextResponse.json({ error: 'Invalid athleteId' }, { status: 400 });
+      return NextResponse.json({ error: 'Account not found.' }, { status: 400 });
     }
 
     let source: AssignmentSource;
@@ -23,12 +23,12 @@ export async function POST(request: NextRequest) {
           : body.value.source.kind === 'training-plan'
             ? parsePositiveInteger(body.value.source.trainingPlanId)
             : null;
-      if (sourceId === null) return NextResponse.json({ error: 'Invalid source' }, { status: 400 });
+      if (sourceId === null) return NextResponse.json({ error: 'Choose a workout or training plan.' }, { status: 400 });
       if (body.value.source.kind === 'library-session') source = { kind: 'library-session', sessionId: sourceId };
       else if (body.value.source.kind === 'training-plan') source = { kind: 'training-plan', trainingPlanId: sourceId };
-      else return NextResponse.json({ error: 'Invalid source' }, { status: 400 });
+      else return NextResponse.json({ error: 'Choose a workout or training plan.' }, { status: 400 });
     } else {
-      return NextResponse.json({ error: 'Invalid source' }, { status: 400 });
+      return NextResponse.json({ error: 'Choose a workout or training plan.' }, { status: 400 });
     }
 
     const scheduledDate = typeof body.value.scheduledDate === 'string' ? body.value.scheduledDate : '';
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, sessionIds: 'sessionIds' in result ? result.sessionIds : [result.sessionId] }, { status: 201 });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to assign source' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not add this to the athlete’s calendar. Try again.' }, { status: 500 });
   }
 }
 

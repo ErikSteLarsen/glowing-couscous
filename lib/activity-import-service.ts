@@ -93,32 +93,32 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
   const points = value.points;
   if (!title || title.length > MAX_TITLE_LENGTH) return { ok: false, error: 'Enter a title up to 140 characters.' };
   if (!['RUNNING', 'BIKING', 'SWIMMING', 'STRENGTH', 'STRETCHING', 'OTHER'].includes(sport)) {
-    return { ok: false, error: 'Choose a supported activity type.' };
+    return { ok: false, error: 'Choose a sport for this activity.' };
   }
-  if (!Number.isFinite(startedAtDate.getTime())) return { ok: false, error: 'Activity start time is invalid.' };
+  if (!Number.isFinite(startedAtDate.getTime())) return { ok: false, error: 'This activity’s start time can’t be read.' };
   if (!Number.isInteger(durationSec) || (durationSec as number) < 1 || (durationSec as number) > MAX_ACTIVITY_IMPORT_DURATION_SEC) {
-    return { ok: false, error: 'Activity duration must be between one second and 36 hours.' };
+    return { ok: false, error: 'Activities must last between 1 second and 36 hours.' };
   }
   let finishedAt: string | undefined;
   if (value.finishedAt !== undefined && value.finishedAt !== null) {
     const finishedAtDate = typeof value.finishedAt === 'string' ? new Date(value.finishedAt) : new Date(Number.NaN);
     const spanSec = (finishedAtDate.getTime() - startedAtDate.getTime()) / 1000;
     if (!Number.isFinite(spanSec) || spanSec < (durationSec as number) - ACTIVITY_IMPORT_FINISH_TOLERANCE_SEC || spanSec > MAX_ACTIVITY_IMPORT_SPAN_SEC) {
-      return { ok: false, error: 'Activity finish time must follow its start by at least the recorded duration and at most 48 hours.' };
+      return { ok: false, error: 'This activity’s start and finish times don’t match its duration.' };
     }
     finishedAt = finishedAtDate.toISOString();
   }
   if (!Array.isArray(points) || points.length < 1 || points.length > MAX_ACTIVITY_IMPORT_POINTS) {
-    return { ok: false, error: `Activity samples must contain between one and ${MAX_ACTIVITY_IMPORT_POINTS.toLocaleString()} points.` };
+    return { ok: false, error: `This activity must have between 1 and ${MAX_ACTIVITY_IMPORT_POINTS.toLocaleString()} recorded data points.` };
   }
   const cleanPoints: ActivitySeriesPoint[] = [];
   let previousElapsed = -1;
   for (const point of points) {
-    if (!point || typeof point !== 'object') return { ok: false, error: 'Activity contains an invalid sensor sample.' };
+    if (!point || typeof point !== 'object') return { ok: false, error: 'This activity has recorded data Tempo can’t read.' };
     const sample = point as Record<string, unknown>;
     const elapsedSec = sample.elapsedSec;
     if (!Number.isInteger(elapsedSec) || (elapsedSec as number) < 0 || (elapsedSec as number) > MAX_ACTIVITY_IMPORT_DURATION_SEC || (elapsedSec as number) < previousElapsed) {
-      return { ok: false, error: 'Activity samples must have ordered elapsed times.' };
+      return { ok: false, error: 'This activity’s recorded data is out of order.' };
     }
     previousElapsed = elapsedSec as number;
     const cleaned: ActivitySeriesPoint = { elapsedSec: elapsedSec as number };
@@ -136,7 +136,7 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
       const candidate = sample[key];
       if (candidate === null || candidate === undefined) continue;
       if (typeof candidate !== 'number' || !Number.isFinite(candidate) || candidate < min || candidate > max) {
-        return { ok: false, error: 'Activity contains a sensor value outside the supported range.' };
+        return { ok: false, error: 'This activity has a sensor reading that is out of range.' };
       }
       Object.assign(cleaned, { [key]: candidate });
     }
@@ -145,17 +145,17 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
   const distanceMeters = optionalBoundedNumber(value.distanceMeters, 0, MAX_ACTIVITY_IMPORT_DISTANCE_METERS);
   const elevationGainMeters = optionalBoundedNumber(value.elevationGainMeters, 0, 100000);
   if (distanceMeters === 'invalid' || elevationGainMeters === 'invalid') {
-    return { ok: false, error: 'Activity distance or elevation is outside the supported range.' };
+    return { ok: false, error: 'This activity’s distance or elevation is out of range.' };
   }
   const plannedSessionId = value.plannedSessionId === null || value.plannedSessionId === undefined
     ? null
     : Number.isInteger(value.plannedSessionId) && (value.plannedSessionId as number) > 0
       ? value.plannedSessionId as number
       : 'invalid';
-  if (plannedSessionId === 'invalid') return { ok: false, error: 'Choose a valid planned session.' };
+  if (plannedSessionId === 'invalid') return { ok: false, error: 'Choose a planned workout from the list.' };
   const laps = validateActivityLaps(value.laps, durationSec as number);
-  if (!laps) return { ok: false, error: 'Activity lap boundaries are invalid.' };
-  if (value.analyzeWorkout !== undefined && typeof value.analyzeWorkout !== 'boolean') return { ok: false, error: 'Choose whether to interpret this workout.' };
+  if (!laps) return { ok: false, error: 'This activity’s laps can’t be read.' };
+  if (value.analyzeWorkout !== undefined && typeof value.analyzeWorkout !== 'boolean') return { ok: false, error: 'Choose whether to analyze this workout.' };
   return {
     ok: true,
     value: {
@@ -244,18 +244,18 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
 
     async deleteImportedActivityForUser(userId: number, activityId: number) {
       if (!Number.isInteger(activityId) || activityId <= 0) {
-        return { ok: false as const, status: 404 as const, error: 'Imported activity not found.' };
+        return { ok: false as const, status: 404 as const, error: 'Activity not found.' };
       }
       return db.$transaction((transaction) => deleteImportedActivityInTransaction(transaction, userId, activityId));
     },
 
     async deleteStravaActivityForUser(userId: number, stravaActivityId: string) {
-      if (!/^\d{1,20}$/.test(stravaActivityId)) return { ok: false as const, status: 404 as const, error: 'Imported activity not found.' };
+      if (!/^\d{1,20}$/.test(stravaActivityId)) return { ok: false as const, status: 404 as const, error: 'Activity not found.' };
       return db.$transaction((transaction) => deleteStravaActivityInTransaction(transaction, userId, stravaActivityId));
     },
 
     async deleteStravaActivityInTransaction(transaction: ActivityImportTransaction, userId: number, stravaActivityId: string) {
-      if (!/^\d{1,20}$/.test(stravaActivityId)) return { ok: false as const, status: 404 as const, error: 'Imported activity not found.' };
+      if (!/^\d{1,20}$/.test(stravaActivityId)) return { ok: false as const, status: 404 as const, error: 'Activity not found.' };
       return deleteStravaActivityInTransaction(transaction, userId, stravaActivityId);
     },
 
@@ -326,7 +326,7 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
           if (provenance.sourceProvider === 'STRAVA') {
             const connectionId = provenance.connectionId;
             if (!connectionId || !transaction.$queryRaw) {
-              return { ok: false as const, status: 409 as const, error: 'The Strava connection is no longer available. Reconnect and try again.' };
+              return { ok: false as const, status: 409 as const, error: 'Strava is no longer connected. Connect it again in Settings, then try again.' };
             }
             const lockedConnection = await transaction.$queryRaw<Array<{ id: string }>>`
               SELECT "id" FROM "StravaConnection"
@@ -334,17 +334,17 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
               FOR SHARE
             `;
             if (lockedConnection.length === 0) {
-              return { ok: false as const, status: 409 as const, error: 'The Strava connection was removed. Reconnect and try again.' };
+              return { ok: false as const, status: 409 as const, error: 'Strava is no longer connected. Connect it again in Settings, then try again.' };
             }
             if (!transaction.stravaInboxActivity?.findUnique || !provenance.externalActivityId || !provenance.expectedInboxFetchedAt) {
-              return { ok: false as const, status: 409 as const, error: 'This Strava activity changed. Reopen it and review the latest data.' };
+              return { ok: false as const, status: 409 as const, error: 'This Strava activity has changed. Open it again to see the latest version.' };
             }
             const currentInboxActivity = await transaction.stravaInboxActivity.findUnique({
               where: { connectionId_stravaActivityId: { connectionId, stravaActivityId: provenance.externalActivityId } },
               select: { fetchedAt: true },
             });
             if (!currentInboxActivity || currentInboxActivity.fetchedAt.getTime() !== provenance.expectedInboxFetchedAt.getTime()) {
-              return { ok: false as const, status: 409 as const, error: 'This Strava activity changed. Reopen it and review the latest data.' };
+              return { ok: false as const, status: 409 as const, error: 'This Strava activity has changed. Open it again to see the latest version.' };
             }
           }
           let sessionId: number;
@@ -353,7 +353,7 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
               where: { id: value.plannedSessionId, athleteId: userId, sport: value.sport, date: { not: null }, status: { not: 'completed' }, activity: { is: null } },
               select: { id: true, status: true },
             });
-            if (!planned) return { ok: false as const, status: 409 as const, error: 'That planned session is no longer available for this activity type.' };
+            if (!planned) return { ok: false as const, status: 409 as const, error: 'That planned workout is no longer available for this sport.' };
             sessionId = planned.id;
             // Claim the row checked above: a completion committed in between changes
             // its status, so the claim matches nothing instead of attaching.
@@ -361,7 +361,7 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
               where: { id: sessionId, status: planned.status, activity: { is: null } },
               data: { status: 'completed' },
             });
-            if (claim.count !== 1) return { ok: false as const, status: 409 as const, error: 'That planned session is no longer available for this activity type.' };
+            if (claim.count !== 1) return { ok: false as const, status: 409 as const, error: 'That planned workout is no longer available for this sport.' };
             const activity = await transaction.activity.create({
               data: { ...activityData, sessionId, importedSessionStatus: planned.status },
             });
@@ -521,11 +521,11 @@ async function deleteImportedActivityInTransaction(transaction: ActivityImportTr
       session: { select: { id: true, athleteId: true, source: true } },
     },
   });
-  if (!activity) return { ok: false as const, status: 404 as const, error: 'Imported activity not found.' };
+  if (!activity) return { ok: false as const, status: 404 as const, error: 'Activity not found.' };
 
   const session = recordValue(activity.session);
   if (numberValue(session.athleteId) !== userId) {
-    return { ok: false as const, status: 404 as const, error: 'Imported activity not found.' };
+    return { ok: false as const, status: 404 as const, error: 'Activity not found.' };
   }
   const sessionId = numberValue(activity.sessionId);
   if (stringValue(session.source) === 'activity-import' && activity.importedSessionStatus == null) {
@@ -548,7 +548,7 @@ async function deleteStravaActivityInTransaction(transaction: ActivityImportTran
   });
   return activity
     ? deleteImportedActivityInTransaction(transaction, userId, numberValue(activity.id))
-    : { ok: false as const, status: 404 as const, error: 'Imported activity not found.' };
+    : { ok: false as const, status: 404 as const, error: 'Activity not found.' };
 }
 
 async function deleteAllStravaActivitiesInTransaction(transaction: ActivityImportTransaction, userId: number) {

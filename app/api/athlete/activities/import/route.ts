@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   const upload = await readActivityUpload(request);
   if (!upload.ok) return NextResponse.json({ error: upload.error }, { status: 400 });
   if (upload.upload.confirmed && upload.upload.pairingChoice === null) {
-    return NextResponse.json({ error: 'Choose a planned session or keep this as a separate activity before saving.' }, { status: 400 });
+    return NextResponse.json({ error: 'Choose a planned workout, or save this on its own.' }, { status: 400 });
   }
   const pairingSessionId = typeof upload.upload.pairingChoice === 'number' ? upload.upload.pairingChoice : null;
   const result = upload.upload.format === 'gpx'

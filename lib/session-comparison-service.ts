@@ -47,8 +47,8 @@ export function createSessionComparisonService({
       const authorized = session && (actor.role === 'ATHLETE'
         ? session.athleteId === actor.userId
         : session.athlete?.coachId === actor.userId);
-      if (!authorized) return { ok: false, status: 404, error: 'Session not found' };
-      if (session.activity && ['manual-paired', 'manual-unplanned', 'tcx-import', 'fit-import', 'gpx-import'].includes(session.activity.metricsSource)) return { ok: false, status: 404, error: 'Structured comparison is unavailable for summary-only activities.' };
+      if (!authorized) return { ok: false, status: 404, error: 'Workout not found.' };
+      if (session.activity && ['manual-paired', 'manual-unplanned', 'tcx-import', 'fit-import', 'gpx-import'].includes(session.activity.metricsSource)) return { ok: false, status: 404, error: 'There’s nothing to compare for an activity that only has totals.' };
 
       const snapshots = projectSessionSnapshotJson(session.coachBaselineJson, session.activity?.actualSnapshotJson);
       return {

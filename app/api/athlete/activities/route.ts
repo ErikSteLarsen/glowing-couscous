@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
+    return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
   }
-  if (!isJsonObject(body)) return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
+  if (!isJsonObject(body)) return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
 
   const result = await athleteManualActivityService.create(user.id, {
     sport: body.sport,

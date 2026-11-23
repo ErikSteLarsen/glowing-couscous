@@ -60,12 +60,12 @@ export function formatResolvedWorkoutTarget(target: WorkoutTarget, profile: Perf
 
 export function missingProfileAction(target: WorkoutTarget): string | null {
   if (target.mode !== 'relative') return null;
-  if (target.reference === 'ftp') return 'Add FTP to preview watts.';
-  if (target.reference === 'threshold-pace') return 'Add threshold pace to preview pace.';
-  if (target.reference === 'profile-pace' || isProfilePaceZoneReference(target.reference)) return 'Add a race result or pace ranges in Profile to preview your running zones.';
-  if (target.reference === 'css') return 'Add CSS to preview pace.';
-  if (target.reference === 'max-hr') return 'Add maximum heart rate in Profile to preview Olympiatoppen zones.';
-  return 'Add threshold HR to preview bpm.';
+  if (target.reference === 'ftp') return 'Add your FTP to see watts.';
+  if (target.reference === 'threshold-pace') return 'Add your threshold pace to see pace.';
+  if (target.reference === 'profile-pace' || isProfilePaceZoneReference(target.reference)) return 'Add a race result or pace zones to see your running paces.';
+  if (target.reference === 'css') return 'Add your CSS to see pace.';
+  if (target.reference === 'max-hr') return 'Add your maximum heart rate to see heart rate in bpm.';
+  return 'Add your threshold heart rate to see bpm.';
 }
 
 function scaled(target: WorkoutTarget, reference: number, unit: 'W' | 'bpm'): ResolvedWorkoutTarget { return { low: Math.round(reference * target.low / 100), high: Math.round(reference * target.high / 100), unit }; }

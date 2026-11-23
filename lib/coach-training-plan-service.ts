@@ -7,7 +7,7 @@ export function createCoachTrainingPlanService({ db = prisma }: { db?: typeof pr
   return {
     async createPlan(coachId: number, input: unknown) {
       const parsed = trainingPlanInput.safeParse(input);
-      if (!parsed.success) return { ok: false as const, status: 400, error: 'Invalid training plan.' };
+      if (!parsed.success) return { ok: false as const, status: 400, error: 'Some details are missing or wrong. Check them and try again.' };
       const plan = await db.trainingPlan.create({
         data: {
           coachOwnerId: coachId,
@@ -25,7 +25,7 @@ export function createCoachTrainingPlanService({ db = prisma }: { db?: typeof pr
       input: unknown,
     ) {
       const parsed = trainingPlanInput.safeParse(input);
-      if (!parsed.success) return { ok: false as const, status: 400, error: 'Invalid training plan.' };
+      if (!parsed.success) return { ok: false as const, status: 400, error: 'Some details are missing or wrong. Check them and try again.' };
       const existing = await db.trainingPlan.findFirst({
         where: { id: trainingPlanId, coachOwnerId: coachId },
         select: { id: true },
@@ -61,7 +61,7 @@ export function createCoachTrainingPlanService({ db = prisma }: { db?: typeof pr
       sessionId?: number,
     ) {
       const parsed = plannerSessionInput.safeParse(input);
-      if (!parsed.success) return { ok: false as const, status: 400, error: 'Invalid session draft.' };
+      if (!parsed.success) return { ok: false as const, status: 400, error: 'Some details are missing or wrong. Check them and try again.' };
       const draft = parsed.data;
       const validationError = validatePlannerSessionDraft(draft);
       if (validationError) return { ok: false as const, error: validationError, status: 400 };
@@ -101,7 +101,7 @@ export function createCoachTrainingPlanService({ db = prisma }: { db?: typeof pr
         where: { id: sessionId, coachOwnerId: coachId, trainingPlanId },
         select: { id: true },
       });
-      if (!existingSession) return { ok: false as const, error: 'Training-plan session not found.', status: 404 };
+      if (!existingSession) return { ok: false as const, error: 'Workout not found.', status: 404 };
 
       await db.$transaction([
         db.block.deleteMany({ where: { sessionId } }),
@@ -120,7 +120,7 @@ export function createCoachTrainingPlanService({ db = prisma }: { db?: typeof pr
         },
         select: { id: true },
       });
-      if (!existing) return { ok: false as const, error: 'Training-plan session not found.', status: 404 };
+      if (!existing) return { ok: false as const, error: 'Workout not found.', status: 404 };
 
       await db.session.delete({ where: { id: sessionId } });
       return { ok: true as const, sessionId };

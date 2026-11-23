@@ -106,13 +106,13 @@ export function createAccountDeletionService({
         select: { passwordHash: true, sessionVersion: true, accounts: { select: { provider: true } } },
       });
       if (!user || user.sessionVersion !== identity.sessionVersion) {
-        return denied(401, 'Your session expired. Sign in again.');
+        return denied(401, 'You were signed out. Sign in again.');
       }
       if (!user.passwordHash) {
         const age = timestamp - (identity.authenticatedAt ?? 0);
         const hasGoogleAccount = user.accounts.some((account) => account.provider === 'google');
         if (identity.signInProvider !== 'google' || !hasGoogleAccount || age < 0 || age > GOOGLE_PROOF_LIFETIME_MS) {
-          return denied(403, 'Confirm your identity with a new Google sign-in, then return to delete your account.');
+          return denied(403, 'Sign in with Google again to confirm it’s you, then come back to delete your account.');
         }
       } else if (typeof input.password !== 'string' || !input.password || Buffer.byteLength(input.password, 'utf8') > 72) {
         return denied(400, 'Enter your current password.');
@@ -148,7 +148,7 @@ export function createAccountDeletionService({
         return denied(401, 'Your account changed. Sign in again before deleting it.');
       }
       if (!passwordHash && now() - (identity.authenticatedAt ?? 0) > GOOGLE_PROOF_LIFETIME_MS) {
-        return denied(403, 'Your identity confirmation expired. Sign in with Google again.');
+        return denied(403, 'Your Google sign-in is more than five minutes old. Sign in with Google again.');
       }
 
       await retainSharedLinks(tx, userId);

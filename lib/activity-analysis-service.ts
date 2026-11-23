@@ -49,12 +49,12 @@ export function createActivityAnalysisService({ db = prisma, now = () => new Dat
         if (!locked.length) return fail(404, 'Imported activity not found.');
         const activity = await tx.activity.findUnique({ where: { id: activityId }, include: {
           session: { select: { sport: true } }, athlete: { select: { performanceProfileJson: true } }, analysis: true } });
-        if (!activity || !isActivityAnalysisEligible(activity)) return fail(400, 'Interpretation is available for running file imports only.');
-        if (!activity.telemetryJson) return fail(400, 'Recorded measurements are unavailable.');
+        if (!activity || !isActivityAnalysisEligible(activity)) return fail(400, 'Analysis is only available for runs imported from a file.');
+        if (!activity.telemetryJson) return fail(400, 'This activity has no recorded data.');
         if (activity.analysis && ['queued', 'processing', 'retry'].includes(activity.analysis.status)) return { ok: true as const };
-        if (activity.analysis && now().getTime() - activity.analysis.updatedAt.getTime() < 60_000) return fail(429, 'Wait a minute before requesting another interpretation.');
+        if (activity.analysis && now().getTime() - activity.analysis.updatedAt.getTime() < 60_000) return fail(429, 'Wait a minute before you analyze again.');
         const active = await tx.activityAnalysis.count({ where: { activity: { athleteId: userId }, status: { in: ['queued', 'processing', 'retry'] } } });
-        if (active >= 10) return fail(429, 'Your analysis queue is full. Try again after current workouts finish.');
+        if (active >= 10) return fail(429, 'Tempo is still analyzing other workouts. Try again when they’re done.');
         const data = newActivityAnalysisJob(activity.telemetryJson, activity.durationSec, activity.athlete.performanceProfileJson ?? '{}');
         await tx.activityAnalysis.upsert({ where: { activityId }, create: { activityId, ...data },
           update: { ...data, status: 'queued', attemptCount: 0, leaseToken: null, leaseUntil: null, nextAttemptAt: now(), resultJson: null, lastError: null } });
@@ -63,10 +63,10 @@ export function createActivityAnalysisService({ db = prisma, now = () => new Dat
     },
     async correctForUser(userId: number, activityId: number, input: unknown) {
       const correction = validateAnalysisCorrection(input);
-      if (!correction) return fail(400, 'Enter valid repetitions, effort seconds, optional recovery seconds and optional pace seconds/km.');
+      if (!correction) return fail(400, 'Check the reps, effort time, recovery time and pace.');
       const saved = await db.activityAnalysis.updateMany({ where: { activityId, activity: { athleteId: userId, metricsSource: 'file-import', externalSource: null, session: { sport: 'RUNNING' } },
         status: { in: ['completed', 'insufficient-data'] } }, data: { correctionJson: JSON.stringify(correction) } });
-      return saved.count ? { ok: true as const } : fail(404, 'Completed interpretation not found.');
+      return saved.count ? { ok: true as const } : fail(404, 'Analyze this workout first.');
     },
     async processPending(ownerId?: number, limit = 2) {
       const due = await db.activityAnalysis.findMany({ where: { ...(ownerId === undefined ? {} : { activity: { athleteId: ownerId } }), OR: [
@@ -82,7 +82,7 @@ export function createActivityAnalysisService({ db = prisma, now = () => new Dat
         await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(73421901)`;
         const owner = ownerId === undefined ? {} : { activity: { athleteId: ownerId } };
         await tx.activityAnalysis.updateMany({ where: { activityId, ...owner, status: 'processing', leaseUntil: { lte: current }, attemptCount: { gte: 3 } },
-          data: { status: 'failed', leaseToken: null, leaseUntil: null, lastError: 'Interpretation timed out repeatedly. Request a new interpretation to retry.' } });
+          data: { status: 'failed', leaseToken: null, leaseUntil: null, lastError: 'The analysis took too long. Choose Try again.' } });
         if (await tx.activityAnalysis.count({ where: { status: 'processing', leaseUntil: { gt: current } } }) >= 4) return { count: 0 };
         return tx.activityAnalysis.updateMany({ where: { activityId, ...owner, attemptCount: { lt: 3 }, OR: [
           { status: { in: ['queued', 'retry'] }, nextAttemptAt: { lte: current } }, { status: 'processing', leaseUntil: { lte: current } } ] },
@@ -94,7 +94,7 @@ export function createActivityAnalysisService({ db = prisma, now = () => new Dat
       try {
         const activity = row.activity;
         if (!isActivityAnalysisEligible(activity) || !activity.telemetryJson || row.version !== ACTIVITY_ANALYZER_VERSION) {
-          await db.activityAnalysis.updateMany({ where: { activityId, leaseToken: token }, data: { status: 'cancelled', leaseToken: null, leaseUntil: null, resultJson: null, lastError: row.version !== ACTIVITY_ANALYZER_VERSION ? 'The analyzer has been updated. Request a new interpretation.' : 'This source is not eligible for interpretation.' } });
+          await db.activityAnalysis.updateMany({ where: { activityId, leaseToken: token }, data: { status: 'cancelled', leaseToken: null, leaseUntil: null, resultJson: null, lastError: row.version !== ACTIVITY_ANALYZER_VERSION ? 'Tempo’s analysis has been updated. Analyze again.' : 'This activity can’t be analyzed.' } });
           return;
         }
         const telemetry = parseActivityTelemetry(activity.telemetryJson);
@@ -107,7 +107,7 @@ export function createActivityAnalysisService({ db = prisma, now = () => new Dat
           const latest = await tx.activity.findUnique({ where: { id: activityId }, include: { session: { select: { sport: true } } } });
           if (!latest || !isActivityAnalysisEligible(latest) || !latest.telemetryJson ||
             activityAnalysisInputHash(latest.telemetryJson, latest.durationSec, row.profileJson) !== row.inputHash) {
-            await tx.activityAnalysis.updateMany({ where: { activityId, leaseToken: token }, data: { status: 'cancelled', resultJson: null, leaseToken: null, leaseUntil: null, lastError: 'Recorded data changed. Request a new interpretation.' } });
+            await tx.activityAnalysis.updateMany({ where: { activityId, leaseToken: token }, data: { status: 'cancelled', resultJson: null, leaseToken: null, leaseUntil: null, lastError: 'The recorded data changed. Analyze again.' } });
             return;
           }
           await tx.activityAnalysis.updateMany({ where: { activityId, leaseToken: token, status: 'processing', leaseUntil: { gt: now() }, inputHash: row.inputHash },
@@ -117,7 +117,7 @@ export function createActivityAnalysisService({ db = prisma, now = () => new Dat
         await db.activityAnalysis.updateMany({ where: { activityId, leaseToken: token, status: 'processing' },
           data: { status: row.attemptCount >= 3 ? 'failed' : 'retry', leaseToken: null, leaseUntil: null,
             nextAttemptAt: new Date(now().getTime() + 30_000 * 2 ** Math.min(row.attemptCount, 5) + Math.floor(Math.random() * 5000)),
-            lastError: 'Interpretation could not finish. Recorded activity data is still available.' } });
+            lastError: 'The analysis couldn’t finish. Your recorded data is still here.' } });
       }
     },
   };

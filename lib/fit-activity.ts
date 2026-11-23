@@ -54,43 +54,43 @@ function unsupported(error: string): FitParseResult {
 function parseMessages(messages: FitMessages): FitParseResult {
   const files = messages.fileIdMesgs ?? [];
   if (files.length !== 1 || files[0]?.type !== 'activity') {
-    return unsupported('Choose a FIT Activity file. This FIT file is not a supported activity export.');
+    return unsupported('This FIT file isn’t an activity. Choose an activity file from your device or app.');
   }
 
   const activities = messages.activityMesgs ?? [];
   if (activities.length !== 1) {
-    return unsupported('This FIT file must contain one completed activity summary. Multi-activity files are not supported.');
+    return unsupported('This FIT file must hold exactly one activity.');
   }
 
   const sessions = messages.sessionMesgs ?? [];
   if (sessions.length !== 1 || activities[0]?.numSessions !== 1 || activities[0]?.type === 'autoMultiSport') {
-    return unsupported('This FIT file contains multiple or incomplete sport sessions. Import one activity at a time.');
+    return unsupported('This FIT file holds more than one sport, or part of it is missing. Import one activity at a time.');
   }
 
   const session = sessions[0];
   const activity = activities[0];
   const sport = sportMap[String(session?.sport ?? '').toLowerCase()];
   if (!sport) {
-    return unsupported(`This FIT activity sport (“${String(session?.sport ?? 'unknown')}”) is not supported. Choose a single-session running, cycling, or swimming file.`);
+    return unsupported(`Tempo can’t import this sport (“${String(session?.sport ?? 'unknown')}”). Choose a single run, ride or swim.`);
   }
 
   const startedAt = fitDate(session.startTime);
   const completedAt = fitDate(session.timestamp);
   const sourceTimezoneOffsetMinutes = getTimezoneOffsetMinutes(activity.timestamp, activity.localTimestamp);
   if (!startedAt || !completedAt || completedAt <= startedAt) {
-    return unsupported('This FIT activity must include valid start and finish timestamps.');
+    return unsupported('This FIT activity has no valid start or finish time.');
   }
   if (!isFiniteNumber(activity.timestamp) || activity.timestamp !== session.timestamp) {
-    return unsupported('This FIT activity has inconsistent Activity and Session finish timestamps.');
+    return unsupported('This FIT activity’s finish times don’t match.');
   }
   if (sourceTimezoneOffsetMinutes === null) {
-    return unsupported('This FIT activity does not include a valid local timestamp, so its source timezone and local activity date cannot be verified.');
+    return unsupported('This FIT activity has no local time, so Tempo can’t tell which day you did it.');
   }
   if (!isFiniteNumber(session.totalElapsedTime) || session.totalElapsedTime < 1) {
-    return unsupported('This FIT activity must include a valid elapsed duration.');
+    return unsupported('This FIT activity has no valid duration.');
   }
   if (isFiniteNumber(session.totalDistance) && session.totalDistance < 0) {
-    return unsupported('This FIT activity contains an invalid distance.');
+    return unsupported('This FIT activity’s distance can’t be read.');
   }
 
   const durationSec = Math.round(session.totalElapsedTime);
@@ -119,16 +119,16 @@ export function parseFitActivity(bytes: Uint8Array): FitParseResult {
   try {
     const decoder = new Decoder(Stream.fromBuffer(Buffer.from(bytes)));
     if (!decoder.isFIT()) return unsupported('Choose a valid .fit activity file.');
-    if (!decoder.checkIntegrity()) return unsupported('This FIT file is incomplete or has failed its integrity check. Choose a complete activity export.');
+    if (!decoder.checkIntegrity()) return unsupported('This FIT file is incomplete or damaged. Export it again from your device or app.');
     const { messages, errors } = decoder.read({
       convertDateTimesToDates: false,
       includeUnknownData: false,
       mergeHeartRates: false,
       decodeMemoGlobs: false,
     });
-    if (errors.length) return unsupported('This FIT file could not be decoded completely. Choose a complete activity export.');
+    if (errors.length) return unsupported('This FIT file couldn’t be read in full. Export it again from your device or app.');
     return parseMessages(messages);
   } catch {
-    return unsupported('This file is not a valid supported FIT activity.');
+    return unsupported('This file isn’t a FIT activity Tempo can read.');
   }
 }

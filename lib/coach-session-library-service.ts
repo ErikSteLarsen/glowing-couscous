@@ -23,7 +23,7 @@ export function createCoachSessionLibraryService({ db = prisma }: { db?: typeof 
 
     async saveForCoach(coachId: number, input: unknown, sessionId?: number) {
       const parsed = plannerSessionInput.safeParse(input);
-      if (!parsed.success) return { ok: false as const, status: 400, error: 'Invalid session draft.' };
+      if (!parsed.success) return { ok: false as const, status: 400, error: 'Some details are missing or wrong. Check them and try again.' };
       const draft = parsed.data;
       const validationError = validatePlannerSessionDraft(draft);
       if (validationError) {
@@ -59,7 +59,7 @@ export function createCoachSessionLibraryService({ db = prisma }: { db?: typeof 
         where: { id: sessionId, coachOwnerId: coachId },
         select: { id: true },
       });
-      if (!existing) return { ok: false as const, error: 'Session not found.', status: 404 };
+      if (!existing) return { ok: false as const, error: 'Workout not found.', status: 404 };
 
       await db.$transaction([
         db.block.deleteMany({ where: { sessionId } }),
@@ -78,7 +78,7 @@ export function createCoachSessionLibraryService({ db = prisma }: { db?: typeof 
         },
         select: { id: true },
       });
-      if (!existing) return { ok: false as const, error: 'Session not found.', status: 404 };
+      if (!existing) return { ok: false as const, error: 'Workout not found.', status: 404 };
 
       await db.session.delete({ where: { id: sessionId } });
       return { ok: true as const, sessionId };

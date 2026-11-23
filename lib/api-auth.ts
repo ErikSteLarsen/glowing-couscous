@@ -3,8 +3,8 @@ import { auth } from '@/auth';
 import { parseSessionPrincipal } from '@/lib/auth-principal';
 import { hasAppRole } from '@/lib/auth-session';
 
-const forbidden = NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-const unauthorized = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+const forbidden = NextResponse.json({ error: 'You don’t have access to this.' }, { status: 403 });
+const unauthorized = NextResponse.json({ error: 'Sign in to continue.' }, { status: 401 });
 
 export async function requireSignedInUser() {
   const session = await auth();

@@ -14,10 +14,10 @@ export async function PATCH(
 
     const { sessionId } = await params;
     const parsedSessionId = parsePositiveInteger(sessionId);
-    if (parsedSessionId === null) return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
+    if (parsedSessionId === null) return NextResponse.json({ error: 'Workout not found.' }, { status: 400 });
 
     const body = await readJsonObject(request);
-    if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    if (!body.ok) return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
 
     const result = await athleteCompletionService.saveActualOutcome(
       { role: 'ATHLETE', userId: user.id },
@@ -29,6 +29,6 @@ export async function PATCH(
     return NextResponse.json({ ok: true, sessionId: result.sessionId, completedAt: result.completedAt.toISOString() });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to save actual outcome' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not save your result. Try again.' }, { status: 500 });
   }
 }

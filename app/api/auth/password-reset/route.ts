@@ -5,7 +5,7 @@ import { passwordResetService } from '@/lib/password-reset-service';
 
 const genericResponse = {
   ok: true,
-  message: 'If a password account uses this email, you will receive a reset link shortly. Check your inbox and spam folder.',
+  message: 'If this email has a Tempo password, we’ll send you a reset link shortly. Check your inbox and spam folder.',
 };
 
 export async function POST(request: NextRequest) {
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
   }
   if (!isJsonObject(body) || typeof body.email !== 'string') {
     return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 });
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 });
   }
   if (!passwordResetService.isConfigured()) {
-    return NextResponse.json({ error: 'Password recovery is temporarily unavailable. Please try again later.' }, { status: 503 });
+    return NextResponse.json({ error: 'Password reset isn’t working right now. Try again later.' }, { status: 503 });
   }
 
   after(async () => {

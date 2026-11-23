@@ -52,7 +52,7 @@ function encryptToken(value: string) {
 
 function decryptToken(value: string) {
   const [version, encodedIv, encodedTag, encodedData] = value.split('.');
-  if (version !== 'v1' || !encodedIv || !encodedTag || !encodedData) throw new Error('Stored Strava credentials could not be read.');
+  if (version !== 'v1' || !encodedIv || !encodedTag || !encodedData) throw new Error('Tempo couldn’t use your Strava connection. Disconnect Strava in Settings, then connect it again.');
   const decipher = createDecipheriv('aes-256-gcm', tokenKey(), Buffer.from(encodedIv, 'base64url'));
   decipher.setAuthTag(Buffer.from(encodedTag, 'base64url'));
   return Buffer.concat([decipher.update(Buffer.from(encodedData, 'base64url')), decipher.final()]).toString('utf8');
@@ -74,10 +74,11 @@ async function readJson(response: Response): Promise<unknown> {
   let value: unknown;
   try { value = await response.json(); } catch { value = null; }
   if (!response.ok) {
-    const record = asRecord(value);
-    const message = typeof record.message === 'string'
-      ? String(record.message)
-      : `Strava returned HTTP ${response.status}.`;
+    const message = response.status === 401 || response.status === 403
+      ? 'Strava stopped accepting Tempo’s connection. Connect Strava again in Settings.'
+      : response.status === 429
+        ? 'Strava is busy. Try again in a few minutes.'
+        : 'Strava isn’t responding right now. Try again later.';
     throw new StravaProviderError(message, response.status);
   }
   return value;
@@ -110,7 +111,7 @@ async function getActiveAccessToken(connection: NonNullable<Awaited<ReturnType<t
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const latest = await prisma.stravaConnection.findUnique({ where: { id: connection.id } });
-    if (!latest) throw new Error('The Strava connection was removed. Connect it again to continue.');
+    if (!latest) throw new Error('Strava is no longer connected. Connect it again in Settings.');
     if (latest.expiresAt > refreshThreshold) return decryptToken(latest.accessTokenEncrypted);
 
     const now = new Date();
@@ -127,7 +128,7 @@ async function getActiveAccessToken(connection: NonNullable<Awaited<ReturnType<t
       for (let check = 0; check < 30; check += 1) {
         await new Promise((resolve) => setTimeout(resolve, 150));
         const refreshed = await prisma.stravaConnection.findUnique({ where: { id: connection.id } });
-        if (!refreshed) throw new Error('The Strava connection was removed. Connect it again to continue.');
+        if (!refreshed) throw new Error('Strava is no longer connected. Connect it again in Settings.');
         if (refreshed.expiresAt > refreshThreshold) return decryptToken(refreshed.accessTokenEncrypted);
         if (!refreshed.refreshLockUntil || refreshed.refreshLockUntil <= new Date()) break;
       }
@@ -140,7 +141,7 @@ async function getActiveAccessToken(connection: NonNullable<Awaited<ReturnType<t
       const accessToken = asString(token.access_token);
       const refreshToken = asString(token.refresh_token);
       const expiresAt = asNumber(token.expires_at);
-      if (!accessToken || !refreshToken || expiresAt === null) throw new Error('Strava did not return refreshed credentials.');
+      if (!accessToken || !refreshToken || expiresAt === null) throw new Error('Strava didn’t respond as expected. Try again in a moment.');
       await prisma.stravaConnection.update({
         where: { id: latest.id },
         data: {
@@ -159,7 +160,7 @@ async function getActiveAccessToken(connection: NonNullable<Awaited<ReturnType<t
       throw error;
     }
   }
-  throw new Error('Strava credentials are being refreshed. Try again in a moment.');
+  throw new Error('Tempo is reconnecting to Strava. Try again in a moment.');
 }
 
 async function apiGet(token: string, path: string) {
@@ -196,7 +197,7 @@ async function fetchDetailedForConnection(
   const token = await getActiveAccessToken(connection);
   const activity = asRecord(await apiGet(token, `/activities/${stravaActivityId}`));
   const athlete = asRecord(activity.athlete);
-  if (String(athlete.id ?? '') !== connection.athleteId) throw new StravaProviderError('This activity does not belong to the connected Strava account.', 404);
+  if (String(athlete.id ?? '') !== connection.athleteId) throw new StravaProviderError('This activity isn’t from your connected Strava account.', 404);
   let streams: StravaStreams = {};
   try {
     const query = new URLSearchParams({ keys: STREAM_KEYS.join(','), key_by_type: 'true' });
@@ -216,7 +217,7 @@ async function detailsFromInbox(
     where: { connectionId_stravaActivityId: { connectionId: connection.id, stravaActivityId } },
     select: { id: true, fetchedAt: true },
   });
-  if (!inboxItem) throw new StravaProviderError('This Strava activity is no longer available. Sync your activities and try again.', 404);
+  if (!inboxItem) throw new StravaProviderError('This Strava activity is no longer available. Choose Check Strava now, then try again.', 404);
   const details = await fetchDetailedForConnection(connection, stravaActivityId);
   return { ...details, inboxFetchedAt: inboxItem.fetchedAt.toISOString() };
 }
@@ -227,7 +228,7 @@ async function upsertInboxActivity(
   activity: StravaRecord,
 ) {
   const summary = toStravaActivitySummary({ ...activity, id: stravaActivityId });
-  if (!summary.startedAt || summary.durationSec < 1) throw new Error('Strava returned an incomplete activity.');
+  if (!summary.startedAt || summary.durationSec < 1) throw new Error('Strava sent an incomplete activity. Try again later.');
   const data = {
     title: summary.title,
     sportType: summary.sportType,
@@ -342,12 +343,12 @@ export const stravaService = {
     const scopes = asString(token.scope, callbackScopes);
     const acceptedScopes = scopes.split(/[\s,]+/).filter(Boolean);
     if (!athleteId || !accessToken || !refreshToken || expiresAt === null) {
-      throw new Error('Strava access was incomplete. Please reconnect and allow activity access.');
+      throw new Error('Tempo needs permission to see your Strava activities. Connect again and allow activity access.');
     }
     const athleteName = [asString(athlete.firstname), asString(athlete.lastname)].filter(Boolean).join(' ') || null;
     const authorizedAt = new Date();
     if (!acceptedScopes.includes('activity:read') && !acceptedScopes.includes('activity:read_all')) {
-      throw new Error('Strava access was incomplete. Please reconnect and allow activity access.');
+      throw new Error('Tempo needs permission to see your Strava activities. Connect again and allow activity access.');
     }
     const existingAthlete = await prisma.stravaConnection.findUnique({ where: { athleteId: String(athleteId) }, select: { userId: true } });
     if (existingAthlete && existingAthlete.userId !== userId) {
@@ -405,7 +406,7 @@ export const stravaService = {
 
   async syncRecentActivities(userId: number) {
     const connection = await getConnection(userId);
-    if (!connection) throw new Error('Connect your Strava account before syncing activities.');
+    if (!connection) throw new Error('Connect Strava first.');
     const token = await getActiveAccessToken(connection);
     const raw = await apiGet(token, '/athlete/activities?per_page=100&page=1');
     const list = Array.isArray(raw) ? raw : [];
@@ -431,7 +432,7 @@ export const stravaService = {
 
   async detailsForUser(userId: number, stravaActivityId: string) {
     const connection = await getConnection(userId);
-    if (!connection) throw new Error('Connect your Strava account to review this activity.');
+    if (!connection) throw new Error('Connect Strava to see this activity.');
     return detailsFromInbox(connection, stravaActivityId);
   },
 
@@ -444,10 +445,10 @@ export const stravaService = {
   ) {
     const supportedSports = ['RUNNING', 'BIKING', 'SWIMMING', 'STRENGTH', 'STRETCHING', 'OTHER'];
     if (sportOverride && !supportedSports.includes(sportOverride)) {
-      return { ok: false as const, status: 400 as const, error: 'Choose a supported activity category.' };
+      return { ok: false as const, status: 400 as const, error: 'Choose a sport.' };
     }
     const connection = await getConnection(userId);
-    if (!connection) throw new Error('Connect your Strava account to review this activity.');
+    if (!connection) throw new Error('Connect Strava to see this activity.');
     const details = await detailsFromInbox(connection, stravaActivityId);
     const title = titleOverride === undefined ? details.title : titleOverride.trim();
     if (!title || title.length > 140) return { ok: false as const, status: 400 as const, error: 'Enter an activity name up to 140 characters.' };

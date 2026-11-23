@@ -59,13 +59,13 @@ export function parseTcxActivity(xml: string): TcxParseResult {
     let elementCount = 0;
     const parser = new SaxesParser({ xmlns: true });
 
-    parser.on('doctype', () => { throw new Error('DOCTYPE is not allowed.'); });
+    parser.on('doctype', () => { throw new Error('This TCX file can’t be read. Export it again from your device or app.'); });
     parser.on('opentag', (tag) => {
       elementCount += 1;
-      if (elementCount > 150_000) throw new Error('TCX contains too many elements.');
+      if (elementCount > 150_000) throw new Error('This TCX file is too large to import.');
       const name = tag.local.toLowerCase();
       stack.push(name);
-      if (stack.length === 1 && name !== 'trainingcenterdatabase') throw new Error('Unsupported XML root.');
+      if (stack.length === 1 && name !== 'trainingcenterdatabase') throw new Error('This file isn’t a TCX activity Tempo can read.');
       if (name === 'activity' && stack.length === 3 && stack[0] === 'trainingcenterdatabase' && stack[1] === 'activities') {
         activityCount += 1;
         if (activityCount > 1) throw new Error('Import one completed activity per file.');
@@ -103,18 +103,18 @@ export function parseTcxActivity(xml: string): TcxParseResult {
 
     const sport = sportMap[activity.sport.toLowerCase()];
     if (!activityCount || !sport) {
-      return { ok: false, error: `This TCX activity sport (“${activity.sport || 'unknown'}”) is not supported. Choose a supported activity file.` };
+      return { ok: false, error: `Tempo can’t import this sport (“${activity.sport || 'unknown'}”). Choose a run, ride or swim.` };
     }
     const startedAt = parseISO(activity.startedAt);
     if (!isValid(startedAt) || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/i.test(activity.startedAt)) {
-      return { ok: false, error: 'TCX activity must include a valid start time with a time zone.' };
+      return { ok: false, error: 'This TCX activity needs a start time with a time zone.' };
     }
     const sourceTimezoneOffsetMinutes = parseTimezoneOffsetMinutes(activity.startedAt);
     if (sourceTimezoneOffsetMinutes === null) {
-      return { ok: false, error: 'TCX activity must include a valid start time with a time zone.' };
+      return { ok: false, error: 'This TCX activity needs a start time with a time zone.' };
     }
     if (!Number.isFinite(activity.durationSec) || activity.durationSec < 1) {
-      return { ok: false, error: 'No completed activity duration was found in this TCX file.' };
+      return { ok: false, error: 'This TCX file has no activity duration.' };
     }
     const durationSec = Math.round(activity.durationSec);
     const completedAt = new Date(startedAt.getTime() + durationSec * 1000);
@@ -133,6 +133,6 @@ export function parseTcxActivity(xml: string): TcxParseResult {
       },
     };
   } catch {
-    return { ok: false, error: 'This file is not a valid supported TCX activity.' };
+    return { ok: false, error: 'This file isn’t a TCX activity Tempo can read.' };
   }
 }

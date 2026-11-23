@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     if (error) return error;
 
     const body = await readJsonObject(request);
-    if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    if (!body.ok) return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
     const result = await coachPlannerService.saveSession(user.id, body.value);
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: result.status });
@@ -18,6 +18,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, sessionId: result.sessionId }, { status: 201 });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to create planner session' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not create this workout. Try again.' }, { status: 500 });
   }
 }

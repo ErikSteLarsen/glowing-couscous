@@ -122,10 +122,10 @@ export function parseGpxActivity(xml: string, requestedSport: string): GpxParseR
     let rootNamespace: string | null = null;
     const parser = new SaxesParser({ xmlns: true });
 
-    parser.on('doctype', () => reject('DOCTYPE is not allowed.'));
+    parser.on('doctype', () => reject('This GPX file can’t be read. Export it again from your device or app.'));
     parser.on('opentag', (tag) => {
       elementCount += 1;
-      if (elementCount > 200_000) reject('GPX contains too many XML elements.');
+      if (elementCount > 200_000) reject('This GPX file is too large to import.');
       const name = tag.local.toLowerCase();
       stack.push(name);
 
@@ -148,14 +148,14 @@ export function parseGpxActivity(xml: string, requestedSport: string): GpxParseR
         segments.push(currentSegment);
       } else if (inGpxRoot && stack.length === 4 && stack[1] === 'trk' && stack[2] === 'trkseg' && name === 'trkpt') {
         pointCount += 1;
-        if (pointCount > MAX_GPX_TRACK_POINTS) reject(`GPX tracks may contain at most ${MAX_GPX_TRACK_POINTS.toLocaleString('en-US')} trackpoints.`);
+        if (pointCount > MAX_GPX_TRACK_POINTS) reject(`This GPX track has too many points. The limit is ${MAX_GPX_TRACK_POINTS.toLocaleString('en-US')}.`);
         currentPoint = {
           latitude: coordinate(readAttribute(tag, 'lat'), -90, 90),
           longitude: coordinate(readAttribute(tag, 'lon'), -180, 180),
           time: '',
         };
       } else if (inGpxRoot && stack.length === 5 && stack[1] === 'trk' && stack[2] === 'trkseg' && stack[3] === 'trkpt' && name === 'time' && currentPoint) {
-        if (currentPoint.time || capture?.name === 'time') reject('Each GPX trackpoint must have one recorded time.');
+        if (currentPoint.time || capture?.name === 'time') reject('Every point in the GPX track needs one time.');
         capture = { name: 'time', depth: stack.length, value: '' };
       }
     });
@@ -175,16 +175,16 @@ export function parseGpxActivity(xml: string, requestedSport: string): GpxParseR
       }
 
       if (name === 'trkpt' && stack.length === 4) {
-        if (!currentPoint) reject('GPX trackpoint data is incomplete.');
+        if (!currentPoint) reject('The GPX track is incomplete.');
         const latitude = currentPoint.latitude;
         const longitude = currentPoint.longitude;
         if (latitude === null || longitude === null) {
-          reject('Every GPX trackpoint must have valid latitude and longitude coordinates.');
+          reject('Some points in the GPX track have no valid location.');
         }
-        if (!currentPoint.time) reject('Every GPX trackpoint must include a recorded time.');
+        if (!currentPoint.time) reject('Every point in the GPX track needs a time.');
         const parsedTime = parseTrackPointTime(currentPoint.time);
-        if (!parsedTime) reject('Every GPX trackpoint time must be valid and include a UTC offset.');
-        if (!currentSegment) reject('GPX trackpoints must be inside a track segment.');
+        if (!parsedTime) reject('Every point in the GPX track needs a valid time with a time zone.');
+        if (!currentSegment) reject('The GPX track can’t be read. Export it again from your device or app.');
         currentSegment.push({ latitude, longitude, time: parsedTime.time, offsetMinutes: parsedTime.offsetMinutes });
         currentPoint = null;
       } else if (name === 'trkseg' && stack.length === 3) {
@@ -194,31 +194,31 @@ export function parseGpxActivity(xml: string, requestedSport: string): GpxParseR
     });
 
     parser.write(xml).close();
-    if (trackCount === 0) return { ok: false, error: 'No GPS track was found. Route-only GPX files cannot be imported as completed activities.' };
+    if (trackCount === 0) return { ok: false, error: 'No recorded track found. A GPX file with only a planned route can’t be imported as an activity.' };
     const points = segments.flat();
-    if (points.length < 2) return { ok: false, error: 'The GPX activity must contain at least two timed trackpoints.' };
+    if (points.length < 2) return { ok: false, error: 'The GPX track needs at least two points with times.' };
 
     const sourceTimezoneOffsetMinutes = points[0]?.offsetMinutes;
     if (sourceTimezoneOffsetMinutes === undefined || points.some((point) => point.offsetMinutes !== sourceTimezoneOffsetMinutes)) {
-      return { ok: false, error: 'GPX trackpoints must use one consistent UTC offset so the recorded local day can be preserved.' };
+      return { ok: false, error: 'All times in the GPX track must use the same time zone.' };
     }
     for (let index = 1; index < points.length; index += 1) {
       const previous = points[index - 1];
       const current = points[index];
       if (previous && current && current.time.getTime() <= previous.time.getTime()) {
-        return { ok: false, error: 'GPX trackpoint times must be in increasing order.' };
+        return { ok: false, error: 'The times in the GPX track are out of order.' };
       }
     }
 
     const first = points[0];
     const last = points.at(-1);
-    if (!first || !last) return { ok: false, error: 'The GPX activity must contain at least two timed trackpoints.' };
+    if (!first || !last) return { ok: false, error: 'The GPX track needs at least two points with times.' };
     const durationSec = Math.round((last.time.getTime() - first.time.getTime()) / 1000);
     if (!Number.isSafeInteger(durationSec) || durationSec < 1) {
-      return { ok: false, error: 'The GPX track does not contain a measurable activity duration.' };
+      return { ok: false, error: 'The GPX track has no measurable duration.' };
     }
     if (durationSec > MAX_PERSISTED_INTEGER) {
-      return { ok: false, error: 'The GPX activity duration exceeds the supported range.' };
+      return { ok: false, error: 'This GPX activity is too long to import.' };
     }
 
     let distance = 0;
@@ -231,7 +231,7 @@ export function parseGpxActivity(xml: string, requestedSport: string): GpxParseR
     }
     const roundedDistance = Math.round(distance);
     if (!Number.isSafeInteger(roundedDistance) || roundedDistance > MAX_PERSISTED_INTEGER) {
-      return { ok: false, error: 'The GPX track distance exceeds the supported range.' };
+      return { ok: false, error: 'The GPX track is too long to import.' };
     }
 
     return {
@@ -249,6 +249,6 @@ export function parseGpxActivity(xml: string, requestedSport: string): GpxParseR
     };
   } catch (error) {
     if (error instanceof GpxParseError) return { ok: false, error: error.message };
-    return { ok: false, error: 'This file is not a valid supported GPX activity.' };
+    return { ok: false, error: 'This file isn’t a GPX activity Tempo can read.' };
   }
 }

@@ -12,8 +12,8 @@ import {
 } from './session-snapshot-service.ts';
 
 const MAX_NOTES_LENGTH = 2000;
-const SKIPPED_OUTCOME_ERROR = 'Skipped sessions cannot record an outcome. Plan the session again first.';
-const RECORDED_OUTCOME_ERROR = 'This outcome was recorded. Only its note can change here; delete the recorded activity to remove it.';
+const SKIPPED_OUTCOME_ERROR = 'You can’t log a result for a skipped workout. Choose Plan again first.';
+const RECORDED_OUTCOME_ERROR = 'This result comes from a recorded activity. You can only change its note here. To remove it, delete the activity.';
 // Outcomes this service derives from planned or edited blocks. Every other
 // source (ride recordings, file/Strava/TCX/FIT/GPX imports, manual activity
 // logs) carries measured data owned elsewhere, so only its note may change here.
@@ -151,12 +151,12 @@ export function createAthleteCompletionService({
     draft: SessionEditorDraft,
   ): Promise<ActualOutcomeResult> {
     if (draft.mode !== 'actual') {
-      return { ok: false, status: 400, error: 'Actual outcome edits require actual mode.' };
+      return { ok: false, status: 400, error: 'Could not save your result. Reload the page and try again.' };
     }
     const validationError = validateSessionSnapshotDraft(draft);
     if (validationError) return { ok: false, status: 400, error: validationError };
     if (!canEditActual(actor, session)) {
-      return { ok: false, status: 404, error: 'Session not found' };
+      return { ok: false, status: 404, error: 'Workout not found.' };
     }
     if (session.status === SKIPPED_SESSION_STATUS) {
       return { ok: false, status: 409, error: SKIPPED_OUTCOME_ERROR };
@@ -165,7 +165,7 @@ export function createAthleteCompletionService({
       return { ok: false, status: 409, error: RECORDED_OUTCOME_ERROR };
     }
     if (draft.athleteId !== null && draft.athleteId !== session.athleteId) {
-      return { ok: false, status: 404, error: 'Session not found' };
+      return { ok: false, status: 404, error: 'Workout not found.' };
     }
 
     const metrics = deriveSessionEditorMetrics(draft);
@@ -241,7 +241,7 @@ export function createAthleteCompletionService({
   return {
     async saveActualOutcome(actor: ActualActor, sessionId: number, input: unknown): Promise<ActualOutcomeResult> {
       const parsed = sessionEditorInput.safeParse(input);
-      if (!parsed.success) return { ok: false, status: 400, error: 'Invalid session draft.' };
+      if (!parsed.success) return { ok: false, status: 400, error: 'Some details are missing or wrong. Check them and try again.' };
       const session = await db.session.findUnique({
         where: { id: sessionId },
         include: {
@@ -251,17 +251,17 @@ export function createAthleteCompletionService({
         },
       });
       if (!session || !canEditActual(actor, session)) {
-        return { ok: false, status: 404, error: 'Session not found' };
+        return { ok: false, status: 404, error: 'Workout not found.' };
       }
       return saveActualForSession(actor, session, parsed.data);
     },
 
     async completeSession(athleteId: number, sessionId: number, input: CompletionInput): Promise<CompletionResult> {
       const notes = normalizeNotes(input);
-      if (notes === 'invalid') return { ok: false, status: 400, error: 'Notes are too long' };
+      if (notes === 'invalid') return { ok: false, status: 400, error: 'Your note is too long.' };
 
       const session = await loadSessionForAthlete(athleteId, sessionId);
-      if (!session) return { ok: false, status: 404, error: 'Session not found' };
+      if (!session) return { ok: false, status: 404, error: 'Workout not found.' };
       if (session.status === SKIPPED_SESSION_STATUS) return { ok: false, status: 409, error: SKIPPED_OUTCOME_ERROR };
 
       const retainedNotes = notes ?? session.activity?.notes ?? session.athleteNotes ?? null;
@@ -294,10 +294,10 @@ export function createAthleteCompletionService({
 
     async reopenSession(athleteId: number, sessionId: number, input: CompletionInput): Promise<CompletionResult> {
       const notes = normalizeNotes(input);
-      if (notes === 'invalid') return { ok: false, status: 400, error: 'Notes are too long' };
+      if (notes === 'invalid') return { ok: false, status: 400, error: 'Your note is too long.' };
 
       const session = await loadSessionForAthlete(athleteId, sessionId);
-      if (!session) return { ok: false, status: 404, error: 'Session not found' };
+      if (!session) return { ok: false, status: 404, error: 'Workout not found.' };
       if (session.status === SKIPPED_SESSION_STATUS) return { ok: false, status: 409, error: SKIPPED_OUTCOME_ERROR };
       if (isRecordedOutcome(session.activity)) return { ok: false, status: 409, error: RECORDED_OUTCOME_ERROR };
 

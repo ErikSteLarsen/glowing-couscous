@@ -8,13 +8,13 @@ export async function GET(
 ) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Sign in to view this activity.' }, { status: 401 });
-  if (!hasAppRole(user)) return NextResponse.json({ error: 'Complete account setup first.' }, { status: 403 });
+  if (!hasAppRole(user)) return NextResponse.json({ error: 'Finish setting up your account first.' }, { status: 403 });
 
   const { activityId } = await params;
   const telemetry = await activityImportService.loadTelemetry(user.id, Number(activityId));
   return telemetry
     ? NextResponse.json({ telemetry })
-    : NextResponse.json({ error: 'Imported activity not found.' }, { status: 404 });
+    : NextResponse.json({ error: 'Activity not found.' }, { status: 404 });
 }
 
 export async function DELETE(
@@ -23,7 +23,7 @@ export async function DELETE(
 ) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Sign in to delete an imported activity.' }, { status: 401 });
-  if (!hasAppRole(user)) return NextResponse.json({ error: 'Complete account setup first.' }, { status: 403 });
+  if (!hasAppRole(user)) return NextResponse.json({ error: 'Finish setting up your account first.' }, { status: 403 });
 
   const { activityId } = await params;
   const result = await activityImportService.deleteImportedActivityForUser(user.id, Number(activityId));

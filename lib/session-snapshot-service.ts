@@ -70,7 +70,7 @@ export function validateSessionSnapshotDraft(draft: SessionEditorDraft): string 
   const editorError = validateSessionEditorDraft(draft);
   if (editorError) return editorError;
   if (draft.coachNotes.length > MAX_NOTES_LENGTH || draft.athleteNotes.length > MAX_NOTES_LENGTH) {
-    return 'Notes are too long.';
+    return 'Your note is too long.';
   }
   return null;
 }

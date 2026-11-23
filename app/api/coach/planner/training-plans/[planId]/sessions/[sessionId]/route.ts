@@ -13,10 +13,10 @@ export async function PATCH(
   const { planId, sessionId } = await params;
   const parsedPlanId = parsePositiveInteger(planId);
   const parsedSessionId = parsePositiveInteger(sessionId);
-  if (parsedPlanId === null) return NextResponse.json({ error: 'Invalid planId' }, { status: 400 });
-  if (parsedSessionId === null) return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
+  if (parsedPlanId === null) return NextResponse.json({ error: 'Training plan not found.' }, { status: 400 });
+  if (parsedSessionId === null) return NextResponse.json({ error: 'Workout not found.' }, { status: 400 });
   const body = await readJsonObject(request);
-  if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  if (!body.ok) return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
   const result = await coachTrainingPlanService.savePlanSession(
     user.id,
     parsedPlanId,
@@ -37,8 +37,8 @@ export async function DELETE(
   const { planId, sessionId } = await params;
   const parsedPlanId = parsePositiveInteger(planId);
   const parsedSessionId = parsePositiveInteger(sessionId);
-  if (parsedPlanId === null) return NextResponse.json({ error: 'Invalid planId' }, { status: 400 });
-  if (parsedSessionId === null) return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
+  if (parsedPlanId === null) return NextResponse.json({ error: 'Training plan not found.' }, { status: 400 });
+  if (parsedSessionId === null) return NextResponse.json({ error: 'Workout not found.' }, { status: 400 });
   const result = await coachTrainingPlanService.deletePlanSession(user.id, parsedPlanId, parsedSessionId);
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json({ ok: true });

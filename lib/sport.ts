@@ -4,7 +4,7 @@ export type SportType = (typeof SPORT_OPTIONS)[number];
 
 export const sportLabels: Record<SportType, string> = {
   RUNNING: 'Running',
-  BIKING: 'Biking',
+  BIKING: 'Cycling',
   SWIMMING: 'Swimming',
   STRENGTH: 'Strength',
   STRETCHING: 'Stretching',

@@ -16,27 +16,27 @@ export async function PATCH(
     const { sessionId } = await params;
     const parsedSessionId = parsePositiveInteger(sessionId);
     if (parsedSessionId === null) {
-      return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
+      return NextResponse.json({ error: 'Workout not found.' }, { status: 400 });
     }
 
     const body = await readJsonObject(request);
-    if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    if (!body.ok) return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
     const session = await prisma.session.findUnique({
       where: { id: parsedSessionId },
       select: { id: true, athleteId: true, date: true },
     });
 
     if (!session) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Workout not found.' }, { status: 404 });
     }
 
     if (!session.athleteId || !session.date) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Workout not found.' }, { status: 404 });
     }
 
     const hasAthlete = await coachService.hasAthlete(user.id, session.athleteId);
     if (!hasAthlete) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Workout not found.' }, { status: 404 });
     }
 
     const result = await plannerService.forWeek({ athleteId: session.athleteId, weekStart: session.date }).execute({
@@ -51,7 +51,7 @@ export async function PATCH(
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to update session' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not save this workout. Try again.' }, { status: 500 });
   }
 }
 
@@ -66,7 +66,7 @@ export async function DELETE(
     const { sessionId } = await params;
     const parsedSessionId = parsePositiveInteger(sessionId);
     if (parsedSessionId === null) {
-      return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
+      return NextResponse.json({ error: 'Workout not found.' }, { status: 400 });
     }
 
     const session = await prisma.session.findUnique({
@@ -75,16 +75,16 @@ export async function DELETE(
     });
 
     if (!session) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Workout not found.' }, { status: 404 });
     }
 
     if (!session.athleteId || !session.date) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Workout not found.' }, { status: 404 });
     }
 
     const hasAthlete = await coachService.hasAthlete(user.id, session.athleteId);
     if (!hasAthlete) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Workout not found.' }, { status: 404 });
     }
 
     const result = await plannerService.forWeek({ athleteId: session.athleteId, weekStart: session.date }).execute({
@@ -99,6 +99,6 @@ export async function DELETE(
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to delete session' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not remove this workout. Try again.' }, { status: 500 });
   }
 }

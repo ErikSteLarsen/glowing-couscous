@@ -8,8 +8,8 @@ type Context = { params: Promise<{ activityId: string }> };
 
 async function context(params: Context['params']) {
   const user = await getCurrentUser();
-  if (!user) return { error: NextResponse.json({ error: 'Sign in to review this workout.' }, { status: 401 }) };
-  if (!hasAppRole(user)) return { error: NextResponse.json({ error: 'Complete account setup first.' }, { status: 403 }) };
+  if (!user) return { error: NextResponse.json({ error: 'Sign in to see this workout.' }, { status: 401 }) };
+  if (!hasAppRole(user)) return { error: NextResponse.json({ error: 'Finish setting up your account first.' }, { status: 403 }) };
   const activityId = Number((await params).activityId);
   if (!Number.isSafeInteger(activityId) || activityId < 1) return { error: NextResponse.json({ error: 'Activity not found.' }, { status: 404 }) };
   return { user, activityId };
@@ -33,7 +33,7 @@ export async function PATCH(request: Request, { params }: Context) {
   const ctx = await context(params);
   if (ctx.error) return ctx.error;
   let input: unknown;
-  try { input = await request.json(); } catch { return NextResponse.json({ error: 'Correction could not be read.' }, { status: 400 }); }
+  try { input = await request.json(); } catch { return NextResponse.json({ error: 'Could not read your changes. Try again.' }, { status: 400 }); }
   const result = await activityAnalysisService.correctForUser(ctx.user.id, ctx.activityId, input);
   return NextResponse.json(result, { status: result.ok ? 200 : result.status });
 }

@@ -20,7 +20,7 @@ export function createAthleteGpxImportService({ db = prisma }: { db?: Database }
     try {
       xml = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
     } catch {
-      return { ok: false as const, error: 'GPX file must use valid UTF-8 text.' };
+      return { ok: false as const, error: 'This GPX file can’t be read. Export it again from your device or app.' };
     }
     return parseGpxActivity(xml, sport);
   }
@@ -41,7 +41,7 @@ export function createAthleteGpxImportService({ db = prisma }: { db?: Database }
 
   return {
     async preview(athleteId: number, bytes: Uint8Array, sport: string): Promise<GpxImportResult> {
-      if (!(await isAthlete(athleteId))) return { ok: false, status: 404, error: 'Athlete not found.' };
+      if (!(await isAthlete(athleteId))) return { ok: false, status: 404, error: 'Account not found.' };
       const parsed = await parse(bytes, sport);
       if (!parsed.ok) return { ok: false, status: 400, error: parsed.error };
       const fingerprint = createHash('sha256').update(bytes).digest('hex');
@@ -57,8 +57,8 @@ export function createAthleteGpxImportService({ db = prisma }: { db?: Database }
     },
 
     async import(athleteId: number, bytes: Uint8Array, sport: string, confirmed: boolean, pairingSessionId?: number | null): Promise<GpxImportResult> {
-      if (!confirmed) return { ok: false, status: 400, error: 'Review the activity and confirm before saving.' };
-      if (!(await isAthlete(athleteId))) return { ok: false, status: 404, error: 'Athlete not found.' };
+      if (!confirmed) return { ok: false, status: 400, error: 'Check the activity, then choose Import activity.' };
+      if (!(await isAthlete(athleteId))) return { ok: false, status: 404, error: 'Account not found.' };
       const parsed = await parse(bytes, sport);
       if (!parsed.ok) return { ok: false, status: 400, error: parsed.error };
       const fingerprint = createHash('sha256').update(bytes).digest('hex');
@@ -78,15 +78,15 @@ export function createAthleteGpxImportService({ db = prisma }: { db?: Database }
           if (attached === 'stale') {
             const retry = await existingImport(athleteId, fingerprint);
             if (retry) return { ok: true, activity: savedActivity(parsed.activity, retry.session), duplicate: true, sessionId: retry.sessionId };
-            return { ok: false, status: 409, error: 'That planned session is no longer available for this import. Review the file again and choose an available session.' };
+            return { ok: false, status: 409, error: 'That planned workout is no longer available. Check the file again and choose another workout.' };
           }
           return { ok: true, activity: parsed.activity, duplicate: false, sessionId: pairingSessionId };
         } catch {
           const retry = await existingImport(athleteId, fingerprint);
           if (retry) return { ok: true, activity: savedActivity(parsed.activity, retry.session), duplicate: true, sessionId: retry.sessionId };
           const paired = await db.activity.findUnique({ where: { sessionId: pairingSessionId }, select: { id: true } });
-          if (paired) return { ok: false, status: 409, error: 'That planned session already has an activity. Review the file again and choose an available session.' };
-          throw new Error('Failed to save imported GPX activity transactionally.');
+          if (paired) return { ok: false, status: 409, error: 'That planned workout already has an activity. Check the file again and choose another workout.' };
+          throw new Error('Could not save this activity. Try again.');
         }
       }
 
@@ -124,7 +124,7 @@ export function createAthleteGpxImportService({ db = prisma }: { db?: Database }
       } catch {
         const retry = await existingImport(athleteId, fingerprint);
         if (retry) return { ok: true, activity: savedActivity(parsed.activity, retry.session), duplicate: true, sessionId: retry.sessionId };
-        throw new Error('Failed to save imported GPX activity transactionally.');
+        throw new Error('Could not save this activity. Try again.');
       }
     },
   };

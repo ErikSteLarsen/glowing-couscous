@@ -130,12 +130,12 @@ export function serializePlannerEditorDraftForSave(draft: PlannerEditorDraft) {
 
 export function validatePlannerEditorDraft(draft: PlannerEditorDraft): string | null {
   if (draft.ownershipMode === 'coach-library') {
-    if (!draft.scheduledDate) return 'A coach session date is required.';
+    if (!draft.scheduledDate) return 'Choose a date.';
     if (draft.planWeekday !== null) return 'Standalone coach sessions cannot have a training-plan weekday.';
   }
 
   if (draft.ownershipMode === 'training-plan') {
-    if (draft.planWeekday === null) return 'Choose a weekday for the training-plan session.';
+    if (draft.planWeekday === null) return 'Choose a day of the week.';
     if (draft.scheduledDate) return 'Training-plan sessions use a weekday instead of a fixed date.';
   }
 
@@ -143,7 +143,7 @@ export function validatePlannerEditorDraft(draft: PlannerEditorDraft): string | 
     if (!Number.isInteger(draft.athleteId) || (draft.athleteId ?? 0) <= 0) {
       return 'Choose an athlete before saving.';
     }
-    if (!draft.scheduledDate) return 'A valid scheduled date is required.';
+    if (!draft.scheduledDate) return 'Choose a valid date.';
   }
 
   return validateSessionEditorDraft(draft);

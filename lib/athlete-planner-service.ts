@@ -140,13 +140,13 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       const requestedDates = uniqueDates(record.dates);
 
       if (!sourceKind || sourceId === null) {
-        return { ok: false as const, error: 'Choose a defined workout or template.', status: 400 };
+        return { ok: false as const, error: 'Choose a workout or routine.', status: 400 };
       }
       if (!requestKey) {
-        return { ok: false as const, error: 'Placement request key is required.', status: 400 };
+        return { ok: false as const, error: 'Something went wrong. Reload the page and try again.', status: 400 };
       }
       if (requestedDates.length === 0) {
-        return { ok: false as const, error: 'Choose at least one target day.', status: 400 };
+        return { ok: false as const, error: 'Choose at least one day.', status: 400 };
       }
       const plannedTime = parsePlannedTime(record.timeLabel);
       if (!plannedTime.ok) {
@@ -190,9 +190,9 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
             const template = await tx.template.findFirst({
               where: { id: sourceId, ownerId: athleteId },
             });
-            if (!template) throw new PlacementError('Template not found.', 404);
+            if (!template) throw new PlacementError('Routine not found.', 404);
             routine = parseTemplateRoutine(template.routineJson);
-            if (!routine) throw new PlacementError('Template routine is invalid. Edit and save it again.', 400);
+            if (!routine) throw new PlacementError('This routine can’t be read. Edit it and save it again.', 400);
             const rangeError = validateRoutineDates(requestedDates);
             if (rangeError) throw new PlacementError(rangeError, 400);
             source = {
@@ -310,7 +310,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
           select: { id: true },
         });
         if (!template) {
-          return { ok: false as const, error: 'Template not found.', status: 404 };
+          return { ok: false as const, error: 'Routine not found.', status: 404 };
         }
       }
 
@@ -322,9 +322,9 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
           where: { id: sessionId, athleteId },
           select: { id: true, status: true, updatedAt: true, activity: { select: { id: true } } },
         });
-        if (!existing) return { ok: false as const, error: 'Session not found.', status: 404 };
+        if (!existing) return { ok: false as const, error: 'Workout not found.', status: 404 };
         if (existing.activity || existing.status === 'completed') {
-          return { ok: false as const, error: 'Completed sessions are immutable.', status: 409 };
+          return { ok: false as const, error: 'Workouts marked as done can’t be changed.', status: 409 };
         }
 
         const plan = await findOrCreatePlan(db, athleteId, dates[0]);
@@ -341,7 +341,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
           return true;
         });
         if (!claimed) {
-          return { ok: false as const, error: 'This session changed while you were editing it. Refresh and try again.', status: 409 };
+          return { ok: false as const, error: 'This workout changed while you were editing it. Reload the page and try again.', status: 409 };
         }
 
         return { ok: true as const, sessionIds: [sessionId] };
@@ -380,12 +380,12 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
               activity: { select: { id: true } },
             },
           });
-          if (!existing?.date) throw new PlacementError('Session not found.', 404);
+          if (!existing?.date) throw new PlacementError('Workout not found.', 404);
           if (existing.activity || existing.status === 'completed') {
-            throw new PlacementError('Completed sessions are immutable.', 409);
+            throw new PlacementError('Workouts marked as done can’t be changed.', 409);
           }
           if (existing.coachOwnerId || existing.assignedById || existing.trainingPlanId) {
-            throw new PlacementError("Coach-assigned sessions keep the day your coach chose.", 409);
+            throw new PlacementError('Workouts from your coach stay on the day your coach chose.', 409);
           }
 
           const plan = await findOrCreatePlan(tx, athleteId, date);
@@ -408,7 +408,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
               ...(existing.status === 'missed' ? { status: 'planned' } : {}),
             },
           });
-          if (moved.count !== 1) throw new PlacementError('The session changed. Refresh the calendar and try again.', 409);
+          if (moved.count !== 1) throw new PlacementError('This workout has changed. Reload your Calendar and try again.', 409);
           return { ok: true as const, sessionId, date };
         });
       } catch (error) {
@@ -430,15 +430,15 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
             activity: { select: { id: true } },
           },
         });
-        if (!existing) return { ok: false as const, error: 'Session not found.', status: 404 };
+        if (!existing) return { ok: false as const, error: 'Workout not found.', status: 404 };
         if (!existing.date) {
-          return { ok: false as const, error: 'Only scheduled sessions can be removed from Planner.', status: 409 };
+          return { ok: false as const, error: 'Only planned workouts can be removed.', status: 409 };
         }
         if (existing.activity || existing.status === 'completed') {
-          return { ok: false as const, error: 'Completed sessions are immutable.', status: 409 };
+          return { ok: false as const, error: 'Workouts marked as done can’t be changed.', status: 409 };
         }
         if (existing.coachOwnerId || existing.assignedById || existing.trainingPlanId) {
-          return { ok: false as const, error: 'Coach-assigned sessions cannot be removed.', status: 409 };
+          return { ok: false as const, error: 'Workouts from your coach can’t be removed.', status: 409 };
         }
 
         const deleted = await tx.session.deleteMany({
@@ -454,7 +454,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
           },
         });
         if (deleted.count !== 1) {
-          return { ok: false as const, error: 'The session changed. Refresh and try again.', status: 409 };
+          return { ok: false as const, error: 'This workout has changed. Reload the page and try again.', status: 409 };
         }
         return { ok: true as const, sessionId };
       });
@@ -476,7 +476,7 @@ function placementReplayResult(
   payloadHash: string,
 ) {
   if (request.payloadHash !== payloadHash) {
-    return { ok: false as const, error: 'This placement key was already used for different dates, start time, or source content.', status: 409 as const };
+    return { ok: false as const, error: 'Something went wrong. Reload the page and try again.', status: 409 as const };
   }
   try {
     const sessionIds = JSON.parse(request.sessionIdsJson);
@@ -486,7 +486,7 @@ function placementReplayResult(
   } catch {
     // A malformed row cannot safely be replayed.
   }
-  return { ok: false as const, error: 'Could not confirm the earlier placement.', status: 409 as const };
+  return { ok: false as const, error: 'Could not confirm that this was added. Check your Calendar before you try again.', status: 409 as const };
 }
 
 function isPlacementRaceError(error: unknown) {

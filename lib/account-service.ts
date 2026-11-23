@@ -32,19 +32,19 @@ export function createAccountService({ db = prisma }: AccountServiceDeps = {}) {
 
     async updateProfile(userId: number, input: Record<string, unknown>) {
       const { name, overviewCards, performanceProfile, expectedUpdatedAt, trainingSports } = input;
-      if (name === undefined && overviewCards === undefined && performanceProfile === undefined && trainingSports === undefined) return { ok: false as const, status: 400, error: 'No profile changes supplied.' };
-      if (trainingSports !== undefined && !parseTrainingSports(trainingSports)) return { ok: false as const, status: 400, error: 'Choose at least one supported training sport.' };
+      if (name === undefined && overviewCards === undefined && performanceProfile === undefined && trainingSports === undefined) return { ok: false as const, status: 400, error: 'There are no changes to save.' };
+      if (trainingSports !== undefined && !parseTrainingSports(trainingSports)) return { ok: false as const, status: 400, error: 'Choose at least one sport.' };
       if (name !== undefined && (typeof name !== 'string' || !name.trim() || name.trim().length > 200)) return { ok: false as const, status: 400, error: 'Enter a name of 1–200 characters.' };
-      if (overviewCards !== undefined && !Array.isArray(overviewCards)) return { ok: false as const, status: 400, error: 'Overview cards must be a list.' };
+      if (overviewCards !== undefined && !Array.isArray(overviewCards)) return { ok: false as const, status: 400, error: 'Something went wrong. Reload the page and try again.' };
       if (performanceProfile !== undefined) {
         const error = validatePerformanceProfile(performanceProfile);
         if (error) return { ok: false as const, status: 400, error };
       }
-      if (expectedUpdatedAt !== undefined && (typeof expectedUpdatedAt !== 'string' || !Number.isFinite(Date.parse(expectedUpdatedAt)))) return { ok: false as const, status: 400, error: 'Invalid profile revision.' };
+      if (expectedUpdatedAt !== undefined && (typeof expectedUpdatedAt !== 'string' || !Number.isFinite(Date.parse(expectedUpdatedAt)))) return { ok: false as const, status: 400, error: 'Something went wrong. Reload the page and try again.' };
       return db.$transaction(async (tx) => {
         const existing = await tx.user.findUnique({ where: { id: userId }, select: { prefsJson: true, updatedAt: true } });
         if (!existing) return { ok: false as const, status: 404, error: 'Account not found.' };
-        if (typeof expectedUpdatedAt === 'string' && existing.updatedAt.getTime() !== Date.parse(expectedUpdatedAt)) return { ok: false as const, status: 409, error: 'Your profile changed in another tab. Reload before applying these changes.' };
+        if (typeof expectedUpdatedAt === 'string' && existing.updatedAt.getTime() !== Date.parse(expectedUpdatedAt)) return { ok: false as const, status: 409, error: 'Your Profile was changed in another tab or window. Reload the page before saving these changes.' };
         const updatedAt = new Date(Math.max(Date.now(), existing.updatedAt.getTime() + 1));
         const result = await tx.user.updateMany({
           where: { id: userId, updatedAt: existing.updatedAt },
@@ -55,7 +55,7 @@ export function createAccountService({ db = prisma }: AccountServiceDeps = {}) {
             updatedAt,
           },
         });
-        if (result.count !== 1) return { ok: false as const, status: 409, error: 'Your profile changed while saving. Reload before applying these changes.' };
+        if (result.count !== 1) return { ok: false as const, status: 409, error: 'Your Profile changed while saving. Reload the page and try again.' };
         return { ok: true as const, updatedAt: updatedAt.toISOString() };
       });
     },

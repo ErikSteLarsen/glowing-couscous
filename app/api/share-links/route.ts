@@ -11,12 +11,12 @@ export async function POST(request: NextRequest) {
   if (error) return error;
 
   const body = await readJsonObject(request);
-  if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  if (!body.ok) return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
 
   const sourceKind = body.value.sourceKind;
   const sourceId = parsePositiveInteger(body.value.sourceId);
   if (!sourceKinds.includes(sourceKind as ShareLinkSourceKind) || sourceId === null) {
-    return NextResponse.json({ error: 'Source kind and source id are required.' }, { status: 400 });
+    return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
   }
 
   const result = await shareLinkService.createForUser(user.id, sourceKind as ShareLinkSourceKind, sourceId);

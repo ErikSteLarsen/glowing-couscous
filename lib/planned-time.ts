@@ -1,4 +1,4 @@
-export const plannedTimeErrorMessage = 'Start time must use 24-hour HH:mm from 00:00 to 23:59.';
+export const plannedTimeErrorMessage = 'Enter a start time between 00:00 and 23:59.';
 
 const plannedTimePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 

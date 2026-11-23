@@ -56,13 +56,13 @@ export function homeActivityReadout(activity: HomeActivity) {
     durationSec: activity.durationSec,
     tss: activity.tss,
     loadAvailable: homeActivityLoadAvailable(activity),
-    sourceLabel: activity.metricsSource === 'strava-import' ? 'Strava' : activity.metricsSource === 'file-import' ? 'Activity file' : 'Manually completed',
+    sourceLabel: activity.metricsSource === 'strava-import' ? 'Strava' : activity.metricsSource === 'file-import' ? 'Activity file' : 'Logged by hand',
   };
 }
 
 export function homeLoadLabel(totals: Pick<HomeTotals, 'tss' | 'loadUnavailableCount'>) {
-  if (totals.tss === null) return 'Load unavailable';
-  return `${totals.tss} estimated TSS${totals.loadUnavailableCount > 0 ? ' · partial' : ''}`;
+  if (totals.tss === null) return 'No TSS';
+  return `${totals.tss} estimated TSS${totals.loadUnavailableCount > 0 ? ' · some TSS missing' : ''}`;
 }
 
 export function homeLoadBarPercent(point: { tss: number | null; loadAvailable: boolean }, points: Array<{ tss: number | null; loadAvailable: boolean }>) {

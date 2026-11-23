@@ -158,20 +158,20 @@ export function analyzeActivity(telemetry: ActivityTelemetry, durationSec: numbe
     if (targetDistance) candidates.push({ id: 'distance', label: `${work.length} × ${targetDistance} m`, durationSec: null, distanceMeters: targetDistance, recoverySec: recoverySec || null });
   }
   const basis = work.some(s => s.paceZone !== null) ? 'pace' : work.some(s => s.hrZone !== null) ? 'heart-rate' : 'unknown';
-  const limitations = ['Interpretation is an estimate; pace changes and laps may not reflect intended repetitions.', 'Training emphasis is not a measurement of physiological adaptation.'];
-  if (tooFragmented) limitations.push('The recording is too fragmented to display a reliable interval structure.');
-  if (segments.reduce((sum, s) => sum + s.durationSec * s.coverage, 0) < durationSec * 0.95) limitations.push('Some time spans have missing or insufficient measurements; pace uses covered spans only.');
-  if (basis === 'unknown') limitations.push('Personal intensity zones are unavailable for these measurements.');
-  if (work.some(s => s.paceZone !== null && s.hrZone !== null && Math.abs(s.paceZone - s.hrZone) >= 2)) limitations.push('Pace and heart-rate zones differ substantially in some efforts. Heart rate can lag or drift; inspect both estimates in the evidence table.');
+  const limitations = ['This is an estimate. Pace changes and laps may not match the reps you planned.', 'The training focus is a best guess, not a measured effect on your fitness.'];
+  if (tooFragmented) limitations.push('The recording has too many gaps to show the intervals reliably.');
+  if (segments.reduce((sum, s) => sum + s.durationSec * s.coverage, 0) < durationSec * 0.95) limitations.push('Some parts have little or no data. Pace only counts parts with data.');
+  if (basis === 'unknown') limitations.push('Add pace or heart-rate zones in Profile to see intensity for this run.');
+  if (work.some(s => s.paceZone !== null && s.hrZone !== null && Math.abs(s.paceZone - s.hrZone) >= 2)) limitations.push('Pace and heart-rate zones differ a lot in some efforts. Heart rate can lag behind or drift, so check both under Reps and details.');
   const zones = work.flatMap(s => (basis === 'pace' ? s.paceZone : s.hrZone) === null ? [] : [basis === 'pace' ? s.paceZone! : s.hrZone!]);
   const typicalZone = median(zones);
   return { version: 1, analyzerVersion: ACTIVITY_ANALYZER_VERSION, source: 'code', model: null, segments,
     workSummary: { repetitions: intervals ? work.length : 0, durationSec: totalSec, distanceMeters: coveredSec ? distance : null,
       paceSecPerKm: distance > 0 ? 1000 * coveredSec / distance : null, coverage: totalSec ? coveredSec / totalSec : 0 },
     candidates, selectedCandidateId: candidates[0]?.id ?? null,
-    summary: intervals ? `Detected ${work.length} efforts, with ${segments.filter(s => s.kind === 'recovery').length} recoveries between them. Variations inside each effort are retained in the recorded measurements.`
-      : speeds.length > 1 ? 'No clear repeated interval pattern was detected. The timeline shows the measured continuous work and any gaps.' : 'There are not enough recorded measurements to interpret this workout.',
-    emphasis: typicalZone ? typicalZone <= 2 ? 'Likely aerobic endurance work' : typicalZone <= 4 ? 'Likely sustained aerobic work' : 'Likely high aerobic demand; anaerobic contribution is uncertain' : 'Training emphasis is uncertain without calibrated intensity.',
+    summary: intervals ? `Found ${work.length} efforts, with ${segments.filter(s => s.kind === 'recovery').length} recoveries between them. Changes within each effort stay in your recorded data.`
+      : speeds.length > 1 ? 'No clear interval pattern found. The chart shows your continuous work and any gaps.' : 'There isn’t enough recorded data to analyze this workout.',
+    emphasis: typicalZone ? typicalZone <= 2 ? 'Likely aerobic endurance work' : typicalZone <= 4 ? 'Likely sustained aerobic work' : 'Likely high aerobic demand; anaerobic contribution is uncertain' : 'Training focus is unclear without your zones.',
     confidence: intervals && coveredSec / Math.max(totalSec, 1) > 0.9 ? 'moderate' : 'limited', limitations, intensityBasis: basis,
     targetPaceSecPerKm: intervals ? median(work.flatMap(s => {
       const middle = measureActivitySegment(points, s.startSec + s.durationSec * 0.2, s.endSec - s.durationSec * 0.2);

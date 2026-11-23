@@ -28,20 +28,20 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
   }
   if (!isJsonObject(body)) {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
   }
   const coachId = parsePositiveInteger(body.coachId);
   if (coachId === null) {
-    return NextResponse.json({ error: 'Invalid coachId' }, { status: 400 });
+    return NextResponse.json({ error: 'Coach not found.' }, { status: 400 });
   }
 
   const result = await coachRequestService.createForAthlete(user.id, coachId);
   if (!result.ok) {
     if (result.status === 409) {
-      return NextResponse.json({ error: result.error ?? 'Request already pending' }, { status: 409 });
+      return NextResponse.json({ error: result.error ?? 'You already have a request waiting for an answer.' }, { status: 409 });
     }
     return NextResponse.json({ error: result.error }, { status: result.status });
   }

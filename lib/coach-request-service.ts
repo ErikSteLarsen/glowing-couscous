@@ -57,15 +57,15 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
         select: { role: true, coachId: true, selfCoached: true },
       });
       if (!athlete || athlete.role !== 'ATHLETE') {
-        return { ok: false, status: 403, error: 'Only athletes can request a coach' };
+        return { ok: false, status: 403, error: 'Only athletes can ask a coach to join.' };
       }
       if (athlete.coachId !== null) {
-        return { ok: false, status: 409, error: 'Athlete already has a coach' };
+        return { ok: false, status: 409, error: 'You already have a coach.' };
       }
 
       const coach = await db.user.findUnique({ where: { id: coachId } });
       if (!coach || coach.role !== 'COACH') {
-        return { ok: false, status: 404, error: 'Coach not found' };
+        return { ok: false, status: 404, error: 'Coach not found.' };
       }
 
       const existingPendingRequest = await db.coachRequest.findFirst({
@@ -77,8 +77,8 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
           status: 409,
           error:
             existingPendingRequest.coachId === coachId
-              ? 'Request already pending'
-              : 'Wait for current request before sending another one',
+              ? 'You already have a request waiting for an answer.'
+              : 'Wait for an answer to your current request before you send another.',
         };
       }
 
@@ -92,7 +92,7 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
       });
 
       if (existingRequest && existingRequest.status === 'PENDING') {
-        return { ok: false, status: 409, error: 'Request already pending' };
+        return { ok: false, status: 409, error: 'You already have a request waiting for an answer.' };
       }
 
       if (existingRequest && existingRequest.status === 'REJECTED') {
@@ -104,7 +104,7 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
       }
 
       if (existingRequest) {
-        return { ok: false, status: 409, error: 'Request already resolved' };
+        return { ok: false, status: 409, error: 'This request has already been answered.' };
       }
 
       try {
@@ -119,7 +119,7 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
         return { ok: true };
       } catch (error: unknown) {
         if ((error as { code?: string }).code === 'P2002') {
-          return { ok: false, status: 409, error: 'Another request is already pending' };
+          return { ok: false, status: 409, error: 'You already have a request waiting for an answer.' };
         }
         throw error;
       }
@@ -149,10 +149,10 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
     async decideForCoach(coachUserId: number, requestId: number, action: CoachRequestAction): Promise<CoachRequestResult> {
       const request = await db.coachRequest.findUnique({ where: { id: requestId } });
       if (!request || request.coachId !== coachUserId) {
-        return { ok: false, status: 404, error: 'Not found' };
+        return { ok: false, status: 404, error: 'Request not found.' };
       }
       if (request.status !== 'PENDING') {
-        return { ok: false, status: 409, error: 'Request already resolved' };
+        return { ok: false, status: 409, error: 'This request has already been answered.' };
       }
 
       if (action === 'accept') {
@@ -162,10 +162,10 @@ export function createCoachRequestService({ db = prisma }: CoachRequestServiceDe
         });
 
         if (!athlete || athlete.role !== 'ATHLETE') {
-          return { ok: false, status: 404, error: 'Athlete not found' };
+          return { ok: false, status: 404, error: 'Athlete not found.' };
         }
         if (athlete.coachId && athlete.coachId !== coachUserId) {
-          return { ok: false, status: 409, error: 'Athlete already has a coach' };
+          return { ok: false, status: 409, error: 'You already have a coach.' };
         }
 
         await db.$transaction([

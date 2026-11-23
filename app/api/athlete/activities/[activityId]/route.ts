@@ -13,15 +13,15 @@ export async function PATCH(
 
     const { activityId } = await params;
     const parsedActivityId = parsePositiveInteger(activityId);
-    if (parsedActivityId === null) return NextResponse.json({ error: 'Invalid activityId.' }, { status: 400 });
+    if (parsedActivityId === null) return NextResponse.json({ error: 'Activity not found.' }, { status: 400 });
 
     let body: unknown;
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
+      return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
     }
-    if (!isJsonObject(body)) return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
+    if (!isJsonObject(body)) return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
 
     const result = await athleteManualActivityService.correct(user.id, parsedActivityId, body);
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
@@ -35,6 +35,6 @@ export async function PATCH(
     });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to correct manual activity.' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not save your changes. Try again.' }, { status: 500 });
   }
 }

@@ -51,7 +51,7 @@ export async function readActivityUpload(request: Request): Promise<{ ok: true; 
       bytesRead += chunk.length;
       if (bytesRead > MAX_ACTIVITY_IMPORT_BYTES + MAX_MULTIPART_OVERHEAD) fail('Activity files must be 5 MB or smaller.');
     });
-    body.on('error', () => fail('Could not read the uploaded file.'));
+    body.on('error', () => fail('Could not read this file. Try again.'));
     parser.on('file', (name, stream, info) => {
       if (sawFile) {
         fail('Choose one activity file at a time.');
@@ -70,32 +70,32 @@ export async function readActivityUpload(request: Request): Promise<{ ok: true; 
         if (fileBytesRead > MAX_ACTIVITY_IMPORT_BYTES) return fail('Activity files must be 5 MB or smaller.');
         if (!rejected) chunks.push(chunk);
       });
-      stream.on('error', () => fail('Could not read the uploaded file.'));
+      stream.on('error', () => fail('Could not read this file. Try again.'));
     });
     parser.on('field', (name, value) => {
       if (name === 'confirmed') confirmed = value === 'true';
       else if (name === 'pairingChoice') {
         if (value === 'separate') pairingChoice = 'separate';
         else if (/^session:[1-9]\d*$/.test(value) && Number.isSafeInteger(Number(value.slice('session:'.length)))) pairingChoice = Number(value.slice('session:'.length));
-        else fail('Choose whether to save this as a separate activity or attach it to a planned session.');
+        else fail('Choose whether to save this on its own or match it to a planned workout.');
       }
       else if (name === 'sport') {
-        if (sawSport) return fail('Choose one activity type for the GPX file.');
+        if (sawSport) return fail('Choose one sport for this GPX file.');
         sawSport = true;
         if (value === 'RUNNING' || value === 'BIKING' || value === 'SWIMMING') sport = value;
         else fail('Choose Running, Cycling, or Swimming for this GPX activity.');
       }
-      else fail('Unexpected upload field.');
+      else fail('Something went wrong with the upload. Reload the page and try again.');
     });
     parser.on('filesLimit', () => fail('Choose one activity file at a time.'));
-    parser.on('fieldsLimit', () => fail('Invalid upload form.'));
-    parser.on('partsLimit', () => fail('Invalid upload form.'));
+    parser.on('fieldsLimit', () => fail('Something went wrong with the upload. Reload the page and try again.'));
+    parser.on('partsLimit', () => fail('Something went wrong with the upload. Reload the page and try again.'));
     parser.on('error', () => fail('Choose a valid .tcx, .fit, or .gpx activity file.'));
     parser.on('finish', () => {
       if (rejected) return;
       if (!sawFile || !validFile || !format) return fail('Choose a .tcx, .fit, or .gpx activity file.');
       if (format === 'gpx' && sport === null) return fail('Choose Running, Cycling, or Swimming for this GPX activity.');
-      if (format !== 'gpx' && sawSport) return fail('Choose an activity type only for GPX files.');
+      if (format !== 'gpx' && sawSport) return fail('Only GPX files need a sport.');
       if (!chunks.length) return fail(`The selected ${format.toUpperCase()} file is empty.`);
       resolve({ ok: true, upload: { bytes: new Uint8Array(Buffer.concat(chunks)), confirmed, pairingChoice, format, sport } });
     });

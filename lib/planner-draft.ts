@@ -212,12 +212,12 @@ export function serializePlannerDraftForSave(draft: PlannerSessionDraft) {
 
 export function validatePlannerSessionDraft(draft: PlannerSessionDraft) {
   if (draft.ownershipMode === 'coach-library') {
-    if (!draft.scheduledDate) return 'A coach session date is required.';
+    if (!draft.scheduledDate) return 'Choose a date.';
     if (draft.planWeekday !== null) return 'Standalone coach sessions cannot have a training-plan weekday.';
   }
 
   if (draft.ownershipMode === 'training-plan') {
-    if (draft.planWeekday === null) return 'Choose a weekday for the training-plan session.';
+    if (draft.planWeekday === null) return 'Choose a day of the week.';
     if (draft.scheduledDate) return 'Training-plan sessions use a weekday instead of a fixed date.';
   }
 
@@ -226,28 +226,28 @@ export function validatePlannerSessionDraft(draft: PlannerSessionDraft) {
       return 'Choose an athlete before saving.';
     }
     if (!draft.scheduledDate || Number.isNaN(new Date(draft.scheduledDate).getTime())) {
-      return 'A valid scheduled date is required.';
+      return 'Choose a valid date.';
     }
   }
 
   if (!draft.title.trim()) {
-    return 'Session title is required.';
+    return 'Add a name.';
   }
   if (!SPORT_OPTIONS.includes(draft.sport as (typeof SPORT_OPTIONS)[number])) {
-    return 'Sport is required.';
+    return 'Choose a sport.';
   }
   if (draft.blocks.length === 0) {
-    return 'At least one block is required.';
+    return 'Add at least one step.';
   }
   for (const block of draft.blocks) {
     if (block.durationSec <= 0) {
-      return 'Every block needs a positive duration.';
+      return 'Every step needs a duration.';
     }
     if (block.targetType && (block.targetLow === null || block.targetHigh === null)) {
-      return 'Target range needs both low and high values.';
+      return 'Enter both a low and a high target.';
     }
     if (block.targetLow !== null && block.targetHigh !== null && block.targetLow > block.targetHigh) {
-      return 'Target range low must be less than or equal to target high.';
+      return 'The low target can’t be higher than the high target.';
     }
   }
   return null;

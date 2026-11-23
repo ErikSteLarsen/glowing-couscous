@@ -2,7 +2,7 @@ import { prisma } from './prisma.ts';
 
 export const SKIPPED_SESSION_STATUS = 'skipped';
 /** Returned with 409 when a write's claim finds the session changed since it was read. */
-export const SESSION_CHANGED_ERROR = 'This session changed while you were editing it (it may have been ridden or completed). Refresh to see the latest version.';
+export const SESSION_CHANGED_ERROR = 'This workout changed while you had it open. It may have been ridden or marked as done. Reload the page to see the latest version.';
 
 type StatusSession = {
   id: number;
@@ -87,25 +87,25 @@ export function createAthleteSessionStatusService({
       },
     });
     if (!session || session.athleteId !== athleteId) {
-      return { ok: false, status: 404, error: 'Session not found.' };
+      return { ok: false, status: 404, error: 'Workout not found.' };
     }
     if (!isPersonalSession(session, athleteId)) {
-      return { ok: false, status: 403, error: 'Coach-assigned sessions can only be changed by the coach.' };
+      return { ok: false, status: 403, error: 'Only your coach can change workouts they planned.' };
     }
     if (session.activity || session.status === 'completed') {
       return {
         ok: false,
         status: 409,
         error: to === 'skipped'
-          ? 'Completed sessions cannot be skipped.'
-          : 'Completed sessions cannot be planned again. Reopen the outcome to change it.',
+          ? 'Workouts marked as done can’t be skipped.'
+          : 'Workouts marked as done can’t be planned again. Mark it as not done first.',
       };
     }
     if (session.status !== from) {
       return {
         ok: false,
         status: 409,
-        error: from === 'planned' ? 'Only planned sessions can be skipped.' : 'Only skipped sessions can be planned again.',
+        error: from === 'planned' ? 'Only planned workouts can be skipped.' : 'Only skipped workouts can be planned again.',
       };
     }
 
@@ -115,7 +115,7 @@ export function createAthleteSessionStatusService({
       data: { status: to },
     });
     if (result.count !== 1) {
-      return { ok: false, status: 409, error: 'The session changed. Refresh and try again.' };
+      return { ok: false, status: 409, error: 'This workout has changed. Reload the page and try again.' };
     }
 
     return { ok: true, sessionId, status: to };

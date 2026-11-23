@@ -13,13 +13,13 @@ export async function GET(
     if (error) return error;
     const { sessionId } = await params;
     const parsedSessionId = parsePositiveInteger(sessionId);
-    if (parsedSessionId === null) return NextResponse.json({ error: 'Invalid sessionId' }, { status: 400 });
+    if (parsedSessionId === null) return NextResponse.json({ error: 'Workout not found.' }, { status: 400 });
 
     const result = await sessionComparisonService.loadComparison({ role: 'COACH', userId: user.id }, parsedSessionId);
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
     return NextResponse.json(result);
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to load comparison' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not load the comparison. Try again.' }, { status: 500 });
   }
 }

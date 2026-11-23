@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const date = req.nextUrl.searchParams.get('date') ?? todayInZone(timeZone);
   const calendar = await athleteService.loadCalendarView(user.id, date, view, { timeZone });
   if (!calendar) {
-    return NextResponse.json({ error: 'Calendar unavailable' }, { status: 404 });
+    return NextResponse.json({ error: 'Could not load your Calendar. Try again.' }, { status: 404 });
   }
 
   return NextResponse.json({

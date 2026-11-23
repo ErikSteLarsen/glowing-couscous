@@ -36,11 +36,11 @@ function normalizeWorkoutDraft(input: unknown) {
   }
 
   if (draft.scheduledDate !== null) {
-    return { draft, error: 'Standalone workouts cannot be assigned to a date.' };
+    return { draft, error: 'Saved workouts don’t have a date. Add the workout to your Calendar instead.' };
   }
 
   if (draft.planWeekday !== null) {
-    return { draft, error: 'Standalone workouts cannot be assigned to a weekday.' };
+    return { draft, error: 'Saved workouts don’t have a day. Add the workout to your Calendar instead.' };
   }
 
   return { draft, error: validateSessionEditorDraft(draft) };
@@ -58,8 +58,8 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
 
     async saveForOwner(owner: WorkoutLibraryOwner, ownerId: number, input: unknown, sessionId?: number) {
       const safety = input && typeof input === 'object' ? input as { requestKey?: unknown; expectedUpdatedAt?: unknown } : {};
-      if (safety.requestKey !== undefined && (typeof safety.requestKey !== 'string' || !/^[a-zA-Z0-9-]{16,80}$/.test(safety.requestKey))) return { ok: false as const, error: 'Invalid save request identity.', status: 400 };
-      if (safety.expectedUpdatedAt !== undefined && (typeof safety.expectedUpdatedAt !== 'string' || !Number.isFinite(Date.parse(safety.expectedUpdatedAt)))) return { ok: false as const, error: 'Invalid workout revision.', status: 400 };
+      if (safety.requestKey !== undefined && (typeof safety.requestKey !== 'string' || !/^[a-zA-Z0-9-]{16,80}$/.test(safety.requestKey))) return { ok: false as const, error: 'Something went wrong. Reload the page and try again.', status: 400 };
+      if (safety.expectedUpdatedAt !== undefined && (typeof safety.expectedUpdatedAt !== 'string' || !Number.isFinite(Date.parse(safety.expectedUpdatedAt)))) return { ok: false as const, error: 'Something went wrong. Reload the page and try again.', status: 400 };
       const normalized = normalizeWorkoutDraft(input);
       if (normalized.error) {
         return { ok: false as const, error: normalized.error, status: 400 };
@@ -79,9 +79,9 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
       }
 
       if (existing?.activity) {
-        return { ok: false as const, error: 'Completed workouts cannot be edited here.', status: 409 };
+        return { ok: false as const, error: 'Workouts marked as done can’t be edited here.', status: 409 };
       }
-      if (existing && typeof safety.expectedUpdatedAt === 'string' && existing.updatedAt.getTime() !== Date.parse(safety.expectedUpdatedAt)) return { ok: false as const, error: 'This workout changed in another tab. Reload or restore your draft as a new workout.', status: 409 };
+      if (existing && typeof safety.expectedUpdatedAt === 'string' && existing.updatedAt.getTime() !== Date.parse(safety.expectedUpdatedAt)) return { ok: false as const, error: 'This workout was changed in another tab or window. Reload the page, or restore your changes as a new workout.', status: 409 };
 
       const data = {
         ...ownerWhere(owner, ownerId),
@@ -107,9 +107,9 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
           const payloadHash = createHash('sha256').update(JSON.stringify(data)).digest('hex');
           const replay = async () => {
             const prior = await db.workoutSaveRequest.findUnique({ where: { userId_owner_requestKey: identity } });
-            if (!prior || prior.payloadHash !== payloadHash || prior.sessionId === null) return { ok: false as const, error: 'This save request changed or is not confirmed. Keep the draft and retry the original save.', status: 409 };
+            if (!prior || prior.payloadHash !== payloadHash || prior.sessionId === null) return { ok: false as const, error: 'Tempo couldn’t confirm your earlier save. Keep your changes and save again.', status: 409 };
             const saved = await db.session.findFirst({ where: { id: prior.sessionId, ...standaloneWhere(owner, ownerId) }, select: { id: true, updatedAt: true } });
-            return saved ? { ok: true as const, sessionId: saved.id, updatedAt: saved.updatedAt.toISOString() } : { ok: false as const, error: 'The previously saved workout is no longer available.', status: 409 };
+            return saved ? { ok: true as const, sessionId: saved.id, updatedAt: saved.updatedAt.toISOString() } : { ok: false as const, error: 'The workout you saved earlier was deleted.', status: 409 };
           };
           if (await db.workoutSaveRequest.findUnique({ where: { userId_owner_requestKey: identity } })) return replay();
           try {
@@ -132,7 +132,7 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
         return db.$transaction(async (tx) => {
           const updatedAt = new Date(Math.max(Date.now(), existing.updatedAt.getTime() + 1));
           const claimed = await tx.session.updateMany({ where: { id: sessionId, ...standaloneWhere(owner, ownerId), updatedAt: existing.updatedAt, activity: { is: null } }, data: { updatedAt } });
-          if (claimed.count !== 1) return { ok: false as const, error: 'This workout changed while saving. Keep your draft and reload.', status: 409 };
+          if (claimed.count !== 1) return { ok: false as const, error: 'This workout changed while you were saving. Keep your changes and reload the page.', status: 409 };
           await tx.block.deleteMany({ where: { sessionId } });
           await tx.session.update({ where: { id: sessionId }, data: { ...data, updatedAt } });
           return { ok: true as const, sessionId, updatedAt: updatedAt.toISOString() };
@@ -153,7 +153,7 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
       });
 
       if (!existing) return { ok: false as const, error: 'Workout not found.', status: 404 };
-      if (existing.activity) return { ok: false as const, error: 'Completed workouts cannot be deleted.', status: 409 };
+      if (existing.activity) return { ok: false as const, error: 'Workouts marked as done can’t be deleted.', status: 409 };
 
       await db.session.delete({ where: { id: sessionId } });
       return { ok: true as const, sessionId };

@@ -10,15 +10,15 @@ export async function POST(request: NextRequest) {
     if (error) return error;
 
     const body = await readJsonObject(request);
-    if (!body.ok) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    if (!body.ok) return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
 
     const sourceKind = body.value.sourceKind;
     if (sourceKind !== 'workout' && sourceKind !== 'template') {
-      return NextResponse.json({ error: 'Invalid source kind' }, { status: 400 });
+      return NextResponse.json({ error: 'Choose a workout or routine.' }, { status: 400 });
     }
 
     const sourceId = parsePositiveInteger(body.value.sourceId);
-    if (sourceId === null) return NextResponse.json({ error: 'Invalid sourceId' }, { status: 400 });
+    if (sourceId === null) return NextResponse.json({ error: 'Choose a workout or routine.' }, { status: 400 });
 
     const result = await athletePlannerService.assignSource(user.id, {
       sourceKind,
@@ -32,6 +32,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, sessionIds: result.sessionIds }, { status: 201 });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to place source' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not add this to your Calendar. Try again.' }, { status: 500 });
   }
 }
