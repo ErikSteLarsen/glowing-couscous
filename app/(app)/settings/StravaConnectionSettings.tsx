@@ -76,7 +76,7 @@ export function StravaConnectionSettings({
           </div>
           <DialogTrigger className={`${secondaryButtonClassName} max-md:min-h-11`}>Manage Strava</DialogTrigger>
         </div>
-        <DialogContent className={`${centeredDialogClassName} h-fit max-w-md space-y-4`}>
+        <DialogContent className={`${centeredDialogClassName} max-w-md space-y-4`}>
           <div>
             <DialogTitle className={sectionHeadingClassName}>Strava connection</DialogTitle>
             <DialogDescription className="mt-1 text-sm text-[var(--text-secondary)]">{status}</DialogDescription>

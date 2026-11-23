@@ -58,7 +58,7 @@ export function AddActivity({ today }: { today: string }) {
           keepMounted
           initialFocus="content"
           finalFocus={() => trigger.current}
-          className={`${centeredDialogClassName} h-fit max-w-xl space-y-4`}
+          className={`${centeredDialogClassName} max-w-xl space-y-4`}
         >
           <div className="flex items-center justify-between gap-3">
             <DialogTitle className={sectionHeadingClassName}>Log completed workout</DialogTitle>

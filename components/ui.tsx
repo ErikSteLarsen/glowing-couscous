@@ -46,7 +46,7 @@ export const dangerTextClassName = 'text-sm text-[var(--status-danger)]';
 export const successTextClassName = 'text-sm text-[var(--status-success)]';
 
 export const overlayPanelClassName = 'bg-[var(--surface)] text-[var(--text)] shadow-[var(--shadow-overlay)]';
-export const centeredDialogClassName = `tempo-alert-dialog w-[calc(100%-2rem)] rounded-2xl border border-[var(--border)] p-5 ${overlayPanelClassName}`;
+export const centeredDialogClassName = `tempo-alert-dialog h-fit w-[calc(100%-2rem)] rounded-2xl border border-[var(--border)] p-5 ${overlayPanelClassName}`;
 export const nativeDialogClassName = `fixed inset-0 z-50 m-auto max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl border p-0 backdrop:bg-[var(--overlay)] ${overlayPanelClassName}`;
 export const sheetDialogClassName = `fixed inset-x-0 bottom-0 mx-auto grid max-h-[calc(100dvh-1rem)] w-full rounded-t-2xl border border-[var(--border)] outline-none md:inset-y-0 md:my-auto md:h-fit md:rounded-2xl ${overlayPanelClassName}`;
 export const dialogActionsClassName = 'flex flex-wrap justify-end gap-2';

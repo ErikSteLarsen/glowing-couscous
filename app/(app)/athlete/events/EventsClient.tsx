@@ -37,7 +37,7 @@ type Candidate = LinkedActivity;
 type DurationParts = { hours: string; minutes: string; seconds: string };
 const blankDuration: DurationParts = { hours: '', minutes: '', seconds: '' };
 const sports = ['RUNNING', 'BIKING', 'SWIMMING', 'TRIATHLON'];
-const dialogClassName = `${centeredDialogClassName} z-50 h-fit`;
+const dialogClassName = `${centeredDialogClassName} z-50`;
 const dialogButtonClassName = 'max-md:min-h-11';
 
 function dateValue(value: string) { return value.slice(0, 10); }
