@@ -88,9 +88,12 @@ installers in `desktop/dist/`. The icon source is `build/icon.svg`. The
 1024 px PNG feeds the Windows and macOS builders, and `build/icons/` provides
 the Linux sizes.
 
-To release a build, set the version in `desktop/package.json` and push a matching
-tag such as `desktop-v0.1.0`. The workflow tests all three platforms and
-publishes all five installers to a stable GitHub Release marked as latest.
+To release a build, set the version in `desktop/package.json` and the matching
+`RIDE_DESKTOP_VERSION` in `lib/ride/launch.ts` (a test fails when they differ),
+commit, and push only the tag first, such as `desktop-v0.1.0`. The workflow
+tests all three platforms and publishes all five installers to a stable GitHub
+Release marked as latest. Push `main` after the release finishes: the website
+links to that exact tag, so deploying earlier gives 404 downloads meanwhile.
 
 ## Launch from the website
 

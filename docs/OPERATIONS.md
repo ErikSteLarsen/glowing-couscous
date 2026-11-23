@@ -57,10 +57,12 @@ access to the seeded accounts and their data.
 
 `/athlete/ride/[sessionId]` uses Web Bluetooth, which needs Chrome or Edge
 (desktop or Android) on HTTPS or `localhost`. Safari and Firefox get a
-targets-only ride and a pointer to the desktop app. Optional
-`NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL` (build-time, public) is the desktop
-download page shown beside the `tempo-ride://open?url=…` deep link; the link is
-hidden when it is unset. Unsaved rides are kept in browser localStorage under
+targets-only ride and a pointer to the desktop app. Installer links (the public
+`/download` page, linked from Settings, and the Start workout fallback) point at
+the GitHub release `desktop-v<RIDE_DESKTOP_VERSION>` from `lib/ride/launch.ts`.
+Optional `NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL` (build-time, public) replaces that
+base: a folder that serves the five installer file names. While the repository
+is private, the GitHub links only work for signed-in collaborators. Unsaved rides are kept in browser localStorage under
 `tempo:ride:v1:<sessionId>` until the server confirms the import.
 
 ## Strava Sync Setup

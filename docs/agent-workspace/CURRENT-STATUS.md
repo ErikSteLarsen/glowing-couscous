@@ -263,6 +263,17 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   browser across Home (with dialog), Calendar, Workouts, Activity, Library,
   session, Templates, Events, Import, Profile, Settings and phone Home. Dark
   mode is unchanged; Ride stays dark by design.
+- Tempo Ride downloads (2026-11-23): a public `/download` page detects the OS
+  and recommends its installers, with install steps and the other systems below.
+  Settings links to it, and so does the Start workout fallback. On a Mac,
+  Chromium's `userAgentData` chip hint narrows the choice to one `.dmg`; Safari
+  and Firefox show both, Apple silicon first, with a how-to-check note. Links
+  are pinned to `desktop-v<RIDE_DESKTOP_VERSION>` instead of `releases/latest`,
+  and a test keeps that constant equal to `desktop/package.json`. Checked in a
+  local browser on Linux, simulated Intel Chrome Mac, Safari Mac, Android and
+  390px phone width, plus the Settings card. The repository is private, so
+  signed-out visitors still get 404 from GitHub until it is made public or
+  `NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL` points at public hosting.
 
 ## Remaining risks and acceptance gates
 
