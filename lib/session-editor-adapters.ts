@@ -10,7 +10,6 @@ import {
   updateSessionEditorFields,
   validateSessionEditorDraft,
   type PersistedSessionRecord,
-  type SessionEditorBlock,
   type SessionEditorBlockPatch,
   type SessionEditorDraft,
 } from './session-editor.ts';

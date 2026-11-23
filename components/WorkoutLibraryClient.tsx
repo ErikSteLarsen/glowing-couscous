@@ -10,7 +10,6 @@ import {
   sectionHeadingClassName,
   BackButton,
   Badge,
-  compactPrimaryButtonClassName,
   compactSecondaryButtonClassName,
   EmptyState,
   ghostButtonClassName,

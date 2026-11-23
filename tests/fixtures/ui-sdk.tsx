@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SessionComparisonDialog } from '../../components/SessionComparisonDialog';
 import { createEmptySessionEditorDraft } from '../../lib/session-editor';

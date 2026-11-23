@@ -11,7 +11,7 @@ import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Men
 import {
   dangerTextClassName,
   sheetDialogClassName,
-  compactSecondaryButtonClassName, ghostButtonClassName, iconButtonClassName,
+  ghostButtonClassName, iconButtonClassName,
   primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName,
 } from '@/components/ui';
 import { withBackOrigin, type BackOrigin } from '@/lib/app-navigation';

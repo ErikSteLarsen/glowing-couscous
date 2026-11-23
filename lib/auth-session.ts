@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 import type { AppRole } from '@/lib/app-navigation';
 import {
   isAppRole,
-  parseApplicationUserId,
   parseSessionPrincipal,
 } from '@/lib/auth-principal';
 

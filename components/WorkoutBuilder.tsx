@@ -24,7 +24,7 @@ import type { PerformanceProfile } from '@/lib/performance-profile';
 import { WorkoutProfile } from '@/components/WorkoutProfile';
 import { buildWorkoutProfile } from '@/lib/workout-profile';
 import { MetricText } from '@/components/tempo/MetricText';
-import { buttonFocusClassName, compactDangerButtonClassName, compactPrimaryButtonClassName, compactSecondaryButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, formTextareaClassName } from '@/components/ui';
+import { buttonFocusClassName, compactDangerButtonClassName, compactSecondaryButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, formTextareaClassName } from '@/components/ui';
 
 const editorSecondaryButtonClassName = `${compactSecondaryButtonClassName} max-md:min-h-11`;
 const editorDangerButtonClassName = `${compactDangerButtonClassName} max-md:min-h-11`;

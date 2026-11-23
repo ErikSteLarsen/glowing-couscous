@@ -2,7 +2,7 @@
 
 import { History } from 'lucide-react';
 import { Popover, PopoverContent, PopoverDescription, PopoverTitle, PopoverTrigger } from '@ui-sdk/react/popover';
-import { overlayPanelClassName, buttonFocusClassName, compactSecondaryButtonClassName, ghostButtonClassName } from '@/components/ui';
+import { buttonFocusClassName, compactSecondaryButtonClassName, ghostButtonClassName } from '@/components/ui';
 import { formatDraftAge } from '@/lib/draft-recovery';
 
 export type DraftEntry = { key: string; name: string; kind: string; savedAt: number };

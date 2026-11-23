@@ -1,4 +1,4 @@
-import { addDays, addMonths, differenceInCalendarDays, endOfDay, endOfMonth, endOfWeek, format, isSameDay, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
+import { addDays, addMonths, differenceInCalendarDays, endOfDay, endOfMonth, endOfWeek, format, isSameDay, startOfMonth, startOfWeek } from 'date-fns';
 import { Prisma } from '@prisma/client';
 import { hasExecutionSteps } from './athlete-execution.ts';
 import { readOverviewCardsFromPrefsJson } from './overview-preferences.ts';

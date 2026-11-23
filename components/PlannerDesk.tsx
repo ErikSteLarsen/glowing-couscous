@@ -39,7 +39,7 @@ import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { formatDuration } from '@/lib/format-duration';
 import { parsePlannedTime } from '@/lib/planned-time';
 import { getSportLabel } from '@/lib/sport';
-import { getTemplateCadence, getTemplateDurationDays, templateDatesForSelection, templateCadenceMeta, validateTemplateDateRange, type TemplateCadence } from '@/lib/template-cadence';
+import { getTemplateDurationDays, templateDatesForSelection, templateCadenceMeta, validateTemplateDateRange, type TemplateCadence } from '@/lib/template-cadence';
 
 export type PlannerDeskRole = 'coach' | 'athlete';
 export type PlannerDeskSourceKind = 'workout' | 'template' | 'training-plan';

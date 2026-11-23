@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { format, startOfWeek } from 'date-fns';
-import { ActionLink, EmptyState, PageShell, secondaryButtonClassName, Surface, TopBar } from '@/components/ui';
+import { EmptyState, PageShell, secondaryButtonClassName, Surface, TopBar } from '@/components/ui';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
