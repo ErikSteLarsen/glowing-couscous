@@ -2,7 +2,8 @@
 
 import { useDeferredValue, useMemo, useRef, useState } from 'react';
 import { SlidersHorizontal, X } from 'lucide-react';
-import { CollectionSearch, CollectionSummary, CollectionToolbar } from '@/components/library/CollectionToolbar';
+import { SearchField } from '@/components/tempo/SearchField';
+import { CollectionSummary, CollectionToolbar } from '@/components/library/CollectionToolbar';
 import { LibraryCard } from '@/components/library/LibraryCard';
 import { WorkoutCardGrid } from '@/components/library/WorkoutCard';
 import { buttonFocusClassName, compactSecondaryButtonClassName, EmptyState, formLabelClassName, formSelectClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
@@ -68,7 +69,7 @@ export function LibraryBrowser({
   return (
     <div className="@container flex min-w-0 flex-col gap-5">
       <div role="search" aria-label="Filter workouts" className="flex flex-col gap-3">
-        <CollectionToolbar search={<CollectionSearch value={query.q} onChange={(q) => update({ q })} label="Search by name, focus or tag" placeholder="Search workouts" />}>
+        <CollectionToolbar search={<SearchField value={query.q} onChange={(event) => update({ q: event.target.value })} label="Search by name, focus or tag" placeholder="Search workouts" labelClassName="min-w-48 flex-1 @2xl:max-w-md" className="max-md:min-h-11" maxLength={80} autoComplete="off" />}>
           <button
             type="button"
             aria-haspopup="dialog"

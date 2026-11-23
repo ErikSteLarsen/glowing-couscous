@@ -41,7 +41,8 @@ import type { PerformanceProfile } from '@/lib/performance-profile';
 import { useDraftRecovery } from '@/components/useDraftRecovery';
 import { DraftRecoveryStatus } from '@/components/DraftRecoveryNotice';
 import { DraftsPopover } from '@/components/DraftsPopover';
-import { CollectionSearch, CollectionSummary, CollectionToolbar } from '@/components/library/CollectionToolbar';
+import { SearchField } from '@/components/tempo/SearchField';
+import { CollectionSummary, CollectionToolbar } from '@/components/library/CollectionToolbar';
 import { WorkoutCard, WorkoutCardFooter, WorkoutCardGrid, WorkoutCardHeader, WorkoutCardMeta, WorkoutCardProfile, WorkoutCardSummary } from '@/components/library/WorkoutCard';
 import { describeWorkoutDraft, isWorkoutDraftRedundant, parseWorkoutRecovery } from '@/lib/workout-recovery';
 import { athleteWorkoutsHref, type WorkoutTab } from '@/lib/athlete-workouts-navigation';
@@ -383,7 +384,7 @@ export function WorkoutLibraryClient({
           <h2 id="workout-library-title" className="text-lg font-semibold text-[var(--text)]">Workout library</h2>
           {typeof listIntro === 'function' ? null : draftsControl}
         </div>}
-        <CollectionToolbar search={<CollectionSearch value={filterText} onChange={setFilterText} label="Search by name or notes" placeholder="Search workouts" />}>
+        <CollectionToolbar search={<SearchField value={filterText} onChange={(event) => setFilterText(event.target.value)} label="Search by name or notes" placeholder="Search workouts" labelClassName="min-w-48 flex-1 @2xl:max-w-md" className="max-md:min-h-11" maxLength={80} autoComplete="off" />}>
           {newWorkoutAction}
         </CollectionToolbar>
         {role === 'ATHLETE' && guidedFormOpen ? <GuidedWorkoutForm onCancel={() => setGuidedFormOpen(false)} onGenerated={(nextDraft, info) => {

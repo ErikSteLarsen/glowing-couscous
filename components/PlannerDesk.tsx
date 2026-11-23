@@ -1,5 +1,6 @@
 'use client';
 
+import { SearchField } from '@/components/tempo/SearchField';
 import { addMonths, format, parseISO, startOfMonth, startOfWeek, subMonths } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -545,11 +546,7 @@ function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSo
         </div>
         <Search aria-hidden="true" className="mt-1 h-5 w-5 text-[var(--color-liquid)]" />
       </div>
-      <label className="relative mt-3 block">
-        <span className="sr-only">Search workouts and templates</span>
-        <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
-        <input type="search" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Search by name or sport" className={`${formFieldClassName} pl-9`} />
-      </label>
+      <SearchField label="Search workouts and templates" labelClassName="mt-3" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Search by name or sport" />
       <div role="tablist" aria-label="Planner source type" className="mt-3 flex overflow-x-auto border-b border-[var(--nav-border)]">
         {tabs.map((tab) => {
           const count = sources.filter((source) => source.kind === tab).length;

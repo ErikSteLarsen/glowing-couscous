@@ -1,5 +1,6 @@
 'use client';
 
+import { SearchField } from '@/components/tempo/SearchField';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowDown, ArrowUp, Copy, Plus, Trash2 } from 'lucide-react';
@@ -110,7 +111,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
         {notice && <p role={notice.error ? 'alert' : 'status'} className={notice.error ? dangerTextClassName : successTextClassName}>{notice.text}</p>}
         <button type="button" disabled={!draft.name.trim() || !draft.entries.length || draft.entries.some(entry => !workouts.some(workout => workout.id === entry.workoutId))} className={`${primaryButtonClassName} max-md:min-h-11`} onClick={() => void mutate(draft.id ? `/api/athlete/templates/${draft.id}` : '/api/athlete/templates', draft.id ? 'PATCH' : 'POST', { name: draft.name, summary: draft.summary, entries: draft.entries.map(({ weekday, workoutId }) => ({ weekday, workoutId })) })}>{busy ? 'Saving…' : 'Save template'}</button>
       </fieldset>
-    </Surface> : <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">{templates.length ? <label className="flex-1 sm:max-w-md"><span className="sr-only">Search templates</span><input type="search" value={filter} onChange={event => setFilter(event.target.value)} className={formFieldClassName} placeholder="Search templates" /></label> : null}<button type="button" disabled={busy} className={`${primaryButtonClassName} max-md:min-h-11`} onClick={() => edit()}>New template</button></div>}
+    </Surface> : <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">{templates.length ? <SearchField label="Search templates" labelClassName="flex-1 sm:max-w-md" value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Search templates" /> : null}<button type="button" disabled={busy} className={`${primaryButtonClassName} max-md:min-h-11`} onClick={() => edit()}>New template</button></div>}
     {!draft && (visible.length ? <div className="space-y-4">{visible.map(template => {
       const routine = parseTemplateRoutine(template.routineJson);
       const filledDays = routine ? ROUTINE_DAYS.flatMap((day, weekday) => {
