@@ -231,7 +231,7 @@ reserved for load charts and their legends.
 
 `{colors.zone-1}` through `{colors.zone-5}` run cool to hot, mirrored in
 `lib/tempo-blocks.ts` (tints are the same hue at 16% alpha). Used by
-`SessionBlockBar`, block details, and the `.ink-zone-N` classes. Zone color
+`SessionBlockBar`, `WorkoutProfile`, block details, and the `.ink-zone-N` classes. Zone color
 always travels with a "Z1" to "Z5" label or accessible text.
 
 ## Typography
@@ -420,7 +420,23 @@ Charts are hand-written SVG, not a charting library.
 
 `SessionBlockBar` uses duration-proportional segments; height and color map to
 Zone 1 to Zone 5, with an accessible label carrying the same information in text.
-When no segments exist, omit the bar instead of rendering an empty image.
+When no segments exist, omit the bar instead of rendering an empty image. It is
+the compact bar for cards and rows only.
+
+Every full-size workout structure uses `WorkoutProfile`
+(`components/WorkoutProfile.tsx`, model in `lib/workout-profile.ts`): session
+detail, library detail, Live, the comparison dialog and the builder preview.
+It is one gap-free profile over time; height is %FTP when every effort has a
+power target, otherwise an even Z1–Z5 scale. Color follows the continuous zone
+ramp in both cases. Repeats are always unrolled so every repetition is drawn in
+time; a light bracket over the repeated span names the set ("2 × 18m zone 4 + 3m
+recovery", shortened to "2 × 21m" or "2×" when narrow). Never label a single
+drawn instance "× 2". A phase row under the profile names each stretch
+(Warm-up, Main set or Set N, the zone name for single efforts, Cool-down) with
+duration and zone, positioned by time; labels that do not fit drop their detail,
+then their text, and keep a tick and tooltip. Selectable profiles have one tab
+stop with arrow-key movement and show the selected step's target and note.
+Live outlines the current step instead of offering selection.
 `StatusBadge` shows planned, adjusted, or missed as text. Completed work does not
 need a repeated completed badge. `WorkoutBuilder` is the canonical authoring
 surface (palette, canvas, inspector); drag reordering must always have keyboard
@@ -576,8 +592,8 @@ well as drag behavior, the sequence exposes its drop target, and selecting a
 block reveals direct intensity and duration controls, an action to edit its
 target range in a focused dialog, and adjacent recovery controls. Repeats are
 created from the selected chart pattern rather than a per-block repetition
-field. Every `SessionBlockBar` maps continuous intensity to segment height and time to width,
-including the full-size authoring timeline. The basics step uses a
+field. The sequence preview is a compact `WorkoutProfile` (no axes or phase
+labels), with repeats drawn in full. The basics step uses a
 centered reading-width panel and presents Continue as its only forward action;
 save controls appear with the detailed authoring workspace.
 After details are unlocked, Edit basics changes the existing summary row into
@@ -640,6 +656,17 @@ Shell feedback uses a content-sized frame capped at 480px, centered within the
 available content column. Use 12px inline / 8px block padding, a 12px gap,
 and an icon-only dismiss control with a 44px mobile target. Feedback clears
 bottom navigation and Profile save actions; sync errors do not overlap notices.
+
+### Session detail
+
+The DOM order is the phone order: header, Workout overview, the logging or
+outcome card (Log completion, Outcome, Completion for skipped, Recorded outcome
+or Activity notes), Block details, recorded data, Description, Coach. When the
+content area is at least 56rem wide (a container query, so the sidebar counts),
+the logging card and Coach move to a 320px side column beside the overview; it is
+sticky on tall viewports unless it holds a recorded outcome. Opening the
+planned adjustment or outcome correction editor returns the page to one column.
+The header Log completion link scrolls to the card and focuses the session note.
 
 ### Activity
 

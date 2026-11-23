@@ -7,6 +7,19 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- Shared workout profile and session layout (2026-11-23). `pnpm lint`,
+  `pnpm typecheck`, `pnpm test` (546 passed, 17 database cases skipped),
+  `pnpm test:db` (598 passed), `pnpm test:ui` (2 passed) and
+  `pnpm check:deadcode` passed. `pnpm build` was not run. Chromium on a local
+  dev server against `tempo_dev`, signed in as Mara, checked at 1440px, 390px
+  and 320px in both themes: a scheduled catalog bike session with repeated sets
+  (then removed), a planned bike session with a repeated block, a completed
+  session, the skipped state, the adjustment editor at full width, the library
+  detail profile with step selection, Live with the current step outlined, and
+  the comparison dialog. The header Log completion link scrolls to the card and
+  focuses the note in both layouts. No page scrolled horizontally. The builder
+  preview was seen only inside the session adjustment editor.
+
 - Clickable control feedback (2026-11-23). `pnpm lint`, `pnpm typecheck`,
   `pnpm test` (540 passed, 17 database cases skipped), `pnpm test:ui`
   (2 passed), and `pnpm build` passed. The build used local
