@@ -7,9 +7,8 @@ import { differenceInCalendarDays, format } from 'date-fns';
 import { CalendarDays, Ellipsis, Link2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogBackdrop, DialogContent, DialogDescription, DialogTitle } from '@ui-sdk/react/dialog';
 import { AlertDialog, AlertDialogClose, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from '@ui-sdk/react/alert-dialog';
-import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/tempo/Menu';
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, OverflowMenuTrigger } from '@/components/tempo/Menu';
 import {
-  buttonFocusClassName,
   compactDangerButtonClassName,
   compactPrimaryButtonClassName,
   compactSecondaryButtonClassName,
@@ -264,9 +263,7 @@ function EventCard({ event, today, onChange, onDelete }: { event: EventRow; toda
       <div className="flex shrink-0 items-center gap-1.5">
         {canRecord ? <button type="button" className={`${event.resultFinishSec === null ? compactPrimaryButtonClassName : compactSecondaryButtonClassName} max-md:min-h-11`} onClick={() => openPanel('result')}>{event.resultFinishSec === null ? 'Record result' : 'Edit result'}</button> : null}
         <Menu>
-          <MenuTrigger aria-label={`Actions for ${event.title}`} className={`inline-flex size-8 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-md:size-11 ${buttonFocusClassName}`}>
-            <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
-          </MenuTrigger>
+          <OverflowMenuTrigger aria-label={`Actions for ${event.title}`} compact />
           <MenuContent align="end">
             <MenuItem onSelect={() => openPanel('edit')}><Pencil aria-hidden="true" size={16} strokeWidth={1.8} />Edit event…</MenuItem>
             <MenuItem onSelect={() => openPanel('activities')}><Link2 aria-hidden="true" size={16} strokeWidth={1.8} />Linked activities<span className="data ml-auto text-xs text-[var(--text-muted)]">{linkedCount}</span></MenuItem>

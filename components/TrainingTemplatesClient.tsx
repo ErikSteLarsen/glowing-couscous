@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowDown, ArrowUp, Copy, Ellipsis, Plus, Trash2 } from 'lucide-react';
-import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/tempo/Menu';
+import { ArrowDown, ArrowUp, Copy, Plus, Trash2 } from 'lucide-react';
+import { Menu, MenuContent, MenuItem, MenuSeparator, OverflowMenuTrigger } from '@/components/tempo/Menu';
 import { ActionLink, buttonFocusClassName, Surface, EmptyState, primaryButtonClassName, secondaryButtonClassName, compactSecondaryButtonClassName, compactDangerButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, dangerTextClassName, successTextClassName } from '@/components/ui';
 import { parseTemplateRoutine, ROUTINE_DAYS } from '@/lib/template-routine';
 import { getSportLabel } from '@/lib/sport';
@@ -125,9 +125,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
             <p className="text-sm text-[var(--text-muted)]">{routine ? `${routine.entries.length} ${routine.entries.length === 1 ? 'session' : 'sessions'} per week` : 'Invalid routine — edit and save again'}</p>
           </div>
           <Menu>
-            <MenuTrigger disabled={busy} aria-label={`More actions for ${template.name}`} className={`inline-flex size-10 shrink-0 items-center justify-center rounded-md text-[var(--text-muted)] transition-colors control-hover:bg-[var(--raised)] control-hover:text-[var(--text)] max-md:size-11 disabled:opacity-50 ${buttonFocusClassName}`}>
-              <Ellipsis aria-hidden="true" size={16} strokeWidth={1.8} />
-            </MenuTrigger>
+            <OverflowMenuTrigger disabled={busy} aria-label={`More actions for ${template.name}`} />
             <MenuContent align="end">
               <MenuItem onSelect={() => void mutate(`/api/athlete/templates/${template.id}/duplicate`, 'POST')}>
                 <Copy aria-hidden="true" size={16} strokeWidth={1.8} />
