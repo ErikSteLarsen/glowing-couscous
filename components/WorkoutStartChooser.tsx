@@ -9,6 +9,7 @@ import { getRideOs, GetTempoRideLink, RideAppInstallHelp, useRideAppLaunch } fro
 import { useCatalogRide } from '@/components/library/useCatalogRide';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
 import {
+  dangerTextClassName,
   sheetDialogClassName,
   compactSecondaryButtonClassName, ghostButtonClassName, iconButtonClassName,
   primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName,
@@ -178,7 +179,7 @@ function StartControl({ workout, source, triggerClassName }: Props) {
               ))}
               {busy ? <p role="status" className="text-sm text-[var(--text-secondary)]">Adding workout to today…</p> : null}
               {catalog.preparation.kind === 'error' ? (
-                <p role="alert" className="text-sm text-[var(--status-danger)]">{catalog.preparation.message}</p>
+                <p role="alert" className={dangerTextClassName}>{catalog.preparation.message}</p>
               ) : null}
               {preparedId !== null ? (
                 <p role="status" className="flex flex-wrap items-center gap-x-1.5 text-sm text-[var(--text-secondary)]">

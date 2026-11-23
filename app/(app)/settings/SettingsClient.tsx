@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { OVERVIEW_CARD_IDS, type OverviewCardId } from '@/lib/overview-preferences';
 import { Toggle } from '@/components/tempo/Toggle';
 import Link from 'next/link';
-import { Surface, buttonFocusClassName, compactSecondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
+import { successTextClassName, dangerTextClassName, Surface, buttonFocusClassName, compactSecondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
 
 const personalOverviewCardIds = ['lastActivity', 'weekLoad', 'trend'] as const satisfies readonly OverviewCardId[];
 
@@ -99,7 +99,7 @@ export function SettingsClient({
         })}
       </div>
       {message ? (
-        <p className={`mt-4 text-sm ${messageTone === 'success' ? 'text-[var(--status-success)]' : 'text-[var(--status-danger)]'}`} role="status">
+        <p className={`mt-4 ${messageTone === 'success' ? successTextClassName : dangerTextClassName}`} role="status">
           {message}
         </p>
       ) : null}

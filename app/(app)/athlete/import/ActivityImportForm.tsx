@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { ActionLink, formFieldClassName, primaryButtonClassName } from '@/components/ui';
+import { successTextClassName, dangerTextClassName, ActionLink, formFieldClassName, primaryButtonClassName } from '@/components/ui';
 import { getSportLabel } from '@/lib/sport';
 import { formatDuration } from '@/lib/format-duration';
 import { formatActivityDateTime } from '@/lib/tcx-time';
@@ -160,8 +160,8 @@ export function ActivityImportForm() {
           ) : <button type="button" onClick={confirmImport} disabled={pending || !pairingChoice} className={`${primaryButtonClassName} max-md:min-h-11`}>{pending ? 'Saving activity…' : 'Confirm and import activity'}</button>}
         </section>
       ) : null}
-      {savedHref ? <p role="status" className="text-sm text-[var(--status-success)]">Activity imported. <ActionLink href={savedHref} tone="ghost">Review outcome</ActionLink></p> : null}
-      {error ? <p role="alert" className="text-sm text-[var(--status-danger)]">{error}</p> : null}
+      {savedHref ? <p role="status" className={successTextClassName}>Activity imported. <ActionLink href={savedHref} tone="ghost">Review outcome</ActionLink></p> : null}
+      {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
     </div>
   );
 }

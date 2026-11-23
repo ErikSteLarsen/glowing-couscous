@@ -10,6 +10,7 @@ import { AlertDialog } from '@ui-sdk/react/alert-dialog';
 import { ConfirmationDialogContent } from '@/components/tempo/ConfirmationDialogContent';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, OverflowMenuTrigger } from '@/components/tempo/Menu';
 import {
+  successTextClassName,
   centeredDialogClassName, dialogActionsClassName,
   compactPrimaryButtonClassName,
   compactSecondaryButtonClassName,
@@ -258,7 +259,7 @@ function EventCard({ event, today, onChange, onDelete }: { event: EventRow; toda
         {event.targetFinishSec || event.resultFinishSec !== null ? <p className="mt-1.5 text-sm text-[var(--text-secondary)]">{event.targetFinishSec ? <>Goal <span className="data">{formatDuration(event.targetFinishSec)}</span></> : null}{event.targetFinishSec && event.resultFinishSec !== null ? ' · ' : null}{event.resultFinishSec !== null ? <>Result <span className="data text-[var(--text)]">{formatDuration(event.resultFinishSec)}</span></> : null}</p> : null}
         {event.resultNote ? <p className="mt-1 whitespace-pre-wrap text-sm text-[var(--text-muted)]">{event.resultNote}</p> : null}
         {linkedCount ? <button type="button" className={`${ghostButtonClassName('compact')} -ml-2 max-md:min-h-11 mt-1`} onClick={() => openPanel('activities')}><Link2 aria-hidden="true" size={14} strokeWidth={1.8} />Linked activities <span className="data">{linkedCount}</span></button> : null}
-        {notice ? <p role="status" className="mt-1 text-sm text-[var(--status-success)]">{notice}</p> : null}
+        {notice ? <p role="status" className={`mt-1 ${successTextClassName}`}>{notice}</p> : null}
         {deleteError && panel !== 'delete' ? <p role="alert" className={`${dangerTextClassName} mt-1`}>{deleteError}</p> : null}
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
@@ -324,7 +325,7 @@ export function EventsClient({ initialEvents, today }: { initialEvents: EventRow
         </MenuContent>
       </Menu>
     </>} />
-    {notice ? <p role="status" className="text-sm text-[var(--status-success)]">{notice}</p> : null}
+    {notice ? <p role="status" className={successTextClassName}>{notice}</p> : null}
     <FormDialog open={adding} onOpenChange={setAdding} pending={addPending} title="Add event" description="Name, sport and date. You can add a goal time now or later.">
       <EventForm today={today} onPendingChange={setAddPending} onCancel={() => setAdding(false)} onSaved={(created) => {
         setEvents((current) => [...current, { ...created, activities: created.activities ?? [] }].sort((a, b) => a.eventDate.localeCompare(b.eventDate)));
