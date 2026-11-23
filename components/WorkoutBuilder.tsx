@@ -444,6 +444,7 @@ export function WorkoutBuilder({
       {model.steps.length ? (
         <div className="space-y-1.5">
           <WorkoutProfile
+            stepActionLabel="Edit step"
             model={model}
             label="Workout profile. Select a step to edit it"
             chartHeight="short"

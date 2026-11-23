@@ -61,6 +61,7 @@ export function WorkoutProfile({
   activeStep = null,
   size = 'full',
   chartHeight = 'regular',
+  stepActionLabel = 'Show details',
   controlsId,
 }: {
   model: WorkoutProfileModel;
@@ -74,6 +75,8 @@ export function WorkoutProfile({
   size?: 'full' | 'compact';
   /** `short` leaves room for the builder's step list on one desktop screen. */
   chartHeight?: 'regular' | 'short';
+  /** Appended to each selectable bar's name, e.g. "Edit step" in the builder. */
+  stepActionLabel?: string;
   /** Id of the panel that shows the selected step. */
   controlsId?: string;
 }) {
@@ -202,7 +205,7 @@ export function WorkoutProfile({
                 tabIndex={index === focusIndex ? 0 : -1}
                 aria-pressed={selectedStep === index}
                 aria-controls={controlsId}
-                aria-label={`${describeProfileStep(model, step)}. Show details`}
+                aria-label={`${describeProfileStep(model, step)}. ${stepActionLabel}`}
                 title={describeProfileStep(model, step)}
                 onClick={() => onSelectStep?.(index)}
                 className={`absolute inset-y-0 cursor-pointer rounded-t-[3px] control-hover:bg-[color-mix(in_oklch,var(--text)_8%,transparent)] ${buttonFocusClassName}`}

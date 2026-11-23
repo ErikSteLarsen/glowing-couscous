@@ -26,7 +26,7 @@ import { GuidedWorkoutForm, type GuidedWorkoutInfo } from '@/components/GuidedWo
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { ShareLinkResult, useShareLink } from '@/components/ShareLinkButton';
 import { Menu, MenuContent, MenuItem, MenuTrigger, OverflowMenuTrigger } from '@/components/tempo/Menu';
-import { formatDuration, formatDurationExact } from '@/lib/format-duration';
+import { formatDuration } from '@/lib/format-duration';
 import {
   createEmptySessionEditorDraft,
   createSessionEditorDraftFromPersisted,
@@ -360,7 +360,6 @@ export function WorkoutLibraryClient({
     ? <NewWorkoutMenu onGuided={openGuidedForm} onScratch={() => requestDraftAction({ kind: 'new' })} onBrowse={collections?.onBrowse} />
     : <button type="button" className={primaryButtonClassName} onClick={() => requestDraftAction({ kind: 'new' })}>Create workout</button>;
 
-  const metrics = deriveSessionEditorMetrics(draft, performanceProfile?.cycling.ftpWatts);
   const showEditor = editorOpen && (!designDirection || clientMounted);
   const showMine = !collections || collections.tab === 'mine';
   const EditorHeading = listIntro ? 'h1' : 'h2';
