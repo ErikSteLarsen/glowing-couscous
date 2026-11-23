@@ -18,7 +18,7 @@ export function LibraryCard({ entry, from }: { entry: CatalogEntry; from?: 'ride
         <CatalogProfile steps={steps} idPrefix={`card-${workout.slug}`} label={`${workout.name} intensity profile, ${formatDuration(metrics.durationSec)}, peak ${Math.round(metrics.maxPct)}% FTP`} className="h-14" />
       </WorkoutCardProfile>
       <WorkoutCardHeader href={href} aside={formatDuration(metrics.durationSec)}>{workout.name}</WorkoutCardHeader>
-      <WorkoutCardMeta>{categoryLabel(workout.category)} · {levelLabel(workout.level)}</WorkoutCardMeta>
+      <WorkoutCardMeta>{categoryLabel(workout.category)}&nbsp;· {levelLabel(workout.level)}</WorkoutCardMeta>
       <WorkoutCardSummary>{workout.summary}</WorkoutCardSummary>
       <WorkoutCardFooter
         metrics={[{ label: 'TSS', value: metrics.tss }, { label: 'IF', value: metrics.intensityFactor.toFixed(2) }]}

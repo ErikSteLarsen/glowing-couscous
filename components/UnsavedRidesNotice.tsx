@@ -126,7 +126,7 @@ export function UnsavedRidesNotice({ userId, excludeSessionId }: { userId: numbe
               {state === 'open' ? (
                 <Link href={`/athlete/ride/${recording.sessionId}`} className="underline underline-offset-2 hover:text-[var(--text)]">{title}</Link>
               ) : <span className="text-[var(--text)]">{title}</span>}{' '}
-              <span className="data">· {formatDuration(recording.timerSec)} · {new Date(savedAtMs).toLocaleString()}</span>
+              <span className="data">· {formatDuration(recording.timerSec)}&nbsp;· {new Date(savedAtMs).toLocaleString()}</span>
               {state === 'closed' ? (
                 <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   {reason ? <span>{reason}.</span> : null}

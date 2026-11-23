@@ -98,7 +98,7 @@ export function CatalogProfile({
         ))}
       </div>
       <span aria-hidden="true" className="data pointer-events-none absolute right-0 -translate-y-full pb-1 text-[11px] text-[var(--text-secondary)]" style={{ top: `${(y(100) / HEIGHT) * 100}%` }}>
-        FTP{ftpWatts ? ` ${ftpWatts} W` : ''}
+        FTP{ftpWatts ? ` ${ftpWatts}\u00A0W` : ''}
       </span>
       <div aria-hidden="true" className="data pointer-events-none absolute inset-x-0 top-full pt-2 text-[11px] leading-none text-[var(--text-muted)]">
         {ticks.map((tick) => <span key={tick} className="absolute -translate-x-1/2" style={{ left: `${(tick / totalSec) * 100}%` }}>{clockLabel(tick)}</span>)}

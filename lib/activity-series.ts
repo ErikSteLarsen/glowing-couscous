@@ -200,11 +200,11 @@ export function bucketActivityMetric(
 export function formatActivityMetricValue(metric: ActivityMetric, value: number): string {
   if (metric === 'pace') {
     const seconds = Math.round(value);
-    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} /km`;
+    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}\u00A0/km`;
   }
   const rounded = metric === 'temperature' || metric === 'grade' ? value.toFixed(1) : Math.round(value).toString();
   const suffix = metric === 'temperature' ? '°C' : definitions[metric].unit;
-  return `${rounded} ${suffix}`;
+  return `${rounded}\u00A0${suffix}`;
 }
 
 function chooseInterval(

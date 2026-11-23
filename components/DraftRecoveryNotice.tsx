@@ -14,7 +14,7 @@ export function DraftRecoveryNotice({ candidates, status, onRestore, onDiscard, 
       <h2 className="text-base font-semibold">Recover unfinished work</h2>
       <p className="text-sm text-[var(--text-secondary)]">These drafts are kept on this browser only. Review them before saving.{onElapsed ? ' Live restores paused. Count elapsed time only if you continued exercising while away.' : ''}</p>
       {candidates.map((draft) => <div key={`${draft.resource}:${draft.writer}`} className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm">{draft.surface === 'workout' ? draft.resource === 'new' ? 'New workout' : 'Workout edit' : draft.surface === 'live' ? 'Live checkpoint' : 'Profile changes'} · {new Date(draft.savedAt).toLocaleString()}</p>
+        <p className="text-sm">{draft.surface === 'workout' ? draft.resource === 'new' ? 'New workout' : 'Workout edit' : draft.surface === 'live' ? 'Live checkpoint' : 'Profile changes'}&nbsp;· {new Date(draft.savedAt).toLocaleString()}</p>
         <div className="flex flex-wrap gap-3"><button type="button" disabled={disabled} className={secondaryButtonClassName} onClick={() => onRestore(draft)}>{onElapsed ? 'Restore paused' : 'Restore'}</button>{onElapsed ? <button type="button" disabled={disabled} className={secondaryButtonClassName} onClick={() => onElapsed(draft)}>Count elapsed time</button> : null}<button type="button" disabled={disabled} className={secondaryButtonClassName} onClick={() => onDiscard(draft)}>Discard draft</button></div>
       </div>)}
     </section> : null}

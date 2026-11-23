@@ -35,7 +35,7 @@ export function SessionWorkoutOverview({ blocks, header }: { blocks: SessionOver
       {header}
       {blocks.length ? <>
         <p className="max-w-[68ch] text-[13px] leading-relaxed text-[var(--text-secondary)]">
-          {groups.map(describeStructureGroup).join(' · ')}.
+          {groups.map(describeStructureGroup).join('\u00A0· ')}.
         </p>
         <div className="flex flex-wrap gap-x-4 gap-y-4" role="group" aria-label="Workout structure. Select a block for details">
           {groups.map((group) => <div key={group.blocks[0].id} className="min-w-0 flex-[1_1_0px]" style={{ minWidth: `min(100%, ${group.pattern.length * 44 + 4}px)` }}>

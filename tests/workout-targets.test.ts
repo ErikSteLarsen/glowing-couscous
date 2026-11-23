@@ -35,10 +35,10 @@ test('current profile resolves FTP, pace, CSS, HR, and profile-independent RPE w
   const css = { metric: 'pace' as const, mode: 'relative' as const, reference: 'css' as const, low: 95, high: 100 };
   const hr = { metric: 'hr' as const, mode: 'relative' as const, reference: 'threshold-hr' as const, low: 86, high: 90 };
   assert.equal(formatWorkoutTarget(ftp), '88-92% FTP');
-  assert.equal(formatResolvedWorkoutTarget(ftp, profile, 'BIKING'), '246-258 W');
-  assert.equal(formatResolvedWorkoutTarget(pace, profile, 'RUNNING'), '4:43-4:54 /km');
-  assert.equal(formatResolvedWorkoutTarget(css, profile, 'SWIMMING'), '1:40-1:45 /100 m');
-  assert.equal(formatResolvedWorkoutTarget(hr, profile, 'BIKING'), '146-153 bpm');
+  assert.equal(formatResolvedWorkoutTarget(ftp, profile, 'BIKING'), '246-258\u00A0W');
+  assert.equal(formatResolvedWorkoutTarget(pace, profile, 'RUNNING'), '4:43-4:54\u00A0/km');
+  assert.equal(formatResolvedWorkoutTarget(css, profile, 'SWIMMING'), '1:40-1:45\u00A0/100 m');
+  assert.equal(formatResolvedWorkoutTarget(hr, profile, 'BIKING'), '146-153\u00A0bpm');
   assert.equal(resolveWorkoutTarget({ metric: 'rpe', mode: 'absolute', reference: null, low: 7, high: 8 }, profile, 'RUNNING'), null);
   assert.equal(formatWorkoutTarget({ metric: 'rpe', mode: 'absolute', reference: null, low: 7, high: 8 }), 'RPE 7-8');
   assert.deepEqual(ftp, { metric: 'power', mode: 'relative', reference: 'ftp', low: 88, high: 92 });
@@ -48,7 +48,7 @@ test('missing values never resolve to zero and live profile updates refresh the 
   const target = { metric: 'power' as const, mode: 'relative' as const, reference: 'ftp' as const, low: 88, high: 92 };
   assert.equal(resolveWorkoutTarget(target, createEmptyPerformanceProfile(), 'BIKING'), null);
   assert.equal(missingProfileAction(target), 'Add FTP to preview watts.');
-  assert.equal(formatResolvedWorkoutTarget(target, normalizePerformanceProfile({ cycling: { ftpWatts: 300 } }), 'BIKING'), '264-276 W');
+  assert.equal(formatResolvedWorkoutTarget(target, normalizePerformanceProfile({ cycling: { ftpWatts: 300 } }), 'BIKING'), '264-276\u00A0W');
 });
 
 test('new running and heart-rate presets resolve from private profile values', () => {
@@ -59,7 +59,7 @@ test('new running and heart-rate presets resolve from private profile values', (
   const pace = presetTarget('RUNNING', 1, profile);
   const heartRate = presetTarget('RUNNING', 2, profile, 'hr', 'relative', 'max-hr');
   assert.deepEqual(pace, { metric: 'pace', mode: 'relative', reference: 'profile-pace-zone-1', low: 50, high: 50 });
-  assert.equal(formatResolvedWorkoutTarget(pace, profile, 'RUNNING'), '7:11 /km');
+  assert.equal(formatResolvedWorkoutTarget(pace, profile, 'RUNNING'), '7:11\u00A0/km');
   const secondProfile = normalizePerformanceProfile({
     running: {
       raceDistanceMeters: 5000,
@@ -67,7 +67,7 @@ test('new running and heart-rate presets resolve from private profile values', (
       paceZoneOverrides: { 1: { fastestSecPerKm: 430, slowestSecPerKm: 490 } },
     },
   });
-  assert.equal(formatResolvedWorkoutTarget(pace, secondProfile, 'RUNNING'), '7:40 /km');
+  assert.equal(formatResolvedWorkoutTarget(pace, secondProfile, 'RUNNING'), '7:40\u00A0/km');
   let increased: WorkoutTarget = pace;
   for (let index = 0; index < 51; index += 1) increased = adjustWorkoutTarget(increased, 1)!;
   assert.equal(zoneForTarget(increased, 'RUNNING', profile), 2);
@@ -75,7 +75,7 @@ test('new running and heart-rate presets resolve from private profile values', (
   assert.equal(reanchored.reference, 'profile-pace-zone-2');
   assert.equal(formatResolvedWorkoutTarget(reanchored, profile, 'RUNNING'), formatResolvedWorkoutTarget(increased, profile, 'RUNNING'));
   assert.deepEqual(heartRate, { metric: 'hr', mode: 'relative', reference: 'max-hr', low: 72, high: 82 });
-  assert.equal(formatResolvedWorkoutTarget(heartRate, profile, 'RUNNING'), '141-159 bpm');
+  assert.equal(formatResolvedWorkoutTarget(heartRate, profile, 'RUNNING'), '141-159\u00A0bpm');
 });
 
 test('repetition expansion drives duration, zones, TSS, and timeline segments', () => {

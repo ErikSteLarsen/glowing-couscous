@@ -74,7 +74,7 @@ export function validatePerformanceProfile(input: unknown): string | null {
     for (const [field, [min, max]] of Object.entries(fields)) {
       const metric = raw[field];
       if (metric !== null && metric !== undefined && metric !== '' && (typeof metric !== 'number' || !Number.isFinite(metric) || metric < min || metric > max)) {
-        return `${sport === 'cycling' ? 'Cycling' : sport === 'running' ? 'Running' : 'Swimming'} ${field === 'thresholdHrBpm' ? 'threshold heart rate' : field === 'ftpWatts' ? 'FTP' : 'threshold pace'} must be between ${min} and ${max}${field.endsWith('Bpm') ? ' bpm' : field === 'ftpWatts' ? ' watts' : ' seconds'}.`;
+        return `${sport === 'cycling' ? 'Cycling' : sport === 'running' ? 'Running' : 'Swimming'} ${field === 'thresholdHrBpm' ? 'threshold heart rate' : field === 'ftpWatts' ? 'FTP' : 'threshold pace'} must be between ${min} and ${max}${field.endsWith('Bpm') ? '\u00A0bpm' : field === 'ftpWatts' ? ' watts' : ' seconds'}.`;
       }
     }
   }

@@ -70,8 +70,8 @@ export function removeRecoveryDraftIfUnchanged(storage: DraftStorage, draft: Rec
 export function formatDraftAge(savedAt: number, now: number, locale?: string) {
   const minutes = Math.round((now - savedAt) / 60_000);
   if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 60) return `${minutes}\u00A0min ago`;
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} hr ago`;
+  if (hours < 24) return `${hours}\u00A0hr ago`;
   return new Date(savedAt).toLocaleString(locale, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
 }

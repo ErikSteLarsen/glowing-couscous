@@ -1,12 +1,13 @@
+/** Durations use non-breaking spaces so "1h 30m" never wraps across lines. */
 export function formatDuration(durationSec: number) {
   const totalSeconds = Math.round(durationSec);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  const remainder = seconds > 0 ? ` ${seconds}s` : '';
+  const remainder = seconds > 0 ? `\u00A0${seconds}s` : '';
 
   if (hours > 0) {
-    return `${hours}h ${String(minutes).padStart(2, '0')}m${remainder}`;
+    return `${hours}h\u00A0${String(minutes).padStart(2, '0')}m${remainder}`;
   }
 
   if (minutes > 0) return `${minutes}m${remainder}`;
@@ -17,5 +18,5 @@ export function formatDurationExact(durationSec: number) {
   const hours = Math.floor(durationSec / 3600);
   const minutes = Math.floor((durationSec % 3600) / 60);
   const seconds = durationSec % 60;
-  return [hours ? `${hours}h` : '', minutes ? `${minutes}m` : '', seconds || (!hours && !minutes) ? `${seconds}s` : ''].filter(Boolean).join(' ');
+  return [hours ? `${hours}h` : '', minutes ? `${minutes}m` : '', seconds || (!hours && !minutes) ? `${seconds}s` : ''].filter(Boolean).join('\u00A0');
 }

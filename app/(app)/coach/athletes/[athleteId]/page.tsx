@@ -60,7 +60,7 @@ export default async function CoachAthleteDetailPage({
         <StatTile
           label="Planned load"
           value={formatDuration(detail.stats.plannedDurationSec)}
-          detail={`${detail.stats.plannedTss} TSS planned`}
+          detail={`${detail.stats.plannedTss}\u00A0TSS planned`}
         />
         <StatTile
           label="Completed volume"
@@ -75,7 +75,7 @@ export default async function CoachAthleteDetailPage({
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 id="coach-week-heading" className="text-lg font-semibold text-[var(--text)]">
-                Week of {format(detail.week.start, 'd MMM yyyy')}
+                Week of {format(detail.week.start, 'd\u00A0MMM\u00A0yyyy')}
               </h2>
             </div>
             {detail.athlete.activePlan?.name ? (
@@ -122,7 +122,7 @@ export default async function CoachAthleteDetailPage({
                           </div>
                           <div className="mt-3 flex flex-wrap gap-4 text-sm text-[var(--text-secondary)]">
                             <MetricText>{formatDuration(hasNoPlannedBaseline(session.metricsSource) ? session.actualDurationSec ?? session.durationSec : session.durationSec)}</MetricText>
-                            <MetricText>{session.tss === null ? 'Load unavailable' : `${session.tss} TSS`}</MetricText>
+                            <MetricText>{session.tss === null ? 'Load unavailable' : `${session.tss}\u00A0TSS`}</MetricText>
                             <MetricText>
                               {hasNoPlannedBaseline(session.metricsSource) ? 'No planned comparison' : session.completionPct === null ? 'Compliance unavailable' : `${session.completionPct}% compliance`}
                             </MetricText>
@@ -159,7 +159,7 @@ export default async function CoachAthleteDetailPage({
                     <div>
                       <h3 className="text-sm font-semibold text-[var(--text)]">{session.title}</h3>
                       <p className="mt-1 text-xs text-[var(--text-secondary)]">
-                        {getSportLabel(session.sport)} · {format(session.date, 'EEE d MMM')}
+                        {getSportLabel(session.sport)}&nbsp;· {format(session.date, 'EEE\u00A0d\u00A0MMM')}
                       </p>
                     </div>
                      <div className="flex flex-wrap items-center justify-end gap-2">

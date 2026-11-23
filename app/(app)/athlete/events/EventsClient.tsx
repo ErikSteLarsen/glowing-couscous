@@ -40,7 +40,7 @@ const dialogClassName = 'tempo-alert-dialog z-50 h-fit w-[calc(100%-2rem)] max-w
 const dialogButtonClassName = 'max-md:min-h-11';
 
 function dateValue(value: string) { return value.slice(0, 10); }
-function formatDay(day: string, pattern = 'EEE d MMM yyyy') { return format(new Date(`${day}T12:00:00`), pattern); }
+function formatDay(day: string, pattern = 'EEE\u00A0d\u00A0MMM\u00A0yyyy') { return format(new Date(`${day}T12:00:00`), pattern); }
 function toSeconds(parts: DurationParts, optional: boolean) {
   if (optional && !parts.hours && !parts.minutes && !parts.seconds) return null;
   return Number(parts.hours || 0) * 3600 + Number(parts.minutes || 0) * 60 + Number(parts.seconds || 0);
@@ -157,7 +157,7 @@ function ResultForm({ event, onSaved, onCancel, onPendingChange }: { event: Even
 }
 
 function ActivitySummary({ activity }: { activity: LinkedActivity }) {
-  return <div className="min-w-0"><p className="break-words text-sm text-[var(--text)]">{activity.session.title} · {getSportLabel(activity.session.sport)}</p><p className="data text-xs text-[var(--text-muted)]">{formatDay(activity.completedOn)} · {formatDuration(activity.durationSec)}{activity.distanceMeters !== null ? ` · ${(activity.distanceMeters / 1000).toFixed(2)} km` : ''}</p></div>;
+  return <div className="min-w-0"><p className="break-words text-sm text-[var(--text)]">{activity.session.title}&nbsp;· {getSportLabel(activity.session.sport)}</p><p className="data text-xs text-[var(--text-muted)]">{formatDay(activity.completedOn)}&nbsp;· {formatDuration(activity.durationSec)}{activity.distanceMeters !== null ? `\u00A0· ${(activity.distanceMeters / 1000).toFixed(2)}\u00A0km` : ''}</p></div>;
 }
 
 /** Explicit link and unlink of completed activities; the event result stays separate. */
@@ -280,7 +280,7 @@ function EventCard({ event, today, onChange, onDelete }: { event: EventRow; toda
     <FormDialog open={panel === 'edit'} onOpenChange={(open) => { if (!open) close(); }} pending={pending} title="Edit event">
       <EventForm initial={event} today={today} onPendingChange={setPending} onCancel={close} onSaved={(updated) => { onChange(updated); close(); setNotice('Event saved.'); }} />
     </FormDialog>
-    <FormDialog open={panel === 'result'} onOpenChange={(open) => { if (!open) close(); }} pending={pending} title={event.resultFinishSec === null ? 'Record result' : 'Edit result'} description={`${event.title} · ${formatDay(day, 'd MMM yyyy')}${event.targetFinishSec ? ` · Goal ${formatDuration(event.targetFinishSec)}` : ''}`}>
+    <FormDialog open={panel === 'result'} onOpenChange={(open) => { if (!open) close(); }} pending={pending} title={event.resultFinishSec === null ? 'Record result' : 'Edit result'} description={`${event.title}\u00A0· ${formatDay(day, 'd\u00A0MMM\u00A0yyyy')}${event.targetFinishSec ? ` · Goal ${formatDuration(event.targetFinishSec)}` : ''}`}>
       <ResultForm event={event} onPendingChange={setPending} onCancel={close} onSaved={(updated) => { onChange(updated); close(); setNotice('Result saved.'); }} />
     </FormDialog>
     <FormDialog open={panel === 'activities'} onOpenChange={(open) => { if (!open) close(); }} pending={pending} title="Linked activities" description={`Link completed activities to ${event.title}. The event result is recorded separately.`}>

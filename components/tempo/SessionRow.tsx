@@ -108,7 +108,7 @@ export function SessionRow({
   const styles = variantStyles[resolvedVariant];
   const visibleDateLabel = dateLabel ?? session.dateLabel;
   const loadUnavailable = session.loadAvailable === false || session.tss === null;
-  const loadLabel = loadUnavailable ? 'Load unavailable' : `${session.tss} TSS`;
+  const loadLabel = loadUnavailable ? 'Load unavailable' : `${session.tss}\u00A0TSS`;
   const averageZone = resolvedVariant === 'calendar' || resolvedVariant === 'month'
     ? getAverageSessionZone(session.segments)
     : null;
@@ -122,7 +122,7 @@ export function SessionRow({
     formatDuration(session.durationSec),
     loadLabel,
     averageZoneMeta ? `Average intensity ${averageZoneMeta.label} ${averageZoneMeta.name}; pause time excluded` : null,
-    session.intensityTimeline ? `Average heart rate ${session.intensityTimeline.averageBpm} bpm` : null,
+    session.intensityTimeline ? `Average heart rate ${session.intensityTimeline.averageBpm}\u00A0bpm` : null,
     session.targetLabel,
     session.compliance ? complianceLabels[session.compliance] : session.status,
   ].filter(Boolean).join(', ');
@@ -145,7 +145,7 @@ export function SessionRow({
             </p>
             {styles.showMetadata ? (
               <p className={`${styles.metadata} text-[var(--text-secondary)]`}>
-                {[visibleDateLabel, showTime ? session.timeLabel : null, getSportLabel(session.sport)].filter(Boolean).join(' · ')}
+                {[visibleDateLabel, showTime ? session.timeLabel : null, getSportLabel(session.sport)].filter(Boolean).join('\u00A0· ')}
               </p>
             ) : null}
           </div>

@@ -269,7 +269,7 @@ export function ProfileClient({ account }: { account: Account }) {
   const currentSnapshot = getDraftSnapshot(name, performanceProfile, raceTimeDraft, customizedZones, paceDrafts);
   const hasUnsavedChanges = currentSnapshot !== savedSnapshot;
   const thresholdZone = paceDrafts[4];
-  const runningThresholdPace = thresholdZone.fastest && thresholdZone.slowest ? `${thresholdZone.fastest}–${thresholdZone.slowest} /km` : null;
+  const runningThresholdPace = thresholdZone.fastest && thresholdZone.slowest ? `${thresholdZone.fastest}–${thresholdZone.slowest}\u00A0/km` : null;
   const hasCustomPaces = zones.some((zone) => customizedZones[zone]);
   const raceDistanceLabel = raceDistances.find((distance) => distance.value === performanceProfile.running.raceDistanceMeters)?.label;
   const runningSource = hasCustomPaces ? 'Custom pace zones' : raceDistanceLabel && raceTimeDraft ? `From ${raceDistanceLabel} in ${raceTimeDraft}` : undefined;
@@ -296,7 +296,7 @@ export function ProfileClient({ account }: { account: Account }) {
             <legend className="text-base font-semibold text-[var(--text)]">Training metrics</legend>
             <p className="max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">Optional. New workout blocks use these for zone targets. Leave anything blank you don’t know.</p>
             <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
-              <TargetRow id="heart-rate" title="Heart rate" metric="Maximum heart rate" value={performanceProfile.heartRateMaxBpm ? `${performanceProfile.heartRateMaxBpm} bpm` : null} open={openSections.has('heart-rate')} onToggle={() => toggleSection('heart-rate')}>
+              <TargetRow id="heart-rate" title="Heart rate" metric="Maximum heart rate" value={performanceProfile.heartRateMaxBpm ? `${performanceProfile.heartRateMaxBpm}\u00A0bpm` : null} open={openSections.has('heart-rate')} onToggle={() => toggleSection('heart-rate')}>
                 <div className="sm:max-w-xs">
                   <MetricInput label="Maximum heart rate (bpm)" value={performanceProfile.heartRateMaxBpm} min={100} max={250} onChange={(heartRateMaxBpm) => setPerformanceProfile((current) => ({ ...current, heartRateMaxBpm }))} />
                 </div>
@@ -310,9 +310,9 @@ export function ProfileClient({ account }: { account: Account }) {
                       const range = heartRateZones[zone];
                       const percentages = OLYMPIATOPPEN_HEART_RATE_PERCENT_BANDS[zone];
                       return <div key={zone} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 py-2 text-sm">
-                        <span className="font-medium text-[var(--text)]">Zone {zone} · {zoneNames[zone]}</span>
-                        <span className="tabular-nums text-[var(--text-secondary)]">I-{zone} · {percentages.low}–{percentages.high}%</span>
-                        <span className="tabular-nums text-[var(--text-secondary)]">{range.low}–{range.high} bpm</span>
+                        <span className="font-medium text-[var(--text)]">Zone {zone}&nbsp;· {zoneNames[zone]}</span>
+                        <span className="tabular-nums text-[var(--text-secondary)]">I-{zone}&nbsp;· {percentages.low}–{percentages.high}%</span>
+                        <span className="tabular-nums text-[var(--text-secondary)]">{range.low}–{range.high}&nbsp;bpm</span>
                       </div>;
                     })}
                   </div>
@@ -362,7 +362,7 @@ export function ProfileClient({ account }: { account: Account }) {
                 </AdvancedTargets>
               </TargetRow>
 
-              <TargetRow id="cycling" title="Cycling" metric="Threshold power (FTP)" value={performanceProfile.cycling.ftpWatts ? `${performanceProfile.cycling.ftpWatts} W` : null} open={openSections.has('cycling')} onToggle={() => toggleSection('cycling')}>
+              <TargetRow id="cycling" title="Cycling" metric="Threshold power (FTP)" value={performanceProfile.cycling.ftpWatts ? `${performanceProfile.cycling.ftpWatts}\u00A0W` : null} open={openSections.has('cycling')} onToggle={() => toggleSection('cycling')}>
                 <div className="sm:max-w-xs">
                   <MetricInput label="Cycling threshold power (FTP, W)" value={performanceProfile.cycling.ftpWatts} onChange={(ftpWatts) => setPerformanceProfile((current) => ({ ...current, cycling: { ...current.cycling, ftpWatts } }))} />
                 </div>
@@ -373,7 +373,7 @@ export function ProfileClient({ account }: { account: Account }) {
                 </AdvancedTargets>
               </TargetRow>
 
-              <TargetRow id="swimming" title="Swimming" metric="Threshold pace (CSS)" value={performanceProfile.swimming.cssSecPer100m ? `${formatSwimPace(performanceProfile.swimming.cssSecPer100m)} /100 m` : null} open={openSections.has('swimming')} onToggle={() => toggleSection('swimming')}>
+              <TargetRow id="swimming" title="Swimming" metric="Threshold pace (CSS)" value={performanceProfile.swimming.cssSecPer100m ? `${formatSwimPace(performanceProfile.swimming.cssSecPer100m)}\u00A0/100 m` : null} open={openSections.has('swimming')} onToggle={() => toggleSection('swimming')}>
                 <div className="sm:max-w-xs">
                   <MetricInput label="Swimming threshold pace (CSS, sec/100 m)" value={performanceProfile.swimming.cssSecPer100m} onChange={(cssSecPer100m) => setPerformanceProfile((current) => ({ ...current, swimming: { ...current.swimming, cssSecPer100m } }))} />
                 </div>
@@ -428,7 +428,7 @@ function TargetRow({ id, title, metric, value, detail, open, onToggle, children 
       <button type="button" aria-expanded={open} aria-controls={panelId} onClick={onToggle} className={`flex min-h-14 w-full items-center gap-3 rounded-lg py-3 text-left transition-colors hover:bg-[var(--raised)] max-md:min-h-16 sm:-mx-2 sm:w-[calc(100%+1rem)] sm:px-2 ${buttonFocusClassName}`}>
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium text-[var(--text)]">{title}</span>
-          <span className="block text-xs text-[var(--text-muted)]">{metric}{detail ? ` · ${detail}` : ''}</span>
+          <span className="block text-xs text-[var(--text-muted)]">{metric}{detail ? `\u00A0· ${detail}` : ''}</span>
         </span>
         {value ? <span className="data shrink-0 text-sm text-[var(--text)]">{value}</span> : <span className="shrink-0 text-sm font-medium text-[var(--brand)]">Add</span>}
         <ChevronDown aria-hidden="true" size={16} strokeWidth={1.8} className={`shrink-0 text-[var(--text-muted)] transition-transform ${open ? 'rotate-180' : ''}`} />

@@ -212,9 +212,9 @@ export function ActivityImportClient({
                     <SummaryValue label="Sport" value={getSportLabel(draft.activity.sport)} />
                     <SummaryValue label="Started" value={format(new Date(draft.activity.startedAt), 'EEE d MMM · HH:mm')} />
                     <SummaryValue label="Duration" value={formatDuration(draft.activity.durationSec)} />
-                    <SummaryValue label="Distance" value={draft.activity.distanceMeters === null ? 'Not recorded' : `${(draft.activity.distanceMeters / 1000).toFixed(2)} km`} />
+                    <SummaryValue label="Distance" value={draft.activity.distanceMeters === null ? 'Not recorded' : `${(draft.activity.distanceMeters / 1000).toFixed(2)}\u00A0km`} />
                     {draft.activity.elevationGainMeters !== null ? (
-                      <SummaryValue label="Elevation gain" value={`${Math.round(draft.activity.elevationGainMeters)} m`} />
+                      <SummaryValue label="Elevation gain" value={`${Math.round(draft.activity.elevationGainMeters)}\u00A0m`} />
                     ) : null}
                   </div>
                   <label className="block">
@@ -236,7 +236,7 @@ export function ActivityImportClient({
                       <option value="">Create a new completed session</option>
                       {plannedSessions.filter((session) => session.sport === draft.activity.sport).map((session) => (
                         <option key={session.id} value={session.id}>
-                          {session.date ? `${format(new Date(session.date), 'd MMM')} · ` : ''}{session.title} · {getSportLabel(session.sport)}
+                          {session.date ? `${format(new Date(session.date), 'd\u00A0MMM')} · ` : ''}{session.title}&nbsp;· {getSportLabel(session.sport)}
                         </option>
                       ))}
                     </select>
@@ -294,8 +294,8 @@ export function ActivityImportClient({
                   <span className="min-w-0 [overflow-wrap:anywhere]">
                     <span className="block break-words text-[15px] font-semibold text-[var(--text)]">{activity.title}</span>
                     <span className="mt-1 block text-[12px] text-[var(--text-secondary)]">
-                      {format(new Date(activity.completedAt), 'EEE d MMM yyyy · HH:mm')} · {getSportLabel(activity.sport)} · {formatDuration(activity.durationSec)} · {activity.source === 'strava' ? 'Strava' : 'File'}
-                      {activity.distanceMeters !== null ? ` · ${(activity.distanceMeters / 1000).toFixed(2)} km` : ''}
+                      {format(new Date(activity.completedAt), 'EEE\u00A0d\u00A0MMM\u00A0yyyy\u00A0· HH:mm')}&nbsp;· {getSportLabel(activity.sport)}&nbsp;· {formatDuration(activity.durationSec)}&nbsp;· {activity.source === 'strava' ? 'Strava' : 'File'}
+                      {activity.distanceMeters !== null ? `\u00A0· ${(activity.distanceMeters / 1000).toFixed(2)}\u00A0km` : ''}
                       {activity.sessionTitle !== activity.title ? ` · Matched to ${activity.sessionTitle}` : ''}
                     </span>
                   </span>

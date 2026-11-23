@@ -618,12 +618,12 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
                           </span>
                         </td>
                         <td className="py-2.5 pr-4 text-right">{formatClock(entry.durationSec)}</td>
-                        <td className="py-2.5 pr-4 text-right text-[var(--text-secondary)]">{entry.averageTargetWatts !== null ? `${entry.averageTargetWatts} W` : '--'}</td>
-                        <td className="py-2.5 pr-4 text-right">{entry.averagePowerWatts !== null ? `${entry.averagePowerWatts} W` : '--'}</td>
+                        <td className="py-2.5 pr-4 text-right text-[var(--text-secondary)]">{entry.averageTargetWatts !== null ? `${entry.averageTargetWatts}\u00A0W` : '--'}</td>
+                        <td className="py-2.5 pr-4 text-right">{entry.averagePowerWatts !== null ? `${entry.averagePowerWatts}\u00A0W` : '--'}</td>
                         <td className="py-2.5 pr-4 text-right" style={{ color: tone === 'none' ? 'var(--text-muted)' : TONE_VAR[tone] }}>
-                          {delta === null ? '--' : `${delta > 0 ? '+' : delta < 0 ? '−' : '±'}${Math.abs(delta)} W`}
+                          {delta === null ? '--' : `${delta > 0 ? '+' : delta < 0 ? '−' : '±'}${Math.abs(delta)}\u00A0W`}
                         </td>
-                        <td className="py-2.5 pr-4 text-right text-[var(--text-secondary)]">{entry.maxPowerWatts !== null ? `${entry.maxPowerWatts} W` : '--'}</td>
+                        <td className="py-2.5 pr-4 text-right text-[var(--text-secondary)]">{entry.maxPowerWatts !== null ? `${entry.maxPowerWatts}\u00A0W` : '--'}</td>
                         <td className="py-2.5 text-right">{entry.averageHeartRateBpm !== null ? `${entry.averageHeartRateBpm}` : '--'}</td>
                       </tr>
                     );
@@ -727,7 +727,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
               <div className="flex items-baseline justify-between gap-3">
                 <Label>Power · 3 s</Label>
                 <p className="text-[14px] font-medium" style={{ color: tone === 'none' ? 'var(--text-secondary)' : toneColor }} aria-live="polite">
-                  {toneText}{delta !== null && tone !== 'on' ? <span className="data"> {delta > 0 ? '+' : '−'}{Math.abs(delta)} W</span> : null}
+                  {toneText}{delta !== null && tone !== 'on' ? <span className="data"> {delta > 0 ? '+' : '−'}{Math.abs(delta)}&nbsp;W</span> : null}
                 </p>
               </div>
               <p className={heroNumeral} style={{ color: tone === 'none' ? 'var(--text)' : toneColor }}>
@@ -785,7 +785,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
           <div className="flex items-baseline justify-between gap-3 border-t border-[var(--border)] pt-3 text-[14px]">
             <span className="text-[var(--text-muted)]">Next</span>
             <span className="min-w-0 truncate text-right text-[var(--text)]">
-              {nextStep ? <>{stepLabel(recording.stepIndex + 1)}<span className="data text-[var(--text-secondary)]">{nextTarget !== null ? ` · ${nextTarget} W` : nextPrescription ? ` · ${nextPrescription}` : ` · Z${nextStep.zone}`} · {formatClock(nextStep.durationSec)}</span></> : currentStep ? 'Finish' : 'Free ride continues'}
+              {nextStep ? <>{stepLabel(recording.stepIndex + 1)}<span className="data text-[var(--text-secondary)]">{nextTarget !== null ? `\u00A0· ${nextTarget}\u00A0W` : nextPrescription ? `\u00A0· ${nextPrescription}` : ` · Z${nextStep.zone}`}&nbsp;· {formatClock(nextStep.durationSec)}</span></> : currentStep ? 'Finish' : 'Free ride continues'}
             </span>
           </div>
         </section>

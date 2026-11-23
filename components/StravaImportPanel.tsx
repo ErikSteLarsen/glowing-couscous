@@ -78,7 +78,7 @@ export function StravaImportPanel({
       const response = await fetch('/api/strava/activities', { method: 'POST' });
       const result = await response.json() as { error?: string; synced?: number };
       if (!response.ok) throw new Error(result.error || 'Strava activities could not be synced.');
-      setNotice(`Checked Strava for recent activities${typeof result.synced === 'number' ? ` · ${result.synced} found` : ''}.`);
+      setNotice(`Checked Strava for recent activities${typeof result.synced === 'number' ? `\u00A0· ${result.synced} found` : ''}.`);
       router.refresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Strava activities could not be synced.');
@@ -240,9 +240,9 @@ export function StravaImportPanel({
               <span className="min-w-0">
                 <span className="block break-words text-[15px] font-semibold text-[var(--text)] group-hover:text-[var(--brand)]">{activity.title}</span>
                 <span className="mt-1 block text-[12px] text-[var(--text-secondary)]">
-                  {format(new Date(activity.startedAt), 'EEE d MMM yyyy · HH:mm')} · {getSportLabel(activity.sport)} · {formatDuration(activity.durationSec)}
-                  {activity.distanceMeters !== null ? ` · ${(activity.distanceMeters / 1000).toFixed(2)} km` : ''}
-                  {activity.elevationGainMeters !== null ? ` · ${Math.round(activity.elevationGainMeters)} m up` : ''}
+                  {format(new Date(activity.startedAt), 'EEE\u00A0d\u00A0MMM\u00A0yyyy\u00A0· HH:mm')}&nbsp;· {getSportLabel(activity.sport)}&nbsp;· {formatDuration(activity.durationSec)}
+                  {activity.distanceMeters !== null ? `\u00A0· ${(activity.distanceMeters / 1000).toFixed(2)}\u00A0km` : ''}
+                  {activity.elevationGainMeters !== null ? `\u00A0· ${Math.round(activity.elevationGainMeters)}\u00A0m up` : ''}
                 </span>
               </span>
               {activity.imported ? <Badge tone="success">Imported</Badge> : activity.dismissed ? <Badge>Dismissed for now</Badge> : null}
@@ -272,9 +272,9 @@ export function StravaImportPanel({
               <div className="min-w-0">
                 <h2 id="strava-activity-details-title" className="break-words text-xl font-semibold text-[var(--text)]">{activeActivity.title}</h2>
                 <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
-                  {format(new Date(activeActivity.startedAt), 'EEE d MMM yyyy · HH:mm')} · {getSportLabel(activeActivity.sport)} · {formatDuration(activeActivity.durationSec)}
-                  {activeActivity.distanceMeters !== null ? ` · ${(activeActivity.distanceMeters / 1000).toFixed(2)} km` : ''}
-                  {activeActivity.elevationGainMeters !== null ? ` · ${Math.round(activeActivity.elevationGainMeters)} m up` : ''}
+                  {format(new Date(activeActivity.startedAt), 'EEE\u00A0d\u00A0MMM\u00A0yyyy\u00A0· HH:mm')}&nbsp;· {getSportLabel(activeActivity.sport)}&nbsp;· {formatDuration(activeActivity.durationSec)}
+                  {activeActivity.distanceMeters !== null ? `\u00A0· ${(activeActivity.distanceMeters / 1000).toFixed(2)}\u00A0km` : ''}
+                  {activeActivity.elevationGainMeters !== null ? `\u00A0· ${Math.round(activeActivity.elevationGainMeters)}\u00A0m up` : ''}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -299,8 +299,8 @@ export function StravaImportPanel({
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <SummaryValue label="Original Strava sport" value={activeActivity.sportType} />
                     <SummaryValue label="Duration" value={formatDuration(activeDetail.durationSec)} />
-                    <SummaryValue label="Distance" value={activeDetail.distanceMeters === null ? 'Not recorded' : `${(activeDetail.distanceMeters / 1000).toFixed(2)} km`} />
-                    <SummaryValue label="Elevation gain" value={activeDetail.elevationGainMeters === null ? 'Not recorded' : `${Math.round(activeDetail.elevationGainMeters)} m`} />
+                    <SummaryValue label="Distance" value={activeDetail.distanceMeters === null ? 'Not recorded' : `${(activeDetail.distanceMeters / 1000).toFixed(2)}\u00A0km`} />
+                    <SummaryValue label="Elevation gain" value={activeDetail.elevationGainMeters === null ? 'Not recorded' : `${Math.round(activeDetail.elevationGainMeters)}\u00A0m`} />
                     {formatStravaMetadata(activeDetail.metadata).map(([label, value]) => <SummaryValue key={label} label={label} value={value} />)}
                   </div>
                   <label className="block">
@@ -319,7 +319,7 @@ export function StravaImportPanel({
                       <option value="">Create a new completed session</option>
                       {activeMatchingSessions.map((session) => (
                         <option key={session.id} value={session.id}>
-                          {session.date ? `${format(new Date(session.date), 'd MMM')} · ` : ''}{session.title} · {getSportLabel(session.sport)}
+                          {session.date ? `${format(new Date(session.date), 'd\u00A0MMM')} · ` : ''}{session.title}&nbsp;· {getSportLabel(session.sport)}
                         </option>
                       ))}
                     </select>
@@ -363,21 +363,21 @@ export function formatStravaMetadata(metadata: Record<string, unknown>) {
     ['Strava sport', metadata.sportType, (value) => String(value)],
     ['Workout type', metadata.workoutType, (value) => String(value)],
     ['Moving time', metadata.movingTimeSec, (value) => formatDuration(Number(value))],
-    ['Elevation high', metadata.elevationHighMeters, (value) => `${Math.round(Number(value))} m`],
-    ['Elevation low', metadata.elevationLowMeters, (value) => `${Math.round(Number(value))} m`],
+    ['Elevation high', metadata.elevationHighMeters, (value) => `${Math.round(Number(value))}\u00A0m`],
+    ['Elevation low', metadata.elevationLowMeters, (value) => `${Math.round(Number(value))}\u00A0m`],
     ['Indoor trainer', metadata.trainer, (value) => value === true ? 'Yes' : 'No'],
     ['Commute', metadata.commute, (value) => value === true ? 'Yes' : 'No'],
-    ['Calories', metadata.calories, (value) => `${Math.round(Number(value))} kcal`],
-    ['Average heart rate', metadata.averageHeartrate, (value) => `${Math.round(Number(value))} bpm`],
-    ['Peak heart rate', metadata.maxHeartrate, (value) => `${Math.round(Number(value))} bpm`],
-    ['Average speed', metadata.averageSpeed, (value) => `${(Number(value) * 3.6).toFixed(1)} km/h`],
-    ['Peak speed', metadata.maxSpeed, (value) => `${(Number(value) * 3.6).toFixed(1)} km/h`],
-    ['Average power', metadata.averageWatts, (value) => `${Math.round(Number(value))} W`],
-    ['Peak power', metadata.maxWatts, (value) => `${Math.round(Number(value))} W`],
-    ['Weighted power', metadata.weightedAverageWatts, (value) => `${Math.round(Number(value))} W`],
-    ['Average cadence', metadata.averageCadence, (value) => `${Math.round(Number(value))} rpm`],
+    ['Calories', metadata.calories, (value) => `${Math.round(Number(value))}\u00A0kcal`],
+    ['Average heart rate', metadata.averageHeartrate, (value) => `${Math.round(Number(value))}\u00A0bpm`],
+    ['Peak heart rate', metadata.maxHeartrate, (value) => `${Math.round(Number(value))}\u00A0bpm`],
+    ['Average speed', metadata.averageSpeed, (value) => `${(Number(value) * 3.6).toFixed(1)}\u00A0km/h`],
+    ['Peak speed', metadata.maxSpeed, (value) => `${(Number(value) * 3.6).toFixed(1)}\u00A0km/h`],
+    ['Average power', metadata.averageWatts, (value) => `${Math.round(Number(value))}\u00A0W`],
+    ['Peak power', metadata.maxWatts, (value) => `${Math.round(Number(value))}\u00A0W`],
+    ['Weighted power', metadata.weightedAverageWatts, (value) => `${Math.round(Number(value))}\u00A0W`],
+    ['Average cadence', metadata.averageCadence, (value) => `${Math.round(Number(value))}\u00A0rpm`],
     ['Average temperature', metadata.averageTemp, (value) => `${Math.round(Number(value))} °C`],
-    ['Total work', metadata.kilojoules, (value) => `${Math.round(Number(value))} kJ`],
+    ['Total work', metadata.kilojoules, (value) => `${Math.round(Number(value))}\u00A0kJ`],
     ['Power source', metadata.deviceWatts, (value) => value === true ? 'Power meter' : 'Estimated'],
     ['Effort score', metadata.sufferScore, (value) => String(value)],
     ['Device', metadata.deviceName, (value) => String(value)],

@@ -59,7 +59,7 @@ test('pace converts speed to min/km and uses higher bars for faster pace', () =>
     { elapsedSec: 61, speedMetersPerSecond: 5 },
   ], 'pace', { durationSec: 120 });
 
-  assert.equal(formatActivityMetricValue('pace', chart.buckets[0].average), '6:40 /km');
+  assert.equal(formatActivityMetricValue('pace', chart.buckets[0].average), '6:40\u00A0/km');
   assert.ok(chart.buckets[1].heightPercent > chart.buckets[0].heightPercent);
 });
 

@@ -432,8 +432,8 @@ function summarizeTelemetry(points: ActivitySeriesPoint[], durationSec: number, 
 
 function createActivitySummary(value: ActivityImportInput, sourceProvider?: string) {
   const parts = [sourceProvider === 'STRAVA' ? 'Imported Strava activity' : 'Imported activity file'];
-  if (value.distanceMeters !== null) parts.push(`${(value.distanceMeters / 1000).toFixed(2)} km`);
-  if (value.elevationGainMeters !== null) parts.push(`${Math.round(value.elevationGainMeters)} m elevation gain`);
+  if (value.distanceMeters !== null) parts.push(`${(value.distanceMeters / 1000).toFixed(2)}\u00A0km`);
+  if (value.elevationGainMeters !== null) parts.push(`${Math.round(value.elevationGainMeters)}\u00A0m elevation gain`);
   return parts.join(' · ');
 }
 

@@ -83,7 +83,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
         return {
           isoDate,
           label: format(date, 'EEE'),
-          dateLabel: format(date, 'd MMM'),
+          dateLabel: format(date, 'd\u00A0MMM'),
           sessions: sessions
             .filter((session): session is typeof session & { date: Date } => session.date !== null)
             .filter((session) => formatISO(session.date, { representation: 'date' }) === isoDate)
@@ -97,7 +97,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
         return {
           isoDate,
           label: format(date, 'EEE'),
-          dateLabel: format(date, 'd MMM'),
+          dateLabel: format(date, 'd\u00A0MMM'),
           inMonth: date.getMonth() === referenceDate.getMonth() && date.getFullYear() === referenceDate.getFullYear(),
           sessions: calendarSessions
             .filter((session): session is typeof session & { date: Date } => session.date !== null)
@@ -110,7 +110,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
         period: {
           start: weekStart,
           end: weekEnd,
-          label: `${format(weekStart, 'd MMM')} - ${format(weekEnd, 'd MMM yyyy')}`,
+          label: `${format(weekStart, 'd\u00A0MMM')} - ${format(weekEnd, 'd\u00A0MMM\u00A0yyyy')}`,
         },
         calendar: {
           start: calendarStart,

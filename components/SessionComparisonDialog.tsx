@@ -188,13 +188,13 @@ function SnapshotView({ draft, ftpWatts }: { draft: SessionEditorDraft; ftpWatts
       <div>
         <p className="text-sm font-semibold text-[var(--text)]">{draft.title}</p>
         <p className="mt-1 text-xs text-[var(--text-secondary)]">
-          {getSportLabel(draft.sport)}{draft.scheduledDate ? ` · ${draft.scheduledDate}` : ''}
+          {getSportLabel(draft.sport)}{draft.scheduledDate ? `\u00A0· ${draft.scheduledDate}` : ''}
         </p>
         {draft.summary ? <p className="mt-3 text-sm leading-[1.5] text-[var(--text-secondary)]">{draft.summary}</p> : null}
       </div>
       <div className="flex flex-wrap gap-4 text-[13px] text-[var(--text-secondary)]">
         <MetricText>{formatDuration(metrics.durationSec)}</MetricText>
-        <MetricText>{metrics.tss} TSS</MetricText>
+        <MetricText>{metrics.tss}&nbsp;TSS</MetricText>
         {draft.rpe !== null ? <MetricText>RPE {draft.rpe}</MetricText> : null}
       </div>
       <SessionBlockBar segments={metrics.segments} />

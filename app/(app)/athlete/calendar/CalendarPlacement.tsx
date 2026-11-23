@@ -90,7 +90,7 @@ export function CalendarPlacement({
   const isRoutine = placement === 'template';
 
   const items: Item[] = catalog
-    ? [{ key: CATALOG_KEY, id: 0, title: catalog.title, detail: [getSportLabel('BIKING'), formatDuration(catalog.durationSec)].join(' · ') }]
+    ? [{ key: CATALOG_KEY, id: 0, title: catalog.title, detail: [getSportLabel('BIKING'), formatDuration(catalog.durationSec)].join('\u00A0· ') }]
     : isRoutine
     ? routines.map((routine) => ({
         key: `template:${routine.id}`,
@@ -102,7 +102,7 @@ export function CalendarPlacement({
         key: `workout:${workout.id}`,
         id: workout.id,
         title: workout.title,
-        detail: [getSportLabel(workout.sport), workout.durationSec > 0 ? formatDuration(workout.durationSec) : null].filter(Boolean).join(' · '),
+        detail: [getSportLabel(workout.sport), workout.durationSec > 0 ? formatDuration(workout.durationSec) : null].filter(Boolean).join('\u00A0· '),
       }));
 
   const [selectedKey, setSelectedKey] = useState(catalog ? CATALOG_KEY : items.some((item) => item.key === initialSourceKey) ? initialSourceKey : '');

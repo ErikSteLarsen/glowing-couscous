@@ -95,7 +95,7 @@ type Feedback = { tone: 'status' | 'alert'; text: string } | null;
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DONE_STATES = new Set<ComplianceState>(['complete', 'partial', 'off', 'unplanned', 'duration-only']);
 
-const formatDay = (day: string) => format(fromDayKey(day), 'EEE d MMM');
+const formatDay = (day: string) => format(fromDayKey(day), 'EEE\u00A0d\u00A0MMM');
 const dayDropId = (day: string) => `day:${day}`;
 const sessionDragId = (sessionId: number) => `session:${sessionId}`;
 
@@ -525,7 +525,7 @@ function useSessionDrag(session: CalendarSession, pending: boolean, draggable = 
 }
 
 function sessionLabel(session: CalendarSession, day: string) {
-  return [session.title, formatDay(day), session.timeLabel, getSportLabel(session.sport), formatDuration(session.durationSec), session.distanceMeters === null ? null : formatDistance(session.distanceMeters), session.tss === null ? 'Load unavailable' : `${session.tss} TSS`, complianceLabels[session.compliance]].filter(Boolean).join(', ');
+  return [session.title, formatDay(day), session.timeLabel, getSportLabel(session.sport), formatDuration(session.durationSec), session.distanceMeters === null ? null : formatDistance(session.distanceMeters), session.tss === null ? 'Load unavailable' : `${session.tss}\u00A0TSS`, complianceLabels[session.compliance]].filter(Boolean).join(', ');
 }
 
 function SessionCard({
@@ -554,16 +554,17 @@ function SessionCard({
         ref={setActivatorNodeRef}
         href={`/athlete/session/${session.id}?from=calendar`}
         aria-label={`Open ${sessionLabel(session, day)}`}
-        className={`block space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2.5 pl-3.5 ${hasActions ? 'pr-9 max-xl:pr-12 max-md:pr-13' : 'pr-3'} transition-colors hover:border-[var(--border-strong)] ${
+        className={`block space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2.5 pl-3.5 pr-3 transition-colors hover:border-[var(--border-strong)] ${
           draggable && session.canReschedule ? 'active:cursor-grabbing' : ''
         } ${pending ? 'opacity-70' : ''} ${buttonFocusClassName}`}
         style={complianceStyle(session.compliance)}
         {...dragProps}
       >
-        <p className="break-words text-[13px] font-medium leading-snug text-[var(--text)]">{session.title}</p>
-        <p className="data text-xs text-[var(--text-secondary)]">
-          {[session.timeLabel, getSportLabel(session.sport), formatDuration(session.durationSec), session.distanceMeters === null ? null : formatDistance(session.distanceMeters), session.tss === null ? 'Load unavailable' : `${session.tss} TSS`].filter(Boolean).join(' · ')}
-        </p>
+        <p className={`break-words text-[13px] font-medium leading-snug text-[var(--text)] ${hasActions ? 'mr-6 max-xl:mr-9 max-md:mr-10' : ''}`}>{session.title}</p>
+        <div className="data space-y-0.5 text-xs text-[var(--text-secondary)]">
+          <p>{[session.timeLabel, getSportLabel(session.sport)].filter(Boolean).join('\u00A0· ')}</p>
+          <p>{[formatDuration(session.durationSec), session.distanceMeters === null ? null : formatDistance(session.distanceMeters), session.tss === null ? 'Load unavailable' : `${session.tss}\u00A0TSS`].filter(Boolean).join('\u00A0· ')}</p>
+        </div>
         <ComplianceMark state={session.compliance} showLabel />
         <SessionBlockBar segments={session.segments} size="compact" />
       </Link>
@@ -803,7 +804,7 @@ function MonthChip({ session, day, pending }: { session: CalendarSession; day: s
         {...dragProps}
       >
         <span className="min-w-0 flex-1 truncate text-[var(--text)]">{session.title}</span>
-        <span className="data hidden shrink-0 text-[var(--text-muted)] lg:inline">{formatDuration(session.durationSec)}{session.distanceMeters === null ? '' : ` · ${formatDistance(session.distanceMeters)}`}</span>
+        <span className="data hidden shrink-0 text-[var(--text-muted)] lg:inline">{formatDuration(session.durationSec)}{session.distanceMeters === null ? '' : `\u00A0· ${formatDistance(session.distanceMeters)}`}</span>
         <ComplianceMark state={session.compliance} />
       </Link>
     </div>
@@ -814,7 +815,7 @@ function DayDetail({ day, onClose, pendingIds, onMove, onSessionDeleted, addHref
   return (
     <section aria-labelledby="calendar-day-detail" className="tile space-y-3 rounded-2xl p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="calendar-day-detail" className="text-base font-medium text-[var(--text)]">{format(fromDayKey(day.isoDate), 'EEEE d MMMM')}</h2>
+        <h2 id="calendar-day-detail" className="text-base font-medium text-[var(--text)]">{format(fromDayKey(day.isoDate), 'EEEE\u00A0d\u00A0MMMM')}</h2>
         <div className="flex gap-2">
           <Link href={addHref(day.isoDate)} className={`${compactSecondaryButtonClassName} min-h-11 sm:min-h-8`}>
             <CalendarPlus aria-hidden="true" size={14} strokeWidth={1.8} />

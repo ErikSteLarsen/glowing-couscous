@@ -105,7 +105,7 @@ export default async function AthleteSessionPage({
         </div>
         <div className={importedWithoutWorkout ? 'py-3 pl-4 sm:pl-6' : ''}>
           <p className="text-[11px] font-medium text-[var(--text-muted)]">Training load</p>
-          <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{detail.session.loadAvailable === false ? 'Unavailable' : `${detail.session.tss} TSS`}</p>
+          <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{detail.session.loadAvailable === false ? 'Unavailable' : `${detail.session.tss}\u00A0TSS`}</p>
         </div>
       </div>
     </div>
@@ -132,7 +132,7 @@ export default async function AthleteSessionPage({
         <span>Duration <MetricText>{formatDuration(detail.session.activityDurationSec ?? 0)}</MetricText></span>
         {detail.session.activityDistanceMeters === null ? null : <span>Distance <MetricText>{formatDistance(detail.session.activityDistanceMeters)}</MetricText></span>}
         <span>RPE <MetricText>{detail.session.activityRpe === null ? 'Not recorded' : detail.session.activityRpe}</MetricText></span>
-        <span>Training load <MetricText>{detail.session.activityTss === null ? 'Unavailable' : `${detail.session.activityTss} TSS`}</MetricText></span>
+        <span>Training load <MetricText>{detail.session.activityTss === null ? 'Unavailable' : `${detail.session.activityTss}\u00A0TSS`}</MetricText></span>
       </div>
       {['tcx-import', 'fit-import', 'gpx-import'].includes(detail.session.metricsSource ?? '')
         && detail.session.activityStartedAt
@@ -238,7 +238,7 @@ export default async function AthleteSessionPage({
           <span>{formatSessionWhen(detail.session.date, detail.session.timeLabel)}</span>
           <StatusBadge status={displayStatus} />
           <MetricText>{formatDuration(detail.session.durationSec)}</MetricText>
-          <MetricText>{detail.session.tss === null ? 'Load unavailable' : `${detail.session.tss} TSS`}</MetricText>
+          <MetricText>{detail.session.tss === null ? 'Load unavailable' : `${detail.session.tss}\u00A0TSS`}</MetricText>
           {detail.session.metricsSource === 'manual-planned' ? <span className="text-[12px]">Planned estimate</span> : null}
           {detail.session.targetLabel ? <span>{detail.session.targetLabel}</span> : null}
         </div>

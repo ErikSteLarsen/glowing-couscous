@@ -71,7 +71,7 @@ export default async function AthleteActivityPage({ searchParams }: {
           <dd>
             {activityFeed.totals.unknownLoad
               ? <span>Unavailable for {activityFeed.totals.unknownLoad} {activityFeed.totals.unknownLoad === 1 ? 'activity' : 'activities'}</span>
-              : <MetricText>{activityFeed.totals.tss} TSS</MetricText>}
+              : <MetricText>{activityFeed.totals.tss}&nbsp;TSS</MetricText>}
           </dd>
         </div>
       </dl>
@@ -106,8 +106,8 @@ export default async function AthleteActivityPage({ searchParams }: {
                       </WorkoutCardHeader>
                       <WorkoutCardMeta>
                         {imported && activity.sourceTimezoneOffsetMinutes !== null
-                          ? <>{formatActivityDateTime(activity.completedAt, activity.sourceTimezoneOffsetMinutes)} · {getSportLabel(activity.sport)} · {activity.metricsSource === 'fit-import' ? 'FIT' : activity.metricsSource === 'gpx-import' ? 'GPX' : 'TCX'}</>
-                          : <>{format(activity.completedAt, 'EEE d MMM yyyy')} · {getSportLabel(activity.sport)}{activity.metricsSource === 'manual-unplanned' ? ' · Logged' : ''}</>}
+                          ? <>{formatActivityDateTime(activity.completedAt, activity.sourceTimezoneOffsetMinutes)}&nbsp;· {getSportLabel(activity.sport)}&nbsp;· {activity.metricsSource === 'fit-import' ? 'FIT' : activity.metricsSource === 'gpx-import' ? 'GPX' : 'TCX'}</>
+                          : <>{format(activity.completedAt, 'EEE\u00A0d\u00A0MMM\u00A0yyyy')}&nbsp;· {getSportLabel(activity.sport)}{activity.metricsSource === 'manual-unplanned' ? ' · Logged' : ''}</>}
                       </WorkoutCardMeta>
                       <WorkoutCardProfile position="inline">
                         {activity.segments.length

@@ -183,4 +183,4 @@ export function formatAnalysisDuration(seconds: number) {
   const sec = Math.round(seconds);
   return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 }
-export function formatAnalysisPace(pace: number | null) { return pace === null ? 'Not available' : `${formatAnalysisDuration(pace)} /km`; }
+export function formatAnalysisPace(pace: number | null) { return pace === null ? 'Not available' : `${formatAnalysisDuration(pace)}\u00A0/km`; }

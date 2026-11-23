@@ -37,7 +37,7 @@ export default async function RideHubPage({ searchParams }: { searchParams: Prom
   const libraryHref = publicLibraryHref(parseCatalogQuery(params));
   const ftpLink = (
     <Link href="/profile#cycling" className={`${ghostButtonClassName('compact')} max-md:min-h-11`}>
-      {ftp ? `FTP ${ftp} W` : 'Set cycling FTP'}
+      {ftp ? `FTP ${ftp}\u00A0W` : 'Set cycling FTP'}
     </Link>
   );
 
@@ -48,7 +48,7 @@ export default async function RideHubPage({ searchParams }: { searchParams: Prom
           <div className="flex min-w-0 items-center gap-3">
             <BrandMark />
             <h1 className="text-base font-medium tracking-[-0.01em] text-[var(--text)]">Ride</h1>
-            <span className="data hidden truncate text-[13px] text-[var(--text-muted)] sm:inline">{format(fromDayKey(hub.today), 'EEEE d MMMM')}</span>
+            <span className="data hidden truncate text-[13px] text-[var(--text-muted)] sm:inline">{format(fromDayKey(hub.today), 'EEEE\u00A0d\u00A0MMMM')}</span>
           </div>
           <Menu>
             <MenuTrigger aria-label="More ride options" className={iconButtonClassName}>
@@ -141,7 +141,7 @@ export default async function RideHubPage({ searchParams }: { searchParams: Prom
 }
 
 function sessionMeta(session: RideHubSession) {
-  return [session.overdue ? format(parseISO(session.day), 'EEE d MMM') : session.timeLabel, formatDuration(session.durationSec), `${session.tss} TSS`].filter(Boolean).join(' · ');
+  return [session.overdue ? format(parseISO(session.day), 'EEE\u00A0d\u00A0MMM') : session.timeLabel, formatDuration(session.durationSec), `${session.tss}\u00A0TSS`].filter(Boolean).join('\u00A0· ');
 }
 
 function TodayFeature({ session }: { session: RideHubSession }) {
@@ -189,7 +189,7 @@ function RecentLine({ ride }: { ride: RideHubRecent }) {
       <Link href={`/athlete/session/${ride.sessionId}?from=ride`} className={`group flex min-w-0 flex-1 flex-col justify-center rounded-sm hover:bg-[var(--raised)] max-md:min-h-11 ${buttonFocusClassName}`}>
         <span className="wrap-anywhere text-[13px] font-medium text-[var(--text)] underline-offset-4 group-hover:underline">{ride.title}</span>
         <span className="data mt-0.5 text-[12px] text-[var(--text-muted)]">
-          {format(parseISO(ride.completedAt), 'EEE d MMM')} · {formatDuration(ride.durationSec)}{ride.tss !== null ? ` · ${ride.tss} TSS` : ''}
+          {format(parseISO(ride.completedAt), 'EEE\u00A0d\u00A0MMM')}&nbsp;· {formatDuration(ride.durationSec)}{ride.tss !== null ? `\u00A0· ${ride.tss}\u00A0TSS` : ''}
         </span>
       </Link>
       {ride.catalogSlug ? (

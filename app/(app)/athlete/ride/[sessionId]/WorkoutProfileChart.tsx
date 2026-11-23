@@ -120,7 +120,7 @@ export function WorkoutProfileChart({ plan, positionSec, buckets, domainSec, hea
         ) : null}
       </svg>
       {plan.ftpWatts ? (
-        <span className="data pointer-events-none absolute right-1 -translate-y-full pb-0.5 text-[11px] text-[var(--text-muted)]" style={{ top: `${(y(plan.ftpWatts) / HEIGHT) * 100}%` }}>FTP {plan.ftpWatts} W</span>
+        <span className="data pointer-events-none absolute right-1 -translate-y-full pb-0.5 text-[11px] text-[var(--text-muted)]" style={{ top: `${(y(plan.ftpWatts) / HEIGHT) * 100}%` }}>FTP {plan.ftpWatts}&nbsp;W</span>
       ) : null}
       <div aria-hidden="true" className="data pointer-events-none absolute inset-x-0 top-full pt-2 text-[11px] leading-none text-[var(--text-muted)]">
         {ticks.map((tick) => <span key={tick} className="absolute -translate-x-1/2" style={{ left: `${(tick / domain) * 100}%` }}>{clockLabel(tick)}</span>)}

@@ -225,9 +225,9 @@ test('calendar steps move by a whole week or month, not a day', () => {
 test('calendar ranges and labels are Monday-first', () => {
   assert.deepEqual(getCalendarRange('week', '2026-11-15'), { start: '2026-11-09', end: '2026-11-15' });
   assert.deepEqual(getCalendarRange('month', '2026-11-09'), { start: '2026-10-26', end: '2026-12-06' });
-  assert.equal(getCalendarPeriodLabel('week', '2026-11-11'), 'Week 46 · 9–15 Nov');
-  assert.equal(getCalendarPeriodLabel('week', '2026-12-30'), 'Week 53 · 28 Dec – 3 Jan');
-  assert.equal(getCalendarPeriodLabel('month', '2026-11-09'), 'November 2026 · Weeks 44–49');
+  assert.equal(getCalendarPeriodLabel('week', '2026-11-11'), 'Week\u00A046\u00A0· 9–15\u00A0Nov');
+  assert.equal(getCalendarPeriodLabel('week', '2026-12-30'), 'Week\u00A053\u00A0· 28\u00A0Dec – 3\u00A0Jan');
+  assert.equal(getCalendarPeriodLabel('month', '2026-11-09'), 'November\u00A02026\u00A0· Weeks\u00A044–49');
   assert.equal(getCalendarHref('month', '2026-11-09'), '/athlete/calendar?view=month&date=2026-11-09');
 });
 

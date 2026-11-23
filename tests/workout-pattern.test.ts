@@ -30,7 +30,7 @@ test('repeating a set adds a pause between sets without a trailing pause', () =>
   assert.equal(metrics.zoneDistributionSec[0], 0);
   assert.equal(metrics.zoneDistributionSec[3], 180);
   assert.equal(metrics.segments[1].label, 'Pause');
-  assert.equal(formatDurationExact(1230), '20m 30s');
+  assert.equal(formatDurationExact(1230), '20m\u00A030s');
   const draft = createEmptySessionEditorDraft({ title: 'Intervals', blocks });
   assert.equal(validateSessionEditorDraft(draft), null);
   const serialized = serializeSessionEditorDraft(draft);

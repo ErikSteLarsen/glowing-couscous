@@ -13,13 +13,13 @@ import {
 } from '../lib/calendar-placement.ts';
 
 test('workout button names the single date, or counts several', () => {
-  assert.equal(getPlacementButtonLabel('workout', ['2026-11-24']), 'Add to Tue 24 Nov');
+  assert.equal(getPlacementButtonLabel('workout', ['2026-11-24']), 'Add to Tue\u00A024\u00A0Nov');
   assert.equal(getPlacementButtonLabel('workout', ['2026-11-24', '2026-11-26', '2026-11-28']), 'Add to 3 days');
   assert.equal(getPlacementButtonLabel('workout', []), 'Choose a date');
 });
 
 test('routine button names the week or month it applies to', () => {
-  assert.equal(getPlacementButtonLabel('template', getRoutineDates('week', '2026-11-25'), 'week'), 'Apply to week of 23 Nov');
+  assert.equal(getPlacementButtonLabel('template', getRoutineDates('week', '2026-11-25'), 'week'), 'Apply to week of 23\u00A0Nov');
   assert.equal(getPlacementButtonLabel('template', getRoutineDates('month', '2026-11-25'), 'month'), 'Apply to November');
 });
 
@@ -36,8 +36,8 @@ test('routine dates match the server contract: a Monday week or the whole calend
 });
 
 test('routine range labels read as plain dates', () => {
-  assert.equal(getRoutineRangeLabel(getRoutineDates('week', '2026-11-25')), 'Mon 23 Nov – Sun 29 Nov');
-  assert.equal(getRoutineRangeLabel(getRoutineDates('month', '2026-11-25')), 'Sun 1 Nov – Mon 30 Nov');
+  assert.equal(getRoutineRangeLabel(getRoutineDates('week', '2026-11-25')), 'Mon\u00A023\u00A0Nov – Sun\u00A029\u00A0Nov');
+  assert.equal(getRoutineRangeLabel(getRoutineDates('month', '2026-11-25')), 'Sun\u00A01\u00A0Nov – Mon\u00A030\u00A0Nov');
   assert.equal(getRoutineRangeLabel([]), '');
 });
 

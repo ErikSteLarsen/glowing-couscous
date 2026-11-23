@@ -54,7 +54,7 @@ async function moveSession(sessionId: number, date: string): Promise<MoveResult>
 }
 
 function formatDay(day: string) {
-  return format(fromDayKey(day), 'EEE d MMM');
+  return format(fromDayKey(day), 'EEE\u00A0d\u00A0MMM');
 }
 
 function QuickMoveAction({ sessionId, title, targetDay, onMoved }: ActionProps & { mode: 'quick'; targetDay: string }) {

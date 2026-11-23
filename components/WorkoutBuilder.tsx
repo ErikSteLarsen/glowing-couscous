@@ -365,7 +365,7 @@ export function WorkoutBuilder({
           <div className="min-w-0 space-y-3 max-xl:order-1" onKeyDown={(event) => { if (event.key === 'Escape') setSelection([]); if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'a') { event.preventDefault(); setSelection(draft.blocks.map((_, index) => index)); } }}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div><h2 className="text-base font-semibold text-[var(--text)]">Workout sequence</h2><p className="text-xs text-[var(--text-secondary)]">{selection.length ? `${selection.length} block${selection.length === 1 ? '' : 's'} selected` : 'Drop a preset here to start'}</p></div>
-              <MetricText>{formatDuration(metrics.durationSec)} / {metrics.tss} TSS</MetricText>
+              <MetricText>{formatDuration(metrics.durationSec)} / {metrics.tss}&nbsp;TSS</MetricText>
             </div>
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1.35fr)_minmax(10rem,0.65fr)]">
               <div className="rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-3"><SessionBlockBar segments={metrics.segments} /><p className="mt-2 text-xs text-[var(--text-secondary)]">Timeline: width is time, height is zone.</p></div>

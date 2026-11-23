@@ -47,15 +47,15 @@ export function formatWorkoutTarget(target: WorkoutTarget, sport?: string): stri
     const reference = target.reference === 'ftp' ? 'FTP' : target.reference === 'threshold-pace' ? 'threshold speed' : profileZone ? `Zone ${profileZone} profile pace` : target.reference === 'profile-pace' ? 'profile pace zones' : target.reference === 'css' ? 'CSS' : target.reference === 'max-hr' ? 'Olympiatoppen HRmax' : 'threshold HR';
     return `${range}% ${reference}`;
   }
-  if (target.metric === 'pace') return `${range} ${sport === 'SWIMMING' ? '/100 m' : '/km'}`;
-  return `${range} ${target.metric === 'power' ? 'W' : 'bpm'}`;
+  if (target.metric === 'pace') return `${range}\u00A0${sport === 'SWIMMING' ? '/100 m' : '/km'}`;
+  return `${range}\u00A0${target.metric === 'power' ? 'W' : 'bpm'}`;
 }
 
 export function formatResolvedWorkoutTarget(target: WorkoutTarget, profile: PerformanceProfile | null | undefined, sport?: string): string | null {
   const resolved = resolveWorkoutTarget(target, profile, sport);
   if (!resolved) return null;
-  if (resolved.unit === 'pace') return `${formatPace(resolved.low)}${resolved.low === resolved.high ? '' : `-${formatPace(resolved.high)}`}${target.reference === 'css' ? ' /100 m' : ' /km'}`;
-  return `${formatNumber(resolved.low)}${resolved.low === resolved.high ? '' : `-${formatNumber(resolved.high)}`} ${resolved.unit}`;
+  if (resolved.unit === 'pace') return `${formatPace(resolved.low)}${resolved.low === resolved.high ? '' : `-${formatPace(resolved.high)}`}${target.reference === 'css' ? '\u00A0/100 m' : '\u00A0/km'}`;
+  return `${formatNumber(resolved.low)}${resolved.low === resolved.high ? '' : `-${formatNumber(resolved.high)}`}\u00A0${resolved.unit}`;
 }
 
 export function missingProfileAction(target: WorkoutTarget): string | null {

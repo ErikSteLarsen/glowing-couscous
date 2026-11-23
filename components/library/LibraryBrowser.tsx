@@ -159,7 +159,7 @@ export function LibraryBrowser({
         </button>
       ) : null}>
         {results.length === entries.length ? `${entries.length} workouts` : `${results.length} of ${entries.length} workouts`}
-        {query.sort === 'name' ? null : ` · ${sortLabel(query.sort)}`}
+        {query.sort === 'name' ? null : `\u00A0· ${sortLabel(query.sort)}`}
       </CollectionSummary>
 
       {results.length === 0 ? (

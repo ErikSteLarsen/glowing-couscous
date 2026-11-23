@@ -429,7 +429,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         todaySessions,
         weekDays,
         nextDays,
-        dateLabels: { today: format(today, 'EEEE, d MMMM'), shortToday: format(today, 'd MMM'), weekNumber: format(today, 'II'), weekRange: `${format(currentWeekStart, 'd MMM')} – ${format(currentWeekEnd, 'd MMM')}` },
+        dateLabels: { today: format(today, 'EEEE, d MMMM'), shortToday: format(today, 'd\u00A0MMM'), weekNumber: format(today, 'II'), weekRange: `${format(currentWeekStart, 'd\u00A0MMM')} – ${format(currentWeekEnd, 'd\u00A0MMM')}` },
         lastActivity: athlete.activities[0]
           ? {
               ...homeActivityReadout(athlete.activities[0]),
@@ -615,7 +615,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
           start: periodStart,
           previousStart: resolvedView === 'month' ? addMonths(periodStart, -1) : addDays(periodStart, -7),
           nextStart: resolvedView === 'month' ? addMonths(periodStart, 1) : addDays(periodStart, 7),
-          label: resolvedView === 'month' ? format(periodStart, 'MMMM yyyy') : `Week of ${format(periodStart, 'd MMM')}`,
+          label: resolvedView === 'month' ? format(periodStart, 'MMMM yyyy') : `Week of ${format(periodStart, 'd\u00A0MMM')}`,
         },
         days,
         weeks,

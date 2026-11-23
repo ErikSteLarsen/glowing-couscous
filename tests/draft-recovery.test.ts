@@ -70,8 +70,8 @@ test('profile recovery preserves unfinished pace/time input but rejects malforme
 
 test('draft age reads as recent minutes or hours before falling back to a date', () => {
   assert.equal(formatDraftAge(now - 20_000, now), 'just now');
-  assert.equal(formatDraftAge(now - 12 * 60_000, now), '12 min ago');
-  assert.equal(formatDraftAge(now - 3 * 60 * 60_000, now), '3 hr ago');
+  assert.equal(formatDraftAge(now - 12 * 60_000, now), '12\u00A0min ago');
+  assert.equal(formatDraftAge(now - 3 * 60 * 60_000, now), '3\u00A0hr ago');
   assert.doesNotMatch(formatDraftAge(now - 2 * 24 * 60 * 60_000, now, 'en-GB'), /ago/);
 });
 

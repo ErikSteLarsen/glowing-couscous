@@ -59,7 +59,7 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
           <h2 className={sectionHeadingClassName}>Profile</h2>
           <p className="text-[12px] text-[var(--text-muted)]">
-            {ftp ? <>Watts from your FTP of <span className="data text-[var(--text-secondary)]">{ftp} W</span></> : <>Targets in % of FTP. <Link href="/athlete/profile" className="text-[var(--brand)] underline-offset-4 hover:underline">Add your FTP</Link> to see watts.</>}
+            {ftp ? <>Watts from your FTP of <span className="data text-[var(--text-secondary)]">{ftp}&nbsp;W</span></> : <>Targets in % of FTP. <Link href="/athlete/profile" className="text-[var(--brand)] underline-offset-4 hover:underline">Add your FTP</Link> to see watts.</>}
           </p>
         </div>
         <CatalogProfile
@@ -81,7 +81,7 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
       <section aria-labelledby="library-intervals" className="min-w-0">
         <div className="flex items-baseline justify-between gap-3">
           <h2 id="library-intervals" className={sectionHeadingClassName}>Intervals</h2>
-          <p className="data text-[12px] text-[var(--text-muted)]">{metrics.intervalCount} efforts · {formatDuration(metrics.workSec)} of work</p>
+          <p className="data text-[12px] text-[var(--text-muted)]">{metrics.intervalCount}&nbsp;efforts&nbsp;· {formatDuration(metrics.workSec)}&nbsp;of work</p>
         </div>
         <ol className="mt-3 divide-y divide-[var(--border)] border-y border-[var(--border)]">
           {workout.items.map((item, itemIndex) => isCatalogRepeat(item) ? (
@@ -151,7 +151,7 @@ function StepRow({ step, format, unit }: { step: CatalogStep; format: (pct: numb
   const ramp = ranged && (step.kind === 'warmup' || step.kind === 'cooldown');
   const [from, to] = step.kind === 'cooldown' ? [step.highPct, step.lowPct] : [step.lowPct, step.highPct];
   const target = ramp ? `${format(from)} → ${format(to)}` : ranged ? `${format(step.lowPct)}–${format(step.highPct)}` : format(step.lowPct);
-  const cue = [step.cue, step.cadence ? `${step.cadence[0]}–${step.cadence[1]} rpm` : null].filter(Boolean).join(' · ');
+  const cue = [step.cue, step.cadence ? `${step.cadence[0]}–${step.cadence[1]}\u00A0rpm` : null].filter(Boolean).join('\u00A0· ');
   return (
     <li className="flex gap-3 py-2.5 text-[13px]">
       <span aria-hidden="true" className="mt-1 h-3.5 w-1.5 shrink-0 rounded-full" style={{ background: pctColor((step.lowPct + step.highPct) / 2) }} />

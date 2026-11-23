@@ -47,14 +47,14 @@ export function getCalendarPeriodLabel(view: CalendarView, day: DayKey): string 
     const { start, end } = getCalendarRange('month', day);
     const firstWeek = getISOWeek(fromDayKey(start));
     const lastWeek = getISOWeek(fromDayKey(addDayKeys(end, -6)));
-    return `${format(fromDayKey(day), 'MMMM yyyy')} · Weeks ${firstWeek}–${lastWeek}`;
+    return `${format(fromDayKey(day), 'MMMM\u00A0yyyy')}\u00A0· Weeks\u00A0${firstWeek}–${lastWeek}`;
   }
   const start = fromDayKey(weekStartOf(day));
   const end = fromDayKey(addDayKeys(weekStartOf(day), 6));
   const range = start.getMonth() === end.getMonth()
-    ? `${format(start, 'd')}–${format(end, 'd MMM')}`
-    : `${format(start, 'd MMM')} – ${format(end, 'd MMM')}`;
-  return `Week ${getISOWeek(start)} · ${range}`;
+    ? `${format(start, 'd')}–${format(end, 'd\u00A0MMM')}`
+    : `${format(start, 'd\u00A0MMM')} – ${format(end, 'd\u00A0MMM')}`;
+  return `Week\u00A0${getISOWeek(start)}\u00A0· ${range}`;
 }
 
 /** Which source list the Calendar's placement flow opens on. */

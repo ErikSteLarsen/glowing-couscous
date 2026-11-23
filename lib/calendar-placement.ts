@@ -15,7 +15,7 @@ export type RoutinePeriod = 'week' | 'month';
 export type ExistingSessionsByDate = Record<string, Array<{ title: string; sport: string }>>;
 
 export function formatPlacementDate(day: string) {
-  return format(fromDayKey(day), 'EEE d MMM');
+  return format(fromDayKey(day), 'EEE\u00A0d\u00A0MMM');
 }
 
 /** The dates a routine fills: the Monday week or the calendar month around `referenceDate`. */
@@ -34,7 +34,7 @@ export function getPlacementButtonLabel(kind: PlacementKind, dates: string[], pe
   if (kind === 'template') {
     return period === 'month'
       ? `Apply to ${format(fromDayKey(dates[0]), 'MMMM')}`
-      : `Apply to week of ${format(fromDayKey(dates[0]), 'd MMM')}`;
+      : `Apply to week of ${format(fromDayKey(dates[0]), 'd\u00A0MMM')}`;
   }
   return dates.length === 1 ? `Add to ${formatPlacementDate(dates[0])}` : `Add to ${dates.length} days`;
 }

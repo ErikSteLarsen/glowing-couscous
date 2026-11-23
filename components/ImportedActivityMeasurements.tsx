@@ -35,8 +35,8 @@ export function ImportedActivityMeasurements({ activityId, durationSec, sport }:
     <div className="space-y-5">
       <ImportedWorkoutAnalysis key={activityId} activityId={activityId} />
       <div className="flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-[var(--text-secondary)]">
-        {telemetry.distanceMeters !== null ? <span>Distance · {(telemetry.distanceMeters / 1000).toFixed(2)} km</span> : null}
-        {telemetry.elevationGainMeters !== null ? <span>Elevation gain · {Math.round(telemetry.elevationGainMeters)} m</span> : null}
+        {telemetry.distanceMeters !== null ? <span>Distance · {(telemetry.distanceMeters / 1000).toFixed(2)}&nbsp;km</span> : null}
+        {telemetry.elevationGainMeters !== null ? <span>Elevation gain · {Math.round(telemetry.elevationGainMeters)}&nbsp;m</span> : null}
       </div>
       <ActivityMetricPreview points={telemetry.points} durationSec={durationSec} distanceMeters={telemetry.distanceMeters} sport={sport} />
     </div>

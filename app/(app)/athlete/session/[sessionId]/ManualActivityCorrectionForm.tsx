@@ -167,7 +167,7 @@ export function ManualActivityCorrectionForm({
               </label>
             </div>
           ) : (
-            <p className="text-sm text-[var(--text-secondary)]">Planned session: {draft.plannedTitle} · {draft.plannedDate}</p>
+            <p className="text-sm text-[var(--text-secondary)]">Planned session: {draft.plannedTitle}&nbsp;· {draft.plannedDate}</p>
           )}
 
           {draft.kind === 'manual-paired' ? (

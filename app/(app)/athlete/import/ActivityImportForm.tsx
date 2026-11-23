@@ -32,7 +32,7 @@ class ImportRequestError extends Error {
 }
 
 function distanceLabel(meters: number) {
-  return meters >= 1000 ? `${(meters / 1000).toFixed(2).replace(/\.00$/, '')} km` : `${meters} m`;
+  return meters >= 1000 ? `${(meters / 1000).toFixed(2).replace(/\.00$/, '')}\u00A0km` : `${meters}\u00A0m`;
 }
 
 export function ActivityImportForm() {
@@ -151,7 +151,7 @@ export function ActivityImportForm() {
             </label>
             {preview.candidates.map((candidate) => <label key={candidate.id} className="flex gap-3 rounded-lg border border-[var(--border)] p-3 text-sm text-[var(--text-secondary)]">
               <input type="radio" name="pairingChoice" value={`session:${candidate.id}`} checked={pairingChoice === `session:${candidate.id}`} onChange={() => setPairingChoice(`session:${candidate.id}`)} />
-              <span><span className="block text-[var(--text)]">{candidate.title} · {format(new Date(`${candidate.date}T12:00:00.000Z`), 'EEE d MMM yyyy')}</span><span>Planned duration {formatDuration(candidate.plannedDurationSec)}</span></span>
+              <span><span className="block text-[var(--text)]">{candidate.title}&nbsp;· {format(new Date(`${candidate.date}T12:00:00.000Z`), 'EEE\u00A0d\u00A0MMM\u00A0yyyy')}</span><span>Planned duration {formatDuration(candidate.plannedDurationSec)}</span></span>
             </label>)}
             {preview.candidates.length === 0 ? <p className="text-sm text-[var(--text-muted)]">No open self-planned {getSportLabel(preview.activity.sport).toLowerCase()} sessions on {preview.activity.completedOn}.</p> : null}
           </fieldset> : null}

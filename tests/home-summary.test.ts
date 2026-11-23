@@ -77,7 +77,7 @@ test('Home independently queries week outcomes and keeps scheduled structure sep
   assert.equal(home.todaySessions.find((session) => session.id === 12)?.loadAvailable, false);
   assert.equal(home.lastActivity?.sessionId, 13);
   assert.deepEqual(home.trend.map((point) => point.id), [1, 2, 3]);
-  assert.equal(home.dateLabels.shortToday, '30 Sep');
+  assert.equal(home.dateLabels.shortToday, '30\u00A0Sep');
 });
 
 test('Home does not query outcomes for an absent account', async () => {

@@ -5,18 +5,18 @@ import type { TempoZone } from '@/lib/tempo-blocks';
 
 export function ActivityIntensityBars({ timeline, compact = false }: { timeline: ActivityIntensityTimeline; compact?: boolean }) {
   const intervalLabel = timeline.intervalSec >= 60
-    ? `${Math.round(timeline.intervalSec / 60)} min`
+    ? `${Math.round(timeline.intervalSec / 60)}\u00A0min`
     : `${timeline.intervalSec} sec`;
   const zoneDescription = timeline.maxHeartRateBpm
-    ? `Zone colors use the saved maximum heart rate of ${timeline.maxHeartRateBpm} bpm.`
+    ? `Zone colors use the saved maximum heart rate of ${timeline.maxHeartRateBpm}\u00A0bpm.`
     : 'Bar height shows recorded heart-rate changes; zone colors are unavailable without a saved maximum heart rate.';
-  const description = `Recorded heart-rate intensity, ${timeline.bins.length} intervals of ${intervalLabel}. Average ${timeline.averageBpm} bpm, range ${timeline.minBpm} to ${timeline.maxBpm} bpm. ${zoneDescription}`;
+  const description = `Recorded heart-rate intensity, ${timeline.bins.length} intervals of ${intervalLabel}. Average ${timeline.averageBpm}\u00A0bpm, range ${timeline.minBpm} to ${timeline.maxBpm}\u00A0bpm. ${zoneDescription}`;
 
   return (
     <div className={compact ? 'space-y-0.5' : 'space-y-1.5'}>
       <div className={`flex flex-wrap items-baseline ${compact ? 'justify-end' : 'justify-between'} gap-x-2 text-[11px] leading-4 text-[var(--text-secondary)]`}>
         {compact ? null : <span className="font-medium text-[var(--text)]">Heart rate</span>}
-        <span className="tabular-nums">{compact ? `Avg HR ${timeline.averageBpm} bpm` : `Avg ${timeline.averageBpm} bpm · ${intervalLabel}`}</span>
+        <span className="tabular-nums">{compact ? `Avg HR ${timeline.averageBpm}\u00A0bpm` : `Avg ${timeline.averageBpm}\u00A0bpm · ${intervalLabel}`}</span>
       </div>
       <div
         role="img"
@@ -27,7 +27,7 @@ export function ActivityIntensityBars({ timeline, compact = false }: { timeline:
           const range = `${formatDuration(bin.from)}–${formatDuration(bin.to)}`;
           const title = bin.averageBpm === null
             ? `${range}: no heart-rate samples`
-            : `${range}: ${bin.averageBpm} bpm average, ${bin.minBpm}–${bin.maxBpm} bpm range${bin.zone ? `, Zone ${bin.zone}` : ''}`;
+            : `${range}: ${bin.averageBpm}\u00A0bpm average, ${bin.minBpm}–${bin.maxBpm}\u00A0bpm range${bin.zone ? `, Zone ${bin.zone}` : ''}`;
           const band = bin.zone ? OLYMPIATOPPEN_HEART_RATE_PERCENT_BANDS[bin.zone as TempoZone] : null;
           const heartRatePercent = bin.averageBpm !== null && timeline.maxHeartRateBpm
             ? bin.averageBpm / timeline.maxHeartRateBpm * 100 : null;
@@ -51,5 +51,5 @@ export function ActivityIntensityBars({ timeline, compact = false }: { timeline:
 function formatDuration(seconds: number) {
   const minutes = Math.floor(seconds / 60);
   const remainder = Math.floor(seconds % 60);
-  return remainder === 0 ? `${minutes} min` : `${minutes}:${String(remainder).padStart(2, '0')}`;
+  return remainder === 0 ? `${minutes}\u00A0min` : `${minutes}:${String(remainder).padStart(2, '0')}`;
 }

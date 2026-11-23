@@ -100,7 +100,7 @@ export function PerformanceChart({ series, today }: Props) {
     : !point.actualLoadKnown
       ? point.actualTss > 0
         ? `${point.actualTss} known · additional load unavailable`
-        : `Load unavailable${point.plannedTss > 0 ? ` · ${point.plannedTss} planned` : ''}`
+        : `Load unavailable${point.plannedTss > 0 ? `\u00A0· ${point.plannedTss} planned` : ''}`
     : point.plannedTss > 0
       ? `${point.actualTss} done · ${point.plannedTss} planned`
       : `${point.actualTss}`;

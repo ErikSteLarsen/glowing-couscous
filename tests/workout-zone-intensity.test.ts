@@ -59,5 +59,5 @@ test('heart-rate presets use Olympiatoppen HRmax zones and preserve explicit thr
   const threshold = presetTarget('RUNNING', 2, profile, 'hr', 'relative', 'threshold-hr');
   const maxHr = presetTarget('RUNNING', 2, profile, 'hr', 'relative', 'max-hr');
   assert.notEqual(formatResolvedWorkoutTarget(threshold, profile, 'RUNNING'), formatResolvedWorkoutTarget(threshold, profile, 'BIKING'));
-  assert.equal(formatResolvedWorkoutTarget(maxHr, profile, 'RUNNING'), '141-159 bpm');
+  assert.equal(formatResolvedWorkoutTarget(maxHr, profile, 'RUNNING'), '141-159\u00A0bpm');
 });

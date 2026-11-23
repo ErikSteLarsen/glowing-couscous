@@ -19,7 +19,7 @@ export function ActivityMetricBars({
   const chart = bucketActivityMetric(points, metric, { durationSec, distanceMeters });
   const sampling = chart.axis === 'time'
     ? `${formatDuration(chart.interval)} intervals`
-    : `${chart.interval} m distance intervals`;
+    : `${chart.interval}\u00A0m distance intervals`;
 
   if (chart.buckets.length === 0) {
     return <p className="text-[13px] text-[var(--text-secondary)]">No {chart.label.toLowerCase()} samples are available for this activity.</p>;
@@ -46,7 +46,7 @@ export function ActivityMetricBars({
         {chart.buckets.map((bucket) => {
           const range = chart.axis === 'time'
             ? `${formatDuration(bucket.from)}–${formatDuration(bucket.to)}`
-            : `${Math.round(bucket.from)}–${Math.round(bucket.to)} m`;
+            : `${Math.round(bucket.from)}–${Math.round(bucket.to)}\u00A0m`;
           const title = `${range}: ${formatActivityMetricValue(metric, bucket.average)} average; ${formatActivityMetricValue(metric, bucket.min)}–${formatActivityMetricValue(metric, bucket.max)} range`;
           return (
             <span
@@ -85,7 +85,7 @@ export function ActivityMetricBars({
                   <th scope="row" className="wrap-anywhere py-2 pr-2 font-medium sm:pr-3">
                     {chart.axis === 'time'
                       ? `${formatDuration(bucket.from)}–${formatDuration(bucket.to)}`
-                      : `${Math.round(bucket.from)}–${Math.round(bucket.to)} m`}
+                      : `${Math.round(bucket.from)}–${Math.round(bucket.to)}\u00A0m`}
                   </th>
                   <td className="wrap-anywhere py-2 pr-2 text-right sm:pr-3">{formatActivityMetricValue(metric, bucket.average)}</td>
                   <td className="wrap-anywhere py-2 text-right">{formatActivityMetricValue(metric, bucket.min)}–{formatActivityMetricValue(metric, bucket.max)}</td>
@@ -102,5 +102,5 @@ export function ActivityMetricBars({
 function formatDuration(seconds: number) {
   const minutes = Math.floor(seconds / 60);
   const remainder = Math.floor(seconds % 60);
-  return remainder === 0 ? `${minutes} min` : `${minutes}:${String(remainder).padStart(2, '0')}`;
+  return remainder === 0 ? `${minutes}\u00A0min` : `${minutes}:${String(remainder).padStart(2, '0')}`;
 }
