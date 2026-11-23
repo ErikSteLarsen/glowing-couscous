@@ -6,7 +6,7 @@ import { signOut } from 'next-auth/react';
 import { clearClientRecovery, loadSignedOutDocument } from '@/lib/client-recovery-cleanup';
 import { SignOutButton } from '@/components/SignOutButton';
 import { AccountDeletionControls } from '@/components/AccountDeletionControls';
-import { secondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
+import { dangerTextClassName, secondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
 
 type Controls = { email: string; hasPassword: boolean; providers: string[]; strava: { connected: boolean; athleteName: string | null } };
 
@@ -45,7 +45,7 @@ export function AccountControls({ userId, controls }: { userId: number; controls
     <p className="text-sm text-[var(--text-secondary)]">Disconnecting Strava removes its imported outcomes from Tempo and restores matched planned sessions. Review the connection controls before disconnecting.</p>
     <div className="flex flex-wrap items-start gap-3"><SignOutButton /><button type="button" disabled={pending} onClick={endSessions} className={secondaryButtonClassName}>{pending ? 'Signing out everywhere…' : 'Sign out everywhere'}</button></div>
     <p className="text-sm text-[var(--text-secondary)]">Signing out removes drafts kept in this browser. Signing out everywhere also invalidates other devices’ sessions when they next access Tempo.</p>
-    {error ? <p role="alert" className="text-sm text-[var(--status-danger)]">{error}</p> : null}
+    {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
     <AccountDeletionControls userId={userId} email={controls.email} hasPassword={controls.hasPassword} hasGoogle={controls.providers.includes('google')} />
   </section>;
 }

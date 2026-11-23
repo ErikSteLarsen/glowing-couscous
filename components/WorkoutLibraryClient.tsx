@@ -6,6 +6,7 @@ import { CalendarPlus, ChevronDown, Ellipsis, Link2, Plus, Trash2, X } from 'luc
 import { useRouter } from 'next/navigation';
 
 import {
+  noticeBoxClassNames,
   sectionHeadingClassName,
   BackButton,
   Badge,
@@ -489,7 +490,7 @@ export function WorkoutLibraryClient({
         </div>
 
         {editorRecovery ? (
-          <section aria-label="Unsaved changes on this browser" className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] px-4 py-3">
+          <section aria-label="Unsaved changes on this browser" className={`flex flex-wrap items-center justify-between gap-3 ${noticeBoxClassNames.warning}`}>
             <p className="min-w-0 text-sm text-[var(--text)]">
               Restore unsaved changes saved <time dateTime={new Date(editorRecovery.savedAt).toISOString()} title={new Date(editorRecovery.savedAt).toLocaleString()}>{formatDraftAge(editorRecovery.savedAt, recovery.checkedAt)}</time>?
               <span className="block text-[12px] text-[var(--text-secondary)]">Kept on this browser only.</span>
@@ -503,7 +504,7 @@ export function WorkoutLibraryClient({
         <DraftRecoveryStatus status={recovery.status} />
 
         {pendingDraftAction ? (
-          <div role="alert" className="space-y-3 rounded-[10px] border border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] p-4">
+          <div role="alert" className={`space-y-3 ${noticeBoxClassNames.warning}`}>
             <div>
               <p className="text-sm font-semibold text-[var(--text)]">Discard unsaved changes?</p>
               <p className="mt-1 text-sm text-[var(--text-secondary)]">Your changes to this workout will be lost.</p>

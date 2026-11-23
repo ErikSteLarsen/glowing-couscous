@@ -43,6 +43,13 @@ export const compactListButtonClassName =
 export const dangerTextClassName = 'text-sm text-[var(--status-danger)]';
 export const successTextClassName = 'text-sm text-[var(--status-success)]';
 
+const noticeBoxClassName = 'rounded-lg border px-4 py-3 text-sm';
+export const noticeBoxClassNames = {
+  info: `${noticeBoxClassName} border-[var(--border)] bg-[var(--raised)] text-[var(--text-secondary)]`,
+  warning: `${noticeBoxClassName} border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] text-[var(--text)]`,
+  danger: `${noticeBoxClassName} border-[var(--danger-border)] bg-[var(--danger-tint)] text-[var(--status-danger)]`,
+} as const;
+
 export function ghostButtonClassName(size: 'default' | 'compact') {
   return size === 'compact'
     ? `inline-flex min-h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-[13px] font-medium text-[var(--brand)] transition-colors control-hover:bg-[var(--brand-tint)] control-hover:text-[var(--text)] ${buttonFocusClassName}`

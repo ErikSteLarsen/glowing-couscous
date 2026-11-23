@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { formatStravaMetadata, StravaImportPanel } from '@/components/StravaImportPanel';
 import { MetricPair } from '@/components/tempo/MetricPair';
-import { sectionHeadingClassName, EmptyState, Surface, buttonFocusClassName, dangerButtonClassName, dangerTextClassName, formFieldClassName, formLabelClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { successTextClassName, sectionHeadingClassName, EmptyState, Surface, buttonFocusClassName, dangerButtonClassName, dangerTextClassName, formFieldClassName, formLabelClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { parseActivityFile, type ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { ImportableSession, ImportedActivityHistory } from '@/lib/activity-import-service';
 import type { StravaConnectionSummary } from '@/lib/strava-service';
@@ -181,7 +181,7 @@ export function ActivityImportClient({
           <p className="text-[12px] text-[var(--text-secondary)]">Up to 10 files at a time, 20 MB each</p>
         </div>
         {fileError ? <p role="alert" className={dangerTextClassName}>{fileError}</p> : null}
-        {notice ? <p role="status" className="text-sm text-[var(--status-success)]">{notice}</p> : null}
+        {notice ? <p role="status" className={successTextClassName}>{notice}</p> : null}
         <p className="text-[12px] leading-[1.5] text-[var(--text-muted)]">
           The original file is read in this browser and is not uploaded or kept. After import, Tempo stores the validated activity summary and sensor samples with your completed session until you delete the import.
         </p>
@@ -272,7 +272,7 @@ export function ActivityImportClient({
           <h2 id="import-history-heading" className={sectionHeadingClassName}>Import history</h2>
           <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Saved Strava and file imports are included in your completed activity history.</p>
         </div>
-        {historyNotice ? <p role="status" className="text-sm text-[var(--status-success)]">{historyNotice}</p> : null}
+        {historyNotice ? <p role="status" className={successTextClassName}>{historyNotice}</p> : null}
         {historyError ? <p role="alert" className={dangerTextClassName}>{historyError}</p> : null}
         {initialActivities.length === 0 ? (
           <EmptyState title="No imports yet" description="Review a Strava activity above or choose a FIT, TCX, or GPX file to add your first activity." />

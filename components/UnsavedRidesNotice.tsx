@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { noticeBoxClassNames } from '@/components/ui';
 import {
   classifyStoredRides,
   clearRideCheckpoint,
@@ -94,7 +95,7 @@ export function UnsavedRidesNotice({ userId, excludeSessionId }: { userId: numbe
   if (rides.length === 0 && saved.length === 0) return null;
   if (rides.length === 0) {
     return (
-      <aside aria-label="Saved rides" role="status" className="rounded-lg border border-[var(--border)] bg-[var(--raised)] px-4 py-3 text-[13px] text-[var(--text-secondary)]">
+      <aside aria-label="Saved rides" role="status" className={noticeBoxClassNames.info}>
         <ul className="space-y-1">
           {saved.map(({ sessionId, title }) => (
             <li key={sessionId}>
@@ -107,7 +108,7 @@ export function UnsavedRidesNotice({ userId, excludeSessionId }: { userId: numbe
     );
   }
   return (
-    <aside aria-label="Unsaved rides" className="rounded-lg border border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] px-4 py-3 text-[13px] text-[var(--text)]">
+    <aside aria-label="Unsaved rides" className={noticeBoxClassNames.warning}>
       <p className="font-medium">{rides.length === 1 ? 'One indoor ride is not saved yet' : `${rides.length} indoor rides are not saved yet`}</p>
       <ul className="mt-1 space-y-1.5 text-[var(--text-secondary)]">
         {saved.map(({ sessionId, title }) => (

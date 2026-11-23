@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
 import { MetricPair } from '@/components/tempo/MetricPair';
-import { sectionHeadingClassName, Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, getSegmentedChoiceClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { successTextClassName, sectionHeadingClassName, Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, getSegmentedChoiceClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import type { ImportableSession } from '@/lib/activity-import-service';
 import type { ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { StravaConnectionSummary, StravaInboxActivitySummary } from '@/lib/strava-service';
@@ -215,7 +215,7 @@ export function StravaImportPanel({
       </div>
 
       {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
-      {notice ? <p role="status" className="text-[13px] text-[var(--status-success)]">{notice}</p> : null}
+      {notice ? <p role="status" className={successTextClassName}>{notice}</p> : null}
       {connection.connected ? (
         <div className="space-y-3">
           <SegmentedControl value={showAllActivities ? 'all' : 'review'} onValueChange={(value) => { if (value) setShowAllActivities(value === 'all'); }} aria-label="Strava inbox filter" className="flex w-full max-w-sm gap-2">

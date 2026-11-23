@@ -41,6 +41,7 @@ import {
 } from '@/components/tempo/Menu';
 import { MetricPair } from '@/components/tempo/MetricPair';
 import {
+  noticeBoxClassNames,
   Surface,
   sectionHeadingClassName,
   buttonFocusClassName,
@@ -342,11 +343,11 @@ export function AthleteCalendar({
       </p>
 
       <div role="status" className="empty:hidden">
-        {feedback?.tone === 'status' ? <p className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-secondary)]">{feedback.text}</p> : null}
+        {feedback?.tone === 'status' ? <p className={noticeBoxClassNames.info}>{feedback.text}</p> : null}
       </div>
       <div role="alert" className="empty:hidden">
         {feedback?.tone === 'alert' ? (
-          <p className="rounded-lg border border-[var(--danger-border)] bg-[var(--danger-tint)] px-3 py-2 text-sm text-[var(--status-danger)]">{feedback.text}</p>
+          <p className={noticeBoxClassNames.danger}>{feedback.text}</p>
         ) : null}
       </div>
 
