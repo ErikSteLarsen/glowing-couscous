@@ -294,6 +294,18 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   390px phone width, plus the Settings card. The repository is private, so
   signed-out visitors still get 404 from GitHub until it is made public or
   `NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL` points at public hosting.
+- Values never split across lines (2026-11-23): durations ("1h\u00A030m"),
+  number-unit pairs (TSS, W, bpm, rpm, km, m, /km, min ago) and display dates
+  ("Tue\u00A024\u00A0Nov") use non-breaking spaces in the shared formatters and
+  in display strings across app/ and components/. Dot-separated meta lines
+  attach each "·" to the item before it, so a line breaks only after a dot.
+  Stored text (plan names, generated workout copy, catalog step text) keeps
+  normal spaces. Calendar cards reserve the menu gap only beside the title,
+  and show time and sport on one line, then duration, distance and load on the
+  next. A text-node scan found no breakable unit or date on Home, Calendar
+  (week and month), Workouts, Library, Activity, Events, Templates, Import,
+  Profile and Ride home; workout descriptions are prose and wrap normally.
+  `pnpm test` 540 and `pnpm test:db` 592 passed; lint and typecheck passed.
 
 ## Remaining risks and acceptance gates
 
