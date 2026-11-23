@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogClose } from '@ui-sdk/react/alert-dialog';
+import { AlertDialog, AlertDialogTrigger } from '@ui-sdk/react/alert-dialog';
+import { ConfirmationDialogContent } from '@/components/tempo/ConfirmationDialogContent';
 import { useRouter } from 'next/navigation';
-import { centeredDialogClassName, dialogActionsClassName, compactDangerButtonClassName, compactSecondaryButtonClassName, dangerButtonClassName, dangerTextClassName } from '@/components/ui';
+import { dangerButtonClassName, dangerTextClassName } from '@/components/ui';
 
 export function SessionDeleteAction({
   sessionId,
@@ -71,23 +72,15 @@ export function SessionDeleteAction({
         </AlertDialogTrigger>
       )}
       {error && !isOpen ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
-      <AlertDialogContent className={`${centeredDialogClassName} max-w-md space-y-4`}>
-        <div>
-          <AlertDialogTitle className="text-base font-medium text-[var(--text)]">Remove this session?</AlertDialogTitle>
-          <AlertDialogDescription className="mt-2 text-sm text-[var(--text-secondary)]">
-            “{title}” will be deleted from your plan. This cannot be undone.
-          </AlertDialogDescription>
-        </div>
-        {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
-        <div className={dialogActionsClassName}>
-          <AlertDialogClose className={`${compactSecondaryButtonClassName} min-h-11 sm:min-h-8`} disabled={isPending}>
-            Keep session
-          </AlertDialogClose>
-          <button type="button" className={`${compactDangerButtonClassName} min-h-11 sm:min-h-8`} disabled={isPending} onClick={() => void removeSession()}>
-            {isPending ? 'Removing…' : 'Remove session'}
-          </button>
-        </div>
-      </AlertDialogContent>
+      <ConfirmationDialogContent
+        title="Remove this session?"
+        description={`“${title}” will be deleted from your plan. This cannot be undone.`}
+        cancelLabel="Keep session"
+        confirmLabel={isPending ? 'Removing…' : 'Remove session'}
+        pending={isPending}
+        error={error}
+        onConfirm={() => void removeSession()}
+      />
     </AlertDialog>
   );
 }

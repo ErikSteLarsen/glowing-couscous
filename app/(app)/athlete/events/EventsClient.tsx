@@ -6,11 +6,11 @@ import { useRouter } from 'next/navigation';
 import { differenceInCalendarDays, format } from 'date-fns';
 import { CalendarDays, Ellipsis, Link2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogBackdrop, DialogContent, DialogDescription, DialogTitle } from '@ui-sdk/react/dialog';
-import { AlertDialog, AlertDialogClose, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from '@ui-sdk/react/alert-dialog';
+import { AlertDialog } from '@ui-sdk/react/alert-dialog';
+import { ConfirmationDialogContent } from '@/components/tempo/ConfirmationDialogContent';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, OverflowMenuTrigger } from '@/components/tempo/Menu';
 import {
   centeredDialogClassName, dialogActionsClassName,
-  compactDangerButtonClassName,
   compactPrimaryButtonClassName,
   compactSecondaryButtonClassName,
   dangerTextClassName,
@@ -286,17 +286,15 @@ function EventCard({ event, today, onChange, onDelete }: { event: EventRow; toda
       <div className="flex justify-end"><button type="button" disabled={pending} onClick={close} className={`${compactSecondaryButtonClassName} ${dialogButtonClassName}`}>Done</button></div>
     </FormDialog>
     <AlertDialog open={panel === 'delete'} onOpenChange={(open, details) => { if (pending) { details.cancel(); return; } if (!open) close(); }}>
-      <AlertDialogContent className={`${dialogClassName} max-w-md space-y-4`}>
-        <div>
-          <AlertDialogTitle className="text-base font-medium text-[var(--text)]">Delete this event?</AlertDialogTitle>
-          <AlertDialogDescription className="mt-2 text-sm text-[var(--text-secondary)]">“{event.title}” and its result will be deleted. Linked activities stay in your history. This cannot be undone.</AlertDialogDescription>
-        </div>
-        {deleteError ? <p role="alert" className={dangerTextClassName}>{deleteError}</p> : null}
-        <div className={dialogActionsClassName}>
-          <AlertDialogClose className={`${compactSecondaryButtonClassName} ${dialogButtonClassName}`} disabled={pending}>Keep event</AlertDialogClose>
-          <button type="button" className={`${compactDangerButtonClassName} ${dialogButtonClassName}`} disabled={pending} onClick={() => void remove()}>{pending ? 'Deleting…' : 'Delete event'}</button>
-        </div>
-      </AlertDialogContent>
+      <ConfirmationDialogContent
+        title="Delete this event?"
+        description={`“${event.title}” and its result will be deleted. Linked activities stay in your history. This cannot be undone.`}
+        cancelLabel="Keep event"
+        confirmLabel={pending ? 'Deleting…' : 'Delete event'}
+        pending={pending}
+        error={deleteError}
+        onConfirm={() => void remove()}
+      />
     </AlertDialog>
   </article>;
 }
