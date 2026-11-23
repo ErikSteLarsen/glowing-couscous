@@ -63,7 +63,7 @@ export function LibraryBrowser({
     : [{ id: 'all', label: '', entries: results }];
 
   if (entries.length === 0) {
-    return <EmptyState title="The library is being written" description="Built-in workouts will appear here as soon as they ship." />;
+    return <EmptyState title="No workouts here yet" description="Ready-made workouts will appear here soon." />;
   }
 
   return (

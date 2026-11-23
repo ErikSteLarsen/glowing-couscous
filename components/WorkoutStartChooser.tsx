@@ -183,8 +183,8 @@ function StartControl({ workout, source, triggerClassName }: Props) {
               ) : null}
               {preparedId !== null ? (
                 <p role="status" className="flex flex-wrap items-center gap-x-1.5 text-sm text-[var(--text-secondary)]">
-                  Workout scheduled for today.
-                  <Link href={withBackOrigin(`/athlete/session/${preparedId}`, source.from)} className={ghostButtonClassName('compact')}>View session</Link>
+                  Added to today.
+                  <Link href={withBackOrigin(`/athlete/session/${preparedId}`, source.from)} className={ghostButtonClassName('compact')}>Open workout</Link>
                 </p>
               ) : null}
               {app.state === 'opening' ? <p role="status" className="text-sm text-[var(--text-secondary)]">Opening Tempo Ride…</p> : null}

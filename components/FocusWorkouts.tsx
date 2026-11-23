@@ -9,8 +9,8 @@ import { athleteWorkoutsHref, resolveWorkoutTab, type WorkoutTab } from '@/lib/a
 import { parseCatalogQuery, type CatalogEntry } from '@/lib/workout-catalog/query';
 
 const labels = {
-  mine: { title: 'My workouts', hint: 'Workouts you saved. Open one to edit it, or schedule a copy.' },
-  library: { title: 'Public library', hint: 'Ready-made workouts for everyone. Customize one to make it yours.' },
+  mine: { title: 'My workouts', hint: 'Workouts you’ve saved. Open one to edit it, or add it to your Calendar.' },
+  library: { title: 'Public library', hint: 'Ready-made workouts. Customize one to save your own version.' },
 } satisfies Record<WorkoutTab, { title: string; hint: string }>;
 
 type Props = Omit<ComponentProps<typeof WorkoutLibraryClient>, 'role' | 'listIntro' | 'collections' | 'designDirection'> & {
@@ -53,8 +53,8 @@ export function FocusWorkouts({ catalogEntries, ...libraryProps }: Props) {
         <TopBar
           title="Workouts"
           description={catalogEntries
-            ? 'Manage your workouts and browse ready-made bike sessions.'
-            : 'Reusable workouts. Scheduling one adds a copy to your Calendar and keeps this version unchanged.'}
+            ? 'Your saved workouts and a library of ready-made bike workouts.'
+            : 'Workouts you can reuse. Adding one to your Calendar puts a copy there, so this version stays as it is.'}
         />
       </div>
       {catalogEntries ? null : <div className="flex justify-end empty:hidden">{drafts}</div>}

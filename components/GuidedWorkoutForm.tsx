@@ -60,7 +60,7 @@ export function GuidedWorkoutForm({ onGenerated, onCancel }: {
         context: result.context,
       });
     } catch {
-      setError('Could not reach the server. Check your connection and try again.');
+      setError('Could not reach Tempo. Check your connection and try again.');
     } finally {
       setPending(false);
     }
@@ -69,8 +69,8 @@ export function GuidedWorkoutForm({ onGenerated, onCancel }: {
   return <section aria-labelledby="guided-workout-title" className="space-y-5 border-y border-[var(--border)] bg-[var(--surface)] px-4 py-5 sm:px-6">
     <div className="space-y-1">
       <h3 id="guided-workout-title" className="text-base font-semibold text-[var(--text)]">Build a guided workout</h3>
-      <p className="max-w-[65ch] text-sm leading-6 text-[var(--text-secondary)]">Choose four things. Tempo uses your completed training from the past four weeks when available, then opens an editable draft for you to review. When AI is enabled, only a summary of that training is sent to the configured model provider; notes and activity streams stay in Tempo.</p>
-      <p role="status" className="text-sm font-medium text-[var(--text)]">{aiStatus === 'available' ? 'AI workout creation is available. The model will design the full workout.' : aiStatus === 'checking' ? 'Checking AI availability. Standard guided creation is always available.' : 'AI workout creation is unavailable. Tempo will use its standard guided patterns.'}</p>
+      <p className="max-w-[65ch] text-sm leading-6 text-[var(--text-secondary)]">Pick four things. Tempo looks at your last four weeks of training and suggests a workout you can edit before you save it. When AI is on, Tempo sends a short summary of that training to an AI service. Your notes and recorded data stay in Tempo.</p>
+      <p role="status" className="text-sm font-medium text-[var(--text)]">{aiStatus === 'available' ? 'AI is on. It designs the whole workout.' : aiStatus === 'checking' ? 'Checking whether AI is on. You can build a workout either way.' : 'AI is off. Tempo builds the workout from its standard patterns.'}</p>
     </div>
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <label className="block space-y-2"><span className={formLabelClassName}>Sport</span><select className={formSelectClassName} value={sport} disabled={pending} onChange={(event) => setSport(event.target.value as GuidedWorkoutInput['sport'])}>{GUIDED_SPORTS.map((option) => <option key={option} value={option}>{getSportLabel(option)}</option>)}</select></label>
@@ -82,7 +82,7 @@ export function GuidedWorkoutForm({ onGenerated, onCancel }: {
     <div className="flex flex-wrap items-center gap-3">
       <button type="button" className={primaryButtonClassName} disabled={pending} onClick={generate}>{pending ? 'Building workout…' : 'Build workout'}</button>
       <button type="button" className={secondaryButtonClassName} disabled={pending} onClick={onCancel}>Cancel</button>
-      <span className="text-xs leading-5 text-[var(--text-secondary)]">The draft is private and unsaved until you save it.</span>
+      <span className="text-xs leading-5 text-[var(--text-secondary)]">Nothing is saved until you choose Save workout.</span>
     </div>
   </section>;
 }

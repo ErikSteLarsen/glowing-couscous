@@ -118,7 +118,7 @@ export function WorkoutBuilder({
   draft,
   onChange,
   showSchedule = false,
-  summaryPlaceholder = 'Coach notes or session intent',
+  summaryPlaceholder = 'Purpose, cues or notes',
   performanceProfile = null,
   titleLabel = 'Workout name',
   summaryLabel = 'Workout summary',
@@ -434,7 +434,7 @@ export function WorkoutBuilder({
         </div>
       )}
       {basicsOpen || !basicsReady ? (
-        <div className="flex flex-wrap items-center justify-between gap-2" aria-label="Builder tools">
+        <div className="flex flex-wrap items-center justify-between gap-2" aria-label="Workout tools">
           {tools}
           {summary}
         </div>

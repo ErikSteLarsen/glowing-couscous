@@ -170,8 +170,8 @@ export function WorkoutLibraryClient({
 
   function restoreWorkout(record: RecoveryDraft) {
     const recovered = parseWorkoutRecovery(record.payload);
-    if (!recovered) { setMessageTone('danger'); setMessage('This draft cannot be read. Discard it and start again.'); return; }
-    if (editorOpen && isDirty && !window.confirm('Replace the open draft with this recovered draft?')) return;
+    if (!recovered) { setMessageTone('danger'); setMessage('These changes can’t be opened. Discard them and start again.'); return; }
+    if (editorOpen && isDirty && !window.confirm('Replace the workout you’re editing with these restored changes?')) return;
     const original = record.resource === 'new' ? null : workouts.find((workout) => String(workout.id) === record.resource);
     const currentRevision = original?.updatedAt ? new Date(original.updatedAt).toISOString() : '';
     const asCopy = record.resource !== 'new' && (!original || currentRevision !== record.baseline);
@@ -185,7 +185,7 @@ export function WorkoutLibraryClient({
     setIsDirty(true); setEditorOpen(true);
     recovery.restored(record);
     setMessageTone('success');
-    setMessage(asCopy ? 'The saved workout changed or was removed. Your draft was restored as a new workout to protect the saved version.' : 'Workout draft restored. Review it before saving.');
+    setMessage(asCopy ? 'This workout was changed or deleted since then, so your changes open as a new workout. The saved version stays as it is.' : 'Changes restored. Check them, then save.');
   }
 
   const visibleWorkouts = useMemo(() => {
@@ -247,7 +247,7 @@ export function WorkoutLibraryClient({
     }
     if (!draft.blocks.some((block) => !block.skipped && block.kind !== 'pause')) {
       setMessageTone('danger');
-      setMessage('Add at least one active block before saving this workout.');
+      setMessage('Add at least one training step before saving. Pauses don’t count.');
       return;
     }
     const validationError = validateSessionEditorDraft(draft);
@@ -277,14 +277,14 @@ export function WorkoutLibraryClient({
         const payloadResponse = await response.json().catch(() => ({})) as { error?: string; sessionId?: number; updatedAt?: string };
         if (!response.ok) {
           setMessageTone('danger');
-          setMessage(payloadResponse.error ?? 'Could not save this workout. Check the fields and try again.');
+          setMessage(payloadResponse.error ?? 'Could not save this workout. Check the details and try again.');
           return;
         }
         setMessageTone('success');
         const untouched = JSON.stringify(draftRef.current) === submittedSnapshot;
         if (untouched) recovery.discard();
         if (payloadResponse.updatedAt) setRevision(payloadResponse.updatedAt);
-        setMessage(selectedWorkoutId ? 'Workout updated in your library.' : 'Workout created in your library. You can now schedule a copy.');
+        setMessage(selectedWorkoutId ? 'Workout saved.' : 'Workout saved to My workouts. You can now add it to your Calendar.');
         setIsDirty(!untouched);
         if (!selectedWorkoutId && payloadResponse.sessionId) {
           setSelectedWorkoutId(payloadResponse.sessionId);
@@ -301,10 +301,10 @@ export function WorkoutLibraryClient({
         } else {
           router.refresh();
         }
-        if (!untouched) setMessage('The submitted workout was saved. Your newer edits are still unsaved; save again to apply them.');
+        if (!untouched) setMessage('Workout saved, but you made more changes while it was saving. Save again to keep them.');
       } catch {
         setMessageTone('danger');
-        setMessage('Could not reach the server. Check your connection and try again.');
+        setMessage('Could not reach Tempo. Check your connection and try again.');
       }
     });
   }
@@ -317,7 +317,7 @@ export function WorkoutLibraryClient({
     }
     if (!workoutId) return;
     const workoutName = title.trim() || 'this workout';
-    if (!window.confirm(`Delete "${workoutName}" from your workout library? This cannot be undone. Scheduled copies are not affected.`)) return;
+    if (!window.confirm(`Delete "${workoutName}" from My workouts? This can’t be undone. Workouts already on your Calendar stay.`)) return;
     startTransition(async () => {
       try {
         const response = await fetch(`${endpoint}/${workoutId}`, { method: 'DELETE' });
@@ -329,11 +329,11 @@ export function WorkoutLibraryClient({
         }
         if (workoutId === selectedWorkoutId) applyDraftAction({ kind: 'close' });
         setMessageTone('success');
-        setMessage('Workout removed from your library.');
+        setMessage('Workout deleted.');
         router.refresh();
       } catch {
         setMessageTone('danger');
-        setMessage('Could not reach the server. Check your connection and try again.');
+        setMessage('Could not reach Tempo. Check your connection and try again.');
       }
     });
   }
@@ -388,7 +388,7 @@ export function WorkoutLibraryClient({
           {newWorkoutAction}
         </CollectionToolbar>
         {role === 'ATHLETE' && guidedFormOpen ? <GuidedWorkoutForm onCancel={() => setGuidedFormOpen(false)} onGenerated={(nextDraft, info) => {
-          if (editorOpen && isDirty && !window.confirm('Replace the open unsaved workout with this generated draft?')) return;
+          if (editorOpen && isDirty && !window.confirm('Replace the workout you’re editing with this new one? Your unsaved changes will be lost.')) return;
           recovery.discard();
           rememberListPosition(null);
           setRequestKey(crypto.randomUUID()); setRevision('');
@@ -420,8 +420,8 @@ export function WorkoutLibraryClient({
             description={collections
               ? 'Workouts you build or customize land here. Use New workout, or start from the public library.'
               : role === 'ATHLETE'
-                ? 'Build one with guidance or from scratch, then schedule a copy in Calendar.'
-                : 'Create a workout here, then add a copy to a day in Planner.'}
+                ? 'Build one with guidance or from scratch, then add it to your Calendar.'
+                : 'Create a workout here, then add it to a day in the planner.'}
             action={collections
               ? <button type="button" className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={collections.onBrowse}>Browse public library</button>
               : newWorkoutAction}
@@ -460,10 +460,10 @@ export function WorkoutLibraryClient({
         <EditorHeading className="sr-only">{selectedWorkoutId ? 'Edit workout' : 'Create workout'}</EditorHeading>
 
         {editorRecovery ? (
-          <section aria-label="Unsaved changes on this browser" className={`flex flex-wrap items-center justify-between gap-3 ${noticeBoxClassNames.warning}`}>
+          <section aria-label="Unsaved changes" className={`flex flex-wrap items-center justify-between gap-3 ${noticeBoxClassNames.warning}`}>
             <p className="min-w-0 text-sm text-[var(--text)]">
-              Restore unsaved changes saved <time dateTime={new Date(editorRecovery.savedAt).toISOString()} title={new Date(editorRecovery.savedAt).toLocaleString()}>{formatDraftAge(editorRecovery.savedAt, recovery.checkedAt)}</time>?
-              <span className="block text-[12px] text-[var(--text-secondary)]">Kept on this browser only.</span>
+              You have unsaved changes from <time dateTime={new Date(editorRecovery.savedAt).toISOString()} title={new Date(editorRecovery.savedAt).toLocaleString()}>{formatDraftAge(editorRecovery.savedAt, recovery.checkedAt)}</time>. Restore them?
+              <span className="block text-[12px] text-[var(--text-secondary)]">They’re only on this device.</span>
             </p>
             <div className="flex gap-2">
               <button type="button" disabled={isPending} className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={() => restoreWorkout(editorRecovery)}>Restore</button>
@@ -498,15 +498,15 @@ export function WorkoutLibraryClient({
 
         {catalogName ? (
           <p className="text-sm text-[var(--text-secondary)]">
-            Starting from <strong className="font-semibold text-[var(--text)]">{catalogName}</strong> in the public library. Saving creates your own workout and leaves the public version unchanged.
+            Based on <strong className="font-semibold text-[var(--text)]">{catalogName}</strong> from the public library. Saving adds your version to My workouts. The original stays as it is.
           </p>
         ) : null}
 
         {guidedInfo ? <div className="space-y-1 border-b border-[var(--border)] pb-4 text-sm leading-6">
-          <p className="font-semibold text-[var(--text)]">{guidedInfo.source === 'ai' ? 'AI-created workout' : `Standard guided pattern: ${guidedInfo.selectedPattern}`}</p>
+          <p className="font-semibold text-[var(--text)]">{guidedInfo.source === 'ai' ? 'AI-created workout' : `Guided workout: ${guidedInfo.selectedPattern}`}</p>
           <p className="text-[var(--text-secondary)]">{guidedInfo.reason}</p>
           <p className="text-[var(--text-secondary)]">{guidedInfo.context}</p>
-          <p className="text-xs text-[var(--text-secondary)]">Review every block and target below. This workout has not been saved.</p>
+          <p className="text-xs text-[var(--text-secondary)]">Check each step and target below. This workout isn’t saved yet.</p>
         </div> : null}
 
         <WorkoutBuilder
@@ -522,7 +522,7 @@ export function WorkoutLibraryClient({
           headerActions={<>
             {!selectedWorkoutId || isDirty ? (
               <span role="status">
-                <Badge tone="warning">{isPending ? 'Saving…' : selectedWorkoutId ? 'Unsaved changes' : 'Unsaved draft'}</Badge>
+                <Badge tone="warning">{isPending ? 'Saving…' : selectedWorkoutId ? 'Unsaved changes' : 'Not saved yet'}</Badge>
               </span>
             ) : null}
             {selectedWorkoutId ? (
@@ -533,7 +533,7 @@ export function WorkoutLibraryClient({
                 <MenuContent align="end">
                   <MenuItem destructive onSelect={() => deleteWorkout()}>
                     <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />
-                    Delete from library…
+                    Delete workout…
                   </MenuItem>
                 </MenuContent>
               </Menu>
@@ -544,7 +544,7 @@ export function WorkoutLibraryClient({
           <button type="button" className={`${primaryButtonClassName} max-md:min-h-11`} disabled={isPending || !draft.blocks.some((block) => !block.skipped && block.kind !== 'pause')} onClick={saveWorkout}>
             {isPending ? 'Saving…' : selectedWorkoutId ? 'Save changes' : 'Save workout'}
           </button>
-          {!draft.blocks.some((block) => !block.skipped && block.kind !== 'pause') ? <span className="text-xs text-[var(--text-secondary)]">Add an active block to save.</span> : null}
+          {!draft.blocks.some((block) => !block.skipped && block.kind !== 'pause') ? <span className="text-xs text-[var(--text-secondary)]">Add a training step to save.</span> : null}
         </div>
       </Surface> : null}
     </div>
@@ -563,11 +563,11 @@ function NewWorkoutMenu({ onGuided, onScratch, onBrowse }: { onGuided: () => voi
       <MenuContent align="start" className="max-w-[min(22rem,calc(100vw-2rem))]">
         <MenuItem onSelect={onGuided} className="flex-col items-start gap-0.5 py-2">
           <span className="font-medium">Build with guidance</span>
-          <span className="text-xs text-[var(--text-secondary)]">Describe the session and review a suggested workout.</span>
+          <span className="text-xs text-[var(--text-secondary)]">Pick a sport, length and effort. Tempo suggests a workout you can edit.</span>
         </MenuItem>
         <MenuItem onSelect={onScratch} className="flex-col items-start gap-0.5 py-2">
           <span className="font-medium">Build from scratch</span>
-          <span className="text-xs text-[var(--text-secondary)]">Choose a name and sport, then add blocks yourself.</span>
+          <span className="text-xs text-[var(--text-secondary)]">Choose a name and sport, then add the steps yourself.</span>
         </MenuItem>
         {onBrowse ? <MenuItem onSelect={onBrowse}>Start from public library</MenuItem> : null}
       </MenuContent>
@@ -598,12 +598,12 @@ function MyWorkoutCard({ workout, metrics, hasDraft, canSchedule, disabled, onEd
         {workout.title}
       </WorkoutCardHeader>
       <WorkoutCardMeta id={`workout-sport-${workout.id}`}>
-        {getSportLabel(workout.sport)}{hasDraft ? <span className="text-[var(--status-warning)]"> · Unsaved draft</span> : null}
+        {getSportLabel(workout.sport)}{hasDraft ? <span className="text-[var(--status-warning)]"> · Unsaved changes</span> : null}
       </WorkoutCardMeta>
       {workout.summary ? <WorkoutCardSummary>{workout.summary}</WorkoutCardSummary> : null}
       <WorkoutCardFooter
         id={`workout-metrics-${workout.id}`}
-        metrics={[{ label: 'TSS', value: metrics.tss }, { label: 'Blocks', value: workout.blocks.length }]}
+        metrics={[{ label: 'TSS', value: metrics.tss }, { label: 'Steps', value: workout.blocks.length }]}
         actions={<>
           {canSchedule ? (
             <Link href={getCalendarPlacementHref(`workout:${workout.id}`)} aria-label={`Schedule ${workout.title}`} className={`${compactSecondaryButtonClassName} max-md:min-h-11`}>
@@ -619,7 +619,7 @@ function MyWorkoutCard({ workout, metrics, hasDraft, canSchedule, disabled, onEd
                 <Link2 aria-hidden="true" size={16} strokeWidth={1.8} />Create share link
               </MenuItem>
               <MenuItem destructive onSelect={onDelete}>
-                <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />Delete from library…
+                <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />Delete workout…
               </MenuItem>
             </MenuContent>
           </Menu>

@@ -135,7 +135,7 @@ export function WorkoutProfile({
 
   return (
     <div className="min-w-0">
-      <p id={descriptionId} className="sr-only">{describeWorkoutProfile(model)}{model.skippedCount ? ` ${model.skippedCount} skipped ${model.skippedCount === 1 ? 'block is' : 'blocks are'} not drawn.` : ''}</p>
+      <p id={descriptionId} className="sr-only">{describeWorkoutProfile(model)}{model.skippedCount ? ` ${model.skippedCount} skipped ${model.skippedCount === 1 ? 'step isn’t' : 'steps aren’t'} shown.` : ''}</p>
 
       {sets.length ? (
         <div aria-hidden="true" className={`relative h-6 ${full ? 'ml-11' : ''}`}>

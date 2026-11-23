@@ -66,15 +66,15 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
 
       <Surface className="[--profile-gap:var(--surface)] pb-4">
         <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className={sectionHeadingClassName}>Profile</h2>
+          <h2 className={sectionHeadingClassName}>Intensity</h2>
           <p className="text-[12px] text-[var(--text-muted)]">
-            {ftp ? <>Watts from your FTP of <span className="data text-[var(--text-secondary)]">{ftp}&nbsp;W</span></> : <>Targets in % of FTP. <Link href="/athlete/profile" className="text-[var(--brand)] underline-offset-4 hover:underline">Add your FTP</Link> to see watts.</>}
+            {ftp ? <>Watts based on your FTP of <span className="data text-[var(--text-secondary)]">{ftp}&nbsp;W</span></> : <>Targets in % of FTP. <Link href="/athlete/profile" className="text-[var(--brand)] underline-offset-4 hover:underline">Add your FTP</Link> to see watts.</>}
           </p>
         </div>
         <WorkoutProfileExplorer
           model={profile}
           ftpWatts={ftp}
-          label={`${workout.name} intensity profile: ${formatDuration(metrics.durationSec)}, ${steps.length} steps, peak ${Math.round(metrics.maxPct)}% of FTP. The interval list below gives every step.`}
+          label={`${workout.name} intensity profile: ${formatDuration(metrics.durationSec)}, ${steps.length} steps, peak ${Math.round(metrics.maxPct)}% of FTP. Every step is listed under Intervals below.`}
         />
       </Surface>
 

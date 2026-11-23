@@ -16,7 +16,7 @@ export function DraftsPopover({ drafts, now, disabled = false, onRestore, onDisc
   onRestore: (key: string) => void; onDiscard: (key: string) => void;
 }) {
   if (drafts.length === 0) return null;
-  const count = `${drafts.length} unsaved ${drafts.length === 1 ? 'draft' : 'drafts'}`;
+  const count = `${drafts.length} unsaved ${drafts.length === 1 ? 'workout' : 'workouts'}`;
   return (
     <Popover>
       <PopoverTrigger
@@ -34,7 +34,7 @@ export function DraftsPopover({ drafts, now, disabled = false, onRestore, onDisc
       >
         <div className="border-b border-[var(--border)] px-4 py-3">
           <PopoverTitle className="text-sm font-semibold">{count}</PopoverTitle>
-          <PopoverDescription className="mt-0.5 text-[12px] text-[var(--text-secondary)]">Kept on this browser only. Restore one to review it before saving.</PopoverDescription>
+          <PopoverDescription className="mt-0.5 text-[12px] text-[var(--text-secondary)]">These changes are only on this device. Restore one to keep editing, then save it.</PopoverDescription>
         </div>
         <ul className="max-h-[min(22rem,60dvh)] divide-y divide-[var(--border)] overflow-y-auto">
           {drafts.map((draft) => (
@@ -46,8 +46,8 @@ export function DraftsPopover({ drafts, now, disabled = false, onRestore, onDisc
                 </p>
               </div>
               <div className="flex gap-2">
-                <button type="button" disabled={disabled} aria-label={`Restore draft: ${draft.name}`} className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={() => onRestore(draft.key)}>Restore</button>
-                <button type="button" disabled={disabled} aria-label={`Discard draft: ${draft.name}`} className={`${ghostButtonClassName('compact')} max-md:min-h-11`} onClick={() => onDiscard(draft.key)}>Discard</button>
+                <button type="button" disabled={disabled} aria-label={`Restore changes to ${draft.name}`} className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={() => onRestore(draft.key)}>Restore</button>
+                <button type="button" disabled={disabled} aria-label={`Discard changes to ${draft.name}`} className={`${ghostButtonClassName('compact')} max-md:min-h-11`} onClick={() => onDiscard(draft.key)}>Discard</button>
               </div>
             </li>
           ))}
