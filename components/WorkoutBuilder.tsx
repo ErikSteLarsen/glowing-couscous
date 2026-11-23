@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useId, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type KeyboardEvent, type PointerEvent, type ReactNode, type TouchEvent } from 'react';
 import { flushSync } from 'react-dom';
 import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -640,12 +640,28 @@ function SortableRow({ id, label, children }: { id: string; label: string; child
       <GripVertical aria-hidden="true" size={15} />
     </button>
   );
+  // The whole row drags too: mouse after 6px of movement (a click still selects),
+  // touch after a short hold (a swipe still scrolls). The keyboard stays on the handle.
+  function startRowDrag(event: PointerEvent<HTMLLIElement> | TouchEvent<HTMLLIElement>, listener: 'onPointerDown' | 'onTouchStart') {
+    if (!(event.target instanceof Element) || event.target.closest(ROW_DRAG_EXCLUDED)) return;
+    if ('pointerType' in event && event.pointerType === 'touch') return;
+    (listeners?.[listener] as ((event: PointerEvent | TouchEvent) => void) | undefined)?.(event);
+  }
   return (
-    <li ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1, position: 'relative', zIndex: isDragging ? 1 : undefined }}>
+    <li
+      ref={setNodeRef}
+      onPointerDown={(event) => startRowDrag(event, 'onPointerDown')}
+      onTouchStart={(event) => startRowDrag(event, 'onTouchStart')}
+      className="select-none"
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1, position: 'relative', zIndex: isDragging ? 1 : undefined }}
+    >
       {children(handle)}
     </li>
   );
 }
+
+/** Controls (and a set's own steps) that keep their own pointer behavior instead of starting a row drag. */
+const ROW_DRAG_EXCLUDED = 'input, textarea, select, a, [contenteditable], [data-no-row-drag], button:not([data-step-button])';
 
 function StepRowLine({ block, sport, profile, selected, handle, menu, editorId, onSelect, onKeyDown, children }: {
   block: SessionEditorBlock;
@@ -683,7 +699,7 @@ function StepRowLine({ block, sport, profile, selected, handle, menu, editorId, 
         </button>
         {menu}
       </div>
-      {children ? <div className="border-t border-[var(--field-selected-border)] p-3">{children}</div> : null}
+      {children ? <div data-no-row-drag className="select-text border-t border-[var(--field-selected-border)] p-3">{children}</div> : null}
     </div>
   );
 }
@@ -705,7 +721,7 @@ function SetRowGroup({ row, blocks, handle, menu, onRepeats, children }: { row: 
         </div>
         {menu}
       </div>
-      <ul className="ml-4 space-y-1 border-l border-[var(--border-strong)] pb-1 pl-1.5" aria-label={`Steps repeated ${row.repeats} times`}>{children}</ul>
+      <ul data-no-row-drag className="ml-4 space-y-1 border-l border-[var(--border-strong)] pb-1 pl-1.5" aria-label={`Steps repeated ${row.repeats} times`}>{children}</ul>
     </div>
   );
 }
