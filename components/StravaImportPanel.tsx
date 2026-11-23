@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
-import { nativeDialogClassName, Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, getSegmentedChoiceClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { nativeDialogClassName, Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, formSelectClassName, getSegmentedChoiceClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import type { ImportableSession } from '@/lib/activity-import-service';
 import type { ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { StravaConnectionSummary, StravaInboxActivitySummary } from '@/lib/strava-service';
@@ -309,13 +309,13 @@ export function StravaImportPanel({
                   </label>
                   <label className="block">
                     <span className={formLabelClassName}>Categorize as</span>
-                    <select className={formFieldClassName} value={activeDraft?.sport ?? activeDetail.sport} onChange={(event) => updateDraft(activeActivity.id, { sport: event.target.value, plannedSessionId: null })}>
+                    <select className={formSelectClassName} value={activeDraft?.sport ?? activeDetail.sport} onChange={(event) => updateDraft(activeActivity.id, { sport: event.target.value, plannedSessionId: null })}>
                       {sportOptions.map((sport) => <option key={sport} value={sport}>{getSportLabel(sport)}</option>)}
                     </select>
                   </label>
                   <label className="block">
                     <span className={formLabelClassName}>Planned session to complete</span>
-                    <select className={formFieldClassName} value={activeDraft?.plannedSessionId ?? ''} onChange={(event) => updateDraft(activeActivity.id, { plannedSessionId: event.target.value ? Number(event.target.value) : null })}>
+                    <select className={formSelectClassName} value={activeDraft?.plannedSessionId ?? ''} onChange={(event) => updateDraft(activeActivity.id, { plannedSessionId: event.target.value ? Number(event.target.value) : null })}>
                       <option value="">Create a new completed session</option>
                       {activeMatchingSessions.map((session) => (
                         <option key={session.id} value={session.id}>
