@@ -17,7 +17,12 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   dialog, menu and switch controls. Disabled Clear filters, Save changes and
   Restart workout kept their resting colors and showed the disabled cursor.
   RideClient's FTP links and disabled Skip icon, and the SettingsClient
-  disclosure, remain with their parallel work.
+  disclosure, were fixed after the merge. An automated pass on the merged code
+  found every visible clickable on Home, Workouts, Settings, Activity and
+  Calendar with the right cursor (pointer, or not-allowed when disabled).
+  Headless Chromium reports `(hover: none)`, so Tailwind `hover:` styles never
+  apply there; hover checks must unwrap `@media (hover: hover)` rules or run
+  headed.
 
 - Athlete Workouts tabs (2026-11-21). `pnpm typecheck`, `pnpm lint`, and
   `pnpm test` passed (538 passed, 17 database cases skipped). `pnpm test:db`
@@ -277,7 +282,10 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   mode is unchanged; Ride stays dark by design.
 - Tempo Ride downloads (2026-11-23): a public `/download` page detects the OS
   and recommends its installers, with install steps and the other systems below.
-  Settings links to it, and so does the Start workout fallback. On a Mac,
+  It is linked from the Start workout chooser (under Open in Tempo Ride), the
+  ride page's no-Bluetooth notice, the install fallback, Settings, and a
+  Desktop app link in the sign-in header (hidden inside Tempo Ride, where the
+  page says the app is already in use). Mid-workout links open a new tab. On a Mac,
   Chromium's `userAgentData` chip hint narrows the choice to one `.dmg`; Safari
   and Firefox show both, Apple silicon first, with a how-to-check note. Links
   are pinned to `desktop-v<RIDE_DESKTOP_VERSION>` instead of `releases/latest`,
