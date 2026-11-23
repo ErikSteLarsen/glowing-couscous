@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { CalendarDays, Ellipsis } from 'lucide-react';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
 import {
+  overlayPanelClassName, dialogActionsClassName,
   compactSecondaryButtonClassName,
   dangerTextClassName,
   formFieldClassName,
@@ -151,7 +152,7 @@ function RescheduleDialog({ sessionId, title, currentDay, today, open, onOpenCha
         aria-modal="true"
         aria-labelledby={`reschedule-session-title-${sessionId}`}
         aria-describedby={`reschedule-session-description-${sessionId}`}
-        className="fixed inset-0 m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)] backdrop:bg-black/60"
+        className={`${overlayPanelClassName} fixed inset-0 m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border border-[var(--border)] p-5 backdrop:bg-black/60`}
         onCancel={(event) => {
           if (isPending) event.preventDefault();
         }}
@@ -175,7 +176,7 @@ function RescheduleDialog({ sessionId, title, currentDay, today, open, onOpenCha
           />
         </label>
         {error ? <p role="alert" className={`${dangerTextClassName} mt-3`}>{error}</p> : null}
-        <div className="mt-5 flex flex-wrap justify-end gap-2">
+        <div className={`mt-5 ${dialogActionsClassName}`}>
           <button type="button" className={`${compactSecondaryButtonClassName} min-h-11 sm:min-h-8`} disabled={isPending} onClick={() => dialogRef.current?.close()}>
             Cancel
           </button>

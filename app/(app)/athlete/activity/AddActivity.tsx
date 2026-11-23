@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
-import { iconButtonClassName, primaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
+import { centeredDialogClassName, iconButtonClassName, primaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
 import { ManualActivityForm } from './ManualActivityForm';
 
 const getHash = () => window.location.hash;
@@ -58,7 +58,7 @@ export function AddActivity({ today }: { today: string }) {
           keepMounted
           initialFocus="content"
           finalFocus={() => trigger.current}
-          className="tempo-alert-dialog h-fit w-[calc(100%-2rem)] max-w-xl space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
+          className={`${centeredDialogClassName} h-fit max-w-xl space-y-4`}
         >
           <div className="flex items-center justify-between gap-3">
             <DialogTitle className={sectionHeadingClassName}>Log completed workout</DialogTitle>

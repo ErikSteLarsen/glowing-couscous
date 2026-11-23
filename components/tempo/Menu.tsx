@@ -2,7 +2,7 @@
 
 import type { ComponentProps } from 'react';
 import { Ellipsis } from 'lucide-react';
-import { buttonFocusClassName } from '@/components/ui';
+import { overlayPanelClassName, buttonFocusClassName } from '@/components/ui';
 import {
   MenuCheckboxItem as SdkCheckboxItem,
   MenuContent as SdkContent,
@@ -39,7 +39,7 @@ export function MenuContent({ className = '', ...props }: ComponentProps<typeof 
     <SdkContent
       sideOffset={6}
       collisionPadding={12}
-      className={`z-50 m-0 min-w-56 rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] p-1.5 text-[var(--text)] shadow-[var(--shadow-overlay)] ${className}`}
+      className={`z-50 m-0 min-w-56 rounded-xl border border-[var(--border-strong)] ${overlayPanelClassName} p-1.5 ${className}`}
       {...props}
     />
   );

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogClose } from '@ui-sdk/react/alert-dialog';
 import { useRouter } from 'next/navigation';
-import { compactDangerButtonClassName, compactSecondaryButtonClassName, dangerButtonClassName, dangerTextClassName } from '@/components/ui';
+import { centeredDialogClassName, dialogActionsClassName, compactDangerButtonClassName, compactSecondaryButtonClassName, dangerButtonClassName, dangerTextClassName } from '@/components/ui';
 
 export function SessionDeleteAction({
   sessionId,
@@ -71,7 +71,7 @@ export function SessionDeleteAction({
         </AlertDialogTrigger>
       )}
       {error && !isOpen ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
-      <AlertDialogContent className="tempo-alert-dialog w-[calc(100%-2rem)] max-w-md space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]">
+      <AlertDialogContent className={`${centeredDialogClassName} max-w-md space-y-4`}>
         <div>
           <AlertDialogTitle className="text-base font-medium text-[var(--text)]">Remove this session?</AlertDialogTitle>
           <AlertDialogDescription className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -79,7 +79,7 @@ export function SessionDeleteAction({
           </AlertDialogDescription>
         </div>
         {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className={dialogActionsClassName}>
           <AlertDialogClose className={`${compactSecondaryButtonClassName} min-h-11 sm:min-h-8`} disabled={isPending}>
             Keep session
           </AlertDialogClose>

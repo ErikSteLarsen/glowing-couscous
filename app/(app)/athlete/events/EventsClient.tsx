@@ -9,6 +9,7 @@ import { Dialog, DialogBackdrop, DialogContent, DialogDescription, DialogTitle }
 import { AlertDialog, AlertDialogClose, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from '@ui-sdk/react/alert-dialog';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, OverflowMenuTrigger } from '@/components/tempo/Menu';
 import {
+  centeredDialogClassName, dialogActionsClassName,
   compactDangerButtonClassName,
   compactPrimaryButtonClassName,
   compactSecondaryButtonClassName,
@@ -35,7 +36,7 @@ type Candidate = LinkedActivity;
 type DurationParts = { hours: string; minutes: string; seconds: string };
 const blankDuration: DurationParts = { hours: '', minutes: '', seconds: '' };
 const sports = ['RUNNING', 'BIKING', 'SWIMMING', 'TRIATHLON'];
-const dialogClassName = 'tempo-alert-dialog z-50 h-fit w-[calc(100%-2rem)] max-w-lg space-y-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]';
+const dialogClassName = `${centeredDialogClassName} z-50 h-fit`;
 const dialogButtonClassName = 'max-md:min-h-11';
 
 function dateValue(value: string) { return value.slice(0, 10); }
@@ -77,7 +78,7 @@ function DurationFields({ label, value, onChange, disabled }: { label: string; v
 function FormDialog({ open, onOpenChange, pending, title, description, children }: { open: boolean; onOpenChange: (open: boolean) => void; pending: boolean; title: string; description?: string; children: ReactNode }) {
   return <Dialog open={open} onOpenChange={(next, details) => { if (pending) { details.cancel(); return; } onOpenChange(next); }}>
     <DialogBackdrop className="fixed inset-0 z-50 bg-black/60" />
-    <DialogContent className={dialogClassName}>
+    <DialogContent className={`${dialogClassName} max-w-lg space-y-5`}>
       <div>
         <DialogTitle className="text-base font-medium text-[var(--text)]">{title}</DialogTitle>
         {description ? <DialogDescription className="mt-2 text-sm text-[var(--text-secondary)]">{description}</DialogDescription> : null}
@@ -148,7 +149,7 @@ function ResultForm({ event, onSaved, onCancel, onPendingChange }: { event: Even
     <DurationFields label="Actual finish time" value={result} onChange={setResult} disabled={saving} />
     <label className="block"><span className={formLabelClassName}>Note (optional)</span><textarea maxLength={500} rows={3} value={note} onChange={(e) => setNote(e.target.value)} className={formTextareaClassName} disabled={saving} placeholder="How did it go?" /></label>
     {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
-    <div className="flex flex-wrap justify-end gap-2">
+    <div className={dialogActionsClassName}>
       <button type="button" disabled={saving} onClick={onCancel} className={`${compactSecondaryButtonClassName} ${dialogButtonClassName}`}>Cancel</button>
       <button disabled={saving} className={`${compactPrimaryButtonClassName} ${dialogButtonClassName}`}>{saving ? 'Saving…' : 'Save result'}</button>
     </div>
@@ -291,7 +292,7 @@ function EventCard({ event, today, onChange, onDelete }: { event: EventRow; toda
           <AlertDialogDescription className="mt-2 text-sm text-[var(--text-secondary)]">“{event.title}” and its result will be deleted. Linked activities stay in your history. This cannot be undone.</AlertDialogDescription>
         </div>
         {deleteError ? <p role="alert" className={dangerTextClassName}>{deleteError}</p> : null}
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className={dialogActionsClassName}>
           <AlertDialogClose className={`${compactSecondaryButtonClassName} ${dialogButtonClassName}`} disabled={pending}>Keep event</AlertDialogClose>
           <button type="button" className={`${compactDangerButtonClassName} ${dialogButtonClassName}`} disabled={pending} onClick={() => void remove()}>{pending ? 'Deleting…' : 'Delete event'}</button>
         </div>

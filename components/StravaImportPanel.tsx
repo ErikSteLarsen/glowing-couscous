@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
-import { Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, getSegmentedChoiceClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { nativeDialogClassName, Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, getSegmentedChoiceClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import type { ImportableSession } from '@/lib/activity-import-service';
 import type { ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { StravaConnectionSummary, StravaInboxActivitySummary } from '@/lib/strava-service';
@@ -258,7 +258,7 @@ export function StravaImportPanel({
       <dialog
         ref={dialogRef}
         id="strava-activity-details"
-        className="fixed inset-0 z-50 m-auto max-h-[calc(100dvh-2rem)] w-[min(48rem,calc(100%-2rem))] overflow-x-hidden overflow-y-auto rounded-[5px] border border-[var(--border)] bg-[var(--surface)] p-0 text-[var(--text)] shadow-[var(--shadow-overlay)] backdrop:bg-[var(--overlay)]"
+        className={`${nativeDialogClassName} w-[min(48rem,calc(100%-2rem))] overflow-x-hidden border-[var(--border-strong)]`}
         aria-labelledby="strava-activity-details-title"
         aria-busy={Boolean(activeActivityId && loading[activeActivityId])}
         onClose={() => setActiveActivityId(null)}
