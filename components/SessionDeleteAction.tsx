@@ -44,7 +44,7 @@ export function SessionDeleteAction({
       if (!response.ok) {
         const reason = payload && typeof payload === 'object' && 'error' in payload && typeof payload.error === 'string'
           ? payload.error
-          : 'The session could not be removed.';
+          : 'Could not remove this workout.';
         setError(reason);
         return;
       }
@@ -54,7 +54,7 @@ export function SessionDeleteAction({
       else if (returnHref) router.replace(returnHref);
       else router.refresh();
     } catch {
-      setError('Could not reach the server. Check your connection and try again.');
+      setError('Could not reach Tempo. Check your connection and try again.');
     } finally {
       setIsPending(false);
     }
@@ -68,15 +68,15 @@ export function SessionDeleteAction({
     }}>
       {controlled ? null : (
         <AlertDialogTrigger className={dangerButtonClassName} disabled={disabled}>
-          Remove session
+          Remove workout
         </AlertDialogTrigger>
       )}
       {error && !isOpen ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
       <ConfirmationDialogContent
-        title="Remove this session?"
-        description={`“${title}” will be deleted from your plan. This cannot be undone.`}
-        cancelLabel="Keep session"
-        confirmLabel={isPending ? 'Removing…' : 'Remove session'}
+        title="Remove this workout?"
+        description={`“${title}” will be removed from your Calendar. This can’t be undone.`}
+        cancelLabel="Keep workout"
+        confirmLabel={isPending ? 'Removing…' : 'Remove workout'}
         pending={isPending}
         error={error}
         onConfirm={() => void removeSession()}

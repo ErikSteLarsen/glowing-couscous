@@ -20,20 +20,20 @@ export function useSessionStatusAction(sessionId: number) {
       try {
         const response = await fetch(`/api/athlete/planner/sessions/${sessionId}/${action}`, { method: 'POST' });
         if (!response.ok) {
-          const payload = await response.json().catch(() => ({ error: 'Failed to update session status' }));
+          const payload = await response.json().catch(() => ({ error: 'Could not update this workout. Try again.' }));
           setMessageTone('danger');
-          setMessage(payload.error ?? 'Failed to update session status');
+          setMessage(payload.error ?? 'Could not update this workout. Try again.');
           return;
         }
 
         setMessageTone('success');
         setMessage(action === 'skip'
-          ? 'Session skipped. It no longer counts as planned or completed.'
-          : 'Session planned again. It counts toward your planned load.');
+          ? 'Workout skipped. It no longer counts toward your plan.'
+          : 'Workout is back in your plan.');
         router.refresh();
       } catch {
         setMessageTone('danger');
-        setMessage('Could not reach the server. Check your connection and try again.');
+        setMessage('Could not reach Tempo. Check your connection and try again.');
       }
     });
   }

@@ -97,12 +97,12 @@ test('comparison hides equal actuals, supports missing baselines, and rejects un
   assert.deepEqual(await equalService.loadComparison({ role: 'ATHLETE', userId: 8 }, 40), {
     ok: false,
     status: 404,
-    error: 'Session not found',
+    error: 'Workout not found.',
   });
   assert.deepEqual(await equalService.loadComparison({ role: 'COACH', userId: 99 }, 40), {
     ok: false,
     status: 404,
-    error: 'Session not found',
+    error: 'Workout not found.',
   });
 });
 
@@ -124,7 +124,7 @@ test('summary-only activity comparison does not expose a structured actual draft
   assert.deepEqual(await createSessionComparisonService({ db: summaryDb as never }).loadComparison({ role: 'ATHLETE', userId: 7 }, 40), {
     ok: false,
     status: 404,
-    error: 'Structured comparison is unavailable for summary-only activities.',
+    error: 'There’s nothing to compare for an activity that only has totals.',
   });
 });
 
@@ -140,10 +140,10 @@ test('comparison routes and history outcomes preserve both role adapters and com
   assert.match(athleteRoute, /loadComparison/);
   assert.match(coachRoute, /requireCoach/);
   assert.match(coachRoute, /loadComparison/);
-  assert.match(dialog, /Coach plan/);
-  assert.match(dialog, /Athlete actual/);
+  assert.match(dialog, /Coach’s plan/);
+  assert.match(dialog, /Athlete’s result/);
   assert.match(dialog, /perspective === 'coach'/);
-  assert.match(dialog, /'Planned'/);
+  assert.match(dialog, /'Plan'/);
   assert.match(dialog, /<dialog/);
   assert.match(dialog, /showModal\(\)/);
   assert.match(dialog, /Loading comparison/);

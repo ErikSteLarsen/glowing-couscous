@@ -81,7 +81,7 @@ test('workout drafts are named by their title and drop out when they match the s
   const baseline = '2026-11-20T10:00:00.000Z';
   assert.deepEqual(describeWorkoutDraft({ resource: '5', payload: payload('Gentle Spin v2') }, [saved]), { name: 'Gentle Spin v2', kind: 'Unsaved changes' });
   assert.deepEqual(describeWorkoutDraft({ resource: 'new', payload: payload('  ') }, [saved]), { name: 'Untitled workout', kind: 'New workout' });
-  assert.deepEqual(describeWorkoutDraft({ resource: '9', payload: 'broken' }, [saved]), { name: 'Untitled workout', kind: 'Edits to a removed workout' });
+  assert.deepEqual(describeWorkoutDraft({ resource: '9', payload: 'broken' }, [saved]), { name: 'Untitled workout', kind: 'Changes to a deleted workout' });
   assert.equal(isWorkoutDraftRedundant({ resource: '5', baseline, payload: payload('Gentle Spin') }, [saved]), true);
   assert.equal(isWorkoutDraftRedundant({ resource: '5', baseline, payload: payload('Gentle Spin v2') }, [saved]), false);
   assert.equal(isWorkoutDraftRedundant({ resource: '5', baseline: 'older', payload: payload('Gentle Spin') }, [saved]), false);

@@ -31,7 +31,7 @@ export function useShareLink(sourceKind: 'session', sourceId: number) {
         const payload = await response.json().catch(() => ({})) as { error?: string; url?: string };
         if (!response.ok || !payload.url) {
           setMessageTone('danger');
-          setMessage(payload.error ?? 'Failed to create share link.');
+          setMessage(payload.error ?? 'Could not create a share link. Try again.');
           return;
         }
 
@@ -39,7 +39,7 @@ export function useShareLink(sourceKind: 'session', sourceId: number) {
         await copyLink(payload.url);
       } catch {
         setMessageTone('danger');
-        setMessage('Failed to create share link.');
+        setMessage('Could not create a share link. Try again.');
       }
     });
   }
@@ -52,7 +52,7 @@ export function useShareLink(sourceKind: 'session', sourceId: number) {
       setMessage('Link copied.');
     } catch {
       setMessageTone('success');
-      setMessage('Link created. Copy it from the field.');
+      setMessage('Link created. Copy it from the box.');
     }
   }
 
@@ -71,7 +71,7 @@ export function ShareLinkResult({ share, showAudience = false }: { share: ShareL
               Copy link
             </button>
           </div>
-          {showAudience ? <p className="text-[11px] leading-[1.4] text-[var(--text-muted)]">Anyone with the URL can view this workout.</p> : null}
+          {showAudience ? <p className="text-[11px] leading-[1.4] text-[var(--text-muted)]">Anyone with this link can see this workout.</p> : null}
         </div>
       ) : null}
       {share.isPending ? <p role="status" className="text-xs text-[var(--text-secondary)]">Creating share link…</p> : null}
@@ -96,7 +96,7 @@ export function ShareLinkButton({
       <button type="button" aria-label={ariaLabel} className={compactSecondaryButtonClassName} onClick={share.createLink} disabled={share.isPending}>
         {share.isPending ? 'Creating share link…' : 'Create share link'}
       </button>
-      <p className="text-[11px] leading-[1.4] text-[var(--text-muted)]">Anyone with the URL can view this workout.</p>
+      <p className="text-[11px] leading-[1.4] text-[var(--text-muted)]">Anyone with this link can see this workout.</p>
       <ShareLinkResult share={{ ...share, isPending: false }} />
     </div>
   );

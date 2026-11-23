@@ -19,9 +19,9 @@ type SaveState = { kind: 'saving' } | { kind: 'failed'; error: string } | { kind
 
 const closedReason: Record<RideSessionStatus | 'missing', string | null> = {
   planned: null,
-  skipped: 'Session skipped',
-  completed: 'Session already completed',
-  missing: 'Session no longer in your calendar',
+  skipped: 'Workout skipped',
+  completed: 'Workout already done',
+  missing: 'Workout no longer in your Calendar',
 };
 
 async function loadOwnedStatuses(sessionIds: number[], signal: AbortSignal): Promise<Map<number, RideSessionStatus> | null> {

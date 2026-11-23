@@ -61,8 +61,8 @@ export function AddActivity({ today }: { today: string }) {
           className={`${centeredDialogClassName} max-w-xl space-y-4`}
         >
           <div className="flex items-center justify-between gap-3">
-            <DialogTitle className={sectionHeadingClassName}>Log completed workout</DialogTitle>
-            <DialogClose aria-label="Close manual log" className={iconButtonClassName}><X size={18} aria-hidden="true" /></DialogClose>
+            <DialogTitle className={sectionHeadingClassName}>Log an activity</DialogTitle>
+            <DialogClose aria-label="Close" className={iconButtonClassName}><X size={18} aria-hidden="true" /></DialogClose>
           </div>
           <ManualActivityForm today={today} />
         </DialogContent>

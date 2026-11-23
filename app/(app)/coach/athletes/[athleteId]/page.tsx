@@ -47,7 +47,7 @@ export default async function CoachAthleteDetailPage({
     <PageShell>
       <TopBar
         title={detail.athlete.name}
-        description={`Coach: ${detail.athlete.coachName}. ${detail.athlete.activePlan?.goalRace ? `Goal race: ${detail.athlete.activePlan.goalRace}.` : 'No goal race set yet.'}`}
+        description={`Coach: ${detail.athlete.coachName}. ${detail.athlete.activePlan?.goalRace ? `Goal race: ${detail.athlete.activePlan.goalRace}.` : 'No goal race yet.'}`}
         back={returnTarget}
       />
 
@@ -67,7 +67,7 @@ export default async function CoachAthleteDetailPage({
           value={formatDuration(detail.stats.completedDurationSec)}
           detail={detail.stats.completedCount > 0 ? 'Recorded from completed activities' : 'No completed activities yet'}
         />
-        <StatTile label="Next session" value={detail.stats.nextSession} detail={detail.athlete.email} />
+        <StatTile label="Next workout" value={detail.stats.nextSession} detail={detail.athlete.email} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -122,25 +122,25 @@ export default async function CoachAthleteDetailPage({
                           </div>
                           <div className="mt-3 flex flex-wrap gap-4 text-sm text-[var(--text-secondary)]">
                             <MetricText>{formatDuration(hasNoPlannedBaseline(session.metricsSource) ? session.actualDurationSec ?? session.durationSec : session.durationSec)}</MetricText>
-                            <MetricText>{session.tss === null ? 'Load unavailable' : `${session.tss}\u00A0TSS`}</MetricText>
+                            <MetricText>{session.tss === null ? 'No TSS' : `${session.tss}\u00A0TSS`}</MetricText>
                             <MetricText>
-                              {hasNoPlannedBaseline(session.metricsSource) ? 'No planned comparison' : session.completionPct === null ? 'Compliance unavailable' : `${session.completionPct}% compliance`}
+                              {hasNoPlannedBaseline(session.metricsSource) ? 'No plan to compare' : session.completionPct === null ? 'No compliance data' : `${session.completionPct}% compliance`}
                             </MetricText>
                           </div>
                         </article>
                       ))}
                     </div>
                   ) : (
-                    <p className="mt-4 text-sm text-[var(--text-secondary)]">No session scheduled.</p>
+                    <p className="mt-4 text-sm text-[var(--text-secondary)]">No workout planned.</p>
                   )}
                 </section>
               ))}
             </div>
           ) : (
             <EmptyState
-              title="No sessions planned this week"
-              description="Assign a session in Planner."
-              action={<ActionLink href={`/coach/planner?athleteId=${detail.athlete.id}`}>Plan next session</ActionLink>}
+              title="No workouts planned this week"
+              description="Add one in the planner."
+              action={<ActionLink href={`/coach/planner?athleteId=${detail.athlete.id}`}>Plan next workout</ActionLink>}
             />
           )}
         </section>
@@ -148,7 +148,7 @@ export default async function CoachAthleteDetailPage({
         <Surface className="space-y-4">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Planned vs done</p>
-            <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">Recent sessions</h2>
+            <h2 className="mt-2 text-lg font-semibold text-[var(--text)]">Recent workouts</h2>
           </div>
 
           {detail.recentSessions.length > 0 ? (
@@ -181,7 +181,7 @@ export default async function CoachAthleteDetailPage({
                   <dl className="mt-3 grid gap-3 sm:grid-cols-3">
                     <div>
                       <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Planned</dt>
-                      <dd className="mt-1 text-sm text-[var(--text)]">{hasNoPlannedBaseline(session.metricsSource) ? 'No planned baseline' : formatDuration(session.durationSec)}</dd>
+                      <dd className="mt-1 text-sm text-[var(--text)]">{hasNoPlannedBaseline(session.metricsSource) ? 'No plan' : formatDuration(session.durationSec)}</dd>
                     </div>
                     <div>
                       <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Done</dt>
@@ -192,7 +192,7 @@ export default async function CoachAthleteDetailPage({
                     <div>
                       <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Compliance</dt>
                       <dd className="mt-1 text-sm text-[var(--text)]">
-                        {hasNoPlannedBaseline(session.metricsSource) ? 'No planned comparison' : session.completionPct === null ? 'Unavailable' : `${session.completionPct}%`}
+                        {hasNoPlannedBaseline(session.metricsSource) ? 'No plan to compare' : session.completionPct === null ? 'No data' : `${session.completionPct}%`}
                       </dd>
                     </div>
                   </dl>
@@ -201,8 +201,8 @@ export default async function CoachAthleteDetailPage({
             </div>
           ) : (
             <EmptyState
-              title="No recent sessions"
-              description="No comparison data yet."
+              title="No recent workouts"
+              description="Nothing to compare yet."
             />
           )}
         </Surface>

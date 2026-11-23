@@ -35,7 +35,7 @@ export default async function AthleteLivePage({
   if (!detail) {
     return (
       <PageShell size="wide">
-        <EmptyState title="Live session unavailable" description="This session could not be loaded for live execution." />
+        <EmptyState title="Can’t open this workout" description="This workout could not be loaded." />
       </PageShell>
     );
   }
@@ -45,10 +45,10 @@ export default async function AthleteLivePage({
   if (detail.session.status === 'skipped') {
     return (
       <PageShell size="wide">
-        <TopBar back={back} title={`Execute ${detail.session.title}`} />
+        <TopBar back={back} title={`Follow along: ${detail.session.title}`} />
         <EmptyState
-          title="Session skipped"
-          description="Plan this session again before running it live."
+          title="Workout skipped"
+          description="Choose Plan again on the workout page before you start it."
         />
       </PageShell>
     );
@@ -65,7 +65,7 @@ export default async function AthleteLivePage({
     return (
       <PageShell size="wide">
         <TopBar back={back} title={title} />
-        <EmptyState title="No workout steps" description="Open session details to review the plan." />
+        <EmptyState title="No workout steps" description="Open the workout page to check the plan." />
       </PageShell>
     );
   }
@@ -74,7 +74,7 @@ export default async function AthleteLivePage({
     <PageShell size="wide">
       <TopBar
         back={back}
-        title={`Execute ${detail.session.title}`}
+        title={`Follow along: ${detail.session.title}`}
         actions={detail.session.sport === 'BIKING' ? (
           <WorkoutStartChooser
             workout={workout}
@@ -98,14 +98,14 @@ export default async function AthleteLivePage({
 
         <div className="space-y-4">
           <Surface>
-            <p className="text-xs font-medium text-[var(--text-muted)]">Session total</p>
+            <p className="text-xs font-medium text-[var(--text-muted)]">Total time</p>
             <p className="mt-3 text-[20px] font-semibold text-[var(--text)]">{formatDuration(detail.session.durationSec)}</p>
             <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{steps.length} steps</p>
           </Surface>
           <Surface>
-            <p className="text-xs font-medium text-[var(--text-muted)]">Coach cue</p>
+            <p className="text-xs font-medium text-[var(--text-muted)]">How to do it</p>
             <p className="mt-3 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
-              Follow targets and steps.
+              Follow each step and its target.
             </p>
           </Surface>
         </div>

@@ -36,7 +36,7 @@ export default async function AthleteRidePage({
       <PageShell size="wide">
         <div className="flex flex-col gap-6">
           <UnsavedRidesNotice userId={user.id} />
-          <EmptyState title="Ride unavailable" description="This session could not be loaded. It may have been removed from your calendar." />
+          <EmptyState title="Can’t open this ride" description="This workout could not be loaded. It may have been removed from your Calendar." />
         </div>
       </PageShell>
     );
@@ -50,8 +50,8 @@ export default async function AthleteRidePage({
         <TopBar back={back} title={`Ride ${detail.session.title}`} />
         <UnsavedRidesNotice userId={user.id} />
         <EmptyState
-          title={detail.session.status === 'skipped' ? 'Session skipped' : 'Session already completed'}
-          description={detail.session.status === 'skipped' ? 'Plan this session again before riding it.' : 'This session already has a saved outcome.'}
+          title={detail.session.status === 'skipped' ? 'Workout skipped' : 'Workout already done'}
+          description={detail.session.status === 'skipped' ? 'Choose Plan again on the workout page before you ride it.' : 'This workout already has a saved result.'}
         />
       </PageShell>
     );
@@ -63,8 +63,8 @@ export default async function AthleteRidePage({
       <PageShell size="wide">
         <TopBar back={back} title={`Ride ${detail.session.title}`} />
         <EmptyState
-          title="Trainer rides are for bike sessions"
-          description={canFollowAlong ? 'Follow this workout step by step.' : 'Open session details to review the plan.'}
+          title="Trainer rides are for bike workouts"
+          description={canFollowAlong ? 'Follow this workout step by step.' : 'Open the workout page to check the plan.'}
           action={canFollowAlong ? (
             <ActionLink href={withBackOrigin(`/athlete/live/${detail.session.id}`, parseBackOrigin('session-live', from))}>Follow along</ActionLink>
           ) : undefined}
@@ -80,7 +80,7 @@ export default async function AthleteRidePage({
       <PageShell size="wide">
         <TopBar back={back} title={`Ride ${detail.session.title}`} />
         <EmptyState
-          title="Trainer rides are for bike sessions"
+          title="Trainer rides are for bike workouts"
           description={steps.length > 0 ? 'Use live guidance to follow this workout step by step.' : 'This workout has no steps to follow.'}
           action={steps.length > 0 ? <ActionLink href={withBackOrigin(`/athlete/live/${detail.session.id}`, parseBackOrigin('session-live', from))}>Follow along</ActionLink> : undefined}
         />

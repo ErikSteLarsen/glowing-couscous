@@ -38,7 +38,7 @@ type SessionRowData = {
 export function SessionRow({
   session,
   href,
-  actionLabel = 'Open session',
+  actionLabel = 'Open workout',
   variant = 'compact',
 }: {
   session: SessionRowData;
@@ -48,7 +48,7 @@ export function SessionRow({
 }) {
   const month = variant === 'month';
   const loadUnavailable = session.loadAvailable === false || session.tss === null;
-  const loadLabel = loadUnavailable ? 'Load unavailable' : `${session.tss}\u00A0TSS`;
+  const loadLabel = loadUnavailable ? 'No TSS' : `${session.tss}\u00A0TSS`;
   const averageZone = month ? getAverageSessionZone(session.segments) : null;
   const averageZoneMeta = averageZone ? getTempoZoneMeta(averageZone) : null;
   const accessibleName = [

@@ -10,11 +10,11 @@ import { addSessionEditorBlock, createEmptySessionEditorDraft } from '../lib/ses
 import { addPlannerBlock, createEmptyPlannerSessionDraft } from '../lib/planner-draft.ts';
 import { plannerSessionInput, sessionEditorInput } from '../lib/session-write-input.ts';
 
-const noDatabase = new Proxy(prisma, { get() { throw new Error('Invalid input reached the database'); } });
+const noDatabase = new Proxy(prisma, { get() { throw new Error('Something went wrong. Reload the page and try again. reached the database'); } });
 const coachPlanner = createCoachPlannerService({ db: noDatabase });
 const coachLibrary = createCoachSessionLibraryService({ db: noDatabase });
 const trainingPlans = createCoachTrainingPlanService({ db: noDatabase });
-async function databaseAccess(): Promise<never> { throw new Error('Invalid input reached the database'); }
+async function databaseAccess(): Promise<never> { throw new Error('Something went wrong. Reload the page and try again. reached the database'); }
 const noSessionDatabase = {
   session: { findUnique: databaseAccess, update: databaseAccess },
   plan: { findFirst: databaseAccess, create: databaseAccess },
@@ -104,5 +104,5 @@ test('transport does not round invalid durations into valid planned sessions', a
   const result = await adjustments.savePlannedSession(7, 1, { ...editor, blocks: [{ ...editor.blocks[0], durationSec: 1.5 }] });
   assert.equal(result.ok, false);
   assert.equal(result.ok ? undefined : result.status, 400);
-  assert.equal(result.ok ? undefined : result.error, 'Every block needs a positive integer duration.');
+  assert.equal(result.ok ? undefined : result.error, 'Every step needs a duration.');
 });

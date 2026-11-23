@@ -13,7 +13,7 @@ test('desktop activity navigation uses the same label as the mobile destination'
   const history = getPrimaryNavigation().find((item) => item.href === '/athlete/activity');
   assert.deepEqual(history, {
     label: 'Activity',
-    description: 'Review completed work',
+    description: 'Everything you’ve done',
     href: '/athlete/activity',
     matchPrefix: '/athlete/activity',
   });
@@ -59,10 +59,10 @@ test('session detail falls back to Calendar without a valid origin', () => {
 });
 
 test('live and ride pages return to their session and keep only a valid origin', () => {
-  assert.deepEqual(resolveBackTarget({ route: 'session-live', sessionId: 7, from: 'home' }), back('/athlete/session/7?from=home', 'Session'));
-  assert.deepEqual(resolveBackTarget({ route: 'session-ride', sessionId: 7, from: 'ride' }), back('/athlete/session/7?from=ride', 'Session'));
-  assert.deepEqual(resolveBackTarget({ route: 'session-ride', sessionId: 7 }), back('/athlete/session/7', 'Session'));
-  assert.deepEqual(resolveBackTarget({ route: 'session-live', sessionId: 7, from: '//evil.example' }), back('/athlete/session/7', 'Session'));
+  assert.deepEqual(resolveBackTarget({ route: 'session-live', sessionId: 7, from: 'home' }), back('/athlete/session/7?from=home', 'Workout'));
+  assert.deepEqual(resolveBackTarget({ route: 'session-ride', sessionId: 7, from: 'ride' }), back('/athlete/session/7?from=ride', 'Workout'));
+  assert.deepEqual(resolveBackTarget({ route: 'session-ride', sessionId: 7 }), back('/athlete/session/7', 'Workout'));
+  assert.deepEqual(resolveBackTarget({ route: 'session-live', sessionId: 7, from: '//evil.example' }), back('/athlete/session/7', 'Workout'));
 });
 
 test('library workout returns to Ride from Tempo Ride, otherwise to the Workouts public tab', () => {

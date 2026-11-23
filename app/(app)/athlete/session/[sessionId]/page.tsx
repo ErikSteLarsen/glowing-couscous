@@ -48,7 +48,7 @@ export default async function AthleteSessionPage({
   if (!detail) {
     return (
       <PageShell size="wide">
-        <EmptyState title="Session not found" description="This session is unavailable or belongs to another athlete." />
+        <EmptyState title="Workout not found" description="It may have been removed, or it belongs to someone else." />
       </PageShell>
     );
   }
@@ -92,8 +92,8 @@ export default async function AthleteSessionPage({
         <h2 className={sectionHeadingClassName}>{importedWithoutWorkout ? 'Activity overview' : 'Workout overview'}</h2>
         <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
           {importedWithoutWorkout
-            ? 'Imported activity · no planned workout matched'
-            : 'The structure of your scheduled workout.'}
+            ? 'Imported activity · not matched to a planned workout'
+            : 'The steps of your planned workout.'}
         </p>
       </div>
       <div className={importedWithoutWorkout
@@ -106,7 +106,7 @@ export default async function AthleteSessionPage({
         </div>
         <div className={importedWithoutWorkout ? 'py-3 pl-4 sm:pl-6' : ''}>
           <p className="text-[11px] font-medium text-[var(--text-muted)]">Training load</p>
-          <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{detail.session.loadAvailable === false ? 'Unavailable' : `${detail.session.tss}\u00A0TSS`}</p>
+          <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{detail.session.loadAvailable === false ? 'No data' : `${detail.session.tss}\u00A0TSS`}</p>
         </div>
       </div>
     </div>
@@ -128,12 +128,12 @@ export default async function AthleteSessionPage({
 
   const recordedOutcome = isImportOrLogged ? (
     <Surface id="session-outcome" className="scroll-mt-20 space-y-3 md:scroll-mt-6">
-      <h2 className={sectionHeadingClassName}>Recorded outcome</h2>
+      <h2 className={sectionHeadingClassName}>Your result</h2>
       <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--text-secondary)]">
         <span>Duration <MetricText>{formatDuration(detail.session.activityDurationSec ?? 0)}</MetricText></span>
         {detail.session.activityDistanceMeters === null ? null : <span>Distance <MetricText>{formatDistance(detail.session.activityDistanceMeters)}</MetricText></span>}
         <span>RPE <MetricText>{detail.session.activityRpe === null ? 'Not recorded' : detail.session.activityRpe}</MetricText></span>
-        <span>Training load <MetricText>{detail.session.activityTss === null ? 'Unavailable' : `${detail.session.activityTss}\u00A0TSS`}</MetricText></span>
+        <span>Training load <MetricText>{detail.session.activityTss === null ? 'No data' : `${detail.session.activityTss}\u00A0TSS`}</MetricText></span>
       </div>
       {['tcx-import', 'fit-import', 'gpx-import'].includes(detail.session.metricsSource ?? '')
         && detail.session.activityStartedAt
@@ -142,18 +142,18 @@ export default async function AthleteSessionPage({
           <div className="space-y-1 text-sm text-[var(--text-secondary)]">
             <p>Recorded start <MetricText>{formatTcxDateTime(detail.session.activityStartedAt, detail.session.activityTimezoneOffsetMinutes)}</MetricText></p>
             <p>{detail.session.metricsSource === 'tcx-import' ? 'Estimated finish' : 'Recorded finish'} <MetricText>{formatTcxDateTime(detail.session.activityCompletedAt, detail.session.activityTimezoneOffsetMinutes)}</MetricText></p>
-            <p className="text-xs text-[var(--text-muted)]">{detail.session.metricsSource === 'fit-import' ? 'Timezone is derived from the FIT Activity local timestamp.' : detail.session.metricsSource === 'gpx-import' ? 'Recorded times and timezone come from the GPX trackpoints.' : 'Finish time is calculated from the recorded start and duration.'}</p>
+            <p className="text-xs text-[var(--text-muted)]">{detail.session.metricsSource === 'fit-import' ? 'Times use the time zone saved in the FIT file.' : detail.session.metricsSource === 'gpx-import' ? 'Times and time zone come from the GPX file.' : 'Finish time is worked out from the start time and duration.'}</p>
           </div>
         ) : null}
-      {detail.session.metricsSource === 'gpx-import' && detail.session.activityDistanceMeters !== null ? <p className="text-xs text-[var(--text-muted)]">Distance is summed from timed trackpoints; GPS coordinates are not stored.</p> : null}
-      {detail.session.activityNotes ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-secondary)]">{detail.session.activityNotes}</p> : <p className="text-sm text-[var(--text-muted)]">No notes recorded.</p>}
+      {detail.session.metricsSource === 'gpx-import' && detail.session.activityDistanceMeters !== null ? <p className="text-xs text-[var(--text-muted)]">Distance comes from the GPS track. Tempo doesn’t keep your route.</p> : null}
+      {detail.session.activityNotes ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-secondary)]">{detail.session.activityNotes}</p> : <p className="text-sm text-[var(--text-muted)]">No notes.</p>}
       {['manual-paired', 'tcx-import', 'fit-import', 'gpx-import'].includes(detail.session.metricsSource ?? '') && detail.session.plannedDurationSec > 0 ? (
         <div className="border-t border-[var(--border)] pt-3 text-sm text-[var(--text-secondary)]">
-          <h3 className="font-medium text-[var(--text)]">Duration comparison</h3>
-          <p className="mt-1">Actual {formatDuration(detail.session.activityDurationSec ?? 0)} · planned {formatDuration(detail.session.plannedDurationSec)}</p>
+          <h3 className="font-medium text-[var(--text)]">Time: plan and result</h3>
+          <p className="mt-1">Done {formatDuration(detail.session.activityDurationSec ?? 0)} · planned {formatDuration(detail.session.plannedDurationSec)}</p>
         </div>
       ) : null}
-      <p className="text-xs text-[var(--text-muted)]">{detail.session.metricsSource === 'fit-import' ? 'Imported FIT activity' : detail.session.metricsSource === 'gpx-import' ? 'Imported GPX activity' : detail.session.metricsSource === 'tcx-import' ? 'Imported TCX activity' : detail.session.metricsSource === 'manual-paired' ? 'Manually logged activity' : 'Logged activity'}{detail.session.plannedDurationSec > 0 ? ' · duration compared with the planned workout' : ' · no planned comparison'}</p>
+      <p className="text-xs text-[var(--text-muted)]">{detail.session.metricsSource === 'fit-import' ? 'Imported FIT activity' : detail.session.metricsSource === 'gpx-import' ? 'Imported GPX activity' : detail.session.metricsSource === 'tcx-import' ? 'Imported TCX activity' : detail.session.metricsSource === 'manual-paired' ? 'Logged by hand' : 'Logged activity'}{detail.session.plannedDurationSec > 0 ? ' · compared with the planned time' : ' · no plan to compare with'}</p>
       {manualCorrectionDraft && detail.session.activityId !== null && detail.session.activityUpdatedAt ? (
         <ManualActivityCorrectionForm
           activityId={detail.session.activityId}
@@ -167,11 +167,11 @@ export default async function AthleteSessionPage({
   const recordedActivity = detail.session.importedActivityId ? (
     <Surface id="recorded-activity" className="space-y-4">
       <div>
-        <h2 className={sectionHeadingClassName}>{importedWithoutWorkout ? 'Activity data' : 'Recorded activity'}</h2>
+        <h2 className={sectionHeadingClassName}>{importedWithoutWorkout ? 'Activity data' : 'Recorded data'}</h2>
         <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
           {importedWithoutWorkout
-            ? 'Charts show the measurements saved with this activity.'
-            : 'Compare recorded measurements with the planned workout below.'}
+            ? 'Charts of the data recorded in this activity.'
+            : 'Compare what you recorded with the planned workout.'}
         </p>
       </div>
       <ImportedActivityMeasurements
@@ -206,7 +206,7 @@ export default async function AthleteSessionPage({
   const hasProfile = !importedWithoutWorkout && !(isImportOrLogged && detail.session.blocks.length === 0);
   const structure = isImportOrLogged && detail.session.blocks.length === 0 ? (
     <Surface className="space-y-3">
-      <p className="text-sm text-[var(--text-muted)]">Summary-only activity has no recorded workout blocks.</p>
+      <p className="text-sm text-[var(--text-muted)]">This activity only has totals, so there are no steps to show.</p>
     </Surface>
   ) : importedWithoutWorkout ? (
     <Surface className="space-y-4">{overviewHeader}</Surface>
@@ -219,16 +219,16 @@ export default async function AthleteSessionPage({
     <>
       {detail.session.sourceWorkout ? (
         <Surface className="space-y-2">
-          <h2 className={sectionHeadingClassName}>Reusable workout</h2>
+          <h2 className={sectionHeadingClassName}>Saved workout</h2>
           <p className="break-words text-[13px] font-medium text-[var(--text)]">{detail.session.sourceWorkout.title}</p>
           <p className="text-[12px] leading-[1.5] text-[var(--text-secondary)]">
-            This session is a copy. Editing the source from ⋯ will not change it.
+            This is a copy. If you edit the original from the ⋯ menu, this workout won’t change.
           </p>
         </Surface>
       ) : null}
       <Surface>
         <p className="text-xs font-medium text-[var(--text-muted)]">Coach</p>
-        <p className="mt-3 text-base font-semibold text-[var(--text)]">{detail.coachName ?? 'Self coached'}</p>
+        <p className="mt-3 text-base font-semibold text-[var(--text)]">{detail.coachName ?? 'Self-coached'}</p>
       </Surface>
     </>
   );
@@ -262,8 +262,8 @@ export default async function AthleteSessionPage({
           <span>{formatSessionWhen(detail.session.date, detail.session.timeLabel)}</span>
           <StatusBadge status={displayStatus} />
           <MetricText>{formatDuration(detail.session.durationSec)}</MetricText>
-          <MetricText>{detail.session.tss === null ? 'Load unavailable' : `${detail.session.tss}\u00A0TSS`}</MetricText>
-          {detail.session.metricsSource === 'manual-planned' ? <span className="text-[12px]">Planned estimate</span> : null}
+          <MetricText>{detail.session.tss === null ? 'No TSS' : `${detail.session.tss}\u00A0TSS`}</MetricText>
+          {detail.session.metricsSource === 'manual-planned' ? <span className="text-[12px]">Estimated</span> : null}
           {detail.session.targetLabel ? <span>{detail.session.targetLabel}</span> : null}
         </div>
 
@@ -296,7 +296,7 @@ export default async function AthleteSessionPage({
                 ) : null}
               </div>
 
-              <aside className="space-y-4 @4xl:hidden" aria-label="Session source">{sourceCards()}</aside>
+              <aside className="space-y-4 @4xl:hidden" aria-label="Original workout and coach">{sourceCards()}</aside>
             </div>
           </div>
         </SessionStructureProvider>

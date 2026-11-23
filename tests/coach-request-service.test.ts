@@ -68,7 +68,7 @@ test('non-athletes cannot create coach requests', async () => {
   assert.deepEqual(await service.createForAthlete(7, 2), {
     ok: false,
     status: 403,
-    error: 'Only athletes can request a coach',
+    error: 'Only athletes can ask a coach to join.',
   });
 });
 
@@ -85,7 +85,7 @@ test('already-coached athletes cannot create new requests', async () => {
   assert.deepEqual(await service.createForAthlete(7, 2), {
     ok: false,
     status: 409,
-    error: 'Athlete already has a coach',
+    error: 'You already have a coach.',
   });
 });
 
@@ -139,7 +139,7 @@ test('pending-key uniqueness races return a conflict', async () => {
   assert.deepEqual(await service.createForAthlete(7, 2), {
     ok: false,
     status: 409,
-    error: 'Another request is already pending',
+    error: 'You already have a request waiting for an answer.',
   });
 });
 

@@ -121,14 +121,14 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
       });
       const payload = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) {
-        setError(payload.error ?? 'Failed to complete session.');
+        setError(payload.error ?? 'Could not mark this workout as done. Try again.');
         return;
       }
       clearExecutionProgress(progressKey);
-      setMessage('Session marked complete.');
+      setMessage('Workout marked as done.');
       router.refresh();
     } catch {
-      setError('Could not reach the server. Check your connection and try again.');
+      setError('Could not reach Tempo. Check your connection and try again.');
     } finally {
       setPending(false);
     }
@@ -146,14 +146,14 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
           activeStep={profileMatchesSteps && !complete && !saved ? currentIndex : null}
         />
       ) : null}
-      {!hasBlocks ? <p role="alert" className={dangerTextClassName}>No workout blocks are available for this session.</p> : null}
+      {!hasBlocks ? <p role="alert" className={dangerTextClassName}>This workout has no steps.</p> : null}
       {currentStep && !saved ? (
         <section aria-labelledby="live-current-step" className="space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0" aria-live="polite">
-              <h2 id="live-current-step" className={sectionHeadingClassName}>{complete ? 'All blocks complete' : currentStep.label}</h2>
+              <h2 id="live-current-step" className={sectionHeadingClassName}>{complete ? 'All steps done' : currentStep.label}</h2>
               {complete ? (
-                <p className="mt-1 text-sm text-[var(--text-secondary)]">Save the outcome to finish.</p>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">Mark the workout as done to finish.</p>
               ) : (
                 <>
                   <p className="data mt-1 text-sm text-[var(--text-secondary)]">Step {currentIndex + 1} of {blocks.length}</p>
@@ -179,11 +179,11 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
               <div>
                 <p className="text-xs font-medium text-[var(--text-muted)]">Step timer</p>
                 {currentStep.durationSec <= 0 ? (
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">This step has no timed duration.</p>
+                  <p className="mt-1 text-sm text-[var(--text-secondary)]">This step has no set time.</p>
                 ) : stepCompleted ? (
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">This step is already marked complete.</p>
+                  <p className="mt-1 text-sm text-[var(--text-secondary)]">This step is already done.</p>
                 ) : timer.kind === 'elapsed' ? (
-                  <p role="status" className="mt-1 text-sm font-medium text-[var(--text)]">Time is up. Step not marked complete.</p>
+                  <p role="status" className="mt-1 text-sm font-medium text-[var(--text)]">Time’s up. Go to the next step when you’re ready.</p>
                 ) : now === null ? (
                   <p aria-label="Loading timer" className="data mt-1 text-3xl font-medium text-[var(--text)]">--:--</p>
                 ) : (
@@ -216,7 +216,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              aria-label="Previous block"
+              aria-label="Previous step"
               className={`${secondaryButtonClassName} min-h-11`}
               disabled={pending || saved || currentIndex === 0}
               onClick={() => updateExecutionState(previousExecution(state))}
@@ -225,7 +225,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
             </button>
             {complete ? (
               <button type="button" className={`${primaryButtonClassName} min-h-11`} disabled={pending || saved} onClick={() => void completeSession()}>
-                {pending ? 'Saving…' : 'Mark session complete'}
+                {pending ? 'Saving…' : 'Mark as done'}
               </button>
             ) : (
               <button
@@ -234,13 +234,13 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
                 disabled={pending || saved}
                 onClick={() => updateExecutionState(advanceExecution(state))}
               >
-                Next block
+                Next step
               </button>
             )}
           </div>
         </section>
       ) : null}
-      {isDone ? <p role="status" className={successTextClassName}>Session saved. Review or correct the outcome in session details.</p> : null}
+      {isDone ? <p role="status" className={successTextClassName}>Workout done. To check or fix the result, open the workout page.</p> : null}
       {message && !isDone ? <p role="status" className={successTextClassName}>{message}</p> : null}
       {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
       {hasBlocks ? (

@@ -51,7 +51,7 @@ export function LogCompletionLink({ tone }: { tone: 'primary' | 'secondary' }) {
         window.history.replaceState(null, '', '#session-outcome');
       }}
     >
-      Log completion
+      Mark as done
     </a>
   );
 }
@@ -113,7 +113,7 @@ export function SessionHeaderActions({
             <MenuContent align="end">
               {canAdjust ? (
                 <MenuItem onSelect={adjust}>
-                  <SquarePen aria-hidden="true" size={16} strokeWidth={1.6} />Adjust planned session
+                  <SquarePen aria-hidden="true" size={16} strokeWidth={1.6} />Change this workout
                 </MenuItem>
               ) : null}
               {move ? (
@@ -123,12 +123,12 @@ export function SessionHeaderActions({
               ) : null}
               {canSkip ? (
                 <MenuItem onSelect={() => status.run('skip')}>
-                  <CircleSlash aria-hidden="true" size={16} strokeWidth={1.6} />Skip session
+                  <CircleSlash aria-hidden="true" size={16} strokeWidth={1.6} />Skip workout
                 </MenuItem>
               ) : null}
               {sourceWorkoutId !== null ? (
                 <MenuItem render={<Link href={`/athlete/workouts?edit=${sourceWorkoutId}`} />}>
-                  <PencilLine aria-hidden="true" size={16} strokeWidth={1.6} />Edit source workout
+                  <PencilLine aria-hidden="true" size={16} strokeWidth={1.6} />Edit original workout
                 </MenuItem>
               ) : null}
               {shareable ? (
@@ -140,7 +140,7 @@ export function SessionHeaderActions({
                 <>
                   <MenuSeparator />
                   <MenuItem destructive onSelect={() => setDeleteOpen(true)}>
-                    <Trash2 aria-hidden="true" size={16} strokeWidth={1.6} />Remove session
+                    <Trash2 aria-hidden="true" size={16} strokeWidth={1.6} />Remove from Calendar
                   </MenuItem>
                 </>
               ) : null}

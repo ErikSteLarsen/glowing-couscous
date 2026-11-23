@@ -27,19 +27,19 @@ for (const width of [390, 1440]) test(`Tempo controls preserve keyboard, focus, 
     await page.keyboard.press('Space');
     assert.equal(await setting.getAttribute('aria-checked'), 'true');
     assert.equal(await page.getByRole('switch', { name: 'Disabled setting' }).isDisabled(), true);
-    await page.getByRole('button', { name: 'Compare baseline and actual' }).click();
-    const actual = page.getByRole('radio', { name: 'Actual', exact: true });
+    await page.getByRole('button', { name: 'Compare plan and result' }).click();
+    const actual = page.getByRole('radio', { name: 'Result', exact: true });
     await actual.waitFor();
     await actual.focus();
     await page.keyboard.press('ArrowLeft');
-    assert.equal(await page.getByRole('radio', { name: 'Planned', exact: true }).getAttribute('aria-checked'), 'true');
+    assert.equal(await page.getByRole('radio', { name: 'Plan', exact: true }).getAttribute('aria-checked'), 'true');
     await page.getByRole('button', { name: 'Close comparison' }).click();
-    const trigger = page.getByRole('button', { name: 'Remove session', exact: true });
+    const trigger = page.getByRole('button', { name: 'Remove workout', exact: true });
     await trigger.focus();
     await page.keyboard.press('Enter');
     const dialog = page.getByRole('alertdialog');
     await dialog.waitFor();
-    assert.equal(await page.getByRole('button', { name: 'Keep session' }).evaluate(el => el === document.activeElement), true);
+    assert.equal(await page.getByRole('button', { name: 'Keep workout' }).evaluate(el => el === document.activeElement), true);
     await page.keyboard.press('Shift+Tab');
     assert.equal(await dialog.evaluate(el => el.contains(document.activeElement)), true);
     await page.keyboard.press('Escape');
@@ -49,7 +49,7 @@ for (const width of [390, 1440]) test(`Tempo controls preserve keyboard, focus, 
       window.fetch = () => new Promise(resolve => { window.finishDelete = () => resolve(new Response(JSON.stringify({ error: 'Try again' }), { status: 409 })); });
     });
     await trigger.click();
-    await dialog.getByRole('button', { name: 'Remove session', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Remove workout', exact: true }).click();
     await page.keyboard.press('Escape');
     assert.equal(await dialog.isVisible(), true);
     await page.evaluate(() => window.finishDelete());
@@ -57,7 +57,7 @@ for (const width of [390, 1440]) test(`Tempo controls preserve keyboard, focus, 
     assert.equal(await page.getByRole('alert').textContent(), 'Try again');
     assert.equal(await dialog.isVisible(), true);
     await page.evaluate(() => { window.fetch = async () => new Response('{}'); });
-    await dialog.getByRole('button', { name: 'Remove session', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Remove workout', exact: true }).click();
     await dialog.waitFor({ state: 'hidden' });
     assert.equal(await page.locator('output').textContent(), 'Morning run');
 
@@ -83,7 +83,7 @@ for (const width of [390, 1440]) test(`Tempo controls preserve keyboard, focus, 
     await page.keyboard.press('Escape');
     await connectionsDialog.waitFor({ state: 'hidden' });
     assert.equal(await connections.evaluate(el => el === document.activeElement), true);
-    await page.getByRole('button', { name: 'Start with targets only' }).click();
+    await page.getByRole('button', { name: 'Start without devices' }).click();
     await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
     const intensity = page.getByRole('button', { name: 'Increase intensity 1%' });
     assert.equal(await intensity.isVisible(), false);
@@ -105,7 +105,7 @@ for (const width of [390, 1440]) test(`Tempo controls preserve keyboard, focus, 
       window.fetch = async () => new Response(JSON.stringify({ sessionId: 1 }));
     });
     await page.getByRole('button', { name: 'Try again', exact: true }).click();
-    await page.getByText('Saved. The session is marked complete.').waitFor();
+    await page.getByText('Saved. The workout is marked as done.').waitFor();
 
     await page.goto(`${pathToFileURL(join(directory, 'index.html')).href}?live`);
     const warmup = page.getByRole('region', { name: 'Warm-up' });
@@ -119,10 +119,10 @@ for (const width of [390, 1440]) test(`Tempo controls preserve keyboard, focus, 
     await warmup.getByRole('button', { name: 'Pause timer', exact: true }).click();
     await page.reload();
     await warmup.getByRole('button', { name: 'Resume timer', exact: true }).waitFor();
-    const next = page.getByRole('button', { name: 'Next block', exact: true });
+    const next = page.getByRole('button', { name: 'Next step', exact: true });
     await next.click();
-    await page.getByText('This step has no timed duration.').waitFor();
-    await page.getByRole('button', { name: 'Previous block' }).click();
+    await page.getByText('This step has no set time.').waitFor();
+    await page.getByRole('button', { name: 'Previous step' }).click();
     await warmup.getByRole('button', { name: 'Start timer', exact: true }).click();
     await page.getByRole('button', { name: 'More workout options' }).focus();
     await page.keyboard.press('Enter');
@@ -132,10 +132,10 @@ for (const width of [390, 1440]) test(`Tempo controls preserve keyboard, focus, 
     await warmup.getByRole('button', { name: 'Start timer', exact: true }).waitFor();
     await next.click();
     await next.click();
-    await page.getByRole('heading', { name: 'All blocks complete' }).waitFor();
-    assert.equal(await page.getByText('Session marked complete.').isVisible(), false);
-    await page.getByRole('button', { name: 'Mark session complete' }).click();
-    await page.getByText('Session marked complete.').waitFor();
+    await page.getByRole('heading', { name: 'All steps done' }).waitFor();
+    assert.equal(await page.getByText('Workout marked as done.').isVisible(), false);
+    await page.getByRole('button', { name: 'Mark as done' }).click();
+    await page.getByText('Workout marked as done.').waitFor();
     assert.deepEqual(errors, []);
   } finally {
     await browser?.close();

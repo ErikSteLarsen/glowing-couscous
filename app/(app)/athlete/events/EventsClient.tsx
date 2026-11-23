@@ -207,7 +207,7 @@ function LinkedActivitiesPanel({ event, onChange, onPendingChange }: { event: Ev
       const requestedPage = Math.min(candidatePage, remainingLastPage);
       setCandidates((current) => current.filter((activity) => activity.id !== activityId)); setCandidateTotal(remainingTotal); setCandidatePage(requestedPage);
       const refreshed = await searchActivities(requestedPage);
-      setMessage(refreshed ? 'Activity linked to event.' : 'Activity linked, but the activity list could not be refreshed. Use Search to try again.');
+      setMessage(refreshed ? 'Activity linked to event.' : 'Activity linked, but the list didn’t update. Choose Search to reload it.');
     } catch { setMessage('Activity could not be linked. Check your connection and try again.'); }
     finally { setSaving(false); }
   }
@@ -220,7 +220,7 @@ function LinkedActivitiesPanel({ event, onChange, onPendingChange }: { event: Ev
       onChange({ ...event, activities: linked.filter((activity) => activity.id !== activityId) });
       if (searched) {
         const refreshed = await searchActivities(0);
-        setMessage(refreshed ? 'Activity unlinked.' : 'Activity unlinked, but the activity list could not be refreshed. Use Search to try again.');
+        setMessage(refreshed ? 'Activity unlinked.' : 'Activity unlinked, but the list didn’t update. Choose Search to reload it.');
       } else setMessage('Activity unlinked.');
     } catch { setMessage('Activity could not be unlinked. Check your connection and try again.'); }
     finally { setSaving(false); }
@@ -229,9 +229,9 @@ function LinkedActivitiesPanel({ event, onChange, onPendingChange }: { event: Ev
     <section aria-label={`Activities linked to ${event.title}`} className="space-y-2">
       {linked.length ? <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] px-3">{linked.map((activity) => <li key={activity.id} className="flex items-center justify-between gap-3 py-2.5"><ActivitySummary activity={activity} /><button type="button" disabled={saving} className={`${compactSecondaryButtonClassName} ${dialogButtonClassName} shrink-0`} onClick={() => void unlinkActivity(activity.id)}>Unlink</button></li>)}</ul> : <p className="text-sm text-[var(--text-muted)]">No activities linked yet.</p>}
     </section>
-    <section aria-label="Link a completed activity" className="space-y-3 border-t border-[var(--border)] pt-4">
-      <form className="flex flex-col gap-2 sm:flex-row sm:items-end" onSubmit={(e) => { e.preventDefault(); void searchActivities(0); }}><label className="min-w-0 flex-1"><span className={formLabelClassName}>Find a completed activity</span><input value={activityQuery} onChange={(e) => setActivityQuery(e.target.value)} className={formFieldClassName} placeholder="Search title or sport" /></label><button disabled={saving} className={`${secondaryButtonClassName} max-md:min-h-11`}>Search</button></form>
-      {searched ? candidates.length ? <ul className="max-h-72 divide-y divide-[var(--border)] overflow-y-auto rounded-xl border border-[var(--border)] px-3">{candidates.map((activity) => <li key={activity.id} className="flex items-center justify-between gap-3 py-2.5"><ActivitySummary activity={activity} /><button type="button" disabled={saving} className={`${compactPrimaryButtonClassName} ${dialogButtonClassName} shrink-0`} onClick={() => void linkActivity(activity.id)}>Link</button></li>)}</ul> : <p className="text-sm text-[var(--text-muted)]">No matching unlinked completed activities.</p> : null}
+    <section aria-label="Link an activity" className="space-y-3 border-t border-[var(--border)] pt-4">
+      <form className="flex flex-col gap-2 sm:flex-row sm:items-end" onSubmit={(e) => { e.preventDefault(); void searchActivities(0); }}><label className="min-w-0 flex-1"><span className={formLabelClassName}>Find an activity</span><input value={activityQuery} onChange={(e) => setActivityQuery(e.target.value)} className={formFieldClassName} placeholder="Search title or sport" /></label><button disabled={saving} className={`${secondaryButtonClassName} max-md:min-h-11`}>Search</button></form>
+      {searched ? candidates.length ? <ul className="max-h-72 divide-y divide-[var(--border)] overflow-y-auto rounded-xl border border-[var(--border)] px-3">{candidates.map((activity) => <li key={activity.id} className="flex items-center justify-between gap-3 py-2.5"><ActivitySummary activity={activity} /><button type="button" disabled={saving} className={`${compactPrimaryButtonClassName} ${dialogButtonClassName} shrink-0`} onClick={() => void linkActivity(activity.id)}>Link</button></li>)}</ul> : <p className="text-sm text-[var(--text-muted)]">No matching activities that aren’t linked yet.</p> : null}
       {candidateTotal > 30 ? <div className="flex items-center gap-2"><button type="button" disabled={saving || candidatePage === 0} className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={() => void searchActivities(candidatePage - 1)}>Previous</button><span className="data text-xs text-[var(--text-muted)]">Page {candidatePage + 1} of {Math.ceil(candidateTotal / 30)}</span><button type="button" disabled={saving || (candidatePage + 1) * 30 >= candidateTotal} className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={() => void searchActivities(candidatePage + 1)}>Next</button></div> : null}
     </section>
     {message ? <p aria-live="polite" className="text-sm text-[var(--text-muted)]">{message}</p> : null}
@@ -297,7 +297,7 @@ function EventCard({ event, today, onChange, onDelete }: { event: EventRow; toda
     <FormDialog open={panel === 'result'} onOpenChange={(open) => { if (!open) close(); }} pending={pending} title={event.resultFinishSec === null ? 'Record result' : 'Edit result'} description={`${event.title}\u00A0· ${formatDay(day, 'd\u00A0MMM\u00A0yyyy')}${event.targetFinishSec ? ` · Goal ${formatDuration(event.targetFinishSec)}` : ''}`}>
       <ResultForm event={event} onPendingChange={setPending} onCancel={close} onSaved={(updated) => { onChange(updated); close(); setNotice('Result saved.'); }} />
     </FormDialog>
-    <FormDialog open={panel === 'activities'} onOpenChange={(open) => { if (!open) close(); }} pending={pending} title="Linked activities" description={`Link completed activities to ${event.title}. The event result is recorded separately.`}>
+    <FormDialog open={panel === 'activities'} onOpenChange={(open) => { if (!open) close(); }} pending={pending} title="Linked activities" description={`Link activities to ${event.title}. You add the event result separately.`}>
       <LinkedActivitiesPanel event={event} onChange={onChange} onPendingChange={setPending} />
       <div className="flex justify-end"><button type="button" disabled={pending} onClick={close} className={`${compactSecondaryButtonClassName} ${dialogButtonClassName}`}>Done</button></div>
     </FormDialog>

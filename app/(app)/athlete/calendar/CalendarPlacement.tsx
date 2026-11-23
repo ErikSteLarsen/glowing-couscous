@@ -178,7 +178,7 @@ export function CalendarPlacement({
         });
         const payload = await response.json().catch(() => ({})) as { error?: string; sessionIds?: number[] };
         if (!response.ok) {
-          setError(payload.error ?? 'Could not add this to your calendar.');
+          setError(payload.error ?? 'Could not add this to your Calendar.');
           return;
         }
         request.current = null;
@@ -285,7 +285,7 @@ export function CalendarPlacement({
                     ))}
                   </ul>
                 ) : null}
-                <p className="mt-3 px-4 pb-3 text-[13px] text-[var(--text-muted)]">Existing sessions stay. Days without a workout add nothing. Each session is an independent copy.</p>
+                <p className="mt-3 px-4 pb-3 text-[13px] text-[var(--text-muted)]">Workouts already on your Calendar stay. Days without a workout stay empty. Each workout is added as its own copy.</p>
               </details>
             ) : null}
           </>
@@ -333,7 +333,7 @@ export function CalendarPlacement({
         {repeatedDates.length ? (
           <p className="flex items-start gap-2 text-[13px] text-[var(--status-warning)]">
             <CircleAlert aria-hidden="true" size={16} className="mt-0.5 shrink-0" />
-            {`Already planned on ${repeatedDates.map(formatPlacementDate).join(', ')}. Adding it again creates a second session.`}
+            {`Already planned on ${repeatedDates.map(formatPlacementDate).join(', ')}. Adding it again puts it there twice.`}
           </p>
         ) : null}
         <div role="alert" className="empty:hidden">{error ? <p className={dangerTextClassName}>{error}</p> : null}</div>

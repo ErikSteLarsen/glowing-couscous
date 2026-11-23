@@ -76,11 +76,11 @@ export function SessionWorkoutProfileCard({ model, header, ftpWatts, title, clas
             controlsId={panelId}
           />
           <p className="text-[12px] text-[var(--text-secondary)]">
-            Select an effort or pause to see its targets and notes.
-            {model.skippedCount ? ` ${model.skippedCount} skipped ${model.skippedCount === 1 ? 'block is' : 'blocks are'} left out of the profile.` : ''}
+            Select a step to see its target and notes.
+            {model.skippedCount ? ` ${model.skippedCount} skipped ${model.skippedCount === 1 ? 'step isn’t' : 'steps aren’t'} shown.` : ''}
           </p>
         </>
-      ) : <p className="text-[13px] text-[var(--text-secondary)]">{model.blocks.length ? 'Every block in this session is skipped.' : 'This session has no workout blocks.'}</p>}
+      ) : <p className="text-[13px] text-[var(--text-secondary)]">{model.blocks.length ? 'Every step in this workout is skipped.' : 'This workout has no steps.'}</p>}
     </Surface>
   );
 }
@@ -107,15 +107,15 @@ export function SessionBlockDetails({ model, className }: { model: WorkoutProfil
     <Surface className={`space-y-4 ${className ?? ''}`}>
       <button type="button" onClick={() => setDetailsOpen(!detailsOpen)} aria-expanded={detailsOpen} aria-controls={panelId}
         className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-[6px] text-left hover:bg-[var(--raised)] ${buttonFocusClassName}`}>
-        <span className={sectionHeadingClassName}>Block details</span>
+        <span className={sectionHeadingClassName}>Steps</span>
         <ChevronDown size={18} className={`shrink-0 text-[var(--text-secondary)] ${detailsOpen ? 'rotate-180' : ''}`} />
       </button>
       <div id={panelId} hidden={!detailsOpen}>
         <div className="space-y-4 border-t border-[var(--border)] pt-4">
           <div>
-            <label htmlFor={selectorId} className="block text-[12px] font-medium text-[var(--text-secondary)]">Inspect a block</label>
+            <label htmlFor={selectorId} className="block text-[12px] font-medium text-[var(--text-secondary)]">Step</label>
             <select id={selectorId} className={`mt-2 ${formSelectClassName}`} value={selection?.block ?? ''} onChange={(event) => chooseBlock(Number(event.target.value))}>
-              {block ? null : <option value="" disabled>Choose a block</option>}
+              {block ? null : <option value="" disabled>Choose a step</option>}
               {model.blocks.map((candidate, index) => <option key={candidate.id} value={index}>{index + 1}. {structureBlockLabel(candidate)}</option>)}
             </select>
           </div>
@@ -124,16 +124,16 @@ export function SessionBlockDetails({ model, className }: { model: WorkoutProfil
               <div className="flex flex-wrap items-center gap-3">
                 <span className="inline-flex min-h-7 items-center rounded-full px-3 text-[12px] font-semibold" style={chipStyle(block)}>{block.kind === 'pause' ? 'Pause' : block.label}</span>
                 {step?.repetition ? <span className="metric-text text-[12px] font-medium text-[var(--text-secondary)]">Rep {step.repetition.index} of {step.repetition.of}</span> : null}
-                {block.skipped ? <span className="text-[12px] font-medium text-[var(--text-secondary)]">Skipped in plan</span> : null}
+                {block.skipped ? <span className="text-[12px] font-medium text-[var(--text-secondary)]">Skipped</span> : null}
               </div>
               <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div><dt className="text-[12px] text-[var(--text-secondary)]">Duration</dt><dd className="metric-text mt-1 text-[13px] font-semibold text-[var(--text)]">{formatDurationExact(block.durationSec * (block.reps ?? 1))}{block.reps && block.reps > 1 ? ` (${block.reps} × ${formatDurationExact(block.durationSec)})` : ''}</dd></div>
-                <div><dt className="text-[12px] text-[var(--text-secondary)]">Target</dt><dd className="mt-1 break-words text-[13px] font-semibold text-[var(--text)]">{block.targetLabel || 'No target set'}{block.targetBasis && block.targetBasis !== block.targetLabel ? <span className="mt-1 block text-[12px] font-normal text-[var(--text-secondary)]">{block.targetBasis} · uses your Profile</span> : null}</dd></div>
+                <div><dt className="text-[12px] text-[var(--text-secondary)]">Target</dt><dd className="mt-1 break-words text-[13px] font-semibold text-[var(--text)]">{block.targetLabel || 'No target'}{block.targetBasis && block.targetBasis !== block.targetLabel ? <span className="mt-1 block text-[12px] font-normal text-[var(--text-secondary)]">{block.targetBasis} · based on your Profile</span> : null}</dd></div>
               </dl>
               {block.note ? <p className="whitespace-pre-wrap break-words text-[13px] leading-relaxed text-[var(--text)]">{block.note}</p> : null}
-              <p className="text-[12px] text-[var(--text-secondary)]">Read-only scheduled copy</p>
+              <p className="text-[12px] text-[var(--text-secondary)]">View only</p>
             </>
-          ) : <p className="text-[13px] text-[var(--text-secondary)]">Select a step in the workout profile, or choose a block above.</p>}
+          ) : <p className="text-[13px] text-[var(--text-secondary)]">Select a step in the chart, or choose one above.</p>}
         </div>
       </div>
     </Surface>

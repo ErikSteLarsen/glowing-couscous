@@ -9,15 +9,15 @@ import { withBackOrigin } from '@/lib/app-navigation';
 import type { StravaConnectionSummary } from '@/lib/strava-service';
 
 const oauthNotices: ReadonlyMap<string, string> = new Map([
-  ['connected', 'Strava is connected. Recent activities are ready to review.'],
-  ['connected:sync-error', 'Strava is connected, but the first check failed. Open the inbox and choose Check Strava now to retry.'],
-  ['connected:revoke-error', 'Strava is connected, but Tempo could not confirm revocation of the previous Strava account.'],
-  ['connected:sync-revoke-error', 'The first activity check failed and Tempo could not confirm revocation of the previous account. Open the inbox and choose Check Strava now to retry.'],
-  ['cancelled', 'Strava connection was cancelled.'],
-  ['error:state', 'The Strava sign-in expired. Start the connection again.'],
+  ['connected', 'Strava is connected. Your recent activities are ready to review.'],
+  ['connected:sync-error', 'Strava is connected, but Tempo couldn’t check for activities yet. Open the Strava inbox and choose Check Strava now.'],
+  ['connected:revoke-error', 'Strava is connected. Tempo couldn’t confirm that your previous Strava account was unlinked.'],
+  ['connected:sync-revoke-error', 'Strava is connected, but Tempo couldn’t check for activities yet or confirm that your previous Strava account was unlinked. Open the Strava inbox and choose Check Strava now.'],
+  ['cancelled', 'You cancelled connecting Strava.'],
+  ['error:state', 'The Strava sign-in timed out. Try connecting again.'],
   ['error:account-linked', 'That Strava account is already linked to another Tempo account.'],
-  ['error:connect', 'Strava could not be connected. Try again.'],
-  ['error:authorization', 'Strava could not be connected. Try again.'],
+  ['error:connect', 'Could not connect Strava. Try again.'],
+  ['error:authorization', 'Could not connect Strava. Try again.'],
 ]);
 
 type DisconnectFeedback =
@@ -38,18 +38,18 @@ export function StravaConnectionSettings({
   const isConnected = connected && !disconnected;
   const status = isConnected
     ? athleteName ? `Connected as ${athleteName}` : 'Connected'
-    : canConnect ? 'Not connected' : 'Currently unavailable';
+    : canConnect ? 'Not connected' : 'Not available right now';
   const oauthNotice = oauthNotices.get(oauthResult ?? '');
   const previousRevocationFailed = oauthResult === 'connected:revoke-error' || oauthResult === 'connected:sync-revoke-error';
 
   async function disconnect() {
-    if (!window.confirm('Disconnect Strava and remove its imported activities from Tempo? Matched planned sessions will be restored.')) return;
+    if (!window.confirm('Disconnect Strava? Activities you imported from Strava are removed from Tempo, and planned workouts they were matched to go back to how they were.')) return;
     setDisconnecting(true);
     setFeedback(null);
     try {
       const response = await fetch('/api/strava/connection', { method: 'DELETE' });
       const result: { error?: string; removedActivities?: number; providerRevoked?: boolean } = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Strava could not be disconnected.');
+      if (!response.ok) throw new Error(result.error || 'Could not disconnect Strava.');
       const count = result.removedActivities ?? 0;
       setFeedback({
         notice: `Strava disconnected. Removed ${count} Strava ${count === 1 ? 'activity' : 'activities'} from Tempo.`,
@@ -57,7 +57,7 @@ export function StravaConnectionSettings({
       });
       router.refresh();
     } catch (error) {
-      setFeedback({ error: error instanceof Error ? error.message : 'Strava could not be disconnected. Try again.' });
+      setFeedback({ error: error instanceof Error ? error.message : 'Could not disconnect Strava. Try again.' });
     } finally {
       setDisconnecting(false);
     }
@@ -86,18 +86,18 @@ export function StravaConnectionSettings({
           {feedback && 'notice' in feedback ? <p role="status" className={successTextClassName}>{feedback.notice}</p> : null}
           {previousRevocationFailed || (feedback && 'providerRevoked' in feedback && !feedback.providerRevoked) ? (
             <p className="text-sm text-[var(--text-secondary)]">
-              Strava did not confirm revocation. <a href="https://www.strava.com/settings/apps" target="_blank" rel="noreferrer" className="text-[var(--brand)] underline underline-offset-2 hover:text-[var(--text)]">Remove Tempo in Strava settings</a>.
+              Tempo couldn’t confirm that Strava removed its access. <a href="https://www.strava.com/settings/apps" target="_blank" rel="noreferrer" className="text-[var(--brand)] underline underline-offset-2 hover:text-[var(--text)]">Remove Tempo in your Strava settings</a>.
             </p>
           ) : null}
           {isConnected ? (
             <>
               <p className="text-sm text-[var(--text-secondary)]">
-                Review synced activities before adding them to Tempo.
-                {webhookConfigured ? null : ' Use Check Strava now in the inbox to fetch recent activities.'}
+                New Strava activities wait in your inbox until you import them.
+                {webhookConfigured ? null : ' Choose Check Strava now in the inbox to look for new ones.'}
               </p>
               <Link href={withBackOrigin('/athlete/import#strava', 'settings')} className={`${primaryButtonClassName} max-md:min-h-11`}>Review Strava activities</Link>
               <div className="space-y-3 border-t border-[var(--border)] pt-4">
-                <p className="text-sm text-[var(--text-secondary)]">Disconnecting removes Strava imports from Tempo and restores any matched sessions to their previous state. Other imports stay in Tempo.</p>
+                <p className="text-sm text-[var(--text-secondary)]">Disconnecting removes the activities you imported from Strava. Planned workouts they were matched to go back to how they were. Activities from files stay.</p>
                 <button type="button" className={`${dangerButtonClassName} max-md:min-h-11`} disabled={disconnecting} onClick={() => void disconnect()}>
                   {disconnecting ? 'Disconnecting…' : 'Disconnect Strava'}
                 </button>

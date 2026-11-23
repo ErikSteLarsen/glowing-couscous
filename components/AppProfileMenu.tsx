@@ -59,7 +59,7 @@ export function AppProfileMenu({
             </Link>
           );
         })}
-        {previewMode ? <p className="px-2.5 py-2 text-xs text-[var(--nav-muted)]">Sample workspace</p> : <SignOutButton size="compact" variant="menu" />}
+        {previewMode ? <p className="px-2.5 py-2 text-xs text-[var(--nav-muted)]">Sample account</p> : <SignOutButton size="compact" variant="menu" />}
       </div>
     </div>
   );

@@ -80,18 +80,18 @@ export function SessionDetailClient({
         });
 
         if (!response.ok) {
-          const payload = await response.json().catch(() => ({ error: 'Failed to update completion' }));
+          const payload = await response.json().catch(() => ({ error: 'Could not save. Try again.' }));
           setMessageTone('danger');
-          setMessage(payload.error ?? 'Failed to update completion');
+          setMessage(payload.error ?? 'Could not save. Try again.');
           return;
         }
 
         setMessageTone('success');
-        setMessage(isRecorded ? 'Note saved.' : nextDone ? 'Session marked complete.' : 'Session moved back to planned.');
+        setMessage(isRecorded ? 'Note saved.' : nextDone ? 'Workout marked as done.' : 'Workout marked as not done.');
         router.refresh();
       } catch {
         setMessageTone('danger');
-        setMessage('Could not reach the server. Check your connection and try again.');
+        setMessage('Could not reach Tempo. Check your connection and try again.');
       }
     });
   }
@@ -108,20 +108,20 @@ export function SessionDetailClient({
         });
 
         if (!response.ok) {
-          const payload = await response.json().catch(() => ({ error: `Failed to save ${isDone ? 'actual correction' : 'session adjustment'}` }));
+          const payload = await response.json().catch(() => ({ error: `Could not save ${isDone ? 'your result' : 'your changes'}. Try again.` }));
           setMessageTone('danger');
-          setMessage(payload.error ?? 'Failed to save session adjustment');
+          setMessage(payload.error ?? 'Could not save your changes. Try again.');
           return;
         }
 
         setNotes(draft.athleteNotes.trim());
         setIsEditing(false);
         setMessageTone('success');
-        setMessage(isDone ? 'Actual correction saved.' : 'Planned session adjustment saved.');
+        setMessage(isDone ? 'Result updated.' : 'Changes to this workout saved.');
         router.refresh();
       } catch {
         setMessageTone('danger');
-        setMessage('Could not reach the server. Check your connection and try again.');
+        setMessage('Could not reach Tempo. Check your connection and try again.');
       }
     });
   }
@@ -129,9 +129,9 @@ export function SessionDetailClient({
   if (isSkipped) {
     return (
       <Surface id={id} className="scroll-mt-20 space-y-3 md:scroll-mt-6">
-        <h2 className={sectionHeadingClassName}>Completion</h2>
+        <h2 className={sectionHeadingClassName}>Skipped</h2>
         <p className="text-[13px] text-[var(--text-secondary)]">
-          This session is skipped, so there is no outcome to record. Plan it again to adjust it, start it, or mark it complete.
+          You skipped this workout, so there’s no result to log. Choose Plan again to change it, start it or mark it as done.
         </p>
       </Surface>
     );
@@ -140,15 +140,15 @@ export function SessionDetailClient({
   return (
     <Surface id={id} className="scroll-mt-20 space-y-4 md:scroll-mt-6">
       {isEditing ? null : <div>
-        <h2 className={sectionHeadingClassName}>{isDone ? 'Outcome' : 'Log completion'}</h2>
+        <h2 className={sectionHeadingClassName}>{isDone ? 'Result' : 'How did it go?'}</h2>
         <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
           {isRecorded ? (
             <>
-              This outcome comes from a recorded activity. You can edit its note; the measured data stays as recorded.
-              To remove the recording, delete it in{' '}
-              <Link href="/athlete/import" className="text-[var(--brand)] underline-offset-4 hover:underline">Import</Link>.
+              This result comes from a recorded activity. You can edit the note. The recorded data stays as it is.
+              To remove the activity, delete it on the{' '}
+              <Link href="/athlete/import" className="text-[var(--brand)] underline-offset-4 hover:underline">Import</Link> page.
             </>
-          ) : isDone ? 'Review the outcome or correct what was recorded.' : 'Add a note, then complete the session.'}
+          ) : isDone ? 'Check your result, or fix what was logged.' : 'Add a note if you like, then mark the workout as done.'}
           {isDone && compliancePct !== null ? ` Plan compliance: ${Math.round(compliancePct)}%.` : ''}
         </p>
       </div>}
@@ -164,7 +164,7 @@ export function SessionDetailClient({
               setDraft(updateSessionEditorFields(initialDraft, { athleteNotes: notes }));
               setIsEditing(true);
             }}>
-              Correct completed outcome
+              Fix result
             </button>
           )}
         </div>
@@ -174,22 +174,22 @@ export function SessionDetailClient({
         // Marks the open editor so the page layout gives it the full width.
         <div data-session-editing="" className="space-y-4 border-t border-[var(--border)] pt-4">
           <div>
-            <p className="text-xs font-medium text-[var(--text-muted)]">{isDone ? 'Actual correction' : 'Planned adjustment'}</p>
+            <p className="text-xs font-medium text-[var(--text-muted)]">{isDone ? 'Fix result' : 'Change this workout'}</p>
             <p className="mt-2 text-[13px] text-[var(--text-secondary)]">
               {isDone
-                ? 'Correct what was actually completed. The original plan and completed status stay intact.'
-                : 'Only this scheduled session changes. The original plan and reusable workout stay intact.'}
+                ? 'Change what you actually did. The plan stays as it was, and the workout stays done.'
+                : 'Only this planned workout changes. Your saved workout stays as it is.'}
             </p>
           </div>
           <WorkoutBuilder
             draft={draft}
             onChange={setDraft}
             showSchedule
-            summaryPlaceholder="Session intent or adjustment context"
+            summaryPlaceholder="Purpose, or why you changed it"
             performanceProfile={performanceProfile}
           />
           <label className="block space-y-2">
-            <span className={formLabelClassName}>Athlete note</span>
+            <span className={formLabelClassName}>Your note</span>
             <textarea
               value={draft.athleteNotes}
               onChange={(event) => setDraft(updateSessionEditorFields(draft, { athleteNotes: event.target.value }))}
@@ -198,7 +198,7 @@ export function SessionDetailClient({
             />
           </label>
           <label className="block space-y-2">
-            <span className={formLabelClassName}>{isDone ? 'Actual RPE (1-10)' : 'Planned RPE (1-10)'}</span>
+            <span className={formLabelClassName}>{isDone ? 'RPE you felt (1–10)' : 'Planned RPE (1–10)'}</span>
             <input
               type="number"
               min="1"
@@ -214,7 +214,7 @@ export function SessionDetailClient({
               Cancel
             </button>
             <button type="button" className={primaryButtonClassName} onClick={saveEditor} disabled={isPending}>
-              {isPending ? 'Saving...' : isDone ? 'Save actual correction' : 'Save adjustment'}
+              {isPending ? 'Saving…' : isDone ? 'Save result' : 'Save changes'}
             </button>
           </div>
         </div>
@@ -223,13 +223,13 @@ export function SessionDetailClient({
       {!isEditing ? (
         <>
           <label className="block space-y-2">
-            <span className={formLabelClassName}>Session note</span>
+            <span className={formLabelClassName}>Note</span>
             <textarea
               id="session-notes"
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               className={`${formTextareaClassName} min-h-28`}
-              placeholder="How did the session feel?"
+              placeholder="How did it feel?"
             />
           </label>
 
@@ -240,7 +240,7 @@ export function SessionDetailClient({
               disabled={isPending}
               className={primaryButtonClassName}
             >
-              {isRecorded ? 'Save note' : isDone ? 'Update completion' : 'Mark complete'}
+              {isDone ? 'Save note' : 'Mark as done'}
             </button>
             {isDone && !isRecorded ? (
               <button
@@ -249,7 +249,7 @@ export function SessionDetailClient({
                 disabled={isPending}
                 className={secondaryButtonClassName}
               >
-                Mark planned again
+                Mark as not done
               </button>
             ) : null}
             {isDone ? null : (

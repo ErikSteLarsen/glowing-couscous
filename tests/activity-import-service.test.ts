@@ -196,7 +196,7 @@ test('rejects a Strava review whose inbox data changed before import', async () 
     externalActivityId: '123',
   });
 
-  assert.deepEqual(result, { ok: false, status: 409, error: 'This Strava activity changed. Reopen it and review the latest data.' });
+  assert.deepEqual(result, { ok: false, status: 409, error: 'This Strava activity has changed. Open it again to see the latest version.' });
   assert.equal(calls.some((call) => call.owner === 'session.create'), false);
 });
 
@@ -207,7 +207,7 @@ test('refuses a planned-session match that changed before import', async () => {
   });
   const result = await service.importForUser(7, { ...validInput, plannedSessionId: 27 });
 
-  assert.deepEqual(result, { ok: false, status: 409, error: 'That planned session is no longer available for this activity type.' });
+  assert.deepEqual(result, { ok: false, status: 409, error: 'That planned workout is no longer available for this sport.' });
   assert.equal(calls.some((call) => call.owner === 'activity.create'), false);
 });
 
@@ -331,7 +331,7 @@ test('does not delete an import if its linked session belongs to a different use
 
   const result = await service.deleteImportedActivityForUser(7, 71);
 
-  assert.deepEqual(result, { ok: false, status: 404, error: 'Imported activity not found.' });
+  assert.deepEqual(result, { ok: false, status: 404, error: 'Activity not found.' });
   assert.equal(calls.some((call) => call.owner === 'session.delete'), false);
 });
 

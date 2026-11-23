@@ -23,7 +23,7 @@ export default async function SharePage({
   const { action } = await searchParams;
   const projection = await shareLinkService.loadPreview(token);
   if (!projection || !isShareToken(token)) {
-    return <EmptyState title="Shared workout unavailable" description="This link is invalid, deleted, or no longer available." />;
+    return <EmptyState title="This shared workout isn’t available" description="The link may be wrong, or it was turned off." />;
   }
 
   const user = await getCurrentUser();

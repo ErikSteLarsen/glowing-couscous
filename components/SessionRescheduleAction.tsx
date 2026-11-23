@@ -47,10 +47,10 @@ async function moveSession(sessionId: number, date: string): Promise<MoveResult>
 
     const error = payload && typeof payload === 'object' && 'error' in payload && typeof payload.error === 'string'
       ? payload.error
-      : 'The session could not be moved.';
+      : 'Could not move this workout.';
     return { ok: false, error };
   } catch {
-    return { ok: false, error: 'Could not reach the server. Check your connection and try again.' };
+    return { ok: false, error: 'Could not reach Tempo. Check your connection and try again.' };
   }
 }
 
@@ -143,7 +143,7 @@ function RescheduleDialog({ sessionId, title, currentDay, today, open, onOpenCha
     <>
       {controlled ? null : (
         <button type="button" className={`${secondaryButtonClassName} min-h-11`} onClick={showDialog}>
-          Reschedule…
+          Move to another day…
         </button>
       )}
       {notice ? <p role="status" className={successTextClassName}>{notice}</p> : null}
@@ -159,9 +159,9 @@ function RescheduleDialog({ sessionId, title, currentDay, today, open, onOpenCha
         onClose={() => onOpenChange?.(false)}
       >
         <div className="space-y-2">
-          <h2 id={`reschedule-session-title-${sessionId}`} className="text-base font-medium">Reschedule session</h2>
+          <h2 id={`reschedule-session-title-${sessionId}`} className="text-base font-medium">Move workout</h2>
           <p id={`reschedule-session-description-${sessionId}`} className="text-sm text-[var(--text-secondary)]">
-            Choose when to do “{title}”. Its workout and scheduled time will stay the same.
+            Choose when to do “{title}”. The steps and start time stay the same.
           </p>
         </div>
         <label className="mt-5 block">
@@ -184,7 +184,7 @@ function RescheduleDialog({ sessionId, title, currentDay, today, open, onOpenCha
             Move to today
           </button>
           <button type="button" className={`${secondaryButtonClassName} min-h-11`} disabled={isPending || !date || date === currentDay} onClick={() => void moveTo(date)}>
-            {isPending ? 'Moving…' : 'Move session'}
+            {isPending ? 'Moving…' : 'Move workout'}
           </button>
         </div>
       </dialog>

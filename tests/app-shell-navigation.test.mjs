@@ -232,8 +232,8 @@ test('Add activity offers all three intake paths and preserves prior entry hashe
   assert.match(chooser, /hash === '#log-activity'/);
   assert.match(chooser, /hash === '#import-activity'.*summary=1#import-summary/);
   assert.match(manual, /<details.*>[\s\S]*More details[\s\S]*name="distanceKm"[\s\S]*name="rpe"[\s\S]*name="notes"[\s\S]*<\/details>/);
-  assert.match(manual, /Keep as a separate activity/);
-  assert.match(imports, /Advanced options[\s\S]*Import summary only/);
+  assert.match(manual, /Save on its own/);
+  assert.match(imports, /Advanced options[\s\S]*Import totals only/);
 });
 
 test('summary-only activity outcomes do not offer structured comparison or editing', async () => {
@@ -249,12 +249,12 @@ test('summary-only activity outcomes do not offer structured comparison or editi
   assert.match(athleteSession, /<Surface id="session-outcome" className="scroll-mt-20 space-y-3 md:scroll-mt-6">/);
   assert.match(athleteSession, /isImportOrLogged \? null : <SessionDetailClient/);
   assert.match(athleteSession, /isImportOrLogged && detail\.session\.blocks\.length === 0/);
-  assert.match(athleteSession, /Summary-only activity has no recorded workout blocks\./);
+  assert.match(athleteSession, /This activity only has totals, so there are no steps to show\./);
   assert.match(coachDetail, /function hasNoPlannedBaseline\(metricsSource: string \| null \| undefined\)/);
   assert.match(coachDetail, /hasNoPlannedBaseline\(session\.metricsSource\) \? null : <SessionComparisonDialog/);
   assert.match(coachDetail, /hasNoPlannedBaseline\(session\.metricsSource\) \? null : <ShareLinkButton/);
   assert.match(coachDetail, /formatDuration\(hasNoPlannedBaseline\(session\.metricsSource\) \? session\.actualDurationSec \?\? session\.durationSec : session\.durationSec\)/);
-  assert.match(coachDetail, /hasNoPlannedBaseline\(session\.metricsSource\) \? 'No planned comparison'/);
+  assert.match(coachDetail, /hasNoPlannedBaseline\(session\.metricsSource\) \? 'No plan to compare'/);
 });
 
 test('coach athlete detail route uses coach-service detail loading instead of the legacy planner flow', async () => {
@@ -342,7 +342,7 @@ test('Import leads with file intake and keeps local inbox refresh in the options
     'components/StravaImportPanel.tsx',
   ].map(read));
 
-  assert.match(imports, /Choose activity files[\s\S]*<StravaImportPanel[\s\S]*Import history/);
+  assert.match(imports, /Choose activity files[\s\S]*<StravaImportPanel[\s\S]*Imported activities/);
   assert.match(inbox, /Check Strava now/);
   assert.match(inbox, /<MenuItem disabled=\{refreshing \|\| syncing\} onSelect=\{\(\) => startRefresh\(\(\) => router\.refresh\(\)\)\}>[\s\S]*Refresh inbox[\s\S]*<\/MenuItem>/);
   assert.match(inbox, /Needs review \(\{pendingActivities\.length\}\)/);
@@ -419,7 +419,7 @@ test('session detail leads with the work or the outcome and keeps secondary acti
 
   // DOM order is the phone order for every state: overview, logging or outcome, block
   // details, recorded data, description, coach. Wide screens only move the outcome beside it.
-  const order = ['{structure}', '{recordedOutcome}', '{completion}', '<SessionBlockDetails', '{recordedActivity}', 'id="session-description"', 'aria-label="Session source"'];
+  const order = ['{structure}', '{recordedOutcome}', '{completion}', '<SessionBlockDetails', '{recordedActivity}', 'id="session-description"', 'aria-label="Original workout and coach"'];
   const positions = order.map((marker) => page.indexOf(marker));
   assert.ok(positions.every((position) => position > 0), order.filter((_, index) => positions[index] < 0).join(', '));
   assert.deepEqual([...positions].sort((left, right) => left - right), positions);
@@ -427,13 +427,13 @@ test('session detail leads with the work or the outcome and keeps secondary acti
   assert.match(page, /has-\[\[data-session-editing\]\]/);
   assert.doesNotMatch(page, /<TopBar[^>]*description=/);
   assert.match(page, /<LogCompletionLink/);
-  assert.match(actions, /Log completion/);
+  assert.match(actions, /Mark as done/);
   assert.match(actions, /querySelector<HTMLElement>\('#session-notes'\)/);
   // Rights come from the server-side session detail, never from the client.
   assert.match(page, /move=\{detail\.session\.canReschedule \?/);
   assert.match(page, /canDelete=\{detail\.session\.canDelete\}/);
   assert.match(page, /statusAction=\{detail\.session\.statusAction\}/);
-  for (const label of ['Adjust planned session', 'Move to another day…', 'Skip session', 'Edit source workout', 'Create share link', 'Remove session']) {
+  for (const label of ['Change this workout', 'Move to another day…', 'Skip workout', 'Edit original workout', 'Create share link', 'Remove from Calendar']) {
     assert.ok(actions.includes(label), label);
   }
   assert.match(actions, /statusAction === 'plan-again'/);

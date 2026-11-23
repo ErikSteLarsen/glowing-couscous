@@ -224,5 +224,5 @@ test('coach session library rejects save when no blocks are provided', async () 
 
   assert.equal(result.ok, false);
   assert.equal((result as { ok: false; error: string; status: number }).status, 400);
-  assert.match((result as { ok: false; error: string; status: number }).error, /block/i);
+  assert.match((result as { ok: false; error: string; status: number }).error, /step/i);
 });

@@ -329,15 +329,15 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         if (response?.ok && payload?.sessionId === sessionId) {
           savedRef.current = true;
           clearRideCheckpoint(userId, sessionId);
-          setSaveState({ kind: 'saved', note: payload.duplicate === true ? 'Tempo already had this ride.' : null });
+          setSaveState({ kind: 'saved', note: payload.duplicate === true ? 'This ride was already saved.' : null });
           return;
         }
         const retryable = !response || response.status >= 500 || response.status === 429;
         if (!retryable || attempt >= SAVE_RETRY_LIMIT) {
-          const error = response?.ok ? 'Tempo could not confirm the save for this session.'
+          const error = response?.ok ? 'Tempo could not confirm that this ride was saved.'
             : typeof payload?.error === 'string' ? payload.error
               : response ? 'Tempo could not save this ride.' : 'Could not reach Tempo.';
-          setSaveState({ kind: 'failed', error: `${error} Your ride is kept on this device.` });
+          setSaveState({ kind: 'failed', error: `${error} Your ride is still on this device.` });
           return;
         }
         await new Promise<void>((resolve) => {
@@ -351,7 +351,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         });
       }
     } catch {
-      setSaveState({ kind: 'failed', error: 'Tempo could not prepare the upload. Your ride is kept on this device.' });
+      setSaveState({ kind: 'failed', error: 'Tempo could not get this ride ready to save. Your ride is still on this device.' });
     } finally {
       pendingSaveRef.current = null;
     }
@@ -445,7 +445,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         </ul>
       ) : (
         <p role="status" className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
-          Bluetooth pairing is unavailable in this browser. You can ride with targets only or pair devices in the <GetTempoRideLink>Tempo Ride desktop app</GetTempoRideLink>.
+          This browser can’t connect to Bluetooth devices. You can ride without devices, or connect them in the <GetTempoRideLink>Tempo Ride desktop app</GetTempoRideLink>.
         </p>
       )}
     </dialog>
@@ -512,8 +512,8 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center gap-8 px-5 py-10">
         <div>
           <h2 className="text-[28px] font-medium tracking-[-0.02em] text-[var(--text)]">Unfinished ride found</h2>
-          <p className="mt-2 text-[14px] text-[var(--text-secondary)]">Last saved {new Date(recovered.savedAtMs).toLocaleString()}.</p>
-          {!recovered.compatible ? <p className="mt-2 text-[14px] text-[var(--status-warning)]">The workout changed since this ride was recorded, so it cannot be resumed. You can still save it.</p> : null}
+          <p className="mt-2 text-[14px] text-[var(--text-secondary)]">Saved on this device {new Date(recovered.savedAtMs).toLocaleString()}.</p>
+          {!recovered.compatible ? <p className="mt-2 text-[14px] text-[var(--status-warning)]">The workout has changed since this ride, so you can’t resume it. You can still save it.</p> : null}
         </div>
         <div className="grid grid-cols-3 gap-6 border-y border-[var(--border)] py-6">
           <Stat label="Recorded" value={formatClock(recoveredSummary.timerSec)} />
@@ -543,7 +543,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   if (status === 'finished') {
     const lapRows = summarizeLaps(recording).filter((entry) => entry.durationSec > 0);
     const saveButton = saveState.kind === 'saved' ? (
-      <Link href={back.href} className={primaryButtonClassName}>View session</Link>
+      <Link href={back.href} className={primaryButtonClassName}>Open workout</Link>
     ) : (
       <button type="button" className={primaryButtonClassName} disabled={saveState.kind === 'saving'} onClick={() => void save()}>
         {saveState.kind === 'saving' ? (saveState.attempt > 1 ? `Retrying (${saveState.attempt})…` : 'Saving…') : saveState.kind === 'failed' ? 'Try again' : 'Save to Tempo'}
@@ -555,11 +555,11 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
           <div>
             <h2 className="text-[clamp(1.75rem,1.4rem+1.2vw,2.5rem)] font-medium tracking-[-0.02em] text-[var(--text)]">Ride complete</h2>
             <div className="mt-2 min-h-5 text-[14px]">
-              {saveState.kind === 'saved' ? <p role="status" className="text-[var(--status-success)]">Saved. The session is marked complete.{saveState.note ? ` ${saveState.note}` : ''}</p> : null}
+              {saveState.kind === 'saved' ? <p role="status" className="text-[var(--status-success)]">Saved. The workout is marked as done.{saveState.note ? ` ${saveState.note}` : ''}</p> : null}
               {saveState.kind === 'failed' ? <p role="alert" className="text-[var(--status-danger)]">{saveState.error}</p> : null}
               {saveState.kind === 'saving' ? <p role="status" className="text-[var(--text-secondary)]">Saving to Tempo…</p> : null}
               {timerSec >= MAX_ACTIVITY_IMPORT_DURATION_SEC ? <p className="text-[var(--text-secondary)]">This ride reached the 36-hour recording limit.</p> : null}
-            {saveState.kind === 'idle' ? <p className="text-[var(--text-secondary)]">The ride stays on this device until Tempo confirms it is saved.</p> : null}
+            {saveState.kind === 'idle' ? <p className="text-[var(--text-secondary)]">Your ride stays on this device until it’s saved to Tempo.</p> : null}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -654,7 +654,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
           <div className="flex flex-col gap-3">
             <button type="button" className={`${primaryButtonClassName} min-h-11 gap-2`} onClick={start}>
               <Play aria-hidden="true" size={18} strokeWidth={1.8} />
-              {anyDevice ? 'Start ride' : 'Start with targets only'}
+              {anyDevice ? 'Start ride' : 'Start without devices'}
             </button>
             {connectionsRow}
           </div>
@@ -707,11 +707,11 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     </>
   );
 
-  return frame(status === 'paused' ? 'Paused' : anyDevice ? 'Riding' : 'Riding · targets only', controls, (
+  return frame(status === 'paused' ? 'Paused' : anyDevice ? 'Riding' : 'Riding · no devices', controls, (
     <>
       {lostDevices.length ? (
         <p role="status" className="border-b border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] px-5 py-2 text-[13px] text-[var(--text)] sm:px-7">
-          {lostDevices.map((role) => ROLE_LABEL[role]).join(' and ')} disconnected. Recording continues; reconnecting automatically…
+          {lostDevices.map((role) => ROLE_LABEL[role]).join(' and ')} disconnected. Still recording. Reconnecting…
         </p>
       ) : null}
       {status === 'paused' ? (
@@ -750,7 +750,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
             <>
               <div className="flex items-baseline justify-between gap-3">
                 <Label>{targetWatts === null && !prescribedTarget ? 'Free ride' : 'Target'}</Label>
-                <p className="text-[13px] text-[var(--text-muted)]">{devices.trainer.status === 'connected' ? 'Waiting for power' : 'Targets only'}</p>
+                <p className="text-[13px] text-[var(--text-muted)]">{devices.trainer.status === 'connected' ? 'Waiting for power' : 'No devices'}</p>
               </div>
               {prescribedTarget ? (
                 <p className={heroNumeral}>{prescribedValue}<span className="ml-2 text-[0.22em] font-normal tracking-normal text-[var(--text-muted)]">{prescribedUnit}</span></p>

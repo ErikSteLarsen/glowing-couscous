@@ -28,7 +28,7 @@ export function CoachRequestsPanel() {
         return r.json();
       })
       .then((data) => setRequests(data.requests ?? []))
-      .catch(() => setError('Failed to load athlete requests.'))
+      .catch(() => setError('Could not load athlete requests. Try again.'))
       .finally(() => setLoading(false));
     return () => controller.abort();
   }, []);
@@ -46,9 +46,9 @@ export function CoachRequestsPanel() {
       });
       if (!res.ok) throw new Error('Request action failed');
       setRequests((prev) => prev.filter((r) => r.id !== requestId));
-      setMessage(action === 'accept' ? 'Athlete added to your roster.' : 'Request rejected.');
+      setMessage(action === 'accept' ? 'Athlete added to your roster.' : 'Request declined.');
     } catch {
-      setError('Failed to update athlete request. Please try again.');
+      setError('Could not answer this request. Try again.');
     } finally {
       setActingRequestId(null);
     }
@@ -59,7 +59,7 @@ export function CoachRequestsPanel() {
   return (
     <Surface>
       <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Athlete requests</p>
-      <h2 className="mt-2 text-xl font-semibold text-[var(--text)]">Pending join requests</h2>
+      <h2 className="mt-2 text-xl font-semibold text-[var(--text)]">Athletes who want to join</h2>
        {message ? <p role="status" aria-live="polite" className={`mt-2 ${successTextClassName}`}>{message}</p> : null}
        {error ? <p role="alert" aria-live="assertive" className={`mt-2 ${dangerTextClassName}`}>{error}</p> : null}
       <div className="mt-4 space-y-3">
@@ -85,7 +85,7 @@ export function CoachRequestsPanel() {
                 disabled={actingRequestId !== null}
                 className={compactDangerButtonClassName}
               >
-                Reject
+                Decline
               </button>
             </div>
           </div>

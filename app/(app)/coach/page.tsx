@@ -15,7 +15,7 @@ export default async function CoachPage() {
     return (
       <PageShell>
         <TopBar title="Your athletes" />
-        <EmptyState title="No coach data found" description="The coach workspace could not be loaded." />
+        <EmptyState title="Couldn’t load your athletes" description="Reload the page to try again." />
       </PageShell>
     );
   }
@@ -32,10 +32,10 @@ export default async function CoachPage() {
         <StatTile
           label="Pending requests"
           value={String(coach.pendingRequests.length)}
-          detail="Awaiting coach response"
+          detail="Waiting for your answer"
         />
         <StatTile
-          label="Planned sessions"
+          label="Planned workouts"
           value={String(coach.athletes.reduce((total, athlete) => total + athlete.plannedCount, 0))}
           detail="Current week"
         />
@@ -70,9 +70,9 @@ export default async function CoachPage() {
                   <p className="mt-1 text-sm text-[var(--text-secondary)]">{athlete.compliancePct}% complete</p>
                 </div>
                 <dl>
-                  <MetricPair label="Next session" value={athlete.nextSession} />
+                  <MetricPair label="Next workout" value={athlete.nextSession} />
                 </dl>
-                <ActionLink href={`/coach/planner?athleteId=${athlete.id}`} tone="secondary" size="compact">Plan next session</ActionLink>
+                <ActionLink href={`/coach/planner?athleteId=${athlete.id}`} tone="secondary" size="compact">Plan next workout</ActionLink>
               </article>
             ))}
           </div>

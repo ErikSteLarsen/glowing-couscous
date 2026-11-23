@@ -55,14 +55,14 @@ test('planner block helpers add, update, duplicate, and reorder immutable drafts
 test('validatePlannerSessionDraft catches missing title and invalid targets', () => {
   const draft = createEmptyPlannerSessionDraft({ athleteId: 5, scheduledDate: '2026-06-25' });
 
-  assert.equal(validatePlannerSessionDraft({ ...draft, title: '' }), 'Session title is required.');
+  assert.equal(validatePlannerSessionDraft({ ...draft, title: '' }), 'Add a name.');
   assert.equal(
     validatePlannerSessionDraft({
       ...draft,
       title: 'Threshold',
       blocks: [{ ...draft.blocks[0], durationSec: 0 }],
     }),
-    'Every block needs a positive duration.',
+    'Every step needs a duration.',
   );
   assert.equal(
     validatePlannerSessionDraft({
@@ -70,7 +70,7 @@ test('validatePlannerSessionDraft catches missing title and invalid targets', ()
       title: 'Threshold',
       blocks: [{ ...draft.blocks[0], targetType: 'power', targetLow: 280, targetHigh: 260 }],
     }),
-    'Target range low must be less than or equal to target high.',
+    'The low target can’t be higher than the high target.',
   );
 });
 
@@ -98,7 +98,7 @@ test('validatePlannerSessionDraft enforces standalone coach session rules', () =
     scheduledDate: '2026-06-25',
   });
 
-  assert.equal(validatePlannerSessionDraft({ ...draft, scheduledDate: '' }), 'A coach session date is required.');
+  assert.equal(validatePlannerSessionDraft({ ...draft, scheduledDate: '' }), 'Choose a date.');
   assert.equal(
     validatePlannerSessionDraft({ ...draft, planWeekday: 3 }),
     'Standalone coach sessions cannot have a training-plan weekday.',
@@ -111,7 +111,7 @@ test('validatePlannerSessionDraft enforces training-plan session weekday rules',
     scheduledDate: null,
   });
 
-  assert.equal(validatePlannerSessionDraft({ ...draft, planWeekday: null }), 'Choose a weekday for the training-plan session.');
+  assert.equal(validatePlannerSessionDraft({ ...draft, planWeekday: null }), 'Choose a day of the week.');
   assert.equal(
     validatePlannerSessionDraft({ ...draft, scheduledDate: '2026-06-25', planWeekday: 2 }),
     'Training-plan sessions use a weekday instead of a fixed date.',

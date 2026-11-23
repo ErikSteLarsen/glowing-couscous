@@ -57,10 +57,10 @@ export function ActivityImportClient({
     try {
       const response = await fetch(`/api/activity-imports/${activityId}`);
       const result = await response.json() as { error?: string; telemetry?: NonNullable<ImportedActivityHistory['telemetry']> };
-      if (!response.ok || !result.telemetry) throw new Error(result.error || 'Measurements could not be loaded.');
+      if (!response.ok || !result.telemetry) throw new Error(result.error || 'Could not load the recorded data.');
       setLoadedTelemetry((current) => ({ ...current, [activityId]: result.telemetry! }));
     } catch (error) {
-      setTelemetryErrors((current) => ({ ...current, [activityId]: error instanceof Error ? error.message : 'Measurements could not be loaded.' }));
+      setTelemetryErrors((current) => ({ ...current, [activityId]: error instanceof Error ? error.message : 'Could not load the recorded data.' }));
     } finally {
       setLoadingTelemetry((current) => ({ ...current, [activityId]: false }));
     }
@@ -120,7 +120,7 @@ export function ActivityImportClient({
       const result = await response.json() as { error?: string; activityId?: number; sessionId?: number };
       if (!response.ok) throw new Error(result.error || 'The activity could not be imported.');
       setDrafts((current) => current.filter((item) => item.key !== draft.key));
-      setNotice(`${draft.activity.title} was added to your completed activities.`);
+      setNotice(`${draft.activity.title} was added to your activities.`);
       router.refresh();
     } catch (error) {
       updateDraft(draft.key, {
@@ -132,8 +132,8 @@ export function ActivityImportClient({
 
   async function deleteImportedActivity(activity: ImportedActivityHistory) {
     const message = activity.standalone
-      ? 'Delete this imported activity and its standalone completed session?'
-      : 'Delete this imported activity? Its recorded measurements will be removed and the planned session restored to its previous state.';
+      ? 'Delete this imported activity? It will be removed from your activities.'
+      : 'Delete this imported activity? Its recorded data is removed, and the planned workout it was matched to goes back to how it was.';
     if (!window.confirm(message)) return;
     setDeletingActivityId(activity.id);
     setHistoryError(null);
@@ -147,7 +147,7 @@ export function ActivityImportClient({
         delete next[activity.id];
         return next;
       });
-      setHistoryNotice(`${activity.title} was removed from your imports.`);
+      setHistoryNotice(`${activity.title} was deleted.`);
       router.refresh();
     } catch (error) {
       setHistoryError(error instanceof Error ? error.message : 'The imported activity could not be deleted. Try again.');
@@ -162,7 +162,7 @@ export function ActivityImportClient({
         <div>
           <h2 className={sectionHeadingClassName}>Activity files</h2>
           <p className="mt-1 max-w-[72ch] text-[13px] leading-[1.5] text-[var(--text-secondary)]">
-            Choose FIT, TCX, or GPX files, then review them before saving. You can match them to planned sessions.
+            Choose FIT, TCX or GPX files and check them before you import. You can match each one to a planned workout.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -184,7 +184,7 @@ export function ActivityImportClient({
         {fileError ? <p role="alert" className={dangerTextClassName}>{fileError}</p> : null}
         {notice ? <p role="status" className={successTextClassName}>{notice}</p> : null}
         <p className="text-[12px] leading-[1.5] text-[var(--text-muted)]">
-          The original file is read in this browser and is not uploaded or kept. After import, Tempo stores the validated activity summary and sensor samples with your completed session until you delete the import.
+          Your file is read on this device and never uploaded. Tempo saves the activity’s totals and recorded data, such as heart rate and power, until you delete it.
         </p>
       </Surface>
 
@@ -229,13 +229,13 @@ export function ActivityImportClient({
                     />
                   </label>
                   <label className="block">
-                  <span className={formLabelClassName}>Same-sport session to complete</span>
+                  <span className={formLabelClassName}>Planned workout to mark as done</span>
                     <select
                       className={`${formSelectClassName} max-md:min-h-11`}
                       value={draft.plannedSessionId ?? ''}
                       onChange={(event) => updateDraft(draft.key, { plannedSessionId: event.target.value ? Number(event.target.value) : null })}
                     >
-                      <option value="">Create a new completed session</option>
+                      <option value="">None, save as a new activity</option>
                       {plannedSessions.filter((session) => session.sport === draft.activity.sport).map((session) => (
                         <option key={session.id} value={session.id}>
                           {session.date ? `${format(new Date(session.date), 'd\u00A0MMM')} · ` : ''}{session.title}&nbsp;· {getSportLabel(session.sport)}
@@ -243,17 +243,17 @@ export function ActivityImportClient({
                       ))}
                     </select>
                     {plannedSessions.every((session) => session.sport !== draft.activity.sport) ? (
-                      <p className="mt-1 text-[12px] text-[var(--text-secondary)]">No unfinished planned session for this sport is available, so this activity will become a new completed session.</p>
+                      <p className="mt-1 text-[12px] text-[var(--text-secondary)]">No unfinished workout is planned for this sport, so this is saved as a new activity.</p>
                     ) : null}
                   </label>
                   <ActivityMetricPreview points={draft.activity.points} durationSec={draft.activity.durationSec} distanceMeters={draft.activity.distanceMeters} sport={draft.activity.sport} />
                   {draft.activity.sport === 'RUNNING' ? <label className="flex min-h-11 items-start gap-3 text-sm text-[var(--text)]">
                     <input type="checkbox" className="mt-1 size-5 shrink-0 accent-[var(--brand)]" checked={draft.analyzeWorkout === true} onChange={event => updateDraft(draft.key, { analyzeWorkout: event.target.checked })} />
-                    <span><span className="block font-medium">Interpret intervals after import</span><span className="mt-1 block text-xs leading-relaxed text-[var(--text-secondary)]">Use a device-original file you have permission to analyze. Calculated interval metrics may be sent to the configured AI provider; location and private notes are excluded.</span></span>
+                    <span><span className="block font-medium">Find intervals after import</span><span className="mt-1 block text-xs leading-relaxed text-[var(--text-secondary)]">Use the original file from your watch or bike computer. Interval numbers may be sent to an AI service. Your location and private notes are never sent.</span></span>
                   </label> : null}
                   <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
                     <p className="text-[12px] text-[var(--text-secondary)]">
-                      {draft.plannedSessionId ? 'The selected session’s planned workout stays available for comparison.' : 'Tempo will create a completed session with this activity data.'}
+                      {draft.plannedSessionId ? 'You can still compare it with the planned workout.' : 'This is saved as a new activity.'}
                     </p>
                     <button type="button" className={`${primaryButtonClassName} max-md:min-h-11`} disabled={draft.importing} onClick={() => void importActivity(draft)}>
                       {draft.importing ? 'Importing…' : 'Import activity'}
@@ -270,8 +270,8 @@ export function ActivityImportClient({
 
       <section aria-labelledby="import-history-heading" className="space-y-4">
         <div>
-          <h2 id="import-history-heading" className={sectionHeadingClassName}>Import history</h2>
-          <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Saved Strava and file imports are included in your completed activity history.</p>
+          <h2 id="import-history-heading" className={sectionHeadingClassName}>Imported activities</h2>
+          <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Activities you imported from Strava or files. They also appear on your Activity page.</p>
         </div>
         {historyNotice ? <p role="status" className={successTextClassName}>{historyNotice}</p> : null}
         {historyError ? <p role="alert" className={dangerTextClassName}>{historyError}</p> : null}
@@ -302,13 +302,13 @@ export function ActivityImportClient({
                     </>}
                   />
                   <span className="text-[12px] font-medium text-[var(--brand)]">
-                    <span className="group-open:hidden">Show measurements</span>
-                    <span className="hidden group-open:inline">Hide measurements</span>
+                    <span className="group-open:hidden">Show recorded data</span>
+                    <span className="hidden group-open:inline">Hide recorded data</span>
                   </span>
                 </summary>
                 <div className="mt-4 space-y-5 border-t border-[var(--border)] pt-4">
                   {loadingTelemetry[activity.id] ? (
-                    <p role="status" className="text-[13px] text-[var(--text-secondary)]">Loading activity measurements…</p>
+                    <p role="status" className="text-[13px] text-[var(--text-secondary)]">Loading recorded data…</p>
                   ) : telemetryErrors[activity.id] ? (
                     <p role="alert" className={dangerTextClassName}>{telemetryErrors[activity.id]}</p>
                   ) : loadedTelemetry[activity.id] ? (
@@ -320,7 +320,7 @@ export function ActivityImportClient({
                     />
                   ) : null}
                   {activity.source === 'strava' && activity.sourceMetadata ? (
-                    <section aria-label="Imported Strava activity details" className="space-y-3">
+                    <section aria-label="Strava details" className="space-y-3">
                       <h3 className="text-[13px] font-semibold text-[var(--text)]">Strava activity details</h3>
                       <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         {formatStravaMetadata(activity.sourceMetadata).map(([label, value]) => (
@@ -330,7 +330,7 @@ export function ActivityImportClient({
                     </section>
                   ) : null}
                   <Link className={`${ghostButtonClassName('default')} max-md:min-h-11`} href={`/athlete/session/${activity.sessionId}?from=imports`}>
-                    Review completed session
+                    Open activity
                   </Link>
                   <button
                     type="button"
@@ -338,7 +338,7 @@ export function ActivityImportClient({
                     disabled={deletingActivityId !== null}
                     onClick={() => void deleteImportedActivity(activity)}
                   >
-                    {deletingActivityId === activity.id ? 'Deleting…' : 'Delete imported activity'}
+                    {deletingActivityId === activity.id ? 'Deleting…' : 'Delete activity'}
                   </button>
                 </div>
               </details>

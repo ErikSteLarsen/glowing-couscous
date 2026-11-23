@@ -186,14 +186,14 @@ test('athlete planned edits enforce ownership and completed-session protection',
   assert.deepEqual(await service.savePlannedSession(8, 40, createDraft()), {
     ok: false,
     status: 404,
-    error: 'Session not found.',
+    error: 'Workout not found.',
   });
 
   const completed = createAthleteSessionAdjustmentService({ db: createDb({ activity: { id: 90 } }).db as never });
   assert.deepEqual(await completed.savePlannedSession(7, 40, createDraft()), {
     ok: false,
     status: 409,
-    error: 'Completed sessions cannot be adjusted.',
+    error: 'Workouts marked as done can’t be changed. Use Fix result instead.',
   });
 });
 
@@ -214,7 +214,7 @@ test('athlete planned edits claim the validated revision and refuse to overwrite
   const result = await racedService.savePlannedSession(7, 40, createDraft());
   assert.equal(result.ok, false);
   assert.equal(!result.ok && result.status, 409);
-  assert.match(!result.ok ? result.error : '', /changed while you were editing/);
+  assert.match(!result.ok ? result.error : '', /changed while you had it open/);
   assert.equal(raced.calls.deletedBlocks, undefined);
   assert.equal(raced.calls.sessionUpdate, undefined);
 });
@@ -226,12 +226,12 @@ test('athlete planned edits reject create-mode drafts and invalid notes', async 
   assert.deepEqual(await service.savePlannedSession(7, 40, { ...createDraft(), mode: 'create' }), {
     ok: false,
     status: 400,
-    error: 'Planned session edits require planned mode.',
+    error: 'Could not save your changes. Reload the page and try again.',
   });
   assert.deepEqual(await service.savePlannedSession(7, 40, { ...createDraft(), athleteNotes: 'x'.repeat(2001) }), {
     ok: false,
     status: 400,
-    error: 'Notes are too long.',
+    error: 'Your note is too long.',
   });
 });
 
@@ -261,8 +261,8 @@ test('athlete session detail keeps the overview read-only, exposes the shared ad
   // The scheduled overview stays read-only (asserted below).
   assert.match(client, /WorkoutBuilder/);
   const actions = await readFile(path.join(process.cwd(), 'app/(app)/athlete/session/[sessionId]/SessionActions.tsx'), 'utf8');
-  // Planned adjustment opens from the header ⋯ menu; the editor stays in the completion section.
-  assert.match(actions, /Adjust planned session/);
+  // Change this workout opens from the header ⋯ menu; the editor stays in the completion section.
+  assert.match(actions, /Change this workout/);
   assert.match(client, /useAdjustRequest\(\)/);
   assert.match(page, /canAdjust=\{logCompletion\}/);
   assert.match(client, /showSchedule/);
@@ -270,7 +270,7 @@ test('athlete session detail keeps the overview read-only, exposes the shared ad
   assert.match(client, /SessionComparisonDialog/);
   assert.match(page, /SessionWorkoutProfileCard/);
   const overview = await readFile(path.join(process.cwd(), 'app/(app)/athlete/session/[sessionId]/SessionStructure.tsx'), 'utf8');
-  assert.match(overview, /Read-only scheduled copy/);
+  assert.match(overview, /View only/);
   assert.doesNotMatch(overview, /fetch\(|WorkoutBuilder/);
   assert.match(page, /<WorkoutStartChooser/);
   assert.match(page, /sourceWorkout/);

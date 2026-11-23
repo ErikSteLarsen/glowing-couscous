@@ -79,11 +79,11 @@ export function StravaImportPanel({
     try {
       const response = await fetch('/api/strava/activities', { method: 'POST' });
       const result = await response.json() as { error?: string; synced?: number };
-      if (!response.ok) throw new Error(result.error || 'Strava activities could not be synced.');
+      if (!response.ok) throw new Error(result.error || 'Could not check Strava. Try again.');
       setNotice(`Checked Strava for recent activities${typeof result.synced === 'number' ? `\u00A0· ${result.synced} found` : ''}.`);
       router.refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Strava activities could not be synced.');
+      setError(reason instanceof Error ? reason.message : 'Could not check Strava. Try again.');
     } finally {
       setSyncing(false);
     }
@@ -135,7 +135,7 @@ export function StravaImportPanel({
         body: JSON.stringify({ stravaActivityId: activityId, ...draft }),
       });
       const result = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(result.error || 'Strava activity could not be imported.');
+      if (!response.ok) throw new Error(result.error || 'Could not import this Strava activity. Try again.');
       setNotice(`${draft.title} was imported into Tempo.`);
       setConnection((current) => ({ ...current, activities: current.activities.map((activity) => activity.id === activityId ? { ...activity, imported: true } : activity) }));
       router.refresh();
@@ -143,7 +143,7 @@ export function StravaImportPanel({
     } catch (reason) {
       setImportErrors((current) => ({
         ...current,
-        [activityId]: reason instanceof Error ? reason.message : 'Strava activity could not be imported.',
+        [activityId]: reason instanceof Error ? reason.message : 'Could not import this Strava activity. Try again.',
       }));
     } finally {
       setImporting((current) => ({ ...current, [activityId]: false }));
@@ -159,13 +159,13 @@ export function StravaImportPanel({
         body: JSON.stringify({ ids: [activityId], action }),
       });
       const result = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(result.error || 'Activity review could not be saved.');
+      if (!response.ok) throw new Error(result.error || 'Could not update this activity. Try again.');
       setConnection((current) => ({ ...current, activities: current.activities.map((activity) => activity.id === activityId ? { ...activity, dismissed: action === 'discard' } : activity) }));
-      setNotice(action === 'discard' ? 'Dismissed for now. Find this activity under All activities to restore or import it.' : 'Restored to Needs review.');
+      setNotice(action === 'discard' ? 'Hidden from your inbox. To bring it back or import it, switch to All activities.' : 'Back in Needs review.');
       dialogRef.current?.close();
       router.refresh();
     } catch (reason) {
-      setImportErrors((current) => ({ ...current, [activityId]: reason instanceof Error ? reason.message : 'Activity review could not be saved.' }));
+      setImportErrors((current) => ({ ...current, [activityId]: reason instanceof Error ? reason.message : 'Could not update this activity. Try again.' }));
     } finally {
       setImporting((current) => ({ ...current, [activityId]: false }));
     }
@@ -187,7 +187,7 @@ export function StravaImportPanel({
           <h2 className={sectionHeadingClassName}>Strava inbox</h2>
           {!connection.connected ? (
             <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
-              {connection.canConnect ? 'Strava is not connected.' : 'Strava is currently unavailable.'}
+              {connection.canConnect ? 'Strava isn’t connected yet.' : 'You can’t connect Strava right now.'}
             </p>
           ) : null}
         </div>
@@ -248,13 +248,13 @@ export function StravaImportPanel({
                   {activity.elevationGainMeters !== null ? `\u00A0· ${Math.round(activity.elevationGainMeters)}\u00A0m up` : ''}
                 </>}
               />
-              {activity.imported ? <Badge tone="success">Imported</Badge> : activity.dismissed ? <Badge>Dismissed for now</Badge> : null}
+              {activity.imported ? <Badge tone="success">Imported</Badge> : activity.dismissed ? <Badge>Hidden</Badge> : null}
             </button>
           ))}
         </div>
       ) : (
         <p className="border-y border-[var(--border)] py-4 text-[13px] text-[var(--text-secondary)]">
-          {showAllActivities ? 'No synced Strava activities yet.' : 'No activities need review.'}
+          {showAllActivities ? 'No Strava activities yet.' : 'No activities need review.'}
         </p>
       ) : null}
 
@@ -300,7 +300,7 @@ export function StravaImportPanel({
               {activeDetail ? (
                 <>
                   <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <MetricPair label="Original Strava sport" value={activeActivity.sportType} />
+                    <MetricPair label="Strava sport" value={activeActivity.sportType} />
                     <MetricPair label="Duration" value={formatDuration(activeDetail.durationSec)} />
                     <MetricPair label="Distance" value={activeDetail.distanceMeters === null ? 'Not recorded' : `${(activeDetail.distanceMeters / 1000).toFixed(2)}\u00A0km`} />
                     <MetricPair label="Elevation gain" value={activeDetail.elevationGainMeters === null ? 'Not recorded' : `${Math.round(activeDetail.elevationGainMeters)}\u00A0m`} />
@@ -311,27 +311,27 @@ export function StravaImportPanel({
                     <input className={formFieldClassName} value={activeDraft?.title ?? activeDetail.title} maxLength={140} onChange={(event) => updateDraft(activeActivity.id, { title: event.target.value })} />
                   </label>
                   <label className="block">
-                    <span className={formLabelClassName}>Categorize as</span>
+                    <span className={formLabelClassName}>Sport in Tempo</span>
                     <select className={formSelectClassName} value={activeDraft?.sport ?? activeDetail.sport} onChange={(event) => updateDraft(activeActivity.id, { sport: event.target.value, plannedSessionId: null })}>
                       {sportOptions.map((sport) => <option key={sport} value={sport}>{getSportLabel(sport)}</option>)}
                     </select>
                   </label>
                   <label className="block">
-                    <span className={formLabelClassName}>Planned session to complete</span>
+                    <span className={formLabelClassName}>Planned workout to mark as done</span>
                     <select className={formSelectClassName} value={activeDraft?.plannedSessionId ?? ''} onChange={(event) => updateDraft(activeActivity.id, { plannedSessionId: event.target.value ? Number(event.target.value) : null })}>
-                      <option value="">Create a new completed session</option>
+                      <option value="">None, save as a new activity</option>
                       {activeMatchingSessions.map((session) => (
                         <option key={session.id} value={session.id}>
                           {session.date ? `${format(new Date(session.date), 'd\u00A0MMM')} · ` : ''}{session.title}&nbsp;· {getSportLabel(session.sport)}
                         </option>
                       ))}
                     </select>
-                    {activeMatchingSessions.length === 0 ? <p className="mt-1 text-[12px] text-[var(--text-secondary)]">No unfinished planned session for this category is available.</p> : null}
+                    {activeMatchingSessions.length === 0 ? <p className="mt-1 text-[12px] text-[var(--text-secondary)]">No unfinished workout is planned for this sport.</p> : null}
                   </label>
                   <ActivityMetricPreview points={activeDetail.points} durationSec={activeDetail.durationSec} distanceMeters={activeDetail.distanceMeters} sport={activeDraft?.sport ?? activeDetail.sport} />
                 </>
               ) : loading[activeActivity.id] ? (
-                <p role="status" className="text-[13px] text-[var(--text-secondary)]">Loading activity data and recorded streams…</p>
+                <p role="status" className="text-[13px] text-[var(--text-secondary)]">Loading activity data…</p>
               ) : null}
             </div>
             <footer className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-4 sm:px-7">
@@ -340,10 +340,10 @@ export function StravaImportPanel({
               ) : null}
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-[12px] text-[var(--text-secondary)]">
-                  {activeDraft?.plannedSessionId ? 'The planned workout stays available for comparison.' : 'Tempo will create a completed session from the recorded activity.'}
+                  {activeDraft?.plannedSessionId ? 'You can still compare it with the planned workout.' : 'This is saved as a new activity.'}
                 </p>
                 {!activeActivity.imported ? <button type="button" className={`${secondaryButtonClassName} max-md:min-h-11`} disabled={Boolean(importing[activeActivity.id])} onClick={() => void reviewActivity(activeActivity.id, activeActivity.dismissed ? 'restore' : 'discard')}>
-                  {activeActivity.dismissed ? 'Restore to inbox' : 'Dismiss for now'}
+                  {activeActivity.dismissed ? 'Move back to inbox' : 'Hide for now'}
                 </button> : null}
                 <button type="button" className={primaryButtonClassName} disabled={Boolean(importing[activeActivity.id]) || activeActivity.imported || !activeDraft?.title.trim()} onClick={() => void importActivity(activeActivity.id)}>
                   {activeActivity.imported ? 'Already imported' : importing[activeActivity.id] ? 'Importing…' : 'Import activity'}
@@ -380,7 +380,7 @@ export function formatStravaMetadata(metadata: Record<string, unknown>) {
     ['Power source', metadata.deviceWatts, (value) => value === true ? 'Power meter' : 'Estimated'],
     ['Effort score', metadata.sufferScore, (value) => String(value)],
     ['Device', metadata.deviceName, (value) => String(value)],
-    ['Recorded timezone', metadata.timezone, (value) => String(value)],
+    ['Time zone', metadata.timezone, (value) => String(value)],
   ];
   return fields.flatMap(([label, candidate, formatValue]) => {
     if (typeof candidate === 'boolean') return [[label, formatValue(candidate)] as [string, string]];

@@ -248,37 +248,37 @@ test('session editor validates duration, repetitions, targets, schedule, and RPE
 
   assert.equal(
     validateSessionEditorDraft({ ...draft, blocks: [{ ...draft.blocks[0], durationSec: 0 }] }),
-    'Every block needs a positive integer duration.',
+    'Every step needs a duration.',
   );
   assert.equal(
     validateSessionEditorDraft({ ...draft, blocks: [{ ...draft.blocks[0], reps: 1.5 }] }),
-    'Repetitions must be a positive integer when provided.',
+    'Repeats must be a whole number of 1 or more.',
   );
   assert.equal(
     validateSessionEditorDraft({
       ...draft,
       blocks: [{ ...draft.blocks[0], target: { metric: 'power', mode: 'absolute', reference: null, low: 280, high: 260 } }],
     }),
-    'Target low must be less than or equal to target high.',
+    'The low target can’t be higher than the high target.',
   );
   assert.equal(
     validateSessionEditorDraft({
       ...draft,
       blocks: [{ ...draft.blocks[0], target: { metric: 'power', mode: 'absolute', reference: null, low: -1, high: 260 } }],
     }),
-    'Target values must be non-negative numbers.',
+    'Targets can’t be negative.',
   );
-  assert.equal(validateSessionEditorDraft({ ...draft, rpe: 0 }), 'RPE must be an integer from 1 through 10.');
-  assert.equal(validateSessionEditorDraft({ ...draft, rpe: 11 }), 'RPE must be an integer from 1 through 10.');
+  assert.equal(validateSessionEditorDraft({ ...draft, rpe: 0 }), 'RPE must be a whole number from 1 to 10.');
+  assert.equal(validateSessionEditorDraft({ ...draft, rpe: 11 }), 'RPE must be a whole number from 1 to 10.');
   assert.equal(validateSessionEditorDraft({ ...draft, rpe: 7 }), null);
   assert.equal(validateSessionEditorDraft({ ...draft, rpe: null }), null);
   assert.equal(
     validateSessionEditorDraft({ ...draft, scheduledDate: 'not-a-date' }),
-    'Scheduled date must be a valid calendar date.',
+    'Choose a valid date.',
   );
   assert.equal(
     validateSessionEditorDraft({ ...draft, planWeekday: 8 as never }),
-    'Plan weekday must be an integer from 1 through 7.',
+    'Choose a day of the week.',
   );
 });
 

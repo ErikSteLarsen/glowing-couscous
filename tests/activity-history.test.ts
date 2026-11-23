@@ -286,7 +286,7 @@ test('activity history pages and filtered totals retain outcomes and athlete iso
       assert.equal(correctedLoad?.compliance, 'unplanned');
 
       const stale = await manualService.correct(athlete.id, activity.id, correction);
-      assert.deepEqual(stale, { ok: false, status: 409, error: 'This activity changed after you opened it. Reload the latest outcome before correcting it.' });
+      assert.deepEqual(stale, { ok: false, status: 409, error: 'This activity changed after you opened it. Reload the page before you edit it.' });
       const invalid = await manualService.correct(athlete.id, activity.id, { ...correction, expectedUpdatedAt: saved.updatedAt.toISOString(), completedOn: '2026-02-30' });
       assert.equal(invalid.ok, false);
       if (!invalid.ok) assert.equal(invalid.status, 400);
@@ -353,7 +353,7 @@ test('activity history pages and filtered totals retain outcomes and athlete iso
       } });
       assert.equal((await manualService.candidates(athlete.id, 'RUNNING', '2026-11-08')).some((item) => item.id === coachAssigned.id), false);
       const stale = await manualService.create(athlete.id, { ...input, title: 'Coach session attempt', requestKey: 'f8a291b9-5c3b-4f72-ab7d-321f9c373e22', pairingChoice: coachAssigned.id });
-      assert.deepEqual(stale, { ok: false, status: 409, error: 'That session is no longer eligible. Choose another session or keep this activity separate.' });
+      assert.deepEqual(stale, { ok: false, status: 409, error: 'That planned workout is no longer available. Choose another, or save this on its own.' });
       assert.equal((await db.session.findUnique({ where: { id: coachAssigned.id } }))?.status, 'planned');
 
       const pairedActivity = await db.activity.findUnique({ where: { sessionId: planned.id } });
@@ -362,7 +362,7 @@ test('activity history pages and filtered totals retain outcomes and athlete iso
         expectedUpdatedAt: pairedActivity.updatedAt.toISOString(), title: 'Must stay planned title', durationMinutes: 35,
         distanceKm: 6.6, rpe: 8, notes: 'Corrected performed summary',
       });
-      assert.deepEqual(forbiddenPlanEdit, { ok: false, status: 400, error: 'The planned workout details cannot be changed from an activity correction.' });
+      assert.deepEqual(forbiddenPlanEdit, { ok: false, status: 400, error: 'You can’t change the planned workout from here.' });
       const pairedCorrection = await manualService.correct(athlete.id, pairedActivity.id, {
         expectedUpdatedAt: pairedActivity.updatedAt.toISOString(), durationMinutes: 35,
         distanceKm: 6.6, rpe: 8, notes: 'Corrected performed summary',

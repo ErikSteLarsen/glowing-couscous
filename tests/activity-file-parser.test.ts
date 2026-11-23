@@ -68,11 +68,11 @@ test('decodes standard FIT session and record fields', () => {
 test('rejects unsupported and damaged activity files', () => {
   assert.throws(() => parseActivityFile('activity.csv', 'date,distance'), /Choose a \.FIT/);
   const damaged = new Uint8Array(14);
-  assert.throws(() => parseActivityFile('activity.fit', damaged.buffer), /not a valid FIT/);
+  assert.throws(() => parseActivityFile('activity.fit', damaged.buffer), /isn’t a FIT activity file/);
   const invalidChecksum = buildFit([definition(0, 20, [[253, 4, 0x86], [3, 1, 0x02]]), data(0, [100, 140], [4, 1])]);
   invalidChecksum[20] ^= 0xff;
-  assert.throws(() => parseActivityFile('activity.fit', invalidChecksum.buffer), /checksum is invalid/);
-  assert.throws(() => parseActivityFile('activity.tcx', '<TrainingCenterDatabase/>'), /no recorded activity samples/);
+  assert.throws(() => parseActivityFile('activity.fit', invalidChecksum.buffer), /FIT file is damaged/);
+  assert.throws(() => parseActivityFile('activity.tcx', '<TrainingCenterDatabase/>'), /no recorded data/);
 });
 
 function definition(local: number, global: number, fields: Array<[number, number, number]>) {

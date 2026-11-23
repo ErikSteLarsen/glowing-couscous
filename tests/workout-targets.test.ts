@@ -15,7 +15,7 @@ test('target normalization preserves legacy absolute targets and validates decim
   const relative = normalizeWorkoutTarget({ metric: 'power', mode: 'relative', reference: 'ftp', low: '88.5', high: '92.25' });
   assert.deepEqual(relative, { metric: 'power', mode: 'relative', reference: 'ftp', low: 88.5, high: 92.25 });
   assert.equal(normalizeWorkoutTarget({ metric: 'power', mode: 'relative', reference: 'ftp', low: '1e2', high: 102 }), null);
-  assert.equal(validateWorkoutTarget({ metric: 'rpe', mode: 'relative', reference: 'ftp', low: 7, high: 8 }), 'RPE targets are direct and cannot use a reference.');
+  assert.equal(validateWorkoutTarget({ metric: 'rpe', mode: 'relative', reference: 'ftp', low: 7, high: 8 }), 'RPE targets can’t be based on your Profile.');
 });
 
 test('sport target catalog exposes only sport-valid relative references', () => {
@@ -47,7 +47,7 @@ test('current profile resolves FTP, pace, CSS, HR, and profile-independent RPE w
 test('missing values never resolve to zero and live profile updates refresh the same generic target', () => {
   const target = { metric: 'power' as const, mode: 'relative' as const, reference: 'ftp' as const, low: 88, high: 92 };
   assert.equal(resolveWorkoutTarget(target, createEmptyPerformanceProfile(), 'BIKING'), null);
-  assert.equal(missingProfileAction(target), 'Add FTP to preview watts.');
+  assert.equal(missingProfileAction(target), 'Add your FTP to see watts.');
   assert.equal(formatResolvedWorkoutTarget(target, normalizePerformanceProfile({ cycling: { ftpWatts: 300 } }), 'BIKING'), '264-276\u00A0W');
 });
 

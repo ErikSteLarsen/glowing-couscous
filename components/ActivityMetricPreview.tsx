@@ -23,7 +23,7 @@ export function ActivityMetricPreview({
     ...(available('temperatureCelsius') ? ['temperature' as const] : []),
   ];
   if (!metrics.length) {
-    return <p className="border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">This activity has no heart-rate, pace, elevation, power, cadence, or temperature samples to chart.</p>;
+    return <p className="border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">This activity has no heart rate, pace, elevation, power, cadence or temperature data to chart.</p>;
   }
   return (
     <div className="grid gap-x-5 gap-y-6 xl:grid-cols-2">

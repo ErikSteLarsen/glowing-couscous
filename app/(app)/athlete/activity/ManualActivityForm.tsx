@@ -105,10 +105,10 @@ export function ManualActivityForm({ today }: { today: string }) {
       <label className="space-y-2">
         <span className={formLabelClassName}>{selectedCandidate ? 'Planned workout title' : 'Title'}</span>
         <input name="title" value={selectedCandidate?.title ?? title} onChange={(event) => setTitle(event.target.value)} className={`${formFieldClassName} max-md:min-h-11`} maxLength={120} required readOnly={Boolean(selectedCandidate)} placeholder="Easy morning run" />
-        {selectedCandidate ? <span className="text-xs text-[var(--text-muted)]">The planned workout title and content stay unchanged.</span> : null}
+        {selectedCandidate ? <span className="text-xs text-[var(--text-muted)]">Uses the planned workout’s title.</span> : null}
       </label>
       <label className="space-y-2">
-        <span className={formLabelClassName}>Completion date</span>
+        <span className={formLabelClassName}>Date</span>
         <input name="completedOn" type="date" value={completedOn} onChange={(event) => { setSelectedDate(event.target.value); void loadCandidates(selectedSport, event.target.value); }} className={`${formFieldClassName} max-md:min-h-11`} required />
       </label>
       <label className="space-y-2">
@@ -135,20 +135,20 @@ export function ManualActivityForm({ today }: { today: string }) {
           </label>
         </div>
       </details>
-      <fieldset className="space-y-2 sm:col-span-2" aria-label="Planned session choice">
-        <legend className={formLabelClassName}>Planned session</legend>
-        {candidateState === 'idle' ? <p className="text-sm text-[var(--text-muted)]">Check for a planned session on this date, or keep the activity separate.</p> : null}
-        {candidateState === 'idle' || candidateState === 'error' ? <button type="button" onClick={() => void loadCandidates(selectedSport, completedOn)} className={`min-h-11 rounded-lg text-sm text-[var(--brand)] underline underline-offset-4 hover:text-[var(--text)] ${buttonFocusClassName}`}>Check planned sessions</button> : null}
-        {candidateState === 'loading' ? <p className="text-sm text-[var(--text-muted)]">Checking planned sessions…</p> : null}
-        {candidateState === 'error' ? <p role="alert" className={dangerTextClassName}>Could not check planned sessions. Retry or keep this activity separate.</p> : null}
-        {candidateState === 'ready' && candidates.length === 0 ? <p className="text-sm text-[var(--text-muted)]">No eligible planned session for this sport and date.</p> : null}
+      <fieldset className="space-y-2 sm:col-span-2" aria-label="Match to a planned workout">
+        <legend className={formLabelClassName}>Planned workout</legend>
+        {candidateState === 'idle' ? <p className="text-sm text-[var(--text-muted)]">Match this to a workout planned for this day, or save it on its own.</p> : null}
+        {candidateState === 'idle' || candidateState === 'error' ? <button type="button" onClick={() => void loadCandidates(selectedSport, completedOn)} className={`min-h-11 rounded-lg text-sm text-[var(--brand)] underline underline-offset-4 hover:text-[var(--text)] ${buttonFocusClassName}`}>Find planned workouts</button> : null}
+        {candidateState === 'loading' ? <p className="text-sm text-[var(--text-muted)]">Looking for planned workouts…</p> : null}
+        {candidateState === 'error' ? <p role="alert" className={dangerTextClassName}>Could not look up planned workouts. Try again, or save this activity on its own.</p> : null}
+        {candidateState === 'ready' && candidates.length === 0 ? <p className="text-sm text-[var(--text-muted)]">No unfinished workout is planned for this sport on this day.</p> : null}
         {candidates.map((candidate) => <label key={candidate.id} className="flex items-center gap-2 text-sm text-[var(--text-secondary)] max-md:min-h-11"><input type="radio" name="pairing-choice" value={`session:${candidate.id}`} checked={pairingChoice === String(candidate.id)} onChange={() => setPairingChoice(String(candidate.id))} /><span>{candidate.title}&nbsp;· {candidate.date}&nbsp;· {candidate.plannedDurationSec > 0 ? `Planned ${formatDuration(candidate.plannedDurationSec)}` : 'No planned duration'}</span></label>)}
-        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] max-md:min-h-11"><input type="radio" name="pairing-choice" value="separate" checked={pairingChoice === 'separate'} onChange={() => setPairingChoice('separate')} /><span>Keep as a separate activity</span></label>
-        {selectedCandidate ? <p className="text-sm text-[var(--text-muted)]">Saving will complete this planned session and record a duration-only result.</p> : null}
+        <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] max-md:min-h-11"><input type="radio" name="pairing-choice" value="separate" checked={pairingChoice === 'separate'} onChange={() => setPairingChoice('separate')} /><span>Save on its own</span></label>
+        {selectedCandidate ? <p className="text-sm text-[var(--text-muted)]">Saving marks this planned workout as done, with the time you entered.</p> : null}
       </fieldset>
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
-        <button type="submit" disabled={pending || !pairingChoice || candidateState === 'loading'} className={`${primaryButtonClassName} max-md:min-h-11`}>{pending ? 'Saving activity…' : pairingChoice === 'separate' ? 'Save separate activity' : selectedCandidate ? 'Complete planned session' : 'Choose how to save'}</button>
-        {saved ? <span role="status" className={successTextClassName}>Saved. <ActionLink href={saved.href} tone="ghost">Review {saved.title}</ActionLink></span> : null}
+        <button type="submit" disabled={pending || !pairingChoice || candidateState === 'loading'} className={`${primaryButtonClassName} max-md:min-h-11`}>{pending ? 'Saving activity…' : pairingChoice === 'separate' ? 'Save activity' : selectedCandidate ? 'Save and mark as done' : 'Choose how to save'}</button>
+        {saved ? <span role="status" className={successTextClassName}>Saved. <ActionLink href={saved.href} tone="ghost">Open {saved.title}</ActionLink></span> : null}
         {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
       </div>
     </form>

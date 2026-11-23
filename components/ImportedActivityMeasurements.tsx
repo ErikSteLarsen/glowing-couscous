@@ -18,16 +18,16 @@ export function ImportedActivityMeasurements({ activityId, durationSec, sport }:
     fetch(`/api/activity-imports/${activityId}`)
       .then(async (response) => {
         const result = await response.json() as { error?: string; telemetry?: Telemetry };
-        if (!response.ok || !result.telemetry) throw new Error(result.error || 'Recorded measurements could not be loaded.');
+        if (!response.ok || !result.telemetry) throw new Error(result.error || 'Could not load the recorded data.');
         return result.telemetry;
       })
       .then((result) => { if (active) setTelemetry(result); })
-      .catch((reason: unknown) => { if (active) setError(reason instanceof Error ? reason.message : 'Recorded measurements could not be loaded.'); })
+      .catch((reason: unknown) => { if (active) setError(reason instanceof Error ? reason.message : 'Could not load the recorded data.'); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [activityId]);
 
-  if (loading) return <p role="status" className="text-[13px] text-[var(--text-secondary)]">Loading recorded measurements…</p>;
+  if (loading) return <p role="status" className="text-[13px] text-[var(--text-secondary)]">Loading recorded data…</p>;
   if (error) return <p role="alert" className={dangerTextClassName}>{error}</p>;
   if (!telemetry) return null;
 

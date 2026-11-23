@@ -7,7 +7,7 @@ const pause = () => createSessionEditorBlock({ kind: 'pause', zone: 1, durationS
 const work = () => createSessionEditorBlock({ kind: 'work', zone: 4, durationSec: 60 });
 
 test('a pause-only workout cannot be saved', () => {
-  assert.equal(validateSessionEditorDraft(createEmptySessionEditorDraft({ title: 'Pause only', blocks: [pause()] })), 'Add an active workout block before saving.');
+  assert.equal(validateSessionEditorDraft(createEmptySessionEditorDraft({ title: 'Pause only', blocks: [pause()] })), 'Add at least one training step before saving. Pauses don’t count.');
 });
 
 test('pauses between sets count toward time, not zone load, and survive serialization', () => {

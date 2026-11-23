@@ -8,8 +8,8 @@ export function ActivityIntensityBars({ timeline, compact = false }: { timeline:
     ? `${Math.round(timeline.intervalSec / 60)}\u00A0min`
     : `${timeline.intervalSec} sec`;
   const zoneDescription = timeline.maxHeartRateBpm
-    ? `Zone colors use the saved maximum heart rate of ${timeline.maxHeartRateBpm}\u00A0bpm.`
-    : 'Bar height shows recorded heart-rate changes; zone colors are unavailable without a saved maximum heart rate.';
+    ? `Zone colors use your maximum heart rate of ${timeline.maxHeartRateBpm}\u00A0bpm.`
+    : 'Bar height shows how your heart rate changed. Add your maximum heart rate in Profile to see zone colors.';
   const description = `Recorded heart-rate intensity, ${timeline.bins.length} intervals of ${intervalLabel}. Average ${timeline.averageBpm}\u00A0bpm, range ${timeline.minBpm} to ${timeline.maxBpm}\u00A0bpm. ${zoneDescription}`;
 
   return (

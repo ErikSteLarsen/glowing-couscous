@@ -43,10 +43,10 @@ test('public share route is outside the signed-in shell and hardens metadata', a
   assert.match(page, /shareLinkService\.loadPreview/);
   assert.doesNotMatch(page, /AppShell/);
   assert.doesNotMatch(page, /prisma\./);
-  assert.match(client, /Use in \{plannerDestination\}/);
-  assert.match(client, /const plannerDestination = userRole === 'COACH' \? 'Workouts' : 'Planner'/);
+  assert.match(client, /Add to \{plannerDestination\}/);
+  assert.match(client, /const plannerDestination = userRole === 'COACH' \? 'Workouts' : 'Calendar'/);
   assert.doesNotMatch(client, /Save as Template/);
-  assert.match(client, /Nothing is saved or scheduled until/);
+  assert.match(client, /You can edit the workout before anything is saved/);
   assert.match(client, /api\/share-links\/intake/);
   assert.match(appLayout, /AppShell/);
 });
@@ -76,7 +76,7 @@ test('supported source surfaces expose share controls with copy and failure stat
   assert.match(button, /api\/share-links/);
   assert.match(button, /Creating share link/);
   assert.match(button, /Copy link/);
-  assert.match(button, /Link created\. Copy it from the field/);
+  assert.match(button, /Link created\. Copy it from the box/);
   assert.doesNotMatch(templateClient, /ShareLinkButton/);
   const athleteSessionActions = await read('app/(app)/athlete/session/[sessionId]/SessionActions.tsx');
   assert.match(athleteSession, /shareable=\{!isImportOrLogged\}/);

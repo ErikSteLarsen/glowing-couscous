@@ -23,10 +23,10 @@ export default function ForgotPasswordPage() {
       });
       const result = await response.json().catch(() => ({})) as { message?: string; error?: string };
       if (!response.ok) {
-        setError(result.error ?? 'We couldn’t send a reset link. Please try again later.');
+        setError(result.error ?? 'We couldn’t send a reset link. Try again later.');
         return;
       }
-      setMessage(result.message ?? 'If a password account uses this email, you will receive a reset link shortly.');
+      setMessage(result.message ?? 'If this email has a Tempo password, we’ll send you a reset link shortly.');
     } catch {
       setError('We couldn’t send a reset link. Check your connection and try again.');
     } finally {
@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthPageShell>
-      <TopBar title="Reset your password" description="We’ll email a one-time link if this address has a password account." align="center" />
+      <TopBar title="Reset your password" description="If you sign in with an email and password, we’ll email you a link to set a new one." align="center" />
       <Surface className="mx-auto w-full max-w-md">
         {message ? (
           <div className="space-y-4">

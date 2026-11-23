@@ -221,7 +221,7 @@ test('athlete planner rejects reuse of a request key for a different payload', a
 
   assert.deepEqual(conflict, {
     ok: false,
-    error: 'This placement key was already used for different dates, start time, or source content.',
+    error: 'Something went wrong. Reload the page and try again.',
     status: 409,
   });
   assert.equal(state.sessions.length, 1);
@@ -285,7 +285,7 @@ test('athlete placement accepts boundary times and rejects anything outside 00:0
     });
     assert.deepEqual(result, {
       ok: false,
-      error: 'Start time must use 24-hour HH:mm from 00:00 to 23:59.',
+      error: 'Enter a start time between 00:00 and 23:59.',
       status: 400,
     }, `expected ${String(timeLabel)} to be rejected`);
   }
@@ -478,14 +478,14 @@ test('personal rescheduling persists calendar days, preserves content, and enfor
 
     await t.test('session deletion is owner-scoped and refuses completed or coach-assigned work', async () => {
       const foreign = await service.deleteSession(other.id, session.id);
-      assert.deepEqual(foreign, { ok: false, error: 'Session not found.', status: 404 });
+      assert.deepEqual(foreign, { ok: false, error: 'Workout not found.', status: 404 });
 
       const source = await db.session.create({ data: {
         athleteId: athlete.id, date: null, sport: 'RUNNING', title: 'Saved workout', source: 'athlete-library',
       } });
       const sourceRefused = await service.deleteSession(athlete.id, source.id);
       assert.deepEqual(sourceRefused, {
-        ok: false, error: 'Only scheduled sessions can be removed from Planner.', status: 409,
+        ok: false, error: 'Only planned workouts can be removed.', status: 409,
       });
       assert.ok(await db.session.findUnique({ where: { id: source.id } }));
       await db.session.delete({ where: { id: source.id } });

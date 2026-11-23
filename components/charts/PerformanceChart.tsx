@@ -99,8 +99,8 @@ export function PerformanceChart({ series, today }: Props) {
     ? `${point.plannedTss} planned`
     : !point.actualLoadKnown
       ? point.actualTss > 0
-        ? `${point.actualTss} known · additional load unavailable`
-        : `Load unavailable${point.plannedTss > 0 ? `\u00A0· ${point.plannedTss} planned` : ''}`
+        ? `${point.actualTss} · some TSS missing`
+        : `No TSS${point.plannedTss > 0 ? `\u00A0· ${point.plannedTss} planned` : ''}`
     : point.plannedTss > 0
       ? `${point.actualTss} done · ${point.plannedTss} planned`
       : `${point.actualTss}`;
@@ -116,7 +116,7 @@ export function PerformanceChart({ series, today }: Props) {
           <LegendValue color="var(--metric-fitness)" label="Fitness" value={String(Math.round(point.fitness))} />
           <LegendValue color="var(--metric-fatigue)" label="Fatigue" value={String(Math.round(point.fatigue))} />
           <LegendValue color="var(--metric-form)" label="Form" value={signed(point.form)} />
-          <LegendValue color="var(--border-strong)" label="Stress" value={stressLabel} />
+          <LegendValue color="var(--border-strong)" label="TSS" value={stressLabel} />
         </span>
       </figcaption>
 
@@ -125,7 +125,7 @@ export function PerformanceChart({ series, today }: Props) {
         aria-valuemin={0}
         aria-valuemax={lastIndex}
         aria-valuenow={shown}
-        aria-valuetext={`${formatDayLong(point.day)}: fitness ${Math.round(point.fitness)}, fatigue ${Math.round(point.fatigue)}, form ${signed(point.form)}, stress ${stressLabel}`}
+        aria-valuetext={`${formatDayLong(point.day)}: fitness ${Math.round(point.fitness)}, fatigue ${Math.round(point.fatigue)}, form ${signed(point.form)}, TSS ${stressLabel}`}
         tabIndex={0}
         aria-label="Training load by day. Use arrow keys to move between days."
         className="relative cursor-pointer hover:bg-[var(--field-surface)] touch-pan-y select-none rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--background)]"
@@ -244,7 +244,7 @@ export function PerformanceChart({ series, today }: Props) {
         </div>
       </div>
       <p className="text-xs text-[var(--text-muted)]">
-        Shaded form band is the balanced zone. Dashed lines project your plan for the next two weeks.
+        The shaded band is the balanced form zone. Dashed lines show where your plan takes you over the next two weeks.
       </p>
     </figure>
   );

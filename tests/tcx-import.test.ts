@@ -217,7 +217,7 @@ test('TCX import requires confirmation, scopes fingerprints per athlete, survive
       assert.equal(preview.ok, true);
       await db.session.update({ where: { id: planned.id }, data: { status: 'completed' } });
       const result = await service.import(athlete.id, staleBytes, true, planned.id);
-      assert.deepEqual(result, { ok: false, status: 409, error: 'That planned session is no longer available for this import. Review the file again and choose an available session.' });
+      assert.deepEqual(result, { ok: false, status: 409, error: 'That planned workout is no longer available. Check the file again and choose another workout.' });
       assert.equal(await db.activity.count({ where: { athleteId: athlete.id, importFingerprint: { not: null } } }), 2);
     });
 
@@ -239,7 +239,7 @@ test('TCX import requires confirmation, scopes fingerprints per athlete, survive
       if (!preview.ok) return;
       assert.equal(preview.candidates?.some((candidate) => candidate.id === missed.id), false);
       const result = await service.import(athlete.id, missedBytes, true, missed.id);
-      assert.deepEqual(result, { ok: false, status: 409, error: 'That planned session is no longer available for this import. Review the file again and choose an available session.' });
+      assert.deepEqual(result, { ok: false, status: 409, error: 'That planned workout is no longer available. Check the file again and choose another workout.' });
     });
 
     await t.test('the recorded completion day, distance, and import provenance appear in Activity, detail, and Calendar', async () => {

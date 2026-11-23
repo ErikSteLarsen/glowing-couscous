@@ -15,7 +15,7 @@ export function PasswordResetClient({ token }: { token: string | null }) {
     event.preventDefault();
     setError('');
     if (!token) {
-      setError('This reset link is missing or invalid. Request a new one to continue.');
+      setError('This reset link doesn’t work. Request a new one to continue.');
       return;
     }
     if (password !== confirmation) {
@@ -54,7 +54,7 @@ export function PasswordResetClient({ token }: { token: string | null }) {
           </div>
         ) : !token ? (
           <div className="space-y-4">
-            <p role="alert" className={dangerTextClassName}>This reset link is missing or invalid. Request a new one to continue.</p>
+            <p role="alert" className={dangerTextClassName}>This reset link doesn’t work. Request a new one to continue.</p>
             <Link href="/forgot-password" className={`${primaryButtonClassName} w-full`}>Request a new link</Link>
           </div>
         ) : (

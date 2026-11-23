@@ -112,9 +112,9 @@ export function ProfileClient({ account }: { account: Account }) {
 
   function restoreProfile(record: RecoveryDraft) {
     const recovered = parseProfileRecovery(record.payload);
-    if (!recovered) { setError('This draft cannot be read. Discard it and start again.'); return; }
-    if (recoveryPayload !== savedSnapshot && !window.confirm('Replace your current unsaved Profile changes with this recovered draft?')) return;
-    if (record.baseline !== revision && !window.confirm('Your saved profile changed after this draft. Restore it for review? Nothing will be saved until you review and save the form.')) return;
+    if (!recovered) { setError('These changes can’t be opened. Discard them and start again.'); return; }
+    if (recoveryPayload !== savedSnapshot && !window.confirm('Replace your current unsaved changes with the restored ones?')) return;
+    if (record.baseline !== revision && !window.confirm('Your Profile was saved again after these changes were made. Restore them anyway? Nothing is saved until you choose Save changes.')) return;
     setName(recovered.name);
     setPerformanceProfile(recovered.profile);
     setRaceTimeDraft(recovered.raceTimeDraft);
@@ -123,7 +123,7 @@ export function ProfileClient({ account }: { account: Account }) {
     const changed = changedTargetSections(savedSnapshot, recovered);
     reveal(changed.sections, changed.advanced);
     recovery.restored(record);
-    setMessage('Profile draft restored. Review your changes, then save.');
+    setMessage('Changes restored. Check them, then save.');
   }
 
   function refreshCalculatedPaces(profile: PerformanceProfile) {
@@ -240,8 +240,8 @@ export function ProfileClient({ account }: { account: Account }) {
       });
 
       if (!res.ok) {
-        const payload = await res.json().catch(() => ({ error: 'Could not save profile' }));
-        showError(payload.error ?? 'Could not save profile');
+        const payload = await res.json().catch(() => ({ error: 'Could not save your Profile. Try again.' }));
+        showError(payload.error ?? 'Could not save your Profile. Try again.');
         setSaving(false);
         return;
       }
@@ -254,12 +254,12 @@ export function ProfileClient({ account }: { account: Account }) {
       setSavedSnapshot(submittedSnapshot);
       await update();
       router.refresh();
-      setMessage('Profile updated. New workout blocks will use these zone defaults.');
+      setMessage('Profile saved. New workout steps use these values for their targets.');
     } catch {
       if (profileSaved) {
-        setMessage('Your profile was saved. Reload if your account details do not refresh.');
+        setMessage('Profile saved. If your name doesn’t update, reload the page.');
       } else {
-        setError('Could not reach Tempo. Your profile changes are still here; try saving again.');
+        setError('Could not reach Tempo. Your changes are still here. Try saving again.');
       }
     }
     setSaving(false);
@@ -293,8 +293,8 @@ export function ProfileClient({ account }: { account: Account }) {
           </div>
 
           <fieldset id="training-metrics" disabled={saving} className="scroll-mt-20 space-y-3 border-t border-[var(--border)] pt-5">
-            <legend className="text-base font-semibold text-[var(--text)]">Training metrics</legend>
-            <p className="max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">Optional. New workout blocks use these for zone targets. Leave anything blank you don’t know.</p>
+            <legend className="text-base font-semibold text-[var(--text)]">Training targets</legend>
+            <p className="max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">Optional. Tempo uses these to turn zones into heart rate, power and pace targets. Leave blank anything you don’t know.</p>
             <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
               <TargetRow id="heart-rate" title="Heart rate" metric="Maximum heart rate" value={performanceProfile.heartRateMaxBpm ? `${performanceProfile.heartRateMaxBpm}\u00A0bpm` : null} open={openSections.has('heart-rate')} onToggle={() => toggleSection('heart-rate')}>
                 <div className="sm:max-w-xs">
@@ -342,7 +342,7 @@ export function ProfileClient({ account }: { account: Account }) {
                   <div className="space-y-3">
                     <div>
                       <h3 className="text-sm font-semibold text-[var(--text)]">Running pace zones</h3>
-                      <p className="mt-1 max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">Starting bands use 65–75%, 75–85%, 85–93%, 93–103%, and 103–115% of race speed. These are editable Tempo estimates, not Olympiatoppen pace bands.</p>
+                      <p className="mt-1 max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">Tempo starts with 65–75%, 75–85%, 85–93%, 93–103% and 103–115% of your race speed. These are Tempo’s estimates, not Olympiatoppen pace zones. You can edit them.</p>
                     </div>
                     <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2 border-b border-[var(--border)] pb-2 text-xs font-semibold text-[var(--text-secondary)] sm:gap-4">
                       <span>Zone</span><span>Fastest /km</span><span>Slowest /km</span>
@@ -355,8 +355,8 @@ export function ProfileClient({ account }: { account: Account }) {
                       </div>)}
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-3">
-                      <p className="max-w-[52ch] text-xs leading-5 text-[var(--text-secondary)]">Race results fill the editable ranges; reset to return to those calculated values. Pace is stored as seconds per kilometre.</p>
-                      <button type="button" disabled={saving} className="min-h-10 text-sm font-medium text-[var(--text-secondary)] underline max-md:min-h-11 decoration-[var(--border)] underline-offset-4 control-hover:text-[var(--text)] disabled:opacity-60" onClick={() => { resetPaceZones(); setError(''); setMessage(''); }}>{performanceProfile.running.raceDistanceMeters && performanceProfile.running.raceTimeSec ? 'Reset to calculated paces' : 'Clear pace overrides'}</button>
+                      <p className="max-w-[52ch] text-xs leading-5 text-[var(--text-secondary)]">Your race result fills in these ranges. Reset to go back to the calculated values.</p>
+                      <button type="button" disabled={saving} className="min-h-10 text-sm font-medium text-[var(--text-secondary)] underline max-md:min-h-11 decoration-[var(--border)] underline-offset-4 control-hover:text-[var(--text)] disabled:opacity-60" onClick={() => { resetPaceZones(); setError(''); setMessage(''); }}>{performanceProfile.running.raceDistanceMeters && performanceProfile.running.raceTimeSec ? 'Reset to calculated paces' : 'Clear custom paces'}</button>
                     </div>
                   </div>
                 </AdvancedTargets>
@@ -384,7 +384,7 @@ export function ProfileClient({ account }: { account: Account }) {
                 </AdvancedTargets>
               </TargetRow>
             </div>
-            <p className="max-w-[68ch] text-xs leading-5 text-[var(--text-secondary)]">Saved workouts keep their settings; profile-based targets use your latest values.</p>
+            <p className="max-w-[68ch] text-xs leading-5 text-[var(--text-secondary)]">Targets based on your Profile always use your latest values. Fixed targets in saved workouts don’t change.</p>
           </fieldset>
         </form>
       </Surface>

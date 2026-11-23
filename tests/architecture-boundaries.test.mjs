@@ -143,13 +143,13 @@ test('coach discovery redirects while request APIs preserve their service owners
   assert.match(discoveryPageSource, /redirect\('\/athlete'\)/);
   assert.match(routeSource, /athleteService/);
   assert.match(routeSource, /loadCoachSearchState/);
-  assert.match(routeSource, /Request already pending/);
+  assert.match(routeSource, /You already have a request waiting for an answer\./);
 });
 
 test('coach request UI surfaces failures and blocks duplicate actions', async () => {
   const panelSource = await read('components/CoachRequestsPanel.tsx');
 
-  assert.match(panelSource, /Failed to load athlete requests/);
+  assert.match(panelSource, /Could not load athlete requests/);
   assert.match(panelSource, /actingRequestId/);
   assert.match(panelSource, /disabled=\{actingRequestId !== null\}/);
 });
@@ -195,7 +195,7 @@ test('template cards keep Apply to Calendar visible, edit from the title and tuc
   // The preview lists only days with workouts; the editor keeps all seven days.
   assert.match(templatesClientSource, /return titles\.length \? \[\{ day, titles \}\] : \[\]/);
   assert.match(templatesClientSource, /'No workout'|>No workout</);
-  assert.doesNotMatch(templatesClientSource, /More actions<\/summary>|Edit routine/);
+  assert.doesNotMatch(templatesClientSource, /More actions<\/summary>|>\s*Edit routine\s*<\/(button|a)>/);
 });
 
 test('planner places sources while libraries own live editing', async () => {
@@ -211,7 +211,7 @@ test('planner places sources while libraries own live editing', async () => {
   assert.match(plannerDeskSource, /training-plan/);
   assert.match(plannerDeskSource, /Monday/);
   assert.match(templatesClientSource, /function edit/);
-  assert.match(templatesClientSource, /Save template/);
+  assert.match(templatesClientSource, /Save routine/);
   assert.match(templatesClientSource, /edit\(template\)/);
 });
 
@@ -225,8 +225,8 @@ test('live route delegates execution state to an accessible client', async () =>
   assert.match(liveClientSource, /previousExecution/);
   assert.match(liveClientSource, /restartExecution/);
   assert.match(liveClientSource, /completion/);
-  assert.match(liveClientSource, /Previous block/);
-  assert.match(liveClientSource, /Next block/);
+  assert.match(liveClientSource, /Previous step/);
+  assert.match(liveClientSource, /Next step/);
   assert.match(stepperSource, /aria-current/);
 });
 
@@ -258,7 +258,7 @@ test('planner service preserves adjusted state when a coach edits an existing se
 
   assert.match(plannerServiceSource, /activity: \{ select: \{ id: true \} \}/);
   assert.match(plannerServiceSource, /adjusted: existing\.adjusted/);
-  assert.match(plannerServiceSource, /Completed sessions are immutable/);
+  assert.match(plannerServiceSource, /Workouts marked as done can’t be changed/);
 });
 
 test('completion writes planned status through the completion service', async () => {
@@ -278,5 +278,5 @@ test('compatibility planner reassigns cross-week edits and does not load retired
 
   assert.match(plannerServiceSource, /scheduledWeekStart = startOfWeek\(scheduledDate/);
   assert.doesNotMatch(plannerServiceSource, /db\.template/);
-  assert.match(plannerServiceSource, /Completed sessions are immutable/);
+  assert.match(plannerServiceSource, /Workouts marked as done can’t be changed/);
 });

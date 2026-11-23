@@ -282,12 +282,12 @@ export function PlannerDesk({
     if (mutationInFlight.current) return;
     if (!selectedSource || !selectedDates.length) {
       setMessageTone('danger');
-      setMessage('Choose a source and at least one target date.');
+      setMessage('Choose a workout or plan and at least one date.');
       return;
     }
     if (role === 'coach' && !selectedAthleteId) {
       setMessageTone('danger');
-      setMessage('Choose an athlete before assigning source content.');
+      setMessage('Choose an athlete first.');
       return;
     }
     if (!templateRangeValid) {
@@ -334,7 +334,7 @@ export function PlannerDesk({
         const payload = await response.json().catch(() => ({})) as { error?: string; sessionIds?: number[] };
         if (!response.ok) {
           setMessageTone('danger');
-          setMessage(payload.error ?? 'Could not assign this source.');
+          setMessage(payload.error ?? 'Could not add this to the athlete’s calendar.');
           setPlacement({ ...feedback, state: 'failed' });
           return;
         }
@@ -348,7 +348,7 @@ export function PlannerDesk({
         router.refresh();
       } catch {
         setMessageTone('danger');
-        setMessage('Could not confirm placement. Check your connection and try again.');
+        setMessage('Could not confirm that this was added. Check your connection and try again.');
         setPlacement({ ...feedback, state: 'failed' });
       } finally { mutationInFlight.current = false; setPendingAction(null); }
     });
@@ -366,7 +366,7 @@ export function PlannerDesk({
         const payload = await response.json().catch(() => ({})) as { error?: string };
         if (!response.ok) {
           setMessageTone('danger');
-          setMessage(payload.error ?? 'Could not remove this session.');
+          setMessage(payload.error ?? 'Could not remove this workout.');
           return;
         }
         setMessageTone('success');
@@ -385,7 +385,7 @@ export function PlannerDesk({
       <Surface className="space-y-4">
         <EmptyState
           title="Add an athlete before planning"
-          description="Planner places defined workouts and reusable sources on an athlete's calendar. Add someone to your roster, then return here to schedule their work."
+          description="The planner puts your workouts and training plans on an athlete’s calendar. Add an athlete to your roster first."
           action={<ActionLink href="/coach" tone="secondary" size="compact">Open athletes</ActionLink>}
         />
       </Surface>
@@ -465,7 +465,7 @@ export function PlannerDesk({
 function AssignmentSummary({ role, source, selectedDates, selectedTemplateDays, rangeStart, rangeEnd, valid, isPending, isAssigning, message, messageTone, canAssign, startTime, timeError, duplicateWarning, onStartTimeChange, onAssign }: { role: PlannerDeskRole; source: PlannerDeskSource | null; selectedDates: string[]; selectedTemplateDays: number | null; rangeStart: string | null; rangeEnd: string | null; valid: boolean; isPending: boolean; isAssigning: boolean; message: string; messageTone: 'success' | 'danger' | 'neutral'; canAssign: boolean; startTime: string; timeError: string | null; duplicateWarning: string | null; onStartTimeChange: (value: string) => void; onAssign: () => void }) {
   const selectedCount = selectedDates.length;
   const buttonLabel = !source
-    ? 'Choose a source'
+    ? 'Choose a workout or plan'
     : source.kind === 'training-plan'
       ? 'Assign training plan'
       : source.kind === 'template'
@@ -475,7 +475,7 @@ function AssignmentSummary({ role, source, selectedDates, selectedTemplateDays, 
     <section className="border-y border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-[var(--shadow-inset)] sm:px-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-[var(--text)]">{source ? source.title : 'No source selected'}{source ? <span className="font-normal text-[var(--text-secondary)]"> · {getSportLabel(source.sport)}&nbsp;· {sourceMeta(source, selectedDates[0])}</span> : null}</p>
+          <p className="truncate text-sm font-semibold text-[var(--text)]">{source ? source.title : 'Nothing selected yet'}{source ? <span className="font-normal text-[var(--text-secondary)]"> · {getSportLabel(source.sport)}&nbsp;· {sourceMeta(source, selectedDates[0])}</span> : null}</p>
           <p className="mt-1 text-xs text-[var(--text-secondary)]">
             {source?.kind === 'template'
               ? `${selectedCount} of ${selectedTemplateDays} days selected${rangeStart ? ` · starts ${formatShortDate(rangeStart)}` : ''}${rangeEnd ? ` · ends ${formatShortDate(rangeEnd)}` : ''}`
@@ -508,7 +508,7 @@ function AssignmentSummary({ role, source, selectedDates, selectedTemplateDays, 
                 />
               </label>
               <p id="planner-start-time-hint" className={`mt-1 text-xs ${timeError ? 'text-[var(--status-danger)]' : 'text-[var(--text-muted)]'}`}>
-                {timeError ?? 'Optional. Leave empty for an untimed session.'}
+                {timeError ?? 'Optional. Leave empty for no set time.'}
               </p>
             </details>
           ) : null}
@@ -544,13 +544,13 @@ function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSo
       ) : null}
       <div className="flex items-start justify-between gap-3 pt-1">
         <div>
-          <h2 className="text-lg font-semibold tracking-[-0.02em]">Find a source</h2>
-          <p className="mt-1 text-sm leading-5 text-[var(--nav-muted)]">Search saved content, then choose its dates.</p>
+          <h2 className="text-lg font-semibold tracking-[-0.02em]">Find a workout or plan</h2>
+          <p className="mt-1 text-sm leading-5 text-[var(--nav-muted)]">Search your workouts and plans, then choose dates.</p>
         </div>
         <Search aria-hidden="true" className="mt-1 h-5 w-5 text-[var(--color-liquid)]" />
       </div>
       <SearchField label="Search workouts and templates" labelClassName="mt-3" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Search by name or sport" />
-      <div role="tablist" aria-label="Planner source type" className={`${switchTrackClassName} mt-3 max-w-full overflow-x-auto`}>
+      <div role="tablist" aria-label="Show workouts or plans" className={`${switchTrackClassName} mt-3 max-w-full overflow-x-auto`}>
         {tabs.map((tab) => {
           const count = sources.filter((source) => source.kind === tab).length;
           return <button key={tab} type="button" role="tab" aria-selected={sourceTab === tab} onClick={() => onTabChange(tab)} className={`${getSwitchOptionClassName(sourceTab === tab)} shrink-0 gap-1 capitalize`}>{tab === 'training-plan' ? 'Plans' : `${tab}s`} <span className="font-normal">{count}</span></button>;
@@ -560,7 +560,7 @@ function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSo
         {visibleSources.length ? visibleSources.map((source) => <SourceResult key={source.key} source={source} selected={source.key === selectedSource?.key} selectedDate={selectedDate} onSelect={onSelectSource} />) : <p className="border border-dashed border-[var(--nav-border)] px-3 py-4 text-sm text-[var(--nav-muted)]">No {sourceTab === 'training-plan' ? 'plans' : `${sourceTab}s`} match “{query}”.</p>}
       </div>
       <div className="mt-4 border-t border-[var(--nav-border)] pt-3 text-xs leading-5 text-[var(--nav-muted)]">
-        <p>{role === 'coach' ? 'Planner places' : 'Calendar places'} independent copies. Editing stays in the library.</p>
+        <p>Each date gets its own copy. Editing the original later won’t change it.</p>
         <div className="mt-2 flex flex-wrap gap-2">
           <ActionLink href={role === 'coach' ? '/coach/workouts' : '/athlete/workouts'} tone="ghost" size="compact">Manage workouts</ActionLink>
           {role === 'athlete' ? <ActionLink href="/athlete/templates" tone="ghost" size="compact">Manage templates</ActionLink> : null}
@@ -641,7 +641,7 @@ function SelectionPanel({ role, sessions, selectedDates, isPending, removingId, 
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold tracking-[-0.03em]">{multiple ? 'Selected days' : 'Selected day'}</h2>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">{multiple ? 'Click a day or session to select only that day.' : 'Sessions assigned to this day.'}</p>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">{multiple ? 'Click a day or workout to select only that day.' : 'Workouts on this day.'}</p>
         </div>
         <CalendarDays aria-hidden="true" className="h-5 w-5 text-[var(--brand)]" />
       </div>
@@ -656,9 +656,9 @@ function SelectionPanel({ role, sessions, selectedDates, isPending, removingId, 
 }
 
 function SelectedDaySessions({ role, date, sessions, isPending, removingId, onRemoveSession }: { role: PlannerDeskRole; date: string | undefined; sessions: PlannerDeskSession[]; isPending: boolean; removingId: number | null; onRemoveSession: (session: PlannerDeskSession) => void }) {
-  if (!date) return <p className="text-sm text-[var(--text-secondary)]">Select a day to see its sessions.</p>;
+  if (!date) return <p className="text-sm text-[var(--text-secondary)]">Select a day to see its workouts.</p>;
   const daySessions = sessions.filter((session) => session.scheduledDate === date);
-  if (!daySessions.length) return <p className="text-sm text-[var(--text-secondary)]">No sessions assigned to this day.</p>;
+  if (!daySessions.length) return <p className="text-sm text-[var(--text-secondary)]">No workouts on this day.</p>;
   return <div className="space-y-2">{daySessions.map((session) => <SessionDetail key={session.id} role={role} session={session} isPending={isPending} removingId={removingId} onRemoveSession={onRemoveSession} />)}</div>;
 }
 
@@ -667,8 +667,8 @@ function SessionDetail({ role, session, isPending, removingId, onRemoveSession }
   return (
     <div className="border border-[var(--field-selected-border)] bg-[var(--surface)] p-3">
       <div className="flex items-start justify-between gap-2">
-        <Link href={sessionHref} className="min-w-0 flex-1 hover:bg-[var(--raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><span className="flex items-center gap-2"><span className="truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</span><ArrowRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[var(--brand)]" /></span><span className="mt-1 block text-[11px] text-[var(--text-secondary)]">{getSportLabel(session.sport)}&nbsp;· {formatDuration(session.durationSec)}&nbsp;· {session.tss === null ? 'Load unavailable' : `${session.tss}\u00A0TSS`}</span></Link>
-        <button type="button" aria-label={`Remove ${session.title}`} disabled={isPending || session.status === 'completed'} title={session.status === 'completed' ? 'Completed sessions cannot be removed from Planner.' : undefined} onClick={() => onRemoveSession(session)} className={`${dangerButtonClassName} min-h-8 px-2.5 py-1.5 text-xs`}>{removingId === session.id ? 'Removing...' : <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />}</button>
+        <Link href={sessionHref} className="min-w-0 flex-1 hover:bg-[var(--raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><span className="flex items-center gap-2"><span className="truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</span><ArrowRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[var(--brand)]" /></span><span className="mt-1 block text-[11px] text-[var(--text-secondary)]">{getSportLabel(session.sport)}&nbsp;· {formatDuration(session.durationSec)}&nbsp;· {session.tss === null ? 'No TSS' : `${session.tss}\u00A0TSS`}</span></Link>
+        <button type="button" aria-label={`Remove ${session.title}`} disabled={isPending || session.status === 'completed'} title={session.status === 'completed' ? 'Workouts marked as done can’t be removed.' : undefined} onClick={() => onRemoveSession(session)} className={`${dangerButtonClassName} min-h-8 px-2.5 py-1.5 text-xs`}>{removingId === session.id ? 'Removing...' : <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />}</button>
       </div>
       <div className="mt-3"><SessionBlockBar segments={session.segments} compact /></div>
       <span className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)]"><SessionStatusIcon status={session.status} /> {statusLabel(session.status)}</span>
@@ -690,19 +690,19 @@ function coachSource(source: PlannerDeskSource) {
 
 function sourceMeta(source: PlannerDeskSource, date: string) {
   if (source.kind === 'workout') return source.durationSec ? formatDuration(source.durationSec) : 'Workout';
-  if (source.kind === 'training-plan') return `${source.sessionCount ?? 0} sessions`;
+  if (source.kind === 'training-plan') return `${source.sessionCount ?? 0} workouts`;
   return `${getTemplateDurationDays(source.cadence ?? 'day', date)} days`;
 }
 
 function sourceDescription(source: PlannerDeskSource, date: string) {
-  if (source.kind === 'training-plan') return 'Monday-start plan with independent athlete sessions.';
+  if (source.kind === 'training-plan') return 'Starts on a Monday. The athlete gets their own copy of each workout.';
   if (source.kind === 'template') return `${templateCadenceMeta[source.cadence ?? 'day'].label}\u00A0· ${getTemplateDurationDays(source.cadence ?? 'day', date)} target day${getTemplateDurationDays(source.cadence ?? 'day', date) === 1 ? '' : 's'}.`;
-  return 'Saved workout copied independently onto the selected dates.';
+  return 'Each date you choose gets its own copy of this workout.';
 }
 
 function calendarInstruction(source: PlannerDeskSource | null) {
   if (source?.kind === 'template') return source.cadence === 'day' ? 'Select the day for this single-day template.' : 'Review the highlighted range, or choose a new start and end date.';
-  if (source?.kind === 'training-plan') return 'Select the week anchor. Training plans always begin on Monday.';
+  if (source?.kind === 'training-plan') return 'Choose the Monday the plan starts on.';
   return 'Select one or more dates for the saved workout.';
 }
 

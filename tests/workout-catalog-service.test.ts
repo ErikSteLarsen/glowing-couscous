@@ -71,7 +71,7 @@ test('ride now reuses an unridden copy from the same day', async () => {
 test('catalog actions reject unknown workouts and invalid dates', async () => {
   const { service, calls } = setup();
   assert.equal((await service.rideNow(3, 'missing', { date: '2026-11-20' })).ok, false);
-  assert.deepEqual(await service.rideNow(3, 'fixture-sweet-spot', { date: '2026-02-30' }), { ok: false, error: 'Send the local date to ride on (yyyy-MM-dd).', status: 400 });
+  assert.deepEqual(await service.rideNow(3, 'fixture-sweet-spot', { date: '2026-02-30' }), { ok: false, error: 'Choose a date.', status: 400 });
   assert.equal((await service.schedule(3, 'fixture-sweet-spot', { dates: ['2026-11-21', 'tomorrow'] })).ok, false);
   assert.equal((await service.schedule(3, 'fixture-sweet-spot', {})).ok, false);
   assert.equal((await service.schedule(3, 'fixture-sweet-spot', { dates: ['2026-11-21'] })).ok, false, 'a request key is required');
@@ -162,7 +162,7 @@ test('Schedule retries with the same request key replay one atomic multi-date co
     assert.equal(await db.session.count({ where: { athleteId: athlete.id } }), 2);
 
     const reused = await catalogService.schedule(athlete.id, workout.slug, { ...body, dates: ['2026-11-25'] });
-    assert.deepEqual(reused, { ok: false, error: 'This schedule request was already used for different dates or workout.', status: 409 });
+    assert.deepEqual(reused, { ok: false, error: 'Something went wrong. Reload the page and try again.', status: 409 });
 
     const fresh = await catalogService.schedule(athlete.id, workout.slug, { ...body, requestKey: 'catalog-schedule-key-0002' });
     assert.ok(fresh.ok && fresh.sessionIds.length === 2);

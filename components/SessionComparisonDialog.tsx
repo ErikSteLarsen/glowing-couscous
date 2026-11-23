@@ -24,7 +24,7 @@ type ComparisonData = {
 export function SessionComparisonDialog({
   sessionId,
   endpoint,
-  label = 'Compare baseline and actual',
+  label = 'Compare plan and result',
   perspective = 'personal',
 }: {
   sessionId: number;
@@ -47,7 +47,7 @@ export function SessionComparisonDialog({
     fetch(endpoint)
       .then(async (response) => {
         const payload = (await response.json().catch(() => ({}))) as ComparisonData & { error?: string };
-        if (!response.ok) throw new Error(payload.error ?? 'Failed to load comparison');
+        if (!response.ok) throw new Error(payload.error ?? 'Could not load the comparison. Try again.');
         return payload;
       })
       .then((payload) => {
@@ -56,7 +56,7 @@ export function SessionComparisonDialog({
         setSelectedVersion(payload.actual ? 'actual' : 'baseline');
       })
       .catch((reason: unknown) => {
-        if (active) setError(reason instanceof Error ? reason.message : 'Failed to load comparison');
+        if (active) setError(reason instanceof Error ? reason.message : 'Could not load the comparison. Try again.');
       })
       .finally(() => {
         if (active) setIsLoading(false);
@@ -128,9 +128,9 @@ export function SessionComparisonDialog({
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Session comparison</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Compare</p>
                 <h2 id={`comparison-title-${sessionId}`} className="mt-2 text-xl font-semibold text-[var(--text)]">
-                  Planned and actual
+                  Plan and result
                 </h2>
               </div>
               <button
@@ -147,29 +147,29 @@ export function SessionComparisonDialog({
             {isLoading ? <p role="status" className="mt-6 text-sm text-[var(--text-secondary)]">Loading comparison…</p> : null}
             {error ? <p role="alert" className="mt-6 text-sm text-[var(--status-danger)]">{error}</p> : null}
             {!isLoading && !error && !selectedDraft ? (
-              <p className="mt-6 text-sm text-[var(--text-secondary)]">No planned or actual snapshot is available for this session.</p>
+              <p className="mt-6 text-sm text-[var(--text-secondary)]">There’s no plan or result to compare for this workout.</p>
             ) : null}
 
             {!isLoading && !error && selectedDraft ? (
               <div className="mt-6 space-y-5">
                 {data?.baseline && data.actual ? (
-                  <SegmentedControl value={selectedVersion} onValueChange={(value) => { if (value === 'baseline' || value === 'actual') setSelectedVersion(value); }} className="flex gap-2 rounded-[3px] bg-[var(--field-surface)] p-1" aria-label="Comparison version">
+                  <SegmentedControl value={selectedVersion} onValueChange={(value) => { if (value === 'baseline' || value === 'actual') setSelectedVersion(value); }} className="flex gap-2 rounded-[3px] bg-[var(--field-surface)] p-1" aria-label="Show plan or result">
                     <SegmentedControlItem
                       value="baseline"
                       className={getSegmentedChoiceClassName(selectedVersion === 'baseline', 'compact')}
                     >
-                      {perspective === 'coach' ? 'Coach plan' : 'Planned'}
+                      {perspective === 'coach' ? 'Coach’s plan' : 'Plan'}
                     </SegmentedControlItem>
                     <SegmentedControlItem
                       value="actual"
                       className={getSegmentedChoiceClassName(selectedVersion === 'actual', 'compact')}
                     >
-                      {perspective === 'coach' ? 'Athlete actual' : 'Actual'}
+                      {perspective === 'coach' ? 'Athlete’s result' : 'Result'}
                     </SegmentedControlItem>
                   </SegmentedControl>
                 ) : (
                   <p className="text-[13px] text-[var(--text-secondary)]">
-                    {data?.actual ? 'Only the actual snapshot is available.' : 'Only the planned snapshot is available.'}
+                    {data?.actual ? 'Only the result is available.' : 'Only the plan is available.'}
                   </p>
                 )}
                 <SnapshotView draft={selectedDraft} ftpWatts={data?.ftpWatts} />

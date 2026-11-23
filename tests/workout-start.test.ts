@@ -8,7 +8,7 @@ const bike = { sport: 'BIKING', status: 'planned', hasSteps: true };
 const follow = ['live', 'Follow along'];
 const openApp = ['app', 'Open in Tempo Ride'];
 const rideInBrowser = ['ride', 'Ride in this browser'];
-const targetsOnly = ['ride', 'Ride with targets only'];
+const targetsOnly = ['ride', 'Ride without devices'];
 const rideInApp = ['ride', 'Ride in Tempo Ride'];
 
 function choices(workout: typeof bike, runtime: WorkoutStartRuntime) {
@@ -25,7 +25,7 @@ test('bike choices follow Web Bluetooth capability, desktop platform and host ap
   for (const webBluetooth of [true, false]) {
     const options = getWorkoutStartOptions(bike, { os: 'linux', webBluetooth, inTempoRide: true });
     assert.deepEqual(options.map(({ mode, label }) => [mode, label]), [rideInApp, follow]);
-    assert.match(options[0].description, webBluetooth ? /Bluetooth devices/ : /save your ride duration/);
+    assert.match(options[0].description, webBluetooth ? /over Bluetooth/ : /ride time is saved/);
   }
 });
 

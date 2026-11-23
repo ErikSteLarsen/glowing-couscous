@@ -46,7 +46,7 @@ export default function LoginPage() {
     try {
       const result = await signIn('credentials', { email: email.trim().toLowerCase(), password, redirect: false });
       if (result?.error) {
-        setError('Invalid email or password. Check your details and try again.');
+        setError('That email and password don’t match. Check them and try again.');
         return;
       }
       router.push(callbackUrl ?? '/');

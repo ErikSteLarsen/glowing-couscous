@@ -11,15 +11,15 @@ const personalOverviewCardIds = ['lastActivity', 'weekLoad', 'trend'] as const s
 const overviewLabels: Record<(typeof personalOverviewCardIds)[number], { title: string; description: string }> = {
   lastActivity: {
     title: 'Last activity',
-    description: 'Keep the most recent completed session visible on Home.',
+    description: 'Show your most recent activity on Home.',
   },
   weekLoad: {
     title: 'Training this week',
-    description: 'Show scheduled training and completed outcomes separately for the current week.',
+    description: 'Show what’s planned and what’s done this week.',
   },
   trend: {
     title: 'Training trends',
-    description: 'Show estimated fitness, fatigue, form, and ramp rate with the training load chart.',
+    description: 'Show fitness, fatigue, form and ramp rate with the training load chart.',
   },
 };
 
@@ -53,16 +53,16 @@ export function SettingsClient({
       if (!response.ok) {
         setOverviewCards(overviewCards);
         setMessageTone('danger');
-        setMessage('Could not save overview settings.');
+        setMessage('Could not save your Home settings. Try again.');
         return;
       }
 
       setMessageTone('success');
-      setMessage('Overview settings updated.');
+      setMessage('Home settings saved.');
       } catch {
         setOverviewCards(overviewCards);
         setMessageTone('danger');
-        setMessage('Could not reach Tempo. Your saved preferences are unchanged; try again.');
+        setMessage('Could not reach Tempo. Your settings didn’t change. Try again.');
       }
     });
   }

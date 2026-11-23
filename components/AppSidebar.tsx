@@ -104,7 +104,7 @@ export function AppSidebar(props: {
       ) : null}
       <aside
         id="tempo-sidebar"
-        aria-label="Workspace"
+        aria-label="Main menu"
         role={props.isMobileViewport && props.mobileOpen ? 'dialog' : undefined}
         aria-hidden={props.isMobileViewport && !props.mobileOpen ? true : undefined}
         aria-modal={props.isMobileViewport && props.mobileOpen ? true : undefined}

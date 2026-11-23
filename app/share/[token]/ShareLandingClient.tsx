@@ -65,7 +65,7 @@ export function ShareLandingClient({
   const [isPending, startTransition] = useTransition();
   const [isDirty, setIsDirty] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
-  const plannerDestination = userRole === 'COACH' ? 'Workouts' : 'Planner';
+  const plannerDestination = userRole === 'COACH' ? 'Workouts' : 'Calendar';
 
   function beginAction(nextAction: ShareCopyAction) {
     if (isPending) return;
@@ -116,19 +116,19 @@ export function ShareLandingClient({
         const payload = await response.json().catch(() => ({})) as { error?: string };
         if (!response.ok) {
           setMessageTone('danger');
-          setMessage(payload.error ?? 'Failed to save shared workout.');
+          setMessage(payload.error ?? 'Could not save this workout. Try again.');
           return;
         }
 
         setMessageTone('success');
-        setMessage(action === 'template' ? 'Private template saved.' : `Workout saved to your ${plannerDestination}.`);
+        setMessage(action === 'template' ? 'Saved to My workouts and as a new routine.' : `Workout saved to your ${plannerDestination}.`);
         router.push(action === 'template'
           ? userRole === 'COACH' ? '/coach/templates' : '/athlete/templates'
           : userRole === 'COACH' ? '/coach/workouts' : '/athlete/calendar');
         router.refresh();
       } catch {
         setMessageTone('danger');
-        setMessage('Could not reach the server. Your changes are kept. Check your connection and save again.');
+        setMessage('Could not reach Tempo. Your changes are still here. Check your connection and save again.');
       }
     });
   }
@@ -138,7 +138,7 @@ export function ShareLandingClient({
       <PageShell size="wide" className="max-w-[1180px]">
         <TopBar
           title={projection.title || 'Shared workout'}
-          description={ownerDeleted ? 'Owner: [deleted]. This anonymized workout remains available to people with its link.' : 'A read-only snapshot. Anyone with this URL can view the workout definition.'}
+          description={ownerDeleted ? 'Shared by a deleted account. Anyone with the link can still see this workout.' : 'A view-only copy. Anyone with this link can see it.'}
         />
 
         {!action ? (
@@ -151,10 +151,10 @@ export function ShareLandingClient({
                   <Badge>{projection.metrics.tss}&nbsp;TSS</Badge>
                 </div>
                 <p className="text-[15px] leading-[1.6] text-[var(--text-secondary)]">
-                  {projection.summary || 'Workout definition shared from Tempo.'}
+                  {projection.summary || 'A workout shared from Tempo.'}
                 </p>
                 <div className="space-y-3">
-                  <h2 className="text-base font-medium text-[var(--text)]">Workout blocks</h2>
+                  <h2 className="text-base font-medium text-[var(--text)]">Steps</h2>
                   {projection.blocks.map((block, index) => (
                     <div key={`${block.kind}-${index}`} className="rounded-[12px] border border-[var(--border)] bg-[var(--field-surface)] p-4">
                       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -182,16 +182,16 @@ export function ShareLandingClient({
                 <div>
                   <h2 className="text-base font-medium text-[var(--text)]">Save your own copy</h2>
                   <p className="mt-2 text-sm leading-[1.55] text-[var(--text-secondary)]">
-                    Nothing is saved or scheduled until you edit and confirm one of these actions.
+                    Pick one. You can edit the workout before anything is saved.
                   </p>
                 </div>
                 <div className="grid gap-3">
                   <button type="button" className={primaryButtonClassName} onClick={() => beginAction('planner')}>
-                    Use in {plannerDestination}
+                    Add to {plannerDestination}
                   </button>
                   {userRole === 'ATHLETE' ? (
                     <button type="button" className={compactSecondaryButtonClassName} onClick={() => beginAction('template')}>
-                      Save as template
+                      Save as routine
                     </button>
                   ) : null}
                 </div>
@@ -203,7 +203,7 @@ export function ShareLandingClient({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-lg font-medium text-[var(--text)]">
-                  {action === 'planner' ? `Edit before saving to ${plannerDestination}` : 'Edit before saving as a template'}
+                  {action === 'planner' ? `Edit before saving to ${plannerDestination}` : 'Edit before saving as a routine'}
                 </h2>
               </div>
               <button type="button" className={compactSecondaryButtonClassName} onClick={closeEditor} disabled={isPending}>
@@ -225,24 +225,24 @@ export function ShareLandingClient({
                 draft={draft}
                 onChange={(next) => { setDraft(next); setIsDirty(true); setMessage(''); }}
                 showSchedule={action === 'planner' && userRole === 'ATHLETE'}
-                summaryPlaceholder="Workout summary"
+                summaryPlaceholder="Notes"
                 performanceProfile={performanceProfile}
               />
             </fieldset>
             {action === 'planner' ? (
               <p className="text-sm text-[var(--text-secondary)]">
-                {userRole === 'COACH' ? 'This will save as a private standalone coach-library session.' : 'This will save as a private athlete Planner session.'}
+                {userRole === 'COACH' ? 'This saves a private copy to your Workouts.' : 'This adds a private copy to your Calendar on the date you choose.'}
               </p>
             ) : null}
             <div className="sticky bottom-0 z-10 -mx-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3">
               <button type="button" className={primaryButtonClassName} onClick={save} disabled={isPending || confirmDiscard}>
-                {isPending ? 'Saving…' : action === 'planner' ? `Save to ${plannerDestination}` : 'Save as template'}
+                {isPending ? 'Saving…' : action === 'planner' ? `Save to ${plannerDestination}` : 'Save as routine'}
               </button>
               {message ? <p role={messageTone === 'success' ? 'status' : 'alert'} className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
             </div>
             <label className="block space-y-2">
-              <span className="text-xs text-[var(--text-muted)]">Shared snapshot</span>
-              <input className={formFieldClassName} value="Source edits cannot change this snapshot." readOnly />
+              <span className="text-xs text-[var(--text-muted)]">Shared version</span>
+              <input className={formFieldClassName} value="Later changes by the owner won’t change your copy." readOnly />
             </label>
           </Surface>
         )}

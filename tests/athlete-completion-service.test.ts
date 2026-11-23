@@ -94,7 +94,7 @@ function plannedSession(activity: Record<string, unknown> | null = null, overrid
     date: new Date('2026-08-24T00:00:00.000Z'),
     timeLabel: null,
     sport: 'RUNNING',
-    title: 'Planned session',
+    title: 'Planned workout',
     summary: null,
     coachNotes: null,
     athleteNotes: null,
@@ -148,7 +148,7 @@ test('manual completion preserves the scheduled date and stores an estimate with
   assert.equal((calls.sessionUpdate as any).data.date.toISOString(), '2026-08-24T00:00:00.000Z');
   assert.equal((calls.sessionUpdate as any).data.athleteNotes, 'Controlled effort');
   const baseline = JSON.parse((calls.sessionUpdate as any).data.coachBaselineJson);
-  assert.equal(baseline.title, 'Planned session');
+  assert.equal(baseline.title, 'Planned workout');
   assert.equal(baseline.blocks.length, 2);
   assert.equal(baseline.blocks[1].durationSec, 900);
 });
@@ -203,12 +203,12 @@ test('completion enforces ownership and bounded notes', async () => {
   assert.deepEqual(await service.completeSession(8, 11, {}), {
     ok: false,
     status: 404,
-    error: 'Session not found',
+    error: 'Workout not found.',
   });
   assert.deepEqual(await service.completeSession(7, 11, { notes: 'x'.repeat(2001) }), {
     ok: false,
     status: 400,
-    error: 'Notes are too long',
+    error: 'Your note is too long.',
   });
 });
 
@@ -262,12 +262,12 @@ test('actual correction permits the roster coach, rejects unrelated coaches, and
   assert.deepEqual(await service.saveActualOutcome({ role: 'COACH', userId: 99 }, 11, actualDraft()), {
     ok: false,
     status: 404,
-    error: 'Session not found',
+    error: 'Workout not found.',
   });
   assert.deepEqual(await service.saveActualOutcome({ role: 'ATHLETE', userId: 7 }, 11, { ...actualDraft(), rpe: 11 }), {
     ok: false,
     status: 400,
-    error: 'RPE must be an integer from 1 through 10.',
+    error: 'RPE must be a whole number from 1 to 10.',
   });
 });
 

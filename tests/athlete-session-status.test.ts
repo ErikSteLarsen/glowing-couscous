@@ -94,7 +94,7 @@ test('skipping twice and planning again a planned session are refused with clear
   assert.deepEqual(await service.skipSession(7, 40), {
     ok: false,
     status: 409,
-    error: 'Only planned sessions can be skipped.',
+    error: 'Only planned workouts can be skipped.',
   });
 
   const planned = createStatusDb(personalSession());
@@ -102,7 +102,7 @@ test('skipping twice and planning again a planned session are refused with clear
   assert.deepEqual(await plannedService.planAgainSession(7, 40), {
     ok: false,
     status: 409,
-    error: 'Only skipped sessions can be planned again.',
+    error: 'Only skipped workouts can be planned again.',
   });
 });
 
@@ -113,7 +113,7 @@ test('completed sessions cannot be skipped or planned again', async () => {
   const skipResult = await service.skipSession(7, 40);
   assert.equal(skipResult.ok, false);
   assert.equal(skipResult.ok ? '' : skipResult.status, 409);
-  assert.equal(skipResult.ok ? '' : skipResult.error, 'Completed sessions cannot be skipped.');
+  assert.equal(skipResult.ok ? '' : skipResult.error, 'Workouts marked as done can’t be skipped.');
 
   const restoreResult = await service.planAgainSession(7, 40);
   assert.equal(restoreResult.ok, false);
@@ -127,7 +127,7 @@ test('other owners sessions are not found and coach-assigned sessions are refuse
   assert.deepEqual(await otherService.skipSession(7, 40), {
     ok: false,
     status: 404,
-    error: 'Session not found.',
+    error: 'Workout not found.',
   });
   assert.equal(otherOwner.calls.updateMany.length, 0);
 
@@ -136,7 +136,7 @@ test('other owners sessions are not found and coach-assigned sessions are refuse
   const refused = await coachService.skipSession(7, 40);
   assert.equal(refused.ok, false);
   assert.equal(refused.ok ? '' : refused.status, 403);
-  assert.equal(refused.ok ? '' : refused.error, 'Coach-assigned sessions can only be changed by the coach.');
+  assert.equal(refused.ok ? '' : refused.error, 'Only your coach can change workouts they planned.');
   assert.equal(coachAssigned.calls.updateMany.length, 0);
 
   const trainingPlan = createStatusDb(personalSession({ trainingPlanId: 3 }));

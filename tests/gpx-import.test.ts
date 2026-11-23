@@ -67,7 +67,7 @@ test('GPX parser rejects route-only, ambiguous, malformed, untimed, and unsafe a
   const overLimit = `<gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1"><trk><trkseg>${tooManyPoints}</trkseg></trk></gpx>`;
   const limitResult = parseGpxActivity(overLimit, 'RUNNING');
   assert.equal(limitResult.ok, false);
-  if (!limitResult.ok) assert.match(limitResult.error, /at most/);
+  if (!limitResult.ok) assert.match(limitResult.error, /too many points/);
 
   const longTrack = Array.from({ length: 110 }, (_, index) => {
     const location = index % 2 === 0 ? 'lat="0" lon="0"' : 'lat="0" lon="180"';
@@ -76,7 +76,7 @@ test('GPX parser rejects route-only, ambiguous, malformed, untimed, and unsafe a
   }).join('');
   const overRange = parseGpxActivity(`<gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1"><trk><trkseg>${longTrack}</trkseg></trk></gpx>`, 'RUNNING');
   assert.equal(overRange.ok, false);
-  if (!overRange.ok) assert.match(overRange.error, /distance exceeds/);
+  if (!overRange.ok) assert.match(overRange.error, /too long to import/);
 });
 
 test('activity upload reader requires one selected sport for GPX only', async () => {

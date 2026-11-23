@@ -29,13 +29,13 @@ export default function SetupPage() {
         body: JSON.stringify({ role: 'ATHLETE' }),
       });
       if (!response.ok) {
-        setError('We couldn’t finish setting up your workspace. Please try again.');
+        setError('We couldn’t finish setting up your account. Try again.');
         return;
       }
       await update({ role: 'ATHLETE' });
       router.push(callbackUrl ?? '/athlete');
     } catch {
-      setError('We couldn’t finish setting up your workspace. Check your connection and try again.');
+      setError('We couldn’t finish setting up your account. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -44,7 +44,7 @@ export default function SetupPage() {
   return (
     <AuthPageShell>
       <TopBar
-        title="Set up your workspace"
+        title="Set up your account"
         description="Plan workouts and track your training in Tempo."
         align="center"
       />
@@ -56,7 +56,7 @@ export default function SetupPage() {
             disabled={loading}
             className={`${primaryButtonClassName} w-full max-md:min-h-11`}
           >
-            {loading ? 'Setting up…' : 'Open my workspace'}
+            {loading ? 'Setting up…' : 'Get started'}
           </button>
         </form>
       </Surface>

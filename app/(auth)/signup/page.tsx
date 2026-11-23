@@ -53,7 +53,7 @@ export default function SignupPage() {
           setError('An account with this email already exists. Sign in below or use another email.');
           return;
         }
-        setError(payload.error ?? 'We couldn’t create your account. Please try again.');
+        setError(payload.error ?? 'We couldn’t create your account. Try again.');
         return;
       }
 

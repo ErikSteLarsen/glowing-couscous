@@ -140,12 +140,12 @@ test('snapshot saves reject out-of-range RPE and overlong notes', async () => {
   assert.deepEqual(await service.saveCoachBaseline(11, { ...draft, rpe: 11 }), {
     ok: false,
     status: 400,
-    error: 'RPE must be an integer from 1 through 10.',
+    error: 'RPE must be a whole number from 1 to 10.',
   });
   assert.deepEqual(await service.saveCoachBaseline(11, { ...draft, coachNotes: 'x'.repeat(2001) }), {
     ok: false,
     status: 400,
-    error: 'Notes are too long.',
+    error: 'Your note is too long.',
   });
 });
 

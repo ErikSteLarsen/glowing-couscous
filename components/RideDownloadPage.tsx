@@ -53,10 +53,10 @@ export function RideDownloadPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            <h2 className={sectionHeadingClassName}>{os === 'other' ? 'Tempo Ride runs on computers' : 'Choose your system'}</h2>
+            <h2 className={sectionHeadingClassName}>{os === 'other' ? 'Tempo Ride is for computers' : 'Choose your system'}</h2>
             <p className="text-sm text-[var(--text-secondary)]">
               {os === 'other'
-                ? 'Open this page on a Windows, macOS or Linux computer. On this device, start a workout in the browser instead; Chrome on Android can connect to Bluetooth trainers.'
+                ? 'Open this page on a Windows, macOS or Linux computer. On this device, start a workout in your browser instead. Chrome on Android can connect to Bluetooth trainers.'
                 : 'Pick the installer for your computer below.'}
             </p>
           </div>
@@ -84,7 +84,7 @@ export function RideDownloadPage() {
       </Surface>
 
       <p className="text-sm text-[var(--text-muted)]">
-        Version {RIDE_DESKTOP_VERSION}. The installers are not code-signed yet, so your system may ask you to confirm the first launch. After installing, open a bike workout in Tempo and choose <strong className="font-medium text-[var(--text-secondary)]">Start workout → Open in Tempo Ride</strong>. <Link href="/" className={linkClassName}>Back to Tempo</Link>
+        Version {RIDE_DESKTOP_VERSION}. The installers aren’t signed yet, so your computer may ask you to confirm the first time you open the app. After installing, open a bike workout in Tempo and choose <strong className="font-medium text-[var(--text-secondary)]">Start workout → Open in Tempo Ride</strong>. <Link href="/" className={linkClassName}>Back to Tempo</Link>
       </p>
     </div>
   );

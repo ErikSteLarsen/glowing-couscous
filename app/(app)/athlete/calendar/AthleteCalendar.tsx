@@ -173,7 +173,7 @@ export function AthleteCalendar({
   const saving = useRef(false);
   const [pendingIds, setPendingIds] = useState<number[]>([]);
   const [feedback, setFeedback] = useState<Feedback>(() =>
-    placedCount ? { tone: 'status', text: `Added ${placedCount} session${placedCount === 1 ? '' : 's'} to your calendar.` } : null);
+    placedCount ? { tone: 'status', text: `Added ${placedCount} workout${placedCount === 1 ? '' : 's'} to your Calendar.` } : null);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [selectedDay, setSelectedDay] = useState<string | null>(() =>
     weeks.some((week) => week.days.some((entry) => entry.isoDate === day && entry.isCurrentMonth)) ? day : null,
@@ -263,14 +263,14 @@ export function AthleteCalendar({
         const payload: unknown = await response.json().catch(() => null);
         const reason = payload && typeof payload === 'object' && 'error' in payload && typeof payload.error === 'string'
           ? payload.error
-          : 'The session could not be moved.';
+          : 'Could not move this workout.';
         throw new Error(reason);
       }
       setFeedback({ tone: 'status', text: `Moved ${session.title} to ${formatDay(toDay)}.` });
       if (allDays.some((entry) => entry.isoDate === toDay)) setSelectedDay(toDay);
     } catch (error) {
-      const reason = error instanceof Error ? error.message : 'The session could not be moved.';
-      setFeedback({ tone: 'alert', text: `Could not confirm moving ${session.title}. ${reason} Refreshing the schedule.` });
+      const reason = error instanceof Error ? error.message : 'Could not move this workout.';
+      setFeedback({ tone: 'alert', text: `Could not move ${session.title}. ${reason} Reloading your Calendar.` });
     } finally {
       saving.current = false;
       startTransition(() => router.refresh());
@@ -278,7 +278,7 @@ export function AthleteCalendar({
     }
   }
 
-  const titleFor = (id: unknown) => sessionsById.get(Number(String(id).replace('session:', '')))?.title ?? 'Session';
+  const titleFor = (id: unknown) => sessionsById.get(Number(String(id).replace('session:', '')))?.title ?? 'Workout';
   const dayFor = (id: unknown) => formatDay(String(id).replace('day:', ''));
   const announcements: Announcements = {
     onDragStart: ({ active }) => `Picked up ${titleFor(active.id)}. Use the arrow keys to choose a day, then press space to drop it or escape to cancel.`,
@@ -304,7 +304,7 @@ export function AthleteCalendar({
   const selected = selectedDay ? allDays.find((entry) => entry.isoDate === selectedDay) ?? null : null;
   const periodNoun = view === 'week' ? 'week' : 'month';
   function handleSessionDeleted(title: string) {
-    setFeedback({ tone: 'status', text: `${title} removed from your plan.` });
+    setFeedback({ tone: 'status', text: `${title} removed from your Calendar.` });
     startTransition(() => router.refresh());
   }
 
@@ -341,7 +341,7 @@ export function AthleteCalendar({
       />
 
       <p className="sr-only">
-        Shortcuts: left and right arrows change the {periodNoun}, T jumps to today, W and M switch view. Focus a planned session and press space to move it.
+        Shortcuts: left and right arrows change the {periodNoun}, T jumps to today, W and M switch view. Focus a planned workout and press space to move it.
       </p>
 
       <div role="status" className="empty:hidden">
@@ -361,7 +361,7 @@ export function AthleteCalendar({
         accessibility={{
           announcements,
           screenReaderInstructions: {
-            draggable: 'To move a session, press space, use the arrow keys to choose a day, and press space again to drop it. Press escape to cancel. Press enter to open it.',
+            draggable: 'To move a workout, press space, use the arrow keys to choose a day, and press space again to drop it. Press escape to cancel. Press enter to open it.',
           },
         }}
         onDragStart={handleDragStart}
@@ -687,13 +687,13 @@ function WeekSummaryPanel({ summary, className = '', compact = false }: { summar
             </>
           } />
         </dl>
-        {completed.unknownLoadSessions > 0 ? <p className="text-xs text-[var(--text-muted)]">Load unavailable for {completed.unknownLoadSessions} activities</p> : null}
+        {completed.unknownLoadSessions > 0 ? <p className="text-xs text-[var(--text-muted)]">No TSS for {completed.unknownLoadSessions} activities</p> : null}
         <div className={compact ? 'flex min-w-[8rem] flex-1 items-center gap-2' : 'space-y-1.5'}>
           <div aria-hidden="true" className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[var(--raised)]">
             <div className="h-full rounded-full bg-[var(--brand)]" style={{ width: `${barWidth}%` }} />
           </div>
           <p className="data flex flex-wrap gap-x-3 text-xs text-[var(--text-secondary)]">
-            <span>{pct === null ? 'Nothing planned' : `${pct}% of planned duration recorded`}</span>
+            <span>{pct === null ? 'Nothing planned' : `${pct}% of planned time done`}</span>
             {missed > 0 ? <span className="inline-flex items-center gap-1"><ComplianceMark state="missed" /> {missed} missed</span> : null}
           </p>
         </div>
@@ -755,7 +755,7 @@ function MonthCell({ day, selected, onSelect, pendingIds }: { day: CalendarDay; 
       <button
         type="button"
         aria-pressed={selected}
-        aria-label={`${formatDay(day.isoDate)}${day.isToday ? ', today' : ''}, ${count} ${count === 1 ? 'session' : 'sessions'}${day.events.length ? `, ${day.events.length} ${day.events.length === 1 ? 'event' : 'events'}: ${day.events.map((event) => event.title).join(', ')}` : ''}`}
+        aria-label={`${formatDay(day.isoDate)}${day.isToday ? ', today' : ''}, ${count} ${count === 1 ? 'workout' : 'workouts'}${day.events.length ? `, ${day.events.length} ${day.events.length === 1 ? 'event' : 'events'}: ${day.events.map((event) => event.title).join(', ')}` : ''}`}
         onClick={() => onSelect(day.isoDate)}
         className={`flex min-h-11 w-full items-start justify-between rounded-md px-1 pt-0.5 text-left transition-colors hover:bg-[var(--raised)] sm:min-h-7 ${buttonFocusClassName}`}
       >

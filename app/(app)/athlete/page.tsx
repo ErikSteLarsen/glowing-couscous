@@ -51,13 +51,13 @@ function restStateFor(doneToday: Array<{ title: string }>, skippedToday: Array<{
   if (doneToday.length > 0) {
     return {
       title: 'Done for today',
-      description: `${doneToday.map((session) => session.title).join(', ')} completed.`,
+      description: `${doneToday.map((session) => session.title).join(', ')} done.`,
     };
   }
   if (skippedToday.length > 0) {
     return {
       title: 'Skipped today',
-      description: `${skippedToday.map((session) => session.title).join(', ')} skipped. Plan it again to bring it back into your load.`,
+      description: `${skippedToday.map((session) => session.title).join(', ')} skipped. To put it back in your plan, open it and choose Plan again.`,
     };
   }
   return {
@@ -187,7 +187,7 @@ export default async function AthletePage() {
               <div className="mt-auto flex flex-wrap gap-2 pt-1">
                 <Link href="/athlete/calendar?place=workout" className={`${secondaryButtonClassName} max-md:min-h-11`}>
                   <CalendarPlus aria-hidden="true" size={15} strokeWidth={1.8} />
-                  Plan a session
+                  Plan a workout
                 </Link>
               </div>
             </>
@@ -242,7 +242,7 @@ export default async function AthletePage() {
             <h2 id="week-heading" className={sectionHeadingClassName}>This week</h2>
             {thisWeek ? (
               <p className="data mt-0.5 text-[13px] text-[var(--text-muted)]">
-                {formatDuration(thisWeek.completed.durationSec)} of {formatDuration(thisWeek.planned.durationSec)}&nbsp;· {thisWeek.completed.unknownLoadSessions ? `load unavailable for ${thisWeek.completed.unknownLoadSessions} activities` : `${thisWeek.completed.tss} of ${thisWeek.planned.tss}\u00A0TSS`}
+                {formatDuration(thisWeek.completed.durationSec)} of {formatDuration(thisWeek.planned.durationSec)}&nbsp;· {thisWeek.completed.unknownLoadSessions ? `no TSS for ${thisWeek.completed.unknownLoadSessions} activities` : `${thisWeek.completed.tss} of ${thisWeek.planned.tss}\u00A0TSS`}
                 {thisWeek.missed > 0 ? `\u00A0· ${thisWeek.missed} missed` : ''}
               </p>
             ) : null}
@@ -256,7 +256,7 @@ export default async function AthletePage() {
           <div
             className="h-1.5 overflow-hidden rounded-full bg-[var(--raised)]"
             role="progressbar"
-            aria-label="Planned workout duration recorded this week"
+            aria-label="Planned time done this week"
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={Math.min(100, thisWeek.completionPct ?? 0)}
@@ -327,7 +327,7 @@ export default async function AthletePage() {
                       </span>
                     ) : null}
                     <span className="col-span-2 text-xs text-[var(--text-muted)]">
-                      {hasHistory ? `${formZoneLabels[load.current.formZone]}\u00A0· ${formAdvice[load.current.formZone]}` : 'Builds as you complete sessions'}
+                      {hasHistory ? `${formZoneLabels[load.current.formZone]}\u00A0· ${formAdvice[load.current.formZone]}` : 'Builds as you complete workouts'}
                     </span>
                   </span>
                 }
@@ -337,31 +337,31 @@ export default async function AthletePage() {
                     <StatTile
                       label={hasHistory ? `Form · ${formZoneLabels[load.current.formZone]}` : 'Form'}
                       value={signed(load.current.form)}
-                      detail={hasHistory ? formAdvice[load.current.formZone] : 'Builds as you complete sessions'}
+                      detail={hasHistory ? formAdvice[load.current.formZone] : 'Builds as you complete workouts'}
                       tone={formTone}
                     />
                     <StatTile
                       label="Fitness"
                       value={String(Math.round(load.current.fitness))}
-                      detail={unknownLoadSessions ? `Estimate; excludes ${unknownLoadSessions} activities with unavailable load` : fitnessChange === null ? '42-day load' : `${signed(fitnessChange)} over 4 weeks`}
+                      detail={unknownLoadSessions ? `Estimate. Leaves out ${unknownLoadSessions} activities with no TSS` : fitnessChange === null ? '42-day load' : `${signed(fitnessChange)} over 4 weeks`}
                       tone={fitnessChange !== null && fitnessChange > 0 ? 'good' : 'neutral'}
                     />
-                    <StatTile label="Fatigue" value={String(Math.round(load.current.fatigue))} detail={unknownLoadSessions ? 'Estimate; some activity load is unavailable' : '7-day load'} />
+                    <StatTile label="Fatigue" value={String(Math.round(load.current.fatigue))} detail={unknownLoadSessions ? 'Estimate. Some activities have no TSS' : '7-day load'} />
                     <StatTile
                       label="Ramp rate"
                       value={load.current.rampRate === null ? '–' : signed(load.current.rampRate)}
                       unit={load.current.rampRate === null ? undefined : '/wk'}
-                      detail={unknownLoadSessions ? 'Estimate; some activity load is unavailable' : rampTone === 'watch' ? 'Fitness rising fast' : 'Fitness change per week'}
+                      detail={unknownLoadSessions ? 'Estimate. Some activities have no TSS' : rampTone === 'watch' ? 'Fitness rising fast' : 'Fitness change per week'}
                       tone={rampTone}
                     />
                   </div>
-                  {unknownLoadSessions > 0 ? <p className="text-xs text-[var(--text-muted)]">Load is unavailable for {unknownLoadSessions} activities. The fitness and fatigue estimates omit them; marked chart days are not measured as zero.</p> : null}
+                  {unknownLoadSessions > 0 ? <p className="text-xs text-[var(--text-muted)]">{unknownLoadSessions} activities have no TSS. Fitness and fatigue leave them out. Marked days on the chart are missing data, not zero.</p> : null}
                   {hasHistory ? (
                     <PerformanceChart series={load.series} today={load.today} />
                   ) : (
                     <EmptyState
-                      title="Your fitness line starts with training load data."
-                      description="Manually logged work counts toward duration history. Load requires a TSS value."
+                      title="Your fitness line starts once you have TSS data."
+                      description="Activities you log by hand count toward your training time. Only activities with TSS build this line."
                     />
                   )}
                   <Link href="/athlete/activity" className={`${ghostButtonClassName('compact')} max-md:min-h-11`}>
@@ -374,7 +374,7 @@ export default async function AthletePage() {
             {cards.has('weekLoad') ? (
               <HomeSummaryDialog
                 label="Weekly volume"
-                description="Planned hours as outlines, recorded hours filled"
+                description="Outlines show planned hours. Filled bars show hours done."
                 className="md:flex-[1_1_0%]"
                 summary={
                   <span className="flex items-end justify-between gap-4">
@@ -423,7 +423,7 @@ export default async function AthletePage() {
                       <p className="text-sm text-[var(--text-secondary)]">&ldquo;{dashboard.lastActivity.notes}&rdquo;</p>
                     ) : null}
                     <Link href={`/athlete/session/${dashboard.lastActivity.sessionId}?from=home`} className={`${ghostButtonClassName('compact')} self-start max-md:min-h-11`}>
-                      Review outcome
+                      Open activity
                       <ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />
                     </Link>
                   </div>
@@ -431,7 +431,7 @@ export default async function AthletePage() {
               ) : (
                 <div className="tile flex flex-col gap-3 rounded-2xl p-4 md:flex-[1_1_0%]">
                   <p className="text-sm text-[var(--text-secondary)]">Last activity</p>
-                  <p className="text-xs text-[var(--text-muted)]">Completed sessions appear here.</p>
+                  <p className="text-xs text-[var(--text-muted)]">Your latest activity shows up here.</p>
                 </div>
               )
             ) : null}

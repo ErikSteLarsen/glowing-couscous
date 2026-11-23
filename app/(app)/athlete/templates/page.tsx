@@ -22,8 +22,8 @@ export default async function AthleteTemplatesPage() {
   return (
     <PageShell>
       <TopBar
-        title="Templates"
-        description="Build a training routine from saved workouts, then apply it to a week or month."
+        title="Routines"
+        description="Put your saved workouts into a weekly routine, then add it to your Calendar for a week or a month."
       />
       <MobileLibrarySwitch active="templates" />
       <TrainingTemplatesClient templates={templates} workouts={workouts.map(workout => ({

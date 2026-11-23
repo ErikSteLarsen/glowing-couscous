@@ -36,7 +36,7 @@ export function SignOutButton({ tone = 'secondary', size = 'default', variant = 
       loadSignedOutDocument('/login');
     } catch {
       setIsSigningOut(false);
-      setErrorMessage('Could not sign out. Please try again.');
+      setErrorMessage('Could not sign out. Try again.');
     }
   }
 
