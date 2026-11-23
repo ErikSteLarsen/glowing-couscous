@@ -25,6 +25,8 @@ import {
   formFieldClassName,
   formLabelClassName,
   formSelectClassName,
+  ghostButtonClassName,
+  iconButtonClassName,
   primaryButtonClassName,
   Surface,
   successTextClassName,
@@ -592,9 +594,9 @@ function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, t
           <p className="mt-1 text-sm text-[var(--text-secondary)]">{calendarInstruction(selectedSource)}</p>
         </div>
         <div className="flex items-center gap-1" role="group" aria-label="Month navigation">
-          <button type="button" aria-label="Previous month" onClick={() => onNavigate(-1)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ChevronLeft aria-hidden="true" className="h-4 w-4" /></button>
-          <button type="button" onClick={() => onNavigate(0)} className="min-h-8 rounded-lg px-2.5 text-xs font-medium text-[var(--brand)] transition hover:bg-[var(--brand-tint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">This month</button>
-          <button type="button" aria-label="Next month" onClick={() => onNavigate(1)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-secondary)] transition hover:bg-[var(--brand-tint)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><ChevronRight aria-hidden="true" className="h-4 w-4" /></button>
+          <button type="button" aria-label="Previous month" onClick={() => onNavigate(-1)} className={iconButtonClassName}><ChevronLeft aria-hidden="true" className="h-4 w-4" /></button>
+          <button type="button" onClick={() => onNavigate(0)} className={ghostButtonClassName('compact')}>This month</button>
+          <button type="button" aria-label="Next month" onClick={() => onNavigate(1)} className={iconButtonClassName}><ChevronRight aria-hidden="true" className="h-4 w-4" /></button>
         </div>
       </div>
       {selectedSource?.kind === 'template' && selectedSource.cadence !== 'day' ? <div className="mt-3 flex flex-wrap items-center gap-3">
