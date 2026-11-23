@@ -90,7 +90,7 @@ function deviceStatusText(state: RideDeviceState) {
     : state.status === 'connecting' ? 'Connecting…' : state.status === 'reconnecting' ? state.message ?? 'Reconnecting…' : state.status === 'error' ? state.message ?? 'Connection failed' : 'Not connected';
 }
 
-const iconControlClassName = `inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-[var(--border-strong)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-40 ${buttonFocusClassName}`;
+const iconControlClassName = `inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-[var(--border-strong)] text-[var(--text-secondary)] transition-colors enabled:hover:bg-[var(--raised)] enabled:hover:text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-40 ${buttonFocusClassName}`;
 
 function DeviceRow({ role, state, onConnect, onDisconnect }: { role: RideDeviceRole; state: RideDeviceState; onConnect: () => void; onDisconnect: () => void }) {
   const idle = state.status === 'disconnected' || state.status === 'error';
@@ -665,7 +665,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         </section>
         {!planHasPowerTargets(plan) ? (
           <p className="text-[14px] text-[var(--status-warning)]">
-            {plan.ftpWatts ? 'This workout has no power targets, so the trainer stays in free ride.' : <><Link href={PROFILE_FTP_HREF} className="underline underline-offset-2">Add FTP in Profile</Link> to turn %FTP targets into watts. Until then the trainer stays in free ride.</>}
+            {plan.ftpWatts ? 'This workout has no power targets, so the trainer stays in free ride.' : <><Link href={PROFILE_FTP_HREF} className="underline underline-offset-2 hover:text-[var(--text)]">Add FTP in Profile</Link> to turn %FTP targets into watts. Until then the trainer stays in free ride.</>}
           </p>
         ) : null}
         {advancedOptions}
@@ -758,7 +758,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
                 <p className={heroNumeral}>{targetWatts === null ? (currentStep ? `Z${currentStep.zone}` : '--') : targetWatts}{targetWatts !== null ? <span className="ml-2 text-[0.22em] font-normal tracking-normal text-[var(--text-muted)]">W</span> : null}</p>
               )}
               <p className="mt-auto text-[14px] text-[var(--text-secondary)]">
-                {prescribedTarget ? <>Ride this by feel in Z{currentStep?.zone}. <Link href={PROFILE_FTP_HREF} className="text-[var(--text)] underline underline-offset-2">Add FTP in Profile</Link> to see watts.</> : targetWatts === null ? 'Ride by feel in this zone.' : plan.ftpWatts ? `${Math.round((targetWatts / plan.ftpWatts) * 100)}% of FTP. Hold this on your trainer.` : 'Hold this on your trainer.'}
+                {prescribedTarget ? <>Ride this by feel in Z{currentStep?.zone}. <Link href={PROFILE_FTP_HREF} className="text-[var(--text)] underline underline-offset-2 hover:text-[var(--brand)]">Add FTP in Profile</Link> to see watts.</> : targetWatts === null ? 'Ride by feel in this zone.' : plan.ftpWatts ? `${Math.round((targetWatts / plan.ftpWatts) * 100)}% of FTP. Hold this on your trainer.` : 'Hold this on your trainer.'}
                 {recording.biasPct !== 0 ? <span className="data"> Intensity {recording.biasPct > 0 ? '+' : '−'}{Math.abs(recording.biasPct)}%.</span> : null}
               </p>
             </>

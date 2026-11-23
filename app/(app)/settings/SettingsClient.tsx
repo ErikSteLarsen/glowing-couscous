@@ -126,7 +126,7 @@ export function DesktopAppSettings() {
 export function AboutSettings() {
   return (
     <details className="rounded-2xl border border-[var(--border)] px-5">
-      <summary className={`min-h-11 cursor-pointer rounded-lg py-3 text-sm font-medium text-[var(--text)] ${buttonFocusClassName}`}>
+      <summary className={`min-h-11 cursor-pointer rounded-lg py-3 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] ${buttonFocusClassName}`}>
         About these settings
       </summary>
       <div className="space-y-2 pb-4 text-sm text-[var(--text-secondary)]">
