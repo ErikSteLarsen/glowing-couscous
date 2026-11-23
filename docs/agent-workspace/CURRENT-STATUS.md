@@ -1,11 +1,23 @@
 # Current status
 
-Last verified locally on **2026-11-21**. Source code and tests are authoritative.
+Last verified locally on **2026-11-23**. Source code and tests are authoritative.
 This is the current snapshot; ownership is in [WORK-INDEX.md](WORK-INDEX.md),
 contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 [VERIFICATION.md](../VERIFICATION.md).
 
 ## Verification
+
+- Clickable control feedback (2026-11-23). `pnpm lint`, `pnpm typecheck`,
+  `pnpm test` (540 passed, 17 database cases skipped), `pnpm test:ui`
+  (2 passed), and `pnpm build` passed. The build used local
+  `tempo_acceptance` with no pending migrations. Chromium on the local dev
+  server verified pointer and hover colors in both themes using the seeded
+  Athlete account. The spot checks covered buttons, tabs, cards, navigation at
+  desktop and 390px, disclosures, a native select and file picker, and SDK
+  dialog, menu and switch controls. Disabled Clear filters, Save changes and
+  Restart workout kept their resting colors and showed the disabled cursor.
+  RideClient's FTP links and disabled Skip icon, and the SettingsClient
+  disclosure, remain with their parallel work.
 
 - Athlete Workouts tabs (2026-11-21). `pnpm typecheck`, `pnpm lint`, and
   `pnpm test` passed (538 passed, 17 database cases skipped). `pnpm test:db`
