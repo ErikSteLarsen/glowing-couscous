@@ -1,549 +1,906 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState } from 'react';
-import { DndContext, DragOverlay, KeyboardSensor, PointerSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent, type DragOverEvent, type DragStartEvent } from '@dnd-kit/core';
+import Link from 'next/link';
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react';
+import { flushSync } from 'react-dom';
+import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { ArrowDown, ArrowUp, ChevronDown, Copy, GripVertical, Minus, Plus, Redo2, Repeat2, Trash2, Undo2 } from 'lucide-react';
 
 import {
-  createSessionEditorBlock,
   deriveSessionEditorMetrics,
   updateSessionEditorBlock,
   updateSessionEditorFields,
   updateSessionEditorSchedule,
   type SessionEditorBlock,
+  type SessionEditorBlockPatch,
   type SessionEditorDraft,
 } from '@/lib/session-editor';
-import { formatDuration } from '@/lib/format-duration';
+import { formatDuration, formatDurationExact } from '@/lib/format-duration';
 import { getSportLabel, SPORT_OPTIONS } from '@/lib/sport';
 import { TEMPO_ZONE_META, type TempoBlockKind, type TempoZone } from '@/lib/tempo-blocks';
-import { getAvailableWorkoutTargets, type WorkoutTarget } from '@/lib/workout-targets';
+import { getAvailableWorkoutTargets, targetOptionReference, validateWorkoutTarget, type WorkoutTarget } from '@/lib/workout-targets';
 import { formatResolvedWorkoutTarget, formatWorkoutTarget, missingProfileAction } from '@/lib/workout-target-resolution';
-import { repeatBlockSelection } from '@/lib/workout-blocks';
+import { adjustWorkoutTarget } from '@/lib/workout-target-adjustment';
+import { presetTarget } from '@/lib/workout-zone-intensity';
+import {
+  ADD_STEP_OPTIONS,
+  INTERVAL_PRESETS,
+  addStepToSet,
+  buildBuilderRows,
+  createStepBlocks,
+  duplicateRow,
+  insertBlocks,
+  locateBlock,
+  moveRow,
+  moveSetStep,
+  nudgeDuration,
+  parseDuration,
+  patchSetStep,
+  removeRow,
+  removeSetStep,
+  repeatWithNext,
+  representativeIndex,
+  rowSpan,
+  setRepeatCount,
+  stepName,
+  targetPatch,
+  zonePatch,
+  zoneTotals,
+  type BuilderRow,
+  type BuilderSetRow,
+} from '@/lib/workout-builder';
 import type { PerformanceProfile } from '@/lib/performance-profile';
 import { WorkoutProfile } from '@/components/WorkoutProfile';
 import { buildWorkoutProfile } from '@/lib/workout-profile';
-import { MetricText } from '@/components/tempo/MetricText';
-import { buttonFocusClassName, compactDangerButtonClassName, compactSecondaryButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, formTextareaClassName } from '@/components/ui';
+import { Menu, MenuContent, MenuGroup, MenuGroupLabel, MenuItem, MenuSeparator, MenuTrigger, OverflowMenuTrigger } from '@/components/tempo/Menu';
+import {
+  buttonFocusClassName,
+  compactPrimaryButtonClassName,
+  compactSecondaryButtonClassName,
+  formFieldClassName,
+  formLabelClassName,
+  formSelectClassName,
+  formTextareaClassName,
+  getSegmentedChoiceClassName,
+  ghostButtonClassName,
+} from '@/components/ui';
 
-const editorSecondaryButtonClassName = `${compactSecondaryButtonClassName} max-md:min-h-11`;
-const editorDangerButtonClassName = `${compactDangerButtonClassName} max-md:min-h-11`;
-
-type BlockPreset = {
-  id: string;
-  name: string;
-  description: string;
-  block: Partial<SessionEditorBlock>;
-};
-
-type SuppressedPaletteClick = {
-  presetId: string;
-  until: number;
-};
-
-const ZONE_PRESETS: Record<TempoZone, readonly BlockPreset[]> = {
-  1: [
-    { id: 'z1-reset', name: 'Reset', description: 'Easy movement to settle in', block: { kind: 'recovery', zone: 1, durationSec: 300 } },
-    { id: 'z1-easy', name: 'Easy', description: 'Quiet, low-load aerobic work', block: { kind: 'recovery', zone: 1, durationSec: 600 } },
-    { id: 'z1-long', name: 'Long recovery', description: 'Extended reset between efforts', block: { kind: 'recovery', zone: 1, durationSec: 900 } },
-    { id: 'z1-float', name: 'Float x4', description: 'Short resets between efforts', block: { kind: 'recovery', zone: 1, durationSec: 120, reps: 4 } },
-    { id: 'z1-cooldown', name: 'Cool-down', description: 'Bring the session back down', block: { kind: 'cooldown', zone: 1, durationSec: 600 } },
-  ],
-  2: [
-    { id: 'z2-start', name: 'Aerobic start', description: 'Gentle opening miles', block: { kind: 'warmup', zone: 2, durationSec: 600 } },
-    { id: 'z2-endurance', name: 'Endurance', description: 'Steady conversational effort', block: { kind: 'work', zone: 2, durationSec: 1200 } },
-    { id: 'z2-long', name: 'Long endurance', description: 'Unhurried time on feet', block: { kind: 'work', zone: 2, durationSec: 1800 } },
-    { id: 'z2-repeat', name: 'Steady x3', description: 'Repeatable aerobic pieces', block: { kind: 'work', zone: 2, durationSec: 600, reps: 3 } },
-    { id: 'z2-finish', name: 'Aerobic finish', description: 'Close with controlled volume', block: { kind: 'work', zone: 2, durationSec: 900 } },
-  ],
-  3: [
-    { id: 'z3-build', name: 'Tempo build', description: 'Controlled rise into tempo', block: { kind: 'work', zone: 3, durationSec: 600 } },
-    { id: 'z3-sustain', name: 'Sustained tempo', description: 'Comfortably hard and even', block: { kind: 'work', zone: 3, durationSec: 1200 } },
-    { id: 'z3-cruise', name: 'Tempo cruise', description: 'Repeatable sustained work', block: { kind: 'work', zone: 3, durationSec: 600, reps: 3 } },
-    { id: 'z3-progress', name: 'Progression', description: 'Build through the middle', block: { kind: 'work', zone: 3, durationSec: 900 } },
-    { id: 'z3-finish', name: 'Tempo finish', description: 'Finish with purposeful pressure', block: { kind: 'work', zone: 3, durationSec: 1800 } },
-  ],
-  4: [
-    { id: 'z4-primer', name: 'Threshold primer', description: 'Short controlled preparation', block: { kind: 'work', zone: 4, durationSec: 300 } },
-    { id: 'z4-threshold', name: 'Threshold', description: 'Sustained work near threshold', block: { kind: 'work', zone: 4, durationSec: 600 } },
-    { id: 'z4-cruise', name: 'Threshold x3', description: 'Classic repeatable intervals', block: { kind: 'work', zone: 4, durationSec: 480, reps: 3 } },
-    { id: 'z4-long', name: 'Long threshold', description: 'A longer demanding effort', block: { kind: 'work', zone: 4, durationSec: 900 } },
-    { id: 'z4-repeat', name: 'Threshold x4', description: 'Build density with four pieces', block: { kind: 'work', zone: 4, durationSec: 360, reps: 4 } },
-  ],
-  5: [
-    { id: 'z5-strides', name: 'Strides x8', description: 'Short, fast, relaxed efforts', block: { kind: 'work', zone: 5, durationSec: 30, reps: 8 } },
-    { id: 'z5-short', name: 'Short VO2 x6', description: 'Sharp repetitions with rhythm', block: { kind: 'work', zone: 5, durationSec: 120, reps: 6 } },
-    { id: 'z5-vo2', name: 'VO2 x5', description: 'Classic high-intensity pieces', block: { kind: 'work', zone: 5, durationSec: 180, reps: 5 } },
-    { id: 'z5-long', name: 'Long VO2 x4', description: 'Longer maximal aerobic work', block: { kind: 'work', zone: 5, durationSec: 240, reps: 4 } },
-    { id: 'z5-max', name: 'Max effort x3', description: 'A small dose of top-end work', block: { kind: 'work', zone: 5, durationSec: 300, reps: 3 } },
-  ],
-};
-
+const editorButtonClassName = `${compactSecondaryButtonClassName} max-md:min-h-11`;
+const iconStepButtonClassName = `${compactSecondaryButtonClassName} max-md:min-h-11 max-md:min-w-11`;
+const WIDE_LAYOUT_QUERY = '(min-width: 64rem)';
 const ZONES: TempoZone[] = [1, 2, 3, 4, 5];
-const PALETTE_DRAG_PREFIX = 'palette:';
+const KIND_OPTIONS: Array<{ kind: TempoBlockKind; label: string }> = [
+  { kind: 'warmup', label: 'Warm-up' },
+  { kind: 'work', label: 'Work' },
+  { kind: 'recovery', label: 'Recovery' },
+  { kind: 'cooldown', label: 'Cool-down' },
+  { kind: 'pause', label: 'Pause' },
+];
+
+/** The side panel needs desktop width; narrower screens open the editor inside the selected row. */
+function useWideLayout() {
+  return useSyncExternalStore(
+    (notify) => {
+      const query = window.matchMedia(WIDE_LAYOUT_QUERY);
+      query.addEventListener('change', notify);
+      return () => query.removeEventListener('change', notify);
+    },
+    () => window.matchMedia(WIDE_LAYOUT_QUERY).matches,
+    () => false,
+  );
+}
+
+function stepButton(clientId: string): HTMLElement | null {
+  return document.querySelector(`[data-step-button="${window.CSS.escape(clientId)}"]`);
+}
+
+function isTextEntry(target: EventTarget | null) {
+  return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
+}
+
+/** "55% FTP" or the zone when there is no target; the resolved value is shown separately. */
+function targetSummary(block: SessionEditorBlock, sport: string) {
+  if (block.kind === 'pause') return null;
+  return block.target ? formatWorkoutTarget(block.target, sport) : TEMPO_ZONE_META[block.zone].label;
+}
+
+function resolvedTarget(block: SessionEditorBlock, sport: string, profile: PerformanceProfile | null) {
+  return block.target?.mode === 'relative' ? formatResolvedWorkoutTarget(block.target, profile, sport) : null;
+}
+
+function stepDuration(block: SessionEditorBlock) {
+  return `${formatDurationExact(block.durationSec)}${block.reps && block.reps > 1 ? ` × ${block.reps}` : ''}`;
+}
 
 export function WorkoutBuilder({
   draft,
   onChange,
   showSchedule = false,
   summaryPlaceholder = 'Coach notes or session intent',
-  durationUnit = 'seconds',
   performanceProfile = null,
-  profileLabel = 'current profile',
   titleLabel = 'Workout name',
   summaryLabel = 'Workout summary',
+  headerActions = null,
 }: {
   draft: SessionEditorDraft;
   onChange: (draft: SessionEditorDraft) => void;
-  showSportMetrics?: boolean;
   showSchedule?: boolean;
   summaryPlaceholder?: string;
-  durationUnit?: 'minutes' | 'seconds';
   performanceProfile?: PerformanceProfile | null;
-  profileLabel?: string;
   titleLabel?: string;
   summaryLabel?: string;
+  /** Status and page actions from the host, shown at the end of the title row. */
+  headerActions?: ReactNode;
 }) {
-  const [selection, setSelection] = useState<number[]>(draft.blocks.length ? [0] : []);
-  const [clipboard, setClipboard] = useState<SessionEditorBlock[]>([]);
+  const uid = useId();
+  const editorId = `${uid}-step-editor`;
+  const wide = useWideLayout();
+  const [selectedId, setSelectedId] = useState<string | null>(draft.blocks[0]?.clientId ?? null);
+  const [profileStep, setProfileStep] = useState<number | null>(null);
   const [history, setHistory] = useState<SessionEditorDraft[]>([]);
   const [future, setFuture] = useState<SessionEditorDraft[]>([]);
-  const [paletteZone, setPaletteZone] = useState<TempoZone>(2);
-  const [dropIndex, setDropIndex] = useState<number | null>(null);
-  const [landing, setLanding] = useState<{ id: string; left: number; top: number; message: string } | null>(null);
-  const [activePresetId, setActivePresetId] = useState<string | null>(null);
-  const [basicsDismissed, setBasicsDismissed] = useState(() => Boolean(draft.title.trim()));
-  const [notesOpen, setNotesOpen] = useState(false);
-  const suppressPaletteClick = useRef<SuppressedPaletteClick | null>(null);
-  const lastFocused = useRef<string | null>(null);
+  const [basicsOpen, setBasicsOpen] = useState(() => !draft.title.trim());
+  const [startsNew] = useState(() => !draft.title.trim());
+  const [zonesOpen, setZonesOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
+  // Focus after a menu action is handed to the menu (it restores focus on close); other actions use the effect.
+  const menuFocus = useRef<string | null>(null);
+  const effectFocus = useRef<string | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-  const metrics = deriveSessionEditorMetrics(draft, performanceProfile?.cycling.ftpWatts);
-  const selected = selection.map((index) => draft.blocks[index]).filter(Boolean);
-  const selectedBlock = selected[0] ?? null;
-  const activePreset = activePresetId ? findPreset(activePresetId) : null;
+
+  const sport = draft.sport;
+  const profile = performanceProfile;
+  const rows = buildBuilderRows(draft.blocks);
+  const metrics = deriveSessionEditorMetrics(draft, profile?.cycling.ftpWatts);
+  const model = buildWorkoutProfile(
+    draft.blocks.map((block) => ({
+      id: block.clientId,
+      kind: block.kind,
+      zone: block.zone,
+      durationSec: block.durationSec,
+      reps: block.reps,
+      target: block.target,
+      skipped: block.skipped,
+      note: block.note || null,
+      targetLabel: [targetSummary(block, sport), resolvedTarget(block, sport, profile)].filter(Boolean).join(' · ') || null,
+    })),
+    { sport, profile, ftpWatts: profile?.cycling.ftpWatts },
+  );
+  const selectedIndex = selectedId ? draft.blocks.findIndex((block) => block.clientId === selectedId) : -1;
+  const selectedBlock = selectedIndex >= 0 ? draft.blocks[selectedIndex] : null;
+  const selectedLocation = selectedIndex >= 0 ? locateBlock(rows, selectedIndex) : null;
+  const selectedSet = selectedLocation?.row.type === 'set' ? selectedLocation.row : null;
+  const profileSelection = selectedProfileStep();
+  const profileHint = draft.blocks
+    .map((block) => block.target && !formatResolvedWorkoutTarget(block.target, profile, sport) ? missingProfileAction(block.target) : null)
+    .find(Boolean) ?? null;
   const basicsReady = Boolean(draft.title.trim() && draft.sport);
-  const basicsOpen = !basicsDismissed || !draft.title.trim();
   const itemNoun = titleLabel === 'Template name' ? 'template' : 'workout';
 
-  function commit(next: SessionEditorDraft) {
+  /** The clicked bar while it still belongs to the selected step, otherwise the step's first bar. */
+  function selectedProfileStep(): number | null {
+    if (selectedIndex < 0) return null;
+    const clicked = profileStep === null ? null : model.steps[profileStep];
+    if (clicked && representativeIndex(rows, clicked.blockIndex) === selectedIndex) return profileStep;
+    const first = model.steps.findIndex((step) => step.blockIndex === selectedIndex);
+    return first < 0 ? null : first;
+  }
+
+  useEffect(() => {
+    const id = effectFocus.current;
+    if (!id) return;
+    effectFocus.current = null;
+    stepButton(id)?.focus();
+  });
+
+  function commit(next: SessionEditorDraft, message?: string) {
     setHistory((current) => [...current.slice(-39), draft]);
     setFuture([]);
     onChange(next);
+    if (message) setAnnouncement(`${message} Not saved yet.`);
   }
 
-  function select(index: number, event?: React.MouseEvent | React.KeyboardEvent) {
-    lastFocused.current = draft.blocks[index]?.clientId ?? null;
-    const block = draft.blocks[index];
-    if (block) setPaletteZone(block.zone);
-    if (event?.shiftKey && selection.length) {
-      const start = selection[selection.length - 1];
-      setSelection(Array.from({ length: Math.abs(index - start) + 1 }, (_, offset) => Math.min(start, index) + offset));
-    } else if (event?.metaKey || event?.ctrlKey || (event as React.KeyboardEvent | undefined)?.code === 'Space') {
-      setSelection((current) => current.includes(index) ? current.filter((item) => item !== index) : [...current, index].sort((a, b) => a - b));
+  function undo() {
+    const previous = history.at(-1);
+    if (!previous) return;
+    setHistory((current) => current.slice(0, -1));
+    setFuture((current) => [draft, ...current]);
+    onChange(previous);
+    setAnnouncement('Change undone.');
+  }
+
+  function redo() {
+    const next = future[0];
+    if (!next) return;
+    setFuture((current) => current.slice(1));
+    setHistory((current) => [...current, draft]);
+    onChange(next);
+    setAnnouncement('Change redone.');
+  }
+
+  function select(clientId: string | null) {
+    setSelectedId(clientId);
+    setProfileStep(null);
+  }
+
+  function selectFromProfile(stepIndex: number) {
+    const step = model.steps[stepIndex];
+    if (!step) return;
+    const block = draft.blocks[representativeIndex(rows, step.blockIndex)];
+    setSelectedId(block.clientId);
+    setProfileStep(stepIndex);
+    // Keep focus on the profile for arrow keys; bring the row into view.
+    requestAnimationFrame(() => stepButton(block.clientId)?.scrollIntoView({ block: 'nearest' }));
+  }
+
+  /** Commit and move selection plus focus to a block that the new draft contains. */
+  function commitAndFocus(next: SessionEditorDraft, focusId: string | null, message: string, fromMenu: boolean) {
+    if (fromMenu) {
+      menuFocus.current = focusId;
+      // The menu restores focus as it closes, so the new row must already be in the DOM.
+      flushSync(() => { commit(next, message); select(focusId); });
     } else {
-      setSelection([index]);
+      effectFocus.current = focusId;
+      commit(next, message);
+      select(focusId);
     }
   }
 
-  function applyBlockPatch(patch: Partial<SessionEditorBlock>) {
-    if (!selection.length) return;
-    let next = draft;
-    for (const index of selection) next = updateSessionEditorBlock(next, index, patch);
-    commit(next);
+  const takeMenuFocus = () => {
+    const id = menuFocus.current;
+    menuFocus.current = null;
+    return id ? stepButton(id) : null;
+  };
+
+  function insertionIndex() {
+    if (!selectedLocation) return draft.blocks.length;
+    return rowSpan(selectedLocation.row).end;
   }
 
-  function removeSelection() {
-    if (!selection.length) return;
-    commit({ ...draft, blocks: draft.blocks.filter((_, index) => !selection.includes(index)) });
-    setSelection([]);
+  function addStep(optionId: string, label: string, fromMenu: boolean) {
+    const blocks = createStepBlocks(optionId, sport, profile);
+    if (!blocks.length) return;
+    const at = insertionIndex();
+    commitAndFocus(insertBlocks(draft, at, blocks), blocks[0].clientId, `${label} added.`, fromMenu);
   }
 
-  function insertPreset(preset: BlockPreset, index = draft.blocks.length, origin?: { left: number; top: number }) {
-    const block = createSessionEditorBlock(preset.block);
-    commit({ ...draft, blocks: [...draft.blocks.slice(0, index), block, ...draft.blocks.slice(index)] });
-    setSelection([index]);
-    setPaletteZone(block.zone);
-    setLanding({ id: block.clientId, left: origin?.left ?? NaN, top: origin?.top ?? NaN, message: `${preset.name} added at position ${index + 1}. Unsaved changes.` });
+  function patchSelected(patch: SessionEditorBlockPatch) {
+    if (!selectedLocation || selectedIndex < 0) return;
+    commit(selectedLocation.row.type === 'set'
+      ? patchSetStep(draft, selectedLocation.row, selectedLocation.offset, patch)
+      : updateSessionEditorBlock(draft, selectedIndex, patch));
   }
 
-  function moveSelection(direction: -1 | 1) {
-    if (!selection.length) return;
-    const ordered = [...selection].sort((a, b) => a - b);
-    const target = direction < 0 ? ordered[0] - 1 : ordered[ordered.length - 1] + 1;
-    if (target < 0 || target >= draft.blocks.length) return;
-    const moving = ordered.map((index) => draft.blocks[index]);
-    const rest = draft.blocks.filter((_, index) => !ordered.includes(index));
-    const insertion = direction < 0 ? target : target - moving.length + 1;
-    const next = [...rest.slice(0, insertion), ...moving, ...rest.slice(insertion)];
-    commit({ ...draft, blocks: next });
-    setSelection(moving.map((_, offset) => insertion + offset));
+  function neighbourAfterRemoval(rowIndex: number) {
+    const neighbour = rows[rowIndex + 1] ?? rows[rowIndex - 1];
+    return neighbour ? draft.blocks[rowSpan(neighbour).start].clientId : null;
   }
 
-  function undo() { const previous = history.at(-1); if (previous) { setHistory((current) => current.slice(0, -1)); setFuture((current) => [draft, ...current]); onChange(previous); } }
-  function redo() { const next = future[0]; if (next) { setFuture((current) => current.slice(1)); setHistory((current) => [...current, draft]); onChange(next); } }
-
-  function closeBasicsOnBlur(event: React.FocusEvent<HTMLDivElement>) {
-    // Do not move a pointer target between pointerdown and click/drag.
-    if (event.relatedTarget instanceof Element && event.relatedTarget.closest('[aria-label="Block preset palette"]')) return;
-    if (basicsReady && !event.currentTarget.contains(event.relatedTarget as Node | null)) setBasicsDismissed(true);
+  function moveRowBy(rowIndex: number, direction: -1 | 1) {
+    const target = rowIndex + direction;
+    if (target < 0 || target >= rows.length) return;
+    commit(moveRow(draft, rows, rowIndex, target), `Moved to position ${target + 1}.`);
   }
 
-  function onDragStart(event: DragStartEvent) {
-    const id = String(event.active.id);
-    if (id.startsWith(PALETTE_DRAG_PREFIX)) setActivePresetId(id.slice(PALETTE_DRAG_PREFIX.length));
-  }
-
-  function onDragOver(event: DragOverEvent) {
-    const index = event.over?.id === 'workout-canvas' ? draft.blocks.length : draft.blocks.findIndex((block) => block.clientId === event.over?.id);
-    setDropIndex(index >= 0 ? index : null);
-  }
-
-  function dragName(id: string | number) {
-    const value = String(id);
-    if (value.startsWith(PALETTE_DRAG_PREFIX)) return findPreset(value.slice(PALETTE_DRAG_PREFIX.length))?.name ?? 'Preset';
-    const index = draft.blocks.findIndex((block) => block.clientId === value);
-    return index < 0 ? 'Block' : `${formatBlockKind(draft.blocks[index].kind)} block ${index + 1}`;
-  }
-
-  function onDragCancel() {
-    setDropIndex(null);
-    setActivePresetId(null);
-    suppressPaletteClick.current = null;
+  function onRowKeyDown(event: KeyboardEvent<HTMLButtonElement>, rowIndex: number, setOffset: number | null) {
+    if (!event.altKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
+    event.preventDefault();
+    const direction = event.key === 'ArrowUp' ? -1 : 1;
+    const row = rows[rowIndex];
+    if (row.type === 'set' && setOffset !== null) {
+      if (setOffset + direction < 0 || setOffset + direction >= row.width) return;
+      commit(moveSetStep(draft, row, setOffset, direction), `Moved within the set.`);
+    } else {
+      moveRowBy(rowIndex, direction);
+    }
   }
 
   function onDragEnd(event: DragEndEvent) {
-    setDropIndex(null);
-    const activeId = String(event.active.id);
-    if (activeId.startsWith(PALETTE_DRAG_PREFIX)) {
-      const preset = findPreset(activeId.slice(PALETTE_DRAG_PREFIX.length));
-      const overId = event.over?.id;
-      const overIndex = draft.blocks.findIndex((block) => block.clientId === overId);
-      if (preset && (overId === 'workout-canvas' || overIndex >= 0)) {
-        insertPreset(preset, overIndex >= 0 ? overIndex : draft.blocks.length, event.active.rect.current.translated ?? undefined);
-      }
-      setActivePresetId(null);
-      suppressPaletteClick.current = { presetId: activeId.slice(PALETTE_DRAG_PREFIX.length), until: Date.now() + 500 };
-      return;
-    }
-
-    const activeIndex = draft.blocks.findIndex((block) => block.clientId === event.active.id);
-    const overIndex = event.over?.id === 'workout-canvas'
-      ? draft.blocks.length
-      : draft.blocks.findIndex((block) => block.clientId === event.over?.id);
-    if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) {
-      setActivePresetId(null);
-      return;
-    }
-    const moving = selection.includes(activeIndex) ? selection : [activeIndex];
-    const selectedBlocks = moving.map((index) => draft.blocks[index]);
-    const remaining = draft.blocks.filter((_, index) => !moving.includes(index));
-    const before = draft.blocks.slice(0, overIndex).filter((_, index) => !moving.includes(index)).length;
-    const nextBlocks = [...remaining.slice(0, before), ...selectedBlocks, ...remaining.slice(before)];
-    if (nextBlocks.every((block, index) => block.clientId === draft.blocks[index]?.clientId)) {
-      setSelection(moving);
-      setActivePresetId(null);
-      return;
-    }
-    commit({ ...draft, blocks: nextBlocks });
-    setSelection(selectedBlocks.map((_, index) => before + index));
-    const origin = event.active.rect.current.translated;
-    setLanding({ id: selectedBlocks[0].clientId, left: origin?.left ?? NaN, top: origin?.top ?? NaN, message: `${selectedBlocks.length === 1 ? 'Block' : `${selectedBlocks.length} blocks`} moved to position ${before + 1}. Unsaved changes.` });
-    setActivePresetId(null);
+    const from = rows.findIndex((row) => row.id === event.active.id);
+    const to = rows.findIndex((row) => row.id === event.over?.id);
+    if (from < 0 || to < 0 || from === to) return;
+    commit(moveRow(draft, rows, from, to), `Moved to position ${to + 1}.`);
   }
 
+  function onBuilderKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (isTextEntry(event.target) || !(event.metaKey || event.ctrlKey)) return;
+    const key = event.key.toLowerCase();
+    if (key === 'z' && !event.shiftKey) { event.preventDefault(); undo(); }
+    if ((key === 'z' && event.shiftKey) || key === 'y') { event.preventDefault(); redo(); }
+  }
+
+  const rowActions = (row: BuilderRow, rowIndex: number) => ({
+    duplicate: () => {
+      const { draft: next, firstId } = duplicateRow(draft, row);
+      commitAndFocus(next, firstId, row.type === 'set' ? 'Set duplicated.' : 'Step duplicated.', true);
+    },
+    moveEarlier: rowIndex > 0 ? () => moveRowBy(rowIndex, -1) : null,
+    moveLater: rowIndex < rows.length - 1 ? () => moveRowBy(rowIndex, 1) : null,
+    remove: () => commitAndFocus(removeRow(draft, row), neighbourAfterRemoval(rowIndex), row.type === 'set' ? 'Set removed.' : 'Step removed.', true),
+  });
+
+  const editor = selectedBlock ? (
+    <StepEditor
+      key={selectedBlock.clientId}
+      id={editorId}
+      block={selectedBlock}
+      sport={sport}
+      profile={profile}
+      set={selectedSet}
+      moreOpen={moreOpen}
+      onMoreOpenChange={setMoreOpen}
+      onPatch={patchSelected}
+    />
+  ) : null;
+
+  const stepRow = (block: SessionEditorBlock, rowIndex: number, setOffset: number | null, menu: ReactNode, handle?: ReactNode) => (
+    <StepRowLine
+      block={block}
+      sport={sport}
+      profile={profile}
+      selected={block.clientId === selectedId}
+      handle={handle}
+      menu={menu}
+      editorId={editorId}
+      onSelect={() => select(block.clientId === selectedId ? null : block.clientId)}
+      onKeyDown={(event) => onRowKeyDown(event, rowIndex, setOffset)}
+    >
+      {!wide && block.clientId === selectedId ? editor : null}
+    </StepRowLine>
+  );
+
+  const tools = (
+    <div className="flex items-center gap-1.5">
+      <AddStepMenu finalFocus={takeMenuFocus} onAdd={(id, label) => addStep(id, label, true)} />
+      <button type="button" className={iconStepButtonClassName} aria-label="Undo" title="Undo (Ctrl+Z)" disabled={!history.length} onClick={undo}><Undo2 aria-hidden="true" size={15} /></button>
+      <button type="button" className={iconStepButtonClassName} aria-label="Redo" title="Redo (Ctrl+Shift+Z)" disabled={!future.length} onClick={redo}><Redo2 aria-hidden="true" size={15} /></button>
+    </div>
+  );
+
+  const summary = (
+    <div className="flex items-center gap-1">
+      <span className="data whitespace-nowrap text-[13px] text-[var(--text)]">{formatDurationExact(metrics.durationSec)} · {metrics.tss}&nbsp;TSS</span>
+      <button type="button" className={`${ghostButtonClassName('compact')} max-md:min-h-11`} aria-expanded={zonesOpen} aria-controls={`${uid}-zones`} onClick={() => setZonesOpen((open) => !open)}>
+        Time by zone<ChevronDown aria-hidden="true" size={14} className={zonesOpen ? 'rotate-180' : ''} />
+      </button>
+    </div>
+  );
+
   return (
-    <section className="min-w-0 space-y-4" aria-label="Visual workout builder">
+    <section className="min-w-0 space-y-3" aria-label="Workout builder" onKeyDown={onBuilderKeyDown}>
       {basicsOpen || !basicsReady ? (
-        <div
-          className="space-y-3 rounded-lg border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-3"
-          onBlur={closeBasicsOnBlur}
-          aria-labelledby="workout-basics-heading"
-        >
-          <div>
-            <h2 id="workout-basics-heading" className="text-base font-semibold text-[var(--text)]">Start with the basics</h2>
-            <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">Name this {itemNoun} and choose its sport. Then build the sequence.</p>
+        <div className="space-y-3 rounded-lg border border-[var(--field-selected-border)] bg-[var(--brand-tint)] p-3" aria-labelledby={`${uid}-basics`}>
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h2 id={`${uid}-basics`} className="text-base font-semibold text-[var(--text)]">{startsNew ? 'Start with the basics' : 'Edit basics'}</h2>
+              {startsNew ? <p className="mt-1 text-sm text-[var(--text-secondary)]">Name this {itemNoun} and choose its sport.</p> : null}
+            </div>
+            {headerActions ? <div className="flex items-center gap-2">{headerActions}</div> : null}
           </div>
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1.35fr)_minmax(12rem,0.65fr)]">
-            <label className="block space-y-2">
+            <label className="block">
               <span className={formLabelClassName}>{titleLabel}</span>
               <input
-                autoFocus={!draft.title.trim()}
+                autoFocus
                 className={formFieldClassName}
                 value={draft.title}
-                onChange={(event) => {
-                  const title = event.target.value;
-                  if (!title.trim()) setBasicsDismissed(false);
-                  commit(updateSessionEditorFields(draft, { title }));
-                }}
+                onChange={(event) => commit(updateSessionEditorFields(draft, { title: event.target.value }))}
                 placeholder={titleLabel === 'Template name' ? 'e.g. Base week' : 'e.g. Tuesday threshold'}
               />
             </label>
-            <label className="block space-y-2">
+            <label className="block">
               <span className={formLabelClassName}>Sport</span>
               <select className={formSelectClassName} value={draft.sport} onChange={(event) => commit(updateSessionEditorFields(draft, { sport: event.target.value }))}>
-                {SPORT_OPTIONS.map((sport) => <option key={sport} value={sport}>{getSportLabel(sport)}</option>)}
+                {SPORT_OPTIONS.map((option) => <option key={option} value={option}>{getSportLabel(option)}</option>)}
               </select>
             </label>
           </div>
+          <label className="block">
+            <span className={formLabelClassName}>{summaryLabel}</span>
+            <textarea rows={2} className={formTextareaClassName} value={draft.summary} placeholder={summaryPlaceholder} onChange={(event) => commit(updateSessionEditorFields(draft, { summary: event.target.value }))} />
+          </label>
+          {showSchedule ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block"><span className={formLabelClassName}>Scheduled date</span><input className={formFieldClassName} type="date" value={draft.scheduledDate ?? ''} onChange={(event) => commit(updateSessionEditorSchedule(draft, { scheduledDate: event.target.value || null }))} /></label>
+              <label className="block"><span className={formLabelClassName}>Time</span><input className={formFieldClassName} type="time" value={draft.timeLabel ?? ''} onChange={(event) => commit(updateSessionEditorSchedule(draft, { timeLabel: event.target.value || null }))} /></label>
+            </div>
+          ) : null}
+          <div className="flex items-center gap-3">
+            <button type="button" className={`${compactPrimaryButtonClassName} max-md:min-h-11`} disabled={!basicsReady} onClick={() => setBasicsOpen(false)}>Done</button>
+            {!basicsReady ? <span className="text-xs text-[var(--text-secondary)]">Add a name to continue.</span> : null}
+          </div>
         </div>
       ) : (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-3" aria-label="Workout basics">
-          <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2" aria-label="Workout basics and tools">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 max-lg:contents">
             <h2 className="min-w-0 break-words text-base font-semibold text-[var(--text)]">{draft.title}</h2>
-            <span className="text-sm text-[var(--text-secondary)]">{getSportLabel(draft.sport)}</span>
+            <span className="text-sm text-[var(--text-secondary)]">
+              {[getSportLabel(draft.sport), showSchedule ? [draft.scheduledDate, draft.timeLabel].filter(Boolean).join(' ') : null, draft.summary.trim() ? 'Notes added' : null].filter(Boolean).join(' · ')}
+            </span>
+            <button type="button" className={`${ghostButtonClassName('compact')} max-md:min-h-11`} onClick={() => setBasicsOpen(true)}>Edit basics</button>
           </div>
-          <button type="button" className={editorSecondaryButtonClassName} onClick={() => setBasicsDismissed(false)}>Edit basics</button>
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 max-lg:order-last max-lg:w-full lg:ml-auto">
+            {tools}
+            {summary}
+          </div>
+          {headerActions ? <div className="flex items-center gap-2 max-lg:ml-auto">{headerActions}</div> : null}
         </div>
       )}
-      <details open={notesOpen} onToggle={(event) => setNotesOpen(event.currentTarget.open)}>
-        <summary className="inline-flex min-h-9 max-md:min-h-11 list-none items-center text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">
-          <span className="underline decoration-[var(--border)] underline-offset-4">{summaryLabel}</span>{!notesOpen && draft.summary.trim() ? <span className="ml-1.5 font-normal text-[var(--text-muted)]">· Added</span> : null}
-        </summary>
-        <label className="mt-3 block space-y-2">
-          <span className="sr-only">{summaryLabel}</span>
-          <textarea className={formTextareaClassName} value={draft.summary} placeholder={summaryPlaceholder} onChange={(event) => commit(updateSessionEditorFields(draft, { summary: event.target.value }))} />
-        </label>
-      </details>
-      {showSchedule ? <div className="grid gap-3 sm:grid-cols-2"><label className="block space-y-2"><span className={formLabelClassName}>Scheduled date</span><input className={formFieldClassName} type="date" value={draft.scheduledDate ?? ''} onChange={(event) => commit(updateSessionEditorSchedule(draft, { scheduledDate: event.target.value || null }))} /></label><label className="block space-y-2"><span className={formLabelClassName}>Time</span><input className={formFieldClassName} type="time" value={draft.timeLabel ?? ''} onChange={(event) => commit(updateSessionEditorSchedule(draft, { timeLabel: event.target.value || null }))} /></label></div> : null}
-
-      <DndContext
-        sensors={sensors}
-        onDragStart={onDragStart}
-        onDragCancel={onDragCancel}
-        onDragOver={onDragOver}
-        onDragEnd={onDragEnd}
-        accessibility={{ announcements: {
-          onDragStart: ({ active }) => `Picked up ${dragName(active.id)}. Choose a position in the sequence.`,
-          onDragOver: ({ over }) => over ? `Insert at position ${over.id === 'workout-canvas' ? draft.blocks.length + 1 : draft.blocks.findIndex((block) => block.clientId === over.id) + 1}.` : 'Outside the sequence. Release to cancel.',
-          onDragEnd: ({ over }) => over ? 'Sequence updated. Changes are not saved yet.' : 'Drop cancelled. Sequence unchanged.',
-          onDragCancel: () => 'Movement cancelled. Sequence unchanged.',
-        } }}
-      >
-        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(13rem,0.72fr)_minmax(0,1.45fr)_minmax(15rem,0.8fr)]">
-          <aside className={`@container space-y-4 rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-4 ${draft.blocks.length ? 'max-xl:order-3' : ''}`} aria-label="Block preset palette">
-            <div>
-              <h2 className="text-sm font-semibold text-[var(--text)]">Block library</h2>
-              <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">Drag a preset into the sequence, or click to add it.</p>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5 @xs:grid-cols-5" role="group" aria-label="Intensity zones">
-              {ZONES.map((zone) => {
-                const meta = TEMPO_ZONE_META[zone];
-                const selectedZone = paletteZone === zone;
-                return (
-                  <button
-                    key={zone}
-                    type="button"
-                    aria-pressed={selectedZone}
-                    aria-label={`${meta.label} ${meta.name}`}
-                    title={`${meta.label} ${meta.name}`}
-                    className={`min-h-11 min-w-0 rounded-lg border px-1 py-1.5 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${selectedZone ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)] text-[var(--field-selected-text)] hover:border-[var(--field-focus)]' : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--field-focus)]'}`}
-                    onClick={() => setPaletteZone(zone)}
-                  >
-                    <span className={`mx-auto mb-1 block h-1.5 w-7 ink-zone-${zone}`} aria-hidden="true" />
-                    <span className="block text-[11px] font-semibold leading-none">{meta.label}</span>
-                    <span className="mt-1 block text-[10px] leading-tight">{meta.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div id="zone-preset-list" role="group" aria-label={`${TEMPO_ZONE_META[paletteZone].label} ${TEMPO_ZONE_META[paletteZone].name} block presets`} className="space-y-2">
-              {ZONE_PRESETS[paletteZone].map((preset) => <PalettePreset key={preset.id} preset={preset} onAdd={() => {
-                const suppression = suppressPaletteClick.current;
-                if (suppression?.presetId === preset.id && suppression.until > Date.now()) {
-                  suppressPaletteClick.current = null;
-                  return;
-                }
-                if (suppression && suppression.until <= Date.now()) suppressPaletteClick.current = null;
-                insertPreset(preset);
-              }} />)}
-            </div>
-          </aside>
-
-          <div className="min-w-0 space-y-3 max-xl:order-1" onKeyDown={(event) => { if (event.key === 'Escape') setSelection([]); if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'a') { event.preventDefault(); setSelection(draft.blocks.map((_, index) => index)); } }}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div><h2 className="text-base font-semibold text-[var(--text)]">Workout sequence</h2><p className="text-xs text-[var(--text-secondary)]">{selection.length ? `${selection.length} block${selection.length === 1 ? '' : 's'} selected` : 'Drop a preset here to start'}</p></div>
-              <MetricText>{formatDuration(metrics.durationSec)} / {metrics.tss}&nbsp;TSS</MetricText>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-[minmax(0,1.35fr)_minmax(10rem,0.65fr)]">
-              <div className="rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-3"><WorkoutProfile size="compact" model={buildWorkoutProfile(draft.blocks.map((block) => ({ ...block, id: block.clientId })), { sport: draft.sport, profile: performanceProfile, ftpWatts: performanceProfile?.cycling.ftpWatts })} label="Workout profile preview" /><p className="mt-2 text-xs text-[var(--text-secondary)]">Profile: width is time, height is intensity. Repeats are drawn in full.</p></div>
-              <IntensityZoneChart segments={metrics.segments} />
-            </div>
-            <div className="flex flex-wrap items-center gap-2" aria-label="Canvas commands">
-              <button type="button" className={editorSecondaryButtonClassName} disabled={!selection.length} onClick={() => moveSelection(-1)}>Earlier</button>
-              <button type="button" className={editorSecondaryButtonClassName} disabled={!selection.length} onClick={() => moveSelection(1)}>Later</button>
-              <details className="basis-full">
-                <summary className={`${editorSecondaryButtonClassName} inline-flex cursor-pointer list-none`}>More tools</summary>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <button type="button" className={editorSecondaryButtonClassName} disabled={!selection.length} onClick={() => setClipboard(selected.map((block) => ({ ...block, id: null })))}>Copy</button>
-                  <button type="button" className={editorSecondaryButtonClassName} disabled={!clipboard.length} onClick={() => { const at = (selection.at(-1) ?? draft.blocks.length - 1) + 1; const copies = clipboard.map((block) => createSessionEditorBlock({ ...block, id: null })); commit({ ...draft, blocks: [...draft.blocks.slice(0, at), ...copies, ...draft.blocks.slice(at)] }); setSelection(copies.map((_, index) => at + index)); }}>Paste</button>
-                  <button type="button" className={editorSecondaryButtonClassName} disabled={!selection.length} onClick={() => { const at = (selection.at(-1) ?? -1) + 1; const copies = selected.map((block) => createSessionEditorBlock({ ...block, id: null })); commit({ ...draft, blocks: [...draft.blocks.slice(0, at), ...copies, ...draft.blocks.slice(at)] }); setSelection(copies.map((_, index) => at + index)); }}>Duplicate</button>
-                  <button type="button" className={editorSecondaryButtonClassName} disabled={!selection.length} onClick={() => commit({ ...draft, blocks: repeatBlockSelection(draft.blocks, selection, 1) })}>Repeat once</button>
-                  <button type="button" className={editorSecondaryButtonClassName} disabled={!history.length} onClick={undo}>Undo</button>
-                  <button type="button" className={editorSecondaryButtonClassName} disabled={!future.length} onClick={redo}>Redo</button>
-                  <button type="button" className={editorDangerButtonClassName} disabled={!selection.length} onClick={removeSelection}>Delete</button>
-                </div>
-              </details>
-            </div>
-            <CanvasDropZone>
-              <SortableContext items={draft.blocks.map((block) => block.clientId)} strategy={verticalListSortingStrategy}>
-                {draft.blocks.length ? <div className="space-y-2">{draft.blocks.map((block, index) => <SortableBlock key={block.clientId} landing={landing?.id === block.clientId ? landing : null} insertionBefore={dropIndex === index} block={block} sport={draft.sport} index={index} selected={selection.includes(index)} profile={performanceProfile} profileLabel={profileLabel} onSelect={select} />)}</div> : <p className="py-6 text-center text-sm text-[var(--text-secondary)]">Choose a preset in the block library to start the sequence.</p>}
-                {dropIndex === draft.blocks.length ? <p className="border-t-2 border-[var(--brand)] pt-2 text-xs text-[var(--brand)]">Drop at end of sequence</p> : null}
-            </SortableContext>
-            <p role="status" className="mt-2 text-xs text-[var(--text-secondary)]">{landing && draft.blocks.some((block) => block.clientId === landing.id) ? landing.message : 'Changes stay in this draft until you save.'}</p>
-            </CanvasDropZone>
-          </div>
-
-          <aside className="ink-form-inspector space-y-4 rounded-lg max-xl:order-2 border border-[var(--border)] bg-[var(--field-surface)] p-4" aria-live="polite">
-            <div><h2 className="text-base font-semibold text-[var(--text)]">{selected.length > 1 ? `Edit ${selected.length} blocks` : 'Block details'}</h2><p className="mt-1 text-xs text-[var(--text-secondary)]">{selected.length > 1 ? 'Changes apply to the selected sequence.' : 'Edit the selected block.'}</p></div>
-            {selectedBlock ? <><label className="block space-y-2"><span className={formLabelClassName}>Training zone</span><select className={formSelectClassName} value={selectedBlock.zone} onChange={(event) => applyBlockPatch({ zone: Number(event.target.value) as TempoZone })}>{Object.entries(TEMPO_ZONE_META).map(([zone, meta]) => <option key={zone} value={zone}>{meta.label} {meta.name}</option>)}</select></label><label className="block space-y-2"><span className={formLabelClassName}>Duration ({durationUnit})</span><input className={formFieldClassName} type="number" min="1" value={durationUnit === 'minutes' ? Math.round(selectedBlock.durationSec / 60) : selectedBlock.durationSec} onChange={(event) => applyBlockPatch({ durationSec: Number(event.target.value) * (durationUnit === 'minutes' ? 60 : 1) })} /></label><label className="block space-y-2"><span className={formLabelClassName}>Repeats</span><input className={formFieldClassName} type="number" min="1" value={selectedBlock.reps ?? ''} onChange={(event) => applyBlockPatch({ reps: event.target.value ? Number(event.target.value) : null })} /></label><TargetEditor sport={draft.sport} target={selectedBlock.target} onChange={(target) => applyBlockPatch({ target })} /><label className="block space-y-2"><span className={formLabelClassName}>Coaching note</span><textarea className={formTextareaClassName} value={selectedBlock.note} onChange={(event) => applyBlockPatch({ note: event.target.value })} /></label><div className="flex flex-wrap gap-2"><button type="button" className={editorSecondaryButtonClassName} onClick={() => applyBlockPatch({ target: null })}>Clear target</button><button type="button" className={editorSecondaryButtonClassName} onClick={() => applyBlockPatch({ note: '', reps: null })}>Clear note and repeats</button><button type="button" className={editorDangerButtonClassName} onClick={removeSelection}>{selected.length > 1 ? 'Remove blocks' : 'Remove block'}</button></div></> : <p className="text-sm text-[var(--text-secondary)]">Select a block in the workout sequence.</p>}
-          </aside>
+      {basicsOpen || !basicsReady ? (
+        <div className="flex flex-wrap items-center justify-between gap-2" aria-label="Builder tools">
+          {tools}
+          {summary}
         </div>
-        {activePreset ? <DragOverlay dropAnimation={null}><PresetDragPreview preset={activePreset} /></DragOverlay> : null}
-      </DndContext>
+      ) : null}
+      {zonesOpen ? <ZoneSummary id={`${uid}-zones`} blocks={draft.blocks} /> : null}
+
+      {model.steps.length ? (
+        <div className="space-y-1.5">
+          <WorkoutProfile
+            model={model}
+            label="Workout profile. Select a step to edit it"
+            chartHeight="short"
+            ftpWatts={profile?.cycling.ftpWatts ?? null}
+            selectedStep={profileSelection}
+            onSelectStep={selectFromProfile}
+            controlsId={selectedBlock ? editorId : undefined}
+          />
+          {profileHint ? (
+            <p className="text-xs text-[var(--text-secondary)]">
+              {profileHint} <Link href="/profile" className="rounded-sm font-medium text-[var(--brand)] underline-offset-4 control-hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">Open Profile</Link>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+        {rows.length ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={onDragEnd}
+            accessibility={{ announcements: {
+              onDragStart: () => 'Picked up. Use the arrow keys to choose a position.',
+              onDragOver: ({ over }) => over ? `Position ${rows.findIndex((row) => row.id === over.id) + 1} of ${rows.length}.` : 'Outside the list. Release to cancel.',
+              onDragEnd: ({ over }) => over ? 'Order updated. Not saved yet.' : 'Move cancelled.',
+              onDragCancel: () => 'Move cancelled. Order unchanged.',
+            } }}
+          >
+            <SortableContext items={rows.map((row) => row.id)} strategy={verticalListSortingStrategy}>
+              <ol className="min-w-0 space-y-1 lg:max-h-[max(16rem,calc(100dvh-36rem))] lg:overflow-y-auto lg:p-0.5" aria-label="Workout steps. Alt plus arrow keys move the focused step">
+                {rows.map((row, rowIndex) => {
+                  const actions = rowActions(row, rowIndex);
+                  if (row.type === 'step') {
+                    const block = draft.blocks[row.index];
+                    const next = rows[rowIndex + 1];
+                    return (
+                      <SortableRow key={row.id} id={row.id} label={stepName(block)}>
+                        {(handle) => stepRow(block, rowIndex, null, (
+                          <RowMenu label={stepName(block)} noun="step" finalFocus={takeMenuFocus} onDuplicate={actions.duplicate} onMoveEarlier={actions.moveEarlier} onMoveLater={actions.moveLater} onRemove={actions.remove}
+                            onRepeat={next?.type === 'step' && block.kind !== 'pause' && draft.blocks[next.index].kind !== 'pause'
+                              ? () => commitAndFocus(repeatWithNext(draft, row.index), block.clientId, 'Repeated with the next step as a set of 2.', true)
+                              : null}
+                          />
+                        ), handle)}
+                      </SortableRow>
+                    );
+                  }
+                  return (
+                    <SortableRow key={row.id} id={row.id} label="set">
+                      {(handle) => (
+                        <SetRowGroup
+                          row={row}
+                          blocks={draft.blocks}
+                          handle={handle}
+                          onRepeats={(repeats) => commit(setRepeatCount(draft, row, repeats), `Set repeats ${repeats} times.`)}
+                          menu={<RowMenu label="set" noun="set" finalFocus={takeMenuFocus} onDuplicate={actions.duplicate} onMoveEarlier={actions.moveEarlier} onMoveLater={actions.moveLater} onRemove={actions.remove}
+                            onAddToSet={() => {
+                              const [recovery] = createStepBlocks('recovery', sport, profile);
+                              commitAndFocus(addStepToSet(draft, row, recovery), recovery.clientId, 'Recovery added to every repeat.', true);
+                            }}
+                          />}
+                        >
+                          {Array.from({ length: row.width }, (_, offset) => {
+                            const block = draft.blocks[row.start + offset];
+                            return (
+                              <li key={block.clientId}>
+                                {stepRow(block, rowIndex, offset, (
+                                  <SetStepMenu
+                                    label={stepName(block)}
+                                    finalFocus={takeMenuFocus}
+                                    onMoveEarlier={offset > 0 ? () => commit(moveSetStep(draft, row, offset, -1), 'Moved within the set.') : null}
+                                    onMoveLater={offset < row.width - 1 ? () => commit(moveSetStep(draft, row, offset, 1), 'Moved within the set.') : null}
+                                    onRemove={() => {
+                                      const next = removeSetStep(draft, row, offset);
+                                      commitAndFocus(next, next.blocks[row.start]?.clientId ?? null, 'Step removed from every repeat.', true);
+                                    }}
+                                  />
+                                ))}
+                              </li>
+                            );
+                          })}
+                        </SetRowGroup>
+                      )}
+                    </SortableRow>
+                  );
+                })}
+              </ol>
+            </SortableContext>
+          </DndContext>
+        ) : (
+          <div className="tile-empty rounded-xl px-4 py-6 text-center">
+            <p className="text-sm font-medium text-[var(--text)]">No steps yet</p>
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">Start with a warm-up, then add steady work or an interval set.</p>
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              {ADD_STEP_OPTIONS.map((option) => (
+                <button key={option.id} type="button" className={editorButtonClassName} onClick={() => addStep(option.id, option.label, false)}>
+                  <Plus aria-hidden="true" size={14} />{option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {wide ? (
+          <aside className="rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-3 lg:sticky lg:top-4" aria-label="Step details">
+            {editor ?? <p className="text-sm text-[var(--text-secondary)]">{rows.length ? 'Select a step in the profile or list to edit it.' : 'Added steps can be edited here.'}</p>}
+          </aside>
+        ) : null}
+      </div>
+      <p role="status" className="sr-only">{announcement}</p>
     </section>
   );
 }
 
-function PalettePreset({ preset, onAdd }: { preset: BlockPreset; onAdd: () => void }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `${PALETTE_DRAG_PREFIX}${preset.id}` });
-  const duration = preset.block.durationSec ?? 0;
-  const reps = preset.block.reps && preset.block.reps > 1 ? ` x ${preset.block.reps}` : '';
-
+function AddStepMenu({ onAdd, finalFocus }: { onAdd: (id: string, label: string) => void; finalFocus: () => HTMLElement | null }) {
   return (
+    <Menu>
+      <MenuTrigger className={`${compactPrimaryButtonClassName} max-md:min-h-11`}>
+        <Plus aria-hidden="true" size={15} strokeWidth={2} />Add step<ChevronDown aria-hidden="true" size={14} />
+      </MenuTrigger>
+      <MenuContent align="start" finalFocus={finalFocus} className="max-w-[min(20rem,calc(100vw-2rem))]">
+        {ADD_STEP_OPTIONS.map((option) => (
+          <MenuItem key={option.id} onSelect={() => onAdd(option.id, option.label)} className="justify-between gap-4">
+            <span>{option.label}</span><span className="data text-xs text-[var(--text-muted)]">{option.detail}</span>
+          </MenuItem>
+        ))}
+        <MenuSeparator />
+        <MenuGroup>
+          <MenuGroupLabel>Interval presets</MenuGroupLabel>
+          {INTERVAL_PRESETS.map((option) => (
+            <MenuItem key={option.id} onSelect={() => onAdd(option.id, `${option.label} set`)} className="justify-between gap-4">
+              <span>{option.label}</span><span className="data text-xs text-[var(--text-muted)]">{option.detail}</span>
+            </MenuItem>
+          ))}
+        </MenuGroup>
+      </MenuContent>
+    </Menu>
+  );
+}
+
+function RowMenu({ label, noun, finalFocus, onDuplicate, onMoveEarlier, onMoveLater, onRemove, onRepeat = null, onAddToSet }: {
+  label: string;
+  noun: 'step' | 'set';
+  finalFocus: () => HTMLElement | null;
+  onDuplicate: () => void;
+  onMoveEarlier: (() => void) | null;
+  onMoveLater: (() => void) | null;
+  onRemove: () => void;
+  onRepeat?: (() => void) | null;
+  onAddToSet?: () => void;
+}) {
+  return (
+    <Menu>
+      <OverflowMenuTrigger compact aria-label={`More actions for ${label}`} />
+      <MenuContent align="end" finalFocus={finalFocus}>
+        <MenuItem onSelect={onDuplicate}><Copy aria-hidden="true" size={16} strokeWidth={1.8} />Duplicate</MenuItem>
+        {onRepeat ? <MenuItem onSelect={onRepeat}><Repeat2 aria-hidden="true" size={16} strokeWidth={1.8} />Repeat with next step</MenuItem> : null}
+        {onAddToSet ? <MenuItem onSelect={onAddToSet}><Plus aria-hidden="true" size={16} strokeWidth={1.8} />Add recovery to each repeat</MenuItem> : null}
+        <MenuItem disabled={!onMoveEarlier} onSelect={() => onMoveEarlier?.()}><ArrowUp aria-hidden="true" size={16} strokeWidth={1.8} />Move earlier</MenuItem>
+        <MenuItem disabled={!onMoveLater} onSelect={() => onMoveLater?.()}><ArrowDown aria-hidden="true" size={16} strokeWidth={1.8} />Move later</MenuItem>
+        <MenuSeparator />
+        <MenuItem destructive onSelect={onRemove}><Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />Remove {noun}</MenuItem>
+      </MenuContent>
+    </Menu>
+  );
+}
+
+function SetStepMenu({ label, finalFocus, onMoveEarlier, onMoveLater, onRemove }: { label: string; finalFocus: () => HTMLElement | null; onMoveEarlier: (() => void) | null; onMoveLater: (() => void) | null; onRemove: () => void }) {
+  return (
+    <Menu>
+      <OverflowMenuTrigger compact aria-label={`More actions for ${label} in this set`} />
+      <MenuContent align="end" finalFocus={finalFocus}>
+        <MenuItem disabled={!onMoveEarlier} onSelect={() => onMoveEarlier?.()}><ArrowUp aria-hidden="true" size={16} strokeWidth={1.8} />Move earlier in set</MenuItem>
+        <MenuItem disabled={!onMoveLater} onSelect={() => onMoveLater?.()}><ArrowDown aria-hidden="true" size={16} strokeWidth={1.8} />Move later in set</MenuItem>
+        <MenuSeparator />
+        <MenuItem destructive onSelect={onRemove}><Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />Remove from set</MenuItem>
+      </MenuContent>
+    </Menu>
+  );
+}
+
+function SortableRow({ id, label, children }: { id: string; label: string; children: (handle: ReactNode) => ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const handle = (
     <button
-      ref={setNodeRef}
       type="button"
-      className="flex min-h-16 w-full items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2.5 text-left transition hover:border-[var(--field-focus)] hover:bg-[var(--brand-tint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] active:cursor-grabbing"
-      style={{ opacity: isDragging ? 0.35 : 1 }}
-      onClick={onAdd}
+      aria-label={`Reorder ${label}`}
+      title="Drag to reorder"
+      className={`inline-flex min-h-8 w-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-[var(--text-muted)] control-hover:bg-[var(--raised)] control-hover:text-[var(--text)] active:cursor-grabbing max-md:min-h-11 max-md:w-8 ${buttonFocusClassName}`}
       {...attributes}
       {...listeners}
     >
-      <span className={`mt-1 h-8 w-1 shrink-0 ink-zone-${preset.block.zone ?? 1}`} aria-hidden="true" />
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] font-semibold text-[var(--text)]">{preset.name}</span>
-        <span className="mt-0.5 block text-[11px] leading-4 text-[var(--text-secondary)]">{preset.description}</span>
-      </span>
-      <span className="metric-text shrink-0 text-[11px] text-[var(--text-secondary)]">{formatDuration(duration)}{reps}</span>
+      <GripVertical aria-hidden="true" size={15} />
     </button>
   );
+  return (
+    <li ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1, position: 'relative', zIndex: isDragging ? 1 : undefined }}>
+      {children(handle)}
+    </li>
+  );
 }
 
-function PresetDragPreview({ preset }: { preset: BlockPreset }) {
+function StepRowLine({ block, sport, profile, selected, handle, menu, editorId, onSelect, onKeyDown, children }: {
+  block: SessionEditorBlock;
+  sport: string;
+  profile: PerformanceProfile | null;
+  selected: boolean;
+  handle?: ReactNode;
+  menu: ReactNode;
+  editorId: string;
+  onSelect: () => void;
+  onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
+  children?: ReactNode;
+}) {
+  const name = stepName(block);
+  const target = targetSummary(block, sport);
+  const resolved = resolvedTarget(block, sport, profile);
   return (
-    <div className="flex w-56 items-center gap-2 rounded-lg border border-[var(--field-selected-border)] bg-[var(--surface)] p-2.5 shadow-[var(--shadow-overlay)]">
-      <span className={`h-8 w-1 shrink-0 ink-zone-${preset.block.zone ?? 1}`} aria-hidden="true" />
-      <span className="min-w-0">
-        <span className="block truncate text-[13px] font-semibold text-[var(--text)]">{preset.name}</span>
-        <span className="block text-[11px] text-[var(--text-secondary)]">Drop into the sequence</span>
-      </span>
+    <div className={`rounded-lg border ${selected ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)]' : 'border-transparent'}`}>
+      <div className="flex min-w-0 items-center gap-1 pr-1">
+        {handle ?? <span className="w-1 shrink-0" aria-hidden="true" />}
+        <button
+          type="button"
+          data-step-button={block.clientId}
+          aria-pressed={selected}
+          aria-controls={selected ? editorId : undefined}
+          aria-label={[name, stepDuration(block), target, resolved, block.skipped ? 'skipped' : null].filter(Boolean).join(', ')}
+          onClick={onSelect}
+          onKeyDown={onKeyDown}
+          className={`@container flex min-h-8 min-w-0 flex-1 items-center gap-2.5 rounded-md px-2 text-left text-[13px] control-hover:bg-[var(--raised)] max-md:min-h-11 ${buttonFocusClassName}`}
+        >
+          <span aria-hidden="true" className={`h-4 w-1.5 shrink-0 rounded-sm ${block.kind === 'pause' ? 'bg-[var(--text-muted)]' : `ink-zone-${block.zone}`}`} />
+          <span className={`min-w-0 flex-1 truncate font-medium ${block.skipped ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text)]'}`}>{name}</span>
+          <span className="data shrink-0 text-[var(--text)]">{stepDuration(block)}</span>
+          <span className="data hidden min-w-0 truncate text-right text-[var(--text-secondary)] @[11rem]:block @lg:w-40 @lg:shrink-0">{target}{target && resolved ? <span className="max-sm:hidden"> · {resolved}</span> : null}</span>
+        </button>
+        {menu}
+      </div>
+      {children ? <div className="border-t border-[var(--field-selected-border)] p-3">{children}</div> : null}
     </div>
   );
 }
 
-function CanvasDropZone({ children }: { children: React.ReactNode }) {
-  const { setNodeRef, isOver } = useDroppable({ id: 'workout-canvas' });
-
-  return <div ref={setNodeRef} className={`min-h-24 rounded-lg border border-dashed p-3 transition-colors ${isOver ? 'border-[var(--brand)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--field-surface)]'}`}>{children}</div>;
+function SetRowGroup({ row, blocks, handle, menu, onRepeats, children }: { row: BuilderSetRow; blocks: SessionEditorBlock[]; handle: ReactNode; menu: ReactNode; onRepeats: (repeats: number) => void; children: ReactNode }) {
+  const totalSec = blocks.slice(row.start, row.end).reduce((sum, block) => sum + block.durationSec * (block.reps ?? 1), 0);
+  const labelId = useId();
+  return (
+    <div className="rounded-lg border border-[var(--border)]">
+      <div className="flex min-w-0 items-center gap-1 pr-1">
+        {handle}
+        <span id={labelId} className="min-w-0 flex-1 truncate px-2 text-[13px] font-medium text-[var(--text)]">
+          Set <span className="data font-normal text-[var(--text-secondary)]">· {formatDurationExact(totalSec)}{row.dropsLastStep ? ' · no recovery after the last' : ''}</span>
+        </span>
+        <div role="group" aria-labelledby={labelId} className="flex items-center gap-1">
+          <button type="button" className={iconStepButtonClassName} aria-label="Fewer repeats" disabled={row.repeats <= 1} onClick={() => onRepeats(row.repeats - 1)}><Minus aria-hidden="true" size={14} /></button>
+          <output aria-live="polite" aria-label={`${row.repeats} repeats`} className="data min-w-9 text-center text-[13px] font-medium text-[var(--text)]">× {row.repeats}</output>
+          <button type="button" className={iconStepButtonClassName} aria-label="More repeats" disabled={row.repeats >= 50} onClick={() => onRepeats(row.repeats + 1)}><Plus aria-hidden="true" size={14} /></button>
+        </div>
+        {menu}
+      </div>
+      <ul className="ml-4 space-y-1 border-l border-[var(--border-strong)] pb-1 pl-1.5" aria-label={`Steps repeated ${row.repeats} times`}>{children}</ul>
+    </div>
+  );
 }
 
-function IntensityZoneChart({ segments }: { segments: Array<{ zone: number; durationSec: number }> }) {
-  const totals = ZONES.map((zone) => ({
-    zone,
-    durationSec: segments.filter((segment) => segment.zone === zone).reduce((total, segment) => total + segment.durationSec, 0),
-  }));
-  const maxDuration = Math.max(...totals.map((item) => item.durationSec), 1);
-  const totalDuration = totals.reduce((total, item) => total + item.durationSec, 0);
-  const summary = totals.map((item) => `${TEMPO_ZONE_META[item.zone].label} ${formatDuration(item.durationSec)}`).join(', ');
-
+function ZoneSummary({ id, blocks }: { id: string; blocks: SessionEditorBlock[] }) {
+  const totals = zoneTotals(blocks);
+  const total = totals.reduce((sum, item) => sum + item.durationSec, 0);
+  const text = totals.map((item) => `${TEMPO_ZONE_META[item.zone].label} ${formatDuration(item.durationSec)}`).join(', ');
   return (
-    <div role="img" aria-label={`Time by intensity zone: ${summary}`} className="rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-3">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-semibold text-[var(--text)]">Time by zone</h3>
-          <p className="mt-1 text-xs text-[var(--text-secondary)]">{formatDuration(totalDuration)} total</p>
-        </div>
-        <span className="text-[10px] uppercase tracking-[0.08em] text-[var(--text-muted)]">Bar chart</span>
+    <div id={id} className="space-y-2 rounded-lg border border-[var(--border)] p-3">
+      <div role="img" aria-label={`Time by zone: ${text}`} className="flex h-2 overflow-hidden rounded-full bg-[var(--sunken)]">
+        {total ? totals.filter((item) => item.durationSec).map((item) => <span key={item.zone} className={`ink-zone-${item.zone}`} style={{ flexGrow: item.durationSec }} />) : null}
       </div>
-      <div className="mt-4 flex h-28 items-end gap-1.5 border-b border-[var(--border)]" aria-hidden="true">
-        {totals.map(({ zone, durationSec }) => (
-          <div key={zone} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1">
-            <span className="metric-text text-[10px] text-[var(--text-secondary)]">{formatDuration(durationSec)}</span>
-            <div className="flex h-16 w-full items-end rounded-[2px] bg-[var(--sunken)]">
-              <span className={`block w-full ${durationSec ? `ink-zone-${zone}` : 'bg-[var(--border)]'}`} style={{ height: `${durationSec ? Math.max((durationSec / maxDuration) * 100, 8) : 3}%` }} />
-            </div>
-            <span className="text-[10px] font-semibold text-[var(--text-secondary)]">{TEMPO_ZONE_META[zone].label}</span>
-          </div>
+      <ul aria-hidden="true" className="data flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--text-secondary)]">
+        {totals.map((item) => (
+          <li key={item.zone} className="flex items-center gap-1.5"><span className={`size-2 rounded-sm ink-zone-${item.zone}`} />{TEMPO_ZONE_META[item.zone].label} {TEMPO_ZONE_META[item.zone].name} <span className="text-[var(--text)]">{formatDuration(item.durationSec)}</span></li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
 
-function findPreset(id: string) {
-  for (const zone of ZONES) {
-    const preset = ZONE_PRESETS[zone].find((item) => item.id === id);
-    if (preset) return preset;
-  }
-  return null;
-}
-
-function SortableBlock({ block, sport, index, selected, profile, profileLabel, onSelect, landing, insertionBefore }: { landing: { left: number; top: number; message: string } | null; insertionBefore: boolean; block: SessionEditorBlock; sport: string; index: number; selected: boolean; profile: PerformanceProfile | null; profileLabel: string; onSelect: (index: number, event?: React.MouseEvent | React.KeyboardEvent) => void }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.clientId });
-  const articleRef = useRef<HTMLElement | null>(null);
-  useLayoutEffect(() => {
-    const node = articleRef.current;
-    if (!landing || !node) return;
-    const rect = node.getBoundingClientRect();
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let animation: Animation | undefined;
-    if (!reduced && Number.isFinite(landing.left)) {
-      animation = node.animate([
-        { transform: `translate(${landing.left - rect.left}px, ${landing.top - rect.top}px)` },
-        { transform: 'translate(0, 0)' },
-      ], { duration: 220, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
-    }
-    if (rect.top < 0 || rect.bottom > window.innerHeight) node.scrollIntoView({ block: 'nearest', behavior: 'instant' });
-    return () => animation?.cancel();
-  }, [landing]);
-  const target = block.target ? formatWorkoutTarget(block.target) : 'No target';
-  const preview = block.target ? formatResolvedWorkoutTarget(block.target, profile, sport) : null;
-  const missing = block.target ? missingProfileAction(block.target) : null;
-  const zone = TEMPO_ZONE_META[block.zone];
+function StepEditor({ id, block, sport, profile, set, moreOpen, onMoreOpenChange, onPatch }: {
+  id: string;
+  block: SessionEditorBlock;
+  sport: string;
+  profile: PerformanceProfile | null;
+  set: BuilderSetRow | null;
+  moreOpen: boolean;
+  onMoreOpenChange: (open: boolean) => void;
+  onPatch: (patch: SessionEditorBlockPatch) => void;
+}) {
+  const uid = useId();
+  const pause = block.kind === 'pause';
+  const resolved = resolvedTarget(block, sport, profile);
+  const lower = block.target ? adjustWorkoutTarget(block.target, -1) : null;
+  const higher = block.target ? adjustWorkoutTarget(block.target, 1) : null;
   return (
-    <div className="relative space-y-1">
-      {insertionBefore ? <span className="pointer-events-none absolute -top-2 left-0 right-0 z-10 border-t-2 border-[var(--brand)] text-xs text-[var(--brand)]"><span className="bg-[var(--surface)] px-1">Insert here</span></span> : null}
-      <article data-block-id={block.clientId} ref={(node) => { setNodeRef(node); articleRef.current = node; }} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.55 : 1 }} className={`rounded-lg border p-3 ${selected ? 'border-[var(--brand)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
-        <div className="flex items-start gap-3">
-          <button type="button" className={`mt-1 min-h-11 shrink-0 rounded-lg px-2 text-xs text-[var(--text-muted)] hover:bg-[var(--raised)] hover:text-[var(--text)] active:cursor-grabbing max-md:px-3 ${buttonFocusClassName}`} aria-label={`Drag block ${index + 1}`} {...attributes} {...listeners}>Drag</button>
-          <button type="button" className={`min-h-11 min-w-0 flex-1 rounded-lg text-left hover:bg-[var(--raised)] ${buttonFocusClassName}`} aria-pressed={selected} onClick={(event) => onSelect(index, event)} onKeyDown={(event) => { if (event.code === 'Space') { event.preventDefault(); onSelect(index, event); } }}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-semibold capitalize text-[var(--text)]">{index + 1}. {formatBlockKind(block.kind)}</span>
-              <span className="flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)]"><span className={`h-2 w-2 ink-zone-${block.zone}`} aria-hidden="true" />{zone.label} {zone.name}</span>
+    <div id={id} className="space-y-3" aria-label={`Edit ${stepName(block)}`} role="group">
+      <div className="flex items-baseline justify-between gap-2">
+        <h3 className="text-sm font-semibold text-[var(--text)]">{stepName(block)}</h3>
+        {set ? <span className="text-xs text-[var(--text-secondary)]">Applies to all {set.repeats} repeats</span> : null}
+      </div>
+      <DurationField id={`${uid}-duration`} value={block.durationSec} onChange={(durationSec) => onPatch({ durationSec })} />
+      {pause ? null : (
+        <fieldset className="min-w-0">
+          <legend className={formLabelClassName}>Intensity</legend>
+          <div className="flex gap-1" role="group" aria-label="Zone">
+            {ZONES.map((zone) => (
+              <button key={zone} type="button" aria-pressed={block.zone === zone} title={`${TEMPO_ZONE_META[zone].label} ${TEMPO_ZONE_META[zone].name}`} className={`${getSegmentedChoiceClassName(block.zone === zone, 'compact')} max-md:min-h-11 gap-1.5`} onClick={() => onPatch(zonePatch(block, zone, sport, profile))}>
+                <span aria-hidden="true" className={`size-2 rounded-sm ink-zone-${zone}`} />{TEMPO_ZONE_META[zone].label}
+              </button>
+            ))}
+          </div>
+          {block.target ? (
+            <div className="mt-2 flex items-center gap-1.5" role="group" aria-label="Target">
+              <button type="button" className={iconStepButtonClassName} aria-label="Lower target" disabled={!lower} onClick={() => lower && onPatch(targetPatch(lower, block.zone, sport, profile))}><Minus aria-hidden="true" size={14} /></button>
+              <span className="data min-w-0 flex-1 truncate text-center text-[13px] text-[var(--text)]" aria-live="polite">{formatWorkoutTarget(block.target, sport)}{resolved ? <span className="text-[var(--text-secondary)]"> · {resolved}</span> : null}</span>
+              <button type="button" className={iconStepButtonClassName} aria-label="Raise target" disabled={!higher} onClick={() => higher && onPatch(targetPatch(higher, block.zone, sport, profile))}><Plus aria-hidden="true" size={14} /></button>
             </div>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">{formatDuration(block.durationSec)}{block.reps && block.reps > 1 ? ` x ${block.reps}` : ''} / {target}</p>
-            {preview ? <p className="mt-1 text-xs text-[var(--text-secondary)]">{preview} using {profileLabel}</p> : missing ? <p className="mt-1 text-xs text-[var(--text-secondary)]">{missing}</p> : null}
-            {block.note ? <p className="mt-2 text-xs text-[var(--text-secondary)]">Cue: {block.note}</p> : null}
-          </button>
+          ) : null}
+        </fieldset>
+      )}
+      <details open={moreOpen} onToggle={(event) => onMoreOpenChange(event.currentTarget.open)} className="group">
+        <summary className={`inline-flex min-h-8 cursor-pointer list-none items-center gap-1 rounded-md text-[13px] font-medium text-[var(--text-secondary)] control-hover:text-[var(--text)] max-md:min-h-11 [&::-webkit-details-marker]:hidden ${buttonFocusClassName}`}>
+          More options<ChevronDown aria-hidden="true" size={14} className="group-open:rotate-180" />
+        </summary>
+        <div className="mt-2 space-y-3">
+          <label className="block">
+            <span className={formLabelClassName}>Step type</span>
+            <select className={formSelectClassName} value={block.kind} onChange={(event) => {
+              const kind = event.target.value as TempoBlockKind;
+              onPatch(kind === 'pause' ? { kind, target: null, reps: null } : { kind });
+            }}>
+              {KIND_OPTIONS.map((option) => <option key={option.kind} value={option.kind}>{option.label}</option>)}
+            </select>
+          </label>
+          {pause ? null : <TargetFields sport={sport} block={block} profile={profile} onPatch={onPatch} />}
+          {pause || set ? null : (
+            <label className="block">
+              <span className={formLabelClassName}>Repeat this step</span>
+              <DraftNumberInput min={1} step={1} integer value={block.reps ?? 1} onCommit={(reps) => onPatch({ reps: reps > 1 ? reps : null })} />
+            </label>
+          )}
+          <label className="block">
+            <span className={formLabelClassName}>Coaching note</span>
+            <textarea rows={2} className={formTextareaClassName} value={block.note} placeholder="Cue, cadence or focus, e.g. 90–95 rpm, seated" onChange={(event) => onPatch({ note: event.target.value })} />
+          </label>
         </div>
-      </article>
+      </details>
     </div>
   );
 }
 
-function TargetEditor({ sport, target, onChange }: { sport: string; target: WorkoutTarget | null; onChange: (target: WorkoutTarget | null) => void }) {
-  const options = getAvailableWorkoutTargets(sport);
-  const value = target ? `${target.metric}:${target.mode}:${target.reference ?? ''}` : '';
-  return <div className="space-y-2"><label className="block space-y-2"><span className={formLabelClassName}>Training target</span><select className={formSelectClassName} value={value} onChange={(event) => { const [metric, mode, reference] = event.target.value.split(':'); onChange(event.target.value ? { metric: metric as WorkoutTarget['metric'], mode: mode as WorkoutTarget['mode'], reference: (reference || null) as WorkoutTarget['reference'], low: target?.low ?? (metric === 'rpe' ? 6 : 0), high: target?.high ?? (metric === 'rpe' ? 7 : 0) } : null); }}><option value="">No target set</option>{options.map((option) => <option key={`${option.metric}-${option.mode}-${option.reference}`} value={`${option.metric}:${option.mode}:${option.reference ?? ''}`}>{option.label}</option>)}</select></label>{target ? <div className="grid grid-cols-2 gap-2"><label className="block space-y-1"><span className={formLabelClassName}>Low</span><input className={formFieldClassName} type="number" step="0.01" value={target.low} onChange={(event) => onChange({ ...target, low: Number(event.target.value) })} /></label><label className="block space-y-1"><span className={formLabelClassName}>High</span><input className={formFieldClassName} type="number" step="0.01" value={target.high} onChange={(event) => onChange({ ...target, high: Number(event.target.value) })} /></label></div> : null}</div>;
+function DurationField({ id, value, onChange }: { id: string; value: number; onChange: (seconds: number) => void }) {
+  const [text, setText] = useState<string | null>(null);
+  const invalid = text !== null && parseDuration(text) === null;
+  return (
+    <div>
+      <label htmlFor={id} className={formLabelClassName}>Duration</label>
+      <input
+        id={id}
+        className={formFieldClassName}
+        inputMode="text"
+        autoComplete="off"
+        value={text ?? formatDurationExact(value)}
+        aria-invalid={invalid}
+        aria-describedby={`${id}-hint`}
+        onFocus={(event) => { setText(formatDurationExact(value)); event.currentTarget.select(); }}
+        onBlur={() => setText(null)}
+        onChange={(event) => {
+          setText(event.target.value);
+          const seconds = parseDuration(event.target.value);
+          if (seconds) onChange(seconds);
+        }}
+        onKeyDown={(event) => {
+          if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+          event.preventDefault();
+          const next = nudgeDuration(value, event.key === 'ArrowUp' ? 1 : -1, event.shiftKey);
+          onChange(next);
+          setText(formatDurationExact(next));
+        }}
+      />
+      <p id={`${id}-hint`} className={`mt-1 text-xs ${invalid ? 'text-[var(--status-danger)]' : 'text-[var(--text-muted)]'}`}>
+        {invalid ? 'Use minutes or a time, e.g. 10, 90s or 1:30.' : 'e.g. 10, 90s or 1:30. Arrow keys adjust.'}
+      </p>
+    </div>
+  );
 }
 
-function formatBlockKind(kind: TempoBlockKind) {
-  if (kind === 'warmup') return 'Warm-up';
-  if (kind === 'cooldown') return 'Cooldown';
-  if (kind === 'recovery') return 'Recovery';
-  return 'Work';
+function targetUnit(target: WorkoutTarget, sport: string) {
+  if (target.metric === 'rpe') return '';
+  if (target.mode === 'relative') return '%';
+  if (target.metric === 'power') return 'W';
+  if (target.metric === 'hr') return 'bpm';
+  return sport === 'SWIMMING' ? 's/100 m' : 's/km';
+}
+
+function TargetFields({ sport, block, profile, onPatch }: { sport: string; block: SessionEditorBlock; profile: PerformanceProfile | null; onPatch: (patch: SessionEditorBlockPatch) => void }) {
+  const uid = useId();
+  const target = block.target;
+  const options = getAvailableWorkoutTargets(sport);
+  const value = target ? `${target.metric}:${target.mode}:${targetOptionReference(target.reference) ?? ''}` : '';
+  const error = target ? validateWorkoutTarget(target, sport) : null;
+  const unit = target ? targetUnit(target, sport) : '';
+  const ramp = target && target.low !== target.high && (block.kind === 'warmup' || block.kind === 'cooldown') && target.metric === 'power';
+  return (
+    <div className="space-y-2">
+      <label className="block">
+        <span className={formLabelClassName}>Target type</span>
+        <select className={formSelectClassName} value={value} onChange={(event) => {
+          const option = options.find((item) => `${item.metric}:${item.mode}:${item.reference ?? ''}` === event.target.value);
+          onPatch({ target: option ? presetTarget(sport, block.zone, profile, option.metric, option.mode, option.reference) : null });
+        }}>
+          <option value="">No target (zone only)</option>
+          {options.map((option) => <option key={`${option.metric}-${option.mode}-${option.reference}`} value={`${option.metric}:${option.mode}:${option.reference ?? ''}`}>{option.label}</option>)}
+        </select>
+      </label>
+      {target ? (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="block">
+              <span className={formLabelClassName}>Low{unit ? ` (${unit})` : ''}</span>
+              <DraftNumberInput min={0} step={0.01} value={target.low} describedBy={error ? `${uid}-error` : undefined} onCommit={(low) => onPatch({ target: { ...target, low } })} />
+            </label>
+            <label className="block">
+              <span className={formLabelClassName}>High{unit ? ` (${unit})` : ''}</span>
+              <DraftNumberInput min={0} step={0.01} value={target.high} describedBy={error ? `${uid}-error` : undefined} onCommit={(high) => onPatch({ target: { ...target, high } })} />
+            </label>
+          </div>
+          {error ? <p id={`${uid}-error`} className="text-xs text-[var(--status-danger)]">{error}</p> : null}
+          {ramp ? <p className="text-xs text-[var(--text-secondary)]">{block.kind === 'warmup' ? 'Ramps up from low to high.' : 'Ramps down from high to low.'}</p> : null}
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+/** A number field that keeps what is typed and commits only valid values, so clearing it never writes 0. */
+function DraftNumberInput({ value, min, step, integer = false, describedBy, onCommit }: { value: number; min: number; step: number; integer?: boolean; describedBy?: string; onCommit: (value: number) => void }) {
+  const [text, setText] = useState<string | null>(null);
+  return (
+    <input
+      className={formFieldClassName}
+      type="number"
+      min={min}
+      step={step}
+      value={text ?? String(value)}
+      aria-describedby={describedBy}
+      onFocus={() => setText(String(value))}
+      onBlur={() => setText(null)}
+      onChange={(event) => {
+        setText(event.target.value);
+        const next = Number(event.target.value);
+        if (event.target.value.trim() && Number.isFinite(next) && next >= min && (!integer || Number.isInteger(next))) onCommit(next);
+      }}
+    />
+  );
 }

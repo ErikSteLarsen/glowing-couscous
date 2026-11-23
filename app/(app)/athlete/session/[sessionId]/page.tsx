@@ -270,12 +270,14 @@ export default async function AthleteSessionPage({
         {/*
           DOM order is the narrow-screen order: overview, logging or outcome, details,
           description, coach. When the content area is wide enough the outcome column moves
-          beside the overview; while the adjustment editor is open it spans the full width.
+          beside the overview; while the adjustment editor is open it spans the full width
+          and replaces the overview.
         */}
         <SessionStructureProvider>
           <div className="@container">
-            <div className="flex flex-col gap-6 @4xl:grid @4xl:grid-cols-[minmax(0,1fr)_320px] @4xl:grid-rows-[auto_1fr] @4xl:[grid-template-areas:'overview_side'_'rest_side'] @4xl:has-[[data-session-editing]]:grid-cols-[minmax(0,1fr)] @4xl:has-[[data-session-editing]]:grid-rows-none @4xl:has-[[data-session-editing]]:[grid-template-areas:'overview'_'side'_'rest']">
-              <div className="min-w-0 @4xl:[grid-area:overview]">{structure}</div>
+            <div className="group/session flex flex-col gap-6 @4xl:grid @4xl:grid-cols-[minmax(0,1fr)_320px] @4xl:grid-rows-[auto_1fr] @4xl:[grid-template-areas:'overview_side'_'rest_side'] @4xl:has-[[data-session-editing]]:grid-cols-[minmax(0,1fr)] @4xl:has-[[data-session-editing]]:grid-rows-none @4xl:has-[[data-session-editing]]:[grid-template-areas:'overview'_'side'_'rest']">
+              {/* The adjustment editor draws its own editable profile, so the read-only one steps aside. */}
+              <div className="min-w-0 @4xl:[grid-area:overview] group-has-[[data-session-editing]]/session:hidden">{structure}</div>
 
               <div className={`min-w-0 space-y-4 @4xl:[grid-area:side] @4xl:self-start ${pinSide ? '[@media(min-height:46rem)]:@4xl:sticky [@media(min-height:46rem)]:@4xl:top-6 @4xl:has-[[data-session-editing]]:static' : ''}`}>
                 {recordedOutcome}

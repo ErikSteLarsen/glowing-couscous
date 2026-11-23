@@ -57,20 +57,25 @@ test('session block bars show colored zones without a gray track', async () => {
   assert.match(barSource, /authoring: 'h-40 px-1 pt-2'/);
 });
 
-test('workout authoring gates details behind basics and exposes direct block controls', async () => {
+test('workout builder keeps basics, the editable profile, compact steps and one step editor', async () => {
   const builderSource = await read('components/WorkoutBuilder.tsx');
 
-  // The rendered builder is the local dnd-kit editor: basics gate the details, and block controls sit in the sequence.
+  // Basics stay a slim row after the first step; the shared profile is the selectable canvas.
   assert.match(builderSource, /Start with the basics/);
   assert.match(builderSource, /basicsReady/);
   assert.match(builderSource, /Edit basics/);
-  assert.match(builderSource, /Workout sequence/);
-  assert.match(builderSource, /aria-label="Canvas commands"/);
-  assert.match(builderSource, /Duplicate/);
-  assert.match(builderSource, /Repeat once/);
-  assert.match(builderSource, /aria-label=\{`Drag block \$\{index \+ 1\}`\}/);
-  assert.match(builderSource, /<DragOverlay dropAnimation=\{null\}>/);
-
+  assert.match(builderSource, /<WorkoutProfile[\s\S]*onSelectStep=\{selectFromProfile\}/);
+  // Steps are compact rows; sets fold repeated copies with a repeat stepper.
+  assert.match(builderSource, /buildBuilderRows\(draft\.blocks\)/);
+  assert.match(builderSource, /aria-label="Fewer repeats"/);
+  // Row actions live in the shared overflow menu; drag has a labelled handle and keyboard alternatives.
+  assert.match(builderSource, /OverflowMenuTrigger/);
+  assert.match(builderSource, /aria-label=\{`Reorder \$\{label\}`\}/);
+  assert.match(builderSource, /Move earlier/);
+  assert.match(builderSource, /event\.altKey/);
+  // Advanced step fields wait behind More options; the profile hint is shown once.
+  assert.match(builderSource, /More options/);
+  assert.doesNotMatch(builderSource, /Block library|Workout sequence|Repeat once/);
 });
 
 test('signed-in routes use grouped app shell while auth pages stay centered', async () => {

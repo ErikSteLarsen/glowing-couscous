@@ -457,32 +457,8 @@ export function WorkoutLibraryClient({
 
       {showEditor ? <div className="page-back -mb-4"><BackButton destination="Workouts" onClick={() => requestDraftAction({ kind: 'close' })} disabled={isPending} /></div> : null}
       {showEditor ? <Surface className="study-workouts__editor min-w-0 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-[var(--border)] pb-3">
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <EditorHeading className="min-w-0 text-lg font-semibold text-[var(--text)]">{selectedWorkoutId ? 'Edit workout' : 'Create workout'}</EditorHeading>
-            {!selectedWorkoutId || isDirty ? (
-              <span role="status">
-                <Badge tone="warning">{isPending ? 'Saving…' : selectedWorkoutId ? 'Unsaved changes' : 'Unsaved draft'}</Badge>
-              </span>
-            ) : null}
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge tone="brand">{formatDurationExact(metrics.durationSec)}</Badge>
-            {selectedWorkoutId ? (
-              <Menu>
-                <OverflowMenuTrigger
-                  disabled={isPending}
-                  aria-label="More workout actions" />
-                <MenuContent align="end">
-                  <MenuItem destructive onSelect={() => deleteWorkout()}>
-                    <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />
-                    Delete from library…
-                  </MenuItem>
-                </MenuContent>
-              </Menu>
-            ) : null}
-          </div>
-        </div>
+        {/* The builder's title row carries the visible name, status and actions. */}
+        <EditorHeading className="sr-only">{selectedWorkoutId ? 'Edit workout' : 'Create workout'}</EditorHeading>
 
         {editorRecovery ? (
           <section aria-label="Unsaved changes on this browser" className={`flex flex-wrap items-center justify-between gap-3 ${noticeBoxClassNames.warning}`}>
@@ -541,11 +517,29 @@ export function WorkoutLibraryClient({
             setDraft((current) => ({ ...next, scheduledDate: null, planWeekday: null, mode: 'create', id: current.id }));
             setIsDirty(true);
           }}
-          showSportMetrics
           summaryLabel="Notes (optional)"
           summaryPlaceholder="What is this workout for?"
-          durationUnit="minutes"
           performanceProfile={performanceProfile}
+          headerActions={<>
+            {!selectedWorkoutId || isDirty ? (
+              <span role="status">
+                <Badge tone="warning">{isPending ? 'Saving…' : selectedWorkoutId ? 'Unsaved changes' : 'Unsaved draft'}</Badge>
+              </span>
+            ) : null}
+            {selectedWorkoutId ? (
+              <Menu>
+                <OverflowMenuTrigger
+                  disabled={isPending}
+                  aria-label="More workout actions" />
+                <MenuContent align="end">
+                  <MenuItem destructive onSelect={() => deleteWorkout()}>
+                    <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />
+                    Delete from library…
+                  </MenuItem>
+                </MenuContent>
+              </Menu>
+            ) : null}
+          </>}
           />
         <div className="sticky bottom-[var(--mobile-nav-clearance)] z-10 -mx-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3 md:bottom-0 max-md:z-20">
           <button type="button" className={`${primaryButtonClassName} max-md:min-h-11`} disabled={isPending || !draft.blocks.some((block) => !block.skipped && block.kind !== 'pause')} onClick={saveWorkout}>
