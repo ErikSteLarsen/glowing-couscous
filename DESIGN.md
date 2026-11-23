@@ -249,9 +249,10 @@ always travels with a "Z1" to "Z5" label or accessible text.
 - **Numbers:** apply `.data` (or `MetricText`, `.metric-text`), which sets
   `tabular-nums`. Required for durations, TSS, RPE, dates, counts, and chart axes.
 
-**The Reading Rule.** A value is label, then a large tabular figure, then a quiet
-unit at `0.5em` in ink 3, then optional detail. Do not restyle each route's
-metrics as a new object; use `StatTile`.
+Use `StatTile` for a standalone metric with a large tabular value, a quiet unit,
+and optional detail. Use `MetricPair` from `components/tempo/` inside a `dl` for
+compact summaries. Stack the label above the value by default, or use `inline`
+for totals that read across. Use `MetricText` for a number within ordinary text.
 
 ## Layout
 
@@ -325,15 +326,20 @@ Use the exports in `components/ui.tsx`; do not restyle buttons in a route.
 
 ### Tiles
 
-- **`Surface`:** `.tile rounded-2xl p-5` for grouped content.
+- **`Surface`:** the bordered, padded container for grouped content. Give a
+  named section an `aria-labelledby` that points to its visible heading, styled
+  with `sectionHeadingClassName`.
 - **`StatTile`:** the square of reading, `min-h 7.5rem`, label at the top, value
   pinned low, optional detail. Detail `tone` is `good` (green), `watch` (amber),
   or `neutral` (ink 3); neutral is the default and carries no signal.
 - **Interactive tiles** (`a.tile`, `button.tile`, `.tile--interactive`) raise on
   hover and need a visible focus state.
-- **`EmptyState`:** a dashed `.tile-empty` with a short title, one line of
+- **`EmptyState`:** a dashed placeholder with a short title, optional
   explanation, and a recovery action when one exists. Place it where the content
   would have been.
+- **Notices:** use `noticeBoxClassNames` for bordered information, warnings,
+  and errors. Use `successTextClassName` and `dangerTextClassName` for inline
+  feedback. Retain the announcement role that matches the interaction.
 - **`Badge`:** pill, 24px minimum, tone neutral, brand, success, or warning, with
   text always present.
 - **`WorkoutCard`** (`components/library/WorkoutCard.tsx`): the card for both
@@ -341,9 +347,12 @@ Use the exports in `components/ui.tsx`; do not restyle buttons in a route.
   covers the card; a mini profile, a meta line, an optional summary and a footer
   of metrics with tab-specific actions follow. It raises on hover and takes a
   trace border on keyboard focus. Grids are 1 column on phones, then 2–4.
-- **`SessionRow`:** the shared workout unit across Home, Calendar, Workouts, and
-  week surfaces (`default`, `compact`, `month`). The whole row is the link; a thin
-  trace line grows on its left edge on hover and focus.
+- **`SessionRow`:** Home uses the compact row for completed and skipped
+  sessions and the month variant in its week strip. The whole row is a link
+  with a trace on hover and focus.
+- **`SessionRowText`:** use the shared title and metadata stack for Calendar
+  session cards and for activity rows in Import, Events, and Ride. The parent
+  owns navigation, disclosure, or drag behavior.
 
 ### Fields
 

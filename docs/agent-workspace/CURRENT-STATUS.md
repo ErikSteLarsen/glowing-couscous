@@ -7,6 +7,18 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- Workspace display unification (2026-11-23). Workouts uses the shared page
+  header. Surfaces, headings, compact metric pairs, notices, empty states,
+  passive badges, and session/activity row text reuse the shared owners in
+  [DESIGN.md](../../DESIGN.md). `pnpm lint`, `pnpm typecheck`,
+  `pnpm test` (540 passed, 17 database cases skipped),
+  `pnpm check:deadcode`, and `pnpm build` passed. The build used local
+  `tempo_acceptance` with no pending migrations. Agent-browser compared Home,
+  Calendar, Workouts, Activity, Events, Templates, Import, Profile, and Settings
+  on `tempo_dev` as Mara at 1440px and 390px in dark and light themes.
+  Calendar's compact load totals also rendered on demand. Coach pages remain
+  behind the existing proxy redirect and were covered by automated checks.
+
 - Clickable control feedback (2026-11-23). `pnpm lint`, `pnpm typecheck`,
   `pnpm test` (540 passed, 17 database cases skipped), `pnpm test:ui`
   (2 passed), and `pnpm build` passed. The build used local
