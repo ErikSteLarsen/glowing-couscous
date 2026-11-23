@@ -130,9 +130,9 @@ export function UnsavedRidesNotice({ userId, excludeSessionId }: { userId: numbe
               {state === 'closed' ? (
                 <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   {reason ? <span>{reason}.</span> : null}
-                  <button type="button" className="font-medium text-[var(--text)] underline underline-offset-2 disabled:no-underline disabled:opacity-70" disabled={saving} aria-busy={saving} onClick={() => void saveAsActivity(ride)}>{saving ? 'Saving…' : 'Save as activity'}</button>
+                  <button type="button" className="font-medium text-[var(--text)] underline underline-offset-2 control-hover:text-[var(--brand)] disabled:no-underline disabled:opacity-70" disabled={saving} aria-busy={saving} onClick={() => void saveAsActivity(ride)}>{saving ? 'Saving…' : 'Save as activity'}</button>
                   <button type="button" className="underline underline-offset-2 hover:text-[var(--text)]" onClick={() => downloadRideBackup(recording)}>Download backup</button>
-                  <button type="button" className="underline underline-offset-2 hover:text-[var(--text)] disabled:opacity-50" disabled={saving} onClick={() => discard(recording.sessionId)}>Discard</button>
+                  <button type="button" className="underline underline-offset-2 control-hover:text-[var(--text)] disabled:opacity-50" disabled={saving} onClick={() => discard(recording.sessionId)}>Discard</button>
                   {save?.kind === 'failed' ? <span role="alert" className="w-full text-[var(--text)]">{save.error} The ride is still on this device.</span> : null}
                 </div>
               ) : null}

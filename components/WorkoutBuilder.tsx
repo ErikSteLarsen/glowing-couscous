@@ -299,7 +299,7 @@ export function WorkoutBuilder({
         </div>
       )}
       <details open={notesOpen} onToggle={(event) => setNotesOpen(event.currentTarget.open)}>
-        <summary className="inline-flex min-h-9 max-md:min-h-11 cursor-pointer list-none items-center text-sm font-medium text-[var(--text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">
+        <summary className="inline-flex min-h-9 max-md:min-h-11 list-none items-center text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">
           <span className="underline decoration-[var(--border)] underline-offset-4">{summaryLabel}</span>{!notesOpen && draft.summary.trim() ? <span className="ml-1.5 font-normal text-[var(--text-muted)]">· Added</span> : null}
         </summary>
         <label className="mt-3 block space-y-2">
@@ -339,7 +339,7 @@ export function WorkoutBuilder({
                     aria-pressed={selectedZone}
                     aria-label={`${meta.label} ${meta.name}`}
                     title={`${meta.label} ${meta.name}`}
-                    className={`min-h-11 min-w-0 rounded-lg border px-1 py-1.5 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${selectedZone ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)] text-[var(--field-selected-text)]' : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--field-focus)]'}`}
+                    className={`min-h-11 min-w-0 rounded-lg border px-1 py-1.5 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${selectedZone ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)] text-[var(--field-selected-text)] hover:border-[var(--field-focus)]' : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--field-focus)]'}`}
                     onClick={() => setPaletteZone(zone)}
                   >
                     <span className={`mx-auto mb-1 block h-1.5 w-7 ink-zone-${zone}`} aria-hidden="true" />
@@ -416,7 +416,7 @@ function PalettePreset({ preset, onAdd }: { preset: BlockPreset; onAdd: () => vo
     <button
       ref={setNodeRef}
       type="button"
-      className="flex min-h-16 w-full cursor-grab items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2.5 text-left transition hover:border-[var(--field-focus)] hover:bg-[var(--brand-tint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] active:cursor-grabbing"
+      className="flex min-h-16 w-full items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2.5 text-left transition hover:border-[var(--field-focus)] hover:bg-[var(--brand-tint)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] active:cursor-grabbing"
       style={{ opacity: isDragging ? 0.35 : 1 }}
       onClick={onAdd}
       {...attributes}
@@ -518,8 +518,8 @@ function SortableBlock({ block, sport, index, selected, profile, profileLabel, o
       {insertionBefore ? <span className="pointer-events-none absolute -top-2 left-0 right-0 z-10 border-t-2 border-[var(--brand)] text-xs text-[var(--brand)]"><span className="bg-[var(--surface)] px-1">Insert here</span></span> : null}
       <article data-block-id={block.clientId} ref={(node) => { setNodeRef(node); articleRef.current = node; }} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.55 : 1 }} className={`rounded-lg border p-3 ${selected ? 'border-[var(--brand)] bg-[var(--brand-tint)]' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
         <div className="flex items-start gap-3">
-          <button type="button" className={`mt-1 min-h-11 shrink-0 cursor-grab rounded-lg px-2 text-xs max-md:px-3 text-[var(--text-muted)] ${buttonFocusClassName}`} aria-label={`Drag block ${index + 1}`} {...attributes} {...listeners}>Drag</button>
-          <button type="button" className={`min-h-11 min-w-0 flex-1 rounded-lg text-left ${buttonFocusClassName}`} aria-pressed={selected} onClick={(event) => onSelect(index, event)} onKeyDown={(event) => { if (event.code === 'Space') { event.preventDefault(); onSelect(index, event); } }}>
+          <button type="button" className={`mt-1 min-h-11 shrink-0 rounded-lg px-2 text-xs text-[var(--text-muted)] hover:bg-[var(--raised)] hover:text-[var(--text)] active:cursor-grabbing max-md:px-3 ${buttonFocusClassName}`} aria-label={`Drag block ${index + 1}`} {...attributes} {...listeners}>Drag</button>
+          <button type="button" className={`min-h-11 min-w-0 flex-1 rounded-lg text-left hover:bg-[var(--raised)] ${buttonFocusClassName}`} aria-pressed={selected} onClick={(event) => onSelect(index, event)} onKeyDown={(event) => { if (event.code === 'Space') { event.preventDefault(); onSelect(index, event); } }}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-semibold capitalize text-[var(--text)]">{index + 1}. {formatBlockKind(block.kind)}</span>
               <span className="flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)]"><span className={`h-2 w-2 ink-zone-${block.zone}`} aria-hidden="true" />{zone.label} {zone.name}</span>

@@ -69,7 +69,7 @@ export function SessionWorkoutOverview({ blocks, header }: { blocks: SessionOver
 
     {blocks.length ? <Surface className="space-y-4">
       <button type="button" onClick={() => setDetailsOpen(!detailsOpen)} aria-expanded={detailsOpen} aria-controls={panelId}
-        className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-[6px] text-left ${buttonFocusClassName}`}>
+        className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-[6px] text-left hover:bg-[var(--raised)] ${buttonFocusClassName}`}>
         <span className={sectionHeadingClassName}>Block details</span>
         <ChevronDown size={18} className={`shrink-0 text-[var(--text-secondary)] ${detailsOpen ? 'rotate-180' : ''}`} />
       </button>

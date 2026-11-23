@@ -229,7 +229,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
       {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
       {hasBlocks ? (
         <details className="group border-t border-[var(--border)]">
-          <summary className={`flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg py-2 text-sm text-[var(--text)] ${buttonFocusClassName}`}>
+          <summary className={`flex min-h-11 list-none items-center gap-2 rounded-lg py-2 hover:bg-[var(--raised)] text-sm text-[var(--text)] ${buttonFocusClassName}`}>
             <ChevronDown aria-hidden="true" size={16} className="shrink-0 group-open:rotate-180" />
             <span className="font-medium">Workout steps</span>
             <span className="data ml-auto text-right text-[var(--text-secondary)]">{formatDuration(totalDuration)}</span>

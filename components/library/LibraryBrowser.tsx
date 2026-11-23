@@ -14,7 +14,7 @@ import type { CatalogCategory, CatalogLevel } from '@/lib/workout-catalog/types'
 
 const chipClassName = (selected: boolean) => `inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium transition-colors max-md:min-h-11 ${buttonFocusClassName} ${
   selected
-    ? 'border-[var(--brand)] bg-[var(--brand-tint)] text-[var(--text)]'
+    ? 'border-[var(--brand)] bg-[var(--brand-tint)] text-[var(--text)] hover:bg-[var(--selection)]'
     : 'border-[var(--border-strong)] text-[var(--text-secondary)] hover:bg-[var(--raised)] hover:text-[var(--text)]'
 }`;
 

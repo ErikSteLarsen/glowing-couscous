@@ -168,7 +168,7 @@ function SessionLine({ session }: { session: RideHubSession }) {
   return (
     <article className="flex flex-col gap-2.5 rounded-xl border border-[var(--border)] p-3">
       <div className="flex items-start justify-between gap-3">
-        <Link href={`/athlete/session/${session.id}?from=ride`} className={`group flex min-w-0 flex-1 flex-col justify-center rounded-sm max-md:min-h-11 ${buttonFocusClassName}`}>
+        <Link href={`/athlete/session/${session.id}?from=ride`} className={`group flex min-w-0 flex-1 flex-col justify-center rounded-sm hover:bg-[var(--raised)] max-md:min-h-11 ${buttonFocusClassName}`}>
           <span className="wrap-anywhere text-[14px] font-medium text-[var(--text)] underline-offset-4 group-hover:underline">{session.title}</span>
           <span className="data mt-0.5 text-[12px] text-[var(--text-muted)]">{sessionMeta(session)}</span>
         </Link>
@@ -186,7 +186,7 @@ function SessionLine({ session }: { session: RideHubSession }) {
 function RecentLine({ ride }: { ride: RideHubRecent }) {
   return (
     <li className="flex items-center justify-between gap-3 py-2.5">
-      <Link href={`/athlete/session/${ride.sessionId}?from=ride`} className={`group flex min-w-0 flex-1 flex-col justify-center rounded-sm max-md:min-h-11 ${buttonFocusClassName}`}>
+      <Link href={`/athlete/session/${ride.sessionId}?from=ride`} className={`group flex min-w-0 flex-1 flex-col justify-center rounded-sm hover:bg-[var(--raised)] max-md:min-h-11 ${buttonFocusClassName}`}>
         <span className="wrap-anywhere text-[13px] font-medium text-[var(--text)] underline-offset-4 group-hover:underline">{ride.title}</span>
         <span className="data mt-0.5 text-[12px] text-[var(--text-muted)]">
           {format(parseISO(ride.completedAt), 'EEE d MMM')} · {formatDuration(ride.durationSec)}{ride.tss !== null ? ` · ${ride.tss} TSS` : ''}

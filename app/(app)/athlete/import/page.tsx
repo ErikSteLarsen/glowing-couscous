@@ -47,9 +47,9 @@ export default async function ImportPage({
           initialStravaConnection={strava}
         />
         <details open={query.summary === '1' || undefined} className="rounded-2xl border border-[var(--border)] px-5">
-          <summary className={`min-h-11 cursor-pointer rounded-lg py-3 text-sm font-medium text-[var(--text)] ${buttonFocusClassName}`}>Advanced options</summary>
+          <summary className={`min-h-11 rounded-lg py-3 hover:bg-[var(--raised)] text-sm font-medium text-[var(--text)] ${buttonFocusClassName}`}>Advanced options</summary>
           <details id="import-summary" open={query.summary === '1' || undefined} className="mb-3 scroll-mt-20">
-            <summary className={`min-h-11 cursor-pointer rounded-lg py-3 text-sm text-[var(--text)] ${buttonFocusClassName}`}>Import summary only</summary>
+            <summary className={`min-h-11 rounded-lg py-3 hover:bg-[var(--raised)] text-sm text-[var(--text)] ${buttonFocusClassName}`}>Import summary only</summary>
             <div className="pb-2"><ActivityImportForm /></div>
           </details>
         </details>
