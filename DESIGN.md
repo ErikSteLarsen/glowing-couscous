@@ -434,7 +434,7 @@ the compact bar for cards and rows only.
 
 Every full-size workout structure uses `WorkoutProfile`
 (`components/WorkoutProfile.tsx`, model in `lib/workout-profile.ts`): session
-detail, library detail, Live, the comparison dialog and the builder preview.
+detail, library detail, Live, the comparison dialog and the builder.
 It is one gap-free profile over time; height is %FTP when every effort has a
 power target, otherwise an even Z1–Z5 scale. Color follows the continuous zone
 ramp in both cases. Repeats are always unrolled so every repetition is drawn in
@@ -445,11 +445,12 @@ drawn instance "× 2". A phase row under the profile names each stretch
 duration and zone, positioned by time; labels that do not fit drop their detail,
 then their text, and keep a tick and tooltip. Selectable profiles have one tab
 stop with arrow-key movement and show the selected step's target and note.
-Live outlines the current step instead of offering selection.
+The builder uses the full profile (with `chartHeight="short"`) as its editing
+canvas. Live outlines the current step instead of offering selection.
 `StatusBadge` shows planned, adjusted, or missed as text. Completed work does not
 need a repeated completed badge. `WorkoutBuilder` is the canonical authoring
-surface (palette, canvas, inspector); drag reordering must always have keyboard
-and explicit earlier/later alternatives.
+surface (profile, step list, step editor); drag reordering must always have
+keyboard and explicit earlier/later alternatives.
 
 ### Loading and empty
 
@@ -591,32 +592,40 @@ to Public library. A clean draft closes without confirmation.
 
 ### Editing
 
-`WorkoutBuilder` is the canonical structured authoring surface. Reuse its
-three-part palette, canvas, and inspector model for new workout editing. Drag
-reordering is supported, but keyboard and explicit earlier/later controls must
-remain available. Do not make drag-and-drop the only way to edit block order.
-New workout creation is progressive: name and sport are confirmed before the
-library, sequence, and inspector appear. Presets expose a visible Add action as
-well as drag behavior, the sequence exposes its drop target, and selecting a
-block reveals direct intensity and duration controls, an action to edit its
-target range in a focused dialog, and adjacent recovery controls. Repeats are
-created from the selected chart pattern rather than a per-block repetition
-field. The sequence preview is a compact `WorkoutProfile` (no axes or phase
-labels), with repeats drawn in full. The basics step uses a
-centered reading-width panel and presents Continue as its only forward action;
-save controls appear with the detailed authoring workspace.
-After details are unlocked, Edit basics changes the existing summary row into
-inline name and sport fields without hiding or resetting the authoring workspace.
-The chart remains the primary authoring surface. Block details follow the chart
-when the available content width cannot support a readable side inspector;
-selection, selected-block actions, and history controls share a compact toolbar
-beside the Workout chart title where space allows. History starts the toolbar
-as quiet icon buttons, followed by a 40px square selected-count badge and the
-selection control. Block actions use a soft group surface; at narrow widths the
-groups wrap without divider lines. Selected-block actions and pattern
-repeats appear only when blocks are selected. The workout
-library shows unsaved status in its Create/Edit workout header, not inside the
-chart.
+`WorkoutBuilder` is the canonical structured authoring surface. Show the
+minimum by default and put advanced fields behind **More options**; a typical
+workout (up to about eight rows) fits a 1440×900 screen with the save bar.
+
+- **Title row.** Name, sport and an Edit basics link, then **Add step**, undo,
+  redo, total time · TSS and a **Time by zone** toggle, then the host's status
+  and ⋯ (passed as `headerActions`, so a host does not add a second header).
+  New workouts open the basics panel (name, sport, notes, schedule) first; it
+  closes with Done.
+- **Profile.** The shared full `WorkoutProfile` is the canvas: click or arrow to
+  a bar to select that step. A missing-profile hint ("Add FTP to preview watts.
+  Open Profile") appears once under the chart, never per step.
+- **Step list.** One line per row: drag handle, zone swatch, name (phase, or the
+  zone for work), duration and target. Repeated sets are stored as consecutive
+  copies but shown as one Set row with a − × N + stepper and its steps indented
+  once; editing a set step changes every repeat. Identical single steps stay
+  separate rows. Row actions (duplicate, repeat with next step, move earlier
+  or later, remove) live in the row ⋯ menu; Alt+↑/↓ moves the focused row and
+  the handle supports keyboard drag. On desktop the list scrolls inside the
+  page when long.
+- **Step editor.** A side panel from `lg`, otherwise inline under the selected
+  row. By default only duration (free text such as 10, 90s or 1:30; arrow keys
+  nudge) and intensity (Z1–Z5 plus −/+ on the target). More options holds step
+  type, target type and low/high range (warm-up and cool-down power ranges
+  ramp), single-step repeats and the coaching note, which also carries cadence
+  cues.
+- **Adding.** Add step offers Warm-up, Steady, Intervals (a 5 × set), Recovery,
+  Cool-down and a few interval presets; new cycling steps start with a %FTP
+  target. Focus and selection move to the new step.
+
+Undo and redo cover every builder change (Ctrl/Cmd+Z, Shift+Ctrl/Cmd+Z outside
+text fields). The workout library shows unsaved status in the builder's title
+row, not inside the chart. While the session adjustment editor is open it
+replaces the read-only overview profile.
 Block type and effort are separate fields. Skipped blocks remain identifiable in
 existing sessions and do not count toward active workout time. New reusable
 workouts require an active block before saving.
@@ -632,7 +641,7 @@ block's readout.
 
 ## Feature feedback contracts
 
-In the workout editor, chart bar height follows the block's numeric target within its zone. Adjacent values within one zone should be distinguishable; a pause remains a short visible mark above the baseline. Keep session-wide target configuration beside the sport selector and individual adjustments immediately below the block's zone selector. Resolve profile pace bounds and HRmax percentages for the current user, and expose only the current block's relevant pace or heart-rate target in its inspector and spoken chart label.
+In the workout editor, chart bar height follows the block's numeric target within its zone. Adjacent values within one zone should be distinguishable; a pause remains a short visible mark above the baseline. Keep a step's target adjustment immediately below its zone choice. Resolve profile pace bounds and HRmax percentages for the current user, and expose only the current block's relevant pace or heart-rate target in its inspector and spoken chart label.
 
 Functional repairs must preserve or improve usability. Prefer simpler flows and
 visual feedback at the affected block, session, or calendar date. Keep the

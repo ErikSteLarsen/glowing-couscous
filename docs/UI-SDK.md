@@ -36,7 +36,9 @@ global SDK stylesheet, or agent access to private account actions is needed.
   `md`. Charts inside only consume Escape while a point is selected.
 - `components/tempo/Menu.tsx`: Tempo-styled SDK Menu parts (content, items,
   checkbox/radio items, indicator, label, separator). Calendar uses it for the
-  header More menu and each session's overflow actions.
+  header More menu and each session's overflow actions. `WorkoutBuilder` uses
+  it for Add step and each step or set ⋯ menu; actions that add, duplicate or
+  remove a step pass `finalFocus` so focus lands on the resulting step.
 - `components/StravaImportPanel.tsx`: SDK segmented radios for the Needs
   review/All activities filter. Existing inbox focus-return ref is preserved.
 

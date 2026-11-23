@@ -7,6 +7,22 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- Workout builder redesign (2026-11-23). The builder is profile-first: the
+  shared `WorkoutProfile` is the selectable canvas, steps are one-line rows with
+  repeated sets folded into a × N row, and one step editor (side panel from
+  `lg`, inline below) shows duration and intensity with the rest under More
+  options. `pnpm lint`, `pnpm typecheck`, `pnpm check:deadcode`, `pnpm test`
+  (560 passed, 16 database cases skipped; one whole-file runner failure passed
+  on rerun), `pnpm test:ui` (2 passed), `pnpm test:db` (612 passed) and
+  `pnpm build` (local `tempo_acceptance`, no pending migrations) passed.
+  Chromium on `tempo_dev` as Mara: at 1440×900 a 4-row and a 6-row workout
+  fit without page scrolling (before: 1264px tall); 390px and 320px have no
+  horizontal scroll; both themes. Checked: create from scratch with a
+  5 × (3m Z5 + 2m Z1) set and save, reopen and edit via the profile, keyboard,
+  pointer and handle-drag reordering, set and step removal, undo, Day-After
+  Reset customization, draft restore, and the session adjustment editor at
+  1440px and 390px (cancelled). The test workout was deleted.
+
 - Workspace display unification (2026-11-23). Workouts uses the shared page
   header. Surfaces, headings, compact metric pairs, notices, empty states,
   passive badges, and session/activity row text reuse the shared owners in
