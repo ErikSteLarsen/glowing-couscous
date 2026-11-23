@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Download } from 'lucide-react';
-import { useMacArchitecture, useRideOs } from '@/components/RideAppLaunch';
+import { useInTempoRide, useMacArchitecture, useRideOs } from '@/components/RideAppLaunch';
 import { Surface, buttonFocusClassName, primaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
 import { RIDE_DESKTOP_VERSION, rideDownloadBase, rideDownloadChoices, rideInstallHints, type RideDownload, type RideOs } from '@/lib/ride/launch';
 
@@ -20,6 +20,7 @@ function HintList({ os }: { os: RideOs }) {
 
 export function RideDownloadPage() {
   const os = useRideOs();
+  const inTempoRide = useInTempoRide();
   const architecture = useMacArchitecture(os);
   const { recommended, others } = rideDownloadChoices(os ?? 'other', rideDownloadBase(process.env.NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL), architecture);
   const detected = os && os !== 'other' ? os : null;
@@ -27,6 +28,11 @@ export function RideDownloadPage() {
 
   return (
     <div className="space-y-5">
+      {inTempoRide ? (
+        <p role="status" className="rounded-2xl border border-[var(--border)] px-5 py-4 text-sm text-[var(--text-secondary)]">
+          You are already using Tempo Ride on this computer. The installers below are for your other computers.
+        </p>
+      ) : null}
       <Surface>
         {detected ? (
           <div className="space-y-4">
@@ -78,7 +84,7 @@ export function RideDownloadPage() {
       </Surface>
 
       <p className="text-sm text-[var(--text-muted)]">
-        Version {RIDE_DESKTOP_VERSION}. The installers are not code-signed yet, so your system may ask you to confirm the first launch. Start a ride from <strong className="font-medium text-[var(--text-secondary)]">Start workout → Tempo Ride app</strong> in Tempo. <Link href="/" className={linkClassName}>Back to Tempo</Link>
+        Version {RIDE_DESKTOP_VERSION}. The installers are not code-signed yet, so your system may ask you to confirm the first launch. After installing, open a bike workout in Tempo and choose <strong className="font-medium text-[var(--text-secondary)]">Start workout → Open in Tempo Ride</strong>. <Link href="/" className={linkClassName}>Back to Tempo</Link>
       </p>
     </div>
   );

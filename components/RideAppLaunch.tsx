@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import Link from 'next/link';
 import { Download } from 'lucide-react';
 import { buttonFocusClassName, compactSecondaryButtonClassName } from '@/components/ui';
@@ -25,6 +25,24 @@ const subscribeToNothing = () => () => undefined;
 /** The visitor's OS after hydration; null during server rendering and the first client render. */
 export function useRideOs(): RideOs | null {
   return useSyncExternalStore(subscribeToNothing, getRideOs, () => null);
+}
+
+function isInTempoRide(): boolean {
+  return window.tempoDesktop?.isDesktop === true;
+}
+
+/** True inside the Tempo Ride desktop app; false during server rendering. */
+export function useInTempoRide(): boolean {
+  return useSyncExternalStore(subscribeToNothing, isInTempoRide, () => false);
+}
+
+/** Link to the public download page; opens a new tab so an in-progress workout stays put. */
+export function GetTempoRideLink({ children = 'Get Tempo Ride', className = 'text-[var(--brand)] underline-offset-4 hover:underline' }: { children?: ReactNode; className?: string }) {
+  return (
+    <Link href="/download" target="_blank" rel="noopener" className={className}>
+      {children}<span className="sr-only"> (opens in a new tab)</span>
+    </Link>
+  );
 }
 
 /**
@@ -117,7 +135,7 @@ export function RideAppInstallHelp({ os, onRetry }: { os: RideOs; onRetry: () =>
             <li key={download.id}><a href={download.url} className="text-[var(--brand)] underline-offset-4 hover:underline">{download.label}</a></li>
           ))}
         </ul>
-        <p className="mt-2"><Link href="/download" className="text-[var(--brand)] underline-offset-4 hover:underline">All downloads and install steps</Link></p>
+        <p className="mt-2"><GetTempoRideLink>All downloads and install steps</GetTempoRideLink></p>
       </details>
     </div>
   );

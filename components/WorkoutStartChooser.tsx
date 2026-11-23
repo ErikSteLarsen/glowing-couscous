@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Ellipsis, Play, X } from 'lucide-react';
 import { Dialog, DialogBackdrop, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@ui-sdk/react/dialog';
-import { getRideOs, RideAppInstallHelp, useRideAppLaunch } from '@/components/RideAppLaunch';
+import { getRideOs, GetTempoRideLink, RideAppInstallHelp, useRideAppLaunch } from '@/components/RideAppLaunch';
 import { useCatalogRide } from '@/components/library/useCatalogRide';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
 import {
@@ -169,7 +169,10 @@ function StartControl({ workout, source, triggerClassName }: Props) {
                   >
                     {optionLabel}
                   </button>
-                  <p id={`${dialogId}-${mode}`} className="px-1 text-[13px] leading-relaxed text-[var(--text-secondary)]">{description}</p>
+                  <p id={`${dialogId}-${mode}`} className="px-1 text-[13px] leading-relaxed text-[var(--text-secondary)]">
+                    {description}
+                    {mode === 'app' ? <> <GetTempoRideLink>Don’t have it yet? Get Tempo Ride</GetTempoRideLink></> : null}
+                  </p>
                 </div>
               ))}
               {busy ? <p role="status" className="text-sm text-[var(--text-secondary)]">Adding workout to today…</p> : null}

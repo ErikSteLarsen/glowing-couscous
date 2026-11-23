@@ -1,3 +1,4 @@
+import { AuthHeaderDownloadLink } from '@/components/AuthHeaderDownloadLink';
 import { BrandMark } from '@/components/BrandMark';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -6,6 +7,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <header className="flex items-center gap-2.5 px-6 pt-6">
         <BrandMark />
         <span className="text-[15px] font-semibold text-[var(--text)]">Tempo</span>
+        <span className="ml-auto"><AuthHeaderDownloadLink /></span>
       </header>
       <main id="main">{children}</main>
     </div>

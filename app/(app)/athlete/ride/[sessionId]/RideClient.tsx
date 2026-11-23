@@ -7,6 +7,7 @@ import { BackLink, buttonFocusClassName, primaryButtonClassName, secondaryButton
 import type { BackTarget } from '@/lib/app-navigation';
 import { Toggle } from '@/components/tempo/Toggle';
 import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
+import { GetTempoRideLink } from '@/components/RideAppLaunch';
 import { MAX_ACTIVITY_IMPORT_DURATION_SEC } from '@/lib/activity-import-limits';
 import type { ExecutionStep } from '@/lib/athlete-execution';
 import { formatDistance } from '@/lib/format-distance';
@@ -444,7 +445,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         </ul>
       ) : (
         <p role="status" className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
-          Bluetooth pairing is unavailable in this browser. You can ride with targets only or pair devices in the Tempo Ride desktop app.
+          Bluetooth pairing is unavailable in this browser. You can ride with targets only or pair devices in the <GetTempoRideLink>Tempo Ride desktop app</GetTempoRideLink>.
         </p>
       )}
     </dialog>
