@@ -4,7 +4,7 @@ import type { ComponentProps, KeyboardEvent, ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { LibraryBrowser } from '@/components/library/LibraryBrowser';
 import { WorkoutLibraryClient } from '@/components/WorkoutLibraryClient';
-import { getSwitchOptionClassName, switchTrackClassName } from '@/components/ui';
+import { TopBar, getSwitchOptionClassName, switchTrackClassName } from '@/components/ui';
 import { athleteWorkoutsHref, resolveWorkoutTab, type WorkoutTab } from '@/lib/athlete-workouts-navigation';
 import { parseCatalogQuery, type CatalogEntry } from '@/lib/workout-catalog/query';
 
@@ -49,14 +49,14 @@ export function FocusWorkouts({ catalogEntries, ...libraryProps }: Props) {
 
   const listIntro = ({ drafts }: { drafts: ReactNode }) => (
     <>
-      <header className="study-workouts__header">
-        <div>
-          <h1>Workouts</h1>
-          <p>{catalogEntries
+      <div className="mb-6">
+        <TopBar
+          title="Workouts"
+          description={catalogEntries
             ? 'Manage your workouts and browse ready-made bike sessions.'
-            : 'Reusable workouts. Scheduling one adds a copy to your Calendar and keeps this version unchanged.'}</p>
-        </div>
-      </header>
+            : 'Reusable workouts. Scheduling one adds a copy to your Calendar and keeps this version unchanged.'}
+        />
+      </div>
       {catalogEntries ? null : <div className="flex justify-end empty:hidden">{drafts}</div>}
       {catalogEntries ? <div className="mb-5 space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-3">

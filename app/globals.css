@@ -349,7 +349,6 @@
 .study-workouts__library input[type="search"] { border-radius: 10px; }
 .ink-studio-app .study-home__day--today { margin-inline: -12px; padding-inline: 12px; border-radius: 11px; background: var(--nav-active); }
 .study-home__trend-point div { background: var(--focus-rule); opacity: 1; border-radius: 3px 3px 0 0; }
-.study-workouts__header { border-bottom: 1px solid var(--focus-rule); padding-bottom: 25px; }
 .ink-studio-app .study-workouts__library .workout-library-grid { display: grid; gap: 12px; border: 0; }
 .ink-studio-app .study-workouts__library .workout-library-card { min-height: 130px; padding: 14px; border: 1px solid var(--border); }
 .study-workouts__library .workout-library-card--selected { border-color: var(--focus-rule); }
