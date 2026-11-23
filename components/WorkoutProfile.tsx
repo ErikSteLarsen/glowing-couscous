@@ -25,6 +25,11 @@ function clockLabel(totalSec: number): string {
   return minutes % 60 === 0 ? `${hours}h` : `${hours}h\u00A0${minutes % 60}m`;
 }
 
+function chartSizeClassName(size: 'full' | 'compact', chartHeight: 'regular' | 'short'): string {
+  if (size === 'compact') return 'h-24';
+  return chartHeight === 'short' ? 'ml-11 h-40' : 'ml-11 h-44 sm:h-56';
+}
+
 /** Width of an element in CSS pixels, or null until it has been measured on the client. */
 function useElementWidth<T extends HTMLElement>() {
   const ref = useRef<T>(null);
@@ -55,6 +60,7 @@ export function WorkoutProfile({
   onSelectStep,
   activeStep = null,
   size = 'full',
+  chartHeight = 'regular',
   controlsId,
 }: {
   model: WorkoutProfileModel;
@@ -66,6 +72,8 @@ export function WorkoutProfile({
   activeStep?: number | null;
   /** `compact` drops the axes and phase labels for tight previews. */
   size?: 'full' | 'compact';
+  /** `short` leaves room for the builder's step list on one desktop screen. */
+  chartHeight?: 'regular' | 'short';
   /** Id of the panel that shows the selected step. */
   controlsId?: string;
 }) {
@@ -137,7 +145,7 @@ export function WorkoutProfile({
         </div>
       ) : null}
 
-      <figure className={`relative ${full ? 'ml-11 h-44 sm:h-56' : 'h-24'}`}>
+      <figure className={`relative ${chartSizeClassName(size, chartHeight)}`}>
         <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none" role="img" aria-label={label} aria-describedby={descriptionId} className="absolute inset-0 h-full w-full overflow-visible">
           <defs>
             {steps.map((step, index) => step.startLevel !== step.endLevel ? (
