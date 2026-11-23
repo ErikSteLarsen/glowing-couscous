@@ -26,11 +26,13 @@ import {
   formFieldClassName,
   formLabelClassName,
   formSelectClassName,
+  getSwitchOptionClassName,
   ghostButtonClassName,
   iconButtonClassName,
   primaryButtonClassName,
   Surface,
   successTextClassName,
+  switchTrackClassName,
 } from '@/components/ui';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { formatDuration } from '@/lib/format-duration';
@@ -547,10 +549,10 @@ function SourceDock({ role, sources, selectedSource, sourceTab, query, visibleSo
         <Search aria-hidden="true" className="mt-1 h-5 w-5 text-[var(--color-liquid)]" />
       </div>
       <SearchField label="Search workouts and templates" labelClassName="mt-3" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Search by name or sport" />
-      <div role="tablist" aria-label="Planner source type" className="mt-3 flex overflow-x-auto border-b border-[var(--nav-border)]">
+      <div role="tablist" aria-label="Planner source type" className={`${switchTrackClassName} mt-3 max-w-full overflow-x-auto`}>
         {tabs.map((tab) => {
           const count = sources.filter((source) => source.kind === tab).length;
-          return <button key={tab} type="button" role="tab" aria-selected={sourceTab === tab} onClick={() => onTabChange(tab)} className={`min-h-9 shrink-0 border-b-2 px-2.5 text-xs font-semibold capitalize transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${sourceTab === tab ? 'border-[var(--brand)] text-[var(--brand)] hover:bg-[var(--raised)]' : 'border-transparent text-[var(--nav-muted)] hover:text-[var(--nav-text)]'}`}>{tab === 'training-plan' ? 'Plans' : `${tab}s`} <span className="font-normal">{count}</span></button>;
+          return <button key={tab} type="button" role="tab" aria-selected={sourceTab === tab} onClick={() => onTabChange(tab)} className={`${getSwitchOptionClassName(sourceTab === tab)} shrink-0 gap-1 capitalize`}>{tab === 'training-plan' ? 'Plans' : `${tab}s`} <span className="font-normal">{count}</span></button>;
         })}
       </div>
       <div className="mt-3 space-y-2">
