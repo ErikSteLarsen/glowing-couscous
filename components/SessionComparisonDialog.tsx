@@ -8,7 +8,8 @@ import { deriveSessionEditorMetrics, type SessionEditorDraft } from '@/lib/sessi
 import { getSportLabel } from '@/lib/sport';
 import { formatDuration } from '@/lib/format-duration';
 import { MetricText } from '@/components/tempo/MetricText';
-import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { WorkoutProfile } from '@/components/WorkoutProfile';
+import { buildWorkoutProfile } from '@/lib/workout-profile';
 import {
   compactSecondaryButtonClassName,
   getSegmentedChoiceClassName,
@@ -197,7 +198,11 @@ function SnapshotView({ draft, ftpWatts }: { draft: SessionEditorDraft; ftpWatts
         <MetricText>{metrics.tss}&nbsp;TSS</MetricText>
         {draft.rpe !== null ? <MetricText>RPE {draft.rpe}</MetricText> : null}
       </div>
-      <SessionBlockBar segments={metrics.segments} />
+      <WorkoutProfile
+        model={buildWorkoutProfile(draft.blocks.map((block) => ({ ...block, id: block.clientId })), { sport: draft.sport, ftpWatts })}
+        ftpWatts={ftpWatts ?? null}
+        label={`${draft.title} workout profile`}
+      />
       {draft.coachNotes || draft.athleteNotes ? (
         <div className="grid gap-3 sm:grid-cols-2">
           {draft.coachNotes ? <p className="rounded-[3px] bg-[var(--brand-tint)] px-3 py-2 text-sm text-[var(--text)]"><strong>Coach note:</strong> {draft.coachNotes}</p> : null}

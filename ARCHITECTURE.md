@@ -67,7 +67,7 @@ and ownership guards; page visibility is not API authorization.
 - `/athlete/ride` - Ride home (no app chrome; Tempo Ride's default page): today's and recent open bike sessions, recent rides, and the library with Ride now
 - `/athlete/planner` - retired; redirects `date`/`source` to Calendar placement (`getPlannerRedirectHref`)
 - `/athlete/templates` - private weekly routines composed from saved workouts
-- `/athlete/session/[sessionId]` - compact read-only workout structure, block inspector and outcome review; `lib/session-structure.ts` groups identical instructions and `components/SessionWorkoutOverview.tsx` owns selection/disclosure
+- `/athlete/session/[sessionId]` - read-only workout profile, block inspector and outcome review; `lib/session-structure.ts` groups identical instructions, `lib/workout-profile.ts` unrolls them into the shared `components/WorkoutProfile.tsx`, and the route's `SessionStructure.tsx` owns selection/disclosure
 - `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion
 - `/athlete/ride/[sessionId]` - indoor bike ride for BIKING sessions: targets-only timer or Web Bluetooth trainer/HR/cadence with ERG targets, 1 Hz recording checkpointed to localStorage (and `window.tempoDesktop` when present), saved through `POST /api/activity-imports` as a `file-import` attached to the planned session
 - `/athlete/activity` - History for completed sessions, manual logs and imported activities, paginated with URL name/sport filters and matching totals

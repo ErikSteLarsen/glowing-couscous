@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { CatalogProfile, pctColor } from '@/components/library/CatalogProfile';
 import { LibraryWorkoutActions } from '@/components/library/LibraryWorkoutActions';
+import { WorkoutProfileExplorer } from '@/components/WorkoutProfile';
 import { ChevronDown } from 'lucide-react';
 import { Badge, PageShell, StatTile, Surface, TopBar, buttonFocusClassName, sectionHeadingClassName } from '@/components/ui';
 import { publicLibraryHref } from '@/lib/athlete-workouts-navigation';
@@ -15,6 +15,9 @@ import { workoutCatalog } from '@/lib/workout-catalog';
 import { catalogWorkoutMetrics, expandCatalogItems, isCatalogRepeat, wattsForPct } from '@/lib/workout-catalog/metrics';
 import { categoryLabel, EMPTY_CATALOG_QUERY, findCatalogWorkout, levelLabel } from '@/lib/workout-catalog/query';
 import type { CatalogStep } from '@/lib/workout-catalog/types';
+import { catalogWorkoutToEditorBlocks } from '@/lib/workout-catalog/session';
+import { buildWorkoutProfile, pctColor } from '@/lib/workout-profile';
+import { formatResolvedWorkoutTarget, formatWorkoutTarget } from '@/lib/workout-target-resolution';
 
 type Params = { params: Promise<{ slug: string }>; searchParams: Promise<{ from?: string }> };
 
@@ -34,7 +37,8 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
   if (!workout) notFound();
 
   const account = await accountService.getAccount(user.id);
-  const ftp = account?.performanceProfile.cycling.ftpWatts ?? null;
+  const performanceProfile = account?.performanceProfile ?? null;
+  const ftp = performanceProfile?.cycling.ftpWatts ?? null;
   const metrics = catalogWorkoutMetrics(workout);
   const steps = expandCatalogItems(workout.items);
   const origin = parseBackOrigin('library-workout', from) ?? 'library';
@@ -42,6 +46,11 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
   const paragraphs = workout.description.split(/\n\s*\n/).map((paragraph) => paragraph.trim()).filter(Boolean);
   const pct = (value: number) => ftp ? `${wattsForPct(value, ftp)}` : `${Math.round(value)}`;
   const pctUnit = ftp ? 'W' : '% FTP';
+  const profile = buildWorkoutProfile(catalogWorkoutToEditorBlocks(workout).map((block) => {
+    const written = block.target ? formatWorkoutTarget(block.target, workout.sport) : null;
+    const resolved = block.target ? formatResolvedWorkoutTarget(block.target, performanceProfile, workout.sport) : null;
+    return { ...block, id: block.clientId, targetLabel: [written, resolved].filter(Boolean).join('\u00A0· ') || null };
+  }), { sport: workout.sport, profile: performanceProfile, ftpWatts: ftp });
 
   return (
     <PageShell size="wide">
@@ -62,10 +71,8 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
             {ftp ? <>Watts from your FTP of <span className="data text-[var(--text-secondary)]">{ftp}&nbsp;W</span></> : <>Targets in % of FTP. <Link href="/athlete/profile" className="text-[var(--brand)] underline-offset-4 hover:underline">Add your FTP</Link> to see watts.</>}
           </p>
         </div>
-        <CatalogProfile
-          steps={steps}
-          idPrefix={`detail-${workout.slug}`}
-          variant="full"
+        <WorkoutProfileExplorer
+          model={profile}
           ftpWatts={ftp}
           label={`${workout.name} intensity profile: ${formatDuration(metrics.durationSec)}, ${steps.length} steps, peak ${Math.round(metrics.maxPct)}% of FTP. The interval list below gives every step.`}
         />

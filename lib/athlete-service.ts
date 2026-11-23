@@ -804,6 +804,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
                 ? (target.mode === 'absolute' ? formatWorkoutTarget(target, session.sport) : formatResolvedWorkoutTarget(target, profile, session.sport) ?? formatWorkoutTarget(target, session.sport))
                 : null,
               targetBasis: target?.mode === 'relative' ? formatWorkoutTarget(target, session.sport) : null,
+              target,
               note: block.note,
               skipped: block.skipped,
               color: meta.solid,

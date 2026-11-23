@@ -8,6 +8,7 @@ import { RideClient } from '../../app/(app)/athlete/ride/[sessionId]/RideClient'
 import { LiveSessionClient } from '../../app/(app)/athlete/live/[sessionId]/LiveSessionClient';
 import type { ExecutionStep } from '../../lib/athlete-execution';
 import { resolveBackTarget } from '../../lib/app-navigation';
+import { buildWorkoutProfile } from '../../lib/workout-profile';
 
 window.fetch = async () => new Response(JSON.stringify({
   baseline: createEmptySessionEditorDraft({ title: 'Planned run', mode: 'planned' }),
@@ -43,4 +44,4 @@ if (root) createRoot(root).render(params.has('ride') ? (
     back={resolveBackTarget({ route: 'session-ride', sessionId: 1 })}
     heartRateMaxBpm={null}
   />
-) : params.has('live') ? <LiveSessionClient sessionId={2} blocks={liveSteps} isDone={false} /> : <Fixture />);
+) : params.has('live') ? <LiveSessionClient sessionId={2} blocks={liveSteps} isDone={false} title="Live ride" profile={buildWorkoutProfile([{ id: 'warmup', kind: 'warmup', zone: 1, durationSec: 60, reps: null, target: { metric: 'power', mode: 'relative', reference: 'ftp', low: 50, high: 50 } }])} /> : <Fixture />);
