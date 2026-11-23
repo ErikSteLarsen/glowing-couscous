@@ -7,6 +7,20 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- Interactive controls (2026-11-23). `pnpm lint`, `pnpm typecheck`,
+  `pnpm test` (540 passed, 17 database cases skipped), `pnpm test:ui`
+  (2 passed), and `pnpm build` passed. `pnpm test:db` passed all 592 tests
+  on rerun after a whole-file runner failure. The build used local
+  `tempo_acceptance` with no pending migrations. Chromium as Mara on
+  `tempo_dev` covered Workouts tab keys, Library search and filter URLs,
+  Activity name and sport filters and manual form, Calendar menu keys and
+  placement search, and Template discard at 1440px and 390px in both themes.
+  Temporary templates and events were saved and deleted. Additional checks
+  covered the workout editor menu, draft popover, Home summary, workout chooser,
+  and Settings Strava dialog. Headless Chromium reported `(hover: none)`.
+  Connected Strava inbox actions and redirected coach pages were outside
+  authenticated browser coverage.
+
 - Clickable control feedback (2026-11-23). `pnpm lint`, `pnpm typecheck`,
   `pnpm test` (540 passed, 17 database cases skipped), `pnpm test:ui`
   (2 passed), and `pnpm build` passed. The build used local
