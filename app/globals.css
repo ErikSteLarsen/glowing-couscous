@@ -417,12 +417,13 @@ body {
   :disabled,
   [aria-disabled="true"],
   [data-disabled],
+  fieldset:disabled label[for],
   label:has(> :is(input[type="checkbox"], input[type="radio"], [role="switch"]):is(:disabled, [aria-disabled="true"], [data-disabled])) {
     cursor: not-allowed;
   }
 
   @media (hover: hover) {
-    label[for]:not([aria-disabled="true"], [data-disabled]):hover,
+    label[for]:not(fieldset:disabled *, [aria-disabled="true"], [data-disabled]):hover,
     label:has(> :is(input[type="checkbox"], input[type="radio"], [role="switch"]):not(:disabled, [aria-disabled="true"], [data-disabled])):hover {
       background-color: var(--raised);
     }
