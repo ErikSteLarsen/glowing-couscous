@@ -10,7 +10,7 @@ export function WorkoutCard({ children, current = false }: { children: ReactNode
   return (
     <article
       data-current={current || undefined}
-      className="tile tile--interactive group relative flex h-full flex-col rounded-2xl p-4 [--profile-gap:var(--surface)] hover:[--profile-gap:var(--raised)] has-[[data-card-target]:focus-visible]:border-[var(--brand)] data-[current]:border-[var(--brand)]"
+      className="tile tile--interactive group relative flex h-full flex-col rounded-2xl p-4 has-[[data-card-target]:focus-visible]:border-[var(--brand)] data-[current]:border-[var(--brand)]"
     >
       {children}
     </article>

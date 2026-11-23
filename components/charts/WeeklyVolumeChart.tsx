@@ -85,7 +85,7 @@ export function WeeklyVolumeChart({ weeks }: { weeks: VolumeWeek[] }) {
               <div
                 key={entry.weekStart}
                 aria-hidden="true"
-                className="relative flex h-full flex-1 items-end"
+                className="relative flex h-full flex-1 cursor-pointer items-end hover:bg-[var(--field-surface)]"
                 onPointerEnter={() => setActive(index)}
                 onPointerDown={() => setActive(index)}
               >
