@@ -7,6 +7,23 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- App-wide copy pass (2026-11-23). User-facing text in `app/`, `components/`
+  and `lib/` (including service and API errors the UI shows) follows the new
+  **Voice and terms** glossary in [DESIGN.md](../../DESIGN.md): workout /
+  planned workout / activity / result / routine / step, "Mark as done",
+  "unsaved changes … only on this device". The athlete Templates page is
+  labelled **Routines** (route unchanged) and the BIKING label reads Cycling.
+  Workout catalog prose, stored formats, URLs and enums are unchanged.
+  `pnpm lint`, `pnpm typecheck`, `pnpm test` (560 passed, 17 database cases
+  skipped), `pnpm test:ui` (2 passed) and `pnpm test:db` (612 passed) passed;
+  `pnpm build` was not run. Chromium on `tempo_dev` as Mara at 1440px and
+  390px: builder draft notice after edit and reload (then discarded), session
+  pages (planned and recorded), Home, Calendar, Activity, Import, Settings,
+  Profile, Routines, download, login, signup and forgot password; no
+  horizontal scroll. The seeded "Recorded ride repro" session shows
+  "Activity not found." under Recorded data; that load failure predates this
+  pass (only its wording changed).
+
 - Workout builder redesign (2026-11-23). The builder is profile-first: the
   shared `WorkoutProfile` is the selectable canvas, steps are one-line rows with
   repeated sets folded into a × N row, and one step editor (side panel from

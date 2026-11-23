@@ -473,6 +473,49 @@ Terse, sentence case, and specific. Say what the thing is, then what to do. No
 exclamation marks, filler, emoji, or decorative glyphs; use the icon set
 (`lucide-react`, 1.5 to 1.6 stroke).
 
+### Voice and terms
+
+Tempo talks to self-coached endurance athletes. They know sport terms; they do
+not know software terms. Write short, plain, friendly sentences in the active
+voice and second person ("you"). One idea per sentence. Buttons are concrete
+verbs ("Save workout", "Mark as done", "Restore", "Discard"). Errors say what
+happened and what to do next ("Could not save this workout. Try again.");
+connection failures say "Could not reach Tempo. Check your connection and try
+again." Applies to every user-facing string, including service errors the UI
+shows, aria labels and confirmation dialogs.
+
+Keep sport terms: FTP, zones (Z1–Z5), intervals, warm-up, cool-down, TSS,
+training load, RPE, compliance, pace, heart rate, cadence, ERG, free ride,
+fitness, fatigue, form, ramp rate, CSS, Olympiatoppen.
+
+One term per concept:
+
+| Concept | Say | Don't say |
+| --- | --- | --- |
+| A training plan of steps, saved or in the library | **workout** | session, source, entity |
+| A workout put on a date | **planned workout** (or just workout) | session, scheduled copy, assignment |
+| Your saved workouts / ready-made ones | **My workouts** / **Public library** | your library, catalog |
+| One part of a workout; a repeated group | **step**; **set** | block, segment, effort (except "effort" as the work part of an interval) |
+| Training you did and Tempo recorded | **activity** | completed session, outcome, record |
+| What you did vs. what was planned | **result** vs. **plan** | actual, baseline, snapshot |
+| Finishing a planned workout | **Mark as done**, status **done** | complete, log completion |
+| Undo done / undo skip | **Mark as not done** / **Plan again** | mark planned again |
+| Not done by its date / chosen not to do | **missed** / **skipped** | — |
+| Weekly pattern of saved workouts | **routine** (page **Routines**) | template |
+| Pages | **Home, Calendar, Workouts, Routines, Activity, Events, Import, Profile, Settings** (capitalized when naming the page) | planner (athlete side) |
+| Training targets on Profile | **training targets** | training metrics |
+| Changes not yet saved | **unsaved changes**, "only on this device" | draft, kept on this browser, local recovery, persist |
+| A link anyone can open | **share link** | public link, URL, snapshot |
+| Activity data from a device | **recorded data** | measurements, samples, streams, telemetry |
+| TSS that can't be calculated | **No TSS** | load unavailable |
+| Strava check for new activities | **Check Strava** | sync |
+| The run analysis | **workout analysis**, **Analyze workout** | interpretation |
+| Bike ride without trainer or sensors | **without devices** | targets only |
+
+Never show HTTP codes, field names, IDs, "invalid", "payload", "provider",
+"fingerprint", "transaction" or "request key". When a request is malformed or a
+key clashes, say "Something went wrong. Reload the page and try again."
+
 ## Accessibility
 
 - Focus: `:focus-visible` is a 2px trace outline with 2px offset; buttons use a
@@ -538,18 +581,18 @@ Desktop sticky actions use the viewport bottom.
 Opening Add session from a day seeds its date and focuses the inline composer
 heading while retaining the date grid. Reuse shared buttons, segmented choices,
 fields, and `SessionRow`; the composer uses the existing field surface and
-rounded panel language. Workouts and Templates have searchable saved-source
-lists, explicit pressed selection, source metadata, and contextual creation
+rounded panel language. Workouts and Routines have searchable saved
+lists, explicit pressed selection, workout or routine details, and contextual creation
 links for empty results. Only the source results scroll independently, capped
 at 280px; date review and Schedule remain outside that scroll area.
 
 Workout dates toggle through calendar buttons and can also be added through an
-explicit date field or removed through labelled date chips. Template selection
+explicit date field or removed through labelled date chips. Routine selection
 uses one reference date: show its full Monday-first week or calendar-month
 range in both the calendar selection and a dated range summary before Schedule.
 The selected-day agenda follows the reference date, while the range identifies
-the entire placement. Explain that scheduled sessions are independent copies
-and saved content remains reusable. Keep Schedule disabled until a source and
+the entire placement. Explain that each planned workout is its own copy
+and the saved workout stays as it is. Keep Schedule disabled until a source and
 valid dates are selected.
 
 Escape or the explicit close control dismisses the composer and returns focus
@@ -579,14 +622,15 @@ More options. Catalog detail links opened from Workouts return to its
 Public library tab.
 
 Hide the header and tabs while the editor is open. **Customize** prefills an
-unsaved draft from the catalog workout. Show its source name and explain that
-Save creates an athlete-owned workout and leaves the public version intact.
+unsaved copy of the catalog workout. Name the original and explain that
+Save adds your version to My workouts and the original stays as it is.
 Both tabs share the `WorkoutCard` grid, search toolbar and count row; My
 workouts cards open the editor and offer Schedule and ⋯ (share, delete). Workout
-drafts kept on this browser appear as an "N unsaved drafts" chip at the right of
-the tabs row, opening a popover that names each draft with its age and offers
-Restore and Discard. Opening a workout that has a draft offers "Restore unsaved
-changes saved <age>?" inside the editor. Drafts identical to the saved version
+drafts kept on this device appear as an "N unsaved workouts" chip at the right of
+the tabs row, opening a popover that names each one with its age and offers
+Restore and Discard. Opening a workout that has a draft says "You have unsaved
+changes from <age>. Restore them?" inside the editor, with "They're only on this
+device." below. Drafts identical to the saved version
 are removed. Profile keeps its inline recovery notice, beside its single form. Back returns
 to Public library. A clean draft closes without confirmation.
 
@@ -602,7 +646,7 @@ workout (up to about eight rows) fits a 1440×900 screen with the save bar.
   New workouts open the basics panel (name, sport, notes, schedule) first; it
   closes with Done.
 - **Profile.** The shared full `WorkoutProfile` is the canvas: click or arrow to
-  a bar to select that step. A missing-profile hint ("Add FTP to preview watts.
+  a bar to select that step. A missing-profile hint ("Add your FTP to see watts.
   Open Profile") appears once under the chart, never per step.
 - **Step list.** One line per row: drag handle, zone swatch, name (phase, or the
   zone for work), duration and target. Repeated sets are stored as consecutive
@@ -664,7 +708,7 @@ text or accessible announcements; do not rely on color, motion, or distant
 banners alone. Reuse shared semantic tokens and component owners.
 
 Recovery offers explicit Restore and Discard actions with timestamps and
-browser-only wording. Present stale workout edits as new copies rather than
+says the changes are only on this device. Present stale workout edits as new copies rather than
 silently overwriting the saved source. Live restores paused; counting elapsed
 time is a separate explicit choice, and Finish remains the persistence action.
 The Profile Account section stays outside its training form and save bar's
@@ -681,13 +725,13 @@ bottom navigation and Profile save actions; sync errors do not overlap notices.
 ### Session detail
 
 The DOM order is the phone order: header, Workout overview, the logging or
-outcome card (Log completion, Outcome, Completion for skipped, Recorded outcome
-or Activity notes), Block details, recorded data, Description, Coach. When the
+result card (How did it go?, Result, Skipped, Your result
+or Activity notes), Steps, recorded data, Description, Coach. When the
 content area is at least 56rem wide (a container query, so the sidebar counts),
 the logging card and Coach move to a 320px side column beside the overview; it is
 sticky on tall viewports unless it holds a recorded outcome. Opening the
 planned adjustment or outcome correction editor returns the page to one column.
-The header Log completion link scrolls to the card and focuses the session note.
+The header Mark as done link scrolls to the card and focuses the note.
 
 ### Activity
 
@@ -717,7 +761,7 @@ are saved. Unknown values may remain blank.
 
 ### Personal training templates
 
-Use the established Night Instrument surfaces and shared controls. Personal Templates
+Use the established Night Instrument surfaces and shared controls. Routines (route `/athlete/templates`)
 is a routine composer, using existing library workouts rather than the block
 editor. Keep name and optional purpose together, followed by one saved-workout
 picker with multi-weekday selection and an ordered Monday–Sunday outline.
