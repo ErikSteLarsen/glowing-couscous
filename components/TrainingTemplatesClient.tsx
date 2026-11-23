@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowDown, ArrowUp, Copy, Ellipsis, Plus, Trash2 } from 'lucide-react';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/tempo/Menu';
-import { ActionLink, buttonFocusClassName, Surface, EmptyState, primaryButtonClassName, secondaryButtonClassName, compactSecondaryButtonClassName, compactDangerButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, dangerTextClassName, successTextClassName } from '@/components/ui';
+import { sectionHeadingClassName, ActionLink, buttonFocusClassName, Surface, EmptyState, primaryButtonClassName, secondaryButtonClassName, compactSecondaryButtonClassName, compactDangerButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, dangerTextClassName, successTextClassName } from '@/components/ui';
 import { parseTemplateRoutine, ROUTINE_DAYS } from '@/lib/template-routine';
 import { getSportLabel } from '@/lib/sport';
 import { getCalendarPlacementHref } from '@/lib/calendar-navigation';
@@ -75,7 +75,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
     {notice && !draft && <p role={notice.error ? 'alert' : 'status'} className={notice.error ? dangerTextClassName : successTextClassName}>{notice.text}</p>}
     {draft ? <Surface className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 ref={editorHeading} tabIndex={-1} className="text-lg font-semibold">{draft.id ? 'Edit training template' : 'New training template'}</h2>
+        <h2 ref={editorHeading} tabIndex={-1} className={sectionHeadingClassName}>{draft.id ? 'Edit training template' : 'New training template'}</h2>
         <button type="button" disabled={busy} className={`${secondaryButtonClassName} max-md:min-h-11`} onClick={() => { if (window.confirm('Discard your unsaved template changes?')) setDraft(null); }}>Cancel</button>
       </div>
       <fieldset disabled={busy} className="space-y-6 min-w-0">
@@ -120,7 +120,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
       return <Surface key={template.id} className="space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
-            <h2 className="text-lg font-semibold break-words"><button type="button" disabled={busy} aria-label={`Edit ${template.name}`} className={`rounded-sm text-left underline-offset-4 max-md:min-h-11 control-hover:text-[var(--brand)] control-hover:underline disabled:opacity-60 ${buttonFocusClassName}`} onClick={() => edit(template)}>{template.name}</button></h2>
+            <h2 className={`break-words ${sectionHeadingClassName}`}><button type="button" disabled={busy} aria-label={`Edit ${template.name}`} className={`rounded-sm text-left underline-offset-4 max-md:min-h-11 control-hover:text-[var(--brand)] control-hover:underline disabled:opacity-60 ${buttonFocusClassName}`} onClick={() => edit(template)}>{template.name}</button></h2>
             {template.summary && <p className="text-sm leading-6 text-[var(--text-secondary)] break-words">{template.summary}</p>}
             <p className="text-sm text-[var(--text-muted)]">{routine ? `${routine.entries.length} ${routine.entries.length === 1 ? 'session' : 'sessions'} per week` : 'Invalid routine — edit and save again'}</p>
           </div>

@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
-import { Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, getSegmentedChoiceClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { sectionHeadingClassName, Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, getSegmentedChoiceClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import type { ImportableSession } from '@/lib/activity-import-service';
 import type { ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { StravaConnectionSummary, StravaInboxActivitySummary } from '@/lib/strava-service';
@@ -182,7 +182,7 @@ export function StravaImportPanel({
     <Surface id="strava" className="scroll-mt-20 space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Strava inbox</h2>
+          <h2 className={sectionHeadingClassName}>Strava inbox</h2>
           {!connection.connected ? (
             <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
               {connection.canConnect ? 'Strava is not connected.' : 'Strava is currently unavailable.'}

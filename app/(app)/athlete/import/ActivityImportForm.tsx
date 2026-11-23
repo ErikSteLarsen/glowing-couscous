@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { ActionLink, formFieldClassName, primaryButtonClassName } from '@/components/ui';
+import { sectionHeadingClassName, ActionLink, formFieldClassName, primaryButtonClassName } from '@/components/ui';
 import { getSportLabel } from '@/lib/sport';
 import { formatDuration } from '@/lib/format-duration';
 import { formatActivityDateTime } from '@/lib/tcx-time';
@@ -106,7 +106,7 @@ export function ActivityImportForm() {
   return (
     <div className="space-y-4 border-t border-[var(--border)] pt-4">
       <div>
-        <h2 className="text-base font-medium text-[var(--text)]">Import activity summary</h2>
+        <h2 className={sectionHeadingClassName}>Import activity summary</h2>
         <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">Save the activity summary and file source. For sensor samples and running workout analysis, use Choose activity files above.</p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">

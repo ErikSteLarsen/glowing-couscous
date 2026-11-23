@@ -211,9 +211,19 @@ export function ActionLink({
   );
 }
 
-export function Surface({ children, className = '', id }: { children: ReactNode; className?: string; id?: string }) {
+export function Surface({
+  children,
+  className = '',
+  id,
+  'aria-labelledby': labelledBy,
+}: {
+  children: ReactNode;
+  className?: string;
+  id?: string;
+  'aria-labelledby'?: string;
+}) {
   return (
-    <section id={id} className={`tile rounded-2xl p-5 ${className}`}>
+    <section id={id} aria-labelledby={labelledBy} className={`tile rounded-2xl p-5 ${className}`}>
       {children}
     </section>
   );

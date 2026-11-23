@@ -40,6 +40,8 @@ import {
   MenuTrigger,
 } from '@/components/tempo/Menu';
 import {
+  Surface,
+  sectionHeadingClassName,
   buttonFocusClassName,
   compactPrimaryButtonClassName,
   compactSecondaryButtonClassName,
@@ -813,9 +815,9 @@ function MonthChip({ session, day, pending }: { session: CalendarSession; day: s
 
 function DayDetail({ day, onClose, pendingIds, onMove, onSessionDeleted, addHref }: { day: CalendarDay; onClose: () => void } & MoveProps) {
   return (
-    <section aria-labelledby="calendar-day-detail" className="tile space-y-3 rounded-2xl p-4">
+    <Surface aria-labelledby="calendar-day-detail" className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="calendar-day-detail" className="text-base font-medium text-[var(--text)]">{format(fromDayKey(day.isoDate), 'EEEE\u00A0d\u00A0MMMM')}</h2>
+        <h2 id="calendar-day-detail" className={sectionHeadingClassName}>{format(fromDayKey(day.isoDate), 'EEEE\u00A0d\u00A0MMMM')}</h2>
         <div className="flex gap-2">
           <Link href={addHref(day.isoDate)} className={`${compactSecondaryButtonClassName} min-h-11 sm:min-h-8`}>
             <CalendarPlus aria-hidden="true" size={14} strokeWidth={1.8} />
@@ -836,6 +838,6 @@ function DayDetail({ day, onClose, pendingIds, onMove, onSessionDeleted, addHref
       ) : day.events.length === 0 ? (
         <p className="text-sm text-[var(--text-muted)]">Nothing planned. Rest, or add a workout for this day.</p>
       ) : null}
-    </section>
+    </Surface>
   );
 }

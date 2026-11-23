@@ -6,6 +6,7 @@ import { CalendarPlus, ChevronDown, Ellipsis, Link2, Plus, Trash2, X } from 'luc
 import { useRouter } from 'next/navigation';
 
 import {
+  sectionHeadingClassName,
   BackButton,
   Badge,
   buttonFocusClassName,
@@ -381,7 +382,7 @@ export function WorkoutLibraryClient({
         className="@container flex min-w-0 flex-col gap-5"
       >
         {collections ? null : <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="workout-library-title" className="text-lg font-semibold text-[var(--text)]">Workout library</h2>
+          <h2 id="workout-library-title" className={sectionHeadingClassName}>Workout library</h2>
           {typeof listIntro === 'function' ? null : draftsControl}
         </div>}
         <CollectionToolbar search={<CollectionSearch value={filterText} onChange={setFilterText} label="Search by name or notes" placeholder="Search workouts" />}>

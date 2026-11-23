@@ -9,6 +9,7 @@ import { Dialog, DialogBackdrop, DialogContent, DialogDescription, DialogTitle }
 import { AlertDialog, AlertDialogClose, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from '@ui-sdk/react/alert-dialog';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/tempo/Menu';
 import {
+  sectionHeadingClassName,
   buttonFocusClassName,
   compactDangerButtonClassName,
   compactPrimaryButtonClassName,
@@ -253,7 +254,7 @@ function EventCard({ event, today, onChange, onDelete }: { event: EventRow; toda
   return <article id={`event-${event.id}`} aria-labelledby={`event-${event.id}-title`} className="scroll-mt-24 py-4 target:bg-[var(--brand-tint)]">
     <div className="flex items-start gap-3">
       <div className="min-w-0 flex-1">
-        <h3 id={`event-${event.id}-title`} className="break-words text-base font-medium text-[var(--text)]">{event.title}</h3>
+        <h3 id={`event-${event.id}-title`} className={`break-words ${sectionHeadingClassName}`}>{event.title}</h3>
         <p className="mt-1 text-sm text-[var(--text-muted)]"><span className="data">{formatDay(day)}</span> · {getSportLabel(event.sport)}{countdown ? <> · <span className="text-[var(--text-secondary)]">{countdown}</span></> : null}</p>
         {event.targetFinishSec || event.resultFinishSec !== null ? <p className="mt-1.5 text-sm text-[var(--text-secondary)]">{event.targetFinishSec ? <>Goal <span className="data">{formatDuration(event.targetFinishSec)}</span></> : null}{event.targetFinishSec && event.resultFinishSec !== null ? ' · ' : null}{event.resultFinishSec !== null ? <>Result <span className="data text-[var(--text)]">{formatDuration(event.resultFinishSec)}</span></> : null}</p> : null}
         {event.resultNote ? <p className="mt-1 whitespace-pre-wrap text-sm text-[var(--text-muted)]">{event.resultNote}</p> : null}
@@ -336,8 +337,8 @@ export function EventsClient({ initialEvents, today }: { initialEvents: EventRow
       }} />
     </FormDialog>
     {events.length === 0 ? <EmptyState title="No events yet" description="Add a race or goal day to see it on your Calendar." /> : <>
-      <section aria-labelledby="upcoming-events"><h2 id="upcoming-events" className="mb-2 text-base font-medium text-[var(--text)]">Upcoming</h2>{upcoming.length ? <EventList events={upcoming} today={today} onChange={updateEvent} onDelete={deleteEvent} /> : <p className="rounded-xl border border-dashed border-[var(--border)] px-4 py-5 text-sm text-[var(--text-muted)]">Nothing coming up. Use <span className="text-[var(--text-secondary)]">Add event</span> for your next race or goal day.</p>}</section>
-      {past.length ? <section aria-labelledby="past-events"><h2 id="past-events" className="mb-2 text-base font-medium text-[var(--text)]">Past events</h2><EventList events={past} today={today} onChange={updateEvent} onDelete={deleteEvent} /></section> : null}
+      <section aria-labelledby="upcoming-events"><h2 id="upcoming-events" className={`mb-2 ${sectionHeadingClassName}`}>Upcoming</h2>{upcoming.length ? <EventList events={upcoming} today={today} onChange={updateEvent} onDelete={deleteEvent} /> : <p className="rounded-xl border border-dashed border-[var(--border)] px-4 py-5 text-sm text-[var(--text-muted)]">Nothing coming up. Use <span className="text-[var(--text-secondary)]">Add event</span> for your next race or goal day.</p>}</section>
+      {past.length ? <section aria-labelledby="past-events"><h2 id="past-events" className={`mb-2 ${sectionHeadingClassName}`}>Past events</h2><EventList events={past} today={today} onChange={updateEvent} onDelete={deleteEvent} /></section> : null}
     </>}
   </PageShell>;
 }

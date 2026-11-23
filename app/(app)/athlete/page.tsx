@@ -12,6 +12,7 @@ import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { HomeSummaryDialog } from '@/components/HomeSummaryDialog';
 import { MiniBars, Sparkline, type MiniBar } from '@/components/charts/Sparklines';
 import {
+  Surface,
   ghostButtonClassName,
   PageShell,
   secondaryButtonClassName,
@@ -125,7 +126,7 @@ export default async function AthletePage() {
         actions={<Link href="/athlete/events" className={`${ghostButtonClassName('default')} max-md:min-h-11`}>Events</Link>}
       />
       <div className={`grid gap-4 ${upcoming.length > 0 ? 'lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]' : ''}`}>
-        <section aria-labelledby="today-heading" className="tile flex min-w-0 flex-col gap-3 rounded-2xl p-5">
+        <Surface aria-labelledby="today-heading" className="flex min-w-0 flex-col gap-3">
           <div className="flex items-center justify-between gap-3">
             <h2 id="today-heading" className={sectionHeadingClassName}>Today</h2>
             {doneToday.length > 0 ? (
@@ -188,10 +189,10 @@ export default async function AthletePage() {
               </div>
             </>
           )}
-        </section>
+        </Surface>
 
         {upcoming.length > 0 ? (
-          <section aria-labelledby="coming-up-heading" className="tile min-w-0 rounded-2xl p-5">
+          <Surface aria-labelledby="coming-up-heading" className="min-w-0">
             <h2 id="coming-up-heading" className={sectionHeadingClassName}>Coming up</h2>
             <ul className="mt-2 space-y-0.5">
               {upcoming.map(({ day, session }) => (
@@ -208,7 +209,7 @@ export default async function AthletePage() {
                 </li>
               ))}
             </ul>
-          </section>
+          </Surface>
         ) : null}
       </div>
 
@@ -220,16 +221,16 @@ export default async function AthletePage() {
       <UnsavedRidesNotice userId={user.id} />
 
       {dashboard.nextEvent ? (
-        <section aria-labelledby="next-event-heading" className="flex flex-col gap-3 rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <Surface aria-labelledby="next-event-heading" className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-medium text-[var(--brand)]">{dashboard.nextEvent.daysUntil === 0 ? 'Today' : dashboard.nextEvent.daysUntil === 1 ? 'Tomorrow' : `In ${dashboard.nextEvent.daysUntil} days`}&nbsp;· {format(new Date(`${dashboard.nextEvent.eventDate}T12:00:00`), 'EEE\u00A0d\u00A0MMM\u00A0yyyy')}</p>
-            <h2 id="next-event-heading" className="mt-0.5 text-base font-medium text-[var(--text)] [overflow-wrap:anywhere]">
+            <h2 id="next-event-heading" className={`mt-0.5 wrap-anywhere ${sectionHeadingClassName}`}>
               {dashboard.nextEvent.title}
               <span className="ml-2 text-sm font-normal text-[var(--text-muted)]">{getSportLabel(dashboard.nextEvent.sport)}{dashboard.nextEvent.targetFinishSec ? ` · Goal ${formatDuration(dashboard.nextEvent.targetFinishSec)}` : ''}</span>
             </h2>
           </div>
           <Link href="/athlete/events" className={`${ghostButtonClassName('compact')} shrink-0 max-md:min-h-11`}>Manage events</Link>
-        </section>
+        </Surface>
       ) : null}
 
       <section aria-labelledby="week-heading" className="space-y-2.5">

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { formatStravaMetadata, StravaImportPanel } from '@/components/StravaImportPanel';
-import { EmptyState, Surface, buttonFocusClassName, dangerButtonClassName, dangerTextClassName, formFieldClassName, formLabelClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { sectionHeadingClassName, EmptyState, Surface, buttonFocusClassName, dangerButtonClassName, dangerTextClassName, formFieldClassName, formLabelClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { parseActivityFile, type ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { ImportableSession, ImportedActivityHistory } from '@/lib/activity-import-service';
 import type { StravaConnectionSummary } from '@/lib/strava-service';
@@ -158,7 +158,7 @@ export function ActivityImportClient({
     <>
       <Surface id="activity-files" className="scroll-mt-20 space-y-4">
         <div>
-          <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Activity files</h2>
+          <h2 className={sectionHeadingClassName}>Activity files</h2>
           <p className="mt-1 max-w-[72ch] text-[13px] leading-[1.5] text-[var(--text-secondary)]">
             Choose FIT, TCX, or GPX files, then review them before saving. You can match them to planned sessions.
           </p>
@@ -188,7 +188,7 @@ export function ActivityImportClient({
 
       {drafts.length ? (
         <section aria-label="Files ready to import" className="space-y-4">
-          <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Review before importing</h2>
+          <h2 className={sectionHeadingClassName}>Review before importing</h2>
           {drafts.map((draft) => (
             <Surface key={draft.key} className="space-y-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -268,7 +268,7 @@ export function ActivityImportClient({
 
       <section aria-labelledby="import-history-heading" className="space-y-4">
         <div>
-          <h2 id="import-history-heading" className="text-[20px] font-semibold tracking-[-0.02em] text-[var(--text)]">Import history</h2>
+          <h2 id="import-history-heading" className={sectionHeadingClassName}>Import history</h2>
           <p className="mt-1 text-[13px] text-[var(--text-secondary)]">Saved Strava and file imports are included in your completed activity history.</p>
         </div>
         {historyNotice ? <p role="status" className="text-sm text-[var(--status-success)]">{historyNotice}</p> : null}
