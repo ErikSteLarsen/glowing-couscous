@@ -212,58 +212,38 @@ export function StravaPostAction({
   } else {
     body = (
       <div className="space-y-5">
-        <section aria-labelledby={`${id}-preview-title`} className="space-y-2">
-          <h3 id={`${id}-preview-title`} className="text-[12px] font-medium text-[var(--text-secondary)]">On Strava</h3>
-          <article
-            className="rounded-xl border border-[#DFDFE8] bg-white px-4 py-4 text-[#242428] shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
-            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif' }}
-          >
-            <p className="flex items-center gap-2 text-[12px] text-[#6D6D78]">
-              <span aria-hidden="true" className="inline-flex size-6 items-center justify-center rounded-full bg-[#FC5200] text-[11px] font-semibold text-white">You</span>
-              Virtual ride
-            </p>
-            <p className="mt-3 text-[20px] font-bold leading-tight [overflow-wrap:anywhere]">{name.trim() || 'Untitled ride'}</p>
-            {description.trim()
-              ? <p className="mt-2 whitespace-pre-wrap text-[15px] leading-[1.45] [overflow-wrap:anywhere]">{description.trim()}</p>
-              : <p className="mt-2 text-[15px] text-[#6D6D78]">No description</p>}
-          </article>
-          <p className="text-[12px] leading-relaxed text-[var(--text-muted)]">Strava adds its own map and stats below the description. Emoji can look slightly different on each phone.</p>
-        </section>
-
-        <details className="group rounded-xl border border-[var(--border)]">
-          <summary className={`flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[var(--text)] ${buttonFocusClassName}`}>
-            Edit title and description
-            <ChevronDown aria-hidden="true" size={16} className="text-[var(--text-muted)] transition-transform group-open:rotate-180" />
-          </summary>
-          <div className="space-y-4 px-4 pb-4">
-            <div>
-              <label htmlFor={`${id}-name`} className={formLabelClassName}>Title</label>
-              <input
-                id={`${id}-name`}
-                className={formFieldClassName}
-                value={name}
-                maxLength={STRAVA_POST_TITLE_MAX}
-                disabled={busy}
-                onChange={(event) => setName(event.target.value)}
-              />
-            </div>
-            <div>
-              <div className="flex items-baseline justify-between gap-3">
-                <label htmlFor={`${id}-description`} className={formLabelClassName}>Description</label>
-                <span className="data text-[11px] text-[var(--text-muted)]">{description.length}/{STRAVA_POST_DESCRIPTION_MAX}</span>
-              </div>
-              <textarea
-                id={`${id}-description`}
-                className={`${formTextareaClassName} min-h-[9rem] text-[13px]`}
-                rows={7}
-                value={description}
-                maxLength={STRAVA_POST_DESCRIPTION_MAX}
-                disabled={busy}
-                onChange={(event) => setDescription(event.target.value)}
-              />
-            </div>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor={`${id}-name`} className={formLabelClassName}>Title</label>
+            <input
+              id={`${id}-name`}
+              className={formFieldClassName}
+              value={name}
+              maxLength={STRAVA_POST_TITLE_MAX}
+              disabled={busy}
+              onChange={(event) => setName(event.target.value)}
+            />
           </div>
-        </details>
+          <div>
+            <div className="flex items-baseline justify-between gap-3">
+              <label htmlFor={`${id}-description`} className={formLabelClassName}>Description</label>
+              <span className="data text-[11px] text-[var(--text-muted)]">{description.length}/{STRAVA_POST_DESCRIPTION_MAX}</span>
+            </div>
+            <textarea
+              id={`${id}-description`}
+              className={`${formTextareaClassName} min-h-[12rem] text-[14px] leading-[1.5]`}
+              rows={Math.min(14, Math.max(8, description.split('\n').length + 1))}
+              value={description}
+              maxLength={STRAVA_POST_DESCRIPTION_MAX}
+              spellCheck={false}
+              disabled={busy}
+              onChange={(event) => setDescription(event.target.value)}
+            />
+            <p className="mt-1.5 text-[12px] leading-relaxed text-[var(--text-muted)]">
+              Posted exactly as written. Strava adds its own map and stats below it. Emoji can look slightly different on each phone.
+            </p>
+          </div>
+        </div>
 
         <details className="group rounded-xl border border-[var(--border)]" onToggle={(event) => { if ((event.currentTarget as HTMLDetailsElement).open) setShowImage(true); }}>
           <summary className={`flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[var(--text)] ${buttonFocusClassName}`}>
@@ -341,7 +321,7 @@ export function StravaPostAction({
                 {state.kind === 'posted' ? 'Your activity is on Strava.'
                   : access?.state === 'not-connected' ? 'Strava isn’t connected yet.'
                     : access?.state === 'needs-scope' ? 'Tempo needs one more permission.'
-                      : 'This is how the title and description will look on Strava.'}
+                      : 'This title and description go to Strava. Edit them before you post.'}
               </DialogDescription>
             </div>
             <DialogClose type="button" className={iconButtonClassName} aria-label="Close" disabled={busy}>
