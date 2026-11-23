@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 
 import {
+  Badge,
   ActionLink,
   dangerButtonClassName,
   dangerTextClassName,
@@ -625,7 +626,7 @@ function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, t
 function CalendarCell({ feedback, day, today, selected, templateMode, onSelect }: { feedback: PlacementFeedback | null; day: PlannerDeskCalendarDay; today: boolean; selected: boolean; templateMode: boolean; onSelect: () => void }) {
   return (
     <button type="button" aria-pressed={selected} aria-current={today ? 'date' : undefined} aria-label={`${day.label} ${day.dateLabel}, ${day.sessions.length} assigned. ${templateMode ? 'Choose for template range.' : 'Toggle date.'}`} onClick={onSelect} className={`flex min-h-[104px] min-w-0 flex-col p-2 text-left transition focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] ${day.inMonth ? 'bg-[var(--field-surface)]' : 'bg-[var(--sunken)]'} ${selected ? 'bg-[var(--brand-tint)]' : ''} hover:bg-[var(--selection)]`}>
-      <span className="flex items-center justify-between gap-2"><span className={`metric-text text-sm font-semibold ${day.inMonth ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>{day.dateLabel.split(' ')[0]}</span>{today ? <span className="rounded-full bg-[var(--brand)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--signal-ink)]">Today</span> : selected ? <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--signal-ink)]"><Check aria-hidden="true" className="h-3 w-3" /></span> : null}</span>
+      <span className="flex items-center justify-between gap-2"><span className={`metric-text text-sm font-semibold ${day.inMonth ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>{day.dateLabel.split(' ')[0]}</span>{today ? <Badge tone="brand">Today</Badge> : selected ? <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--signal-ink)]"><Check aria-hidden="true" className="h-3 w-3" /></span> : null}</span>
       {feedback ? <span className={`mt-2 block text-xs ${feedback.state === 'failed' ? 'text-[var(--status-danger)]' : feedback.state === 'saved' ? 'text-[var(--status-success)]' : 'text-[var(--text-secondary)]'}`}>{feedback.state === 'placing' ? 'Placing' : feedback.state === 'saved' ? 'Placed' : 'Not confirmed'}: {feedback.title}</span> : null}
       <span className="mt-2 min-w-0 space-y-1">{day.sessions.slice(0, 2).map((session) => <span key={session.id} className="block truncate border-l-2 border-[var(--brand)] bg-[var(--surface)] px-1.5 py-1 text-[11px] font-medium text-[var(--text)]">{session.title}</span>)}{day.sessions.length > 2 ? <span className="block px-1.5 text-[11px] text-[var(--text-muted)]">+{day.sessions.length - 2} more</span> : null}</span>
     </button>

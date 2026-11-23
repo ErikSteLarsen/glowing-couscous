@@ -13,6 +13,7 @@ import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { HomeSummaryDialog } from '@/components/HomeSummaryDialog';
 import { MiniBars, Sparkline, type MiniBar } from '@/components/charts/Sparklines';
 import {
+  Badge,
   EmptyState,
   Surface,
   ghostButtonClassName,
@@ -205,7 +206,7 @@ export default async function AthletePage() {
                   >
                     <span className="data w-16 shrink-0 text-[var(--text-muted)]">{day.label} {day.dateLabel}</span>
                     <span className="min-w-0 flex-1 py-1.5 text-[var(--text)] [overflow-wrap:anywhere]">{session.title}</span>
-                    {session.status === 'skipped' ? <span className="shrink-0 text-xs text-[var(--text-secondary)]">Skipped</span> : null}
+                    {session.status === 'skipped' ? <Badge>Skipped</Badge> : null}
                     <span className="data shrink-0 text-[var(--text-muted)]">{formatDuration(session.durationSec)}</span>
                   </Link>
                 </li>

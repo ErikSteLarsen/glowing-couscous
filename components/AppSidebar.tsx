@@ -24,7 +24,7 @@ import type { LucideIcon } from 'lucide-react';
 import { getPrimaryNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import { AppProfileMenu } from '@/components/AppProfileMenu';
 import { BrandMark } from '@/components/BrandMark';
-import { buttonFocusClassName } from '@/components/ui';
+import { Badge, buttonFocusClassName } from '@/components/ui';
 
 const navIcons: Record<string, LucideIcon> = {
   Athletes: UsersRound,
@@ -125,9 +125,7 @@ export function AppSidebar(props: {
               <BrandMark />
               <span className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--text)]">Tempo</span>
               {props.user.role === 'COACH' ? (
-                <span className="rounded-full border border-[var(--border-strong)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-muted)]">
-                  Coach
-                </span>
+                <Badge>Coach</Badge>
               ) : null}
             </Link>
             <button
