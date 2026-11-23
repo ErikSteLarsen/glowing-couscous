@@ -95,7 +95,7 @@ export default async function AthleteSessionPage({
         <h2 className={sectionHeadingClassName}>{importedWithoutWorkout ? 'Activity overview' : 'Workout overview'}</h2>
         <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
           {importedWithoutWorkout
-            ? 'Imported activity · not matched to a planned workout'
+            ? 'Imported activity, not matched to a planned workout'
             : 'The blocks of your planned workout.'}
         </p>
       </div>
@@ -162,10 +162,10 @@ export default async function AthleteSessionPage({
       {['manual-paired', 'tcx-import', 'fit-import', 'gpx-import'].includes(detail.session.metricsSource ?? '') && detail.session.plannedDurationSec > 0 ? (
         <div className="border-t border-[var(--border)] pt-3 text-sm text-[var(--text-secondary)]">
           <h3 className="font-medium text-[var(--text)]">Time: plan and result</h3>
-          <p className="mt-1">Done {formatDuration(detail.session.activityDurationSec ?? 0)} · planned {formatDuration(detail.session.plannedDurationSec)}</p>
+          <p className="mt-1">Done {formatDuration(detail.session.activityDurationSec ?? 0)}, planned {formatDuration(detail.session.plannedDurationSec)}</p>
         </div>
       ) : null}
-      <p className="text-xs text-[var(--text-muted)]">{detail.session.metricsSource === 'fit-import' ? 'Imported FIT activity' : detail.session.metricsSource === 'gpx-import' ? 'Imported GPX activity' : detail.session.metricsSource === 'tcx-import' ? 'Imported TCX activity' : detail.session.metricsSource === 'manual-paired' ? 'Logged by hand' : 'Logged activity'}{detail.session.plannedDurationSec > 0 ? ' · compared with the planned time' : ' · no plan to compare with'}</p>
+      <p className="text-xs text-[var(--text-muted)]">{detail.session.metricsSource === 'fit-import' ? 'Imported FIT activity' : detail.session.metricsSource === 'gpx-import' ? 'Imported GPX activity' : detail.session.metricsSource === 'tcx-import' ? 'Imported TCX activity' : detail.session.metricsSource === 'manual-paired' ? 'Logged by hand' : 'Logged activity'}{detail.session.plannedDurationSec > 0 ? ', compared with the planned time' : ', no plan to compare with'}</p>
       {manualCorrectionDraft && detail.session.activityId !== null && detail.session.activityUpdatedAt ? (
         <ManualActivityCorrectionForm
           activityId={detail.session.activityId}

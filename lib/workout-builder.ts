@@ -223,11 +223,11 @@ export function targetPatch(target: WorkoutTarget, zone: TempoZone, sport: strin
 export type AddStepOption = { id: string; label: string; detail: string };
 
 export const ADD_STEP_OPTIONS: readonly AddStepOption[] = [
-  { id: 'warmup', label: 'Warm-up', detail: '10m · Z2' },
-  { id: 'steady', label: 'Steady', detail: '10m · Z2' },
+  { id: 'warmup', label: 'Warm-up', detail: '10m – Z2' },
+  { id: 'steady', label: 'Steady', detail: '10m – Z2' },
   { id: 'intervals', label: 'Intervals', detail: '5 × (3m Z4 + 2m Z1)' },
-  { id: 'recovery', label: 'Recovery', detail: '3m · Z1' },
-  { id: 'cooldown', label: 'Cool-down', detail: '10m · Z1' },
+  { id: 'recovery', label: 'Recovery', detail: '3m – Z1' },
+  { id: 'cooldown', label: 'Cool-down', detail: '10m – Z1' },
 ];
 
 export const INTERVAL_PRESETS: readonly AddStepOption[] = [

@@ -198,8 +198,8 @@ export function createGuidedCandidates(input: GuidedWorkoutInput, profile: Perfo
     add('progressive', 'Build gently', 'Starts below the selected effort, then settles into it.', `Progressive ${input.intensity} ${sport}`, `Begin gently, then move toward a controlled ${input.intensity} effort.`, continuousBlocks(input, zone, true));
   } else {
     const zone: TempoZone = input.intensity === 'easy' ? 2 : input.intensity === 'steady' ? 3 : 4;
-    add('regular', 'Longer efforts', 'More time at the chosen effort with easy movement between repetitions.', `${input.intensity} intervals · ${input.durationMinutes} min`, `Controlled ${input.intensity} intervals with active recovery. Short interval heart-rate targets can lag behind effort.`, intervalBlocks(input, zone, false));
-    add('short', 'Shorter efforts', 'Short repeats make the workout easier to pace and adjust.', `Short ${input.intensity} intervals · ${input.durationMinutes} min`, `Short controlled efforts with active recovery. Keep each repetition repeatable.`, intervalBlocks(input, zone, true));
+    add('regular', 'Longer efforts', 'More time at the chosen effort with easy movement between repetitions.', `${input.intensity} intervals – ${input.durationMinutes} min`, `Controlled ${input.intensity} intervals with active recovery. Short interval heart-rate targets can lag behind effort.`, intervalBlocks(input, zone, false));
+    add('short', 'Shorter efforts', 'Short repeats make the workout easier to pace and adjust.', `Short ${input.intensity} intervals – ${input.durationMinutes} min`, `Short controlled efforts with active recovery. Keep each repetition repeatable.`, intervalBlocks(input, zone, true));
   }
   if (sparse || recentHard) return candidates.slice().reverse();
   return candidates;

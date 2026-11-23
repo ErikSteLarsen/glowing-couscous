@@ -458,7 +458,7 @@ export function WorkoutLibraryClient({
           {visibleWorkouts.length === workouts.length
             ? `${workouts.length} ${workouts.length === 1 ? 'workout' : 'workouts'}`
             : `${visibleWorkouts.length} of ${workouts.length} workouts`}
-          {sort === 'name' ? null : `\u00A0· ${CATALOG_SORTS.find((entry) => entry.id === sort)?.label ?? ''}`}
+          {sort === 'name' ? null : `\u00A0– ${CATALOG_SORTS.find((entry) => entry.id === sort)?.label ?? ''}`}
         </CollectionSummary>
         {message ? (
           <p role={messageTone === 'danger' ? 'alert' : 'status'} className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>
@@ -657,7 +657,7 @@ function MyWorkoutCard({ workout, summary, href, hasDraft, canSchedule, disabled
         </WorkoutCardHeader>
       )}
       <WorkoutCardMeta id={`workout-meta-${workout.id}`}>
-        {getSportLabel(workout.sport)}{peakZone ? <>&nbsp;· {peakZone}</> : null}{hasDraft ? <span className="text-[var(--status-warning)]">&nbsp;· Unsaved changes</span> : null}
+        <span>{getSportLabel(workout.sport)}</span>{peakZone ? <>{' '}<span>{peakZone}</span></> : null}{hasDraft ? <>{' '}<span className="text-[var(--status-warning)]">Unsaved changes</span></> : null}
       </WorkoutCardMeta>
       {summary.lead ? <WorkoutCardSummary>{summary.lead}</WorkoutCardSummary> : null}
       <WorkoutCardFooter

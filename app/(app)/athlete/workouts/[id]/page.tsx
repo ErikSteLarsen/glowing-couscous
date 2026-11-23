@@ -57,7 +57,7 @@ export default async function MyWorkoutPage({ params }: Params) {
       ftpWatts={ftp}
       about={{ heading: 'Notes', paragraphs: summary.details }}
       items={ownedWorkoutDetailItems(summary.profile, ftp)}
-      itemsSummary={`${summary.effortCount} ${summary.effortCount === 1 ? 'effort' : 'efforts'} · ${formatDuration(summary.workSec)} of work`}
+      itemsSummary={`${summary.effortCount} ${summary.effortCount === 1 ? 'effort' : 'efforts'} – ${formatDuration(summary.workSec)} of work`}
       stats={[
         { label: 'Duration', value: formatDuration(summary.durationSec) },
         { label: 'Training load', value: String(summary.tss), unit: 'TSS' },

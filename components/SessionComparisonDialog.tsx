@@ -189,7 +189,7 @@ function SnapshotView({ draft, ftpWatts }: { draft: SessionEditorDraft; ftpWatts
       <div>
         <p className="text-sm font-semibold text-[var(--text)]">{draft.title}</p>
         <p className="mt-1 text-xs text-[var(--text-secondary)]">
-          {getSportLabel(draft.sport)}{draft.scheduledDate ? `\u00A0· ${draft.scheduledDate}` : ''}
+          {getSportLabel(draft.sport)}{draft.scheduledDate ? `\u00A0– ${draft.scheduledDate}` : ''}
         </p>
         {draft.summary ? <p className="mt-3 text-sm leading-[1.5] text-[var(--text-secondary)]">{draft.summary}</p> : null}
       </div>
@@ -213,7 +213,7 @@ function SnapshotView({ draft, ftpWatts }: { draft: SessionEditorDraft; ftpWatts
         {draft.blocks.map((block, index) => (
           <div key={block.clientId} className={`rounded-[3px] border border-[var(--border)] bg-[var(--field-surface)] p-3 ${block.skipped ? 'opacity-60' : ''}`}>
             <div className="flex items-center justify-between gap-3 text-sm text-[var(--text)]">
-              <span className="font-semibold">{index + 1}. {block.kind}{block.skipped ? ' · skipped' : ''}</span>
+              <span className="font-semibold">{index + 1}. {block.kind}{block.skipped ? ' – skipped' : ''}</span>
               <span>{formatDuration(block.durationSec)}</span>
             </div>
             {block.note ? <p className="mt-1 text-xs text-[var(--text-secondary)]">{block.note}</p> : null}

@@ -212,7 +212,7 @@ export function ActivityImportClient({
                 <>
                   <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <MetricPair label="Sport" value={getSportLabel(draft.activity.sport)} />
-                    <MetricPair label="Started" value={format(new Date(draft.activity.startedAt), 'EEE d MMM · HH:mm')} />
+                    <MetricPair label="Started" value={format(new Date(draft.activity.startedAt), 'EEE d MMM, HH:mm')} />
                     <MetricPair label="Duration" value={formatDuration(draft.activity.durationSec)} />
                     <MetricPair label="Distance" value={draft.activity.distanceMeters === null ? 'Not recorded' : `${(draft.activity.distanceMeters / 1000).toFixed(2)}\u00A0km`} />
                     {draft.activity.elevationGainMeters !== null ? (
@@ -238,7 +238,7 @@ export function ActivityImportClient({
                       <option value="">None, save as a new activity</option>
                       {plannedSessions.filter((session) => session.sport === draft.activity.sport).map((session) => (
                         <option key={session.id} value={session.id}>
-                          {session.date ? `${format(new Date(session.date), 'd\u00A0MMM')} · ` : ''}{session.title}&nbsp;· {getSportLabel(session.sport)}
+                          {session.date ? `${format(new Date(session.date), 'd\u00A0MMM')} – ` : ''}{session.title}&nbsp;– {getSportLabel(session.sport)}
                         </option>
                       ))}
                     </select>
@@ -296,9 +296,9 @@ export function ActivityImportClient({
                   <SessionRowText
                     title={activity.title}
                     meta={<>
-                      {format(new Date(activity.completedAt), 'EEE\u00A0d\u00A0MMM\u00A0yyyy\u00A0· HH:mm')}&nbsp;· {getSportLabel(activity.sport)}&nbsp;· {formatDuration(activity.durationSec)}&nbsp;· {activity.source === 'strava' ? 'Strava' : 'File'}
-                      {activity.distanceMeters !== null ? `\u00A0· ${(activity.distanceMeters / 1000).toFixed(2)}\u00A0km` : ''}
-                      {activity.sessionTitle !== activity.title ? ` · Matched to ${activity.sessionTitle}` : ''}
+                      {format(new Date(activity.completedAt), 'EEE\u00A0d\u00A0MMM\u00A0yyyy, HH:mm')}&nbsp;– {getSportLabel(activity.sport)}&nbsp;– {formatDuration(activity.durationSec)}&nbsp;– {activity.source === 'strava' ? 'Strava' : 'File'}
+                      {activity.distanceMeters !== null ? `\u00A0– ${(activity.distanceMeters / 1000).toFixed(2)}\u00A0km` : ''}
+                      {activity.sessionTitle !== activity.title ? ` – Matched to ${activity.sessionTitle}` : ''}
                     </>}
                   />
                   <span className="text-[12px] font-medium text-[var(--brand)]">

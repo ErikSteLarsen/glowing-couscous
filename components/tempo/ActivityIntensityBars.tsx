@@ -16,7 +16,7 @@ export function ActivityIntensityBars({ timeline, compact = false }: { timeline:
     <div className={compact ? 'space-y-0.5' : 'space-y-1.5'}>
       <div className={`flex flex-wrap items-baseline ${compact ? 'justify-end' : 'justify-between'} gap-x-2 text-[11px] leading-4 text-[var(--text-secondary)]`}>
         {compact ? null : <span className="font-medium text-[var(--text)]">Heart rate</span>}
-        <span className="tabular-nums">{compact ? `Avg HR ${timeline.averageBpm}\u00A0bpm` : `Avg ${timeline.averageBpm}\u00A0bpm · ${intervalLabel}`}</span>
+        <span className="tabular-nums">{compact ? `Avg HR ${timeline.averageBpm}\u00A0bpm` : `Avg ${timeline.averageBpm}\u00A0bpm – ${intervalLabel}`}</span>
       </div>
       <div
         role="img"

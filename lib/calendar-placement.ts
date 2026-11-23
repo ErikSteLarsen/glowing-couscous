@@ -26,7 +26,7 @@ export function getRoutineDates(period: RoutinePeriod, referenceDate: string): s
 
 export function getRoutineRangeLabel(dates: string[]) {
   if (!dates.length) return '';
-  return `${formatPlacementDate(dates[0])} – ${formatPlacementDate(dates[dates.length - 1])}`;
+  return `${formatPlacementDate(dates[0])}–${formatPlacementDate(dates[dates.length - 1])}`;
 }
 
 export function getPlacementButtonLabel(kind: PlacementKind, dates: string[], period: RoutinePeriod = 'week') {

@@ -144,7 +144,7 @@ export default async function RideHubPage({ searchParams }: { searchParams: Prom
 }
 
 function sessionMeta(session: RideHubSession) {
-  return [session.overdue ? format(parseISO(session.day), 'EEE\u00A0d\u00A0MMM') : session.timeLabel, formatDuration(session.durationSec), `${session.tss}\u00A0TSS`].filter(Boolean).join('\u00A0· ');
+  return [session.overdue ? format(parseISO(session.day), 'EEE\u00A0d\u00A0MMM') : session.timeLabel, formatDuration(session.durationSec), `${session.tss}\u00A0TSS`].filter(Boolean).join('\u00A0– ');
 }
 
 function TodayFeature({ session }: { session: RideHubSession }) {
@@ -191,7 +191,7 @@ function RecentLine({ ride }: { ride: RideHubRecent }) {
       <Link href={`/athlete/session/${ride.sessionId}?from=ride`} className={`group flex min-w-0 flex-1 flex-col justify-center rounded-sm hover:bg-[var(--raised)] max-md:min-h-11 ${buttonFocusClassName}`}>
         <SessionRowText
           title={ride.title}
-          meta={[format(parseISO(ride.completedAt), 'EEE\u00A0d\u00A0MMM'), formatDuration(ride.durationSec), ride.tss === null ? null : `${ride.tss}\u00A0TSS`].filter(Boolean).join('\u00A0· ')}
+          meta={[format(parseISO(ride.completedAt), 'EEE\u00A0d\u00A0MMM'), formatDuration(ride.durationSec), ride.tss === null ? null : `${ride.tss}\u00A0TSS`].filter(Boolean).join('\u00A0– ')}
           titleClassName="underline-offset-4 group-hover:underline"
         />
       </Link>

@@ -80,7 +80,7 @@ export function StravaImportPanel({
       const response = await fetch('/api/strava/activities', { method: 'POST' });
       const result = await response.json() as { error?: string; synced?: number };
       if (!response.ok) throw new Error(result.error || 'Could not check Strava. Try again.');
-      setNotice(`Checked Strava for recent activities${typeof result.synced === 'number' ? `\u00A0· ${result.synced} found` : ''}.`);
+      setNotice(typeof result.synced === 'number' ? `Checked Strava for recent activities and found ${result.synced}.` : 'Checked Strava for recent activities.');
       router.refresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Could not check Strava. Try again.');
@@ -243,9 +243,9 @@ export function StravaImportPanel({
                 title={activity.title}
                 titleClassName="group-hover:text-[var(--brand)]"
                 meta={<>
-                  {format(new Date(activity.startedAt), 'EEE\u00A0d\u00A0MMM\u00A0yyyy\u00A0· HH:mm')}&nbsp;· {getSportLabel(activity.sport)}&nbsp;· {formatDuration(activity.durationSec)}
-                  {activity.distanceMeters !== null ? `\u00A0· ${(activity.distanceMeters / 1000).toFixed(2)}\u00A0km` : ''}
-                  {activity.elevationGainMeters !== null ? `\u00A0· ${Math.round(activity.elevationGainMeters)}\u00A0m up` : ''}
+                  {format(new Date(activity.startedAt), 'EEE\u00A0d\u00A0MMM\u00A0yyyy, HH:mm')}&nbsp;– {getSportLabel(activity.sport)}&nbsp;– {formatDuration(activity.durationSec)}
+                  {activity.distanceMeters !== null ? `\u00A0– ${(activity.distanceMeters / 1000).toFixed(2)}\u00A0km` : ''}
+                  {activity.elevationGainMeters !== null ? `\u00A0– ${Math.round(activity.elevationGainMeters)}\u00A0m up` : ''}
                 </>}
               />
               {activity.imported ? <Badge tone="success">Imported</Badge> : activity.dismissed ? <Badge>Hidden</Badge> : null}
@@ -275,9 +275,9 @@ export function StravaImportPanel({
               <div className="min-w-0">
                 <h2 id="strava-activity-details-title" className="break-words text-xl font-semibold text-[var(--text)]">{activeActivity.title}</h2>
                 <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
-                  {format(new Date(activeActivity.startedAt), 'EEE\u00A0d\u00A0MMM\u00A0yyyy\u00A0· HH:mm')}&nbsp;· {getSportLabel(activeActivity.sport)}&nbsp;· {formatDuration(activeActivity.durationSec)}
-                  {activeActivity.distanceMeters !== null ? `\u00A0· ${(activeActivity.distanceMeters / 1000).toFixed(2)}\u00A0km` : ''}
-                  {activeActivity.elevationGainMeters !== null ? `\u00A0· ${Math.round(activeActivity.elevationGainMeters)}\u00A0m up` : ''}
+                  {format(new Date(activeActivity.startedAt), 'EEE\u00A0d\u00A0MMM\u00A0yyyy, HH:mm')}&nbsp;– {getSportLabel(activeActivity.sport)}&nbsp;– {formatDuration(activeActivity.durationSec)}
+                  {activeActivity.distanceMeters !== null ? `\u00A0– ${(activeActivity.distanceMeters / 1000).toFixed(2)}\u00A0km` : ''}
+                  {activeActivity.elevationGainMeters !== null ? `\u00A0– ${Math.round(activeActivity.elevationGainMeters)}\u00A0m up` : ''}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -322,7 +322,7 @@ export function StravaImportPanel({
                       <option value="">None, save as a new activity</option>
                       {activeMatchingSessions.map((session) => (
                         <option key={session.id} value={session.id}>
-                          {session.date ? `${format(new Date(session.date), 'd\u00A0MMM')} · ` : ''}{session.title}&nbsp;· {getSportLabel(session.sport)}
+                          {session.date ? `${format(new Date(session.date), 'd\u00A0MMM')} – ` : ''}{session.title}&nbsp;– {getSportLabel(session.sport)}
                         </option>
                       ))}
                     </select>

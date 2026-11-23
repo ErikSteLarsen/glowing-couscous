@@ -14,7 +14,7 @@ const instrumentSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: { default: 'Tempo', template: '%s · Tempo' },
+  title: { default: 'Tempo', template: '%s – Tempo' },
   description: 'Plan, follow, and review your own endurance training.',
 };
 

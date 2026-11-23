@@ -62,7 +62,7 @@ export function homeActivityReadout(activity: HomeActivity) {
 
 export function homeLoadLabel(totals: Pick<HomeTotals, 'tss' | 'loadUnavailableCount'>) {
   if (totals.tss === null) return 'No TSS';
-  return `${totals.tss} estimated TSS${totals.loadUnavailableCount > 0 ? ' · some TSS missing' : ''}`;
+  return `${totals.tss} estimated TSS${totals.loadUnavailableCount > 0 ? ', some TSS missing' : ''}`;
 }
 
 export function homeLoadBarPercent(point: { tss: number | null; loadAvailable: boolean }, points: Array<{ tss: number | null; loadAvailable: boolean }>) {

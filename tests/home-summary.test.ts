@@ -11,7 +11,7 @@ test('completed totals use saved durations, count a matched outcome once and inc
   const matched = outcome();
   const standalone = outcome({ id: 2, sessionId: 12, durationSec: 1800, tss: 0, metricsSource: 'strava-import' });
   assert.deepEqual(summarizeHomeActivities([matched, matched, standalone]), { count: 2, durationSec: 4500, tss: 35, loadUnavailableCount: 1 });
-  assert.equal(homeLoadLabel(summarizeHomeActivities([matched, standalone])), '35 estimated TSS · some TSS missing');
+  assert.equal(homeLoadLabel(summarizeHomeActivities([matched, standalone])), '35 estimated TSS, some TSS missing');
 });
 
 test('unknown import load is not a measured zero; rounded calibrated and manual zero remain valid', () => {

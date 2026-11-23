@@ -33,14 +33,13 @@ function apiPath(activityId: number, suffix = '') {
   return `/api/athlete/activities/${activityId}${suffix}`;
 }
 
-/** "Posted to Strava · View on Strava", shown instead of the post button once an activity is on Strava. */
+/** "Posted to Strava" and a "View on Strava" link, shown instead of the post button once an activity is on Strava. */
 export function StravaPostedNote({ url, className = '' }: { url: string; className?: string }) {
   return (
     <p className={`inline-flex min-h-10 flex-wrap items-center gap-x-1.5 text-sm text-[var(--text-secondary)] ${className}`}>
       <Check aria-hidden="true" size={16} strokeWidth={1.8} className="text-[var(--status-success)]" />
       Posted to Strava
-      <span aria-hidden="true" className="text-[var(--text-muted)]">·</span>
-      <a href={url} target="_blank" rel="noreferrer" className={`${ghostButtonClassName('compact')} -mx-1`}>
+      <a href={url} target="_blank" rel="noreferrer" className={`${ghostButtonClassName('compact')} -mr-1`}>
         View on Strava<ExternalLink aria-hidden="true" size={14} strokeWidth={1.8} />
       </a>
     </p>
@@ -247,7 +246,7 @@ export function StravaPostAction({
 
         <details className="group rounded-xl border border-[var(--border)]" onToggle={(event) => { if ((event.currentTarget as HTMLDetailsElement).open) setShowImage(true); }}>
           <summary className={`flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[var(--text)] ${buttonFocusClassName}`}>
-            <span>Picture <span className="font-normal text-[var(--text-muted)]">· not posted to Strava</span></span>
+            <span>Picture <span className="font-normal text-[var(--text-muted)]">– not posted to Strava</span></span>
             <ChevronDown aria-hidden="true" size={16} className="text-[var(--text-muted)] transition-transform group-open:rotate-180" />
           </summary>
           <div className="space-y-3 px-4 pb-4">

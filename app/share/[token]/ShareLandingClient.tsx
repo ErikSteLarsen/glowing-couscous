@@ -160,12 +160,12 @@ export function ShareLandingClient({
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold capitalize text-[var(--text)]">
-                            {block.kind}{block.skipped ? ' · skipped' : ''}
+                            {block.kind}{block.skipped ? ' – skipped' : ''}
                           </p>
                           {block.note ? <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{block.note}</p> : null}
                         </div>
                         <span className="text-[13px] font-medium text-[var(--text-secondary)]">
-                          {formatDuration(block.durationSec)}{block.reps ? `\u00A0· ${block.reps} reps` : ''}
+                          {formatDuration(block.durationSec)}{block.reps ? `\u00A0– ${block.reps} reps` : ''}
                         </span>
                       </div>
                       {block.target ? (

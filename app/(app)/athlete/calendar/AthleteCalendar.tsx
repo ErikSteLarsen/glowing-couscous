@@ -570,8 +570,8 @@ function SessionCard({
           title={session.title}
           titleClassName={hasActions ? 'mr-6 max-xl:mr-9 max-md:mr-10' : undefined}
           meta={<>
-            <span className="block">{[session.timeLabel, getSportLabel(session.sport)].filter(Boolean).join('\u00A0· ')}</span>
-            <span className="block">{[formatDuration(session.durationSec), session.distanceMeters === null ? null : formatDistance(session.distanceMeters), session.tss === null ? 'Load unavailable' : `${session.tss}\u00A0TSS`].filter(Boolean).join('\u00A0· ')}</span>
+            <span className="block">{[session.timeLabel, getSportLabel(session.sport)].filter(Boolean).join('\u00A0– ')}</span>
+            <span className="block">{[formatDuration(session.durationSec), session.distanceMeters === null ? null : formatDistance(session.distanceMeters), session.tss === null ? 'Load unavailable' : `${session.tss}\u00A0TSS`].filter(Boolean).join('\u00A0– ')}</span>
           </>}
         />
         <ComplianceMark state={session.compliance} showLabel />
@@ -807,7 +807,7 @@ function MonthChip({ session, day, pending }: { session: CalendarSession; day: s
         {...dragProps}
       >
         <span className="min-w-0 flex-1 truncate text-[var(--text)]">{session.title}</span>
-        <span className="data hidden shrink-0 text-[var(--text-muted)] lg:inline">{formatDuration(session.durationSec)}{session.distanceMeters === null ? '' : `\u00A0· ${formatDistance(session.distanceMeters)}`}</span>
+        <span className="data hidden shrink-0 text-[var(--text-muted)] lg:inline">{formatDuration(session.durationSec)}{session.distanceMeters === null ? '' : `\u00A0– ${formatDistance(session.distanceMeters)}`}</span>
         <ComplianceMark state={session.compliance} />
       </Link>
     </div>

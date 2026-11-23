@@ -310,8 +310,8 @@ export function ProfileClient({ account }: { account: Account }) {
                       const range = heartRateZones[zone];
                       const percentages = OLYMPIATOPPEN_HEART_RATE_PERCENT_BANDS[zone];
                       return <div key={zone} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 py-2 text-sm">
-                        <span className="font-medium text-[var(--text)]">Zone {zone}&nbsp;· {zoneNames[zone]}</span>
-                        <span className="tabular-nums text-[var(--text-secondary)]">I-{zone}&nbsp;· {percentages.low}–{percentages.high}%</span>
+                        <span className="font-medium text-[var(--text)]">Zone {zone}&nbsp;– {zoneNames[zone]}</span>
+                        <span className="flex gap-x-2 tabular-nums text-[var(--text-secondary)]"><span>I-{zone}</span><span>{percentages.low}–{percentages.high}%</span></span>
                         <span className="tabular-nums text-[var(--text-secondary)]">{range.low}–{range.high}&nbsp;bpm</span>
                       </div>;
                     })}
@@ -349,7 +349,7 @@ export function ProfileClient({ account }: { account: Account }) {
                     </div>
                     <div className="space-y-3">
                       {zones.map((zone) => <div key={zone} className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-                        <span className="text-sm font-medium text-[var(--text)]">Zone {zone}<span className="hidden text-[var(--text-secondary)] sm:inline"> · {zoneNames[zone]}</span></span>
+                        <span className="text-sm font-medium text-[var(--text)]">Zone {zone}<span className="hidden text-[var(--text-secondary)] sm:inline"> – {zoneNames[zone]}</span></span>
                         <PaceInput label={`Zone ${zone} fastest pace per kilometre`} value={paceDrafts[zone].fastest} onChange={(value) => changePaceBound(zone, 'fastest', value)} />
                         <PaceInput label={`Zone ${zone} slowest pace per kilometre`} value={paceDrafts[zone].slowest} onChange={(value) => changePaceBound(zone, 'slowest', value)} />
                       </div>)}
@@ -428,7 +428,7 @@ function TargetRow({ id, title, metric, value, detail, open, onToggle, children 
       <button type="button" aria-expanded={open} aria-controls={panelId} onClick={onToggle} className={`flex min-h-14 w-full items-center gap-3 rounded-lg py-3 text-left transition-colors hover:bg-[var(--raised)] max-md:min-h-16 sm:-mx-2 sm:w-[calc(100%+1rem)] sm:px-2 ${buttonFocusClassName}`}>
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium text-[var(--text)]">{title}</span>
-          <span className="block text-xs text-[var(--text-muted)]">{metric}{detail ? `\u00A0· ${detail}` : ''}</span>
+          <span className="block text-xs text-[var(--text-muted)]">{metric}{detail ? `\u00A0– ${detail}` : ''}</span>
         </span>
         {value ? <span className="data shrink-0 text-sm text-[var(--text)]">{value}</span> : <span className="shrink-0 text-sm font-medium text-[var(--brand)]">Add</span>}
         <ChevronDown aria-hidden="true" size={16} strokeWidth={1.8} className={`shrink-0 text-[var(--text-muted)] transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -443,7 +443,7 @@ function AdvancedTargets({ id, open, onToggle, note, children }: { id: SportSect
   return <div className="border-t border-[var(--border)] pt-3">
     <button type="button" aria-expanded={open} aria-controls={panelId} onClick={onToggle} className={`-ml-2 inline-flex min-h-10 items-center max-md:min-h-11 gap-1.5 rounded-lg px-2 text-[13px] font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] ${buttonFocusClassName}`}>
       <ChevronDown aria-hidden="true" size={16} strokeWidth={1.8} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
-      Advanced targets{note ? <span className="font-normal text-[var(--text-muted)]"> · {note}</span> : null}
+      Advanced targets{note ? <span className="font-normal text-[var(--text-muted)]"> – {note}</span> : null}
     </button>
     {open ? <div id={panelId} className="mt-3 space-y-5">{children}</div> : null}
   </div>;

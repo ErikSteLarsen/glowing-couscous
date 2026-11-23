@@ -204,7 +204,7 @@ async function assignTrainingPlan(db: SourceAssignmentDb, command: AssignSourceC
 
   const plan =
     (await db.plan.findFirst({ where: { athleteId: command.athleteId, startDate: weekStart, endDate: weekEnd }, orderBy: { id: 'desc' } })) ??
-    (await db.plan.create({ data: { athleteId: command.athleteId, name: `${source.name ?? 'Training plan'} · week of ${format(weekStart, 'd MMM yyyy')}`, startDate: weekStart, endDate: weekEnd } }));
+    (await db.plan.create({ data: { athleteId: command.athleteId, name: `${source.name ?? 'Training plan'}, week of ${format(weekStart, 'd MMM yyyy')}`, startDate: weekStart, endDate: weekEnd } }));
   const existing = await db.trainingPlanAssignment.findUnique({
     where: { trainingPlanId_athleteId_weekStart: { trainingPlanId: source.id, athleteId: command.athleteId, weekStart } },
     include: { assignments: { select: { sessionId: true } } },

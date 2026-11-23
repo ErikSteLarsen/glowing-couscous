@@ -36,8 +36,8 @@ test('routine dates match the server contract: a Monday week or the whole calend
 });
 
 test('routine range labels read as plain dates', () => {
-  assert.equal(getRoutineRangeLabel(getRoutineDates('week', '2026-11-25')), 'Mon\u00A023\u00A0Nov – Sun\u00A029\u00A0Nov');
-  assert.equal(getRoutineRangeLabel(getRoutineDates('month', '2026-11-25')), 'Sun\u00A01\u00A0Nov – Mon\u00A030\u00A0Nov');
+  assert.equal(getRoutineRangeLabel(getRoutineDates('week', '2026-11-25')), 'Mon\u00A023\u00A0Nov–Sun\u00A029\u00A0Nov');
+  assert.equal(getRoutineRangeLabel(getRoutineDates('month', '2026-11-25')), 'Sun\u00A01\u00A0Nov–Mon\u00A030\u00A0Nov');
   assert.equal(getRoutineRangeLabel([]), '');
 });
 

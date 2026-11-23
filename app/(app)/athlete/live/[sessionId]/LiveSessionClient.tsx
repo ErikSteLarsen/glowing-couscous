@@ -254,8 +254,8 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
             <Stepper
               items={blocks.map((block, index) => ({
                 id: block.id,
-                title: `${block.label}\u00A0· ${formatDuration(block.durationSec)}`,
-                detail: [block.targetLabel, block.note].filter(Boolean).join('\u00A0· '),
+                title: `${block.label}\u00A0– ${formatDuration(block.durationSec)}`,
+                detail: [block.targetLabel, block.note].filter(Boolean).join('\u00A0– '),
                 active: index === currentIndex && !complete && !saved,
                 done: saved || state.completed[index],
               }))}

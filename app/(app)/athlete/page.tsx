@@ -124,7 +124,7 @@ export default async function AthletePage() {
   return (
     <PageShell size="wall">
       <TopBar
-        eyebrow={`${format(today, 'EEEE\u00A0d\u00A0MMMM')}\u00A0· Week\u00A0${getISOWeek(today)}`}
+        eyebrow={`${format(today, 'EEEE\u00A0d\u00A0MMMM')}\u00A0– Week\u00A0${getISOWeek(today)}`}
         title={`${greetingFor(hourInZone(timeZone))}, ${firstName}`}
         actions={<Link href="/athlete/events" className={`${ghostButtonClassName('default')} max-md:min-h-11`}>Events</Link>}
       />
@@ -143,14 +143,14 @@ export default async function AthletePage() {
             <>
               <div className="min-w-0">
                 <p className="data text-[13px] text-[var(--text-muted)]">
-                  {[nextAction.timeLabel, getSportLabel(nextAction.sport)].filter(Boolean).join('\u00A0· ')}
+                  {[nextAction.timeLabel, getSportLabel(nextAction.sport)].filter(Boolean).join('\u00A0– ')}
                 </p>
                 <p className="mt-0.5 text-xl font-medium tracking-[-0.02em] text-[var(--text)] [overflow-wrap:anywhere]">{nextAction.title}</p>
                 <p className="data mt-1 text-sm text-[var(--text-secondary)]">
                   <span className="text-[var(--text)]">{formatDuration(nextAction.durationSec)}</span>
-                  {' · '}
+                  {' – '}
                   <span className="text-[var(--text)]">{nextAction.tss}</span> TSS
-                  {nextAction.targetLabel ? `\u00A0· ${nextAction.targetLabel}` : ''}
+                  {nextAction.targetLabel ? `\u00A0– ${nextAction.targetLabel}` : ''}
                 </p>
               </div>
               <SessionBlockBar segments={nextAction.segments} size="compact" />
@@ -226,10 +226,10 @@ export default async function AthletePage() {
       {dashboard.nextEvent ? (
         <Surface aria-labelledby="next-event-heading" className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-xs font-medium text-[var(--brand)]">{dashboard.nextEvent.daysUntil === 0 ? 'Today' : dashboard.nextEvent.daysUntil === 1 ? 'Tomorrow' : `In ${dashboard.nextEvent.daysUntil} days`}&nbsp;· {format(new Date(`${dashboard.nextEvent.eventDate}T12:00:00`), 'EEE\u00A0d\u00A0MMM\u00A0yyyy')}</p>
+            <p className="text-xs font-medium text-[var(--brand)]">{dashboard.nextEvent.daysUntil === 0 ? 'Today' : dashboard.nextEvent.daysUntil === 1 ? 'Tomorrow' : `In ${dashboard.nextEvent.daysUntil} days`}&nbsp;– {format(new Date(`${dashboard.nextEvent.eventDate}T12:00:00`), 'EEE\u00A0d\u00A0MMM\u00A0yyyy')}</p>
             <h2 id="next-event-heading" className={`mt-0.5 wrap-anywhere ${sectionHeadingClassName}`}>
               {dashboard.nextEvent.title}
-              <span className="ml-2 text-sm font-normal text-[var(--text-muted)]">{getSportLabel(dashboard.nextEvent.sport)}{dashboard.nextEvent.targetFinishSec ? ` · Goal ${formatDuration(dashboard.nextEvent.targetFinishSec)}` : ''}</span>
+              <span className="ml-2 text-sm font-normal text-[var(--text-muted)]">{getSportLabel(dashboard.nextEvent.sport)}{dashboard.nextEvent.targetFinishSec ? ` – Goal ${formatDuration(dashboard.nextEvent.targetFinishSec)}` : ''}</span>
             </h2>
           </div>
           <Link href="/athlete/events" className={`${ghostButtonClassName('compact')} shrink-0 max-md:min-h-11`}>Manage events</Link>
@@ -242,8 +242,8 @@ export default async function AthletePage() {
             <h2 id="week-heading" className={sectionHeadingClassName}>This week</h2>
             {thisWeek ? (
               <p className="data mt-0.5 text-[13px] text-[var(--text-muted)]">
-                {formatDuration(thisWeek.completed.durationSec)} of {formatDuration(thisWeek.planned.durationSec)}&nbsp;· {thisWeek.completed.unknownLoadSessions ? `no TSS for ${thisWeek.completed.unknownLoadSessions} activities` : `${thisWeek.completed.tss} of ${thisWeek.planned.tss}\u00A0TSS`}
-                {thisWeek.missed > 0 ? `\u00A0· ${thisWeek.missed} missed` : ''}
+                {formatDuration(thisWeek.completed.durationSec)} of {formatDuration(thisWeek.planned.durationSec)}&nbsp;– {thisWeek.completed.unknownLoadSessions ? `no TSS for ${thisWeek.completed.unknownLoadSessions} activities` : `${thisWeek.completed.tss} of ${thisWeek.planned.tss}\u00A0TSS`}
+                {thisWeek.missed > 0 ? `\u00A0– ${thisWeek.missed} missed` : ''}
               </p>
             ) : null}
           </div>
@@ -327,7 +327,7 @@ export default async function AthletePage() {
                       </span>
                     ) : null}
                     <span className="col-span-2 text-xs text-[var(--text-muted)]">
-                      {hasHistory ? `${formZoneLabels[load.current.formZone]}\u00A0· ${formAdvice[load.current.formZone]}` : 'Builds as you complete workouts'}
+                      {hasHistory ? `${formZoneLabels[load.current.formZone]}\u00A0– ${formAdvice[load.current.formZone]}` : 'Builds as you complete workouts'}
                     </span>
                   </span>
                 }
@@ -335,7 +335,7 @@ export default async function AthletePage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                     <StatTile
-                      label={hasHistory ? `Form · ${formZoneLabels[load.current.formZone]}` : 'Form'}
+                      label={hasHistory ? `Form – ${formZoneLabels[load.current.formZone]}` : 'Form'}
                       value={signed(load.current.form)}
                       detail={hasHistory ? formAdvice[load.current.formZone] : 'Builds as you complete workouts'}
                       tone={formTone}
@@ -397,13 +397,13 @@ export default async function AthletePage() {
               dashboard.lastActivity ? (
                 <HomeSummaryDialog
                   label="Last activity"
-                  description={`${format(dashboard.lastActivity.completedAt, 'EEE\u00A0d\u00A0MMM')}\u00A0· ${getSportLabel(dashboard.lastActivity.sport)}`}
+                  description={`${format(dashboard.lastActivity.completedAt, 'EEE\u00A0d\u00A0MMM')}\u00A0– ${getSportLabel(dashboard.lastActivity.sport)}`}
                   className="md:flex-[1_1_0%]"
                   summary={
                     <span className="min-w-0">
                       <span className="block truncate text-base font-medium text-[var(--text)]">{dashboard.lastActivity.title}</span>
                       <span className="data mt-1 block text-xs text-[var(--text-muted)]">
-                        {format(dashboard.lastActivity.completedAt, 'EEE\u00A0d\u00A0MMM')}&nbsp;· {formatDuration(dashboard.lastActivity.durationSec)}&nbsp;· {dashboard.lastActivity.tss}&nbsp;TSS
+                        {format(dashboard.lastActivity.completedAt, 'EEE\u00A0d\u00A0MMM')}&nbsp;– {formatDuration(dashboard.lastActivity.durationSec)}&nbsp;– {dashboard.lastActivity.tss}&nbsp;TSS
                       </span>
                     </span>
                   }

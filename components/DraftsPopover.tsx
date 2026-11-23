@@ -42,7 +42,7 @@ export function DraftsPopover({ drafts, now, disabled = false, onRestore, onDisc
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{draft.name}</p>
                 <p className="text-[12px] text-[var(--text-muted)]">
-                  {draft.kind} · <time dateTime={new Date(draft.savedAt).toISOString()} title={new Date(draft.savedAt).toLocaleString()}>{formatDraftAge(draft.savedAt, now)}</time>
+                  {draft.kind} – <time dateTime={new Date(draft.savedAt).toISOString()} title={new Date(draft.savedAt).toLocaleString()}>{formatDraftAge(draft.savedAt, now)}</time>
                 </p>
               </div>
               <div className="flex gap-2">

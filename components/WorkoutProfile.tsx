@@ -221,7 +221,7 @@ export function WorkoutProfile({
         {full && phases.length ? (
           <div aria-hidden="true" className="relative mt-1.5 h-9">
             {phases.map((phase, index) => (
-              <div key={phase.startSec} className="absolute inset-y-0 overflow-hidden border-l border-[var(--border-strong)] pl-1" style={{ left: left(phase.startSec), width: left(phase.durationSec) }} title={`${phase.title} · ${phase.detail}`}>
+              <div key={phase.startSec} className="absolute inset-y-0 overflow-hidden border-l border-[var(--border-strong)] pl-1" style={{ left: left(phase.startSec), width: left(phase.durationSec) }} title={`${phase.title} – ${phase.detail}`}>
                 {phaseFits[index] >= 0 ? (
                   <>
                     <span className="block truncate text-[12px] font-medium leading-4 text-[var(--text)]">{phase.title}</span>
@@ -256,7 +256,7 @@ export function WorkoutProfileExplorer({ model, label, ftpWatts = null, hint = '
       <div id={panelId} aria-live="polite" className="min-h-11 border-t border-[var(--border)] pt-3 text-[13px]">
         {step && block ? (
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <span className="font-medium text-[var(--text)]">{step.repetition ? `Rep ${step.repetition.index} of ${step.repetition.of} · ` : ''}{step.label}</span>
+            <span className="font-medium text-[var(--text)]">{step.repetition ? `Rep ${step.repetition.index} of ${step.repetition.of} – ` : ''}{step.label}</span>
             {block.targetLabel ? <span className="data text-[var(--text)]">{block.targetLabel}</span> : null}
             {block.note ? <span className="basis-full text-[var(--text-secondary)]">{block.note}</span> : null}
           </div>

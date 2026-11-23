@@ -135,7 +135,7 @@ test('conversion produces valid canonical relative-FTP blocks with notes', () =>
   assert.equal(blocks[0].kind, 'warmup');
   assert.equal(blocks[0].zone, 1);
   assert.equal(blocks[1].zone, 4);
-  assert.equal(blocks[0].note, 'Build gradually · Cadence 85–95 rpm');
+  assert.equal(blocks[0].note, 'Build gradually. Cadence 85–95 rpm');
   assert.equal(catalogStepNote({ cue: null, cadence: [100, 100] }), 'Cadence 100 rpm');
   assert.equal(blocks[2].note, '');
 

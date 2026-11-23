@@ -434,7 +434,7 @@ function createActivitySummary(value: ActivityImportInput, sourceProvider?: stri
   const parts = [sourceProvider === 'STRAVA' ? 'Imported Strava activity' : 'Imported activity file'];
   if (value.distanceMeters !== null) parts.push(`${(value.distanceMeters / 1000).toFixed(2)}\u00A0km`);
   if (value.elevationGainMeters !== null) parts.push(`${Math.round(value.elevationGainMeters)}\u00A0m elevation gain`);
-  return parts.join(' · ');
+  return parts.join(', ');
 }
 
 function sanitizeSourceMetadata(value?: Record<string, unknown>) {

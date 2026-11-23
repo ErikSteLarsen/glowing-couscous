@@ -67,7 +67,7 @@ export function summarizeOwnedWorkout(workout: OwnedWorkoutRecord, performancePr
   const profile = buildWorkoutProfile(draft.blocks.map((block): OwnedProfileBlock => {
     const written = block.target ? formatWorkoutTarget(block.target, draft.sport) : null;
     const resolved = block.target ? formatResolvedWorkoutTarget(block.target, performanceProfile, draft.sport) : null;
-    return { ...block, id: block.clientId, targetLabel: [written, resolved].filter(Boolean).join('\u00A0· ') || null, shortTarget: resolved ?? written };
+    return { ...block, id: block.clientId, targetLabel: [written, resolved].filter(Boolean).join('\u00A0– ') || null, shortTarget: resolved ?? written };
   }), { sport: draft.sport, profile: performanceProfile, ftpWatts });
 
   const active = profile.steps.filter((step) => step.kind !== 'pause');

@@ -166,7 +166,7 @@ function ActivitySummary({ activity }: { activity: LinkedActivity }) {
   return (
     <SessionRowText
       title={activity.session.title}
-      meta={[getSportLabel(activity.session.sport), formatDay(activity.completedOn), formatDuration(activity.durationSec), distance].filter(Boolean).join('\u00A0· ')}
+      meta={[getSportLabel(activity.session.sport), formatDay(activity.completedOn), formatDuration(activity.durationSec), distance].filter(Boolean).join('\u00A0– ')}
     />
   );
 }
@@ -265,7 +265,7 @@ function EventCard({ event, today, onChange, onDelete }: { event: EventRow; toda
     <div className="flex items-start gap-3">
       <div className="min-w-0 flex-1">
         <h3 id={`event-${event.id}-title`} className={`break-words ${sectionHeadingClassName}`}>{event.title}</h3>
-        <p className="mt-1 text-sm text-[var(--text-muted)]"><span className="data">{formatDay(day)}</span> · {getSportLabel(event.sport)}{countdown ? <> · <span className="text-[var(--text-secondary)]">{countdown}</span></> : null}</p>
+        <p className="mt-1 text-sm text-[var(--text-muted)]"><span className="data">{formatDay(day)}</span> – {getSportLabel(event.sport)}{countdown ? <> – <span className="text-[var(--text-secondary)]">{countdown}</span></> : null}</p>
         {event.targetFinishSec || event.resultFinishSec !== null ? (
           <dl className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
             {event.targetFinishSec ? <MetricPair inline label="Goal" value={formatDuration(event.targetFinishSec)} /> : null}
@@ -294,7 +294,7 @@ function EventCard({ event, today, onChange, onDelete }: { event: EventRow; toda
     <FormDialog open={panel === 'edit'} onOpenChange={(open) => { if (!open) close(); }} pending={pending} title="Edit event">
       <EventForm initial={event} today={today} onPendingChange={setPending} onCancel={close} onSaved={(updated) => { onChange(updated); close(); setNotice('Event saved.'); }} />
     </FormDialog>
-    <FormDialog open={panel === 'result'} onOpenChange={(open) => { if (!open) close(); }} pending={pending} title={event.resultFinishSec === null ? 'Record result' : 'Edit result'} description={`${event.title}\u00A0· ${formatDay(day, 'd\u00A0MMM\u00A0yyyy')}${event.targetFinishSec ? ` · Goal ${formatDuration(event.targetFinishSec)}` : ''}`}>
+    <FormDialog open={panel === 'result'} onOpenChange={(open) => { if (!open) close(); }} pending={pending} title={event.resultFinishSec === null ? 'Record result' : 'Edit result'} description={`${event.title}\u00A0– ${formatDay(day, 'd\u00A0MMM\u00A0yyyy')}${event.targetFinishSec ? ` – Goal ${formatDuration(event.targetFinishSec)}` : ''}`}>
       <ResultForm event={event} onPendingChange={setPending} onCancel={close} onSaved={(updated) => { onChange(updated); close(); setNotice('Result saved.'); }} />
     </FormDialog>
     <FormDialog open={panel === 'activities'} onOpenChange={(open) => { if (!open) close(); }} pending={pending} title="Linked activities" description={`Link activities to ${event.title}. You add the event result separately.`}>

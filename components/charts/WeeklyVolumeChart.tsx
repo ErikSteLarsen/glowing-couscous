@@ -42,9 +42,9 @@ export function WeeklyVolumeChart({ weeks }: { weeks: VolumeWeek[] }) {
   }
 
   const detail = week.isFuture
-    ? `${formatDuration(week.plannedSec)} planned · ${week.plannedTss}\u00A0TSS`
-    : `${formatDuration(week.completedSec)} of ${formatDuration(week.plannedSec)}\u00A0· ${week.unknownLoadSessions ? `no TSS for ${week.unknownLoadSessions} activities` : `${week.completedTss}\u00A0TSS`}${
-        week.completionPct !== null ? `\u00A0· ${week.completionPct}%` : ''
+    ? `${formatDuration(week.plannedSec)} planned – ${week.plannedTss}\u00A0TSS`
+    : `${formatDuration(week.completedSec)} of ${formatDuration(week.plannedSec)}\u00A0– ${week.unknownLoadSessions ? `no TSS for ${week.unknownLoadSessions} activities` : `${week.completedTss}\u00A0TSS`}${
+        week.completionPct !== null ? `\u00A0– ${week.completionPct}%` : ''
       }`;
 
   return (
@@ -52,7 +52,7 @@ export function WeeklyVolumeChart({ weeks }: { weeks: VolumeWeek[] }) {
       <figcaption className="flex flex-wrap items-baseline justify-between gap-2 text-[13px]">
         <span className="data text-[var(--text-secondary)]">
           Week of {formatDayShort(week.weekStart)}
-          {week.isCurrent ? ' · this week' : ''}
+          {week.isCurrent ? ' – this week' : ''}
         </span>
         <span className="data text-[var(--text)]">{detail}</span>
       </figcaption>

@@ -128,7 +128,7 @@ export function SessionBlockDetails({ model, className }: { model: WorkoutProfil
               </div>
               <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div><dt className="text-[12px] text-[var(--text-secondary)]">Duration</dt><dd className="metric-text mt-1 text-[13px] font-semibold text-[var(--text)]">{formatDurationExact(block.durationSec * (block.reps ?? 1))}{block.reps && block.reps > 1 ? ` (${block.reps} × ${formatDurationExact(block.durationSec)})` : ''}</dd></div>
-                <div><dt className="text-[12px] text-[var(--text-secondary)]">Target</dt><dd className="mt-1 break-words text-[13px] font-semibold text-[var(--text)]">{block.targetLabel || 'No target'}{block.targetBasis && block.targetBasis !== block.targetLabel ? <span className="mt-1 block text-[12px] font-normal text-[var(--text-secondary)]">{block.targetBasis} · based on your Profile</span> : null}</dd></div>
+                <div><dt className="text-[12px] text-[var(--text-secondary)]">Target</dt><dd className="mt-1 break-words text-[13px] font-semibold text-[var(--text)]">{block.targetLabel || 'No target'}{block.targetBasis && block.targetBasis !== block.targetLabel ? <span className="mt-1 block text-[12px] font-normal text-[var(--text-secondary)]">{block.targetBasis}, based on your Profile</span> : null}</dd></div>
               </dl>
               {block.note ? <p className="whitespace-pre-wrap break-words text-[13px] leading-relaxed text-[var(--text)]">{block.note}</p> : null}
               <p className="text-[12px] text-[var(--text-secondary)]">View only</p>

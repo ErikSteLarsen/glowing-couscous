@@ -97,8 +97,8 @@ export default async function AthleteActivityPage({ searchParams }: {
                       </WorkoutCardHeader>
                       <WorkoutCardMeta>
                         {imported && activity.sourceTimezoneOffsetMinutes !== null
-                          ? <>{formatActivityDateTime(activity.completedAt, activity.sourceTimezoneOffsetMinutes)}&nbsp;· {getSportLabel(activity.sport)}&nbsp;· {activity.metricsSource === 'fit-import' ? 'FIT' : activity.metricsSource === 'gpx-import' ? 'GPX' : 'TCX'}</>
-                          : <>{format(activity.completedAt, 'EEE\u00A0d\u00A0MMM\u00A0yyyy')}&nbsp;· {getSportLabel(activity.sport)}{activity.metricsSource === 'manual-unplanned' ? ' · Logged by hand' : ''}</>}
+                          ? <>{formatActivityDateTime(activity.completedAt, activity.sourceTimezoneOffsetMinutes)}&nbsp;– {getSportLabel(activity.sport)}&nbsp;– {activity.metricsSource === 'fit-import' ? 'FIT' : activity.metricsSource === 'gpx-import' ? 'GPX' : 'TCX'}</>
+                          : <>{format(activity.completedAt, 'EEE\u00A0d\u00A0MMM\u00A0yyyy')}&nbsp;– {getSportLabel(activity.sport)}{activity.metricsSource === 'manual-unplanned' ? ' – Logged by hand' : ''}</>}
                       </WorkoutCardMeta>
                       <WorkoutCardProfile position="inline">
                         {activity.segments.length

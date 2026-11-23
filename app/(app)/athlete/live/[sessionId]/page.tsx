@@ -86,7 +86,6 @@ export default async function AthleteLivePage({
 
       <div className="flex flex-wrap items-center gap-3 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">
         <span>Week of {format(startOfWeek(detail.session.date, { weekStartsOn: 1 }), 'd\u00A0MMM')}</span>
-        <span aria-hidden="true">·</span>
         <span>{formatSessionWhen(detail.session.date, detail.session.timeLabel)}</span>
         <StatusBadge status={detail.session.status} />
       </div>

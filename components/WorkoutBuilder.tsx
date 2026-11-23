@@ -169,7 +169,7 @@ export function WorkoutBuilder({
       target: block.target,
       skipped: block.skipped,
       note: block.note || null,
-      targetLabel: [targetSummary(block, sport), resolvedTarget(block, sport, profile)].filter(Boolean).join(' · ') || null,
+      targetLabel: [targetSummary(block, sport), resolvedTarget(block, sport, profile)].filter(Boolean).join(' – ') || null,
     })),
     { sport, profile, ftpWatts: profile?.cycling.ftpWatts },
   );
@@ -366,7 +366,7 @@ export function WorkoutBuilder({
 
   const summary = (
     <div className="flex items-center gap-1">
-      <span className="data whitespace-nowrap text-[13px] text-[var(--text)]">{formatDurationExact(metrics.durationSec)} · {metrics.tss}&nbsp;TSS</span>
+      <span className="data whitespace-nowrap text-[13px] text-[var(--text)]">{formatDurationExact(metrics.durationSec)} – {metrics.tss}&nbsp;TSS</span>
       <button type="button" className={`${ghostButtonClassName('compact')} max-md:min-h-11`} aria-expanded={zonesOpen} aria-controls={`${uid}-zones`} onClick={() => setZonesOpen((open) => !open)}>
         Time by zone<ChevronDown aria-hidden="true" size={14} className={zonesOpen ? 'rotate-180' : ''} />
       </button>
@@ -422,7 +422,7 @@ export function WorkoutBuilder({
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 max-lg:contents">
             <h2 className="min-w-0 break-words text-base font-semibold text-[var(--text)]">{draft.title}</h2>
             <span className="text-sm text-[var(--text-secondary)]">
-              {[getSportLabel(draft.sport), showSchedule ? [draft.scheduledDate, draft.timeLabel].filter(Boolean).join(' ') : null, draft.summary.trim() ? 'Notes added' : null].filter(Boolean).join(' · ')}
+              {[getSportLabel(draft.sport), showSchedule ? [draft.scheduledDate, draft.timeLabel].filter(Boolean).join(' ') : null, draft.summary.trim() ? 'Notes added' : null].filter(Boolean).join(' – ')}
             </span>
             <button type="button" className={`${ghostButtonClassName('compact')} max-md:min-h-11`} onClick={() => setBasicsOpen(true)}>Edit basics</button>
           </div>
@@ -695,7 +695,7 @@ function StepRowLine({ block, sport, profile, selected, handle, menu, editorId, 
           <span aria-hidden="true" className={`h-4 w-1.5 shrink-0 rounded-sm ${block.kind === 'pause' ? 'bg-[var(--text-muted)]' : `ink-zone-${block.zone}`}`} />
           <span className={`min-w-0 flex-1 truncate font-medium ${block.skipped ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text)]'}`}>{name}</span>
           <span className="data shrink-0 text-[var(--text)]">{stepDuration(block)}</span>
-          <span className="data hidden min-w-0 truncate text-right text-[var(--text-secondary)] @[11rem]:block @lg:w-40 @lg:shrink-0">{target}{target && resolved ? <span className="max-sm:hidden"> · {resolved}</span> : null}</span>
+          <span className="data hidden min-w-0 truncate text-right text-[var(--text-secondary)] @[11rem]:block @lg:w-40 @lg:shrink-0">{target}{target && resolved ? <span className="max-sm:hidden"> – {resolved}</span> : null}</span>
         </button>
         {menu}
       </div>
@@ -712,7 +712,7 @@ function SetRowGroup({ row, blocks, handle, menu, onRepeats, children }: { row: 
       <div className="flex min-w-0 items-center gap-1 pr-1">
         {handle}
         <span id={labelId} className="min-w-0 flex-1 truncate px-2 text-[13px] font-medium text-[var(--text)]">
-          Repeat <span className="data font-normal text-[var(--text-secondary)]">· {formatDurationExact(totalSec)}{row.dropsLastStep ? ' · no recovery after the last' : ''}</span>
+          Repeat <span className="data font-normal text-[var(--text-secondary)]">– {formatDurationExact(totalSec)}{row.dropsLastStep ? ' – no recovery after the last' : ''}</span>
         </span>
         <div role="group" aria-labelledby={labelId} className="flex items-center gap-1">
           <button type="button" className={iconStepButtonClassName} aria-label="Fewer repeats" disabled={row.repeats <= 1} onClick={() => onRepeats(row.repeats - 1)}><Minus aria-hidden="true" size={14} /></button>
@@ -779,7 +779,7 @@ function StepEditor({ id, block, sport, profile, set, moreOpen, onMoreOpenChange
           {block.target ? (
             <div className="mt-2 flex items-center gap-1.5" role="group" aria-label="Target">
               <button type="button" className={iconStepButtonClassName} aria-label="Lower target" disabled={!lower} onClick={() => lower && onPatch(targetPatch(lower, block.zone, sport, profile))}><Minus aria-hidden="true" size={14} /></button>
-              <span className="data min-w-0 flex-1 truncate text-center text-[13px] text-[var(--text)]" aria-live="polite">{formatWorkoutTarget(block.target, sport)}{resolved ? <span className="text-[var(--text-secondary)]"> · {resolved}</span> : null}</span>
+              <span className="data min-w-0 flex-1 truncate text-center text-[13px] text-[var(--text)]" aria-live="polite">{formatWorkoutTarget(block.target, sport)}{resolved ? <span className="text-[var(--text-secondary)]"> – {resolved}</span> : null}</span>
               <button type="button" className={iconStepButtonClassName} aria-label="Raise target" disabled={!higher} onClick={() => higher && onPatch(targetPatch(higher, block.zone, sport, profile))}><Plus aria-hidden="true" size={14} /></button>
             </div>
           ) : null}

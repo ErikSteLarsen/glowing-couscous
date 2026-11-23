@@ -17,16 +17,16 @@ const days = [
 ];
 
 const activities = [
-  { sport: 'Run', title: 'Tempo intervals', meta: 'Yesterday · 48 min', value: '8.4 km', color: 'orange' },
-  { sport: 'Ride', title: 'Endurance spin', meta: 'Mon · 1 hr 12 min', value: '32.1 km', color: 'blue' },
-  { sport: 'Swim', title: 'Technique + aerobic', meta: 'Sun · 38 min', value: '1,600 m', color: 'purple' },
+  { sport: 'Run', title: 'Tempo intervals', meta: 'Yesterday – 48 min', value: '8.4 km', color: 'orange' },
+  { sport: 'Ride', title: 'Endurance spin', meta: 'Mon – 1 hr 12 min', value: '32.1 km', color: 'blue' },
+  { sport: 'Swim', title: 'Technique + aerobic', meta: 'Sun – 38 min', value: '1,600 m', color: 'purple' },
 ];
 
 const blocks = [
-  { kind: 'Warm up', value: '10 min', detail: 'Easy · Zone 1–2', tone: 'soft' },
-  { kind: 'Work', value: '4 × 6 min', detail: 'Threshold · Zone 4', tone: 'signal' },
-  { kind: 'Recovery', value: '4 × 3 min', detail: 'Easy · Zone 2', tone: 'cool' },
-  { kind: 'Cool down', value: '8 min', detail: 'Easy · Zone 1', tone: 'soft' },
+  { kind: 'Warm up', value: '10 min', detail: 'Easy – Zone 1–2', tone: 'soft' },
+  { kind: 'Work', value: '4 × 6 min', detail: 'Threshold – Zone 4', tone: 'signal' },
+  { kind: 'Recovery', value: '4 × 3 min', detail: 'Easy – Zone 2', tone: 'cool' },
+  { kind: 'Cool down', value: '8 min', detail: 'Easy – Zone 1', tone: 'soft' },
 ];
 
 export function TempoDirectionDemo({ direction }: { direction: Direction }) {
@@ -40,7 +40,7 @@ export function TempoDirectionDemo({ direction }: { direction: Direction }) {
       <div className="tempo-demo__announcement">
         <span>Design direction preview</span>
         <span className="tempo-demo__announcement-separator">/</span>
-        <span>{isSplit ? '01 · Split board' : '02 · Field notes'}</span>
+        <span>{isSplit ? '01 – Split board' : '02 – Field notes'}</span>
         <Link href={isSplit ? '/design/tempo-field' : '/design/tempo-split'}>
           Compare {isSplit ? 'field notes' : 'split board'} <ArrowUpRight size={14} aria-hidden="true" />
         </Link>
@@ -80,7 +80,7 @@ export function TempoDirectionDemo({ direction }: { direction: Direction }) {
           <header className="tempo-demo__topbar">
             <div>
               <button type="button" className="tempo-demo__menu-button" onClick={() => setMenuOpen(true)} aria-label="Open navigation"><Menu size={18} /></button>
-              <p className="tempo-demo__date">Tuesday · September 10, 2026</p>
+              <p className="tempo-demo__date">Tuesday, September 10, 2026</p>
               <h1>Good morning, Mia<span className="tempo-demo__punctuation">.</span></h1>
               <p className="tempo-demo__lede">One clear session today. Let&apos;s make it count.</p>
             </div>
@@ -98,7 +98,7 @@ export function TempoDirectionDemo({ direction }: { direction: Direction }) {
               </div>
               <div className="tempo-demo__next-card">
                 <div className="tempo-demo__next-card-head">
-                  <div className="tempo-demo__sport-mark"><span className="tempo-demo__sport-glyph">↗</span><span>Bike · Threshold</span></div>
+                  <div className="tempo-demo__sport-mark"><span className="tempo-demo__sport-glyph">↗</span><span>Bike – Threshold</span></div>
                   <span className="tempo-demo__duration"><Clock3 size={15} /> 58 min</span>
                 </div>
                 <h3>Four corners</h3>
@@ -139,13 +139,13 @@ export function TempoDirectionDemo({ direction }: { direction: Direction }) {
               <section className="tempo-demo__activity-card" id="activity">
                 <div className="tempo-demo__section-heading"><div><p className="tempo-demo__section-kicker">Recent activity</p><h2>Good work, lately</h2></div><a href="#activity" className="tempo-demo__text-link">See all</a></div>
                 <div className="tempo-demo__activity-list">
-                  {activities.map((activity) => <div className="tempo-demo__activity" key={activity.title}><span className={`tempo-demo__activity-dot tempo-demo__activity-dot--${activity.color}`} /><span className="tempo-demo__activity-copy"><strong>{activity.title}</strong><small>{activity.sport} · {activity.meta}</small></span><strong className="tempo-demo__activity-value">{activity.value}</strong></div>)}
+                  {activities.map((activity) => <div className="tempo-demo__activity" key={activity.title}><span className={`tempo-demo__activity-dot tempo-demo__activity-dot--${activity.color}`} /><span className="tempo-demo__activity-copy"><strong>{activity.title}</strong><small>{activity.sport} – {activity.meta}</small></span><strong className="tempo-demo__activity-value">{activity.value}</strong></div>)}
                 </div>
               </section>
             </aside>
           </div>
 
-          <footer className="tempo-demo__footer"><span>Tempo design direction preview</span><span>Sample athlete data · not connected to your account</span></footer>
+          <footer className="tempo-demo__footer"><span>Tempo design direction preview</span><span>Sample athlete data – not connected to your account</span></footer>
         </section>
       </div>
     </main>

@@ -159,7 +159,7 @@ export default async function CoachAthleteDetailPage({
                     <div>
                       <h3 className="text-sm font-semibold text-[var(--text)]">{session.title}</h3>
                       <p className="mt-1 text-xs text-[var(--text-secondary)]">
-                        {getSportLabel(session.sport)}&nbsp;· {format(session.date, 'EEE\u00A0d\u00A0MMM')}
+                        {getSportLabel(session.sport)}&nbsp;– {format(session.date, 'EEE\u00A0d\u00A0MMM')}
                       </p>
                     </div>
                      <div className="flex flex-wrap items-center justify-end gap-2">

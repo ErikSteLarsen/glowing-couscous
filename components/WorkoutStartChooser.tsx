@@ -151,7 +151,7 @@ function StartControl({ workout, source, triggerClassName }: Props) {
               <div className="min-w-0">
                 <DialogTitle className={sectionHeadingClassName}>{label}</DialogTitle>
                 <DialogDescription className="mt-1 break-words text-sm text-[var(--text-secondary)]">
-                  {workout.title} <span className="data whitespace-nowrap">· {formatDuration(workout.durationSec)}</span>
+                  {workout.title} <span className="data whitespace-nowrap">– {formatDuration(workout.durationSec)}</span>
                   {source.kind !== 'session' ? <span className="mt-1 block">Adds this workout to today.</span> : null}
                 </DialogDescription>
               </div>

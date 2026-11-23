@@ -519,6 +519,14 @@ Never show HTTP codes, field names, IDs, "invalid", "payload", "provider",
 "fingerprint", "transaction" or "request key". When a request is malformed or a
 key clashes, say "Something went wrong. Reload the page and try again."
 
+**Separators.** Never use the middle dot (·). Between items in a run of stats or
+metadata, use a spaced en dash: "48 min – 27.1 km – TSS 69". Prefer something
+better where it reads better: a gap between separate UI elements, a comma or
+words when the run is really a phrase ("Mon 2 Nov, 08:15"), a line break when
+the items are distinct facts. A range keeps an unspaced en dash ("80–95 rpm",
+"Z1–Z5"), and a minus sign is "−", so a spaced dash always means a separator.
+Put a non-breaking space before the separator dash when it must not start a line.
+
 ## Accessibility
 
 - Focus: `:focus-visible` is a 2px trace outline with 2px offset; buttons use a
@@ -649,7 +657,7 @@ minimum by default and put advanced fields behind **More options**; a typical
 workout (up to about eight rows) fits a 1440×900 screen with the save bar.
 
 - **Title row.** Name, sport and an Edit basics link, then **Add block**, undo,
-  redo, total time · TSS and a **Time by zone** toggle, then the host's status
+  redo, total time and TSS, a **Time by zone** toggle, then the host's status
   and ⋯ (passed as `headerActions`, so a host does not add a second header).
   New workouts open the basics panel (name, sport, notes, schedule) first; it
   closes with Done.
@@ -741,13 +749,13 @@ sticky on tall viewports unless it holds a recorded outcome. Opening the
 planned adjustment or outcome correction editor returns the page to one column.
 The header Mark as done link scrolls to the card and focuses the note.
 A saved activity with recorded data puts **Post to Strava** (secondary) in the
-header; once posted it reads **Posted to Strava · View on Strava**. The post sheet
+header; once posted it reads **Posted to Strava** with a **View on Strava** link. The post sheet
 shows the chart image, then editable Title and Description, with **Not now** and
 **Post to Strava**; Download image and the .tcx fallback stay in the sheet.
 
 ### Activity
 
-Completed work is a `WorkoutCard` grid: title, date · sport, duration, a slim
+Completed work is a `WorkoutCard` grid: title, date and sport, duration, a slim
 block bar, one-line notes, TSS and compliance, and Compare where a planned
 baseline exists. The card opens the session outcome. Search, sport filter,
 totals and pagination stay above and below the grid.
@@ -755,7 +763,7 @@ totals and pagination stay above and below the grid.
 ### Home overview
 
 Home is a compact overview that fits one desktop screen: Today (sport, title,
-duration · TSS · target, a compact block bar, Start workout and Details) beside
+duration, TSS and target, a compact block bar, Start workout and Details) beside
 the next three Coming up sessions, then This week, then a row of summary tiles.
 The long description lives on the session page. Training trends, Weekly volume
 and Last activity are tiles with one value line and a word-sized sparkline;

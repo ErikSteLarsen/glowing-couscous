@@ -8,6 +8,6 @@ export function analysisTimelineSegments(result: ActivityAnalysisResult) {
     const zone = result.intensityBasis === 'pace' ? segment.paceZone : result.intensityBasis === 'heart-rate' ? segment.hrZone : null;
     const stopped = segment.kind === 'recovery' && segment.coverage >= 0.95 && segment.distanceMeters === 0;
     return { key: segment.id, durationSec: segment.durationSec, zone, kind: stopped ? 'pause' as const : segment.kind,
-      label: `${label} · ${formatAnalysisDuration(segment.durationSec)} · ${formatAnalysisPace(segment.paceSecPerKm)}`, color: '' };
+      label: `${label}\u00A0– ${formatAnalysisDuration(segment.durationSec)}\u00A0– ${formatAnalysisPace(segment.paceSecPerKm)}`, color: '' };
   });
 }

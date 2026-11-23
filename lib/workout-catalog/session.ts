@@ -8,10 +8,11 @@ export function catalogStepTarget(step: Pick<CatalogStep, 'lowPct' | 'highPct'>)
   return { metric: 'power', mode: 'relative', reference: 'ftp', low: step.lowPct, high: step.highPct };
 }
 
-/** Rider-facing note for a block: the step cue, then the cadence cue. */
+/** Rider-facing note for a block: the step cue, then the cadence cue, as sentences. */
 export function catalogStepNote(step: Pick<CatalogFlatStep, 'cue' | 'cadence'>): string {
   const cadence = step.cadence ? (step.cadence[0] === step.cadence[1] ? `${step.cadence[0]} rpm` : `${step.cadence[0]}–${step.cadence[1]} rpm`) : null;
-  return [step.cue, cadence ? `Cadence ${cadence}` : null].filter(Boolean).join(' · ');
+  const cue = step.cue && cadence && !/[.!?]$/.test(step.cue) ? `${step.cue}.` : step.cue;
+  return [cue, cadence ? `Cadence ${cadence}` : null].filter(Boolean).join(' ');
 }
 
 /**

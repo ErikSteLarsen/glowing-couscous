@@ -1,7 +1,7 @@
 import { TempoDirectionDemo } from '@/components/design/TempoDirectionDemo';
 
 export const metadata = {
-  title: 'Tempo · Split board direction',
+  title: 'Tempo – Split board direction',
   description: 'A Tempo visual system direction preview.',
 };
 

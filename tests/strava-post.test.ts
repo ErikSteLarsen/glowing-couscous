@@ -88,7 +88,7 @@ test('block line names the main repeat and leaves out warm-up and cool-down', ()
     ]).flat(),
     { kind: 'cooldown', zone: 1, durationSec: 480, reps: null },
   ];
-  assert.equal(summarizeBlocksForPost(blocks), '4 × 4 min Z5 · 3:30 easy');
+  assert.equal(summarizeBlocksForPost(blocks), '4 × 4 min Z5 – 3:30 easy');
 });
 
 test('block line folds repeats whatever kind the blocks were stored as', () => {
@@ -101,7 +101,7 @@ test('block line folds repeats whatever kind the blocks were stored as', () => {
     { kind: 'steady', zone: 4, durationSec: 240, reps: null },
     { kind: 'steady', zone: 1, durationSec: 300, reps: null },
   ];
-  assert.equal(summarizeBlocksForPost(blocks), '3 × 4 min Z4 · 2 min easy');
+  assert.equal(summarizeBlocksForPost(blocks), '3 × 4 min Z4 – 2 min easy');
   assert.equal(summarizeBlocksForPost([{ kind: 'work', zone: 2, durationSec: 3600, reps: null }]), '60 min Z2');
   assert.equal(summarizeBlocksForPost([]), null);
 });
@@ -118,7 +118,7 @@ test('post draft is a clean card: grouped numbers, then the work, with no app fo
   assert.equal(draft.name, 'VO2 max 4 × 4');
   assert.equal(
     draft.description,
-    `⚡ 210 W avg · ${stats.normalizedPowerWatts} W NP\n❤️ ${stats.averageHeartRateBpm} bpm avg · ${stats.maxHeartRateBpm} max\n⏱ 20 min · TSS 41\n\n🔥 4 × 4 min Z5`,
+    `⚡ 210 W avg – ${stats.normalizedPowerWatts} W NP\n❤️ ${stats.averageHeartRateBpm} bpm avg – ${stats.maxHeartRateBpm} max\n⏱ 20 min – TSS 41\n\n🔥 4 × 4 min Z5`,
   );
   assert.doesNotMatch(draft.description, /Tempo/);
   const bare = buildStravaPostDraft({ title: 'Spin', stats: statsFromPoints([{ elapsedSec: 0 }], 5400, null), blocks: [] });
@@ -138,7 +138,7 @@ test('clean card shows the power shape and each hard effort as ridden', () => {
   ];
   const efforts = effortsFromRide({ points, durationSec: 360, blocks });
   assert.deepEqual(efforts, [{ durationSec: 60, averagePowerWatts: 300 }, { durationSec: 60, averagePowerWatts: 310 }]);
-  assert.equal(formatEffortLine(efforts ?? []), '🔥 2 × 1 min: 300 · 310 W');
+  assert.equal(formatEffortLine(efforts ?? []), '🔥 2 × 1 min: 300 – 310 W');
   // Laps that don't match the plan (a skipped block) are not trusted.
   assert.equal(effortsFromRide({ points, durationSec: 360, blocks, laps: [{ startSec: 0, endSec: 360 }] }), null);
   // A ride much longer than the plan without laps is not trusted either.

@@ -155,7 +155,7 @@ test('live targets preserve relative decimal prescriptions and optionally resolv
   assert.equal(createExecutionSteps(blocks, 'BIKING')[0].targetLabel, '90.5-100% FTP');
   const profile = createEmptyPerformanceProfile();
   profile.cycling.ftpWatts = 250;
-  assert.equal(createExecutionSteps(blocks, 'BIKING', profile)[0].targetLabel, '90.5-100% FTP · 226-250\u00A0W');
+  assert.equal(createExecutionSteps(blocks, 'BIKING', profile)[0].targetLabel, '90.5-100% FTP\u00A0– 226-250\u00A0W');
   assert.equal(blocks[0].target?.low, 90.5);
 });
 
@@ -165,9 +165,9 @@ test('live heart-rate previews use the session sport and never borrow another th
   profile.cycling.thresholdHrBpm = 170;
   profile.running.thresholdHrBpm = 180;
   profile.swimming.thresholdHrBpm = 160;
-  assert.equal(createExecutionSteps(blocks, 'RUNNING', profile)[0].targetLabel, '90-100% threshold HR · 162-180\u00A0bpm');
-  assert.equal(createExecutionSteps(blocks, 'BIKING', profile)[0].targetLabel, '90-100% threshold HR · 153-170\u00A0bpm');
-  assert.equal(createExecutionSteps(blocks, 'SWIMMING', profile)[0].targetLabel, '90-100% threshold HR · 144-160\u00A0bpm');
+  assert.equal(createExecutionSteps(blocks, 'RUNNING', profile)[0].targetLabel, '90-100% threshold HR\u00A0– 162-180\u00A0bpm');
+  assert.equal(createExecutionSteps(blocks, 'BIKING', profile)[0].targetLabel, '90-100% threshold HR\u00A0– 153-170\u00A0bpm');
+  assert.equal(createExecutionSteps(blocks, 'SWIMMING', profile)[0].targetLabel, '90-100% threshold HR\u00A0– 144-160\u00A0bpm');
   profile.running.thresholdHrBpm = null;
   assert.equal(createExecutionSteps(blocks, 'RUNNING', profile)[0].targetLabel, '90-100% threshold HR');
 });

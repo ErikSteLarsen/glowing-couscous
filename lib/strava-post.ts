@@ -55,7 +55,7 @@ function blockPhrase(block: StravaPostBlock) {
 }
 
 /**
- * One line for the main work, e.g. "4 × 4 min Z5 · 3:30 easy". Warm-up and cool-down are left out;
+ * One line for the main work, e.g. "4 × 4 min Z5 – 3:30 easy". Warm-up and cool-down are left out;
  * at most three parts are named so the line stays short.
  */
 export function summarizeBlocksForPost(blocks: StravaPostBlock[]): string | null {
@@ -81,7 +81,7 @@ export function summarizeBlocksForPost(blocks: StravaPostBlock[]): string | null
   for (const group of groupSessionStructure(structure)) {
     const [first, second] = group.pattern;
     if (group.repeats > 1 && group.recoveryCount > 0 && second) {
-      parts.push(`${group.repeats} × ${blockPhrase(first)} · ${blockPhrase(second)}`);
+      parts.push(`${group.repeats} × ${blockPhrase(first)} – ${blockPhrase(second)}`);
     } else if (group.repeats > 1) {
       parts.push(`${group.repeats} × ${group.pattern.length === 1 ? blockPhrase(first) : `(${group.pattern.map(blockPhrase).join(' + ')})`}`);
     } else {
@@ -178,10 +178,10 @@ export function effortsFromRide(input: { points: ActivitySeriesPoint[]; duration
   return efforts;
 }
 
-/** "🔥 4 × 4 min: 301 · 300 · 301 · 300 W" when the efforts share a length, otherwise "🔥 Efforts: 320 · 301 W". */
+/** "🔥 4 × 4 min: 301 – 300 – 301 – 300 W" when the efforts share a length, otherwise "🔥 Efforts: 320 – 301 W". */
 export function formatEffortLine(efforts: StravaPostEffort[]) {
   if (efforts.length === 0) return null;
-  const shown = efforts.slice(0, 10).map((effort) => effort.averagePowerWatts).join(' · ');
+  const shown = efforts.slice(0, 10).map((effort) => effort.averagePowerWatts).join(' – ');
   const more = efforts.length > 10 ? ' …' : '';
   const sameLength = efforts.every((effort) => effort.durationSec === efforts[0].durationSec);
   if (!sameLength) return `🔥 Efforts: ${shown}${more} W`;
@@ -198,16 +198,16 @@ export function formatCleanCard(input: { stats: StravaPostStats; distanceMeters:
   const power = [
     stats.averagePowerWatts !== null ? `${stats.averagePowerWatts} W avg` : null,
     stats.normalizedPowerWatts !== null ? `${stats.normalizedPowerWatts} W NP` : null,
-  ].filter(Boolean).join(' · ');
+  ].filter(Boolean).join(' – ');
   const heart = [
     stats.averageHeartRateBpm !== null ? `${stats.averageHeartRateBpm} bpm avg` : null,
     stats.maxHeartRateBpm !== null ? `${stats.maxHeartRateBpm} max` : null,
-  ].filter(Boolean).join(' · ');
+  ].filter(Boolean).join(' – ');
   const time = [
     formatRideTime(stats.durationSec),
     input.distanceMeters && input.distanceMeters > 0 ? `${(input.distanceMeters / 1000).toFixed(1)} km` : null,
     stats.tss !== null ? `TSS ${stats.tss}` : null,
-  ].filter(Boolean).join(' · ');
+  ].filter(Boolean).join(' – ');
   const numbers = [power ? `⚡ ${power}` : null, heart ? `❤️ ${heart}` : null, `⏱ ${time}`].filter(Boolean).join('\n');
   const work = (input.efforts && formatEffortLine(input.efforts)) ?? (input.blockLine ? `🔥 ${input.blockLine}` : null);
   return [numbers, input.shape, work].filter(Boolean).join('\n\n');
@@ -220,7 +220,7 @@ export function formatStatsLine(stats: StravaPostStats) {
     stats.normalizedPowerWatts !== null ? `NP ${stats.normalizedPowerWatts} W` : null,
     stats.averageHeartRateBpm !== null ? `${stats.averageHeartRateBpm} bpm` : null,
     stats.tss !== null ? `TSS ${stats.tss}` : null,
-  ].filter(Boolean).join(' · ');
+  ].filter(Boolean).join(' – ');
 }
 
 export function buildStravaPostDraft(input: {

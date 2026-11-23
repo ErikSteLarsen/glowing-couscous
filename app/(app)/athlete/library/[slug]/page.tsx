@@ -43,7 +43,7 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
   const profile = buildWorkoutProfile(catalogWorkoutToEditorBlocks(workout).map((block) => {
     const written = block.target ? formatWorkoutTarget(block.target, workout.sport) : null;
     const resolved = block.target ? formatResolvedWorkoutTarget(block.target, performanceProfile, workout.sport) : null;
-    return { ...block, id: block.clientId, targetLabel: [written, resolved].filter(Boolean).join(' · ') || null };
+    return { ...block, id: block.clientId, targetLabel: [written, resolved].filter(Boolean).join(' – ') || null };
   }), { sport: workout.sport, profile: performanceProfile, ftpWatts: ftp });
 
   const block = (step: CatalogStep): WorkoutDetailBlock => {
@@ -52,7 +52,7 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
     const [start, end] = step.kind === 'cooldown' ? [step.highPct, step.lowPct] : [step.lowPct, step.highPct];
     return {
       label: KIND_LABEL[step.kind],
-      note: [step.cue, step.cadence ? `${step.cadence[0]}–${step.cadence[1]} rpm` : null].filter(Boolean).join(' · ') || null,
+      note: [step.cue, step.cadence ? `${step.cadence[0]}–${step.cadence[1]} rpm` : null].filter(Boolean).join(' – ') || null,
       durationSec: step.durationSec,
       target: ramp ? `${pct(start)} → ${pct(end)}` : ranged ? `${pct(step.lowPct)}–${pct(step.highPct)}` : pct(step.lowPct),
       unit: pctUnit,
@@ -74,7 +74,7 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
       ftpWatts={ftp}
       about={{ heading: 'How to ride it', paragraphs: workout.description.split(/\n\s*\n/).map((paragraph) => paragraph.trim()).filter(Boolean) }}
       items={workout.items.map((item) => isCatalogRepeat(item) ? { repeat: item.repeat, blocks: item.steps.map(block) } : { repeat: null, blocks: [block(item)] })}
-      itemsSummary={`${metrics.intervalCount} efforts · ${formatDuration(metrics.workSec)} of work`}
+      itemsSummary={`${metrics.intervalCount} efforts – ${formatDuration(metrics.workSec)} of work`}
       stats={[
         { label: 'Duration', value: formatDuration(metrics.durationSec) },
         { label: 'Training load', value: String(metrics.tss), unit: 'TSS' },

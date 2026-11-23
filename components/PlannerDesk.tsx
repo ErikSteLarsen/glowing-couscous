@@ -475,10 +475,10 @@ function AssignmentSummary({ role, source, selectedDates, selectedTemplateDays, 
     <section className="border-y border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-[var(--shadow-inset)] sm:px-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-[var(--text)]">{source ? source.title : 'Nothing selected yet'}{source ? <span className="font-normal text-[var(--text-secondary)]"> · {getSportLabel(source.sport)}&nbsp;· {sourceMeta(source, selectedDates[0])}</span> : null}</p>
+          <p className="truncate text-sm font-semibold text-[var(--text)]">{source ? source.title : 'Nothing selected yet'}{source ? <span className="font-normal text-[var(--text-secondary)]"> – {getSportLabel(source.sport)}&nbsp;– {sourceMeta(source, selectedDates[0])}</span> : null}</p>
           <p className="mt-1 text-xs text-[var(--text-secondary)]">
             {source?.kind === 'template'
-              ? `${selectedCount} of ${selectedTemplateDays} days selected${rangeStart ? ` · starts ${formatShortDate(rangeStart)}` : ''}${rangeEnd ? ` · ends ${formatShortDate(rangeEnd)}` : ''}`
+              ? `${selectedCount} of ${selectedTemplateDays} days selected${rangeStart ? ` – starts ${formatShortDate(rangeStart)}` : ''}${rangeEnd ? ` – ends ${formatShortDate(rangeEnd)}` : ''}`
               : `${selectedCount} ${selectedCount === 1 ? 'day' : 'days'} selected`}
           </p>
         </div>
@@ -490,7 +490,7 @@ function AssignmentSummary({ role, source, selectedDates, selectedTemplateDays, 
             <details className="group min-w-0 sm:w-40">
               <summary className="min-h-10 cursor-pointer list-none rounded-lg py-2 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">
                 <span aria-hidden="true" className="mr-1 inline-block transition-transform group-open:rotate-90">›</span>
-                Advanced{startTime && !timeError ? `\u00A0· ${startTime}` : ''}
+                Advanced{startTime && !timeError ? `\u00A0– ${startTime}` : ''}
               </summary>
               <label className="block">
                 <span className={formLabelClassName}>Start time</span>
@@ -576,7 +576,7 @@ function SourceResult({ source, selected, selectedDate, onSelect }: { source: Pl
       <span className={`mt-1 h-8 w-1 shrink-0 rounded-full ${source.kind === 'template' ? 'bg-[var(--color-zone-4)]' : source.kind === 'training-plan' ? 'bg-[var(--color-zone-5)]' : 'bg-[var(--color-zone-2)]'}`} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center justify-between gap-2"><span className="truncate text-[13px] font-semibold text-[var(--text)]">{source.title}</span>{selected ? <Check aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[var(--brand)]" /> : null}</span>
-        <span className="mt-1 block text-xs text-[var(--text-secondary)]">{getSportLabel(source.sport)}&nbsp;· {sourceMeta(source, selectedDate)}</span>
+        <span className="mt-1 block text-xs text-[var(--text-secondary)]">{getSportLabel(source.sport)}&nbsp;– {sourceMeta(source, selectedDate)}</span>
         <span className="mt-2 block text-xs leading-5 text-[var(--text-muted)]">{source.summary ?? sourceDescription(source, selectedDate)}</span>
       </span>
     </button>
@@ -601,7 +601,7 @@ function MonthCalendar({ onSelectTemplateRange, placement, label, initialDate, t
       </div>
       {selectedSource?.kind === 'template' && selectedSource.cadence !== 'day' ? <div className="mt-3 flex flex-wrap items-center gap-3">
         <button type="button" onClick={onSelectTemplateRange} className={primaryButtonClassName}>Select {selectedSource.cadence === 'week' ? `week of ${formatShortDate(shortcutDates[0])}` : format(parseISO(shortcutDates[0]), 'MMMM yyyy')}</button>
-        <p className="text-sm text-[var(--text-secondary)]">{formatShortDate(shortcutDates[0])} – {formatShortDate(shortcutDates[shortcutDates.length - 1])}&nbsp;· {shortcutDates.length} days</p>
+        <p className="text-sm text-[var(--text-secondary)]">{formatShortDate(shortcutDates[0])}–{formatShortDate(shortcutDates[shortcutDates.length - 1])}, {shortcutDates.length}&nbsp;days</p>
       </div> : null}
       {rangeError ? <p className="mt-2 text-sm text-[var(--status-warning)]">{rangeError}</p> : null}
       <div className="mt-3 pb-1">
@@ -667,7 +667,7 @@ function SessionDetail({ role, session, isPending, removingId, onRemoveSession }
   return (
     <div className="border border-[var(--field-selected-border)] bg-[var(--surface)] p-3">
       <div className="flex items-start justify-between gap-2">
-        <Link href={sessionHref} className="min-w-0 flex-1 hover:bg-[var(--raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><span className="flex items-center gap-2"><span className="truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</span><ArrowRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[var(--brand)]" /></span><span className="mt-1 block text-[11px] text-[var(--text-secondary)]">{getSportLabel(session.sport)}&nbsp;· {formatDuration(session.durationSec)}&nbsp;· {session.tss === null ? 'No TSS' : `${session.tss}\u00A0TSS`}</span></Link>
+        <Link href={sessionHref} className="min-w-0 flex-1 hover:bg-[var(--raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"><span className="flex items-center gap-2"><span className="truncate text-[13px] font-semibold text-[var(--text)]">{session.title}</span><ArrowRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[var(--brand)]" /></span><span className="mt-1 block text-[11px] text-[var(--text-secondary)]">{getSportLabel(session.sport)}&nbsp;– {formatDuration(session.durationSec)}&nbsp;– {session.tss === null ? 'No TSS' : `${session.tss}\u00A0TSS`}</span></Link>
         <button type="button" aria-label={`Remove ${session.title}`} disabled={isPending || session.status === 'completed'} title={session.status === 'completed' ? 'Workouts marked as done can’t be removed.' : undefined} onClick={() => onRemoveSession(session)} className={`${dangerButtonClassName} min-h-8 px-2.5 py-1.5 text-xs`}>{removingId === session.id ? 'Removing...' : <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />}</button>
       </div>
       <div className="mt-3"><SessionBlockBar segments={session.segments} compact /></div>
@@ -696,7 +696,7 @@ function sourceMeta(source: PlannerDeskSource, date: string) {
 
 function sourceDescription(source: PlannerDeskSource, date: string) {
   if (source.kind === 'training-plan') return 'Starts on a Monday. The athlete gets their own copy of each workout.';
-  if (source.kind === 'template') return `${templateCadenceMeta[source.cadence ?? 'day'].label}\u00A0· ${getTemplateDurationDays(source.cadence ?? 'day', date)} target day${getTemplateDurationDays(source.cadence ?? 'day', date) === 1 ? '' : 's'}.`;
+  if (source.kind === 'template') return `${templateCadenceMeta[source.cadence ?? 'day'].label}\u00A0– ${getTemplateDurationDays(source.cadence ?? 'day', date)} target day${getTemplateDurationDays(source.cadence ?? 'day', date) === 1 ? '' : 's'}.`;
   return 'Each date you choose gets its own copy of this workout.';
 }
 

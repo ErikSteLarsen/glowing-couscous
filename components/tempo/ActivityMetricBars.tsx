@@ -33,7 +33,7 @@ export function ActivityMetricBars({
         <h3 className="text-[13px] font-semibold text-[var(--text)]">{chart.label}</h3>
         <p className="text-[12px] tabular-nums text-[var(--text-secondary)]">
           Avg {formatActivityMetricValue(metric, chart.average)}
-          <span className="px-2 text-[var(--text-muted)]" aria-hidden="true">·</span>
+          {' – '}
           {sampling}
         </p>
       </div>

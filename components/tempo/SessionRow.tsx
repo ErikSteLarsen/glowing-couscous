@@ -82,7 +82,7 @@ export function SessionRow({
           </p>
           {!month ? (
             <p className="data mt-1 text-xs text-[var(--text-secondary)]">
-              {[session.dateLabel, session.timeLabel, getSportLabel(session.sport)].filter(Boolean).join('\u00A0· ')}
+              {[session.dateLabel, session.timeLabel, getSportLabel(session.sport)].filter(Boolean).join('\u00A0– ')}
             </p>
           ) : null}
         </div>

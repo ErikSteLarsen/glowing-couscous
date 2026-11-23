@@ -99,10 +99,10 @@ export function PerformanceChart({ series, today }: Props) {
     ? `${point.plannedTss} planned`
     : !point.actualLoadKnown
       ? point.actualTss > 0
-        ? `${point.actualTss} · some TSS missing`
-        : `No TSS${point.plannedTss > 0 ? `\u00A0· ${point.plannedTss} planned` : ''}`
+        ? `${point.actualTss} – some TSS missing`
+        : `No TSS${point.plannedTss > 0 ? `\u00A0– ${point.plannedTss} planned` : ''}`
     : point.plannedTss > 0
-      ? `${point.actualTss} done · ${point.plannedTss} planned`
+      ? `${point.actualTss} done – ${point.plannedTss} planned`
       : `${point.actualTss}`;
 
   return (
@@ -110,7 +110,7 @@ export function PerformanceChart({ series, today }: Props) {
       <figcaption className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 text-[13px]">
         <span className="data text-[var(--text-secondary)]">
           {formatDayLong(point.day)}
-          {point.day === today ? ' · today' : point.projected ? ' · if you follow the plan' : ''}
+          {point.day === today ? ' – today' : point.projected ? ' – if you follow the plan' : ''}
         </span>
         <span className="flex flex-wrap gap-x-5 gap-y-1">
           <LegendValue color="var(--metric-fitness)" label="Fitness" value={String(Math.round(point.fitness))} />

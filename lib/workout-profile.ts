@@ -17,7 +17,7 @@ export type WorkoutProfileBlock = {
   reps: number | null;
   target: WorkoutTarget | null;
   skipped?: boolean;
-  /** Display-only: the target as the athlete should read it, e.g. "95% FTP · 238 W". */
+  /** Display-only: the target as the athlete should read it, e.g. "95% FTP – 238 W". */
   targetLabel?: string | null;
   targetBasis?: string | null;
   note?: string | null;
@@ -57,7 +57,7 @@ export type WorkoutProfilePhase = {
   startSec: number;
   durationSec: number;
   title: string;
-  /** "10m · Z1–Z2". */
+  /** "10m – Z1–Z2". */
   detail: string;
   firstStep: number;
 };
@@ -244,7 +244,7 @@ export function buildWorkoutProfile<B extends WorkoutProfileBlock>(
     startSec: phase.startSec,
     durationSec: phase.durationSec,
     title: phase.set && setPhases.length > 1 ? `Repeat ${setPhases.indexOf(phase) + 1}` : phase.title,
-    detail: [formatDurationExact(phase.durationSec), zoneRange(phase.zones)].filter(Boolean).join(' · '),
+    detail: [formatDurationExact(phase.durationSec), zoneRange(phase.zones)].filter(Boolean).join(' – '),
     firstStep: phase.firstStep,
   }));
 

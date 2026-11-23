@@ -88,7 +88,7 @@ function deviceDot(state: RideDeviceState) {
 
 function deviceStatusText(state: RideDeviceState) {
   return state.status === 'connected'
-    ? `${state.name ?? 'Connected'}${state.protocol === 'cycling-power' ? ' · power only' : ''}`
+    ? `${state.name ?? 'Connected'}${state.protocol === 'cycling-power' ? ', power only' : ''}`
     : state.status === 'connecting' ? 'Connecting…' : state.status === 'reconnecting' ? state.message ?? 'Reconnecting…' : state.status === 'error' ? state.message ?? 'Connection failed' : 'Not connected';
 }
 
@@ -791,7 +791,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       </div>
     );
     const nextText = currentStep
-      ? nextStep ? `Next ${stepLabel(stepIndex + 1)}${nextTarget !== null ? ` · ${nextTarget} W` : nextPrescription ? ` · ${nextPrescription}` : ''}` : 'Free ride next'
+      ? nextStep ? `next: ${stepLabel(stepIndex + 1)}${nextTarget !== null ? ` – ${nextTarget} W` : nextPrescription ? ` – ${nextPrescription}` : ''}` : 'free ride next'
       : 'After workout plan';
 
     return (
@@ -801,7 +801,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-[15px] font-medium text-[var(--text)]">{sessionTitle}</h1>
             <p className="truncate text-[12px] text-[var(--text-muted)]">
-              {status === 'paused' ? 'Paused' : 'Riding'} · {connectedCount === 0 ? 'no devices' : `${connectedCount} ${connectedCount === 1 ? 'device' : 'devices'}`}
+              {status === 'paused' ? 'Paused' : 'Riding'}, {connectedCount === 0 ? 'no devices' : `${connectedCount} ${connectedCount === 1 ? 'device' : 'devices'}`}
             </p>
           </div>
           {ergButton}
@@ -823,7 +823,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
               <div className="min-w-0">
                 <h2 className="truncate text-base font-medium text-[var(--text)]">{stepLabel(stepIndex)}</h2>
                 <p className="truncate text-[12px] text-[var(--text-secondary)]">
-                  {currentStep ? `Block ${stepIndex + 1} of ${plan.steps.length} · ` : ''}<span className="data">{nextText}</span>
+                  {currentStep ? `Block ${stepIndex + 1} of ${plan.steps.length}, ` : ''}<span className="data">{nextText}</span>
                 </p>
               </div>
               <p className="flex shrink-0 items-baseline gap-1.5 text-[12px] text-[var(--text-secondary)]">
@@ -837,7 +837,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
           <section aria-label="Ride metrics" className="shrink-0">
             <div className="pt-4">
               <div className="flex items-baseline justify-between gap-3 text-[12px] text-[var(--text-secondary)]">
-                <span>Power · 3 s</span>
+                <span>3 s power</span>
                 {targetWatts !== null || prescribedTarget ? (
                   <span>
                     {ergOn ? 'ERG target' : 'Target'}{' '}
@@ -886,7 +886,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
 
           <section aria-label="Workout profile" className="flex min-h-0 flex-1 flex-col pt-3">
             <p className="shrink-0 text-right text-[12px] text-[var(--text-secondary)]">
-              <span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <> · <span className="data">{formatClock(remainingSec)}</span> left</> : null}
+              <span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <> – <span className="data">{formatClock(remainingSec)}</span> left</> : null}
             </p>
             <div className="min-h-12 flex-1 pb-6 pt-2">
               <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} className="h-full" />
@@ -950,7 +950,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
 
           <div className="mt-5 flex flex-col gap-2 border-t border-[var(--border)] pt-4">
             <button type="button" className={`${secondaryButtonClassName} !h-12 w-full`} aria-haspopup="dialog" onClick={() => { closeSheet(); connectionsRef.current?.showModal(); }}>
-              Connections · {connectedCount === 0 ? 'none connected' : `${connectedCount} connected`}
+              Connections – {connectedCount === 0 ? 'none connected' : `${connectedCount} connected`}
             </button>
             {fullscreenSupported ? <button type="button" className={`${secondaryButtonClassName} !h-12 w-full`} onClick={() => { closeSheet(); toggleFullscreen(); }}>{fullscreen ? 'Exit full screen' : 'Full screen'}</button> : null}
             <button type="button" className={`${secondaryButtonClassName} !h-12 w-full gap-2`} onClick={() => { if (window.confirm('Finish this ride?')) { closeSheet(); finish(); } }}>
@@ -963,7 +963,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     );
   }
 
-  return frame(status === 'paused' ? 'Paused' : anyDevice ? 'Riding' : 'Riding · no devices', controls, (
+  return frame(status === 'paused' ? 'Paused' : anyDevice ? 'Riding' : 'Riding, no devices', controls, (
     <>
       {lostDevices.length ? (
         <p role="status" className="border-b border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] px-5 py-2 text-[13px] text-[var(--text)] sm:px-7">
@@ -1034,7 +1034,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
                         <span aria-hidden="true" className="ride-state-bar absolute top-0 h-1.5 rounded-full" style={{ left: `${50 + Math.min(0, deviation) * 50}%`, width: `${Math.abs(deviation) * 50}%`, background: toneColor }} />
                       </div>
                       <p className="text-sm font-medium" style={{ color: toneColor }}>
-                        {toneText}{delta !== null && tone !== 'on' ? <span className="data"> · {delta > 0 ? '+' : '−'}{Math.abs(delta)}&nbsp;W</span> : null}
+                        {toneText}{delta !== null && tone !== 'on' ? <> by <span className="data">{Math.abs(delta)}&nbsp;W</span></> : null}
                       </p>
                     </div>
                   ) : threeSecond === null ? (
@@ -1088,10 +1088,10 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
             {currentStep ? (
               <p className="min-w-0 break-words">
                 <span className="text-[var(--text-muted)]">Next </span>
-                {nextStep ? <>{stepLabel(stepIndex + 1)}<span className="data">{nextTarget !== null ? ` · ${nextTarget} W` : nextPrescription ? ` · ${nextPrescription}` : ` · Z${nextStep.zone}`} · {formatClock(nextStep.durationSec)}</span></> : 'Free ride'}
+                {nextStep ? <>{stepLabel(stepIndex + 1)}<span className="data">{nextTarget !== null ? ` – ${nextTarget} W` : nextPrescription ? ` – ${nextPrescription}` : ` – Z${nextStep.zone}`} – {formatClock(nextStep.durationSec)}</span></> : 'Free ride'}
               </p>
             ) : null}
-            <p className="ml-auto"><span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <> · <span className="data">{formatClock(remainingSec)}</span> left in plan</> : null}</p>
+            <p className="ml-auto"><span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <> – <span className="data">{formatClock(remainingSec)}</span> left in plan</> : null}</p>
           </div>
           <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} className="h-36 md:h-48 xl:h-56" />
         </section>
