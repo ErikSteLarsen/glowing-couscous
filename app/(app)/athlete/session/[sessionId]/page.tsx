@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import { ActionLink, EmptyState, PageShell, Surface, TopBar, sectionHeadingClassName } from '@/components/ui';
+import { EmptyState, PageShell, Surface, TopBar, sectionHeadingClassName } from '@/components/ui';
 import { MetricText } from '@/components/tempo/MetricText';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser } from '@/lib/auth-session';
@@ -10,7 +10,7 @@ import { formatTcxDateTime } from '@/lib/tcx-time';
 import { parseBackOrigin, resolveBackTarget } from '@/lib/app-navigation';
 import { SessionDetailClient } from './SessionDetailClient';
 import { isRecordedOutcome } from '@/lib/athlete-completion-service';
-import { SessionAdjustProvider, SessionHeaderActions } from './SessionActions';
+import { LogCompletionLink, SessionAdjustProvider, SessionHeaderActions } from './SessionActions';
 import { ManualActivityCorrectionForm, type ManualActivityCorrectionDraft } from './ManualActivityCorrectionForm';
 import { accountService } from '@/lib/account-service';
 import { formatSessionWhen } from '@/lib/session-display';
@@ -18,7 +18,8 @@ import { getRequestTimeZone } from '@/lib/request-time-zone';
 import { toDayKey } from '@/lib/training-load';
 import { todayInZone } from '@/lib/user-time';
 import { ImportedActivityMeasurements } from '@/components/ImportedActivityMeasurements';
-import { SessionWorkoutOverview } from '@/components/SessionWorkoutOverview';
+import { buildWorkoutProfile } from '@/lib/workout-profile';
+import { SessionBlockDetails, SessionStructureProvider, SessionWorkoutProfileCard } from './SessionStructure';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { canStartWorkout } from '@/lib/workout-start';
 
@@ -121,12 +122,12 @@ export default async function AthleteSessionPage({
         workout={{ title, sport, status, durationSec, hasSteps }}
         source={{ kind: 'session', id, from: sessionOrigin }}
       />
-      <ActionLink href="#session-outcome" tone={startable ? 'secondary' : 'primary'}>Log completion</ActionLink>
+      <LogCompletionLink tone={startable ? 'secondary' : 'primary'} />
     </>
   ) : null;
 
   const recordedOutcome = isImportOrLogged ? (
-    <Surface id="session-outcome" className="space-y-3">
+    <Surface id="session-outcome" className="scroll-mt-20 space-y-3 md:scroll-mt-6">
       <h2 className={sectionHeadingClassName}>Recorded outcome</h2>
       <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--text-secondary)]">
         <span>Duration <MetricText>{formatDuration(detail.session.activityDurationSec ?? 0)}</MetricText></span>
@@ -183,7 +184,7 @@ export default async function AthleteSessionPage({
 
   const completion = importedWithoutWorkout ? (
     detail.session.notes.trim() ? (
-      <Surface id="session-outcome" className="space-y-3">
+      <Surface id="session-outcome" className="scroll-mt-20 space-y-3 md:scroll-mt-6">
         <h2 className={sectionHeadingClassName}>Activity notes</h2>
         <p className="border-t border-[var(--border)] pt-4 whitespace-pre-wrap break-words text-[13px] leading-[1.55] text-[var(--text)]">{detail.session.notes.trim()}</p>
       </Surface>
@@ -200,6 +201,9 @@ export default async function AthleteSessionPage({
     isRecorded={detail.session.status === 'completed' && isRecordedOutcome(detail.session.metricsSource ? { metricsSource: detail.session.metricsSource } : null)}
   />;
 
+  const ftpWatts = account?.performanceProfile.cycling.ftpWatts ?? null;
+  const profile = buildWorkoutProfile(detail.session.blocks, { sport, profile: account?.performanceProfile ?? null, ftpWatts });
+  const hasProfile = !importedWithoutWorkout && !(isImportOrLogged && detail.session.blocks.length === 0);
   const structure = isImportOrLogged && detail.session.blocks.length === 0 ? (
     <Surface className="space-y-3">
       <p className="text-sm text-[var(--text-muted)]">Summary-only activity has no recorded workout blocks.</p>
@@ -207,10 +211,30 @@ export default async function AthleteSessionPage({
   ) : importedWithoutWorkout ? (
     <Surface className="space-y-4">{overviewHeader}</Surface>
   ) : (
-    <SessionWorkoutOverview blocks={detail.session.blocks} header={overviewHeader} />
+    <SessionWorkoutProfileCard model={profile} header={overviewHeader} ftpWatts={ftpWatts} title={title} />
   );
 
-  const leadsWithOutcome = isCompleted || importedWithoutWorkout;
+  // Rendered in two places (beside the overview, or last on narrow screens); build fresh elements for each.
+  const sourceCards = () => (
+    <>
+      {detail.session.sourceWorkout ? (
+        <Surface className="space-y-2">
+          <h2 className={sectionHeadingClassName}>Reusable workout</h2>
+          <p className="break-words text-[13px] font-medium text-[var(--text)]">{detail.session.sourceWorkout.title}</p>
+          <p className="text-[12px] leading-[1.5] text-[var(--text-secondary)]">
+            This session is a copy. Editing the source from ⋯ will not change it.
+          </p>
+        </Surface>
+      ) : null}
+      <Surface>
+        <p className="text-xs font-medium text-[var(--text-muted)]">Coach</p>
+        <p className="mt-3 text-base font-semibold text-[var(--text)]">{detail.coachName ?? 'Self coached'}</p>
+      </Surface>
+    </>
+  );
+
+  // Recorded outcomes can hold a correction form; keep those in normal flow instead of pinning them.
+  const pinSide = !isImportOrLogged && !importedWithoutWorkout;
 
   return (
     <PageShell size="wide" className="[overflow-wrap:anywhere]">
@@ -243,49 +267,37 @@ export default async function AthleteSessionPage({
           {detail.session.targetLabel ? <span>{detail.session.targetLabel}</span> : null}
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="min-w-0 space-y-6">
-            {leadsWithOutcome ? (
-              <>
+        {/*
+          DOM order is the narrow-screen order: overview, logging or outcome, details,
+          description, coach. When the content area is wide enough the outcome column moves
+          beside the overview; while the adjustment editor is open it spans the full width.
+        */}
+        <SessionStructureProvider>
+          <div className="@container">
+            <div className="flex flex-col gap-6 @4xl:grid @4xl:grid-cols-[minmax(0,1fr)_320px] @4xl:grid-rows-[auto_1fr] @4xl:[grid-template-areas:'overview_side'_'rest_side'] @4xl:has-[[data-session-editing]]:grid-cols-[minmax(0,1fr)] @4xl:has-[[data-session-editing]]:grid-rows-none @4xl:has-[[data-session-editing]]:[grid-template-areas:'overview'_'side'_'rest']">
+              <div className="min-w-0 @4xl:[grid-area:overview]">{structure}</div>
+
+              <div className={`min-w-0 space-y-4 @4xl:[grid-area:side] @4xl:self-start ${pinSide ? '[@media(min-height:46rem)]:@4xl:sticky [@media(min-height:46rem)]:@4xl:top-6 @4xl:has-[[data-session-editing]]:static' : ''}`}>
                 {recordedOutcome}
                 {completion}
-                {recordedActivity}
-                {structure}
-              </>
-            ) : (
-              <>
-                {structure}
-                {recordedOutcome}
-                {recordedActivity}
-              </>
-            )}
+                <div className="hidden space-y-4 @4xl:block">{sourceCards()}</div>
+              </div>
 
-            {detail.session.summary ? (
-              <section aria-labelledby="session-description" className="space-y-2">
-                <h2 id="session-description" className={sectionHeadingClassName}>Description</h2>
-                <p className="max-w-[68ch] whitespace-pre-wrap break-words text-sm leading-relaxed text-[var(--text-secondary)]">{detail.session.summary}</p>
-              </section>
-            ) : null}
+              <div className="min-w-0 space-y-6 @4xl:[grid-area:rest]">
+                {hasProfile ? <SessionBlockDetails model={profile} /> : null}
+                {recordedActivity}
+                {detail.session.summary ? (
+                  <section aria-labelledby="session-description" className="space-y-2">
+                    <h2 id="session-description" className={sectionHeadingClassName}>Description</h2>
+                    <p className="max-w-[68ch] whitespace-pre-wrap break-words text-sm leading-relaxed text-[var(--text-secondary)]">{detail.session.summary}</p>
+                  </section>
+                ) : null}
+              </div>
 
-            {leadsWithOutcome ? null : completion}
+              <aside className="space-y-4 @4xl:hidden" aria-label="Session source">{sourceCards()}</aside>
+            </div>
           </div>
-
-          <aside className="space-y-4" aria-label="Session source">
-            {detail.session.sourceWorkout ? (
-              <Surface className="space-y-2">
-                <h2 className={sectionHeadingClassName}>Reusable workout</h2>
-                <p className="break-words text-[13px] font-medium text-[var(--text)]">{detail.session.sourceWorkout.title}</p>
-                <p className="text-[12px] leading-[1.5] text-[var(--text-secondary)]">
-                  This session is a copy. Editing the source from ⋯ will not change it.
-                </p>
-              </Surface>
-            ) : null}
-            <Surface>
-              <p className="text-xs font-medium text-[var(--text-muted)]">Coach</p>
-              <p className="mt-3 text-base font-semibold text-[var(--text)]">{detail.coachName ?? 'Self coached'}</p>
-            </Surface>
-          </aside>
-        </div>
+        </SessionStructureProvider>
       </SessionAdjustProvider>
     </PageShell>
   );

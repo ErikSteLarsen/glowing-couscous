@@ -268,8 +268,8 @@ test('athlete session detail keeps the overview read-only, exposes the shared ad
   assert.match(client, /showSchedule/);
   assert.match(client, /\/actual/);
   assert.match(client, /SessionComparisonDialog/);
-  assert.match(page, /SessionWorkoutOverview/);
-  const overview = await readFile(path.join(process.cwd(), 'components/SessionWorkoutOverview.tsx'), 'utf8');
+  assert.match(page, /SessionWorkoutProfileCard/);
+  const overview = await readFile(path.join(process.cwd(), 'app/(app)/athlete/session/[sessionId]/SessionStructure.tsx'), 'utf8');
   assert.match(overview, /Read-only scheduled copy/);
   assert.doesNotMatch(overview, /fetch\(|WorkoutBuilder/);
   assert.match(page, /<WorkoutStartChooser/);

@@ -7,7 +7,7 @@ import { SessionDeleteAction } from '@/components/SessionDeleteAction';
 import { SessionRescheduleAction } from '@/components/SessionRescheduleAction';
 import { ShareLinkResult, useShareLink } from '@/components/ShareLinkButton';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/tempo/Menu';
-import { iconButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { iconButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { SessionStatusMessage, useSessionStatusAction, type SessionStatusAction } from './SessionStatusControl';
 
 const AdjustRequestContext = createContext<{ request: number; requestAdjust: () => void }>({ request: 0, requestAdjust: () => undefined });
@@ -24,6 +24,36 @@ export function SessionAdjustProvider({ children }: { children: ReactNode }) {
 
 export function useAdjustRequest() {
   return useContext(AdjustRequestContext).request;
+}
+
+function scrollBehavior(): ScrollBehavior {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+}
+
+/**
+ * Header link to the completion form. The form sits beside the overview on wide screens
+ * and under it on narrow ones, so this scrolls to it and moves focus into the note.
+ * Without JavaScript the hash link still jumps to the section.
+ */
+export function LogCompletionLink({ tone }: { tone: 'primary' | 'secondary' }) {
+  return (
+    <a
+      href="#session-outcome"
+      className={tone === 'primary' ? primaryButtonClassName : secondaryButtonClassName}
+      onClick={(event) => {
+        const section = document.getElementById('session-outcome');
+        if (!section) return;
+        event.preventDefault();
+        section.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
+        const field = section.querySelector<HTMLElement>('#session-notes') ?? section;
+        if (field === section) section.setAttribute('tabindex', '-1');
+        field.focus({ preventScroll: true });
+        window.history.replaceState(null, '', '#session-outcome');
+      }}
+    >
+      Log completion
+    </a>
+  );
 }
 
 /**
@@ -63,7 +93,7 @@ export function SessionHeaderActions({
 
   function adjust() {
     requestAdjust();
-    requestAnimationFrame(() => document.getElementById('session-outcome')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    requestAnimationFrame(() => document.getElementById('session-outcome')?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' }));
   }
 
   return (

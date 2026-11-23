@@ -128,7 +128,7 @@ export function SessionDetailClient({
 
   if (isSkipped) {
     return (
-      <Surface id={id} className="space-y-3">
+      <Surface id={id} className="scroll-mt-20 space-y-3 md:scroll-mt-6">
         <h2 className={sectionHeadingClassName}>Completion</h2>
         <p className="text-[13px] text-[var(--text-secondary)]">
           This session is skipped, so there is no outcome to record. Plan it again to adjust it, start it, or mark it complete.
@@ -138,7 +138,7 @@ export function SessionDetailClient({
   }
 
   return (
-    <Surface id={id} className="space-y-4">
+    <Surface id={id} className="scroll-mt-20 space-y-4 md:scroll-mt-6">
       {isEditing ? null : <div>
         <h2 className={sectionHeadingClassName}>{isDone ? 'Outcome' : 'Log completion'}</h2>
         <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
@@ -171,7 +171,8 @@ export function SessionDetailClient({
       ) : null}
 
       {isEditing ? (
-        <div className="space-y-4 border-t border-[var(--border)] pt-4">
+        // Marks the open editor so the page layout gives it the full width.
+        <div data-session-editing="" className="space-y-4 border-t border-[var(--border)] pt-4">
           <div>
             <p className="text-xs font-medium text-[var(--text-muted)]">{isDone ? 'Actual correction' : 'Planned adjustment'}</p>
             <p className="mt-2 text-[13px] text-[var(--text-secondary)]">

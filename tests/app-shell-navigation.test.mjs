@@ -246,7 +246,7 @@ test('summary-only activity outcomes do not offer structured comparison or editi
   assert.match(activityPage, /actions=\{comparable \? <SessionComparisonDialog/);
   assert.match(athleteSession, /const isImportOrLogged = IMPORTED_OR_LOGGED_SOURCES\.includes\(detail\.session\.metricsSource \?\? ''\);/);
   assert.match(athleteSession, /shareable=\{!isImportOrLogged\}/);
-  assert.match(athleteSession, /<Surface id="session-outcome" className="space-y-3">/);
+  assert.match(athleteSession, /<Surface id="session-outcome" className="scroll-mt-20 space-y-3 md:scroll-mt-6">/);
   assert.match(athleteSession, /isImportOrLogged \? null : <SessionDetailClient/);
   assert.match(athleteSession, /isImportOrLogged && detail\.session\.blocks\.length === 0/);
   assert.match(athleteSession, /Summary-only activity has no recorded workout blocks\./);
@@ -417,12 +417,18 @@ test('session detail leads with the work or the outcome and keeps secondary acti
   const page = await read('app/(app)/athlete/session/[sessionId]/page.tsx');
   const actions = await read('app/(app)/athlete/session/[sessionId]/SessionActions.tsx');
 
-  // Open sessions: structure, then description; completed sessions: outcome first.
-  assert.match(page, /const leadsWithOutcome = isCompleted \|\| importedWithoutWorkout;/);
-  assert.match(page, /\{recordedOutcome\}\s*\{completion\}\s*\{recordedActivity\}\s*\{structure\}/);
-  assert.ok(page.indexOf('{structure}\n                {recordedOutcome}') < page.indexOf('id="session-description"'));
+  // DOM order is the phone order for every state: overview, logging or outcome, block
+  // details, recorded data, description, coach. Wide screens only move the outcome beside it.
+  const order = ['{structure}', '{recordedOutcome}', '{completion}', '<SessionBlockDetails', '{recordedActivity}', 'id="session-description"', 'aria-label="Session source"'];
+  const positions = order.map((marker) => page.indexOf(marker));
+  assert.ok(positions.every((position) => position > 0), order.filter((_, index) => positions[index] < 0).join(', '));
+  assert.deepEqual([...positions].sort((left, right) => left - right), positions);
+  assert.match(page, /\[grid-template-areas:'overview_side'_'rest_side'\]/);
+  assert.match(page, /has-\[\[data-session-editing\]\]/);
   assert.doesNotMatch(page, /<TopBar[^>]*description=/);
-  assert.match(page, /Log completion/);
+  assert.match(page, /<LogCompletionLink/);
+  assert.match(actions, /Log completion/);
+  assert.match(actions, /querySelector<HTMLElement>\('#session-notes'\)/);
   // Rights come from the server-side session detail, never from the client.
   assert.match(page, /move=\{detail\.session\.canReschedule \?/);
   assert.match(page, /canDelete=\{detail\.session\.canDelete\}/);
