@@ -13,7 +13,7 @@ import { complianceLabels, type ComplianceState } from '@/lib/training-load';
 
 type SessionStatus = 'planned' | 'completed' | 'adjusted' | 'missed' | 'skipped';
 
-export type SessionRowData = {
+type SessionRowData = {
   id: number;
   title: string;
   sport: string;
@@ -35,89 +35,27 @@ export type SessionRowData = {
   }>;
 };
 
-export type SessionRowVariant = 'default' | 'compact' | 'calendar' | 'month';
-
-const variantStyles: Record<SessionRowVariant, {
-  root: string;
-  title: string;
-  metadata: string;
-  metrics: string;
-  showMetadata: boolean;
-  showBar: boolean;
-  barSize: 'card' | 'compact' | 'calendar';
-}> = {
-  default: {
-    root: 'ink-session-row space-y-3 rounded-lg bg-[var(--surface)] p-4',
-    title: 'break-words text-[18px] font-medium leading-[1.2]',
-    metadata: 'mt-1 text-[14px]',
-    metrics: 'gap-x-4 gap-y-1 text-[14px]',
-    showMetadata: true,
-    showBar: true,
-    barSize: 'card',
-  },
-  compact: {
-    root: 'ink-session-row space-y-2 rounded-lg bg-[var(--surface)] px-3 py-2.5',
-    title: 'break-words text-[13px] font-semibold',
-    metadata: 'mt-1 text-[12px]',
-    metrics: 'gap-x-3 gap-y-1 text-[12px]',
-    showMetadata: true,
-    showBar: true,
-    barSize: 'compact',
-  },
-  calendar: {
-    root: 'ink-session-row ink-session-row--calendar rounded-lg bg-[var(--surface)] px-3 py-2.5',
-    title: 'break-words text-[13px] font-semibold leading-5',
-    metadata: 'mt-0.5 text-[11px] leading-4',
-    metrics: 'gap-x-2.5 gap-y-0 text-[11px] leading-4',
-    showMetadata: true,
-    showBar: true,
-    barSize: 'calendar',
-  },
-  month: {
-    root: 'ink-session-row ink-session-row--calendar space-y-1 rounded-lg bg-[var(--field-surface)] px-2.5 py-2',
-    title: 'break-words text-[12px] font-medium leading-[1.25]',
-    metadata: '',
-    metrics: '',
-    showMetadata: false,
-    showBar: false,
-    barSize: 'compact',
-  },
-};
-
 export function SessionRow({
   session,
   href,
   actionLabel = 'Open session',
-  variant,
-  compact,
-  dateLabel,
-  muted = false,
-  showTime = true,
+  variant = 'compact',
 }: {
   session: SessionRowData;
   href: string;
   actionLabel?: string;
-  variant?: SessionRowVariant;
-  /** @deprecated Use `variant="compact"` instead. */
-  compact?: boolean;
-  dateLabel?: string;
-  muted?: boolean;
-  showTime?: boolean;
+  variant?: 'compact' | 'month';
 }) {
-  const resolvedVariant = variant ?? (compact ? 'compact' : 'default');
-  const styles = variantStyles[resolvedVariant];
-  const visibleDateLabel = dateLabel ?? session.dateLabel;
+  const month = variant === 'month';
   const loadUnavailable = session.loadAvailable === false || session.tss === null;
   const loadLabel = loadUnavailable ? 'Load unavailable' : `${session.tss}\u00A0TSS`;
-  const averageZone = resolvedVariant === 'calendar' || resolvedVariant === 'month'
-    ? getAverageSessionZone(session.segments)
-    : null;
+  const averageZone = month ? getAverageSessionZone(session.segments) : null;
   const averageZoneMeta = averageZone ? getTempoZoneMeta(averageZone) : null;
   const accessibleName = [
     actionLabel,
     session.title,
-    visibleDateLabel,
-    showTime ? session.timeLabel : null,
+    session.dateLabel,
+    session.timeLabel,
     getSportLabel(session.sport),
     formatDuration(session.durationSec),
     loadLabel,
@@ -131,43 +69,37 @@ export function SessionRow({
     <Link
       href={href}
       aria-label={accessibleName}
-      className={`group block min-w-0 border border-[var(--border)] transition hover:border-[var(--border-strong)] hover:bg-[var(--raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] ${styles.root}`}
+      className={`group ink-session-row block min-w-0 rounded-lg border border-[var(--border)] transition hover:border-[var(--border-strong)] hover:bg-[var(--raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] ${month ? 'ink-session-row--calendar bg-[var(--field-surface)] px-2.5 py-2' : 'bg-[var(--surface)] px-3 py-2.5'}`}
     >
-      <div className={muted ? 'opacity-70' : undefined}>
-        <div className={`flex min-w-0 items-start ${averageZone ? 'gap-1.5' : 'gap-3'}`}>
-          {averageZone ? <SessionIntensitySwatch zone={averageZone} /> : null}
-          <div className="min-w-0 flex-1">
-            <p
-              title={resolvedVariant === 'calendar' || resolvedVariant === 'month' ? session.title : undefined}
-              className={`${styles.title} text-[var(--text)]`}
-            >
-              {session.title}
+      <div className={`flex min-w-0 items-start ${averageZone ? 'gap-1.5' : 'gap-3'}`}>
+        {averageZone ? <SessionIntensitySwatch zone={averageZone} /> : null}
+        <div className="min-w-0 flex-1">
+          <p
+            title={month ? session.title : undefined}
+            className={`${month ? 'break-words text-xs font-medium leading-[1.25]' : 'break-words text-[13px] font-semibold'} text-[var(--text)]`}
+          >
+            {session.title}
+          </p>
+          {!month ? (
+            <p className="data mt-1 text-xs text-[var(--text-secondary)]">
+              {[session.dateLabel, session.timeLabel, getSportLabel(session.sport)].filter(Boolean).join('\u00A0· ')}
             </p>
-            {styles.showMetadata ? (
-              <p className={`${styles.metadata} text-[var(--text-secondary)]`}>
-                {[visibleDateLabel, showTime ? session.timeLabel : null, getSportLabel(session.sport)].filter(Boolean).join('\u00A0· ')}
-              </p>
-            ) : null}
-          </div>
-          {session.compliance ? <ComplianceMark state={session.compliance} showLabel={session.status === 'skipped'} className="mt-1" /> : null}
+          ) : null}
         </div>
-        {styles.showBar ? (
-          session.intensityTimeline?.bins.length
-            ? <div className={resolvedVariant === 'calendar' ? 'mt-1' : undefined}>
-                <ActivityIntensityBars timeline={session.intensityTimeline} compact={resolvedVariant === 'calendar'} />
-              </div>
-            : <SessionBlockBar segments={session.segments} size={styles.barSize} />
-        ) : null}
-        {styles.metrics ? (
-          <div className={`flex flex-wrap items-center ${styles.metrics} ${resolvedVariant === 'calendar' ? 'mt-1' : ''} text-[var(--text-secondary)]`}>
+        {session.compliance ? <ComplianceMark state={session.compliance} showLabel={session.status === 'skipped'} className="mt-1" /> : null}
+      </div>
+      {!month ? (
+        <>
+          {session.intensityTimeline?.bins.length
+            ? <ActivityIntensityBars timeline={session.intensityTimeline} />
+            : <SessionBlockBar segments={session.segments} size="compact" />}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--text-secondary)]">
             <MetricText>{formatDuration(session.durationSec)}</MetricText>
-            {resolvedVariant === 'calendar' && loadUnavailable
-              ? <span title={loadLabel}>Load n/a</span>
-              : <MetricText>{loadLabel}</MetricText>}
+            <MetricText>{loadLabel}</MetricText>
             {session.targetLabel ? <span>{session.targetLabel}</span> : null}
           </div>
-        ) : null}
-      </div>
+        </>
+      ) : null}
     </Link>
   );
 }

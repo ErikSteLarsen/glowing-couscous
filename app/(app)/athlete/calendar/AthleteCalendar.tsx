@@ -40,6 +40,7 @@ import {
   MenuTrigger,
 } from '@/components/tempo/Menu';
 import { MetricPair } from '@/components/tempo/MetricPair';
+import { SessionRowText } from '@/components/tempo/SessionRowText';
 import {
   noticeBoxClassNames,
   Surface,
@@ -564,11 +565,14 @@ function SessionCard({
         style={complianceStyle(session.compliance)}
         {...dragProps}
       >
-        <p className={`break-words text-[13px] font-medium leading-snug text-[var(--text)] ${hasActions ? 'mr-6 max-xl:mr-9 max-md:mr-10' : ''}`}>{session.title}</p>
-        <div className="data space-y-0.5 text-xs text-[var(--text-secondary)]">
-          <p>{[session.timeLabel, getSportLabel(session.sport)].filter(Boolean).join('\u00A0· ')}</p>
-          <p>{[formatDuration(session.durationSec), session.distanceMeters === null ? null : formatDistance(session.distanceMeters), session.tss === null ? 'Load unavailable' : `${session.tss}\u00A0TSS`].filter(Boolean).join('\u00A0· ')}</p>
-        </div>
+        <SessionRowText
+          title={session.title}
+          titleClassName={hasActions ? 'mr-6 max-xl:mr-9 max-md:mr-10' : undefined}
+          meta={<>
+            <span className="block">{[session.timeLabel, getSportLabel(session.sport)].filter(Boolean).join('\u00A0· ')}</span>
+            <span className="block">{[formatDuration(session.durationSec), session.distanceMeters === null ? null : formatDistance(session.distanceMeters), session.tss === null ? 'Load unavailable' : `${session.tss}\u00A0TSS`].filter(Boolean).join('\u00A0· ')}</span>
+          </>}
+        />
         <ComplianceMark state={session.compliance} showLabel />
         <SessionBlockBar segments={session.segments} size="compact" />
       </Link>

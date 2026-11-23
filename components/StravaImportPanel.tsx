@@ -1,5 +1,6 @@
 'use client';
 
+import { SessionRowText } from '@/components/tempo/SessionRowText';
 import { SegmentedControl, SegmentedControlItem } from '@ui-sdk/react/segmented-control';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
@@ -238,14 +239,15 @@ export function StravaImportPanel({
               aria-controls="strava-activity-details"
               onClick={() => openDetails(activity)}
             >
-              <span className="min-w-0">
-                <span className="block break-words text-[15px] font-semibold text-[var(--text)] group-hover:text-[var(--brand)]">{activity.title}</span>
-                <span className="mt-1 block text-[12px] text-[var(--text-secondary)]">
+              <SessionRowText
+                title={activity.title}
+                titleClassName="group-hover:text-[var(--brand)]"
+                meta={<>
                   {format(new Date(activity.startedAt), 'EEE\u00A0d\u00A0MMM\u00A0yyyy\u00A0· HH:mm')}&nbsp;· {getSportLabel(activity.sport)}&nbsp;· {formatDuration(activity.durationSec)}
                   {activity.distanceMeters !== null ? `\u00A0· ${(activity.distanceMeters / 1000).toFixed(2)}\u00A0km` : ''}
                   {activity.elevationGainMeters !== null ? `\u00A0· ${Math.round(activity.elevationGainMeters)}\u00A0m up` : ''}
-                </span>
-              </span>
+                </>}
+              />
               {activity.imported ? <Badge tone="success">Imported</Badge> : activity.dismissed ? <Badge>Dismissed for now</Badge> : null}
             </button>
           ))}

@@ -1,5 +1,6 @@
 'use client';
 
+import { SessionRowText } from '@/components/tempo/SessionRowText';
 import { MetricPair } from '@/components/tempo/MetricPair';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
@@ -160,7 +161,13 @@ function ResultForm({ event, onSaved, onCancel, onPendingChange }: { event: Even
 }
 
 function ActivitySummary({ activity }: { activity: LinkedActivity }) {
-  return <div className="min-w-0"><p className="break-words text-sm text-[var(--text)]">{activity.session.title}&nbsp;· {getSportLabel(activity.session.sport)}</p><p className="data text-xs text-[var(--text-muted)]">{formatDay(activity.completedOn)}&nbsp;· {formatDuration(activity.durationSec)}{activity.distanceMeters !== null ? `\u00A0· ${(activity.distanceMeters / 1000).toFixed(2)}\u00A0km` : ''}</p></div>;
+  const distance = activity.distanceMeters === null ? null : `${(activity.distanceMeters / 1000).toFixed(2)}\u00A0km`;
+  return (
+    <SessionRowText
+      title={activity.session.title}
+      meta={[getSportLabel(activity.session.sport), formatDay(activity.completedOn), formatDuration(activity.durationSec), distance].filter(Boolean).join('\u00A0· ')}
+    />
+  );
 }
 
 /** Explicit link and unlink of completed activities; the event result stays separate. */

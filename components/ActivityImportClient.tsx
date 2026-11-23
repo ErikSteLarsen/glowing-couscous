@@ -1,5 +1,6 @@
 'use client';
 
+import { SessionRowText } from '@/components/tempo/SessionRowText';
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -292,14 +293,14 @@ export function ActivityImportClient({
                 }}
               >
                 <summary className={`flex min-h-11 cursor-pointer list-none flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-lg px-2 py-2 text-left transition-colors hover:bg-[var(--raised)] [&::-webkit-details-marker]:hidden ${buttonFocusClassName}`}>
-                  <span className="min-w-0 [overflow-wrap:anywhere]">
-                    <span className="block break-words text-[15px] font-semibold text-[var(--text)]">{activity.title}</span>
-                    <span className="mt-1 block text-[12px] text-[var(--text-secondary)]">
+                  <SessionRowText
+                    title={activity.title}
+                    meta={<>
                       {format(new Date(activity.completedAt), 'EEE\u00A0d\u00A0MMM\u00A0yyyy\u00A0· HH:mm')}&nbsp;· {getSportLabel(activity.sport)}&nbsp;· {formatDuration(activity.durationSec)}&nbsp;· {activity.source === 'strava' ? 'Strava' : 'File'}
                       {activity.distanceMeters !== null ? `\u00A0· ${(activity.distanceMeters / 1000).toFixed(2)}\u00A0km` : ''}
                       {activity.sessionTitle !== activity.title ? ` · Matched to ${activity.sessionTitle}` : ''}
-                    </span>
-                  </span>
+                    </>}
+                  />
                   <span className="text-[12px] font-medium text-[var(--brand)]">
                     <span className="group-open:hidden">Show measurements</span>
                     <span className="hidden group-open:inline">Hide measurements</span>
