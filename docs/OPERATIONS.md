@@ -113,6 +113,19 @@ then attempts to revoke the provider token. If Strava does not confirm
 revocation, the page links to Strava's connected-app settings. Strava-side
 authorization changes are received through the webhook.
 
+### Posting to Strava
+
+Tempo asks for `activity:read,activity:read_all,activity:write` when connecting.
+Connections made before posting existed only hold read scopes; the post sheet
+then asks the athlete to **Reconnect Strava**, which runs the same OAuth flow
+and returns to the activity. Apply `20261123120000_activity_strava_post`
+(`pnpm db:migrate`) before deploying. No new production environment variables
+are needed. `STRAVA_API_BASE_URL` is a development-only override (accepted only
+for `http://localhost` or `127.0.0.1`, ignored when `NODE_ENV=production`) for
+running against a local stub; never point it at a real host. Every saved
+activity with recorded data also offers **Download .tcx file** (session ⋯ menu)
+for manual upload at strava.com/upload/select.
+
 Prisma CLI reads `.env`, so a database-only `.env.local` is not sufficient for
 `pnpm db:push`, `pnpm db:migrate`, or `pnpm db:setup`. `DATABASE_URL` is the
 pooled runtime URL; `DIRECT_URL` is used for Prisma migrations and

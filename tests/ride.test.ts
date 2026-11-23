@@ -6,7 +6,7 @@ import { cadenceFromCrank, parseCscMeasurement, parseCyclingPowerMeasurement, pa
 import { encodeRequestControl, encodeReset, encodeSetIndoorBikeSimulation, encodeSetTargetPower, encodeSetTargetResistance, encodeStartOrResume, encodeStopOrPause, parseControlPointResponse } from '../lib/ride/ftms-control.ts';
 import { applyBias, createRidePlan, ergTargetChanged, planHasPowerTargets, targetWattsAt } from '../lib/ride/ride-plan.ts';
 import {
-  addReading, advanceStep, createRecording, downsampleSamples, finishRecording, normalizedPower, parseCheckpoint, pauseRecording, recordReading,
+  addReading, advanceStep, createRecording, downsampleSamples, finishRecording, normalizedPower, parseCheckpoint, pauseRecording, previousStep, recordReading,
   restoreRecording, resumeRecording, serializeCheckpoint, startRecording, summarizeRecording, tick, toImportPayload, type RideSample,
 } from '../lib/ride/recorder.ts';
 import { createSessionEditorBlock } from '../lib/session-editor.ts';
@@ -445,6 +445,27 @@ test('skipping after a delayed tick counts elapsed seconds in the step they were
   const crossed = advanceStep(rec, ride, 5000, reading(100));
   assert.equal(crossed.stepIndex, 1);
   assert.equal(crossed.stepElapsedSec, 1);
+});
+
+test('going back restarts the previous block in a new lap', () => {
+  const ride = plan();
+  const rec = startRecording(createRecording(7, 'Threshold', ride), ride, 0);
+  const skipped = advanceStep(rec, ride, 3000, reading(100));
+  const back = previousStep(skipped, ride, 5000, reading(100));
+  assert.equal(back.stepIndex, 0);
+  assert.equal(back.stepElapsedSec, 0);
+  assert.deepEqual(back.laps, [
+    { stepIndex: 0, startSec: 0, endSec: 3 },
+    { stepIndex: 1, startSec: 3, endSec: 5 },
+    { stepIndex: 0, startSec: 5, endSec: null },
+  ]);
+  assert.equal(previousStep(back, ride).stepIndex, 0);
+  assert.equal(previousStep(back, ride).laps.length, 3);
+
+  let freeRide = back;
+  while (freeRide.stepIndex < ride.steps.length) freeRide = advanceStep(freeRide, ride);
+  assert.equal(previousStep(freeRide, ride).stepIndex, ride.steps.length - 1);
+  assert.equal(previousStep(createRecording(7, 'Threshold', ride), ride).status, 'ready');
 });
 
 test('telemetry records 1 Hz while the UI timer is suspended', () => {

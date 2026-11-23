@@ -423,7 +423,7 @@ function inferGpxSport(xml: string) {
 function normalizeSport(input: string) {
   const sport = input.toLowerCase();
   if (/run|trail|treadmill|jog/.test(sport)) return 'RUNNING';
-  if (/bike|cycl|ride|mtb|virtual/.test(sport)) return 'BIKING';
+  if (/bik(e|ing)|cycl|ride|mtb|virtual/.test(sport)) return 'BIKING';
   if (/swim/.test(sport)) return 'SWIMMING';
   if (/strength|weight|gym|workout/.test(sport)) return 'STRENGTH';
   if (/yoga|stretch/.test(sport)) return 'STRETCHING';

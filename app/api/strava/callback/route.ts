@@ -3,21 +3,25 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { stravaService, StravaConnectionConflictError } from '@/lib/strava-service';
+import { safeStravaReturnPath } from '@/lib/strava-post';
 
 const STATE_COOKIE = 'tempo_strava_oauth_state';
+const RETURN_COOKIE = 'tempo_strava_return';
 const IMPORT_PATH = '/athlete/import';
 
-function redirectToImport(request: Request, result: string) {
-  const url = new URL(IMPORT_PATH, request.url);
+function redirectToImport(request: Request, result: string, returnTo: string | null = null) {
+  const url = new URL(returnTo ?? IMPORT_PATH, request.url);
   url.searchParams.set('strava', result);
   const response = NextResponse.redirect(url);
-  response.cookies.set(STATE_COOKIE, '', {
-    httpOnly: true,
-    secure: new URL(request.url).protocol === 'https:',
-    sameSite: 'lax',
-    path: '/api/strava/callback',
-    maxAge: 0,
-  });
+  for (const name of [STATE_COOKIE, RETURN_COOKIE]) {
+    response.cookies.set(name, '', {
+      httpOnly: true,
+      secure: new URL(request.url).protocol === 'https:',
+      sameSite: 'lax',
+      path: '/api/strava/callback',
+      maxAge: 0,
+    });
+  }
   return response;
 }
 
@@ -33,13 +37,14 @@ export async function GET(request: Request) {
   const code = url.searchParams.get('code') ?? '';
   const cookieStore = await cookies();
   const cookieState = cookieStore.get(STATE_COOKIE)?.value ?? '';
+  const returnTo = safeStravaReturnPath(cookieStore.get(RETURN_COOKIE)?.value);
   const user = await getCurrentUser();
   const responseState = `${state.split('.')[0] ?? ''}.${user?.id ?? ''}`;
   if (!user || !hasAppRole(user) || !cookieState || !matchesState(state, cookieState) || !matchesState(state, responseState)) {
     return redirectToImport(request, 'error:state');
   }
-  if (url.searchParams.get('error') === 'access_denied') return redirectToImport(request, 'cancelled');
-  if (!code) return redirectToImport(request, 'error:authorization');
+  if (url.searchParams.get('error') === 'access_denied') return redirectToImport(request, 'cancelled', returnTo);
+  if (!code) return redirectToImport(request, 'error:authorization', returnTo);
 
   try {
     const scopes = url.searchParams.get('scope') ?? '';
@@ -51,11 +56,11 @@ export async function GET(request: Request) {
       syncFailed = true;
     }
     if (syncFailed && !connection.previousProviderRevoked) return redirectToImport(request, 'connected:sync-revoke-error');
-    if (syncFailed) return redirectToImport(request, 'connected:sync-error');
+    if (syncFailed && !returnTo) return redirectToImport(request, 'connected:sync-error');
     if (!connection.previousProviderRevoked) return redirectToImport(request, 'connected:revoke-error');
-    return redirectToImport(request, 'connected');
+    return redirectToImport(request, 'connected', returnTo);
   } catch (error) {
     if (error instanceof StravaConnectionConflictError) return redirectToImport(request, 'error:account-linked');
-    return redirectToImport(request, 'error:connect');
+    return redirectToImport(request, 'error:connect', returnTo);
   }
 }

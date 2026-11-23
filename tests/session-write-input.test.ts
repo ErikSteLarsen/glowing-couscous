@@ -104,5 +104,5 @@ test('transport does not round invalid durations into valid planned sessions', a
   const result = await adjustments.savePlannedSession(7, 1, { ...editor, blocks: [{ ...editor.blocks[0], durationSec: 1.5 }] });
   assert.equal(result.ok, false);
   assert.equal(result.ok ? undefined : result.status, 400);
-  assert.equal(result.ok ? undefined : result.error, 'Every step needs a duration.');
+  assert.equal(result.ok ? undefined : result.error, 'Every block needs a duration.');
 });

@@ -22,6 +22,8 @@ import { buildWorkoutProfile } from '@/lib/workout-profile';
 import { SessionBlockDetails, SessionStructureProvider, SessionWorkoutProfileCard } from './SessionStructure';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { canStartWorkout } from '@/lib/workout-start';
+import { stravaPostService } from '@/lib/strava-post-service';
+import { StravaPostAction, StravaPostedNote } from '@/components/StravaPostAction';
 
 /** Outcomes owned by a manual log or a file import; their data is not edited through the session completion form. */
 const IMPORTED_OR_LOGGED_SOURCES = ['manual-unplanned', 'manual-paired', 'tcx-import', 'fit-import', 'gpx-import'];
@@ -31,13 +33,13 @@ export default async function AthleteSessionPage({
   searchParams,
 }: {
   params: Promise<{ sessionId: string }>;
-  searchParams: Promise<{ from?: string }>;
+  searchParams: Promise<{ from?: string; post?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user || user.role !== 'ATHLETE') redirect('/login');
 
   const { sessionId } = await params;
-  const { from } = await searchParams;
+  const { from, post } = await searchParams;
   const parsedSessionId = Number(sessionId);
   if (!Number.isInteger(parsedSessionId) || parsedSessionId <= 0) {
     notFound();
@@ -53,6 +55,7 @@ export default async function AthleteSessionPage({
     );
   }
 
+  const stravaPost = detail.session.activityId === null ? null : await stravaPostService.loadForUser(user.id, detail.session.activityId);
   const sessionOrigin = parseBackOrigin('session', from);
   const returnTarget = resolveBackTarget({ route: 'session', from });
   const displayStatus = detail.session.isOverdue ? 'missed' : detail.session.status;
@@ -93,7 +96,7 @@ export default async function AthleteSessionPage({
         <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
           {importedWithoutWorkout
             ? 'Imported activity · not matched to a planned workout'
-            : 'The steps of your planned workout.'}
+            : 'The blocks of your planned workout.'}
         </p>
       </div>
       <div className={importedWithoutWorkout
@@ -124,6 +127,15 @@ export default async function AthleteSessionPage({
       />
       <LogCompletionLink tone={startable ? 'secondary' : 'primary'} />
     </>
+  ) : stravaPost?.posted ? (
+    <StravaPostedNote url={stravaPost.posted.url} />
+  ) : stravaPost?.availability === 'ready' ? (
+    <StravaPostAction
+      activityId={stravaPost.activityId}
+      initial={stravaPost}
+      returnPath={`/athlete/session/${id}?post=strava`}
+      autoOpen={post === 'strava'}
+    />
   ) : null;
 
   const recordedOutcome = isImportOrLogged ? (
@@ -206,7 +218,7 @@ export default async function AthleteSessionPage({
   const hasProfile = !importedWithoutWorkout && !(isImportOrLogged && detail.session.blocks.length === 0);
   const structure = isImportOrLogged && detail.session.blocks.length === 0 ? (
     <Surface className="space-y-3">
-      <p className="text-sm text-[var(--text-muted)]">This activity only has totals, so there are no steps to show.</p>
+      <p className="text-sm text-[var(--text-muted)]">This activity only has totals, so there are no blocks to show.</p>
     </Surface>
   ) : importedWithoutWorkout ? (
     <Surface className="space-y-4">{overviewHeader}</Surface>
@@ -254,6 +266,7 @@ export default async function AthleteSessionPage({
               statusAction={detail.session.statusAction}
               canDelete={detail.session.canDelete}
               returnHref={returnTarget.href}
+              downloadTcxHref={stravaPost?.hasSamples ? `/api/athlete/activities/${stravaPost.activityId}/tcx` : null}
             />
           }
         />

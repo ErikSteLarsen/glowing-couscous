@@ -52,7 +52,7 @@ export type WorkoutProfileSet = {
   labels: string[];
 };
 
-/** A labelled stretch of the workout under the profile: Warm-up, Main set, Endurance, Cool-down. */
+/** A labelled stretch of the workout under the profile: Warm-up, Repeat, Endurance, Cool-down. */
 export type WorkoutProfilePhase = {
   startSec: number;
   durationSec: number;
@@ -224,7 +224,7 @@ export function buildWorkoutProfile<B extends WorkoutProfileBlock>(
       const pattern = group.repeats > 1 ? group.pattern : [{ ...group.blocks[0], reps: null }];
       const betweenOnly = group.recoveryCount > 0 && group.recoveryCount < group.repeats;
       sets.push({ startSec: groupStart, durationSec: groupSec, repeats, labels: setLabels(pattern, repeats, betweenOnly, groupSec) });
-      rawPhases.push({ title: 'Main set', set: true, startSec: groupStart, durationSec: groupSec, zones: setZones(steps.slice(firstStep)), firstStep });
+      rawPhases.push({ title: 'Repeat', set: true, startSec: groupStart, durationSec: groupSec, zones: setZones(steps.slice(firstStep)), firstStep });
       continue;
     }
     steps.slice(firstStep).forEach((step, offset) => {
@@ -243,7 +243,7 @@ export function buildWorkoutProfile<B extends WorkoutProfileBlock>(
   const phases = rawPhases.map((phase): WorkoutProfilePhase => ({
     startSec: phase.startSec,
     durationSec: phase.durationSec,
-    title: phase.set && setPhases.length > 1 ? `Set ${setPhases.indexOf(phase) + 1}` : phase.title,
+    title: phase.set && setPhases.length > 1 ? `Repeat ${setPhases.indexOf(phase) + 1}` : phase.title,
     detail: [formatDurationExact(phase.durationSec), zoneRange(phase.zones)].filter(Boolean).join(' · '),
     firstStep: phase.firstStep,
   }));
@@ -273,7 +273,7 @@ export function describeProfileStep(model: WorkoutProfileModel, step: WorkoutPro
 
 /** One sentence for screen readers that lists the workout in time order. */
 export function describeWorkoutProfile(model: WorkoutProfileModel): string {
-  if (!model.steps.length) return 'No timed steps.';
+  if (!model.steps.length) return 'No timed blocks.';
   const parts: string[] = [];
   let setIndex = 0;
   for (const phase of model.phases) {

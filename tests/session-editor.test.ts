@@ -232,7 +232,7 @@ test('session editor represents skipped blocks and excludes them from Tempo metr
         key: 'recovery-0',
         zone: 1,
         durationSec: 300,
-        label: 'Z1 Recovery',
+        label: 'Z1 Easy',
         color: '#2563EB',
         tint: '#E4EDFF',
       },
@@ -248,7 +248,7 @@ test('session editor validates duration, repetitions, targets, schedule, and RPE
 
   assert.equal(
     validateSessionEditorDraft({ ...draft, blocks: [{ ...draft.blocks[0], durationSec: 0 }] }),
-    'Every step needs a duration.',
+    'Every block needs a duration.',
   );
   assert.equal(
     validateSessionEditorDraft({ ...draft, blocks: [{ ...draft.blocks[0], reps: 1.5 }] }),

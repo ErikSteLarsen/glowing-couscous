@@ -1,5 +1,5 @@
 export const TEMPO_ZONE_META = {
-  1: { label: 'Z1', name: 'Recovery', solid: '#2563EB', tint: '#E4EDFF', factor: 0.55 },
+  1: { label: 'Z1', name: 'Easy', solid: '#2563EB', tint: '#E4EDFF', factor: 0.55 },
   2: { label: 'Z2', name: 'Endurance', solid: '#16A34A', tint: '#E1F4E7', factor: 0.7 },
   3: { label: 'Z3', name: 'Tempo', solid: '#CA8A04', tint: '#FBF1D2', factor: 0.85 },
   4: { label: 'Z4', name: 'Threshold', solid: '#EA580C', tint: '#FDE7D9', factor: 0.98 },

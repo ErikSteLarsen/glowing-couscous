@@ -75,7 +75,7 @@ export function WorkoutProfile({
   size?: 'full' | 'compact';
   /** `short` leaves room for the builder's step list on one desktop screen. */
   chartHeight?: 'regular' | 'short';
-  /** Appended to each selectable bar's name, e.g. "Edit step" in the builder. */
+  /** Appended to each selectable bar's name, e.g. "Edit block" in the builder. */
   stepActionLabel?: string;
   /** Id of the panel that shows the selected step. */
   controlsId?: string;
@@ -135,7 +135,7 @@ export function WorkoutProfile({
 
   return (
     <div className="min-w-0">
-      <p id={descriptionId} className="sr-only">{describeWorkoutProfile(model)}{model.skippedCount ? ` ${model.skippedCount} skipped ${model.skippedCount === 1 ? 'step isn’t' : 'steps aren’t'} shown.` : ''}</p>
+      <p id={descriptionId} className="sr-only">{describeWorkoutProfile(model)}{model.skippedCount ? ` ${model.skippedCount} skipped ${model.skippedCount === 1 ? 'block isn’t' : 'blocks aren’t'} shown.` : ''}</p>
 
       {sets.length ? (
         <div aria-hidden="true" className={`relative h-6 ${full ? 'ml-11' : ''}`}>
@@ -196,7 +196,7 @@ export function WorkoutProfile({
 
         {activeStep !== null ? outline(activeStep, 'active') : null}
         {interactive ? (
-          <div role="group" aria-label="Workout steps. Use the arrow keys to move between steps" className="absolute inset-0" onKeyDown={move}>
+          <div role="group" aria-label="Workout blocks. Use the arrow keys to move between blocks" className="absolute inset-0" onKeyDown={move}>
             {steps.map((step, index) => (
               <button
                 key={step.key}
@@ -245,7 +245,7 @@ export function WorkoutProfile({
 }
 
 /** A profile with its own selection readout, for read-only pages that have no separate inspector. */
-export function WorkoutProfileExplorer({ model, label, ftpWatts = null, hint = 'Select a step to see its target and cue.' }: { model: WorkoutProfileModel; label: string; ftpWatts?: number | null; hint?: string }) {
+export function WorkoutProfileExplorer({ model, label, ftpWatts = null, hint = 'Select a block to see its target and cue.' }: { model: WorkoutProfileModel; label: string; ftpWatts?: number | null; hint?: string }) {
   const [selected, setSelected] = useState<number | null>(null);
   const panelId = useId();
   const step = selected === null ? null : model.steps[selected];

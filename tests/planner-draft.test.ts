@@ -62,7 +62,7 @@ test('validatePlannerSessionDraft catches missing title and invalid targets', ()
       title: 'Threshold',
       blocks: [{ ...draft.blocks[0], durationSec: 0 }],
     }),
-    'Every step needs a duration.',
+    'Every block needs a duration.',
   );
   assert.equal(
     validatePlannerSessionDraft({

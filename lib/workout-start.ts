@@ -6,7 +6,7 @@ export type WorkoutStartRuntime = { os: RideOs; webBluetooth: boolean; inTempoRi
 const followAlong = {
   mode: 'live',
   label: 'Follow along',
-  description: 'A timer for each step. You move on to the next step yourself.',
+  description: 'A timer for each block. You move on to the next block yourself.',
 } as const;
 
 const openApp = {
@@ -24,7 +24,7 @@ const browserRide = {
 const targetsOnly = {
   mode: 'ride',
   label: 'Ride without devices',
-  description: 'Tempo times each interval and shows its target. Your ride time is saved at the end.',
+  description: 'Tempo times each block and shows its target. Your ride time is saved at the end.',
 } as const;
 
 type WorkoutStartOption = { mode: 'live' | 'ride' | 'app'; label: string; description: string };

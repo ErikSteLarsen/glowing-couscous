@@ -24,3 +24,19 @@ export function legacyLibraryRedirectHref(params: Record<string, string | string
 export function customizeWorkoutHref(slug: string) {
   return athleteWorkoutsHref(new URLSearchParams({ customize: slug }));
 }
+
+/** Detail page of one saved workout, the owned counterpart of `/athlete/library/<slug>`. */
+export function myWorkoutHref(id: number) {
+  return `/athlete/workouts/${id}`;
+}
+
+export function myWorkoutsHref() {
+  return athleteWorkoutsHref(new URLSearchParams({ tab: 'mine' }));
+}
+
+/** Opens the editor; `from: 'detail'` makes its Back return to the workout's detail page. */
+export function editWorkoutHref(id: number, from?: 'detail') {
+  const params = new URLSearchParams({ edit: String(id) });
+  if (from) params.set('from', from);
+  return athleteWorkoutsHref(params);
+}

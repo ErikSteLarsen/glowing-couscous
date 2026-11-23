@@ -7,6 +7,33 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- Post to Strava (2026-11-23, local). Workout pages for saved activities with
+  recorded data show **Post to Strava** (preview sheet with editable title and
+  description, chart PNG from `next/og`, Download image) and a .tcx download in
+  the ⋯ menu; the ride summary offers the same sheet beside **Open workout**.
+  Migration `20261123120000_activity_strava_post` applied to `tempo_ride_focus`.
+  Checked end to end against a local stub Strava API (never strava.com) with a
+  fake connection: read-only scopes open the Reconnect step (connect URL now
+  requests `activity:write` and returns to the activity), upload with polling
+  stored the Strava id and the page then shows **Posted to Strava · View on
+  Strava**, re-posting is a no-op, a duplicate links to the existing activity,
+  Strava-imported activities offer no post (409). Real Strava OAuth and upload
+  are not verified. `pnpm exec tsc --noEmit -p .`, `pnpm lint` and `pnpm test`
+  (580 passed, 17 database cases skipped) passed; `pnpm build` was not run.
+  Also fixed: TCX files with `Sport="Biking"` imported as Other.
+
+- Indoor ride Focus candidate (2026-11-23, local redesign branch). The active
+  view prioritizes three-second power, cadence, and current-interval average
+  power and heart rate. The interval countdown and next step sit above the
+  compact workout profile. Workout totals are available in the ride summary.
+  `pnpm test` passed (560 passed, 17 database cases skipped). `pnpm lint` and
+  `pnpm build` passed. The build used the isolated local `tempo_ride_focus`
+  PostgreSQL database. T3 browser checked the authenticated ride at 1440×900
+  and 390×844, without devices and with simulated FTMS telemetry. Verified
+  power, cadence, interval average reset on skip, ERG toggle, pause and resume,
+  reload recovery, and finish and save. Both test sessions had saved activities
+  in PostgreSQL. Physical Bluetooth acceptance and design feedback remain open.
+
 - The athlete workspace calls saved weekly schedules **Training plans** across
   navigation, Calendar, editing, and shared-workout intake. Existing URLs and
   data formats are preserved. `pnpm test` (560 passed, 17 database cases skipped),

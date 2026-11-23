@@ -24,7 +24,9 @@ import { canStartWorkout, getWorkoutStartOptions, type WorkoutStartEligibility, 
 
 type WorkoutSource =
   | { kind: 'session'; id: number; from: BackOrigin | null; liveSteps?: ExecutionStep[] }
-  | { kind: 'catalog'; slug: string; from: 'library' | 'ride' };
+  | { kind: 'catalog'; slug: string; from: 'library' | 'ride' }
+  /** A saved workout from My workouts: like a catalog workout, a copy is added to today first. */
+  | { kind: 'workout'; id: number; from: BackOrigin | null };
 
 type Props = {
   workout: WorkoutStartEligibility & { title: string; durationSec: number };
@@ -87,7 +89,7 @@ function StartControl({ workout, source, triggerClassName }: Props) {
       return;
     }
 
-    const id = source.kind === 'session' ? source.id : await catalog.prepare(source.slug);
+    const id = source.kind === 'session' ? source.id : await catalog.prepare(source);
     if (id === null) return;
 
     if (mode === 'app') {
@@ -150,7 +152,7 @@ function StartControl({ workout, source, triggerClassName }: Props) {
                 <DialogTitle className={sectionHeadingClassName}>{label}</DialogTitle>
                 <DialogDescription className="mt-1 break-words text-sm text-[var(--text-secondary)]">
                   {workout.title} <span className="data whitespace-nowrap">· {formatDuration(workout.durationSec)}</span>
-                  {source.kind === 'catalog' ? <span className="mt-1 block">Adds this workout to today.</span> : null}
+                  {source.kind !== 'session' ? <span className="mt-1 block">Adds this workout to today.</span> : null}
                 </DialogDescription>
               </div>
               <DialogClose type="button" className={iconButtonClassName} aria-label="Close" disabled={busy}>

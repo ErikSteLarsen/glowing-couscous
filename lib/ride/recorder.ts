@@ -157,6 +157,16 @@ export function advanceStep(recording: RideRecording, plan: RidePlan, nowMs?: nu
   return recording.status === 'ready' ? next : openLap(next);
 }
 
+/** Ends the current lap and restarts the previous plan step from its beginning. From free ride it returns to the last step. */
+export function previousStep(recording: RideRecording, plan: RidePlan, nowMs?: number, latest?: RideReading): RideRecording {
+  const current = nowMs === undefined ? recording : tick(recording, plan, nowMs, latest);
+  if (current.status !== 'running' && current.status !== 'paused') return current;
+  let index = Math.min(current.stepIndex, plan.steps.length) - 1;
+  while (index >= 0 && plan.steps[index].durationSec <= 0) index -= 1;
+  if (index < 0) return current;
+  return openLap({ ...closeLap(current), stepIndex: index, stepElapsedSec: 0 });
+}
+
 export function startRecording(recording: RideRecording, plan: RidePlan, nowMs: number): RideRecording {
   if (recording.status !== 'ready') return recording;
   const started = skipZeroLengthSteps({ ...recording, status: 'running', startedAtMs: nowMs, lastTickAtMs: nowMs, elapsedTickAtMs: nowMs }, plan);

@@ -100,16 +100,20 @@ test('Workouts keeps its owner-scoped list and session detail keeps its entry co
   assert.match(workoutsClientSource, /md:bottom-0/);
 });
 
-test('Workouts has one New workout entry, a visible Schedule action and sharing in the row menu', async () => {
+test('Workouts has one New workout entry, and saved workouts keep Schedule and sharing like public ones', async () => {
   const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
+  const myActionsSource = await read('components/library/MyWorkoutActions.tsx');
 
   assert.match(workoutsClientSource, /New workout/);
   assert.match(workoutsClientSource, /Build with guidance/);
   assert.match(workoutsClientSource, /Build from scratch/);
   assert.match(workoutsClientSource, /Start from public library/);
-  assert.match(workoutsClientSource, />\s*Schedule\s*<\/Link>/);
+  assert.match(myActionsSource, />Schedule\s*<\/Link>/);
+  assert.match(myActionsSource, />Schedule\s*<\/MenuItem>/);
+  assert.match(myActionsSource, />Edit<\/MenuItem>/);
   assert.doesNotMatch(workoutsClientSource, /Plan this|Build guided workout|Create manually/);
-  assert.match(workoutsClientSource, /<MenuItem onSelect=\{share\.createLink\}>/);
+  assert.match(myActionsSource, /<MenuItem onSelect=\{share\.createLink\}>/);
+  assert.match(workoutsClientSource, /<MyWorkoutMenu /);
   assert.doesNotMatch(workoutsClientSource, /<ShareLinkButton/);
 });
 
@@ -130,6 +134,7 @@ test('the workout editor replaces the list and its header, returning to the list
 test('Library detail keeps Start workout and Schedule visible and schedules through Calendar placement', async () => {
   const actionsSource = await read('components/library/LibraryWorkoutActions.tsx');
   const detailSource = await read('app/(app)/athlete/library/[slug]/page.tsx');
+  const layoutSource = await read('components/library/WorkoutDetail.tsx');
   const scheduleSource = await read('app/(app)/athlete/library/[slug]/schedule/page.tsx');
   const placementSource = await read('app/(app)/athlete/calendar/CalendarPlacement.tsx');
 
@@ -140,13 +145,31 @@ test('Library detail keeps Start workout and Schedule visible and schedules thro
   const menuSource = await read('components/library/LibraryWorkoutMenu.tsx');
   assert.match(menuSource, /href=\{customizeWorkoutHref\(slug\)\}/);
   assert.match(menuSource, />Customize/);
-  assert.match(detailSource, /Workout details/);
-  assert.ok(detailSource.indexOf('library-intervals') < detailSource.indexOf('Workout details'));
-  assert.ok(detailSource.indexOf('Workout details') < detailSource.indexOf('Intensity factor'));
+  assert.match(detailSource, /<WorkoutDetail/);
+  assert.match(layoutSource, /Workout details/);
+  assert.ok(layoutSource.indexOf('workout-intervals') < layoutSource.indexOf('Workout details'));
+  assert.match(detailSource, /label: 'Intensity factor'/);
   assert.match(scheduleSource, /<CalendarPlacement/);
   assert.match(scheduleSource, /addDayKeys\(todayInZone\(/);
   assert.match(scheduleSource, /catalog=\{\{/);
   assert.match(placementSource, /\/api\/athlete\/library\/\$\{encodeURIComponent\(catalog\.slug\)\}\/schedule/);
+});
+
+test('saved workouts open a detail page in the same layout as public workouts, with Edit', async () => {
+  const [ownedPage, publicPage, focusSource, actionsSource] = await Promise.all([
+    'app/(app)/athlete/workouts/[id]/page.tsx',
+    'app/(app)/athlete/library/[slug]/page.tsx',
+    'components/FocusWorkouts.tsx',
+    'components/library/MyWorkoutActions.tsx',
+  ].map(read));
+
+  for (const page of [ownedPage, publicPage]) assert.match(page, /<WorkoutDetail/);
+  assert.match(ownedPage, /workoutLibraryService\.getForOwner\('athlete', user\.id, workoutId\)/);
+  assert.doesNotMatch(ownedPage, /prisma\./);
+  assert.match(focusSource, /workoutHref=\{catalogEntries \? myWorkoutHref : null\}/);
+  assert.match(actionsSource, /<WorkoutStartChooser/);
+  assert.match(actionsSource, /source=\{\{ kind: 'workout', id, from: null \}\}/);
+  assert.match(actionsSource, /href=\{editWorkoutHref\(id, 'detail'\)\}/);
 });
 
 test('Calendar placement only places defined sources on selected dates', async () => {
@@ -172,7 +195,7 @@ test('Calendar placement only places defined sources on selected dates', async (
   assert.match(plannerDeskSource, /setSelectedDates\(dates\)/);
   assert.match(plannerDeskSource, /Month navigation/);
   assert.match(plannerDeskSource, /params\.set\('source', selectedSource\.key\)/);
-  assert.match(workoutsClientSource, /getCalendarPlacementHref\(`workout:\$\{workout\.id\}`\)/);
+  assert.match(await read('components/library/MyWorkoutActions.tsx'), /getCalendarPlacementHref\(`workout:\$\{id\}`\)/);
   assert.match(templatesClientSource, /getCalendarPlacementHref\(`template:\$\{template\.id\}`\)/);
   assert.doesNotMatch(templatesClientSource, /\/athlete\/calendar\?add=1&template=/);
 });
@@ -249,7 +272,7 @@ test('summary-only activity outcomes do not offer structured comparison or editi
   assert.match(athleteSession, /<Surface id="session-outcome" className="scroll-mt-20 space-y-3 md:scroll-mt-6">/);
   assert.match(athleteSession, /isImportOrLogged \? null : <SessionDetailClient/);
   assert.match(athleteSession, /isImportOrLogged && detail\.session\.blocks\.length === 0/);
-  assert.match(athleteSession, /This activity only has totals, so there are no steps to show\./);
+  assert.match(athleteSession, /This activity only has totals, so there are no blocks to show\./);
   assert.match(coachDetail, /function hasNoPlannedBaseline\(metricsSource: string \| null \| undefined\)/);
   assert.match(coachDetail, /hasNoPlannedBaseline\(session\.metricsSource\) \? null : <SessionComparisonDialog/);
   assert.match(coachDetail, /hasNoPlannedBaseline\(session\.metricsSource\) \? null : <ShareLinkButton/);

@@ -56,6 +56,13 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
       });
     },
 
+    async getForOwner(owner: WorkoutLibraryOwner, ownerId: number, sessionId: number) {
+      return db.session.findFirst({
+        where: { id: sessionId, ...standaloneWhere(owner, ownerId) },
+        include: { blocks: { orderBy: { sortOrder: 'asc' } } },
+      });
+    },
+
     async saveForOwner(owner: WorkoutLibraryOwner, ownerId: number, input: unknown, sessionId?: number) {
       const safety = input && typeof input === 'object' ? input as { requestKey?: unknown; expectedUpdatedAt?: unknown } : {};
       if (safety.requestKey !== undefined && (typeof safety.requestKey !== 'string' || !/^[a-zA-Z0-9-]{16,80}$/.test(safety.requestKey))) return { ok: false as const, error: 'Something went wrong. Reload the page and try again.', status: 400 };

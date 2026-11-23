@@ -1,8 +1,10 @@
 import { randomBytes } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
+import { safeStravaReturnPath, STRAVA_REQUESTED_SCOPES } from '@/lib/strava-post';
 
 const STATE_COOKIE = 'tempo_strava_oauth_state';
+const RETURN_COOKIE = 'tempo_strava_return';
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
@@ -23,7 +25,7 @@ export async function GET(request: Request) {
     redirect_uri: callback,
     response_type: 'code',
     approval_prompt: 'auto',
-    scope: 'activity:read,activity:read_all',
+    scope: STRAVA_REQUESTED_SCOPES,
     state,
   }).toString();
 
@@ -34,6 +36,15 @@ export async function GET(request: Request) {
     sameSite: 'lax',
     path: '/api/strava/callback',
     maxAge: 600,
+  });
+  // After connecting from an activity, come back to it instead of the Import page.
+  const returnTo = safeStravaReturnPath(new URL(request.url).searchParams.get('returnTo'));
+  response.cookies.set(RETURN_COOKIE, returnTo ?? '', {
+    httpOnly: true,
+    secure: new URL(request.url).protocol === 'https:',
+    sameSite: 'lax',
+    path: '/api/strava/callback',
+    maxAge: returnTo ? 600 : 0,
   });
   return response;
 }

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { CalendarClock, CircleSlash, Ellipsis, Link2, PencilLine, SquarePen, Trash2 } from 'lucide-react';
+import { CalendarClock, CircleSlash, Download, Ellipsis, Link2, PencilLine, SquarePen, Trash2 } from 'lucide-react';
 import { SessionDeleteAction } from '@/components/SessionDeleteAction';
 import { SessionRescheduleAction } from '@/components/SessionRescheduleAction';
 import { ShareLinkResult, useShareLink } from '@/components/ShareLinkButton';
@@ -71,6 +71,7 @@ export function SessionHeaderActions({
   statusAction,
   canDelete,
   returnHref,
+  downloadTcxHref = null,
 }: {
   sessionId: number;
   title: string;
@@ -82,6 +83,8 @@ export function SessionHeaderActions({
   statusAction: SessionStatusAction | null;
   canDelete: boolean;
   returnHref: string;
+  /** The recorded data as a .tcx file, for uploading to Strava or another app by hand. */
+  downloadTcxHref?: string | null;
 }) {
   const { requestAdjust } = useContext(AdjustRequestContext);
   const share = useShareLink('session', sessionId);
@@ -89,7 +92,7 @@ export function SessionHeaderActions({
   const [moveOpen, setMoveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const canSkip = statusAction === 'skip';
-  const hasMenu = canAdjust || Boolean(move) || canSkip || sourceWorkoutId !== null || shareable || canDelete;
+  const hasMenu = canAdjust || Boolean(move) || canSkip || sourceWorkoutId !== null || shareable || canDelete || Boolean(downloadTcxHref);
 
   function adjust() {
     requestAdjust();
@@ -134,6 +137,11 @@ export function SessionHeaderActions({
               {shareable ? (
                 <MenuItem onSelect={share.createLink}>
                   <Link2 aria-hidden="true" size={16} strokeWidth={1.6} />Create share link
+                </MenuItem>
+              ) : null}
+              {downloadTcxHref ? (
+                <MenuItem render={<a href={downloadTcxHref} download />}>
+                  <Download aria-hidden="true" size={16} strokeWidth={1.6} />Download .tcx file
                 </MenuItem>
               ) : null}
               {canDelete ? (

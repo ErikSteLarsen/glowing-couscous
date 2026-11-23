@@ -237,11 +237,11 @@ export function validatePlannerSessionDraft(draft: PlannerSessionDraft) {
     return 'Choose a sport.';
   }
   if (draft.blocks.length === 0) {
-    return 'Add at least one step.';
+    return 'Add at least one block.';
   }
   for (const block of draft.blocks) {
     if (block.durationSec <= 0) {
-      return 'Every step needs a duration.';
+      return 'Every block needs a duration.';
     }
     if (block.targetType && (block.targetLow === null || block.targetHigh === null)) {
       return 'Enter both a low and a high target.';

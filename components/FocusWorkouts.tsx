@@ -5,15 +5,15 @@ import { useSearchParams } from 'next/navigation';
 import { LibraryBrowser } from '@/components/library/LibraryBrowser';
 import { WorkoutLibraryClient } from '@/components/WorkoutLibraryClient';
 import { TopBar, getSwitchOptionClassName, switchTrackClassName } from '@/components/ui';
-import { athleteWorkoutsHref, resolveWorkoutTab, type WorkoutTab } from '@/lib/athlete-workouts-navigation';
+import { athleteWorkoutsHref, myWorkoutHref, resolveWorkoutTab, type WorkoutTab } from '@/lib/athlete-workouts-navigation';
 import { parseCatalogQuery, type CatalogEntry } from '@/lib/workout-catalog/query';
 
 const labels = {
-  mine: { title: 'My workouts', hint: 'Workouts you’ve saved. Open one to edit it, or add it to your Calendar.' },
+  mine: { title: 'My workouts', hint: 'Workouts you’ve saved. Open one to start, schedule or edit it.' },
   library: { title: 'Public library', hint: 'Ready-made workouts. Customize one to save your own version.' },
 } satisfies Record<WorkoutTab, { title: string; hint: string }>;
 
-type Props = Omit<ComponentProps<typeof WorkoutLibraryClient>, 'role' | 'listIntro' | 'collections' | 'designDirection'> & {
+type Props = Omit<ComponentProps<typeof WorkoutLibraryClient>, 'role' | 'listIntro' | 'collections' | 'designDirection' | 'workoutHref'> & {
   catalogEntries: CatalogEntry[] | null;
 };
 
@@ -94,6 +94,7 @@ export function FocusWorkouts({ catalogEntries, ...libraryProps }: Props) {
         role="ATHLETE"
         designDirection="nocturne"
         listIntro={listIntro}
+        workoutHref={catalogEntries ? myWorkoutHref : null}
         collections={catalogEntries ? {
           tab,
           onBrowse: () => selectTab('library', true),

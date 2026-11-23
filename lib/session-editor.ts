@@ -351,12 +351,12 @@ export function validateSessionEditorDraft(draft: SessionEditorDraft): string | 
   if (draft.planWeekday !== null && (!Number.isInteger(draft.planWeekday) || draft.planWeekday < 1 || draft.planWeekday > 7)) {
     return 'Choose a day of the week.';
   }
-  if (draft.blocks.length === 0) return 'Add at least one step.';
-  if (!draft.blocks.some((block) => block.kind !== 'pause' && !block.skipped)) return 'Add at least one training step before saving. Pauses don’t count.';
+  if (draft.blocks.length === 0) return 'Add at least one block.';
+  if (!draft.blocks.some((block) => block.kind !== 'pause' && !block.skipped)) return 'Add at least one training block before saving. Pauses don’t count.';
 
   for (const block of draft.blocks) {
     if (!Number.isInteger(block.durationSec) || block.durationSec <= 0) {
-      return 'Every step needs a duration.';
+      return 'Every block needs a duration.';
     }
     if (block.reps !== null && (!Number.isInteger(block.reps) || block.reps <= 0)) {
       return 'Repeats must be a whole number of 1 or more.';

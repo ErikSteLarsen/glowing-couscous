@@ -2,22 +2,21 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import Link from 'next/link';
-import { ChevronDown, Maximize, Minimize, Minus, Pause, Play, Plus, SkipForward, Square } from 'lucide-react';
+import { ChevronDown, ChevronUp, Ellipsis, Maximize, Minimize, Minus, Pause, Play, Plus, SkipBack, SkipForward, Square } from 'lucide-react';
 import { BackLink, buttonFocusClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import type { BackTarget } from '@/lib/app-navigation';
-import { Toggle } from '@/components/tempo/Toggle';
 import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
 import { GetTempoRideLink } from '@/components/RideAppLaunch';
 import { MAX_ACTIVITY_IMPORT_DURATION_SEC } from '@/lib/activity-import-limits';
 import type { ExecutionStep } from '@/lib/athlete-execution';
 import { formatDistance } from '@/lib/format-distance';
 import { intensityColor } from '@/lib/intensity-color';
-import { zoneForHeartRateBpm } from '@/lib/profile-training-zones';
 import { isWebBluetoothAvailable, RideDeviceManager, type RideDeviceRole, type RideDeviceState } from '@/lib/ride/bluetooth';
 import { ergTargetChanged, planHasPowerTargets, targetWattsAt, type RidePlan } from '@/lib/ride/ride-plan';
 import { complianceTone, planPositionSec, powerBuckets, stepIntensityZone } from '@/lib/ride/ride-chart';
 import {
   advanceStep,
+  previousStep,
   createRecording,
   currentLapStats,
   emptyReading,
@@ -39,6 +38,7 @@ import {
 } from '@/lib/ride/recorder';
 import { clearRideCheckpoint, downloadRideBackup, listStoredRides, saveRideCheckpoint } from '@/lib/ride/recording-store';
 import { WorkoutProfileChart } from './WorkoutProfileChart';
+import { StravaPostAction } from '@/components/StravaPostAction';
 
 const CHECKPOINT_INTERVAL_MS = 5000;
 const SAMPLE_INTERVAL_MS = 250;
@@ -46,17 +46,19 @@ const SAVE_RETRY_LIMIT = 5;
 const ROLES = ['trainer', 'heartRate', 'cadence'] as const;
 const subscribeNever = () => () => undefined;
 const PROFILE_FTP_HREF = '/profile#cycling';
+const MORE_DATA_KEY = 'tempo.ride.moreData';
+const PHONE_QUERY = '(max-width: 639px)';
 
-/** "90.5-100% FTP" → ["90.5-100", "% FTP"], so the number can carry the hero size. */
-function splitPrescription(label: string | null): [string, string] {
-  const match = label?.match(/^([\d.\-–]+)\s*(.*)$/);
-  return match ? [match[1], match[2]] : [label ?? '', ''];
+function subscribePhone(onChange: () => void) {
+  const query = window.matchMedia(PHONE_QUERY);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
 }
 
 type SaveState =
   | { kind: 'idle' }
   | { kind: 'saving'; attempt: number }
-  | { kind: 'saved'; note: string | null }
+  | { kind: 'saved'; note: string | null; activityId: number | null }
   | { kind: 'failed'; error: string };
 
 function formatClock(totalSeconds: number): string {
@@ -109,17 +111,31 @@ function Kbd({ children }: { children: ReactNode }) {
   return <kbd className="data inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-[var(--border-strong)] px-1.5 text-[11px] text-[var(--text)]">{children}</kbd>;
 }
 
-function Label({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <p className={`text-[12px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)] ${className}`}>{children}</p>;
-}
-
-function Stat({ label, value, unit, tone }: { label: string; value: string; unit?: string; tone?: string }) {
+function Stat({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
     <div className="min-w-0">
       <p className="truncate text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)]">{label}</p>
-      <p className="ride-numeral mt-1.5 truncate text-[clamp(1.375rem,1.1rem+0.9vw,2.25rem)]" style={tone ? { color: tone } : undefined}>
+      <p className="ride-numeral mt-1.5 truncate text-[clamp(1.375rem,1.1rem+0.9vw,2.25rem)]">
         {value}{unit ? <span className="ml-1 text-[0.45em] font-normal tracking-normal text-[var(--text-muted)]">{unit}</span> : null}
       </p>
+    </div>
+  );
+}
+
+function RideMetric({ label, value, unit, size, color }: {
+  label: string;
+  value: string;
+  unit?: string;
+  size: string;
+  color?: string;
+}) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-sm text-[var(--text-secondary)]">{label}</dt>
+      <dd className="mt-2 flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
+        <span className={`ride-numeral !leading-none ${size}`} style={{ color }}>{value}</span>
+        {unit ? <span className="text-sm text-[var(--text-muted)]">{unit}</span> : null}
+      </dd>
     </div>
   );
 }
@@ -158,6 +174,16 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   const pendingSaveRef = useRef<AbortController | null>(null);
   const savedRef = useRef(false);
   const connectionsRef = useRef<HTMLDialogElement>(null);
+  const phoneSheetRef = useRef<HTMLDialogElement>(null);
+  const isPhone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE_QUERY).matches, () => false);
+  // The live view never renders on the server, so reading storage here cannot cause a hydration mismatch.
+  const [moreData, setMoreData] = useState(() => {
+    try { return typeof window !== 'undefined' && window.localStorage.getItem(MORE_DATA_KEY) === '1'; } catch { return false; }
+  });
+  const toggleMoreData = useCallback(() => setMoreData((open) => {
+    try { window.localStorage.setItem(MORE_DATA_KEY, open ? '0' : '1'); } catch { /* preference only */ }
+    return !open;
+  }), []);
 
   useEffect(() => () => pendingSaveRef.current?.abort(), []);
 
@@ -286,6 +312,10 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     const now = Date.now();
     commit(advanceStep(recordingRef.current, plan, now, manager.getReading(now)), true);
   }, [commit, manager, plan]);
+  const goBack = useCallback(() => {
+    const now = Date.now();
+    commit(previousStep(recordingRef.current, plan, now, manager.getReading(now)), true);
+  }, [commit, manager, plan]);
   const bias = useCallback((delta: number) => {
     const now = Date.now();
     const current = tick(recordingRef.current, plan, now, manager.getReading(now));
@@ -329,7 +359,11 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         if (response?.ok && payload?.sessionId === sessionId) {
           savedRef.current = true;
           clearRideCheckpoint(userId, sessionId);
-          setSaveState({ kind: 'saved', note: payload.duplicate === true ? 'This ride was already saved.' : null });
+          setSaveState({
+            kind: 'saved',
+            note: payload.duplicate === true ? 'This ride was already saved.' : null,
+            activityId: Number.isSafeInteger(payload.activityId) ? payload.activityId : null,
+          });
           return;
         }
         const retryable = !response || response.status >= 500 || response.status === 429;
@@ -374,30 +408,29 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     commit(createRecording(sessionId, sessionTitle, plan));
   }, [userId, commit, plan, sessionId, sessionTitle]);
 
-  // Keyboard: space pause/resume, N next step, E toggle ERG, +/- intensity, F fullscreen.
+  // Keyboard: space pause/resume, N next step, B previous step, E toggle ERG, +/- intensity, F fullscreen.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
-      if (connectionsRef.current?.open || event.metaKey || event.ctrlKey || event.altKey || target?.closest('input, textarea, select, button, a, summary, [contenteditable="true"]')) return;
+      if (connectionsRef.current?.open || phoneSheetRef.current?.open || event.metaKey || event.ctrlKey || event.altKey || target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      // A focused control keeps its native Space activation; letter shortcuts still work after a click.
+      if (event.key === ' ' && target?.closest('button, a, summary')) return;
       if ((event.key === 'f' || event.key === 'F') && document.fullscreenEnabled) { toggleFullscreen(); return; }
       if (!active) return;
       if (event.key === ' ') { event.preventDefault(); togglePause(); }
       else if (event.key === 'n' || event.key === 'N') skip();
+      else if (event.key === 'b' || event.key === 'B') goBack();
       else if (event.key === 'e' || event.key === 'E') toggleErg();
       else if (event.key === '+' || event.key === '=') bias(1);
       else if (event.key === '-' || event.key === '_') bias(-1);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [active, bias, skip, toggleErg, toggleFullscreen, togglePause]);
+  }, [active, bias, goBack, skip, toggleErg, toggleFullscreen, togglePause]);
 
-  // Workout-level stats are recomputed once per recorded second (when samples change), not per 4 Hz sample.
-  const { samples, laps: recordedLaps, timerSec, elapsedSec, movingSec, distanceMeters, stepIndex, stepElapsedSec } = recording;
-  const summary = useMemo(
-    () => summarizeRecording({ ...recording, samples, laps: recordedLaps, timerSec, elapsedSec, movingSec, distanceMeters }, plan.ftpWatts),
-    [samples, recordedLaps, timerSec, elapsedSec, movingSec, distanceMeters, plan.ftpWatts], // eslint-disable-line react-hooks/exhaustive-deps
-  );
+  const { samples, laps: recordedLaps, timerSec, stepIndex, stepElapsedSec } = recording;
   const lap = useMemo(() => currentLapStats({ samples, laps: recordedLaps }), [samples, recordedLaps]);
+  const workout = useMemo(() => summarizeRecording(recording, plan.ftpWatts), [recording, plan.ftpWatts]);
   const positionSec = planPositionSec({ stepIndex, stepElapsedSec, timerSec, laps: recordedLaps }, plan);
   const domainSec = Math.max(plan.totalSec, positionSec);
   const buckets = useMemo(
@@ -408,7 +441,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   const connectedCount = ROLES.filter((role) => devices[role].status === 'connected').length;
   const anyDevice = connectedCount > 0;
   const lostDevices = ROLES.filter((role) => devices[role].status === 'reconnecting');
-  const stepLabel = (index: number) => steps[index]?.label ?? (index >= plan.steps.length ? 'Free ride' : `Step ${index + 1}`);
+  const stepLabel = (index: number) => steps[index]?.label ?? (index >= plan.steps.length ? 'Free ride' : `Block ${index + 1}`);
 
   const backLink = <BackLink target={back} variant="compact" />;
   const fullscreenButton = fullscreenSupported ? (
@@ -451,35 +484,14 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     </dialog>
   );
 
-  const advancedOptions = (
-    <details className="group">
-      <summary className={`${secondaryButtonClassName} w-fit cursor-pointer list-none gap-2`}>
-        Advanced options
-        <ChevronDown aria-hidden="true" size={16} className="group-open:rotate-180" />
-      </summary>
-      <div className="mt-3 space-y-4">
-        {active ? (
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-            <div className="flex items-center gap-2" role="group" aria-label="Intensity">
-              <span className="text-sm text-[var(--text-secondary)]">Intensity</span>
-              <button type="button" className={iconControlClassName} onClick={() => bias(-1)} aria-label="Decrease intensity 1%" aria-keyshortcuts="-"><Minus aria-hidden="true" size={16} strokeWidth={1.8} /></button>
-              <span className="data min-w-12 text-center text-sm font-medium text-[var(--text)]" aria-live="polite">{recording.biasPct > 0 ? '+' : recording.biasPct < 0 ? '−' : ''}{Math.abs(recording.biasPct)}%</span>
-              <button type="button" className={iconControlClassName} onClick={() => bias(1)} aria-label="Increase intensity 1%" aria-keyshortcuts="+"><Plus aria-hidden="true" size={16} strokeWidth={1.8} /></button>
-            </div>
-            {devices.ergAvailable ? (
-              <span className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)]">ERG<Toggle checked={recording.ergEnabled} onChange={toggleErg} label="ERG mode" /></span>
-            ) : null}
-          </div>
-        ) : null}
-        <dl className="grid w-fit grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 text-[13px] text-[var(--text-secondary)]">
-          <dt><Kbd>Space</Kbd></dt><dd>Pause or resume</dd>
-          <dt><Kbd>N</Kbd></dt><dd>Skip to next interval</dd>
-          <dt><Kbd>E</Kbd></dt><dd>Toggle ERG</dd>
-          <dt className="flex gap-1"><Kbd>+</Kbd><Kbd>−</Kbd></dt><dd>Adjust intensity 1%</dd>
-          {fullscreenSupported ? <><dt><Kbd>F</Kbd></dt><dd>Full screen</dd></> : null}
-        </dl>
-      </div>
-    </details>
+  const shortcutLegend = (
+    <dl aria-label="Keyboard shortcuts" className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-[var(--text-muted)] [@media(pointer:coarse)]:hidden">
+      <div className="flex items-center gap-1.5"><dt><Kbd>Space</Kbd></dt><dd>Pause</dd></div>
+      <div className="flex items-center gap-1.5"><dt className="flex gap-1"><Kbd>B</Kbd><Kbd>N</Kbd></dt><dd>Previous / next block</dd></div>
+      <div className="flex items-center gap-1.5"><dt><Kbd>E</Kbd></dt><dd>ERG</dd></div>
+      <div className="flex items-center gap-1.5"><dt className="flex gap-1"><Kbd>+</Kbd><Kbd>−</Kbd></dt><dd>Intensity</dd></div>
+      {fullscreenSupported ? <div className="flex items-center gap-1.5"><dt><Kbd>F</Kbd></dt><dd>Full screen</dd></div> : null}
+    </dl>
   );
 
   const frame = (stateLabel: string, controls: ReactNode, body: ReactNode, label: string) => (
@@ -541,9 +553,16 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   }
 
   if (status === 'finished') {
+    const summary = summarizeRecording(recording, plan.ftpWatts);
     const lapRows = summarizeLaps(recording).filter((entry) => entry.durationSec > 0);
     const saveButton = saveState.kind === 'saved' ? (
-      <Link href={back.href} className={primaryButtonClassName}>Open workout</Link>
+      <>
+        <Link href={back.href} className={primaryButtonClassName}>Open workout</Link>
+        {/* Optional: the workout page keeps the same Post to Strava action for later. */}
+        {saveState.activityId !== null ? (
+          <StravaPostAction activityId={saveState.activityId} returnPath={`/athlete/session/${sessionId}?post=strava`} />
+        ) : null}
+      </>
     ) : (
       <button type="button" className={primaryButtonClassName} disabled={saveState.kind === 'saving'} onClick={() => void save()}>
         {saveState.kind === 'saving' ? (saveState.attempt > 1 ? `Retrying (${saveState.attempt})…` : 'Saving…') : saveState.kind === 'failed' ? 'Try again' : 'Save to Tempo'}
@@ -556,6 +575,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
             <h2 className="text-[clamp(1.75rem,1.4rem+1.2vw,2.5rem)] font-medium tracking-[-0.02em] text-[var(--text)]">Ride complete</h2>
             <div className="mt-2 min-h-5 text-[14px]">
               {saveState.kind === 'saved' ? <p role="status" className="text-[var(--status-success)]">Saved. The workout is marked as done.{saveState.note ? ` ${saveState.note}` : ''}</p> : null}
+              {saveState.kind === 'saved' && saveState.activityId !== null ? <p className="mt-1 text-[var(--text-secondary)]">Post it to Strava now, or later from the workout page.</p> : null}
               {saveState.kind === 'failed' ? <p role="alert" className="text-[var(--status-danger)]">{saveState.error}</p> : null}
               {saveState.kind === 'saving' ? <p role="status" className="text-[var(--text-secondary)]">Saving to Tempo…</p> : null}
               {timerSec >= MAX_ACTIVITY_IMPORT_DURATION_SEC ? <p className="text-[var(--text-secondary)]">This ride reached the 36-hour recording limit.</p> : null}
@@ -588,14 +608,14 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
           <WorkoutProfileChart plan={plan} positionSec={null} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} className="h-52 sm:h-64" />
         </section>
 
-        <section aria-labelledby="ride-intervals" className="pt-4">
-          <h3 id="ride-intervals" className="text-[16px] font-medium text-[var(--text)]">Intervals</h3>
+        <section aria-labelledby="ride-blocks" className="pt-4">
+          <h3 id="ride-blocks" className="text-[16px] font-medium text-[var(--text)]">Blocks</h3>
           {lapRows.length ? (
             <div className="mt-3 overflow-x-auto">
               <table className="data w-full min-w-[640px] text-left text-[14px]">
                 <thead>
                   <tr className="border-b border-[var(--border)] text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                    <th scope="col" className="py-2 pr-4 font-medium">Interval</th>
+                    <th scope="col" className="py-2 pr-4 font-medium">Block</th>
                     <th scope="col" className="py-2 pr-4 text-right font-medium">Time</th>
                     <th scope="col" className="py-2 pr-4 text-right font-medium">Target</th>
                     <th scope="col" className="py-2 pr-4 text-right font-medium">Avg power</th>
@@ -631,14 +651,14 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
                 </tbody>
               </table>
             </div>
-          ) : <p className="mt-2 text-[14px] text-[var(--text-secondary)]">No intervals were recorded.</p>}
+          ) : <p className="mt-2 text-[14px] text-[var(--text-secondary)]">No blocks were recorded.</p>}
         </section>
       </div>
     ), 'Ride summary');
   }
 
   if (status === 'ready') {
-    const intervalCount = plan.steps.filter((step) => step.kind !== 'pause' && step.durationSec > 0).length;
+    const blockCount = plan.steps.filter((step) => step.kind !== 'pause' && step.durationSec > 0).length;
     return frame('Ready to ride', null, (
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-4 py-6 sm:px-8 sm:py-8">
         <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-10">
@@ -646,7 +666,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
             <h2 className="text-[clamp(1.75rem,1.3rem+1.6vw,3rem)] font-medium leading-tight tracking-[-0.025em] text-[var(--text)]">{sessionTitle}</h2>
             <div className="mt-4 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
               <Stat label="Duration" value={formatClock(plan.totalSec)} />
-              <Stat label="Intervals" value={String(intervalCount)} />
+              <Stat label="Blocks" value={String(blockCount)} />
               <Stat label="FTP" value={display(plan.ftpWatts)} unit={plan.ftpWatts ? 'W' : undefined} />
               <Stat label="Planned TSS" value={display(plannedTss)} />
             </div>
@@ -668,44 +688,280 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
             {plan.ftpWatts ? 'This workout has no power targets, so the trainer stays in free ride.' : <><Link href={PROFILE_FTP_HREF} className="underline underline-offset-2 hover:text-[var(--text)]">Add FTP in Profile</Link> to turn %FTP targets into watts. Until then the trainer stays in free ride.</>}
           </p>
         ) : null}
-        {advancedOptions}
+        {shortcutLegend}
       </div>
     ), 'Ride setup');
   }
 
-  // Riding.
-  const hasPower = threeSecondPower(recording, live) !== null;
   const threeSecond = threeSecondPower(recording, live);
   const tone = complianceTone(threeSecond, targetWatts);
   const toneColor = TONE_VAR[tone];
   const delta = threeSecond !== null && targetWatts !== null ? threeSecond - targetWatts : null;
-  // Without FTP there are no watts, but the %FTP prescription is still the target to ride.
-  const prescribedTarget = targetWatts === null ? steps[recording.stepIndex]?.prescribedTarget ?? null : null;
-  const [prescribedValue, prescribedUnit] = splitPrescription(prescribedTarget);
-  const toneText = tone === 'on' ? 'On target' : tone === 'over' ? 'Above target' : tone === 'under' ? 'Below target' : targetWatts === null ? (prescribedTarget ? `Target ${prescribedTarget}` : 'Free ride') : 'No power';
-  const stepRemaining = currentStep ? currentStep.durationSec - recording.stepElapsedSec : null;
-  const stepProgress = currentStep && currentStep.durationSec > 0 ? recording.stepElapsedSec / currentStep.durationSec : 0;
-  const nextStep = plan.steps[recording.stepIndex + 1];
+  const toneText = tone === 'on' ? 'On target' : tone === 'over' ? 'Above target' : 'Below target';
+  const prescribedTarget = targetWatts === null ? steps[stepIndex]?.prescribedTarget ?? null : null;
+  const ergOn = recording.ergEnabled && devices.ergAvailable;
+  const stepTime = currentStep
+    ? currentStep.durationSec - stepElapsedSec
+    : timerSec - (recordedLaps.at(-1)?.startSec ?? 0);
+  const stepProgress = currentStep && currentStep.durationSec > 0 ? stepElapsedSec / currentStep.durationSec : 0;
+  const nextStep = plan.steps[stepIndex + 1];
   const nextTarget = targetWattsAt(nextStep, 0, recording.biasPct);
-  const nextPrescription = steps[recording.stepIndex + 1]?.prescribedTarget ?? null;
+  const nextPrescription = steps[stepIndex + 1]?.prescribedTarget ?? null;
   const remainingSec = Math.max(0, plan.totalSec - positionSec);
-  const hrZone = live.heartRateBpm !== null ? zoneForHeartRateBpm(live.heartRateBpm, heartRateMaxBpm) : null;
   const deviation = delta !== null && targetWatts ? Math.max(-1, Math.min(1, delta / Math.max(20, targetWatts * 0.25))) : null;
-  const intervalColor = currentStep ? (currentStep.kind === 'pause' ? 'var(--text-muted)' : intensityColor(stepIntensityZone(currentStep, plan.ftpWatts))) : 'var(--brand)';
-  const heroNumeral = 'ride-numeral text-[clamp(4rem,min(9vw,16.5vh),10.25rem)]';
+  const intervalColor = currentStep?.kind === 'pause' ? 'var(--text-muted)' : currentStep ? intensityColor(stepIntensityZone(currentStep, plan.ftpWatts)) : 'var(--brand)';
+  const hasPowerTargets = planHasPowerTargets(plan);
+  const ftpPercent = threeSecond !== null && plan.ftpWatts ? Math.round((threeSecond / plan.ftpWatts) * 100) : null;
+  const biasText = `${recording.biasPct > 0 ? '+' : recording.biasPct < 0 ? '−' : ''}${Math.abs(recording.biasPct)}%`;
+  const unit = (value: number | null | undefined, text: string) => value === null || value === undefined ? undefined : text;
+
+  const canGoBack = plan.steps.slice(0, Math.min(stepIndex, plan.steps.length)).some((step) => step.durationSec > 0);
+  const ergButton = (
+    <button
+      type="button"
+      className={`inline-flex h-10 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${buttonFocusClassName} ${ergOn ? 'border-[var(--brand)] text-[var(--text)]' : 'border-[var(--border-strong)] text-[var(--text-secondary)] enabled:hover:bg-[var(--raised)] enabled:hover:text-[var(--text)]'}`}
+      onClick={toggleErg}
+      disabled={!devices.ergAvailable}
+      aria-pressed={ergOn}
+      aria-keyshortcuts="E"
+      title={devices.ergAvailable ? `ERG ${ergOn ? 'on' : 'off'} (E)` : 'Connect a controllable trainer to use ERG'}
+    >
+      <span aria-hidden="true" className={`size-2 rounded-full ${ergOn ? 'bg-[var(--brand)]' : 'bg-[var(--border-strong)]'}`} />
+      ERG {ergOn ? 'on' : 'off'}
+    </button>
+  );
 
   const controls = (
     <>
-      <button type="button" className={iconControlClassName} onClick={skip} disabled={!currentStep} aria-label="Skip to next interval" aria-keyshortcuts="N" title="Skip interval (N)"><SkipForward aria-hidden="true" size={17} strokeWidth={1.7} /></button>
-      <button type="button" className={`${status === 'paused' ? primaryButtonClassName : secondaryButtonClassName} !h-10 gap-2`} onClick={togglePause} aria-keyshortcuts="Space">
-        {status === 'paused' ? <Play aria-hidden="true" size={16} strokeWidth={1.8} /> : <Pause aria-hidden="true" size={16} strokeWidth={1.8} />}
-        {status === 'paused' ? 'Resume' : 'Pause'}
-      </button>
-      <button type="button" className={`${secondaryButtonClassName} !h-10 gap-2`} onClick={() => { if (window.confirm('Finish this ride?')) finish(); }}>
-        <Square aria-hidden="true" size={14} strokeWidth={1.8} />Finish
-      </button>
+      <div role="group" aria-label="Trainer control" className="flex items-center gap-2">
+        {ergButton}
+        {hasPowerTargets ? (
+          <div className="flex items-center gap-1" role="group" aria-label="Intensity" title="Intensity (+ / −)">
+            <span aria-hidden="true" className="mr-1 hidden text-sm text-[var(--text-secondary)] 2xl:inline">Intensity</span>
+            <button type="button" className={iconControlClassName} onClick={() => bias(-1)} aria-label="Decrease intensity 1%" aria-keyshortcuts="-"><Minus aria-hidden="true" size={15} strokeWidth={1.8} /></button>
+            <span className="data min-w-12 text-center text-sm font-medium text-[var(--text)]" aria-live="polite" aria-label={`Intensity ${biasText}`}>{biasText}</span>
+            <button type="button" className={iconControlClassName} onClick={() => bias(1)} aria-label="Increase intensity 1%" aria-keyshortcuts="+"><Plus aria-hidden="true" size={15} strokeWidth={1.8} /></button>
+          </div>
+        ) : null}
+      </div>
+      <span aria-hidden="true" className="mx-1 hidden h-6 w-px bg-[var(--border-strong)] sm:block" />
+      <div role="group" aria-label="Ride" className="flex items-center gap-2">
+        <button type="button" className={`${status === 'paused' ? primaryButtonClassName : secondaryButtonClassName} !h-10 gap-2`} onClick={togglePause} aria-keyshortcuts="Space" title={`${status === 'paused' ? 'Resume' : 'Pause'} (Space)`}>
+          {status === 'paused' ? <Play aria-hidden="true" size={16} strokeWidth={1.8} /> : <Pause aria-hidden="true" size={16} strokeWidth={1.8} />}
+          {status === 'paused' ? 'Resume' : 'Pause'}
+        </button>
+        <button type="button" className={`${secondaryButtonClassName} !h-10 gap-2`} onClick={() => { if (window.confirm('Finish this ride?')) finish(); }}>
+          <Square aria-hidden="true" size={14} strokeWidth={1.8} />Finish
+        </button>
+      </div>
     </>
   );
+
+  const rowLabel = 'py-3 pr-4 text-left align-top font-sans text-sm font-normal text-[var(--text-secondary)] max-sm:sr-only';
+  const nowCell = 'py-3 pr-4 align-top';
+  const avgCell = 'py-3 pl-3 text-left align-top sm:pl-6';
+  const avgValue = (value: number | null | undefined, unitText: string, color?: string) => (
+    <span className="inline-flex items-baseline gap-1">
+      <span className="ride-numeral !leading-none text-xl sm:text-[1.75rem]" style={{ color: value == null ? undefined : color }}>{display(value)}</span>
+      {value != null ? <span className="text-[12px] text-[var(--text-muted)]">{unitText}</span> : null}
+    </span>
+  );
+  const nowValue = (value: number | null, unitText: string, size: string, color?: string) => (
+    <span className="inline-flex items-baseline gap-1.5">
+      <span className={`ride-numeral !leading-none ${size}`} style={{ color: value === null ? undefined : color }}>{display(value)}</span>
+      {value !== null ? <span className="text-sm text-[var(--text-muted)]">{unitText}</span> : null}
+    </span>
+  );
+
+  if (isPhone) {
+    const closeSheet = () => phoneSheetRef.current?.close();
+    const sheetMetric = (label: string, value: string, unitText?: string, color?: string) => (
+      <div className="min-w-0">
+        <dt className="truncate text-[12px] text-[var(--text-secondary)]">{label}</dt>
+        <dd className="mt-1 flex items-baseline gap-1"><span className="ride-numeral text-xl" style={{ color }}>{value}</span>{unitText && value !== '--' ? <span className="text-[12px] text-[var(--text-muted)]">{unitText}</span> : null}</dd>
+      </div>
+    );
+    const phoneAvg = (label: string, power: number | null | undefined, heartRate: number | null | undefined) => (
+      <div className="min-w-0">
+        <p className="text-[12px] text-[var(--text-secondary)]">{label}</p>
+        <p className="mt-1 flex flex-wrap items-baseline gap-x-3">
+          <span className="inline-flex items-baseline gap-1"><span className="ride-numeral text-2xl">{display(power)}</span>{power != null ? <span className="text-[12px] text-[var(--text-muted)]">W</span> : null}</span>
+          <span className="inline-flex items-baseline gap-1"><span className="ride-numeral text-2xl" style={{ color: heartRate != null ? 'var(--ride-hr)' : undefined }}>{display(heartRate)}</span>{heartRate != null ? <span className="text-[12px] text-[var(--text-muted)]">bpm</span> : null}</span>
+        </p>
+      </div>
+    );
+    const nextText = currentStep
+      ? nextStep ? `Next ${stepLabel(stepIndex + 1)}${nextTarget !== null ? ` · ${nextTarget} W` : nextPrescription ? ` · ${nextPrescription}` : ''}` : 'Free ride next'
+      : 'After workout plan';
+
+    return (
+      <div className="ride-mode flex h-dvh flex-col overflow-hidden">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-[var(--border)] px-2">
+          {backLink}
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-[15px] font-medium text-[var(--text)]">{sessionTitle}</h1>
+            <p className="truncate text-[12px] text-[var(--text-muted)]">
+              {status === 'paused' ? 'Paused' : 'Riding'} · {connectedCount === 0 ? 'no devices' : `${connectedCount} ${connectedCount === 1 ? 'device' : 'devices'}`}
+            </p>
+          </div>
+          {ergButton}
+          <button type="button" className={iconControlClassName} aria-label="More controls and data" aria-haspopup="dialog" onClick={() => phoneSheetRef.current?.showModal()}>
+            <Ellipsis aria-hidden="true" size={18} strokeWidth={1.8} />
+          </button>
+        </header>
+
+        {lostDevices.length ? (
+          <p role="status" className="shrink-0 truncate border-b border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] px-4 py-1.5 text-[12px] text-[var(--text)]">
+            {lostDevices.map((role) => ROLE_LABEL[role]).join(' and ')} disconnected. Reconnecting…
+          </p>
+        ) : null}
+        {status === 'paused' ? <p role="status" className="shrink-0 border-b border-[var(--border)] bg-[var(--raised)] px-4 py-1.5 text-[12px] text-[var(--text)]">Paused. The timer is stopped.</p> : null}
+
+        <main id="ride" aria-label="Ride" className="flex min-h-0 flex-1 flex-col px-4">
+          <section aria-label="Current block" className="shrink-0 pt-3">
+            <div className="flex items-end justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="truncate text-base font-medium text-[var(--text)]">{stepLabel(stepIndex)}</h2>
+                <p className="truncate text-[12px] text-[var(--text-secondary)]">
+                  {currentStep ? `Block ${stepIndex + 1} of ${plan.steps.length} · ` : ''}<span className="data">{nextText}</span>
+                </p>
+              </div>
+              <p className="flex shrink-0 items-baseline gap-1.5 text-[12px] text-[var(--text-secondary)]">
+                <span className="ride-numeral !leading-none text-[1.75rem]">{formatClock(stepTime)}</span>
+                {currentStep ? 'left' : 'free'}
+              </p>
+            </div>
+            {currentStep ? <ProgressBar value={stepProgress} label="Block progress" color={intervalColor} className="mt-2 h-1" /> : null}
+          </section>
+
+          <section aria-label="Ride metrics" className="shrink-0">
+            <div className="pt-4">
+              <div className="flex items-baseline justify-between gap-3 text-[12px] text-[var(--text-secondary)]">
+                <span>Power · 3 s</span>
+                {targetWatts !== null || prescribedTarget ? (
+                  <span>
+                    {ergOn ? 'ERG target' : 'Target'}{' '}
+                    <span className="ride-numeral text-xl !text-[var(--text-secondary)]">{targetWatts ?? prescribedTarget}</span>
+                    {targetWatts !== null ? <span className="ml-0.5 text-[var(--text-muted)]">W</span> : null}
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-1 flex items-baseline gap-1.5">
+                <span className="ride-numeral !leading-none text-[4.5rem]">{display(threeSecond)}</span>
+                {threeSecond !== null ? <span className="text-base text-[var(--text-muted)]">W</span> : null}
+              </p>
+              {deviation !== null ? (
+                <div className="mt-2 flex items-center gap-3">
+                  <div className="relative h-1.5 flex-1 rounded-full bg-[var(--raised)]" role="meter" aria-label="Power versus target" aria-valuemin={-100} aria-valuemax={100} aria-valuenow={Math.round(deviation * 100)} aria-valuetext={delta ? `${Math.abs(delta)} watts ${delta > 0 ? 'above' : 'below'} target` : toneText}>
+                    <span aria-hidden="true" className="absolute -top-0.5 left-1/2 h-2.5 w-px bg-[var(--text-muted)]" />
+                    <span aria-hidden="true" className="ride-state-bar absolute top-0 h-1.5 rounded-full" style={{ left: `${50 + Math.min(0, deviation) * 50}%`, width: `${Math.abs(deviation) * 50}%`, background: toneColor }} />
+                  </div>
+                  <p className="shrink-0 text-[13px] font-medium" style={{ color: toneColor }}>
+                    {tone === 'on' ? 'On target' : <span className="data">{delta !== null && delta > 0 ? '+' : '−'}{Math.abs(delta ?? 0)}&nbsp;W</span>}
+                  </p>
+                </div>
+              ) : threeSecond === null ? (
+                <p className="mt-2 text-[13px] text-[var(--text-secondary)]">
+                  {prescribedTarget && !plan.ftpWatts ? 'Ride by feel. Add FTP in Profile to see watts.' : devices.trainer.status === 'connected' ? 'Waiting for power' : 'No power source connected'}
+                </p>
+              ) : null}
+            </div>
+
+            <dl className="mt-3 grid grid-cols-2 gap-4 border-t border-[var(--border)] pt-3">
+              <div>
+                <dt className="text-[12px] text-[var(--text-secondary)]">Heart rate</dt>
+                <dd className="mt-1 flex items-baseline gap-1"><span className="ride-numeral !leading-none text-[2.25rem]" style={{ color: live.heartRateBpm !== null ? 'var(--ride-hr)' : undefined }}>{display(live.heartRateBpm)}</span>{live.heartRateBpm !== null ? <span className="text-[12px] text-[var(--text-muted)]">bpm</span> : null}</dd>
+              </div>
+              <div>
+                <dt className="text-[12px] text-[var(--text-secondary)]">Cadence</dt>
+                <dd className="mt-1 flex items-baseline gap-1"><span className="ride-numeral !leading-none text-[2.25rem]">{display(live.cadenceRpm)}</span>{live.cadenceRpm !== null ? <span className="text-[12px] text-[var(--text-muted)]">rpm</span> : null}</dd>
+              </div>
+            </dl>
+
+            <div className="mt-3 grid grid-cols-2 gap-4 border-t border-[var(--border)] pt-3">
+              {phoneAvg(currentStep ? 'Block avg' : 'Free ride avg', lap?.averagePowerWatts, lap?.averageHeartRateBpm)}
+              {phoneAvg('Workout avg', workout.averagePowerWatts, workout.averageHeartRateBpm)}
+            </div>
+          </section>
+
+          <section aria-label="Workout profile" className="flex min-h-0 flex-1 flex-col pt-3">
+            <p className="shrink-0 text-right text-[12px] text-[var(--text-secondary)]">
+              <span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <> · <span className="data">{formatClock(remainingSec)}</span> left</> : null}
+            </p>
+            <div className="min-h-12 flex-1 pb-6 pt-2">
+              <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} className="h-full" />
+            </div>
+          </section>
+        </main>
+
+        <footer className="flex shrink-0 items-center gap-2 border-t border-[var(--border)] px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+          <div role="group" aria-label="Block navigation" className="flex gap-2">
+            <button type="button" className={`${secondaryButtonClassName} !h-12 gap-1.5 !px-3`} onClick={goBack} disabled={!canGoBack} aria-label="Previous block">
+              <SkipBack aria-hidden="true" size={16} strokeWidth={1.7} />Back
+            </button>
+            <button type="button" className={`${secondaryButtonClassName} !h-12 gap-1.5 !px-3`} onClick={skip} disabled={!currentStep} aria-label="Next block">
+              Next<SkipForward aria-hidden="true" size={16} strokeWidth={1.7} />
+            </button>
+          </div>
+          <button type="button" className={`${status === 'paused' ? primaryButtonClassName : secondaryButtonClassName} ml-auto !h-12 min-w-32 gap-2`} onClick={togglePause}>
+            {status === 'paused' ? <Play aria-hidden="true" size={18} strokeWidth={1.8} /> : <Pause aria-hidden="true" size={18} strokeWidth={1.8} />}
+            {status === 'paused' ? 'Resume' : 'Pause'}
+          </button>
+        </footer>
+
+        <dialog
+          ref={phoneSheetRef}
+          aria-labelledby="ride-sheet-title"
+          className="fixed inset-x-0 bottom-0 top-auto m-0 max-h-[85dvh] w-full max-w-full overflow-y-auto rounded-t-2xl backdrop:bg-black/60 border-t border-[var(--border)] bg-[var(--surface)] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-[var(--text)] shadow-[var(--shadow-overlay)]"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="ride-sheet-title" className="text-base font-medium">Ride controls</h2>
+            <button type="button" className={secondaryButtonClassName} autoFocus onClick={closeSheet}>Close</button>
+          </div>
+
+          {hasPowerTargets ? (
+            <div className="mt-4 flex items-center justify-between gap-3 border-t border-[var(--border)] pt-4" role="group" aria-label="Intensity">
+              <span className="text-sm text-[var(--text-secondary)]">Intensity</span>
+              <div className="flex items-center gap-2">
+                <button type="button" className={`${iconControlClassName} !size-11`} onClick={() => bias(-1)} aria-label="Decrease intensity 1%"><Minus aria-hidden="true" size={16} strokeWidth={1.8} /></button>
+                <span className="data min-w-14 text-center text-base font-medium" aria-live="polite">{biasText}</span>
+                <button type="button" className={`${iconControlClassName} !size-11`} onClick={() => bias(1)} aria-label="Increase intensity 1%"><Plus aria-hidden="true" size={16} strokeWidth={1.8} /></button>
+              </div>
+            </div>
+          ) : null}
+
+          <section aria-labelledby="ride-sheet-data" className="mt-4 border-t border-[var(--border)] pt-4">
+            <h3 id="ride-sheet-data" className="text-sm font-medium">All data</h3>
+            <dl className="mt-3 grid grid-cols-3 gap-x-4 gap-y-4">
+              {sheetMetric('% FTP now', display(ftpPercent), '%')}
+              {sheetMetric('Normalized', display(workout.normalizedPowerWatts), 'W')}
+              {sheetMetric('Max power', display(workout.maxPowerWatts), 'W')}
+              {sheetMetric('Block cadence', display(lap?.averageCadenceRpm), 'rpm')}
+              {sheetMetric('Avg cadence', display(workout.averageCadenceRpm), 'rpm')}
+              {sheetMetric('Max HR', display(workout.maxHeartRateBpm), 'bpm', workout.maxHeartRateBpm != null ? 'var(--ride-hr)' : undefined)}
+              {sheetMetric('Work', display(workout.workKj), 'kJ')}
+              {sheetMetric('TSS', display(workout.tss))}
+              {sheetMetric('IF', display(workout.intensityFactor, 2))}
+              {sheetMetric('Distance', workout.distanceMeters > 0 ? formatDistance(workout.distanceMeters) : '--')}
+              {sheetMetric('Elapsed', formatClock(timerSec))}
+              {sheetMetric('Plan left', formatClock(remainingSec))}
+            </dl>
+          </section>
+
+          <div className="mt-5 flex flex-col gap-2 border-t border-[var(--border)] pt-4">
+            <button type="button" className={`${secondaryButtonClassName} !h-12 w-full`} aria-haspopup="dialog" onClick={() => { closeSheet(); connectionsRef.current?.showModal(); }}>
+              Connections · {connectedCount === 0 ? 'none connected' : `${connectedCount} connected`}
+            </button>
+            {fullscreenSupported ? <button type="button" className={`${secondaryButtonClassName} !h-12 w-full`} onClick={() => { closeSheet(); toggleFullscreen(); }}>{fullscreen ? 'Exit full screen' : 'Full screen'}</button> : null}
+            <button type="button" className={`${secondaryButtonClassName} !h-12 w-full gap-2`} onClick={() => { if (window.confirm('Finish this ride?')) { closeSheet(); finish(); } }}>
+              <Square aria-hidden="true" size={14} strokeWidth={1.8} />Finish ride
+            </button>
+          </div>
+        </dialog>
+        {connectionsDialog}
+      </div>
+    );
+  }
 
   return frame(status === 'paused' ? 'Paused' : anyDevice ? 'Riding' : 'Riding · no devices', controls, (
     <>
@@ -718,121 +974,130 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         <p role="status" className="border-b border-[var(--border)] bg-[var(--raised)] px-5 py-2 text-[13px] text-[var(--text)] sm:px-7">Paused. The timer is stopped.</p>
       ) : null}
 
-      <div className="grid gap-px bg-[var(--border)] md:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,0.72fr)]">
-        {/* Power vs target */}
-        <section aria-label="Power" className="relative flex min-w-0 flex-col gap-4 bg-[var(--background)] px-5 pb-5 pt-6 sm:px-7">
-          <div aria-hidden="true" className="ride-state-bar absolute inset-x-0 top-0 h-1" style={{ background: hasPower ? toneColor : 'var(--border)' }} />
-          {hasPower ? (
-            <>
-              <div className="flex items-baseline justify-between gap-3">
-                <Label>Power · 3 s</Label>
-                <p className="text-[14px] font-medium" style={{ color: tone === 'none' ? 'var(--text-secondary)' : toneColor }} aria-live="polite">
-                  {toneText}{delta !== null && tone !== 'on' ? <span className="data"> {delta > 0 ? '+' : '−'}{Math.abs(delta)}&nbsp;W</span> : null}
-                </p>
-              </div>
-              <p className={heroNumeral} style={{ color: tone === 'none' ? 'var(--text)' : toneColor }}>
-                {display(threeSecond)}<span className="ml-2 text-[0.22em] font-normal tracking-normal text-[var(--text-muted)]">W</span>
-              </p>
-              <div className="mt-auto space-y-3">
-                <div className="flex items-baseline gap-3">
-                  <Label>{recording.ergEnabled && devices.ergAvailable ? 'Target · ERG' : 'Target'}</Label>
-                  <p className="ride-numeral text-[clamp(2.25rem,min(4.1vw,7.5vh),4.5rem)]">{prescribedTarget ? prescribedValue : display(targetWatts)}<span className="ml-1.5 text-[0.4em] font-normal tracking-normal text-[var(--text-muted)]">{prescribedTarget ? prescribedUnit : 'W'}</span></p>
-                </div>
-                {deviation !== null ? (
-                  <div className="relative h-2 rounded-full bg-[var(--raised)]" role="meter" aria-label="Power versus target" aria-valuemin={-100} aria-valuemax={100} aria-valuenow={Math.round(deviation * 100)}>
-                    <span aria-hidden="true" className="absolute left-1/2 top-[-4px] h-4 w-px bg-[var(--text-muted)]" />
-                    <span aria-hidden="true" className="ride-state-bar absolute top-0 h-2 rounded-full" style={{ left: `${50 + Math.min(0, deviation) * 50}%`, width: `${Math.abs(deviation) * 50}%`, background: toneColor }} />
-                  </div>
-                ) : null}
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex items-baseline justify-between gap-3">
-                <Label>{targetWatts === null && !prescribedTarget ? 'Free ride' : 'Target'}</Label>
-                <p className="text-[13px] text-[var(--text-muted)]">{devices.trainer.status === 'connected' ? 'Waiting for power' : 'No devices'}</p>
-              </div>
-              {prescribedTarget ? (
-                <p className={heroNumeral}>{prescribedValue}<span className="ml-2 text-[0.22em] font-normal tracking-normal text-[var(--text-muted)]">{prescribedUnit}</span></p>
-              ) : (
-                <p className={heroNumeral}>{targetWatts === null ? (currentStep ? `Z${currentStep.zone}` : '--') : targetWatts}{targetWatts !== null ? <span className="ml-2 text-[0.22em] font-normal tracking-normal text-[var(--text-muted)]">W</span> : null}</p>
-              )}
-              <p className="mt-auto text-[14px] text-[var(--text-secondary)]">
-                {prescribedTarget ? <>Ride this by feel in Z{currentStep?.zone}. <Link href={PROFILE_FTP_HREF} className="text-[var(--text)] underline underline-offset-2 hover:text-[var(--brand)]">Add FTP in Profile</Link> to see watts.</> : targetWatts === null ? 'Ride by feel in this zone.' : plan.ftpWatts ? `${Math.round((targetWatts / plan.ftpWatts) * 100)}% of FTP. Hold this on your trainer.` : 'Hold this on your trainer.'}
-                {recording.biasPct !== 0 ? <span className="data"> Intensity {recording.biasPct > 0 ? '+' : '−'}{Math.abs(recording.biasPct)}%.</span> : null}
-              </p>
-            </>
-          )}
-        </section>
-
-        {/* Current interval */}
-        <section aria-label="Current interval" className="relative flex min-w-0 flex-col gap-4 bg-[var(--background)] px-5 pb-5 pt-6 sm:px-7">
-          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-1" style={{ background: intervalColor }} />
-          <div className="flex items-baseline justify-between gap-3">
-            <p className="truncate text-[clamp(1rem,0.85rem+0.5vw,1.375rem)] font-medium text-[var(--text)]">{stepLabel(recording.stepIndex)}</p>
-            <p className="data shrink-0 text-[13px] text-[var(--text-muted)]">{currentStep ? `${recording.stepIndex + 1} / ${plan.steps.length}` : 'After plan'}</p>
-          </div>
-          <div>
-            <Label>{currentStep ? 'Interval left' : 'Free ride'}</Label>
-            <p className={`${heroNumeral} mt-2`} aria-live="off">{stepRemaining === null ? formatClock(recording.timerSec - (recording.laps.at(-1)?.startSec ?? 0)) : formatClock(stepRemaining)}</p>
-          </div>
-          <ProgressBar value={stepProgress} label="Interval progress" color={intervalColor} />
-          <div className="mt-auto grid grid-cols-3 gap-4">
-            <Stat label="Int avg" value={display(lap?.averagePowerWatts)} unit="W" tone={lap?.averagePowerWatts !== null && lap?.averageTargetWatts !== null && lap ? TONE_VAR[complianceTone(lap.averagePowerWatts, lap.averageTargetWatts)] : undefined} />
-            <Stat label="Int avg HR" value={display(lap?.averageHeartRateBpm)} unit="bpm" />
-            <Stat label="Int max" value={display(lap?.maxPowerWatts)} unit="W" />
-          </div>
-          <div className="flex items-baseline justify-between gap-3 border-t border-[var(--border)] pt-3 text-[14px]">
-            <span className="text-[var(--text-muted)]">Next</span>
-            <span className="min-w-0 truncate text-right text-[var(--text)]">
-              {nextStep ? <>{stepLabel(recording.stepIndex + 1)}<span className="data text-[var(--text-secondary)]">{nextTarget !== null ? `\u00A0· ${nextTarget}\u00A0W` : nextPrescription ? `\u00A0· ${nextPrescription}` : ` · Z${nextStep.zone}`}&nbsp;· {formatClock(nextStep.durationSec)}</span></> : currentStep ? 'Finish' : 'Free ride continues'}
-            </span>
-          </div>
-        </section>
-
-        {/* Heart rate and cadence */}
-        <div className="grid gap-px bg-[var(--border)] max-lg:md:col-span-2 max-lg:md:grid-cols-2 lg:grid-rows-2">
-          <section aria-label="Heart rate" className="flex min-w-0 flex-col gap-2 bg-[var(--background)] px-5 pb-5 pt-6 sm:px-7">
-            <div className="flex items-center justify-between gap-2">
-              <Label>Heart rate</Label>
-              {hrZone ? <span className="data rounded-md px-2 py-0.5 text-[13px] font-semibold text-[var(--signal-ink)]" style={{ background: intensityColor(hrZone) }}>I-{hrZone}</span> : null}
+      <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col px-4 sm:px-8">
+        <section aria-label="Current block" className="space-y-3 py-4 sm:py-5">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <div className="min-w-0 flex-1">
+              <h2 className="break-words text-lg font-medium text-[var(--text)]">{stepLabel(stepIndex)}</h2>
+              <p className="text-sm text-[var(--text-secondary)]">{currentStep ? `Block ${stepIndex + 1} of ${plan.steps.length}` : 'After workout plan'}</p>
             </div>
-            <p className="ride-numeral text-[clamp(3.5rem,min(7vw,13vh),8.25rem)]" style={hrZone ? { color: 'var(--ride-hr)' } : undefined}>
-              {display(live.heartRateBpm)}<span className="ml-1.5 text-[0.28em] font-normal tracking-normal text-[var(--text-muted)]">bpm</span>
+            <p className="flex shrink-0 items-baseline gap-2 text-sm text-[var(--text-secondary)]">
+              <span className="ride-numeral !leading-none text-[1.75rem]">{formatClock(stepTime)}</span>
+              {currentStep ? 'left' : 'in free ride'}
             </p>
-            {devices.heartRate.status === 'disconnected' && live.heartRateBpm === null ? <p className="mt-auto text-[12px] text-[var(--text-muted)]">No heart-rate sensor</p> : null}
-          </section>
-          <section aria-label="Cadence" className="flex min-w-0 flex-col gap-2 bg-[var(--background)] px-5 pb-5 pt-6 sm:px-7">
-            <Label>Cadence</Label>
-            <p className="ride-numeral text-[clamp(3.5rem,min(7vw,13vh),8.25rem)]">
-              {display(live.cadenceRpm)}<span className="ml-1.5 text-[0.28em] font-normal tracking-normal text-[var(--text-muted)]">rpm</span>
-            </p>
-            {live.cadenceRpm === null && !anyDevice ? <p className="mt-auto text-[12px] text-[var(--text-muted)]">No cadence sensor</p> : null}
-          </section>
-        </div>
+            <div role="group" aria-label="Block navigation" className="flex shrink-0 items-center gap-2 max-sm:w-full sm:border-l sm:border-[var(--border)] sm:pl-6">
+              <button type="button" className={`${secondaryButtonClassName} !h-10 gap-2 max-sm:flex-1`} onClick={goBack} disabled={!canGoBack} aria-keyshortcuts="B" title="Go back to the previous block (B)">
+                <SkipBack aria-hidden="true" size={16} strokeWidth={1.7} />Previous
+              </button>
+              <button type="button" className={`${secondaryButtonClassName} !h-10 gap-2 max-sm:flex-1`} onClick={skip} disabled={!currentStep} aria-keyshortcuts="N" title="Skip to the next block (N)">
+                Next block<SkipForward aria-hidden="true" size={16} strokeWidth={1.7} />
+              </button>
+            </div>
+          </div>
+          {currentStep ? <ProgressBar value={stepProgress} label="Block progress" color={intervalColor} className="h-1" /> : null}
+        </section>
+
+        <section aria-label="Ride metrics" className="border-y border-[var(--border)] py-3 sm:py-4">
+          <table className="w-full table-fixed border-collapse">
+            <colgroup>
+              <col className="w-0 sm:w-28" />
+              <col className="w-[42%] sm:w-[36%]" />
+              <col />
+              <col />
+            </colgroup>
+            <thead>
+              <tr className="text-[12px] text-[var(--text-muted)]">
+                <td className="max-sm:sr-only" />
+                <th scope="col" className="pb-1 pr-4 text-left font-normal">Now</th>
+                <th scope="col" className="border-l border-[var(--border)] pb-1 pl-3 text-left font-normal sm:pl-6">{currentStep ? 'Block avg' : 'Free ride avg'}</th>
+                <th scope="col" className="pb-1 pl-3 text-left font-normal sm:pl-6">Workout avg</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t border-[var(--border)]">
+                <th scope="row" className={rowLabel}>Power</th>
+                <td className={nowCell}>
+                  <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                    {nowValue(threeSecond, 'W', 'text-[2.5rem] sm:text-[3.25rem]')}
+                    {targetWatts !== null || prescribedTarget ? (
+                      <span className="text-sm text-[var(--text-secondary)]">
+                        {ergOn ? 'ERG target' : 'Target'}{' '}
+                        <span className="ride-numeral text-xl !text-[var(--text-secondary)] sm:text-2xl">{targetWatts ?? prescribedTarget}</span>
+                        {targetWatts !== null ? <span className="ml-1 text-[12px] text-[var(--text-muted)]">W</span> : null}
+                      </span>
+                    ) : null}
+                  </div>
+                  {deviation !== null ? (
+                    <div className="mt-2.5 max-w-xs space-y-1.5">
+                      <div className="relative h-1.5 rounded-full bg-[var(--raised)]" role="meter" aria-label="Power versus target" aria-valuemin={-100} aria-valuemax={100} aria-valuenow={Math.round(deviation * 100)} aria-valuetext={delta ? `${Math.abs(delta)} watts ${delta > 0 ? 'above' : 'below'} target` : toneText}>
+                        <span aria-hidden="true" className="absolute -top-0.5 left-1/2 h-2.5 w-px bg-[var(--text-muted)]" />
+                        <span aria-hidden="true" className="ride-state-bar absolute top-0 h-1.5 rounded-full" style={{ left: `${50 + Math.min(0, deviation) * 50}%`, width: `${Math.abs(deviation) * 50}%`, background: toneColor }} />
+                      </div>
+                      <p className="text-sm font-medium" style={{ color: toneColor }}>
+                        {toneText}{delta !== null && tone !== 'on' ? <span className="data"> · {delta > 0 ? '+' : '−'}{Math.abs(delta)}&nbsp;W</span> : null}
+                      </p>
+                    </div>
+                  ) : threeSecond === null ? (
+                    <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                      {prescribedTarget && !plan.ftpWatts ? (
+                        <>Ride by feel. <Link href={PROFILE_FTP_HREF} className="text-[var(--text)] underline underline-offset-2 hover:text-[var(--brand)]">Add FTP in Profile</Link> to see watts.</>
+                      ) : devices.trainer.status === 'connected' ? 'Waiting for power' : 'No power source connected'}
+                    </p>
+                  ) : null}
+                </td>
+                <td className={`${avgCell} border-l border-[var(--border)]`}>{avgValue(lap?.averagePowerWatts, 'W')}</td>
+                <td className={avgCell}>{avgValue(workout.averagePowerWatts, 'W')}</td>
+              </tr>
+              <tr className="border-t border-[var(--border)]">
+                <th scope="row" className={rowLabel}>Heart rate</th>
+                <td className={nowCell}>{nowValue(live.heartRateBpm, 'bpm', 'text-[2rem] sm:text-[2.5rem]', 'var(--ride-hr)')}</td>
+                <td className={`${avgCell} border-l border-[var(--border)]`}>{avgValue(lap?.averageHeartRateBpm, 'bpm', 'var(--ride-hr)')}</td>
+                <td className={avgCell}>{avgValue(workout.averageHeartRateBpm, 'bpm', 'var(--ride-hr)')}</td>
+              </tr>
+              <tr className="border-t border-[var(--border)]">
+                <th scope="row" className={rowLabel}>Cadence</th>
+                <td className={nowCell}>{nowValue(live.cadenceRpm, 'rpm', 'text-[2rem] sm:text-[2.5rem]')}</td>
+                <td className={`${avgCell} border-l border-[var(--border)]`}>{avgValue(lap?.averageCadenceRpm, 'rpm')}</td>
+                <td className={avgCell}>{avgValue(workout.averageCadenceRpm, 'rpm')}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div className="mt-2 border-t border-[var(--border)] pt-3">
+            <button type="button" className={`inline-flex items-center gap-1.5 rounded-md text-sm text-[var(--text-secondary)] hover:text-[var(--text)] ${buttonFocusClassName}`} aria-expanded={moreData} aria-controls="ride-more-data" onClick={toggleMoreData}>
+              {moreData ? 'Less data' : 'More data'}
+              {moreData ? <ChevronUp aria-hidden="true" size={15} /> : <ChevronDown aria-hidden="true" size={15} />}
+            </button>
+            {moreData ? (
+              <dl id="ride-more-data" className="mt-3 grid grid-cols-3 gap-x-6 gap-y-4 sm:grid-cols-4 xl:grid-cols-8">
+                <RideMetric label="% FTP now" value={display(ftpPercent)} unit={unit(ftpPercent, '%')} size="text-lg" />
+                <RideMetric label="Normalized" value={display(workout.normalizedPowerWatts)} unit={unit(workout.normalizedPowerWatts, 'W')} size="text-lg" />
+                <RideMetric label="Max power" value={display(workout.maxPowerWatts)} unit={unit(workout.maxPowerWatts, 'W')} size="text-lg" />
+                <RideMetric label="Max HR" value={display(workout.maxHeartRateBpm)} unit={unit(workout.maxHeartRateBpm, 'bpm')} size="text-lg" />
+                <RideMetric label="Work" value={display(workout.workKj)} unit={unit(workout.workKj, 'kJ')} size="text-lg" />
+                <RideMetric label="TSS" value={display(workout.tss)} size="text-lg" />
+                <RideMetric label="IF" value={display(workout.intensityFactor, 2)} size="text-lg" />
+                <RideMetric label="Distance" value={workout.distanceMeters > 0 ? formatDistance(workout.distanceMeters) : '--'} size="text-lg" />
+              </dl>
+            ) : null}
+          </div>
+        </section>
+
+        <section aria-label="Workout profile" className="flex flex-col gap-3 py-4 sm:py-5">
+          <div className="flex flex-wrap justify-between gap-x-6 gap-y-1 text-sm text-[var(--text-secondary)]">
+            {currentStep ? (
+              <p className="min-w-0 break-words">
+                <span className="text-[var(--text-muted)]">Next </span>
+                {nextStep ? <>{stepLabel(stepIndex + 1)}<span className="data">{nextTarget !== null ? ` · ${nextTarget} W` : nextPrescription ? ` · ${nextPrescription}` : ` · Z${nextStep.zone}`} · {formatClock(nextStep.durationSec)}</span></> : 'Free ride'}
+              </p>
+            ) : null}
+            <p className="ml-auto"><span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <> · <span className="data">{formatClock(remainingSec)}</span> left in plan</> : null}</p>
+          </div>
+          <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} className="h-36 md:h-48 xl:h-56" />
+        </section>
+
+        <div className="border-t border-[var(--border)] pb-5 pt-3">{shortcutLegend}</div>
       </div>
-
-      {/* Workout totals */}
-      <section aria-label="Workout" className="border-y border-[var(--border)] px-5 py-4 sm:px-7">
-        <ProgressBar value={plan.totalSec > 0 ? positionSec / plan.totalSec : 0} label="Workout progress" className="h-1" />
-        <div className="mt-4 grid grid-cols-4 gap-x-6 gap-y-4 lg:grid-cols-8">
-          <Stat label="Elapsed" value={formatClock(recording.timerSec)} />
-          <Stat label="Remaining" value={formatClock(remainingSec)} />
-          <Stat label="Avg power" value={display(summary.averagePowerWatts)} unit="W" />
-          <Stat label="NP" value={display(summary.normalizedPowerWatts)} unit="W" />
-          <Stat label="Work" value={display(summary.workKj, 0)} unit="kJ" />
-          <Stat label="TSS" value={plan.ftpWatts ? display(summary.tss) : '--'} />
-          <Stat label="IF" value={plan.ftpWatts ? display(summary.intensityFactor, 2) : '--'} />
-          <Stat label="Avg HR" value={display(summary.averageHeartRateBpm)} unit="bpm" />
-        </div>
-      </section>
-
-      <div className="border-b border-[var(--border)] px-5 py-3 sm:px-7">{advancedOptions}</div>
-
-      {/* Profile */}
-      <section aria-label="Workout profile" className="flex min-h-[180px] flex-1 flex-col px-5 pb-8 pt-4 sm:px-7">
-        <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? recording.stepIndex : null} className="min-h-[150px] flex-1" />
-      </section>
     </>
   ), 'Ride');
 }

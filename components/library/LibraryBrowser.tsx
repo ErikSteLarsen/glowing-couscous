@@ -1,23 +1,18 @@
 'use client';
 
 import { useDeferredValue, useMemo, useRef, useState } from 'react';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { SearchField } from '@/components/tempo/SearchField';
+import { ActiveFilterChips, FilterChipGroup, FiltersButton, FiltersDialog, SortSelect } from '@/components/library/CollectionFilters';
 import { CollectionSummary, CollectionToolbar } from '@/components/library/CollectionToolbar';
 import { LibraryCard } from '@/components/library/LibraryCard';
 import { WorkoutCardGrid } from '@/components/library/WorkoutCard';
-import { nativeDialogClassName, iconButtonClassName, buttonFocusClassName, compactSecondaryButtonClassName, EmptyState, formLabelClassName, formSelectClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { compactSecondaryButtonClassName, EmptyState, ghostButtonClassName } from '@/components/ui';
 import {
   CATALOG_CATEGORIES, CATALOG_LEVELS, CATALOG_SORTS, DURATION_BUCKETS, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, serializeCatalogQuery, withCatalogQuery,
   type CatalogEntry, type CatalogQuery, type CatalogSort, type DurationBucket,
 } from '@/lib/workout-catalog/query';
 import type { CatalogCategory, CatalogLevel } from '@/lib/workout-catalog/types';
-
-const chipClassName = (selected: boolean) => `inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium transition-colors max-md:min-h-11 ${buttonFocusClassName} ${
-  selected
-    ? 'border-[var(--brand)] bg-[var(--brand-tint)] text-[var(--text)] hover:bg-[var(--selection)]'
-    : 'border-[var(--border-strong)] text-[var(--text-secondary)] hover:bg-[var(--raised)] hover:text-[var(--text)]'
-}`;
 
 export function LibraryBrowser({
   entries,
@@ -70,89 +65,31 @@ export function LibraryBrowser({
     <div className="@container flex min-w-0 flex-col gap-5">
       <div role="search" aria-label="Filter workouts" className="flex flex-col gap-3">
         <CollectionToolbar search={<SearchField value={query.q} onChange={(event) => update({ q: event.target.value })} label="Search by name, focus or tag" placeholder="Search workouts" labelClassName="min-w-48 flex-1 @2xl:max-w-md" className="max-md:min-h-11" maxLength={80} autoComplete="off" />}>
-          <button
-            type="button"
-            aria-haspopup="dialog"
-            aria-label={activeFilters.length ? `Filters, ${activeFilters.length} active` : 'Filters'}
-            className={`${secondaryButtonClassName} shrink-0 max-md:min-h-11`}
-            onClick={() => filtersDialog.current?.showModal()}
-          >
-            <SlidersHorizontal aria-hidden="true" size={16} strokeWidth={1.6} />
-            Filters
-            {activeFilters.length ? <span aria-hidden="true" className="data inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--brand)] px-1.5 text-[12px] font-semibold leading-5 text-[var(--signal-ink)]">{activeFilters.length}</span> : null}
-          </button>
+          <FiltersButton activeCount={activeFilters.length} onOpen={() => filtersDialog.current?.showModal()} />
         </CollectionToolbar>
-        {activeFilters.length ? (
-          <ul aria-label="Active filters" className="flex flex-wrap gap-2">
-            {activeFilters.map((chip) => (
-              <li key={chip.key}>
-                <button type="button" aria-label={`Remove ${chip.label} filter`} className={chipClassName(true)} onClick={() => update(chip.remove)}>
-                  {chip.label}<X aria-hidden="true" size={13} strokeWidth={1.8} className="text-[var(--text-muted)]" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+        <ActiveFilterChips chips={activeFilters.map((chip) => ({ key: chip.key, label: chip.label, onRemove: () => update(chip.remove) }))} />
       </div>
 
-      <dialog
-        ref={filtersDialog}
-        aria-labelledby="library-filters-title"
-        className={`${nativeDialogClassName} w-[min(36rem,calc(100%-2rem))] border-[var(--border-strong)]`}
-        onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close(); }}
+      <FiltersDialog
+        dialogRef={filtersDialog}
+        titleId="library-filters-title"
+        resultCount={results.length}
+        clearDisabled={activeFilters.length === 0}
+        onClear={() => update({ ...EMPTY_CATALOG_QUERY, q: query.q, sort: query.sort })}
       >
-        <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4">
-          <h2 id="library-filters-title" className="text-lg font-semibold text-[var(--text)]">Filters</h2>
-          <button type="button" aria-label="Close filters" className={iconButtonClassName} onClick={() => filtersDialog.current?.close()}>
-            <X aria-hidden="true" size={18} strokeWidth={1.7} />
-          </button>
-        </div>
-        <div className="flex flex-col gap-6 px-5 py-5">
-          <fieldset className="flex flex-col gap-2.5">
-            <legend className={`${formLabelClassName} mb-2.5`}>Focus</legend>
-            <div className="flex flex-wrap gap-2">
-              {CATALOG_CATEGORIES.map((category) => {
-                const count = categoryCounts.get(category.id) ?? 0;
-                const selected = query.categories.includes(category.id);
-                if (count === 0 && !selected) return null;
-                return (
-                  <button key={category.id} type="button" aria-pressed={selected} className={chipClassName(selected)} onClick={() => update({ categories: toggle(query.categories, category.id) })}>
-                    {category.label}<span className="data text-[12px] text-[var(--text-muted)]">{count}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </fieldset>
-          <fieldset className="flex flex-col">
-            <legend className={`${formLabelClassName} mb-2.5`}>Length</legend>
-            <div className="flex flex-wrap gap-2">
-              {DURATION_BUCKETS.map((bucket) => (
-                <button key={bucket.id} type="button" aria-pressed={query.durations.includes(bucket.id)} className={chipClassName(query.durations.includes(bucket.id))} onClick={() => update({ durations: toggle<DurationBucket>(query.durations, bucket.id) })}>{bucket.label}</button>
-              ))}
-            </div>
-          </fieldset>
-          <fieldset className="flex flex-col">
-            <legend className={`${formLabelClassName} mb-2.5`}>Level</legend>
-            <div className="flex flex-wrap gap-2">
-              {CATALOG_LEVELS.map((level) => (
-                <button key={level.id} type="button" aria-pressed={query.levels.includes(level.id)} className={chipClassName(query.levels.includes(level.id))} onClick={() => update({ levels: toggle<CatalogLevel>(query.levels, level.id) })}>{level.label}</button>
-              ))}
-            </div>
-          </fieldset>
-          <label className="flex flex-col gap-2.5">
-            <span className={formLabelClassName}>Sort</span>
-            <select className={`${formSelectClassName} max-md:min-h-11`} value={query.sort} onChange={(event) => update({ sort: event.target.value as CatalogSort })}>
-              {CATALOG_SORTS.map((sort) => <option key={sort.id} value={sort.id}>{sortLabel(sort.id)}</option>)}
-            </select>
-          </label>
-        </div>
-        <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-          <button type="button" className={`${ghostButtonClassName('default')} max-md:min-h-11`} disabled={activeFilters.length === 0} onClick={() => update({ ...EMPTY_CATALOG_QUERY, q: query.q, sort: query.sort })}>Clear filters</button>
-          <button type="button" className={`${primaryButtonClassName} max-md:min-h-11`} onClick={() => filtersDialog.current?.close()}>
-            {`Show ${results.length} ${results.length === 1 ? 'workout' : 'workouts'}`}
-          </button>
-        </div>
-      </dialog>
+        <FilterChipGroup
+          legend="Focus"
+          options={CATALOG_CATEGORIES.flatMap((category) => {
+            const count = categoryCounts.get(category.id) ?? 0;
+            return count === 0 && !query.categories.includes(category.id) ? [] : [{ id: category.id, label: category.label, count }];
+          })}
+          selected={query.categories}
+          onToggle={(id) => update({ categories: toggle(query.categories, id) })}
+        />
+        <FilterChipGroup legend="Length" options={DURATION_BUCKETS} selected={query.durations} onToggle={(id) => update({ durations: toggle<DurationBucket>(query.durations, id) })} />
+        <FilterChipGroup legend="Level" options={CATALOG_LEVELS} selected={query.levels} onToggle={(id) => update({ levels: toggle<CatalogLevel>(query.levels, id) })} />
+        <SortSelect value={query.sort} options={CATALOG_SORTS.map((sort) => ({ id: sort.id, label: sortLabel(sort.id) }))} onChange={(sort) => update({ sort })} />
+      </FiltersDialog>
 
       <CollectionSummary action={filtered && results.length > 0 ? (
         <button type="button" className={`${ghostButtonClassName('compact')} max-md:min-h-11`} onClick={clearFilters}>

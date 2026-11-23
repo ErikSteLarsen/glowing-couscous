@@ -141,7 +141,7 @@ export function ManualActivityCorrectionForm({
             <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">
               {draft.kind === 'manual-unplanned'
                 ? 'Change the details you logged. Activities logged by hand have no TSS.'
-                : 'Change what you did. The planned workout, its date and its steps stay as they are.'}
+                : 'Change what you did. The planned workout, its date and its blocks stay as they are.'}
             </p>
           </div>
 

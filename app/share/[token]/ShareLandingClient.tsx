@@ -154,7 +154,7 @@ export function ShareLandingClient({
                   {projection.summary || 'A workout shared from Tempo.'}
                 </p>
                 <div className="space-y-3">
-                  <h2 className="text-base font-medium text-[var(--text)]">Steps</h2>
+                  <h2 className="text-base font-medium text-[var(--text)]">Blocks</h2>
                   {projection.blocks.map((block, index) => (
                     <div key={`${block.kind}-${index}`} className="rounded-[12px] border border-[var(--border)] bg-[var(--field-surface)] p-4">
                       <div className="flex flex-wrap items-center justify-between gap-3">

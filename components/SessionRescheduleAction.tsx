@@ -161,7 +161,7 @@ function RescheduleDialog({ sessionId, title, currentDay, today, open, onOpenCha
         <div className="space-y-2">
           <h2 id={`reschedule-session-title-${sessionId}`} className="text-base font-medium">Move workout</h2>
           <p id={`reschedule-session-description-${sessionId}`} className="text-sm text-[var(--text-secondary)]">
-            Choose when to do “{title}”. The steps and start time stay the same.
+            Choose when to do “{title}”. The blocks and start time stay the same.
           </p>
         </div>
         <label className="mt-5 block">

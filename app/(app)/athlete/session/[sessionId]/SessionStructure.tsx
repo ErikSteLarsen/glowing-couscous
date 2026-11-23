@@ -76,11 +76,11 @@ export function SessionWorkoutProfileCard({ model, header, ftpWatts, title, clas
             controlsId={panelId}
           />
           <p className="text-[12px] text-[var(--text-secondary)]">
-            Select a step to see its target and notes.
-            {model.skippedCount ? ` ${model.skippedCount} skipped ${model.skippedCount === 1 ? 'step isn’t' : 'steps aren’t'} shown.` : ''}
+            Select a block to see its target and notes.
+            {model.skippedCount ? ` ${model.skippedCount} skipped ${model.skippedCount === 1 ? 'block isn’t' : 'blocks aren’t'} shown.` : ''}
           </p>
         </>
-      ) : <p className="text-[13px] text-[var(--text-secondary)]">{model.blocks.length ? 'Every step in this workout is skipped.' : 'This workout has no steps.'}</p>}
+      ) : <p className="text-[13px] text-[var(--text-secondary)]">{model.blocks.length ? 'Every block in this workout is skipped.' : 'This workout has no blocks.'}</p>}
     </Surface>
   );
 }
@@ -107,15 +107,15 @@ export function SessionBlockDetails({ model, className }: { model: WorkoutProfil
     <Surface className={`space-y-4 ${className ?? ''}`}>
       <button type="button" onClick={() => setDetailsOpen(!detailsOpen)} aria-expanded={detailsOpen} aria-controls={panelId}
         className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-[6px] text-left hover:bg-[var(--raised)] ${buttonFocusClassName}`}>
-        <span className={sectionHeadingClassName}>Steps</span>
+        <span className={sectionHeadingClassName}>Blocks</span>
         <ChevronDown size={18} className={`shrink-0 text-[var(--text-secondary)] ${detailsOpen ? 'rotate-180' : ''}`} />
       </button>
       <div id={panelId} hidden={!detailsOpen}>
         <div className="space-y-4 border-t border-[var(--border)] pt-4">
           <div>
-            <label htmlFor={selectorId} className="block text-[12px] font-medium text-[var(--text-secondary)]">Step</label>
+            <label htmlFor={selectorId} className="block text-[12px] font-medium text-[var(--text-secondary)]">Block</label>
             <select id={selectorId} className={`mt-2 ${formSelectClassName}`} value={selection?.block ?? ''} onChange={(event) => chooseBlock(Number(event.target.value))}>
-              {block ? null : <option value="" disabled>Choose a step</option>}
+              {block ? null : <option value="" disabled>Choose a block</option>}
               {model.blocks.map((candidate, index) => <option key={candidate.id} value={index}>{index + 1}. {structureBlockLabel(candidate)}</option>)}
             </select>
           </div>
@@ -133,7 +133,7 @@ export function SessionBlockDetails({ model, className }: { model: WorkoutProfil
               {block.note ? <p className="whitespace-pre-wrap break-words text-[13px] leading-relaxed text-[var(--text)]">{block.note}</p> : null}
               <p className="text-[12px] text-[var(--text-secondary)]">View only</p>
             </>
-          ) : <p className="text-[13px] text-[var(--text-secondary)]">Select a step in the chart, or choose one above.</p>}
+          ) : <p className="text-[13px] text-[var(--text-secondary)]">Select a block in the chart, or choose one above.</p>}
         </div>
       </div>
     </Surface>

@@ -296,7 +296,7 @@ export function WorkoutBuilder({
     const row = rows[rowIndex];
     if (row.type === 'set' && setOffset !== null) {
       if (setOffset + direction < 0 || setOffset + direction >= row.width) return;
-      commit(moveSetStep(draft, row, setOffset, direction), `Moved within the set.`);
+      commit(moveSetStep(draft, row, setOffset, direction), `Moved within the repeat.`);
     } else {
       moveRowBy(rowIndex, direction);
     }
@@ -319,11 +319,11 @@ export function WorkoutBuilder({
   const rowActions = (row: BuilderRow, rowIndex: number) => ({
     duplicate: () => {
       const { draft: next, firstId } = duplicateRow(draft, row);
-      commitAndFocus(next, firstId, row.type === 'set' ? 'Set duplicated.' : 'Step duplicated.', true);
+      commitAndFocus(next, firstId, row.type === 'set' ? 'Repeat duplicated.' : 'Block duplicated.', true);
     },
     moveEarlier: rowIndex > 0 ? () => moveRowBy(rowIndex, -1) : null,
     moveLater: rowIndex < rows.length - 1 ? () => moveRowBy(rowIndex, 1) : null,
-    remove: () => commitAndFocus(removeRow(draft, row), neighbourAfterRemoval(rowIndex), row.type === 'set' ? 'Set removed.' : 'Step removed.', true),
+    remove: () => commitAndFocus(removeRow(draft, row), neighbourAfterRemoval(rowIndex), row.type === 'set' ? 'Repeat removed.' : 'Block removed.', true),
   });
 
   const editor = selectedBlock ? (
@@ -444,9 +444,9 @@ export function WorkoutBuilder({
       {model.steps.length ? (
         <div className="space-y-1.5">
           <WorkoutProfile
-            stepActionLabel="Edit step"
+            stepActionLabel="Edit block"
             model={model}
-            label="Workout profile. Select a step to edit it"
+            label="Workout profile. Select a block to edit it"
             chartHeight="short"
             ftpWatts={profile?.cycling.ftpWatts ?? null}
             selectedStep={profileSelection}
@@ -475,7 +475,7 @@ export function WorkoutBuilder({
             } }}
           >
             <SortableContext items={rows.map((row) => row.id)} strategy={verticalListSortingStrategy}>
-              <ol className="min-w-0 space-y-1 lg:max-h-[max(16rem,calc(100dvh-36rem))] lg:overflow-y-auto lg:p-0.5" aria-label="Workout steps. Alt plus arrow keys move the focused step">
+              <ol className="min-w-0 space-y-1 lg:max-h-[max(16rem,calc(100dvh-36rem))] lg:overflow-y-auto lg:p-0.5" aria-label="Workout blocks. Alt plus arrow keys move the focused block">
                 {rows.map((row, rowIndex) => {
                   const actions = rowActions(row, rowIndex);
                   if (row.type === 'step') {
@@ -484,9 +484,9 @@ export function WorkoutBuilder({
                     return (
                       <SortableRow key={row.id} id={row.id} label={stepName(block)}>
                         {(handle) => stepRow(block, rowIndex, null, (
-                          <RowMenu label={stepName(block)} noun="step" finalFocus={takeMenuFocus} onDuplicate={actions.duplicate} onMoveEarlier={actions.moveEarlier} onMoveLater={actions.moveLater} onRemove={actions.remove}
+                          <RowMenu label={stepName(block)} noun="block" finalFocus={takeMenuFocus} onDuplicate={actions.duplicate} onMoveEarlier={actions.moveEarlier} onMoveLater={actions.moveLater} onRemove={actions.remove}
                             onRepeat={next?.type === 'step' && block.kind !== 'pause' && draft.blocks[next.index].kind !== 'pause'
-                              ? () => commitAndFocus(repeatWithNext(draft, row.index), block.clientId, 'Repeated with the next step as a set of 2.', true)
+                              ? () => commitAndFocus(repeatWithNext(draft, row.index), block.clientId, 'Repeated with the next block, 2 times.', true)
                               : null}
                           />
                         ), handle)}
@@ -494,14 +494,14 @@ export function WorkoutBuilder({
                     );
                   }
                   return (
-                    <SortableRow key={row.id} id={row.id} label="set">
+                    <SortableRow key={row.id} id={row.id} label="repeat">
                       {(handle) => (
                         <SetRowGroup
                           row={row}
                           blocks={draft.blocks}
                           handle={handle}
-                          onRepeats={(repeats) => commit(setRepeatCount(draft, row, repeats), `Set repeats ${repeats} times.`)}
-                          menu={<RowMenu label="set" noun="set" finalFocus={takeMenuFocus} onDuplicate={actions.duplicate} onMoveEarlier={actions.moveEarlier} onMoveLater={actions.moveLater} onRemove={actions.remove}
+                          onRepeats={(repeats) => commit(setRepeatCount(draft, row, repeats), `Repeats ${repeats} times.`)}
+                          menu={<RowMenu label="repeat" noun="repeat" finalFocus={takeMenuFocus} onDuplicate={actions.duplicate} onMoveEarlier={actions.moveEarlier} onMoveLater={actions.moveLater} onRemove={actions.remove}
                             onAddToSet={() => {
                               const [recovery] = createStepBlocks('recovery', sport, profile);
                               commitAndFocus(addStepToSet(draft, row, recovery), recovery.clientId, 'Recovery added to every repeat.', true);
@@ -516,11 +516,11 @@ export function WorkoutBuilder({
                                   <SetStepMenu
                                     label={stepName(block)}
                                     finalFocus={takeMenuFocus}
-                                    onMoveEarlier={offset > 0 ? () => commit(moveSetStep(draft, row, offset, -1), 'Moved within the set.') : null}
-                                    onMoveLater={offset < row.width - 1 ? () => commit(moveSetStep(draft, row, offset, 1), 'Moved within the set.') : null}
+                                    onMoveEarlier={offset > 0 ? () => commit(moveSetStep(draft, row, offset, -1), 'Moved within the repeat.') : null}
+                                    onMoveLater={offset < row.width - 1 ? () => commit(moveSetStep(draft, row, offset, 1), 'Moved within the repeat.') : null}
                                     onRemove={() => {
                                       const next = removeSetStep(draft, row, offset);
-                                      commitAndFocus(next, next.blocks[row.start]?.clientId ?? null, 'Step removed from every repeat.', true);
+                                      commitAndFocus(next, next.blocks[row.start]?.clientId ?? null, 'Block removed from every repeat.', true);
                                     }}
                                   />
                                 ))}
@@ -537,8 +537,8 @@ export function WorkoutBuilder({
           </DndContext>
         ) : (
           <div className="tile-empty rounded-xl px-4 py-6 text-center">
-            <p className="text-sm font-medium text-[var(--text)]">No steps yet</p>
-            <p className="mt-1 text-xs text-[var(--text-secondary)]">Start with a warm-up, then add steady work or an interval set.</p>
+            <p className="text-sm font-medium text-[var(--text)]">No blocks yet</p>
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">Start with a warm-up, then add steady work or intervals.</p>
             <div className="mt-3 flex flex-wrap justify-center gap-2">
               {ADD_STEP_OPTIONS.map((option) => (
                 <button key={option.id} type="button" className={editorButtonClassName} onClick={() => addStep(option.id, option.label, false)}>
@@ -549,8 +549,8 @@ export function WorkoutBuilder({
           </div>
         )}
         {wide ? (
-          <aside className="rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-3 lg:sticky lg:top-4" aria-label="Step details">
-            {editor ?? <p className="text-sm text-[var(--text-secondary)]">{rows.length ? 'Select a step in the profile or list to edit it.' : 'Added steps can be edited here.'}</p>}
+          <aside className="rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-3 lg:sticky lg:top-4" aria-label="Block details">
+            {editor ?? <p className="text-sm text-[var(--text-secondary)]">{rows.length ? 'Select a block in the profile or list to edit it.' : 'Added blocks can be edited here.'}</p>}
           </aside>
         ) : null}
       </div>
@@ -563,7 +563,7 @@ function AddStepMenu({ onAdd, finalFocus }: { onAdd: (id: string, label: string)
   return (
     <Menu>
       <MenuTrigger className={`${compactPrimaryButtonClassName} max-md:min-h-11`}>
-        <Plus aria-hidden="true" size={15} strokeWidth={2} />Add step<ChevronDown aria-hidden="true" size={14} />
+        <Plus aria-hidden="true" size={15} strokeWidth={2} />Add block<ChevronDown aria-hidden="true" size={14} />
       </MenuTrigger>
       <MenuContent align="start" finalFocus={finalFocus} className="max-w-[min(20rem,calc(100vw-2rem))]">
         {ADD_STEP_OPTIONS.map((option) => (
@@ -575,7 +575,7 @@ function AddStepMenu({ onAdd, finalFocus }: { onAdd: (id: string, label: string)
         <MenuGroup>
           <MenuGroupLabel>Interval presets</MenuGroupLabel>
           {INTERVAL_PRESETS.map((option) => (
-            <MenuItem key={option.id} onSelect={() => onAdd(option.id, `${option.label} set`)} className="justify-between gap-4">
+            <MenuItem key={option.id} onSelect={() => onAdd(option.id, `${option.label} repeat`)} className="justify-between gap-4">
               <span>{option.label}</span><span className="data text-xs text-[var(--text-muted)]">{option.detail}</span>
             </MenuItem>
           ))}
@@ -587,7 +587,7 @@ function AddStepMenu({ onAdd, finalFocus }: { onAdd: (id: string, label: string)
 
 function RowMenu({ label, noun, finalFocus, onDuplicate, onMoveEarlier, onMoveLater, onRemove, onRepeat = null, onAddToSet }: {
   label: string;
-  noun: 'step' | 'set';
+  noun: 'block' | 'repeat';
   finalFocus: () => HTMLElement | null;
   onDuplicate: () => void;
   onMoveEarlier: (() => void) | null;
@@ -601,7 +601,7 @@ function RowMenu({ label, noun, finalFocus, onDuplicate, onMoveEarlier, onMoveLa
       <OverflowMenuTrigger compact aria-label={`More actions for ${label}`} />
       <MenuContent align="end" finalFocus={finalFocus}>
         <MenuItem onSelect={onDuplicate}><Copy aria-hidden="true" size={16} strokeWidth={1.8} />Duplicate</MenuItem>
-        {onRepeat ? <MenuItem onSelect={onRepeat}><Repeat2 aria-hidden="true" size={16} strokeWidth={1.8} />Repeat with next step</MenuItem> : null}
+        {onRepeat ? <MenuItem onSelect={onRepeat}><Repeat2 aria-hidden="true" size={16} strokeWidth={1.8} />Repeat with next block</MenuItem> : null}
         {onAddToSet ? <MenuItem onSelect={onAddToSet}><Plus aria-hidden="true" size={16} strokeWidth={1.8} />Add recovery to each repeat</MenuItem> : null}
         <MenuItem disabled={!onMoveEarlier} onSelect={() => onMoveEarlier?.()}><ArrowUp aria-hidden="true" size={16} strokeWidth={1.8} />Move earlier</MenuItem>
         <MenuItem disabled={!onMoveLater} onSelect={() => onMoveLater?.()}><ArrowDown aria-hidden="true" size={16} strokeWidth={1.8} />Move later</MenuItem>
@@ -615,12 +615,12 @@ function RowMenu({ label, noun, finalFocus, onDuplicate, onMoveEarlier, onMoveLa
 function SetStepMenu({ label, finalFocus, onMoveEarlier, onMoveLater, onRemove }: { label: string; finalFocus: () => HTMLElement | null; onMoveEarlier: (() => void) | null; onMoveLater: (() => void) | null; onRemove: () => void }) {
   return (
     <Menu>
-      <OverflowMenuTrigger compact aria-label={`More actions for ${label} in this set`} />
+      <OverflowMenuTrigger compact aria-label={`More actions for ${label} in this repeat`} />
       <MenuContent align="end" finalFocus={finalFocus}>
-        <MenuItem disabled={!onMoveEarlier} onSelect={() => onMoveEarlier?.()}><ArrowUp aria-hidden="true" size={16} strokeWidth={1.8} />Move earlier in set</MenuItem>
-        <MenuItem disabled={!onMoveLater} onSelect={() => onMoveLater?.()}><ArrowDown aria-hidden="true" size={16} strokeWidth={1.8} />Move later in set</MenuItem>
+        <MenuItem disabled={!onMoveEarlier} onSelect={() => onMoveEarlier?.()}><ArrowUp aria-hidden="true" size={16} strokeWidth={1.8} />Move earlier in repeat</MenuItem>
+        <MenuItem disabled={!onMoveLater} onSelect={() => onMoveLater?.()}><ArrowDown aria-hidden="true" size={16} strokeWidth={1.8} />Move later in repeat</MenuItem>
         <MenuSeparator />
-        <MenuItem destructive onSelect={onRemove}><Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />Remove from set</MenuItem>
+        <MenuItem destructive onSelect={onRemove}><Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />Remove from repeat</MenuItem>
       </MenuContent>
     </Menu>
   );
@@ -712,7 +712,7 @@ function SetRowGroup({ row, blocks, handle, menu, onRepeats, children }: { row: 
       <div className="flex min-w-0 items-center gap-1 pr-1">
         {handle}
         <span id={labelId} className="min-w-0 flex-1 truncate px-2 text-[13px] font-medium text-[var(--text)]">
-          Set <span className="data font-normal text-[var(--text-secondary)]">· {formatDurationExact(totalSec)}{row.dropsLastStep ? ' · no recovery after the last' : ''}</span>
+          Repeat <span className="data font-normal text-[var(--text-secondary)]">· {formatDurationExact(totalSec)}{row.dropsLastStep ? ' · no recovery after the last' : ''}</span>
         </span>
         <div role="group" aria-labelledby={labelId} className="flex items-center gap-1">
           <button type="button" className={iconStepButtonClassName} aria-label="Fewer repeats" disabled={row.repeats <= 1} onClick={() => onRepeats(row.repeats - 1)}><Minus aria-hidden="true" size={14} /></button>
@@ -721,7 +721,7 @@ function SetRowGroup({ row, blocks, handle, menu, onRepeats, children }: { row: 
         </div>
         {menu}
       </div>
-      <ul data-no-row-drag className="ml-4 space-y-1 border-l border-[var(--border-strong)] pb-1 pl-1.5" aria-label={`Steps repeated ${row.repeats} times`}>{children}</ul>
+      <ul data-no-row-drag className="ml-4 space-y-1 border-l border-[var(--border-strong)] pb-1 pl-1.5" aria-label={`Blocks repeated ${row.repeats} times`}>{children}</ul>
     </div>
   );
 }
@@ -791,7 +791,7 @@ function StepEditor({ id, block, sport, profile, set, moreOpen, onMoreOpenChange
         </summary>
         <div className="mt-2 space-y-3">
           <label className="block">
-            <span className={formLabelClassName}>Step type</span>
+            <span className={formLabelClassName}>Block type</span>
             <select className={formSelectClassName} value={block.kind} onChange={(event) => {
               const kind = event.target.value as TempoBlockKind;
               onPatch(kind === 'pause' ? { kind, target: null, reps: null } : { kind });
@@ -802,7 +802,7 @@ function StepEditor({ id, block, sport, profile, set, moreOpen, onMoreOpenChange
           {pause ? null : <TargetFields sport={sport} block={block} profile={profile} onPatch={onPatch} />}
           {pause || set ? null : (
             <label className="block">
-              <span className={formLabelClassName}>Repeat this step</span>
+              <span className={formLabelClassName}>Repeat this block</span>
               <DraftNumberInput min={1} step={1} integer value={block.reps ?? 1} onCommit={(reps) => onPatch({ reps: reps > 1 ? reps : null })} />
             </label>
           )}

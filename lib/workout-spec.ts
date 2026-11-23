@@ -24,11 +24,11 @@ export function normalizeWorkoutBlockDrafts(input: unknown) {
 export function validateWorkoutBlocks(blocks: WorkoutBlockDraft[], allowedTypes: readonly string[]) {
   for (const block of blocks) {
     if (!block.title) {
-      return 'Every step needs a name.';
+      return 'Every block needs a name.';
     }
 
     if (!allowedTypes.includes(block.blockType)) {
-      return 'One of the steps has a type Tempo doesn’t recognize.';
+      return 'One of the blocks has a type Tempo doesn’t recognize.';
     }
   }
 

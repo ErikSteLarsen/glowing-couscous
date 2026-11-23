@@ -65,7 +65,7 @@ export default async function AthleteLivePage({
     return (
       <PageShell size="wide">
         <TopBar back={back} title={title} />
-        <EmptyState title="No workout steps" description="Open the workout page to check the plan." />
+        <EmptyState title="No workout blocks" description="Open the workout page to check the plan." />
       </PageShell>
     );
   }
@@ -100,12 +100,12 @@ export default async function AthleteLivePage({
           <Surface>
             <p className="text-xs font-medium text-[var(--text-muted)]">Total time</p>
             <p className="mt-3 text-[20px] font-semibold text-[var(--text)]">{formatDuration(detail.session.durationSec)}</p>
-            <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{steps.length} steps</p>
+            <p className="mt-1 text-[13px] text-[var(--text-secondary)]">{steps.length} {steps.length === 1 ? 'block' : 'blocks'}</p>
           </Surface>
           <Surface>
             <p className="text-xs font-medium text-[var(--text-muted)]">How to do it</p>
             <p className="mt-3 text-[13px] leading-[1.55] text-[var(--text-secondary)]">
-              Follow each step and its target.
+              Follow each block and its target.
             </p>
           </Surface>
         </div>

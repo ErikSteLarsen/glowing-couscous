@@ -64,7 +64,7 @@ export default async function AthleteRidePage({
         <TopBar back={back} title={`Ride ${detail.session.title}`} />
         <EmptyState
           title="Trainer rides are for bike workouts"
-          description={canFollowAlong ? 'Follow this workout step by step.' : 'Open the workout page to check the plan.'}
+          description={canFollowAlong ? 'Follow this workout block by block.' : 'Open the workout page to check the plan.'}
           action={canFollowAlong ? (
             <ActionLink href={withBackOrigin(`/athlete/live/${detail.session.id}`, parseBackOrigin('session-live', from))}>Follow along</ActionLink>
           ) : undefined}
@@ -81,7 +81,7 @@ export default async function AthleteRidePage({
         <TopBar back={back} title={`Ride ${detail.session.title}`} />
         <EmptyState
           title="Trainer rides are for bike workouts"
-          description={steps.length > 0 ? 'Use live guidance to follow this workout step by step.' : 'This workout has no steps to follow.'}
+          description={steps.length > 0 ? 'Use live guidance to follow this workout block by block.' : 'This workout has no blocks to follow.'}
           action={steps.length > 0 ? <ActionLink href={withBackOrigin(`/athlete/live/${detail.session.id}`, parseBackOrigin('session-live', from))}>Follow along</ActionLink> : undefined}
         />
       </PageShell>

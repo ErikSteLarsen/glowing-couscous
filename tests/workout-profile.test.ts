@@ -38,7 +38,7 @@ test('repeated sets are unrolled in time, gap-free, and bracketed once over ever
   assert.ok(Math.abs(model.steps[1].startLevel - (3 + 5 / 15)) < 1e-9, '95% FTP sits a third into Z4');
   assert.deepEqual([model.steps[5].startPct, model.steps[5].endPct], [65, 45], 'cool-down ramps down');
   assert.deepEqual(model.phases.map((phase) => [phase.title, phase.detail]), [
-    ['Warm-up', '10m · Z2'], ['Main set', '42m · Z4'], ['Cool-down', '10m · Z1'],
+    ['Warm-up', '10m · Z2'], ['Repeat', '42m · Z4'], ['Cool-down', '10m · Z1'],
   ]);
   assert.match(describeWorkoutProfile(model), /2 × 18m zone 4 \+ 3m recovery/);
 });
@@ -70,7 +70,7 @@ test('separate repeated sets are numbered and adjacent single blocks with the sa
     block(3, 'work', 4, { zone: 5 }), block(4, 'recovery', 2), block(5, 'work', 4, { zone: 5 }), block(6, 'recovery', 2),
     block(7, 'work', 8), block(8, 'recovery', 4), block(9, 'work', 8), block(10, 'recovery', 4),
   ]);
-  assert.deepEqual(model.phases.map((phase) => phase.title), ['Endurance', 'Set 1', 'Set 2']);
+  assert.deepEqual(model.phases.map((phase) => phase.title), ['Endurance', 'Repeat 1', 'Repeat 2']);
   assert.equal(model.phases[0].detail, '35m · Z2');
 });
 

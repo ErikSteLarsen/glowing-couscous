@@ -3,8 +3,8 @@ import { prisma } from './prisma.ts';
 import { activityImportService, type ActivityImportTransaction } from './activity-import-service.ts';
 import { normalizeStravaActivity, normalizeStravaSport, toStravaActivitySummary } from './strava-normalizer.ts';
 import type { StravaRecord, StravaStreams, StravaActivitySummary } from './strava-normalizer.ts';
+import { hasStravaWriteScope } from './strava-post.ts';
 
-const STRAVA_API = 'https://www.strava.com/api/v3';
 const STRAVA_TOKEN = 'https://www.strava.com/oauth/token';
 const STRAVA_REVOKE = 'https://www.strava.com/oauth/revoke';
 const MAX_INBOX_ACTIVITIES = 100;
@@ -27,6 +27,18 @@ export class StravaConnectionConflictError extends Error {}
 export class StravaProviderError extends Error {
   readonly status: number;
   constructor(message: string, status: number) { super(message); this.status = status; }
+}
+
+/**
+ * Strava's v3 API base. `STRAVA_API_BASE_URL` points Tempo at a local stub during development;
+ * it is ignored in production so a stray value can never redirect real tokens.
+ */
+export function stravaApiBase() {
+  const override = process.env.STRAVA_API_BASE_URL?.trim();
+  if (override && process.env.NODE_ENV !== 'production' && /^http:\/\/(127\.0\.0\.1|localhost):\d+(\/|$)/.test(override)) {
+    return override.replace(/\/+$/, '');
+  }
+  return 'https://www.strava.com/api/v3';
 }
 
 function requiredEnvironment(name: string) {
@@ -164,7 +176,7 @@ async function getActiveAccessToken(connection: NonNullable<Awaited<ReturnType<t
 }
 
 async function apiGet(token: string, path: string) {
-  return readJson(await fetch(`${STRAVA_API}${path}`, {
+  return readJson(await fetch(`${stravaApiBase()}${path}`, {
     headers: { authorization: `Bearer ${token}` },
     cache: 'no-store',
     signal: AbortSignal.timeout(12_000),
@@ -284,13 +296,37 @@ async function removeLocalStravaActivity(connection: { id: string; userId: numbe
   });
 }
 
+export type StravaWriteAccess =
+  | { state: 'not-connected'; canConnect: boolean }
+  | { state: 'needs-scope' }
+  | { state: 'ready' };
+
+function canConnectStrava() {
+  return Boolean(
+    process.env.STRAVA_CLIENT_ID?.trim() && process.env.STRAVA_CLIENT_SECRET?.trim() &&
+    /^[0-9a-f]{64}$/i.test(process.env.STRAVA_TOKEN_ENCRYPTION_KEY?.trim() ?? ''),
+  );
+}
+
 export const stravaService = {
+  /** Whether Tempo may upload activities for this user: connected, and granted `activity:write`. */
+  async writeAccessForUser(userId: number): Promise<StravaWriteAccess> {
+    const connection = await getConnection(userId);
+    if (!connection) return { state: 'not-connected', canConnect: canConnectStrava() };
+    return hasStravaWriteScope(connection.scopes) ? { state: 'ready' } : { state: 'needs-scope' };
+  },
+
+  /** A fresh access token for uploads, refreshing it when it is about to expire. */
+  async writeTokenForUser(userId: number) {
+    const connection = await getConnection(userId);
+    if (!connection) throw new StravaProviderError('Connect Strava first.', 404);
+    if (!hasStravaWriteScope(connection.scopes)) throw new StravaProviderError('Reconnect Strava to allow posting.', 403);
+    return getActiveAccessToken(connection);
+  },
+
   async connectionForUser(userId: number): Promise<StravaConnectionSummary> {
     const connection = await getConnection(userId);
-    const canConnect = Boolean(
-      process.env.STRAVA_CLIENT_ID?.trim() && process.env.STRAVA_CLIENT_SECRET?.trim() &&
-      /^[0-9a-f]{64}$/i.test(process.env.STRAVA_TOKEN_ENCRYPTION_KEY?.trim() ?? ''),
-    );
+    const canConnect = canConnectStrava();
     if (!connection) return { connected: false, canConnect, athleteName: null, webhookConfigured: webhooksConfigured(), activities: [] };
     const [activities, imported] = await Promise.all([
       prisma.stravaInboxActivity.findMany({

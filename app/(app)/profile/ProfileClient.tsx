@@ -254,7 +254,7 @@ export function ProfileClient({ account }: { account: Account }) {
       setSavedSnapshot(submittedSnapshot);
       await update();
       router.refresh();
-      setMessage('Profile saved. New workout steps use these values for their targets.');
+      setMessage('Profile saved. New workout blocks use these values for their targets.');
     } catch {
       if (profileSaved) {
         setMessage('Profile saved. If your name doesn’t update, reload the page.');

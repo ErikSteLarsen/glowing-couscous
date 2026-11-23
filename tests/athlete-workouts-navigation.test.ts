@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { customizeWorkoutHref, legacyLibraryRedirectHref, resolveWorkoutTab } from '../lib/athlete-workouts-navigation.ts';
+import { customizeWorkoutHref, editWorkoutHref, legacyLibraryRedirectHref, myWorkoutHref, myWorkoutsHref, resolveWorkoutTab } from '../lib/athlete-workouts-navigation.ts';
+import { ownedWorkoutDetailItems, splitWorkoutNotes, summarizeOwnedWorkout } from '../lib/owned-workout-summary.ts';
 
 test('explicit workout tabs override the default based on the saved workout count', () => {
   assert.equal(resolveWorkoutTab(null, 0), 'library');
@@ -20,4 +21,84 @@ test('legacy library redirects preserve catalog filters without entering the edi
 
 test('Customize links open a catalog draft by slug', () => {
   assert.equal(customizeWorkoutHref('gentle-spin-30'), '/athlete/workouts?customize=gentle-spin-30');
+});
+
+test('saved workouts have a detail page, and Edit from it returns there', () => {
+  assert.equal(myWorkoutHref(7), '/athlete/workouts/7');
+  assert.equal(myWorkoutsHref(), '/athlete/workouts?tab=mine');
+  assert.equal(editWorkoutHref(7), '/athlete/workouts?edit=7');
+  assert.equal(editWorkoutHref(7, 'detail'), '/athlete/workouts?edit=7&from=detail');
+});
+
+const power = (low: number, high = low) => ({ metric: 'power' as const, mode: 'relative' as const, reference: 'ftp' as const, low, high });
+const profile = { cycling: { ftpWatts: 250 } } as Parameters<typeof summarizeOwnedWorkout>[1];
+
+test('a saved bike workout summarizes like a public one: %FTP profile, IF and folded repeats', () => {
+  const summary = summarizeOwnedWorkout({
+    id: 1, sport: 'BIKING', title: 'Threshold 3x8', summary: 'Three threshold efforts.\n\nKeep cadence high.',
+    blocks: [
+      { kind: 'warmup', zone: 2, durationSec: 600, target: power(55, 75) },
+      ...[1, 2, 3].flatMap(() => [
+        { kind: 'work', zone: 4, durationSec: 480, target: power(95, 100) },
+        { kind: 'recovery', zone: 1, durationSec: 180, target: power(50) },
+      ]),
+      { kind: 'cooldown', zone: 1, durationSec: 300, target: power(40, 60) },
+    ],
+  }, profile);
+
+  assert.equal(summary.axis, 'power');
+  assert.equal(summary.durationSec, 600 + 3 * 660 + 300);
+  assert.equal(summary.peakZone, 4);
+  assert.equal(summary.effortCount, 3);
+  assert.equal(summary.workSec, 3 * 480);
+  assert.ok(summary.intensityFactor !== null && summary.intensityFactor > 0.7 && summary.intensityFactor < 0.95);
+  assert.deepEqual(splitWorkoutNotes('Three threshold efforts.\n\nKeep cadence high.'), { lead: 'Three threshold efforts.', details: ['Keep cadence high.'] });
+  assert.equal(summary.lead, 'Three threshold efforts.');
+
+  const items = ownedWorkoutDetailItems(summary.profile);
+  assert.deepEqual(items.map((item) => [item.repeat, item.blocks.map((block) => block.label)]), [
+    [null, ['Warm-up']],
+    [3, ['Effort', 'Recovery']],
+    [null, ['Cool-down']],
+  ]);
+});
+
+test('a repeat without its last recovery keeps the list honest', () => {
+  const summary = summarizeOwnedWorkout({
+    id: 2, sport: 'BIKING', title: 'Short', summary: null,
+    blocks: [
+      { kind: 'work', zone: 5, durationSec: 120, target: power(115) },
+      { kind: 'recovery', zone: 1, durationSec: 120, target: power(50) },
+      { kind: 'work', zone: 5, durationSec: 120, target: power(115) },
+      { kind: 'recovery', zone: 1, durationSec: 120, target: power(50) },
+      { kind: 'work', zone: 5, durationSec: 120, target: power(115) },
+    ],
+  }, profile);
+  const items = ownedWorkoutDetailItems(summary.profile);
+  const listed = items.reduce((sum, item) => sum + (item.repeat ?? 1) * item.blocks.reduce((total, block) => total + block.durationSec, 0), 0);
+  assert.equal(listed, summary.durationSec);
+});
+
+test('a run without power targets falls back to the zone scale and has no IF', () => {
+  const summary = summarizeOwnedWorkout({
+    id: 3, sport: 'RUNNING', title: 'Easy run', summary: null,
+    blocks: [{ kind: 'work', zone: 2, durationSec: 2400, target: null }],
+  }, profile);
+  assert.equal(summary.axis, 'zone');
+  assert.equal(summary.intensityFactor, null);
+  assert.equal(summary.peakZone, 2);
+  assert.equal(summary.profile.steps.length, 1);
+});
+
+test('saved power blocks list watts like public ones, ramps as start → end', () => {
+  const summary = summarizeOwnedWorkout({
+    id: 4, sport: 'BIKING', title: 'Ramp', summary: null,
+    blocks: [
+      { kind: 'warmup', zone: 2, durationSec: 600, target: power(50, 70) },
+      { kind: 'work', zone: 4, durationSec: 600, target: power(95, 100) },
+    ],
+  }, profile);
+  const [warmup, work] = ownedWorkoutDetailItems(summary.profile, 250).flatMap((item) => item.blocks);
+  assert.deepEqual([warmup.target, warmup.unit], ['125 → 175', 'W']);
+  assert.deepEqual([work.target, work.unit], ['238–250', 'W']);
 });

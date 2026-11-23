@@ -135,7 +135,7 @@ expansion until personal use is complete or explicitly requested.
 - Blocks provide sport, targets, duration, repetitions, notes, skipped state, and zone information.
 - New effort blocks use the selected zone's target preset. Profile-backed running pace starts at the midpoint of the user's editable zone range; Olympiatoppen heart-rate targets use the user's BPM range for that zone. Numeric adjustments can move effort into another zone, and choosing a zone resets its preset. Relative profile targets remain generic in stored workouts so each user resolves them against their own profile.
 - The performance profile stores maximum heart rate for Olympiatoppen I-1–I-5 boundaries and a recent running race distance/time to seed five editable pace ranges. Pace defaults use Tempo's race-speed bands, not Olympiatoppen-published pace bands; profile users can set the fastest and slowest min/km for each zone.
-- Short pause blocks sit between efforts or repeated sets. They count toward elapsed time but do not contribute training load.
+- Short pause blocks sit between efforts or repeats. They count toward elapsed time but do not contribute training load.
 - Duration, training load, zones, and timelines are derived from structured blocks.
 - `Workouts` stores private reusable definitions without dates or assignments
   in **My workouts**. **Public library** offers built-in indoor bike workouts.
@@ -174,6 +174,7 @@ expansion until personal use is complete or explicitly requested.
 
 - Live execution is a local block stepper; it does not collect device or sensor telemetry.
 - Activity recording imports support both user-selected files and a Strava OAuth/webhook review flow. Users choose whether to import a Strava activity and may match it to an unfinished planned session.
+- A saved activity with recorded data can be posted to Strava from its workout page or the ride summary, after an editable preview (title, one stats line, one block line, chart image). Each activity is posted at most once; the page then shows **Posted to Strava · View on Strava**. Activities that came from Strava are never posted back. Strava's API cannot attach photos, so the chart image is offered as a download, and a .tcx download covers manual upload.
 - Messaging, multi-coach collaboration, shared business accounts, custom sports, and deep analytics are not implemented.
 - Routine application repeats one weekly pattern over a chosen calendar month. Different patterns for successive weeks, open-ended recurrence, automatic progression and public routine distribution remain outside the current model. Application adds sessions alongside existing calendar content; it does not replace a plan.
 - Public sharing exposes only a sanitized workout definition; it never exposes ownership, relationship, private notes, or actual data.

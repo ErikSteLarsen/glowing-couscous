@@ -488,14 +488,17 @@ Keep sport terms: FTP, zones (Z1–Z5), intervals, warm-up, cool-down, TSS,
 training load, RPE, compliance, pace, heart rate, cadence, ERG, free ride,
 fitness, fatigue, form, ramp rate, CSS, Olympiatoppen.
 
-One term per concept:
+One term per concept. Workout parts follow TrainingPeaks and Zwift (blocks) and
+Garmin Connect (Repeat), which matches the stored `blocks` model. "Interval" is
+only a sport term for hard efforts or a workout type ("Threshold intervals"),
+never the name of a part of a workout.
 
 | Concept | Say | Don't say |
 | --- | --- | --- |
-| A single workout made up of steps, saved or in the library | **workout** | session, source, entity |
+| A single workout made up of blocks, saved or in the library | **workout** | session, source, entity |
 | A workout put on a date | **planned workout** (or just workout) | session, scheduled copy, assignment |
 | Your saved workouts / ready-made ones | **My workouts** / **Public library** | your library, catalog |
-| One part of a workout; a repeated group | **step**; **set** | block, segment, effort (except "effort" as the work part of an interval) |
+| One part of a workout; a repeated group of blocks | **block**; **repeat** ("Repeat 4×", "Add repeat") | step, set, segment, interval (block kinds stay **effort**, **recovery**, **warm-up**, **cool-down**) |
 | Training you did and Tempo recorded | **activity** | completed session, outcome, record |
 | What you did vs. what was planned | **result** vs. **plan** | actual, baseline, snapshot |
 | Finishing a planned workout | **Mark as done**, status **done** | complete, log completion |
@@ -624,8 +627,13 @@ Public library tab.
 Hide the header and tabs while the editor is open. **Customize** prefills an
 unsaved copy of the catalog workout. Name the original and explain that
 Save adds your version to My workouts and the original stays as it is.
-Both tabs share the `WorkoutCard` grid, search toolbar and count row; My
-workouts cards open the editor and offer Schedule and ⋯ (share, delete). Workout
+Workouts are one concept. Both tabs share the `WorkoutCard` grid (the same
+%FTP or zone profile, meta line, TSS and IF), the search, Filters and sort
+toolbar, and the count row. Every card opens a detail page rendered by the
+shared `WorkoutDetail` layout: public at `/athlete/library/<slug>`, saved at
+`/athlete/workouts/<id>`. Saved workouts differ only where ownership does: the
+detail page shows **Edit** beside Start workout and Schedule, and ⋯ adds share
+link and Delete; public workouts offer **Customize** in ⋯ instead. Workout
 drafts kept on this device appear as an "N unsaved workouts" chip at the right of
 the tabs row, opening a popover that names each one with its age and offers
 Restore and Discard. Opening a workout that has a draft says "You have unsaved
@@ -640,7 +648,7 @@ to Public library. A clean draft closes without confirmation.
 minimum by default and put advanced fields behind **More options**; a typical
 workout (up to about eight rows) fits a 1440×900 screen with the save bar.
 
-- **Title row.** Name, sport and an Edit basics link, then **Add step**, undo,
+- **Title row.** Name, sport and an Edit basics link, then **Add block**, undo,
   redo, total time · TSS and a **Time by zone** toggle, then the host's status
   and ⋯ (passed as `headerActions`, so a host does not add a second header).
   New workouts open the basics panel (name, sport, notes, schedule) first; it
@@ -665,7 +673,7 @@ workout (up to about eight rows) fits a 1440×900 screen with the save bar.
   type, target type and low/high range (warm-up and cool-down power ranges
   ramp), single-step repeats and the coaching note, which also carries cadence
   cues.
-- **Adding.** Add step offers Warm-up, Steady, Intervals (a 5 × set), Recovery,
+- **Adding.** Add block offers Warm-up, Steady, Intervals (a 5 × repeat), Recovery,
   Cool-down and a few interval presets; new cycling steps start with a %FTP
   target. Focus and selection move to the new step.
 
@@ -732,6 +740,10 @@ the logging card and Coach move to a 320px side column beside the overview; it i
 sticky on tall viewports unless it holds a recorded outcome. Opening the
 planned adjustment or outcome correction editor returns the page to one column.
 The header Mark as done link scrolls to the card and focuses the note.
+A saved activity with recorded data puts **Post to Strava** (secondary) in the
+header; once posted it reads **Posted to Strava · View on Strava**. The post sheet
+shows the chart image, then editable Title and Description, with **Not now** and
+**Post to Strava**; Download image and the .tcx fallback stay in the sheet.
 
 ### Activity
 

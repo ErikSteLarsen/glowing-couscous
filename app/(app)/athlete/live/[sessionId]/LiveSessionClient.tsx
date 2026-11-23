@@ -142,21 +142,21 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
         <WorkoutProfile
           model={profile}
           ftpWatts={ftpWatts}
-          label={`${title} workout profile${profileMatchesSteps && !complete && !saved && currentStep ? `, current step ${currentIndex + 1} of ${blocks.length} outlined` : ''}`}
+          label={`${title} workout profile${profileMatchesSteps && !complete && !saved && currentStep ? `, current block ${currentIndex + 1} of ${blocks.length} outlined` : ''}`}
           activeStep={profileMatchesSteps && !complete && !saved ? currentIndex : null}
         />
       ) : null}
-      {!hasBlocks ? <p role="alert" className={dangerTextClassName}>This workout has no steps.</p> : null}
+      {!hasBlocks ? <p role="alert" className={dangerTextClassName}>This workout has no blocks.</p> : null}
       {currentStep && !saved ? (
         <section aria-labelledby="live-current-step" className="space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0" aria-live="polite">
-              <h2 id="live-current-step" className={sectionHeadingClassName}>{complete ? 'All steps done' : currentStep.label}</h2>
+              <h2 id="live-current-step" className={sectionHeadingClassName}>{complete ? 'All blocks done' : currentStep.label}</h2>
               {complete ? (
                 <p className="mt-1 text-sm text-[var(--text-secondary)]">Mark the workout as done to finish.</p>
               ) : (
                 <>
-                  <p className="data mt-1 text-sm text-[var(--text-secondary)]">Step {currentIndex + 1} of {blocks.length}</p>
+                  <p className="data mt-1 text-sm text-[var(--text-secondary)]">Block {currentIndex + 1} of {blocks.length}</p>
                   {currentStep.targetLabel ? <p className="data mt-2 text-sm font-medium text-[var(--text)]">{currentStep.targetLabel}</p> : null}
                   {currentStep.note ? <p className="mt-1 max-w-prose text-sm text-[var(--text-secondary)]">{currentStep.note}</p> : null}
                 </>
@@ -175,15 +175,15 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
             </Menu>
           </div>
           {!complete ? (
-            <div role="group" aria-label="Step timer" className="flex flex-wrap items-end gap-x-4 gap-y-2">
+            <div role="group" aria-label="Block timer" className="flex flex-wrap items-end gap-x-4 gap-y-2">
               <div>
-                <p className="text-xs font-medium text-[var(--text-muted)]">Step timer</p>
+                <p className="text-xs font-medium text-[var(--text-muted)]">Block timer</p>
                 {currentStep.durationSec <= 0 ? (
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">This step has no set time.</p>
+                  <p className="mt-1 text-sm text-[var(--text-secondary)]">This block has no set time.</p>
                 ) : stepCompleted ? (
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">This step is already done.</p>
+                  <p className="mt-1 text-sm text-[var(--text-secondary)]">This block is already done.</p>
                 ) : timer.kind === 'elapsed' ? (
-                  <p role="status" className="mt-1 text-sm font-medium text-[var(--text)]">Time’s up. Go to the next step when you’re ready.</p>
+                  <p role="status" className="mt-1 text-sm font-medium text-[var(--text)]">Time’s up. Go to the next block when you’re ready.</p>
                 ) : now === null ? (
                   <p aria-label="Loading timer" className="data mt-1 text-3xl font-medium text-[var(--text)]">--:--</p>
                 ) : (
@@ -216,7 +216,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              aria-label="Previous step"
+              aria-label="Previous block"
               className={`${secondaryButtonClassName} min-h-11`}
               disabled={pending || saved || currentIndex === 0}
               onClick={() => updateExecutionState(previousExecution(state))}
@@ -234,7 +234,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
                 disabled={pending || saved}
                 onClick={() => updateExecutionState(advanceExecution(state))}
               >
-                Next step
+                Next block
               </button>
             )}
           </div>
@@ -247,7 +247,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
         <details className="group border-t border-[var(--border)]">
           <summary className={`flex min-h-11 list-none items-center gap-2 rounded-lg py-2 hover:bg-[var(--raised)] text-sm text-[var(--text)] ${buttonFocusClassName}`}>
             <ChevronDown aria-hidden="true" size={16} className="shrink-0 group-open:rotate-180" />
-            <span className="font-medium">Workout steps</span>
+            <span className="font-medium">Workout blocks</span>
             <span className="data ml-auto text-right text-[var(--text-secondary)]">{formatDuration(totalDuration)}</span>
           </summary>
           <div className="pt-2">

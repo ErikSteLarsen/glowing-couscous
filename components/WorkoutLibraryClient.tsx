@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from 'react';
-import Link from 'next/link';
-import { CalendarPlus, ChevronDown, Ellipsis, Link2, Plus, Trash2, X } from 'lucide-react';
+import { ChevronDown, Plus, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -13,7 +12,6 @@ import {
   compactSecondaryButtonClassName,
   EmptyState,
   ghostButtonClassName,
-  iconButtonClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   dangerButtonClassName,
@@ -23,21 +21,21 @@ import {
 } from '@/components/ui';
 import { WorkoutBuilder } from '@/components/WorkoutBuilder';
 import { GuidedWorkoutForm, type GuidedWorkoutInfo } from '@/components/GuidedWorkoutForm';
-import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { ShareLinkResult, useShareLink } from '@/components/ShareLinkButton';
 import { Menu, MenuContent, MenuItem, MenuTrigger, OverflowMenuTrigger } from '@/components/tempo/Menu';
+import { CatalogProfile } from '@/components/library/CatalogProfile';
+import { ActiveFilterChips, FilterChipGroup, FiltersButton, FiltersDialog, SortSelect } from '@/components/library/CollectionFilters';
+import { MyWorkoutMenu } from '@/components/library/MyWorkoutActions';
 import { formatDuration } from '@/lib/format-duration';
 import {
   createEmptySessionEditorDraft,
   createSessionEditorDraftFromPersisted,
-  deriveSessionEditorMetrics,
   serializeSessionEditorDraft,
   validateSessionEditorDraft,
   type SessionEditorDraft,
   type PersistedSessionBlock,
 } from '@/lib/session-editor';
 import { getSportLabel } from '@/lib/sport';
-import { getCalendarPlacementHref } from '@/lib/calendar-navigation';
 import type { PerformanceProfile } from '@/lib/performance-profile';
 import { useDraftRecovery } from '@/components/useDraftRecovery';
 import { DraftRecoveryStatus } from '@/components/DraftRecoveryNotice';
@@ -48,6 +46,9 @@ import { WorkoutCard, WorkoutCardFooter, WorkoutCardGrid, WorkoutCardHeader, Wor
 import { describeWorkoutDraft, isWorkoutDraftRedundant, parseWorkoutRecovery } from '@/lib/workout-recovery';
 import { athleteWorkoutsHref, type WorkoutTab } from '@/lib/athlete-workouts-navigation';
 import { formatDraftAge, recoveryKey, type RecoveryDraft } from '@/lib/draft-recovery';
+import { summarizeOwnedWorkout, type OwnedWorkoutSummary } from '@/lib/owned-workout-summary';
+import { getTempoZoneMeta } from '@/lib/tempo-blocks';
+import { CATALOG_SORTS, DURATION_BUCKETS, type CatalogSort, type DurationBucket } from '@/lib/workout-catalog/query';
 
 type WorkoutRecord = {
   id: number;
@@ -82,6 +83,7 @@ export function WorkoutLibraryClient({
   designDirection = null,
   ownerId = null,
   listIntro = null,
+  workoutHref = null,
 }: {
   role: 'COACH' | 'ATHLETE';
   workouts: WorkoutRecord[];
@@ -99,11 +101,17 @@ export function WorkoutLibraryClient({
   ownerId?: number | null;
   /** Page header shown with the list; the editor replaces it while open. A function places the unsaved-drafts control. */
   listIntro?: ReactNode | ((slots: { drafts: ReactNode }) => ReactNode);
+  /** Detail page of a saved workout. With it, cards open that page (as public workouts do) and Edit opens the editor. */
+  workoutHref?: ((id: number) => string) | null;
 }) {
   const router = useRouter();
   const initialWorkout = initialWorkoutId === null ? null : workouts.find((workout) => workout.id === initialWorkoutId) ?? null;
   const [isPending, startTransition] = useTransition();
   const [filterText, setFilterText] = useState('');
+  const [sportFilter, setSportFilter] = useState<string[]>([]);
+  const [lengthFilter, setLengthFilter] = useState<DurationBucket[]>([]);
+  const [sort, setSort] = useState<CatalogSort>('name');
+  const filtersDialog = useRef<HTMLDialogElement>(null);
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<number | null>(() => initialWorkout?.id ?? null);
   const entry = initialCustomization ? `customize:${initialCustomization.slug}` : initialWorkout ? `edit:${initialWorkout.id}` : null;
   const [editorEntry, setEditorEntry] = useState(entry);
@@ -188,13 +196,36 @@ export function WorkoutLibraryClient({
     setMessage(asCopy ? 'This workout was changed or deleted since then, so your changes open as a new workout. The saved version stays as it is.' : 'Changes restored. Check them, then save.');
   }
 
+  const summaries = useMemo(() => new Map(workouts.map((workout) => [workout.id, summarizeOwnedWorkout(workout, performanceProfile)])), [workouts, performanceProfile]);
+  const sportOptions = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const workout of workouts) counts.set(workout.sport, (counts.get(workout.sport) ?? 0) + 1);
+    return [...counts].map(([id, count]) => ({ id, label: getSportLabel(id), count })).sort((a, b) => a.label.localeCompare(b.label));
+  }, [workouts]);
+  const activeFilters = [
+    ...sportFilter.map((id) => ({ key: `sport:${id}`, label: getSportLabel(id), onRemove: () => setSportFilter((current) => current.filter((value) => value !== id)) })),
+    ...lengthFilter.map((id) => ({ key: `length:${id}`, label: DURATION_BUCKETS.find((bucket) => bucket.id === id)?.label ?? id, onRemove: () => setLengthFilter((current) => current.filter((value) => value !== id)) })),
+  ];
+  const filtered = Boolean(filterText.trim()) || activeFilters.length > 0;
+  const clearSearchAndFilters = () => { setFilterText(''); setSportFilter([]); setLengthFilter([]); };
+  const toggle = <T extends string>(values: T[], value: T) => values.includes(value) ? values.filter((entry) => entry !== value) : [...values, value];
+
   const visibleWorkouts = useMemo(() => {
     const query = filterText.trim().toLowerCase();
-    if (!query) return workouts;
-    return workouts.filter((workout) =>
-      workout.title.toLowerCase().includes(query) || (workout.summary ?? '').toLowerCase().includes(query),
-    );
-  }, [filterText, workouts]);
+    const matches = workouts.filter((workout) => {
+      const summary = summaries.get(workout.id);
+      return (!query || workout.title.toLowerCase().includes(query) || (workout.summary ?? '').toLowerCase().includes(query))
+        && (sportFilter.length === 0 || sportFilter.includes(workout.sport))
+        && (lengthFilter.length === 0 || (summary !== undefined && lengthFilter.includes(summary.bucket)));
+    });
+    if (sort === 'name') return matches;
+    const value = (workout: WorkoutRecord) => {
+      const summary = summaries.get(workout.id);
+      return sort.startsWith('duration') ? summary?.durationSec ?? 0 : summary?.tss ?? 0;
+    };
+    const direction = sort.endsWith('desc') ? -1 : 1;
+    return [...matches].sort((a, b) => (value(a) - value(b)) * direction || a.title.localeCompare(b.title));
+  }, [filterText, workouts, summaries, sportFilter, lengthFilter, sort]);
 
   function applyDraftAction(action: PendingDraftAction) {
     recovery.discard();
@@ -217,8 +248,12 @@ export function WorkoutLibraryClient({
       setSelectedWorkoutId(null);
       setDraft(createNewDraft());
       setEditorOpen(false);
-      if (entry) {
+      const returnToDetail = initialWorkout && workoutHref && new URLSearchParams(window.location.search).get('from') === 'detail';
+      if (returnToDetail) {
+        router.replace(workoutHref(initialWorkout.id), { scroll: false });
+      } else if (entry) {
         const params = new URLSearchParams(window.location.search);
+        params.delete('from');
         params.delete('edit');
         params.delete('customize');
         if (initialCustomization) params.set('tab', 'library');
@@ -247,7 +282,7 @@ export function WorkoutLibraryClient({
     }
     if (!draft.blocks.some((block) => !block.skipped && block.kind !== 'pause')) {
       setMessageTone('danger');
-      setMessage('Add at least one training step before saving. Pauses don’t count.');
+      setMessage('Add at least one training block before saving. Pauses don’t count.');
       return;
     }
     const validationError = validateSessionEditorDraft(draft);
@@ -384,9 +419,24 @@ export function WorkoutLibraryClient({
           <h2 id="workout-library-title" className={sectionHeadingClassName}>Workout library</h2>
           {typeof listIntro === 'function' ? null : draftsControl}
         </div>}
-        <CollectionToolbar search={<SearchField value={filterText} onChange={(event) => setFilterText(event.target.value)} label="Search by name or notes" placeholder="Search workouts" labelClassName="min-w-48 flex-1 @2xl:max-w-md" className="max-md:min-h-11" maxLength={80} autoComplete="off" />}>
-          {newWorkoutAction}
-        </CollectionToolbar>
+        <div role="search" aria-label="Filter workouts" className="flex flex-col gap-3">
+          <CollectionToolbar search={<SearchField value={filterText} onChange={(event) => setFilterText(event.target.value)} label="Search by name or notes" placeholder="Search workouts" labelClassName="min-w-48 flex-1 max-sm:basis-full @2xl:max-w-md" className="max-md:min-h-11" maxLength={80} autoComplete="off" />}>
+            {workouts.length ? <FiltersButton activeCount={activeFilters.length} onOpen={() => filtersDialog.current?.showModal()} /> : null}
+            {newWorkoutAction}
+          </CollectionToolbar>
+          <ActiveFilterChips chips={activeFilters} />
+        </div>
+        <FiltersDialog
+          dialogRef={filtersDialog}
+          titleId="my-workouts-filters-title"
+          resultCount={visibleWorkouts.length}
+          clearDisabled={activeFilters.length === 0}
+          onClear={() => { setSportFilter([]); setLengthFilter([]); }}
+        >
+          {sportOptions.length > 1 ? <FilterChipGroup legend="Sport" options={sportOptions} selected={sportFilter} onToggle={(id) => setSportFilter((current) => toggle(current, id))} /> : null}
+          <FilterChipGroup legend="Length" options={DURATION_BUCKETS} selected={lengthFilter} onToggle={(id) => setLengthFilter((current) => toggle(current, id))} />
+          <SortSelect value={sort} options={CATALOG_SORTS} onChange={setSort} />
+        </FiltersDialog>
         {role === 'ATHLETE' && guidedFormOpen ? <GuidedWorkoutForm onCancel={() => setGuidedFormOpen(false)} onGenerated={(nextDraft, info) => {
           if (editorOpen && isDirty && !window.confirm('Replace the workout you’re editing with this new one? Your unsaved changes will be lost.')) return;
           recovery.discard();
@@ -400,14 +450,15 @@ export function WorkoutLibraryClient({
           setEditorOpen(true);
           setMessage('');
         }} /> : null}
-        <CollectionSummary action={filterText.trim() && visibleWorkouts.length > 0 ? (
-          <button type="button" className={`${ghostButtonClassName('compact')} max-md:min-h-11`} onClick={() => setFilterText('')}>
-            <X aria-hidden="true" size={14} strokeWidth={1.7} />Clear search
+        <CollectionSummary action={filtered && visibleWorkouts.length > 0 ? (
+          <button type="button" className={`${ghostButtonClassName('compact')} max-md:min-h-11`} onClick={clearSearchAndFilters}>
+            <X aria-hidden="true" size={14} strokeWidth={1.7} />{activeFilters.length ? 'Clear search and filters' : 'Clear search'}
           </button>
         ) : null}>
-          {filterText.trim()
-            ? `${visibleWorkouts.length} of ${workouts.length} workouts`
-            : `${workouts.length} ${workouts.length === 1 ? 'workout' : 'workouts'}`}
+          {visibleWorkouts.length === workouts.length
+            ? `${workouts.length} ${workouts.length === 1 ? 'workout' : 'workouts'}`
+            : `${visibleWorkouts.length} of ${workouts.length} workouts`}
+          {sort === 'name' ? null : `\u00A0· ${CATALOG_SORTS.find((entry) => entry.id === sort)?.label ?? ''}`}
         </CollectionSummary>
         {message ? (
           <p role={messageTone === 'danger' ? 'alert' : 'status'} className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>
@@ -428,19 +479,20 @@ export function WorkoutLibraryClient({
           />
         ) : (
           <EmptyState
-            title="No matching workouts"
-            description="Try a different name or note, or clear your search."
-            action={<button type="button" className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={() => setFilterText('')}>Clear search</button>}
+            title="No workouts match"
+            description="Try a different search or adjust your filters."
+            action={<button type="button" className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={clearSearchAndFilters}>Clear search and filters</button>}
           />
         ) : (
           <WorkoutCardGrid>
             {visibleWorkouts.map((workout) => {
-              const workoutMetrics = deriveSessionEditorMetrics(draftForWorkout(workout), performanceProfile?.cycling.ftpWatts);
+              const summary = summaries.get(workout.id) ?? summarizeOwnedWorkout(workout, performanceProfile);
               return (
                 <li key={workout.id} className="min-w-0">
                   <MyWorkoutCard
                     workout={workout}
-                    metrics={workoutMetrics}
+                    summary={summary}
+                    href={workoutHref ? workoutHref(workout.id) : null}
                     hasDraft={draftResources.has(String(workout.id))}
                     canSchedule={role === 'ATHLETE'}
                     disabled={isPending}
@@ -506,7 +558,7 @@ export function WorkoutLibraryClient({
           <p className="font-semibold text-[var(--text)]">{guidedInfo.source === 'ai' ? 'AI-created workout' : `Guided workout: ${guidedInfo.selectedPattern}`}</p>
           <p className="text-[var(--text-secondary)]">{guidedInfo.reason}</p>
           <p className="text-[var(--text-secondary)]">{guidedInfo.context}</p>
-          <p className="text-xs text-[var(--text-secondary)]">Check each step and target below. This workout isn’t saved yet.</p>
+          <p className="text-xs text-[var(--text-secondary)]">Check each block and target below. This workout isn’t saved yet.</p>
         </div> : null}
 
         <WorkoutBuilder
@@ -544,7 +596,7 @@ export function WorkoutLibraryClient({
           <button type="button" className={`${primaryButtonClassName} max-md:min-h-11`} disabled={isPending || !draft.blocks.some((block) => !block.skipped && block.kind !== 'pause')} onClick={saveWorkout}>
             {isPending ? 'Saving…' : selectedWorkoutId ? 'Save changes' : 'Save workout'}
           </button>
-          {!draft.blocks.some((block) => !block.skipped && block.kind !== 'pause') ? <span className="text-xs text-[var(--text-secondary)]">Add a training step to save.</span> : null}
+          {!draft.blocks.some((block) => !block.skipped && block.kind !== 'pause') ? <span className="text-xs text-[var(--text-secondary)]">Add a training block to save.</span> : null}
         </div>
       </Surface> : null}
     </div>
@@ -567,7 +619,7 @@ function NewWorkoutMenu({ onGuided, onScratch, onBrowse }: { onGuided: () => voi
         </MenuItem>
         <MenuItem onSelect={onScratch} className="flex-col items-start gap-0.5 py-2">
           <span className="font-medium">Build from scratch</span>
-          <span className="text-xs text-[var(--text-secondary)]">Choose a name and sport, then add the steps yourself.</span>
+          <span className="text-xs text-[var(--text-secondary)]">Choose a name and sport, then add the blocks yourself.</span>
         </MenuItem>
         {onBrowse ? <MenuItem onSelect={onBrowse}>Start from public library</MenuItem> : null}
       </MenuContent>
@@ -575,55 +627,46 @@ function NewWorkoutMenu({ onGuided, onScratch, onBrowse }: { onGuided: () => voi
   );
 }
 
-/** My workouts card: the name opens the editor; Schedule and More options sit in the footer. */
-function MyWorkoutCard({ workout, metrics, hasDraft, canSchedule, disabled, onEdit, onDelete }: {
-  workout: WorkoutRecord; metrics: ReturnType<typeof deriveSessionEditorMetrics>; hasDraft: boolean;
+/**
+ * My workouts card, built like the public `LibraryCard`: %FTP profile, name and
+ * duration, sport and hardest zone, notes, TSS and IF, and one ⋯ menu. With a
+ * detail page the name opens it; otherwise (coach) it opens the editor.
+ */
+function MyWorkoutCard({ workout, summary, href, hasDraft, canSchedule, disabled, onEdit, onDelete }: {
+  workout: WorkoutRecord; summary: OwnedWorkoutSummary; href: string | null; hasDraft: boolean;
   canSchedule: boolean; disabled: boolean; onEdit: () => void; onDelete: () => void;
 }) {
   const share = useShareLink('session', workout.id);
+  const peakZone = summary.peakZone ? getTempoZoneMeta(summary.peakZone).name : null;
+  const describedBy = `workout-meta-${workout.id} workout-metrics-${workout.id}`;
+  const profileLabel = `${workout.title} intensity profile, ${formatDuration(summary.durationSec)}${summary.axis === 'power' ? `, peak ${Math.round(summary.maxPct)}% FTP` : ''}`;
   return (
     <WorkoutCard>
       <WorkoutCardProfile>
-        {metrics.segments.length
-          ? <SessionBlockBar segments={metrics.segments} size="tile" />
+        {summary.profile.steps.length
+          ? <CatalogProfile steps={summary.profile.steps} idPrefix={`mine-${workout.id}`} label={profileLabel} className="h-14" />
           : <div aria-hidden="true" className="h-14 border-b border-dashed border-[var(--border)]" />}
       </WorkoutCardProfile>
-      <WorkoutCardHeader
-        data-workout-row={workout.id}
-        aria-label={`Edit workout: ${workout.title}`}
-        aria-describedby={`workout-sport-${workout.id} workout-metrics-${workout.id}`}
-        onClick={onEdit}
-        aside={formatDuration(metrics.durationSec)}
-      >
-        {workout.title}
-      </WorkoutCardHeader>
-      <WorkoutCardMeta id={`workout-sport-${workout.id}`}>
-        {getSportLabel(workout.sport)}{hasDraft ? <span className="text-[var(--status-warning)]"> · Unsaved changes</span> : null}
+      {href ? (
+        <WorkoutCardHeader href={href} data-workout-row={workout.id} aria-describedby={describedBy} aside={formatDuration(summary.durationSec)}>
+          {workout.title}
+        </WorkoutCardHeader>
+      ) : (
+        <WorkoutCardHeader data-workout-row={workout.id} aria-label={`Edit workout: ${workout.title}`} aria-describedby={describedBy} onClick={onEdit} aside={formatDuration(summary.durationSec)}>
+          {workout.title}
+        </WorkoutCardHeader>
+      )}
+      <WorkoutCardMeta id={`workout-meta-${workout.id}`}>
+        {getSportLabel(workout.sport)}{peakZone ? <>&nbsp;· {peakZone}</> : null}{hasDraft ? <span className="text-[var(--status-warning)]">&nbsp;· Unsaved changes</span> : null}
       </WorkoutCardMeta>
-      {workout.summary ? <WorkoutCardSummary>{workout.summary}</WorkoutCardSummary> : null}
+      {summary.lead ? <WorkoutCardSummary>{summary.lead}</WorkoutCardSummary> : null}
       <WorkoutCardFooter
         id={`workout-metrics-${workout.id}`}
-        metrics={[{ label: 'TSS', value: metrics.tss }, { label: 'Steps', value: workout.blocks.length }]}
-        actions={<>
-          {canSchedule ? (
-            <Link href={getCalendarPlacementHref(`workout:${workout.id}`)} aria-label={`Schedule ${workout.title}`} className={`${compactSecondaryButtonClassName} max-md:min-h-11`}>
-              <CalendarPlus aria-hidden="true" size={15} strokeWidth={1.6} />Schedule
-            </Link>
-          ) : null}
-          <Menu>
-            <MenuTrigger disabled={share.isPending || disabled} aria-label={`More options for ${workout.title}`} className={iconButtonClassName}>
-              <Ellipsis aria-hidden="true" size={18} strokeWidth={1.8} />
-            </MenuTrigger>
-            <MenuContent align="end">
-              <MenuItem onSelect={share.createLink}>
-                <Link2 aria-hidden="true" size={16} strokeWidth={1.8} />Create share link
-              </MenuItem>
-              <MenuItem destructive onSelect={onDelete}>
-                <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />Delete workout…
-              </MenuItem>
-            </MenuContent>
-          </Menu>
-        </>}
+        metrics={[
+          { label: 'TSS', value: summary.tss },
+          ...(summary.intensityFactor === null ? [] : [{ label: 'IF', value: summary.intensityFactor.toFixed(2) }]),
+        ]}
+        actions={<MyWorkoutMenu id={workout.id} name={workout.title} share={share} disabled={disabled} onEdit={onEdit} onDelete={onDelete} showSchedule={canSchedule} />}
       />
       {share.message || share.shareUrl ? <div className="relative z-10 mt-3 space-y-2"><ShareLinkResult share={share} showAudience /></div> : null}
     </WorkoutCard>

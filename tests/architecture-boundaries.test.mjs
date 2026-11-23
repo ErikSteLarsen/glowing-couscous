@@ -225,8 +225,8 @@ test('live route delegates execution state to an accessible client', async () =>
   assert.match(liveClientSource, /previousExecution/);
   assert.match(liveClientSource, /restartExecution/);
   assert.match(liveClientSource, /completion/);
-  assert.match(liveClientSource, /Previous step/);
-  assert.match(liveClientSource, /Next step/);
+  assert.match(liveClientSource, /Previous block/);
+  assert.match(liveClientSource, /Next block/);
   assert.match(stepperSource, /aria-current/);
 });
 
