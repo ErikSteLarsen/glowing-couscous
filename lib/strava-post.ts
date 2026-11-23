@@ -5,7 +5,6 @@ import { groupSessionStructure, type StructureBlock } from './session-structure.
 /** Strava limits are generous; keep posts short and inside what Tempo can show in the preview. */
 export const STRAVA_POST_TITLE_MAX = 120;
 export const STRAVA_POST_DESCRIPTION_MAX = 1000;
-export const STRAVA_POST_FOOTER = 'Recorded with Tempo';
 
 export type StravaPostBlock = { kind: string; zone: number; durationSec: number; reps: number | null; skipped?: boolean };
 
@@ -14,10 +13,17 @@ export type StravaPostStats = {
   averagePowerWatts: number | null;
   normalizedPowerWatts: number | null;
   averageHeartRateBpm: number | null;
+  maxHeartRateBpm: number | null;
   tss: number | null;
 };
 
+/** One hard block as ridden: its planned length and the average power actually held. */
+export type StravaPostEffort = { durationSec: number; averagePowerWatts: number };
+
 export type StravaPostDraft = { name: string; description: string; statsLine: string; blockLine: string | null };
+
+const SHAPE_BARS = '▁▂▃▄▅▆▇█';
+const SHAPE_WIDTH = 24;
 
 /** "4 min", "30 s", "3:30", "90 min", "1:05:30". */
 export function formatPostDuration(durationSec: number) {
@@ -116,8 +122,95 @@ export function statsFromPoints(points: ActivitySeriesPoint[], durationSec: numb
       ? roundOrNull(normalizedPowerFrom(length, (index) => power[index]))
       : null,
     averageHeartRateBpm: roundOrNull(average(heart)),
+    maxHeartRateBpm: ordered.reduce<number | null>((max, point) => point.heartRateBpm == null ? max : Math.max(max ?? 0, point.heartRateBpm), null),
     tss: tss === null ? null : Math.round(tss),
   };
+}
+
+function averagePowerBetween(points: ActivitySeriesPoint[], startSec: number, endSec: number) {
+  const values = points
+    .filter((point) => point.elapsedSec >= startSec && point.elapsedSec < endSec && point.powerWatts != null)
+    .map((point) => point.powerWatts as number);
+  return values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : null;
+}
+
+/** The ride's power as a row of bars, e.g. "▃▃▃██▁▃█▆▁▅█". Null when power wasn't recorded. */
+export function powerShape(points: ActivitySeriesPoint[], durationSec: number, width = SHAPE_WIDTH): string | null {
+  const span = Math.max(1, Math.round(durationSec));
+  const buckets: Array<number | null> = Array.from({ length: width }, (_, index) => averagePowerBetween(points, (index * span) / width, ((index + 1) * span) / width));
+  const present = buckets.filter((value): value is number => value !== null);
+  if (present.length < width / 2) return null;
+  const low = Math.min(...present);
+  const range = Math.max(1, Math.max(...present) - low);
+  return buckets.map((value) => value === null ? SHAPE_BARS[0] : SHAPE_BARS[Math.round(((value - low) / range) * (SHAPE_BARS.length - 1))]).join('');
+}
+
+const isHardBlock = (block: StravaPostBlock) => block.kind !== 'pause' && block.kind !== 'warmup' && block.kind !== 'cooldown' && block.kind !== 'recovery' && block.zone >= 3;
+
+/**
+ * Average power for each hard block as ridden. Uses the recorded laps when they line up one-to-one with
+ * the plan (a Tempo Ride recording without skips), otherwise the plan's timing when the ride lasted as
+ * long as the plan. Returns null when neither is trustworthy, so the post never states a made-up number.
+ */
+export function effortsFromRide(input: { points: ActivitySeriesPoint[]; durationSec: number; laps?: { startSec: number; endSec: number }[]; blocks: StravaPostBlock[] }): StravaPostEffort[] | null {
+  const planned = input.blocks
+    .filter((block) => !block.skipped && block.durationSec > 0)
+    .flatMap((block) => Array.from({ length: Math.max(1, block.reps ?? 1) }, () => block));
+  if (!planned.some(isHardBlock)) return null;
+  let windows: { startSec: number; endSec: number }[] | null = null;
+  if (input.laps && input.laps.length === planned.length) {
+    windows = input.laps;
+  } else if (!input.laps?.length) {
+    const plannedSec = planned.reduce((sum, block) => sum + block.durationSec, 0);
+    if (Math.abs(plannedSec - input.durationSec) <= Math.max(30, plannedSec * 0.03)) {
+      let start = 0;
+      windows = planned.map((block) => ({ startSec: start, endSec: (start += block.durationSec) }));
+    }
+  }
+  if (!windows) return null;
+  const efforts: StravaPostEffort[] = [];
+  for (const [index, block] of planned.entries()) {
+    if (!isHardBlock(block)) continue;
+    const watts = averagePowerBetween(input.points, windows[index].startSec, windows[index].endSec);
+    if (watts === null) return null;
+    efforts.push({ durationSec: block.durationSec, averagePowerWatts: watts });
+  }
+  return efforts;
+}
+
+/** "🔥 4 × 4 min: 301 · 300 · 301 · 300 W" when the efforts share a length, otherwise "🔥 Efforts: 320 · 301 W". */
+export function formatEffortLine(efforts: StravaPostEffort[]) {
+  if (efforts.length === 0) return null;
+  const shown = efforts.slice(0, 10).map((effort) => effort.averagePowerWatts).join(' · ');
+  const more = efforts.length > 10 ? ' …' : '';
+  const sameLength = efforts.every((effort) => effort.durationSec === efforts[0].durationSec);
+  if (!sameLength) return `🔥 Efforts: ${shown}${more} W`;
+  const length = formatPostDuration(efforts[0].durationSec);
+  return efforts.length === 1 ? `🔥 ${length}: ${shown} W` : `🔥 ${efforts.length} × ${length}: ${shown}${more} W`;
+}
+
+/**
+ * The "clean card" description: grouped numbers with emoji labels, the power shape, and the hard
+ * efforts. Lines without data are left out rather than shown as dashes.
+ */
+export function formatCleanCard(input: { stats: StravaPostStats; distanceMeters: number | null; shape: string | null; efforts: StravaPostEffort[] | null; blockLine: string | null }) {
+  const { stats } = input;
+  const power = [
+    stats.averagePowerWatts !== null ? `${stats.averagePowerWatts} W avg` : null,
+    stats.normalizedPowerWatts !== null ? `${stats.normalizedPowerWatts} W NP` : null,
+  ].filter(Boolean).join(' · ');
+  const heart = [
+    stats.averageHeartRateBpm !== null ? `${stats.averageHeartRateBpm} bpm avg` : null,
+    stats.maxHeartRateBpm !== null ? `${stats.maxHeartRateBpm} max` : null,
+  ].filter(Boolean).join(' · ');
+  const time = [
+    formatRideTime(stats.durationSec),
+    input.distanceMeters && input.distanceMeters > 0 ? `${(input.distanceMeters / 1000).toFixed(1)} km` : null,
+    stats.tss !== null ? `TSS ${stats.tss}` : null,
+  ].filter(Boolean).join(' · ');
+  const numbers = [power ? `⚡ ${power}` : null, heart ? `❤️ ${heart}` : null, `⏱ ${time}`].filter(Boolean).join('\n');
+  const work = (input.efforts && formatEffortLine(input.efforts)) ?? (input.blockLine ? `🔥 ${input.blockLine}` : null);
+  return [numbers, input.shape, work].filter(Boolean).join('\n\n');
 }
 
 export function formatStatsLine(stats: StravaPostStats) {
@@ -130,12 +223,19 @@ export function formatStatsLine(stats: StravaPostStats) {
   ].filter(Boolean).join(' · ');
 }
 
-export function buildStravaPostDraft(input: { title: string; stats: StravaPostStats; blocks: StravaPostBlock[] }): StravaPostDraft {
+export function buildStravaPostDraft(input: {
+  title: string;
+  stats: StravaPostStats;
+  blocks: StravaPostBlock[];
+  distanceMeters?: number | null;
+  shape?: string | null;
+  efforts?: StravaPostEffort[] | null;
+}): StravaPostDraft {
   const statsLine = formatStatsLine(input.stats);
   const blockLine = summarizeBlocksForPost(input.blocks);
   return {
     name: input.title.trim().slice(0, STRAVA_POST_TITLE_MAX) || 'Tempo ride',
-    description: [statsLine, blockLine, STRAVA_POST_FOOTER].filter(Boolean).join('\n'),
+    description: formatCleanCard({ stats: input.stats, distanceMeters: input.distanceMeters ?? null, shape: input.shape ?? null, efforts: input.efforts ?? null, blockLine }),
     statsLine,
     blockLine,
   };

@@ -8,6 +8,8 @@ import { buildPostChartSvg, type PostChartStep } from './strava-post-chart.ts';
 import {
   buildStravaPostDraft,
   createStravaUploadClient,
+  effortsFromRide,
+  powerShape,
   statsFromPoints,
   stravaActivityUrl,
   StravaUploadError,
@@ -66,7 +68,14 @@ function prepare(activity: LoadedActivity) {
   const title = activity.session.title?.trim() || activity.importTitle?.trim() || 'Tempo activity';
   const stats = statsFromPoints(points, activity.durationSec, activity.tss);
   const postBlocks: StravaPostBlock[] = blocks.map((block) => ({ kind: block.kind, zone: block.zone, durationSec: block.durationSec, reps: block.reps, skipped: block.skipped }));
-  const draft = buildStravaPostDraft({ title, stats, blocks: postBlocks });
+  const draft = buildStravaPostDraft({
+    title,
+    stats,
+    blocks: postBlocks,
+    distanceMeters: activity.distanceMeters ?? telemetry?.distanceMeters ?? null,
+    shape: powerShape(points, activity.durationSec),
+    efforts: effortsFromRide({ points, durationSec: activity.durationSec, laps: telemetry?.laps, blocks: postBlocks }),
+  });
   const startedAt = activity.startedAt ?? new Date(activity.completedAt.getTime() - activity.durationSec * 1000);
   const fromStrava = activity.externalSource === 'STRAVA' || activity.metricsSource === 'strava-import';
   const hasSamples = points.length >= 2;

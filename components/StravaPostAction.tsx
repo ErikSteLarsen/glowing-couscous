@@ -2,9 +2,10 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, Download, ExternalLink, X } from 'lucide-react';
+import { Check, ChevronDown, Download, ExternalLink, X } from 'lucide-react';
 import { Dialog, DialogBackdrop, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@ui-sdk/react/dialog';
 import {
+  buttonFocusClassName,
   dangerTextClassName,
   formFieldClassName,
   formLabelClassName,
@@ -76,6 +77,7 @@ export function StravaPostAction({
   const [description, setDescription] = useState(initial?.draft.description ?? '');
   const [state, setState] = useState<PostState>({ kind: 'editing' });
   const [imageReady, setImageReady] = useState(false);
+  const [showImage, setShowImage] = useState(false);
   const busy = state.kind === 'posting';
 
   // Opening from the ride summary loads the preview the first time.
@@ -158,7 +160,7 @@ export function StravaPostAction({
           {state.duplicate ? 'This activity was already on Strava, so Tempo linked to it instead of posting it again.' : 'Posted to Strava.'}
         </p>
         <p className="text-[13px] leading-relaxed text-[var(--text-secondary)]">
-          Strava doesn’t let apps add photos. To show the chart on Strava, download the image and add it to the activity there.
+          The picture wasn’t posted: Strava only lets its partner apps attach photos. Download it and add it to the activity in the Strava app.
         </p>
       </div>
     );
@@ -210,51 +212,86 @@ export function StravaPostAction({
   } else {
     body = (
       <div className="space-y-5">
-        <figure className="space-y-2">
-          <div className="relative aspect-[16/9] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--background)]">
-            {imageReady ? null : <div className="skeleton absolute inset-0" aria-hidden="true" />}
-            {/* eslint-disable-next-line @next/next/no-img-element -- a generated PNG served by Tempo, not a static asset */}
-            <img
-              src={imageHref}
-              alt={`Chart of ${name || 'this activity'}: recorded power and heart rate over the planned blocks.`}
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ${imageReady ? 'opacity-100' : 'opacity-0'}`}
-              onLoad={() => setImageReady(true)}
-            />
-          </div>
-          <figcaption className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[12px] leading-relaxed text-[var(--text-muted)]">
-            <span>Strava doesn’t let apps add photos. Download the image and add it on Strava.</span>
-            <a href={`${imageHref}?download=1`} download className={`${ghostButtonClassName('compact')} -mx-2`}>
-              <Download aria-hidden="true" size={14} strokeWidth={1.7} />Download image
-            </a>
-          </figcaption>
-        </figure>
+        <section aria-labelledby={`${id}-preview-title`} className="space-y-2">
+          <h3 id={`${id}-preview-title`} className="text-[12px] font-medium text-[var(--text-secondary)]">On Strava</h3>
+          <article
+            className="rounded-xl border border-[#DFDFE8] bg-white px-4 py-4 text-[#242428] shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
+            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif' }}
+          >
+            <p className="flex items-center gap-2 text-[12px] text-[#6D6D78]">
+              <span aria-hidden="true" className="inline-flex size-6 items-center justify-center rounded-full bg-[#FC5200] text-[11px] font-semibold text-white">You</span>
+              Virtual ride
+            </p>
+            <p className="mt-3 text-[20px] font-bold leading-tight [overflow-wrap:anywhere]">{name.trim() || 'Untitled ride'}</p>
+            {description.trim()
+              ? <p className="mt-2 whitespace-pre-wrap text-[15px] leading-[1.45] [overflow-wrap:anywhere]">{description.trim()}</p>
+              : <p className="mt-2 text-[15px] text-[#6D6D78]">No description</p>}
+          </article>
+          <p className="text-[12px] leading-relaxed text-[var(--text-muted)]">Strava adds its own map and stats below the description. Emoji can look slightly different on each phone.</p>
+        </section>
 
-        <div>
-          <label htmlFor={`${id}-name`} className={formLabelClassName}>Title</label>
-          <input
-            id={`${id}-name`}
-            className={formFieldClassName}
-            value={name}
-            maxLength={STRAVA_POST_TITLE_MAX}
-            disabled={busy}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </div>
-        <div>
-          <div className="flex items-baseline justify-between gap-3">
-            <label htmlFor={`${id}-description`} className={formLabelClassName}>Description</label>
-            <span className="data text-[11px] text-[var(--text-muted)]">{description.length}/{STRAVA_POST_DESCRIPTION_MAX}</span>
+        <details className="group rounded-xl border border-[var(--border)]">
+          <summary className={`flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[var(--text)] ${buttonFocusClassName}`}>
+            Edit title and description
+            <ChevronDown aria-hidden="true" size={16} className="text-[var(--text-muted)] transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="space-y-4 px-4 pb-4">
+            <div>
+              <label htmlFor={`${id}-name`} className={formLabelClassName}>Title</label>
+              <input
+                id={`${id}-name`}
+                className={formFieldClassName}
+                value={name}
+                maxLength={STRAVA_POST_TITLE_MAX}
+                disabled={busy}
+                onChange={(event) => setName(event.target.value)}
+              />
+            </div>
+            <div>
+              <div className="flex items-baseline justify-between gap-3">
+                <label htmlFor={`${id}-description`} className={formLabelClassName}>Description</label>
+                <span className="data text-[11px] text-[var(--text-muted)]">{description.length}/{STRAVA_POST_DESCRIPTION_MAX}</span>
+              </div>
+              <textarea
+                id={`${id}-description`}
+                className={`${formTextareaClassName} min-h-[9rem] text-[13px]`}
+                rows={7}
+                value={description}
+                maxLength={STRAVA_POST_DESCRIPTION_MAX}
+                disabled={busy}
+                onChange={(event) => setDescription(event.target.value)}
+              />
+            </div>
           </div>
-          <textarea
-            id={`${id}-description`}
-            className={`${formTextareaClassName} data min-h-[6.5rem] text-[13px]`}
-            rows={4}
-            value={description}
-            maxLength={STRAVA_POST_DESCRIPTION_MAX}
-            disabled={busy}
-            onChange={(event) => setDescription(event.target.value)}
-          />
-        </div>
+        </details>
+
+        <details className="group rounded-xl border border-[var(--border)]" onToggle={(event) => { if ((event.currentTarget as HTMLDetailsElement).open) setShowImage(true); }}>
+          <summary className={`flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[var(--text)] ${buttonFocusClassName}`}>
+            <span>Picture <span className="font-normal text-[var(--text-muted)]">· not posted to Strava</span></span>
+            <ChevronDown aria-hidden="true" size={16} className="text-[var(--text-muted)] transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="space-y-3 px-4 pb-4">
+            <p className="text-[13px] leading-relaxed text-[var(--text-secondary)]">
+              Strava only lets its partner apps, like Zwift and Garmin, attach photos, so Tempo can’t post this picture.
+              Download it and add it to the activity in the Strava app.
+            </p>
+            <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--background)]">
+              {imageReady ? null : <div className="skeleton absolute inset-0" aria-hidden="true" />}
+              {showImage ? (
+                // eslint-disable-next-line @next/next/no-img-element -- a generated PNG served by Tempo, not a static asset
+                <img
+                  src={imageHref}
+                  alt={`Chart of ${name || 'this activity'}: recorded power and heart rate over the planned blocks.`}
+                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ${imageReady ? 'opacity-100' : 'opacity-0'}`}
+                  onLoad={() => setImageReady(true)}
+                />
+              ) : null}
+            </div>
+            <a href={`${imageHref}?download=1`} download className={secondaryButtonClassName}>
+              <Download aria-hidden="true" size={16} strokeWidth={1.7} />Download image
+            </a>
+          </div>
+        </details>
 
         <div aria-live="polite" className="empty:hidden">
           {busy ? <p role="status" className="text-sm text-[var(--text-secondary)]">Uploading to Strava. This takes a few seconds.</p> : null}
@@ -304,7 +341,7 @@ export function StravaPostAction({
                 {state.kind === 'posted' ? 'Your activity is on Strava.'
                   : access?.state === 'not-connected' ? 'Strava isn’t connected yet.'
                     : access?.state === 'needs-scope' ? 'Tempo needs one more permission.'
-                      : 'This is what Strava will show. You can edit the title and description.'}
+                      : 'This is how the title and description will look on Strava.'}
               </DialogDescription>
             </div>
             <DialogClose type="button" className={iconButtonClassName} aria-label="Close" disabled={busy}>

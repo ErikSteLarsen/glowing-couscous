@@ -6,6 +6,9 @@ import { parseActivityFile } from '../lib/activity-file-parser.ts';
 import { buildPostChartSvg } from '../lib/strava-post-chart.ts';
 import {
   buildStravaPostDraft,
+  effortsFromRide,
+  formatEffortLine,
+  powerShape,
   createStravaUploadClient,
   duplicateActivityId,
   hasStravaWriteScope,
@@ -103,7 +106,7 @@ test('block line folds repeats whatever kind the blocks were stored as', () => {
   assert.equal(summarizeBlocksForPost([]), null);
 });
 
-test('post draft is a title, one stats line, one block line and a Tempo line', () => {
+test('post draft is a clean card: grouped numbers, then the work, with no app footer', () => {
   const stats = statsFromPoints(ridePoints(1200), 1200, 41.4);
   assert.equal(stats.averagePowerWatts, 210);
   assert.ok(stats.normalizedPowerWatts !== null && stats.normalizedPowerWatts > 210);
@@ -115,10 +118,35 @@ test('post draft is a title, one stats line, one block line and a Tempo line', (
   assert.equal(draft.name, 'VO2 max 4 × 4');
   assert.equal(
     draft.description,
-    `20 min · 210 W avg · NP ${stats.normalizedPowerWatts} W · ${stats.averageHeartRateBpm} bpm · TSS 41\n4 × 4 min Z5\nRecorded with Tempo`,
+    `⚡ 210 W avg · ${stats.normalizedPowerWatts} W NP\n❤️ ${stats.averageHeartRateBpm} bpm avg · ${stats.maxHeartRateBpm} max\n⏱ 20 min · TSS 41\n\n🔥 4 × 4 min Z5`,
   );
+  assert.doesNotMatch(draft.description, /Tempo/);
   const bare = buildStravaPostDraft({ title: 'Spin', stats: statsFromPoints([{ elapsedSec: 0 }], 5400, null), blocks: [] });
-  assert.equal(bare.description, '1h 30m\nRecorded with Tempo');
+  assert.equal(bare.description, '⏱ 1h 30m');
+});
+
+test('clean card shows the power shape and each hard effort as ridden', () => {
+  // 2 min easy, then 2 × (1 min hard + 1 min easy), at 1 Hz.
+  const watts = (sec: number) => sec < 120 ? 150 : [300, 150, 310, 150][Math.floor((sec - 120) / 60)];
+  const points = Array.from({ length: 360 }, (_, sec) => ({ elapsedSec: sec, powerWatts: watts(sec) }));
+  const blocks = [
+    { kind: 'warmup', zone: 2, durationSec: 120, reps: null },
+    { kind: 'work', zone: 5, durationSec: 60, reps: null },
+    { kind: 'recovery', zone: 1, durationSec: 60, reps: null },
+    { kind: 'work', zone: 5, durationSec: 60, reps: null },
+    { kind: 'recovery', zone: 1, durationSec: 60, reps: null },
+  ];
+  const efforts = effortsFromRide({ points, durationSec: 360, blocks });
+  assert.deepEqual(efforts, [{ durationSec: 60, averagePowerWatts: 300 }, { durationSec: 60, averagePowerWatts: 310 }]);
+  assert.equal(formatEffortLine(efforts ?? []), '🔥 2 × 1 min: 300 · 310 W');
+  // Laps that don't match the plan (a skipped block) are not trusted.
+  assert.equal(effortsFromRide({ points, durationSec: 360, blocks, laps: [{ startSec: 0, endSec: 360 }] }), null);
+  // A ride much longer than the plan without laps is not trusted either.
+  assert.equal(effortsFromRide({ points, durationSec: 900, blocks }), null);
+  const shape = powerShape(points, 360, 12);
+  assert.equal(shape?.length, 12);
+  assert.match(shape ?? '', /^[▁▂▃▄▅▆▇█]+$/);
+  assert.equal(powerShape([{ elapsedSec: 0 }], 360), null);
 });
 
 test('post text is validated before upload', () => {
