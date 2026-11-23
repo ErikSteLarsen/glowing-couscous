@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@custom-variant control-hover {
+  @media (hover: hover) {
+    &:where(:not(:disabled, [aria-disabled="true"], [data-disabled])):hover {
+      @slot;
+    }
+  }
+}
+
 /* Shared navigation: collapsed desktop gives its entire column to the page. */
 .tempo-menu-bar {
   position: sticky;
@@ -392,10 +400,32 @@ body {
     text-decoration: none;
   }
 
-  button,
-  a,
-  [role="button"] {
+  :where(
+    button, a, summary, select, label[for],
+    label:has(> :is(input[type="checkbox"], input[type="radio"], [role="switch"])),
+    input:is([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]),
+    [role="button"], [role="tab"], [role="option"], [role="menuitem"],
+    [role="menuitemradio"], [role="menuitemcheckbox"], [role="switch"], [role="checkbox"], [role="radio"]
+  ) {
     cursor: pointer;
+  }
+
+  input[type="file"]::file-selector-button {
+    cursor: inherit;
+  }
+
+  :disabled,
+  [aria-disabled="true"],
+  [data-disabled],
+  label:has(> :is(input[type="checkbox"], input[type="radio"], [role="switch"]):is(:disabled, [aria-disabled="true"], [data-disabled])) {
+    cursor: not-allowed;
+  }
+
+  @media (hover: hover) {
+    label[for]:not([aria-disabled="true"], [data-disabled]):hover,
+    label:has(> :is(input[type="checkbox"], input[type="radio"], [role="switch"]):not(:disabled, [aria-disabled="true"], [data-disabled])):hover {
+      background-color: var(--raised);
+    }
   }
 
   h1,
