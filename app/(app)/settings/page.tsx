@@ -5,7 +5,7 @@ import { accountService } from '@/lib/account-service';
 import { readOverviewCardsFromPrefsJson } from '@/lib/overview-preferences';
 import { stravaService } from '@/lib/strava-service';
 import { StravaConnectionSettings } from './StravaConnectionSettings';
-import { AboutSettings, SettingsClient } from './SettingsClient';
+import { AboutSettings, DesktopAppSettings, SettingsClient } from './SettingsClient';
 
 export default async function SettingsPage({ searchParams }: {
   searchParams: Promise<{ strava?: string | string[] }>;
@@ -34,6 +34,7 @@ export default async function SettingsPage({ searchParams }: {
           webhookConfigured={strava.webhookConfigured}
           oauthResult={typeof query.strava === 'string' ? query.strava : undefined}
         />
+        <DesktopAppSettings />
         <AboutSettings />
       </div>
     </PageShell>

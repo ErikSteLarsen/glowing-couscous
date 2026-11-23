@@ -1,17 +1,49 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import Link from 'next/link';
 import { Download } from 'lucide-react';
 import { buttonFocusClassName, compactSecondaryButtonClassName } from '@/components/ui';
-import { detectRideOs, rideAppLink, rideDownloadBase, rideDownloads, rideInstallHints, rideSessionPath, RIDE_APP_LAUNCH_TIMEOUT_MS, type RideOs } from '@/lib/ride/launch';
+import { detectRideOs, macArchitectureFromHints, rideAppLink, rideDownloadBase, rideDownloadChoices, rideInstallHints, rideSessionPath, RIDE_APP_LAUNCH_TIMEOUT_MS, type MacArchitecture, type RideOs } from '@/lib/ride/launch';
+
+type UserAgentData = {
+  platform?: string;
+  getHighEntropyValues?: (hints: string[]) => Promise<{ architecture?: string }>;
+};
 
 export function getRideOs(): RideOs {
-  const nav: Navigator & { userAgentData?: { platform?: string } } = navigator;
+  const nav: Navigator & { userAgentData?: UserAgentData } = navigator;
   return detectRideOs({
     platform: nav.userAgentData?.platform ?? nav.platform,
     userAgent: nav.userAgent,
     maxTouchPoints: nav.maxTouchPoints,
   });
+}
+
+const subscribeToNothing = () => () => undefined;
+
+/** The visitor's OS after hydration; null during server rendering and the first client render. */
+export function useRideOs(): RideOs | null {
+  return useSyncExternalStore(subscribeToNothing, getRideOs, () => null);
+}
+
+/**
+ * The Mac chip, where the browser reports it (Chromium's `userAgentData`).
+ * Safari and Firefox return null, so Apple silicon stays first and Intel is offered beside it.
+ */
+export function useMacArchitecture(os: RideOs | null): MacArchitecture | null {
+  const [architecture, setArchitecture] = useState<MacArchitecture | null>(null);
+  useEffect(() => {
+    if (os !== 'macos') return;
+    const data = (navigator as Navigator & { userAgentData?: UserAgentData }).userAgentData;
+    if (!data?.getHighEntropyValues) return;
+    let active = true;
+    data.getHighEntropyValues(['architecture'])
+      .then((hints) => { if (active) setArchitecture(macArchitectureFromHints(hints)); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [os]);
+  return os === 'macos' ? architecture : null;
 }
 
 type LaunchState = 'idle' | 'opening' | 'attempted';
@@ -61,9 +93,8 @@ export function useRideAppLaunch() {
 }
 
 export function RideAppInstallHelp({ os, onRetry }: { os: RideOs; onRetry: () => void }) {
-  const downloads = rideDownloads(os, rideDownloadBase(process.env.NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL));
-  const primary = downloads.filter((download) => download.os === os);
-  const others = downloads.filter((download) => download.os !== os);
+  const architecture = useMacArchitecture(os);
+  const { recommended: primary, others } = rideDownloadChoices(os, rideDownloadBase(process.env.NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL), architecture);
 
   return (
     <div className="space-y-3 border-t border-[var(--border)] pt-4 text-sm text-[var(--text-secondary)]">
@@ -86,6 +117,7 @@ export function RideAppInstallHelp({ os, onRetry }: { os: RideOs; onRetry: () =>
             <li key={download.id}><a href={download.url} className="text-[var(--brand)] underline-offset-4 hover:underline">{download.label}</a></li>
           ))}
         </ul>
+        <p className="mt-2"><Link href="/download" className="text-[var(--brand)] underline-offset-4 hover:underline">All downloads and install steps</Link></p>
       </details>
     </div>
   );

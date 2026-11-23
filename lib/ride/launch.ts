@@ -3,7 +3,11 @@ export type RideOs = 'windows' | 'macos' | 'linux' | 'other';
 
 export type RideDownload = { id: string; os: Exclude<RideOs, 'other'>; label: string; fileName: string; url: string };
 
-export const DEFAULT_RIDE_DOWNLOAD_BASE = 'https://github.com/ErikSteLarsen/glowing-couscous/releases/latest/download';
+/** The released Tempo Ride version the website links to. Must match `desktop/package.json` (a test enforces it). */
+export const RIDE_DESKTOP_VERSION = '0.2.2';
+
+/** Pinned to the release tag so the links never depend on which GitHub release is marked latest. */
+export const DEFAULT_RIDE_DOWNLOAD_BASE = `https://github.com/ErikSteLarsen/glowing-couscous/releases/download/desktop-v${RIDE_DESKTOP_VERSION}`;
 
 const DOWNLOADS: Array<Omit<RideDownload, 'url'>> = [
   { id: 'windows', os: 'windows', label: 'Windows installer', fileName: 'Tempo-Ride-Windows-Setup.exe' },
@@ -32,13 +36,27 @@ export function rideDownloadBase(override?: string | null): string {
   return trimmed || DEFAULT_RIDE_DOWNLOAD_BASE;
 }
 
-/** All installers, with the detected OS first. On macOS, `arm` hints put Apple silicon first. */
-export function rideDownloads(os: RideOs, base = DEFAULT_RIDE_DOWNLOAD_BASE, architecture?: string | null): RideDownload[] {
+export type MacArchitecture = 'arm' | 'x86';
+
+const MAC_DOWNLOAD_IDS: Record<MacArchitecture, string> = { arm: 'macos-arm64', x86: 'macos-x64' };
+
+/** Normalizes `userAgentData` high-entropy hints to a Mac chip, or null when the browser gives no usable answer. */
+export function macArchitectureFromHints(hints: { architecture?: string | null } | null | undefined): MacArchitecture | null {
+  const architecture = hints?.architecture?.toLowerCase();
+  if (architecture === 'arm') return 'arm';
+  if (architecture === 'x86') return 'x86';
+  return null;
+}
+
+/**
+ * Installers split into the ones to offer first and the rest. On macOS a known chip narrows the
+ * recommendation to one .dmg; without a hint both are recommended, Apple silicon first.
+ */
+export function rideDownloadChoices(os: RideOs, base = DEFAULT_RIDE_DOWNLOAD_BASE, architecture?: MacArchitecture | null): { recommended: RideDownload[]; others: RideDownload[] } {
   const all = DOWNLOADS.map((download) => ({ ...download, url: `${base}/${download.fileName}` }));
-  if (os === 'other') return all;
-  const preferredMac = architecture === 'x86' ? 'macos-x64' : 'macos-arm64';
-  const rank = (download: RideDownload) => download.os !== os ? 2 : os === 'macos' && download.id !== preferredMac ? 1 : 0;
-  return [...all].sort((left, right) => rank(left) - rank(right));
+  const macChip = architecture ? MAC_DOWNLOAD_IDS[architecture] : null;
+  const isRecommended = (download: RideDownload) => download.os === os && (!macChip || download.id === macChip);
+  return { recommended: all.filter(isRecommended), others: all.filter((download) => !isRecommended(download)) };
 }
 
 /** Short first-run instructions for each OS; the builds are unsigned. */

@@ -3,7 +3,8 @@
 import { useState, useTransition } from 'react';
 import { OVERVIEW_CARD_IDS, type OverviewCardId } from '@/lib/overview-preferences';
 import { Toggle } from '@/components/tempo/Toggle';
-import { Surface, buttonFocusClassName, sectionHeadingClassName } from '@/components/ui';
+import Link from 'next/link';
+import { Surface, buttonFocusClassName, compactSecondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
 
 const personalOverviewCardIds = ['lastActivity', 'weekLoad', 'trend'] as const satisfies readonly OverviewCardId[];
 
@@ -102,6 +103,22 @@ export function SettingsClient({
           {message}
         </p>
       ) : null}
+    </Surface>
+  );
+}
+
+export function DesktopAppSettings() {
+  return (
+    <Surface>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <h2 className={sectionHeadingClassName}>Tempo Ride desktop app</h2>
+          <p className="mt-1 text-[13px] leading-[1.5] text-[var(--text-secondary)]">
+            Ride indoor bike workouts with your Bluetooth trainer on Windows, macOS or Linux.
+          </p>
+        </div>
+        <Link href="/download" className={compactSecondaryButtonClassName}>Get the app</Link>
+      </div>
     </Surface>
   );
 }

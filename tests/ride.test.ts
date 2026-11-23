@@ -1,5 +1,6 @@
 import test, { type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
 import { cadenceFromCrank, parseCscMeasurement, parseCyclingPowerMeasurement, parseHeartRateMeasurement, parseIndoorBikeData, speedFromWheel } from '../lib/ride/ble-parsers.ts';
 import { encodeRequestControl, encodeReset, encodeSetIndoorBikeSimulation, encodeSetTargetPower, encodeSetTargetResistance, encodeStartOrResume, encodeStopOrPause, parseControlPointResponse } from '../lib/ride/ftms-control.ts';
@@ -309,7 +310,7 @@ test('lap stats average each step and report the open lap', async () => {
 });
 
 test('ride app launch detects OS and orders installers', async () => {
-  const { detectRideOs, rideDownloads, rideDownloadBase, rideAppLink, rideInstallHints } = await import('../lib/ride/launch.ts');
+  const { detectRideOs, rideDownloadChoices, rideDownloadBase, rideAppLink, rideInstallHints, macArchitectureFromHints, RIDE_DESKTOP_VERSION } = await import('../lib/ride/launch.ts');
   assert.equal(detectRideOs({ platform: 'Windows' }), 'windows');
   assert.equal(detectRideOs({ userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit' }), 'macos');
   assert.equal(detectRideOs({ userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' }), 'linux');
@@ -317,14 +318,27 @@ test('ride app launch detects OS and orders installers', async () => {
   assert.equal(detectRideOs({ userAgent: 'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X)' }), 'other');
   assert.equal(detectRideOs({}), 'other');
 
-  assert.equal(rideDownloadBase(null), 'https://github.com/ErikSteLarsen/glowing-couscous/releases/latest/download');
+  const desktopPackage = JSON.parse(await readFile(new URL('../desktop/package.json', import.meta.url), 'utf8'));
+  assert.equal(RIDE_DESKTOP_VERSION, desktopPackage.version, 'lib/ride/launch.ts must link to the version in desktop/package.json');
+  assert.equal(rideDownloadBase(null), `https://github.com/ErikSteLarsen/glowing-couscous/releases/download/desktop-v${desktopPackage.version}`);
   assert.equal(rideDownloadBase(' https://example.com/r/ '), 'https://example.com/r');
-  const mac = rideDownloads('macos', 'https://x');
-  assert.equal(mac[0].url, 'https://x/Tempo-Ride-macOS-arm64.dmg');
-  assert.equal(rideDownloads('macos', 'https://x', 'x86')[0].fileName, 'Tempo-Ride-macOS-x64.dmg');
-  assert.equal(rideDownloads('linux')[0].fileName, 'Tempo-Ride-Linux.AppImage');
-  assert.equal(rideDownloads('windows')[0].fileName, 'Tempo-Ride-Windows-Setup.exe');
-  assert.equal(rideDownloads('other').length, 5);
+
+  const ids = (downloads: Array<{ id: string }>) => downloads.map((download) => download.id);
+  const mac = rideDownloadChoices('macos', 'https://x');
+  assert.deepEqual(ids(mac.recommended), ['macos-arm64', 'macos-x64']);
+  assert.equal(mac.recommended[0].url, 'https://x/Tempo-Ride-macOS-arm64.dmg');
+  assert.deepEqual(ids(rideDownloadChoices('macos', 'https://x', 'x86').recommended), ['macos-x64']);
+  assert.deepEqual(ids(rideDownloadChoices('macos', 'https://x', 'arm').recommended), ['macos-arm64']);
+  assert.ok(ids(rideDownloadChoices('macos', 'https://x', 'arm').others).includes('macos-x64'));
+  assert.deepEqual(ids(rideDownloadChoices('linux').recommended), ['linux-appimage', 'linux-deb']);
+  assert.deepEqual(ids(rideDownloadChoices('windows').recommended), ['windows']);
+  assert.equal(rideDownloadChoices('windows').others.length, 4);
+  assert.equal(rideDownloadChoices('other').recommended.length, 0);
+  assert.equal(rideDownloadChoices('other').others.length, 5);
+  assert.equal(macArchitectureFromHints({ architecture: 'arm' }), 'arm');
+  assert.equal(macArchitectureFromHints({ architecture: 'x86' }), 'x86');
+  assert.equal(macArchitectureFromHints({ architecture: '' }), null);
+  assert.equal(macArchitectureFromHints(null), null);
   assert.equal(rideAppLink('https://t.app/athlete/ride/4'), 'tempo-ride://open?url=https%3A%2F%2Ft.app%2Fathlete%2Fride%2F4');
   assert.ok(rideInstallHints('linux').some((hint) => hint.includes('chmod +x')));
 });
