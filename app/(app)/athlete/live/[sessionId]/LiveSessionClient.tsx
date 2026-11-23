@@ -15,6 +15,8 @@ import {
 } from '@/components/ui';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
 import { Stepper } from '@/components/tempo/Stepper';
+import { WorkoutProfile } from '@/components/WorkoutProfile';
+import type { WorkoutProfileModel } from '@/lib/workout-profile';
 import { formatDuration } from '@/lib/format-duration';
 import {
   advanceExecution,
@@ -42,10 +44,14 @@ import {
   subscribeToExecutionProgress,
 } from '@/lib/athlete-execution-progress-store';
 
-export function LiveSessionClient({ sessionId, blocks, isDone }: {
+export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts = null, title }: {
   sessionId: number;
   blocks: ExecutionStep[];
   isDone: boolean;
+  /** Profile steps are the execution steps in the same order, so the current one can be outlined. */
+  profile: WorkoutProfileModel;
+  ftpWatts?: number | null;
+  title: string;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -128,8 +134,18 @@ export function LiveSessionClient({ sessionId, blocks, isDone }: {
     }
   }
 
+  const profileMatchesSteps = profile.steps.length === blocks.length;
+
   return (
     <div className="space-y-4">
+      {profile.steps.length ? (
+        <WorkoutProfile
+          model={profile}
+          ftpWatts={ftpWatts}
+          label={`${title} workout profile${profileMatchesSteps && !complete && !saved && currentStep ? `, current step ${currentIndex + 1} of ${blocks.length} outlined` : ''}`}
+          activeStep={profileMatchesSteps && !complete && !saved ? currentIndex : null}
+        />
+      ) : null}
       {!hasBlocks ? <p role="alert" className={dangerTextClassName}>No workout blocks are available for this session.</p> : null}
       {currentStep && !saved ? (
         <section aria-labelledby="live-current-step" className="space-y-4">

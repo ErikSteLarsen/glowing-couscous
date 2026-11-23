@@ -21,7 +21,8 @@ import { getAvailableWorkoutTargets, type WorkoutTarget } from '@/lib/workout-ta
 import { formatResolvedWorkoutTarget, formatWorkoutTarget, missingProfileAction } from '@/lib/workout-target-resolution';
 import { repeatBlockSelection } from '@/lib/workout-blocks';
 import type { PerformanceProfile } from '@/lib/performance-profile';
-import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { WorkoutProfile } from '@/components/WorkoutProfile';
+import { buildWorkoutProfile } from '@/lib/workout-profile';
 import { MetricText } from '@/components/tempo/MetricText';
 import { buttonFocusClassName, compactDangerButtonClassName, compactPrimaryButtonClassName, compactSecondaryButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, formTextareaClassName } from '@/components/ui';
 
@@ -368,7 +369,7 @@ export function WorkoutBuilder({
               <MetricText>{formatDuration(metrics.durationSec)} / {metrics.tss}&nbsp;TSS</MetricText>
             </div>
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1.35fr)_minmax(10rem,0.65fr)]">
-              <div className="rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-3"><SessionBlockBar segments={metrics.segments} /><p className="mt-2 text-xs text-[var(--text-secondary)]">Timeline: width is time, height is zone.</p></div>
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--field-surface)] p-3"><WorkoutProfile size="compact" model={buildWorkoutProfile(draft.blocks.map((block) => ({ ...block, id: block.clientId })), { sport: draft.sport, profile: performanceProfile, ftpWatts: performanceProfile?.cycling.ftpWatts })} label="Workout profile preview" /><p className="mt-2 text-xs text-[var(--text-secondary)]">Profile: width is time, height is intensity. Repeats are drawn in full.</p></div>
               <IntensityZoneChart segments={metrics.segments} />
             </div>
             <div className="flex flex-wrap items-center gap-2" aria-label="Canvas commands">

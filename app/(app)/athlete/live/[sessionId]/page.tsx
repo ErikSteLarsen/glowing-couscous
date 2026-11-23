@@ -1,7 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { format, startOfWeek } from 'date-fns';
 import { ActionLink, EmptyState, PageShell, secondaryButtonClassName, Surface, TopBar } from '@/components/ui';
-import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
@@ -12,6 +11,7 @@ import { createExecutionSteps } from '@/lib/athlete-execution';
 import { formatSessionWhen } from '@/lib/session-display';
 import { LiveSessionClient } from './LiveSessionClient';
 import { canStartWorkout } from '@/lib/workout-start';
+import { buildWorkoutProfile } from '@/lib/workout-profile';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 
 export default async function AthleteLivePage({
@@ -56,6 +56,11 @@ export default async function AthleteLivePage({
   const { id, title, sport, status, durationSec } = detail.session;
   const steps = createExecutionSteps(detail.session.editor.blocks, sport, account?.performanceProfile);
   const workout = { title, sport, status, durationSec, hasSteps: steps.length > 0 };
+  const ftpWatts = account?.performanceProfile.cycling.ftpWatts ?? null;
+  const profile = buildWorkoutProfile(
+    detail.session.editor.blocks.map((block) => ({ ...block, id: block.clientId })),
+    { sport, profile: account?.performanceProfile ?? null, ftpWatts },
+  );
   if (status !== 'completed' && !canStartWorkout(workout)) {
     return (
       <PageShell size="wide">
@@ -88,8 +93,7 @@ export default async function AthleteLivePage({
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <Surface className="space-y-4">
-          <SessionBlockBar segments={detail.session.segments} />
-          <LiveSessionClient sessionId={detail.session.id} blocks={steps} isDone={detail.session.status === 'completed'} />
+          <LiveSessionClient sessionId={detail.session.id} blocks={steps} isDone={detail.session.status === 'completed'} profile={profile} ftpWatts={ftpWatts} title={title} />
         </Surface>
 
         <div className="space-y-4">
