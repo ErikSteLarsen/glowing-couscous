@@ -69,7 +69,7 @@ export function getSegmentedChoiceClassName(selected: boolean, size: 'default' |
 /** Segmented switch in the instrument style: a raised track with a lifted active option. */
 export function getSwitchOptionClassName(selected: boolean) {
   return `inline-flex min-h-8 items-center justify-center rounded-md px-3 text-[13px] font-medium transition-colors ${buttonFocusClassName} ${
-    selected ? 'bg-[var(--border-strong)] text-[var(--text)] control-hover:bg-[var(--field-border)]' : 'text-[var(--text-muted)] control-hover:text-[var(--text)]'
+    selected ? 'bg-[var(--border-strong)] text-[var(--text)] control-hover:bg-[var(--selection)]' : 'text-[var(--text-muted)] control-hover:text-[var(--text)]'
   }`;
 }
 
