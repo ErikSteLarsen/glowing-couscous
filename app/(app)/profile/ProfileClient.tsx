@@ -282,7 +282,7 @@ export function ProfileClient({ account }: { account: Account }) {
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block space-y-2">
               <span className={formLabelClassName}>Display name</span>
-              <input value={name} onChange={(event) => setName(event.target.value)} disabled={saving} className={`${formFieldClassName} disabled:cursor-wait disabled:opacity-60`} />
+              <input value={name} onChange={(event) => setName(event.target.value)} disabled={saving} className={`${formFieldClassName} disabled:opacity-60`} />
             </label>
             <div className="min-w-0 space-y-2">
               <p className={formLabelClassName}>Email</p>
@@ -356,7 +356,7 @@ export function ProfileClient({ account }: { account: Account }) {
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-3">
                       <p className="max-w-[52ch] text-xs leading-5 text-[var(--text-secondary)]">Race results fill the editable ranges; reset to return to those calculated values. Pace is stored as seconds per kilometre.</p>
-                      <button type="button" disabled={saving} className="min-h-10 text-sm font-medium text-[var(--text-secondary)] underline max-md:min-h-11 decoration-[var(--border)] underline-offset-4 hover:text-[var(--text)] disabled:cursor-wait disabled:opacity-60" onClick={() => { resetPaceZones(); setError(''); setMessage(''); }}>{performanceProfile.running.raceDistanceMeters && performanceProfile.running.raceTimeSec ? 'Reset to calculated paces' : 'Clear pace overrides'}</button>
+                      <button type="button" disabled={saving} className="min-h-10 text-sm font-medium text-[var(--text-secondary)] underline max-md:min-h-11 decoration-[var(--border)] underline-offset-4 control-hover:text-[var(--text)] disabled:opacity-60" onClick={() => { resetPaceZones(); setError(''); setMessage(''); }}>{performanceProfile.running.raceDistanceMeters && performanceProfile.running.raceTimeSec ? 'Reset to calculated paces' : 'Clear pace overrides'}</button>
                     </div>
                   </div>
                 </AdvancedTargets>

@@ -50,7 +50,7 @@ export function AppProfileMenu({
               aria-current={isActive ? 'page' : undefined}
               className={`flex min-h-11 items-center gap-3 rounded-lg px-2.5 text-sm transition-colors md:min-h-9 ${buttonFocusClassName} ${
                 isActive
-                  ? 'bg-[var(--nav-active)] text-[var(--text)]'
+                  ? 'bg-[var(--nav-active)] text-[var(--text)] hover:bg-[var(--selection)]'
                   : 'text-[var(--nav-muted)] hover:bg-[var(--nav-active)] hover:text-[var(--text)]'
               }`}
             >

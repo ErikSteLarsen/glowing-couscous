@@ -98,7 +98,7 @@ export function AppSidebar(props: {
           aria-label="Close menu"
           aria-hidden="true"
           tabIndex={-1}
-          className="fixed inset-0 z-30 bg-[var(--overlay)] backdrop-blur-[2px] md:hidden"
+          className="fixed inset-0 z-30 bg-[var(--overlay)] backdrop-blur-[2px] hover:bg-[color-mix(in_srgb,var(--overlay),black_12%)] md:hidden"
           onClick={props.onClose}
         />
       ) : null}
@@ -119,7 +119,7 @@ export function AppSidebar(props: {
             <Link
               href={navItems[0]?.href ?? '/'}
               onClick={onNavigate}
-              className={`flex min-w-0 items-center gap-2.5 rounded-lg max-md:min-h-11 ${buttonFocusClassName}`}
+              className={`flex min-w-0 items-center gap-2.5 rounded-lg hover:bg-[var(--raised)] max-md:min-h-11 ${buttonFocusClassName}`}
               aria-label="Tempo home"
             >
               <BrandMark />
@@ -168,7 +168,7 @@ export function AppSidebar(props: {
                   aria-current={isActive ? 'page' : undefined}
                   className={`flex min-h-11 items-center gap-3 whitespace-nowrap rounded-lg px-2.5 text-sm transition-colors md:min-h-9 ${buttonFocusClassName} ${
                     isActive
-                      ? 'bg-[var(--nav-active)] text-[var(--text)]'
+                      ? 'bg-[var(--nav-active)] text-[var(--text)] hover:text-[var(--nav-signal)]'
                       : 'text-[var(--nav-muted)] hover:bg-[var(--nav-active)] hover:text-[var(--text)]'
                   }`}
                 >
