@@ -191,8 +191,8 @@ export function CalendarPlacement({
     });
   }
 
-  const noun = isRoutine ? 'routine' : 'workout';
-  const title = catalog ? 'Schedule workout' : isRoutine ? 'Apply a routine' : 'Add workout';
+  const noun = isRoutine ? 'training plan' : 'workout';
+  const title = catalog ? 'Schedule workout' : isRoutine ? 'Apply a training plan' : 'Add workout';
   const back = catalog?.back ?? { href: calendarHref, destination: 'Calendar', label: 'Back to Calendar' };
 
   if (!items.length) {
@@ -200,11 +200,11 @@ export function CalendarPlacement({
       <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
         <TopBar back={back} title={title} />
         <EmptyState
-          title={isRoutine ? 'No routines yet' : 'No saved workouts yet'}
-          description={isRoutine ? 'Build a weekly routine from your saved workouts, then apply it here.' : 'Save a workout first, then add it to any day.'}
+          title={isRoutine ? 'No training plans yet' : 'No saved workouts yet'}
+          description={isRoutine ? 'Build a weekly training plan from your saved workouts, then apply it here.' : 'Save a workout first, then add it to any day.'}
           action={
             <Link href={isRoutine ? '/athlete/templates' : '/athlete/workouts'} className={`${compactSecondaryButtonClassName} max-md:min-h-11`}>
-              {isRoutine ? 'Open Templates' : 'Open Workouts'}
+              {isRoutine ? 'Open training plans' : 'Open Workouts'}
             </Link>
           }
         />
@@ -217,7 +217,7 @@ export function CalendarPlacement({
       <TopBar back={back} title={title} />
 
       <section aria-labelledby={`${ids}-what`} className="flex flex-col gap-3">
-        <h2 id={`${ids}-what`} className={sectionHeadingClassName}>{isRoutine ? 'Routine' : 'Workout'}</h2>
+        <h2 id={`${ids}-what`} className={sectionHeadingClassName}>{isRoutine ? 'Training plan' : 'Workout'}</h2>
         {selected && !picking ? (
           <div className="flex items-center gap-3 rounded-xl border border-[var(--field-selected-border)] bg-[var(--brand-tint)] px-4 py-3">
             <div className="min-w-0 flex-1">

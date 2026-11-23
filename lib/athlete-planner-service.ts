@@ -140,7 +140,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       const requestedDates = uniqueDates(record.dates);
 
       if (!sourceKind || sourceId === null) {
-        return { ok: false as const, error: 'Choose a workout or routine.', status: 400 };
+        return { ok: false as const, error: 'Choose a workout or training plan.', status: 400 };
       }
       if (!requestKey) {
         return { ok: false as const, error: 'Something went wrong. Reload the page and try again.', status: 400 };
@@ -190,9 +190,9 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
             const template = await tx.template.findFirst({
               where: { id: sourceId, ownerId: athleteId },
             });
-            if (!template) throw new PlacementError('Routine not found.', 404);
+            if (!template) throw new PlacementError('Training plan not found.', 404);
             routine = parseTemplateRoutine(template.routineJson);
-            if (!routine) throw new PlacementError('This routine can’t be read. Edit it and save it again.', 400);
+            if (!routine) throw new PlacementError('This training plan can’t be read. Edit it and save it again.', 400);
             const rangeError = validateRoutineDates(requestedDates);
             if (rangeError) throw new PlacementError(rangeError, 400);
             source = {
@@ -310,7 +310,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
           select: { id: true },
         });
         if (!template) {
-          return { ok: false as const, error: 'Routine not found.', status: 404 };
+          return { ok: false as const, error: 'Training plan not found.', status: 404 };
         }
       }
 

@@ -15,6 +15,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Could not save this routine. Try again.' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not save this training plan. Try again.' }, { status: 500 });
   }
 }

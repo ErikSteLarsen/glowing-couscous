@@ -121,7 +121,7 @@ export function ShareLandingClient({
         }
 
         setMessageTone('success');
-        setMessage(action === 'template' ? 'Saved to My workouts and as a new routine.' : `Workout saved to your ${plannerDestination}.`);
+        setMessage(action === 'template' ? 'Saved to My workouts and as a new training plan.' : `Workout saved to your ${plannerDestination}.`);
         router.push(action === 'template'
           ? userRole === 'COACH' ? '/coach/templates' : '/athlete/templates'
           : userRole === 'COACH' ? '/coach/workouts' : '/athlete/calendar');
@@ -191,7 +191,7 @@ export function ShareLandingClient({
                   </button>
                   {userRole === 'ATHLETE' ? (
                     <button type="button" className={compactSecondaryButtonClassName} onClick={() => beginAction('template')}>
-                      Save as routine
+                      Save as a training plan
                     </button>
                   ) : null}
                 </div>
@@ -203,7 +203,7 @@ export function ShareLandingClient({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-lg font-medium text-[var(--text)]">
-                  {action === 'planner' ? `Edit before saving to ${plannerDestination}` : 'Edit before saving as a routine'}
+                  {action === 'planner' ? `Edit before saving to ${plannerDestination}` : 'Edit before saving as a training plan'}
                 </h2>
               </div>
               <button type="button" className={compactSecondaryButtonClassName} onClick={closeEditor} disabled={isPending}>
@@ -236,7 +236,7 @@ export function ShareLandingClient({
             ) : null}
             <div className="sticky bottom-0 z-10 -mx-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3">
               <button type="button" className={primaryButtonClassName} onClick={save} disabled={isPending || confirmDiscard}>
-                {isPending ? 'Saving…' : action === 'planner' ? `Save to ${plannerDestination}` : 'Save as routine'}
+                {isPending ? 'Saving…' : action === 'planner' ? `Save to ${plannerDestination}` : 'Save as a training plan'}
               </button>
               {message ? <p role={messageTone === 'success' ? 'status' : 'alert'} className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
             </div>

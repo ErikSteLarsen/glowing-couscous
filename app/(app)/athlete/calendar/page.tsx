@@ -100,7 +100,7 @@ async function PlacementPage({ userId, view, day, placement, source }: {
     workoutIds: workouts.map((workout) => workout.id),
     templateIds: workspace.templates.map((template) => template.id),
   });
-  const initialMessage = source && !initialSource ? 'That workout or routine is no longer in your library.' : '';
+  const initialMessage = source && !initialSource ? 'That workout or training plan is no longer in your library.' : '';
   const routines: PlacementRoutine[] = workspace.templates.map((template) => ({
     id: template.id,
     name: template.name,

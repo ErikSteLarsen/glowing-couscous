@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === 'template' && user.role !== 'ATHLETE') {
-    return NextResponse.json({ error: 'Only athlete accounts can save a shared workout as a routine.' }, { status: 403 });
+    return NextResponse.json({ error: 'Only athlete accounts can save a shared workout as a training plan.' }, { status: 403 });
   }
   const result = action === 'template'
     ? await shareLinkService.saveTemplateCopy(user.id, token, body.value.draft)

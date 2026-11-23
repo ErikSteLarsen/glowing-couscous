@@ -13,7 +13,7 @@ export async function PATCH(
     if (error) return error;
     const { templateId } = await params;
     const parsedTemplateId = parsePositiveInteger(templateId);
-    if (parsedTemplateId === null) return NextResponse.json({ error: 'Routine not found.' }, { status: 400 });
+    if (parsedTemplateId === null) return NextResponse.json({ error: 'Training plan not found.' }, { status: 400 });
     const body = await readJsonObject(request);
     if (!body.ok) return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
     const result = await templateService.saveForOwner(user.id, body.value, parsedTemplateId);
@@ -21,7 +21,7 @@ export async function PATCH(
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Could not save this routine. Try again.' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not save this training plan. Try again.' }, { status: 500 });
   }
 }
 
@@ -34,12 +34,12 @@ export async function DELETE(
     if (error) return error;
     const { templateId } = await params;
     const parsedTemplateId = parsePositiveInteger(templateId);
-    if (parsedTemplateId === null) return NextResponse.json({ error: 'Routine not found.' }, { status: 400 });
+    if (parsedTemplateId === null) return NextResponse.json({ error: 'Training plan not found.' }, { status: 400 });
     const result = await templateService.deleteForOwner(user.id, parsedTemplateId);
     if (result.error) return NextResponse.json({ error: result.error }, { status: 404 });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Could not delete this routine. Try again.' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not delete this training plan. Try again.' }, { status: 500 });
   }
 }

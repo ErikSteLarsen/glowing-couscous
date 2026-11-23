@@ -32,7 +32,7 @@ function normalizeWorkoutDraft(input: unknown) {
   const draft = normalizeSessionEditorDraft(input);
 
   if (draft.templateId !== null) {
-    return { draft, error: 'Training routines must be applied through Calendar.' };
+    return { draft, error: 'Training plans must be applied through Calendar.' };
   }
 
   if (draft.scheduledDate !== null) {

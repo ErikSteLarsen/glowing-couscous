@@ -27,7 +27,7 @@ export function getPrimaryNavigation(): NavItem[] {
     { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete', exact: true },
     { label: 'Calendar', description: 'Your planned workouts', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
     { label: 'Workouts', description: 'Yours & public library', href: '/athlete/workouts', matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/library'] },
-    { label: 'Routines', description: 'Weekly training patterns', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
+    { label: 'Training plans', description: 'Weekly training patterns', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
     { label: 'Activity', description: 'Everything you’ve done', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
     { label: 'Events', description: 'Goals and results', href: '/athlete/events', matchPrefix: '/athlete/events' },
   ];

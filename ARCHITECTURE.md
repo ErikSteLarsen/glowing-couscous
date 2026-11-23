@@ -66,7 +66,7 @@ and ownership guards; page visibility is not API authorization.
   workout profile, start actions, and Calendar placement
 - `/athlete/ride` - Ride home (no app chrome; Tempo Ride's default page): today's and recent open bike sessions, recent rides, and the library with Ride now
 - `/athlete/planner` - retired; redirects `date`/`source` to Calendar placement (`getPlannerRedirectHref`)
-- `/athlete/templates` - private weekly routines composed from saved workouts
+- `/athlete/templates` - private weekly training plans composed from saved workouts
 - `/athlete/session/[sessionId]` - read-only workout profile, block inspector and outcome review; `lib/session-structure.ts` groups identical instructions, `lib/workout-profile.ts` unrolls them into the shared `components/WorkoutProfile.tsx`, and the route's `SessionStructure.tsx` owns selection/disclosure
 - `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion
 - `/athlete/ride/[sessionId]` - indoor bike ride for BIKING sessions: targets-only timer or Web Bluetooth trainer/HR/cadence with ERG targets, 1 Hz recording checkpointed to localStorage (and `window.tempoDesktop` when present), saved through `POST /api/activity-imports` as a `file-import` attached to the planned session
@@ -88,7 +88,7 @@ navigation.
 - `/api/coach/requests/*` - coach request decisions
 - `/api/coach/planner/*`, `/api/coach/assignments`, `/api/coach/sessions/*` - coach planning
 - `/api/coach/workouts/*`, `/api/athlete/workouts/*` - standalone libraries
-- `/api/athlete/templates/*` - saved-workout routines
+- `/api/athlete/templates/*` - training plans built from saved workouts
 - `/api/athlete/library/[slug]/{ride,schedule}` - copy a catalog workout to today or chosen dates
 - `/api/athlete/planner/*`, `/api/athlete/sessions/*` - athlete planning and outcomes
 - `/api/athlete/workouts/generate` - private guided workout draft generation from bounded choices and recent completed training
@@ -115,7 +115,7 @@ navigation.
 | Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |
 | Guided workout creation | `lib/guided-workout.ts`, `lib/guided-workout-service.ts`, `lib/workout-llm.ts`, `components/GuidedWorkoutForm.tsx` | Owner-scoped recent-training summary, validated full model-authored workouts, app-wide provider health cache, standard fallback patterns, and unsaved draft handoff to the shared builder |
 | Training plans | `lib/coach-training-plan-service.ts` | Reusable weekday-based coach plans |
-| Templates | `lib/template-service.ts`, `lib/template-routine.ts`, `components/TrainingTemplatesClient.tsx` | Owner-scoped saved-workout routine composition, snapshot validation and weekday expansion; `lib/template-period.ts` validates week/month application |
+| Personal training plans | `lib/template-service.ts`, `lib/template-routine.ts`, `components/TrainingTemplatesClient.tsx` | Owner-scoped training plan composition from saved workouts, snapshot validation and weekday expansion; `lib/template-period.ts` validates week/month application |
 | Activity navigation | `lib/activity-navigation.ts` | Validated history filters, page size, and pagination URLs |
 | Athlete events | `lib/athlete-event-service.ts`, `lib/athlete-service.ts` | Athlete-owned event validation, results, explicit completed-activity search/link/unlink, and Home and Calendar read models |
 | Manual activity | `lib/athlete-manual-activity-service.ts`, `lib/athlete-import-pairing.ts` | Athlete-owned manual summaries, eligible self-planned candidates, explicit pairing or standalone logging, atomic completion, and version-checked manual corrections |
@@ -242,19 +242,19 @@ transactions with UI-only guards.
 See [operations](docs/OPERATIONS.md) for setup/deployment and
 [current status](docs/agent-workspace/CURRENT-STATUS.md) for unresolved gates.
 
-## Personal training routines
+## Personal training plans
 
 `Template.routineJson` holds a versioned weekly pattern of weekday entries and
 server-captured library workout snapshots. Personal authoring uses this required
 field. The current schema also retains legacy sport/cadence columns and Block
 and ShareLink relations, restored by the personal-training-loop migration;
 they do not add a second personal authoring model. Session.templateId retains
-routine lineage with on-delete SET NULL, preserving independent calendar copies.
-Personal template POST/PATCH uses `template-service.saveForOwner`, accepting
+training plan lineage with on-delete SET NULL, preserving independent calendar copies.
+Personal training plan POST/PATCH uses `template-service.saveForOwner`, accepting
 only library workout IDs, weekdays, name and summary. It checks ownership and
 standalone-library scope within the save transaction; submitted blocks, titles,
 targets and arbitrary snapshot data are never trusted. Duplication retains the
-snapshots. Deleted or edited source workouts do not alter a saved routine;
+snapshots. Deleted or edited source workouts do not alter a saved training plan;
 saving again requires available library workouts and captures current versions.
 
 `template-routine` owns parsing and deterministic date/weekday expansion.
@@ -265,11 +265,11 @@ Within-day entry order is preserved in creation order, which Calendar reads by
 session ID after date. Relative references and decimal targets survive copying.
 Workouts never loads a template as one workout; standalone saves refuse template
 lineage. Coach assignment supports library sessions and training plans only.
-Public links publish session definitions, not routines. An Athlete can explicitly
-save a shared workout into their library and a one-entry Monday routine through
+Public links publish individual workout definitions. An Athlete can explicitly
+save a shared workout into their library and a one-entry Monday training plan through
 `share-link-service.saveTemplateCopy`. These are two service saves, not one
-transaction; a routine-save failure can leave its library workout copy. Public
-routine projection remains unsupported. No new coach authorization is added.
+transaction; a training plan save failure can leave its library workout copy. Public
+training plan projection remains unsupported. No new coach authorization is added.
 Historical migrations remain immutable: the routine cleanup removed old fields,
 and the later personal-training-loop migration restored compatibility fields.
 Current schema and service behavior override that intermediate migration state.

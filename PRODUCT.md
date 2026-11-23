@@ -15,7 +15,7 @@ web
 
 ## Users
 
-- **Primary: people managing their own training.** They create workouts and reusable templates, plan their calendar, follow sessions, and record and review outcomes. The current implementation calls this role Athlete.
+- **Primary: people managing their own training.** They create workouts and reusable training plans, plan their calendar, follow sessions, and record and review outcomes. The current implementation calls this role Athlete.
 - **Secondary: coaches and coached athletes.** Existing collaboration supports rosters, reusable content, and assignments. Coach discovery and connection are deferred from the current personal navigation.
 
 ## Product Purpose
@@ -31,7 +31,7 @@ Workout Planner joins reusable structured workout authoring, Monday-first person
 The first MVP is used as a recurring personal training workspace:
 
 1. Sign up and enter the personal Athlete workspace directly.
-2. Create, edit, save, and reuse a structured workout, then group saved workouts into a reusable routine.
+2. Create, edit, save, and reuse a structured workout, then group saved workouts into a reusable training plan.
 3. Schedule personal content on selected dates and review or remove planned sessions.
 4. Open and follow a session, then record completion, notes, and actual outcomes.
 5. Review persisted results in Activity and session detail after refreshing or signing in again.
@@ -43,7 +43,7 @@ Training weeks begin on Monday. Desktop, mobile, and keyboard workflows are all 
 Prioritize correctness, persistence, understandable empty and error states, and usable desktop, mobile, and keyboard interactions across the personal training loop. Verify shared Planner source selection, date ranges, month navigation, and session state handling before expanding scope. These are acceptance targets, not a claim that every browser check has passed.
 
 1. Sign up and reach a useful personal workspace.
-2. Create, edit, save, and reuse a structured workout or template.
+2. Create, edit, save, and reuse a structured workout or training plan.
 3. Schedule personal content on selected dates and reliably review or remove planned sessions.
 4. Open and follow a session, record completion, notes, and actual outcomes.
 5. Review saved results in Activity and session detail after refreshing or signing in again.
@@ -54,7 +54,7 @@ Prioritize correctness, persistence, understandable empty and error states, and 
 10. Log a simple manual summary against an eligible self-planned session, or keep the activity separate, without building structured actual intervals.
 11. Correct a saved manual activity from its outcome review; keep paired workout details fixed and keep imported file outcomes source-preserving.
 
-When a saved template opens in Planner, preselect a cadence-valid range: a
+When a saved training plan opens in Planner, preselect a cadence-valid range: a
 Monday-to-Sunday week or the full calendar month. Show that range before
 assignment and let the athlete choose a different start date.
 
@@ -140,10 +140,10 @@ expansion until personal use is complete or explicitly requested.
 - `Workouts` stores private reusable definitions without dates or assignments
   in **My workouts**. **Public library** offers built-in indoor bike workouts.
   **Customize** starts a draft that becomes an owned workout when saved.
-- Personal `Calendar` provides week/month review and rescheduling, handing selected dates to the separate `Planner` desk to schedule independent copies. Coach `Planner` places content onto athlete dates or training-plan weekdays. Workouts can target multiple dates; routines apply their weekday pattern to a complete week or calendar month.
-- Personal `Templates` groups saved workouts into a Monday–Sunday routine, with a name and optional purpose/notes. Multiple workouts may be ordered on a weekday; empty weekdays add nothing. Apply one routine to a Monday-starting week or repeat it through a whole calendar month. Template composition cannot author workout blocks.
-- Routine saves capture server-owned library workout snapshots. Later library edits/deletions do not change saved routines; saving the routine again captures the selected library versions. Scheduled sessions are independent copies. Relative targets resolve against the person's Profile; absolute targets remain fixed.
-- Templates only contain saved-workout routines. Block-backed templates, cadence settings, workout-editor template loading, and coach template assignment are removed. An Athlete may explicitly save a shared workout into their library and a one-entry Monday routine; public links still publish workout definitions only. Public routine sharing and curated standard routines remain future work; public sharing supports individual workouts only.
+- Personal `Calendar` provides week/month review and rescheduling, handing selected dates to the separate `Planner` desk to schedule independent copies. Coach `Planner` places content onto athlete dates or training-plan weekdays. Workouts can target multiple dates; training plans apply their weekday schedule to a complete week or calendar month.
+- Personal **Training plans** groups saved workouts into a Monday–Sunday schedule, with a name and optional purpose/notes. Multiple workouts may be ordered on a weekday; empty weekdays add nothing. Apply one training plan to a Monday-starting week or repeat it through a whole calendar month. Training plans use saved workouts.
+- Saving a training plan captures server-owned library workout snapshots. Later library edits/deletions do not change saved training plans. Saving the plan again captures the selected library versions. Scheduled sessions are independent copies. Relative targets resolve against the person's Profile; absolute targets remain fixed.
+- Block-backed templates, cadence settings, workout-editor template loading, and coach template assignment are removed. An Athlete may explicitly save a shared workout into their library and a one-entry Monday training plan; public links still publish workout definitions only. Public training plan sharing and curated training plans remain future work; public sharing supports individual workouts only.
 - Completion stores performed metrics, notes, and the latest actual snapshot in `Activity`.
 - Home separates scheduled structure by Session date from completed outcomes by
   Activity date. Standalone imports contribute only to completed totals; matched

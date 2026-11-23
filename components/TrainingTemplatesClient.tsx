@@ -62,7 +62,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
         setConfirmationOpen(false);
       }
       if (method === 'PATCH' || (method === 'POST' && body)) setDraft(null);
-      setNotice({ text: method === 'DELETE' ? 'Routine deleted. Workouts already on your Calendar stay.' : path.endsWith('/duplicate') ? 'Routine copied.' : 'Routine saved. Use Apply to Calendar to add it to a week or month.', error: false });
+      setNotice({ text: method === 'DELETE' ? 'Training plan deleted. Workouts already on your Calendar stay.' : path.endsWith('/duplicate') ? 'Training plan copied.' : 'Training plan saved. Use Apply to Calendar to add it to a week or month.', error: false });
       router.refresh();
     } catch (error) {
       setNotice({ text: error instanceof Error ? error.message : 'Could not reach Tempo. Your changes are still here. Try again.', error: true });
@@ -86,7 +86,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
     {notice && !draft && !confirmationOpen && <p role={notice.error ? 'alert' : 'status'} className={notice.error ? dangerTextClassName : successTextClassName}>{notice.text}</p>}
     {draft ? <Surface className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 ref={editorHeading} tabIndex={-1} className={sectionHeadingClassName}>{draft.id ? 'Edit routine' : 'New routine'}</h2>
+        <h2 ref={editorHeading} tabIndex={-1} className={sectionHeadingClassName}>{draft.id ? 'Edit training plan' : 'New training plan'}</h2>
         <button type="button" disabled={busy} className={`${secondaryButtonClassName} max-md:min-h-11`} onClick={(event) => {
           confirmationTrigger.current = event.currentTarget;
           setConfirmation({ kind: 'discard' });
@@ -95,7 +95,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
       </div>
       <fieldset disabled={busy} className="space-y-6 min-w-0">
         <div className="space-y-3">
-          <label className="block max-w-xl space-y-2"><span className={formLabelClassName}>Routine name</span><input autoComplete="off" maxLength={160} value={draft.name} className={formFieldClassName} onChange={event => setDraft({ ...draft, name: event.target.value })} placeholder="Easy running and intervals" /></label>
+          <label className="block max-w-xl space-y-2"><span className={formLabelClassName}>Training plan name</span><input autoComplete="off" maxLength={160} value={draft.name} className={formFieldClassName} onChange={event => setDraft({ ...draft, name: event.target.value })} placeholder="Easy running and intervals" /></label>
           <details open={notesOpen} onToggle={event => setNotesOpen(event.currentTarget.open)}>
             <summary className={`-ml-2 inline-flex min-h-9 cursor-pointer list-none items-center rounded-lg px-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--raised)] hover:text-[var(--text)] max-md:min-h-11 [&::-webkit-details-marker]:hidden ${buttonFocusClassName}`}><span className="underline decoration-[var(--border)] underline-offset-4">Purpose or notes (optional)</span>{!notesOpen && draft.summary.trim() ? <span className="ml-1.5 font-normal text-[var(--text-muted)]">· Added</span> : null}</summary>
             <label className="mt-2 block max-w-xl"><span className="sr-only">Purpose or notes (optional)</span><textarea maxLength={2000} value={draft.summary} rows={2} className={formTextareaClassName} onChange={event => setDraft({ ...draft, summary: event.target.value })} placeholder="A relaxed base week with two interval days" /></label>
@@ -106,9 +106,9 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
           <label className="block space-y-2"><span className={formLabelClassName}>Workout</span><select className={formSelectClassName} value={workoutId} onChange={event => setWorkoutId(Number(event.target.value))}>{workouts.map(workout => <option key={workout.id} value={workout.id}>{workout.title}&nbsp;· {getSportLabel(workout.sport)}&nbsp;· {formatDuration(workout.durationSec)}</option>)}</select></label>
           <fieldset className="space-y-2"><legend className={formLabelClassName}>Days for this workout</legend><div className="flex flex-wrap gap-3">{ROUTINE_DAYS.map((day, weekday) => <label key={day} className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={weekdays.includes(weekday)} onChange={event => setWeekdays(current => event.target.checked ? [...current, weekday].sort() : current.filter(value => value !== weekday))} />{day}</label>)}</div></fieldset>
           <button type="button" disabled={!weekdays.length || draft.entries.length + weekdays.length > 70} className={`${secondaryButtonClassName} max-md:min-h-11`} onClick={() => setDraft({ ...draft, entries: [...draft.entries, ...weekdays.map(weekday => ({ key: nextKey.current++, weekday, workoutId }))] })}><Plus size={16} />Add to {weekdays.length || 'selected'} {weekdays.length === 1 ? 'day' : 'days'}</button>
-        </div> : <EmptyState title="Save a workout first" description="Routines are built from your saved workouts. Create your easy run and interval workouts first, then come back here." action={<div className="max-md:[&>a]:min-h-11"><ActionLink href="/athlete/workouts">Open Workouts</ActionLink></div>} />}
+        </div> : <EmptyState title="Save a workout first" description="Training plans are built from your saved workouts. Create your easy run and interval workouts first, then come back here." action={<div className="max-md:[&>a]:min-h-11"><ActionLink href="/athlete/workouts">Open Workouts</ActionLink></div>} />}
         <div className="space-y-2">
-          <h3 className="font-semibold">Your weekly routine</h3>
+          <h3 className="font-semibold">Your weekly plan</h3>
           <p role="status" aria-live="polite" className="text-sm text-[var(--text-secondary)]">{draft.entries.length} workouts a week. Days without workouts stay empty on your Calendar.</p>
           <div className="divide-y divide-[var(--border)]">{ROUTINE_DAYS.map((day, weekday) => {
             const entries = draft.entries.filter(entry => entry.weekday === weekday);
@@ -121,11 +121,11 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
             }) : <p className="text-sm text-[var(--text-muted)]">No workout</p>}</div></section>;
           })}</div>
         </div>
-        <p className="text-sm leading-6 text-[var(--text-secondary)]">Saving copies these workouts as they are now. Targets based on your Profile (pace, power, heart rate) update with it; fixed targets stay fixed. Editing a workout later doesn’t change this routine or workouts already on your Calendar.</p>
+        <p className="text-sm leading-6 text-[var(--text-secondary)]">Saving copies these workouts as they are now. Targets based on your Profile (pace, power, heart rate) update with it; fixed targets stay fixed. Editing a workout later doesn’t change this training plan or workouts already on your Calendar.</p>
         {notice && <p role={notice.error ? 'alert' : 'status'} className={notice.error ? dangerTextClassName : successTextClassName}>{notice.text}</p>}
-        <button type="button" disabled={!draft.name.trim() || !draft.entries.length || draft.entries.some(entry => !workouts.some(workout => workout.id === entry.workoutId))} className={`${primaryButtonClassName} max-md:min-h-11`} onClick={() => void mutate(draft.id ? `/api/athlete/templates/${draft.id}` : '/api/athlete/templates', draft.id ? 'PATCH' : 'POST', { name: draft.name, summary: draft.summary, entries: draft.entries.map(({ weekday, workoutId }) => ({ weekday, workoutId })) })}>{busy ? 'Saving…' : 'Save routine'}</button>
+        <button type="button" disabled={!draft.name.trim() || !draft.entries.length || draft.entries.some(entry => !workouts.some(workout => workout.id === entry.workoutId))} className={`${primaryButtonClassName} max-md:min-h-11`} onClick={() => void mutate(draft.id ? `/api/athlete/templates/${draft.id}` : '/api/athlete/templates', draft.id ? 'PATCH' : 'POST', { name: draft.name, summary: draft.summary, entries: draft.entries.map(({ weekday, workoutId }) => ({ weekday, workoutId })) })}>{busy ? 'Saving…' : 'Save training plan'}</button>
       </fieldset>
-    </Surface> : <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">{templates.length ? <SearchField label="Search routines" labelClassName="flex-1 sm:max-w-md" value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Search routines" /> : null}<button type="button" disabled={busy} className={`${primaryButtonClassName} max-md:min-h-11`} ref={newTemplateButton} onClick={() => edit()}>New routine</button></div>}
+    </Surface> : <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">{templates.length ? <SearchField label="Search training plans" labelClassName="flex-1 sm:max-w-md" value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Search training plans" /> : null}<button type="button" disabled={busy} className={`${primaryButtonClassName} max-md:min-h-11`} ref={newTemplateButton} onClick={() => edit()}>New training plan</button></div>}
     {!draft && (visible.length ? <div className="space-y-4">{visible.map(template => {
       const routine = parseTemplateRoutine(template.routineJson);
       const filledDays = routine ? ROUTINE_DAYS.flatMap((day, weekday) => {
@@ -137,7 +137,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
           <div className="min-w-0 space-y-1">
             <h2 className={`break-words ${sectionHeadingClassName}`}><button type="button" disabled={busy} aria-label={`Edit ${template.name}`} className={`rounded-sm text-left underline-offset-4 max-md:min-h-11 control-hover:text-[var(--brand)] control-hover:underline disabled:opacity-60 ${buttonFocusClassName}`} onClick={() => edit(template)}>{template.name}</button></h2>
             {template.summary && <p className="text-sm leading-6 text-[var(--text-secondary)] break-words">{template.summary}</p>}
-            <p className="text-sm text-[var(--text-muted)]">{routine ? `${routine.entries.length} ${routine.entries.length === 1 ? 'workout' : 'workouts'} a week` : 'This routine can’t be read. Edit it and save again.'}</p>
+            <p className="text-sm text-[var(--text-muted)]">{routine ? `${routine.entries.length} ${routine.entries.length === 1 ? 'workout' : 'workouts'} a week` : 'This training plan can’t be read. Edit it and save again.'}</p>
           </div>
           <Menu>
             <OverflowMenuTrigger id={`template-menu-${template.id}`} disabled={busy} aria-label={`More actions for ${template.name}`} />
@@ -162,14 +162,14 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
         {filledDays.length ? <dl className="grid gap-x-6 gap-y-2 md:grid-cols-2">{filledDays.map(({ day, titles }) => <div key={day} className="flex min-w-0 gap-3 text-sm"><dt className="w-24 shrink-0 text-[var(--text-secondary)]">{day}</dt><dd className="break-words min-w-0">{titles.join(', ')}</dd></div>)}</dl> : null}
         <div className="max-md:[&>a]:min-h-11"><ActionLink href={getCalendarPlacementHref(`template:${template.id}`)} size="compact">Apply to Calendar</ActionLink></div>
       </Surface>;
-    })}</div> : <EmptyState title={templates.length ? 'No matching routines' : 'Build your first routine'} description={templates.length ? 'Try a different search.' : 'Put saved workouts on the days you train. Days left empty add nothing when you apply it.'} />)}
+    })}</div> : <EmptyState title={templates.length ? 'No matching training plans' : 'Build your first training plan'} description={templates.length ? 'Try a different search.' : 'Put saved workouts on the days you train. Days left empty add nothing when you apply it.'} />)}
     <AlertDialog open={confirmationOpen} onOpenChange={(open, details) => {
       if (busy) { details.cancel(); return; }
       setConfirmationOpen(open);
     }}>
       {confirmation?.kind === 'discard' ? (
         <ConfirmationDialogContent
-          title="Discard your unsaved changes to this routine?"
+          title="Discard your unsaved changes to this training plan?"
           description="Your changes will be lost."
           cancelLabel="Keep editing"
           confirmLabel="Discard changes"
@@ -184,8 +184,8 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
         <ConfirmationDialogContent
           title={`Delete “${confirmation.template.name}”?`}
           description="Workouts already on your Calendar stay."
-          cancelLabel="Keep routine"
-          confirmLabel={busy ? 'Deleting…' : 'Delete routine'}
+          cancelLabel="Keep training plan"
+          confirmLabel={busy ? 'Deleting…' : 'Delete training plan'}
           finalFocus={() => confirmationTrigger.current ?? newTemplateButton.current}
           pending={busy}
           error={notice?.error ? notice.text : undefined}

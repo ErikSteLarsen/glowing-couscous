@@ -16,7 +16,7 @@ export function MobileLibrarySwitch({ active }: { active: 'workouts' | 'template
         aria-current={active === 'templates' ? 'page' : undefined}
         className={`flex min-h-11 items-center justify-center border-b-2 px-3 text-[13px] font-semibold transition hover:bg-[var(--field-surface)] ${buttonFocusClassName} ${active === 'templates' ? 'border-[var(--brand)] text-[var(--brand)]' : 'border-transparent text-[var(--text-secondary)]'}`}
       >
-        Routines
+        Training plans
       </Link>
     </nav>
   );

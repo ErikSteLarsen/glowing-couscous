@@ -435,7 +435,7 @@ function CalendarMoreMenu({ view, day, showTotals, onShowTotalsChange }: {
         <MenuGroup>
           <MenuItem render={<Link href={getCalendarHref(view, day, { place: 'template' })} />}>
             <CalendarRange aria-hidden="true" size={16} strokeWidth={1.8} />
-            Apply a routine
+            Apply a training plan
           </MenuItem>
           <MenuItem render={<Link href="/athlete/events" />}>
             <Flag aria-hidden="true" size={16} strokeWidth={1.8} />

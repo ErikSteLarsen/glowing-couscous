@@ -120,7 +120,7 @@ test('workout library rejects routine lineage when authoring standalone workouts
     templateId: 99,
   });
 
-  assert.deepEqual(result, { ok: false, error: 'Training routines must be applied through Calendar.', status: 400 });
+  assert.deepEqual(result, { ok: false, error: 'Training plans must be applied through Calendar.', status: 400 });
   assert.equal(created, false);
 });
 

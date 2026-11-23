@@ -14,11 +14,11 @@ export async function POST(request: NextRequest) {
 
     const sourceKind = body.value.sourceKind;
     if (sourceKind !== 'workout' && sourceKind !== 'template') {
-      return NextResponse.json({ error: 'Choose a workout or routine.' }, { status: 400 });
+      return NextResponse.json({ error: 'Choose a workout or training plan.' }, { status: 400 });
     }
 
     const sourceId = parsePositiveInteger(body.value.sourceId);
-    if (sourceId === null) return NextResponse.json({ error: 'Choose a workout or routine.' }, { status: 400 });
+    if (sourceId === null) return NextResponse.json({ error: 'Choose a workout or training plan.' }, { status: 400 });
 
     const result = await athletePlannerService.assignSource(user.id, {
       sourceKind,

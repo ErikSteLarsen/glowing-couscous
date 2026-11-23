@@ -492,7 +492,7 @@ One term per concept:
 
 | Concept | Say | Don't say |
 | --- | --- | --- |
-| A training plan of steps, saved or in the library | **workout** | session, source, entity |
+| A single workout made up of steps, saved or in the library | **workout** | session, source, entity |
 | A workout put on a date | **planned workout** (or just workout) | session, scheduled copy, assignment |
 | Your saved workouts / ready-made ones | **My workouts** / **Public library** | your library, catalog |
 | One part of a workout; a repeated group | **step**; **set** | block, segment, effort (except "effort" as the work part of an interval) |
@@ -501,8 +501,8 @@ One term per concept:
 | Finishing a planned workout | **Mark as done**, status **done** | complete, log completion |
 | Undo done / undo skip | **Mark as not done** / **Plan again** | mark planned again |
 | Not done by its date / chosen not to do | **missed** / **skipped** | — |
-| Weekly pattern of saved workouts | **routine** (page **Routines**) | template |
-| Pages | **Home, Calendar, Workouts, Routines, Activity, Events, Import, Profile, Settings** (capitalized when naming the page) | planner (athlete side) |
+| Weekly schedule of saved workouts | **training plan** (page **Training plans**) | template, routine |
+| Pages | **Home, Calendar, Workouts, Training plans, Activity, Events, Import, Profile, Settings** (capitalized when naming the page) | planner (athlete side) |
 | Training targets on Profile | **training targets** | training metrics |
 | Changes not yet saved | **unsaved changes**, "only on this device" | draft, kept on this browser, local recovery, persist |
 | A link anyone can open | **share link** | public link, URL, snapshot |
@@ -581,13 +581,13 @@ Desktop sticky actions use the viewport bottom.
 Opening Add session from a day seeds its date and focuses the inline composer
 heading while retaining the date grid. Reuse shared buttons, segmented choices,
 fields, and `SessionRow`; the composer uses the existing field surface and
-rounded panel language. Workouts and Routines have searchable saved
-lists, explicit pressed selection, workout or routine details, and contextual creation
+rounded panel language. Workouts and Training plans have searchable saved
+lists, explicit pressed selection, workout or training plan details, and contextual creation
 links for empty results. Only the source results scroll independently, capped
 at 280px; date review and Schedule remain outside that scroll area.
 
 Workout dates toggle through calendar buttons and can also be added through an
-explicit date field or removed through labelled date chips. Routine selection
+explicit date field or removed through labelled date chips. Training plan selection
 uses one reference date: show its full Monday-first week or calendar-month
 range in both the calendar selection and a dated range summary before Schedule.
 The selected-day agenda follows the reference date, while the range identifies
@@ -612,7 +612,7 @@ operable tablist with counts and 44px minimum touch targets. Describe the
 active collection in one line. Default to **My workouts** when the athlete
 has saved workouts and **Public library** otherwise. The URL carries the
 explicit tab and any catalog filters. The mobile navigation drawer links to
-Templates.
+Training plans.
 
 Keep **New workout** on **My workouts**. Its menu includes **Start from
 public library**. Catalog cards open a read-only detail page and offer
@@ -759,11 +759,9 @@ shows calculated previews and advanced targets with the fields they affect.
 The link disappears when maximum heart rate and the selected sports’ targets
 are saved. Unknown values may remain blank.
 
-### Personal training templates
+### Personal training plans
 
-Use the established Night Instrument surfaces and shared controls. Routines (route `/athlete/templates`)
-is a routine composer, using existing library workouts rather than the block
-editor. Keep name and optional purpose together, followed by one saved-workout
+Use the established Night Instrument surfaces and shared controls. **Training plans** (`/athlete/templates`) uses saved library workouts. Keep name and optional purpose together, followed by one saved-workout
 picker with multi-weekday selection and an ordered Monday–Sunday outline.
 Days without entries say No workout. Multiple entries expose accessible reorder
 and remove controls; at narrow widths their actions wrap below the workout
@@ -771,10 +769,10 @@ selector. Show save failures beside Save and retain the draft. Cancelling or
 leaving the browser requires an unsaved-change safeguard.
 
 The library previews only the weekdays that have workouts, with the session count.
-The title opens the editor, Duplicate and Delete live in the card's ⋯ menu, and
-the visible Apply to Calendar carries the chosen template into scheduling. Routine application
-offers One week or Whole month, an explicit full date range and the actual dated
+The title opens the editor, and Duplicate and Delete live in the card's ⋯ menu.
+Apply to Calendar opens scheduling for the chosen training plan with options
+for One week or Whole month, an explicit full date range, and the actual dated
 workout list/count before saving. Explain that existing sessions remain, empty
 days add nothing, relative targets use Profile and fixed targets remain fixed.
-Templates have one routine model. Do not expose cadence controls, workout block
-authoring, single-workout template loading or public Save as Template intake.
+Training plans use one weekly schedule model. Keep cadence controls, workout block
+authoring, and loading a training plan as a single workout out of the editor.

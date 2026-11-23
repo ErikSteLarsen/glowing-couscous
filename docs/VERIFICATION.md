@@ -83,7 +83,7 @@ interaction/persistence checks; they do not replace them.
 
 Check at 390px and 1440px with local Athlete accounts with and without saved
 workouts. Verify the default tab, arrow-key selection, explicit tab URLs, browser
-Back, and Templates access from the mobile drawer. Search and filter the Public
+Back, and Training plans access from the mobile drawer. Search and filter the Public
 library, then reload and check the selected tab and filters. Open a filtered
 legacy `/athlete/library` URL and verify it redirects to the same catalog results.
 Check that a catalog card opens its detail and that Schedule opens Calendar
@@ -106,7 +106,7 @@ workout.
    undo/redo, failure draft retention and explicit save feedback.
 3. Schedule multiple dates in Calendar; check week/month views after reload. Edit and
    cross-week reschedule personal work without requiring Assignment lineage.
-4. Compose saved workouts on weekdays in Templates, apply one complete week or
+4. Compose saved workouts on weekdays in Training plans, apply one complete week or
    whole month, preview the actual dated sessions, preserve within-day order,
    and leave empty weekdays untouched. Refuse old block-template input and
    retired public/coach template paths. Verify snapshots after source deletion,
@@ -150,7 +150,7 @@ keyboard/focus, names/labels, landmarks, contrast, reduced motion and non-color
 feedback. Shell checks include drawer focus return/containment, Escape, inert
 content, scroll lock, resize/history cleanup and desktop menu/theme persistence.
 
-Phone navigation groups Home, Calendar, Workouts (Templates), and
+Phone navigation groups Home, Calendar, Workouts (Training plans), and
 History (Import). Verify date handoff, week strip/sticky placement, tap-first
 editing, History filters and pinned Profile save state. Check coach navigation
 against existing role boundaries after shared changes.

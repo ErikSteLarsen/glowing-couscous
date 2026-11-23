@@ -211,7 +211,7 @@ test('planner places sources while libraries own live editing', async () => {
   assert.match(plannerDeskSource, /training-plan/);
   assert.match(plannerDeskSource, /Monday/);
   assert.match(templatesClientSource, /function edit/);
-  assert.match(templatesClientSource, /Save routine/);
+  assert.match(templatesClientSource, /Save training plan/);
   assert.match(templatesClientSource, /edit\(template\)/);
 });
 

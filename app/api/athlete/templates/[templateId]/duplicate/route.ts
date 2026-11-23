@@ -12,7 +12,7 @@ export async function POST(
   if (error) return error;
   const { templateId } = await params;
   const parsedTemplateId = parsePositiveInteger(templateId);
-  if (parsedTemplateId === null) return NextResponse.json({ error: 'Routine not found.' }, { status: 400 });
+  if (parsedTemplateId === null) return NextResponse.json({ error: 'Training plan not found.' }, { status: 400 });
   const result = await templateService.duplicateForOwner(user.id, parsedTemplateId);
   if (result.error) return NextResponse.json({ error: result.error }, { status: 404 });
   return NextResponse.json({ ok: true }, { status: 201 });

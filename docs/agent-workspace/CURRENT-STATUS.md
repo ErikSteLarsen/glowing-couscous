@@ -7,6 +7,11 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- The athlete workspace calls saved weekly schedules **Training plans** across
+  navigation, Calendar, editing, and shared-workout intake. Existing URLs and
+  data formats are preserved. `pnpm test` (560 passed, 17 database cases skipped),
+  `pnpm lint`, and `pnpm typecheck` passed.
+
 - App-wide copy pass (2026-11-23). User-facing text in `app/`, `components/`
   and `lib/` (including service and API errors the UI shows) follows the new
   **Voice and terms** glossary in [DESIGN.md](../../DESIGN.md): workout /
@@ -182,10 +187,10 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 - Personal sessions support completion, correction, rescheduling, removal,
   Skip and Plan again with ownership/status checks. Planner supports optional
   start times and warns about repeated placement of a source on selected dates.
-- Personal Templates composes saved workouts into weekly routines. Routine JSON
+- Training plans groups saved workouts into weekly schedules. `Template.routineJson`
   owns authoring; the schema still retains legacy columns/relations restored by
   a later migration. Public links publish workout definitions. An Athlete may
-  explicitly save one into their library and a one-entry Monday routine.
+  explicitly save one into their library and a one-entry Monday training plan.
 - The mounted Import workspace accepts recorded FIT/TCX/GPX files up to 20 MB,
   previews before saving and persists normalized measurement series and optional
   laps for review. Raw uploads and GPS coordinates are not persisted. Older

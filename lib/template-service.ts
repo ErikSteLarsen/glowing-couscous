@@ -15,9 +15,9 @@ export function createTemplateService({ db = prisma }: { db?: typeof prisma } = 
       if (!Array.isArray(draft.entries) || !draft.entries.length || draft.entries.length > 70) return { error: 'Add between 1 and 70 saved workouts.' };
       const selections = draft.entries as Array<{ weekday: number; workoutId: number }>;
       if (selections.some(entry => !entry || !Number.isInteger(entry.weekday) || entry.weekday < 0 || entry.weekday > 6 || !Number.isSafeInteger(entry.workoutId) || entry.workoutId <= 0)) return { error: 'Choose a saved workout and a day for every entry.' };
-      if (templateId !== undefined && (!Number.isSafeInteger(templateId) || templateId <= 0)) return { error: 'Routine not found.' };
+      if (templateId !== undefined && (!Number.isSafeInteger(templateId) || templateId <= 0)) return { error: 'Training plan not found.' };
       return db.$transaction(async tx => {
-        if (templateId !== undefined && !await tx.template.findFirst({ where: { id: templateId, ownerId } })) return { error: 'Routine not found.' };
+        if (templateId !== undefined && !await tx.template.findFirst({ where: { id: templateId, ownerId } })) return { error: 'Training plan not found.' };
         const workouts = await tx.session.findMany({
           where: { id: { in: selections.map(entry => entry.workoutId) }, athleteId: ownerId, coachOwnerId: null, date: null, planId: null, trainingPlanId: null },
           include: { blocks: { orderBy: { sortOrder: 'asc' } } },
@@ -43,14 +43,14 @@ export function createTemplateService({ db = prisma }: { db?: typeof prisma } = 
 
     async deleteForOwner(ownerId: number, templateId: number) {
       const template = await db.template.findFirst({ where: { id: templateId, ownerId } });
-      if (!template) return { error: 'Routine not found.' };
+      if (!template) return { error: 'Training plan not found.' };
       await db.template.delete({ where: { id: templateId } });
       return { error: null };
     },
     async duplicateForOwner(ownerId: number, templateId: number) {
       const template = await db.template.findFirst({ where: { id: templateId, ownerId } });
-      if (!template) return { error: 'Routine not found.' };
-      if (!parseTemplateRoutine(template.routineJson)) return { error: 'This routine can’t be read. Edit it and save again.' };
+      if (!template) return { error: 'Training plan not found.' };
+      if (!parseTemplateRoutine(template.routineJson)) return { error: 'This training plan can’t be read. Edit it and save again.' };
       await db.template.create({ data: { ownerId, name: `${template.name} (Copy)`, summary: template.summary, routineJson: template.routineJson } });
       return { error: null };
     },
