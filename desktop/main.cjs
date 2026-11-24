@@ -8,6 +8,7 @@ const { openDesktopDialog } = require('./dialog.cjs')
 const { launchTarget, parseSettings, rememberSite, startPageSite } = require('./launch.cjs')
 const { createRecordingStore } = require('./recordings.cjs')
 const { SCHEME, isTrustedWebUrl, isYouTubeEmbedUrl, parseRideLink, parseWebUrl } = require('./urls.cjs')
+const { YOUTUBE_PARTITION, YOUTUBE_SIZE, createYouTubeBrowser } = require('./youtube.cjs')
 
 const START_FILE = path.join(__dirname, 'ui', 'start.html')
 const START_URL = pathToFileURL(START_FILE).href
@@ -26,6 +27,35 @@ let settings
 let recordings
 let pendingLink = Promise.resolve()
 let loadError = ''
+
+function openExternal(value) {
+  const url = parseWebUrl(value)
+  if (url) shell.openExternal(url.href).catch(() => {})
+}
+
+// A separate window on youtube.com with its own signed-in session; see README.
+const youtube = createYouTubeBrowser({
+  getTempoWindow: () => mainWindow,
+  isTrusted,
+  openExternal,
+  createWindow: () => new BrowserWindow({
+    title: 'YouTube',
+    width: YOUTUBE_SIZE[0],
+    height: YOUTUBE_SIZE[1],
+    minWidth: 400,
+    minHeight: 300,
+    autoHideMenuBar: true,
+    backgroundColor: '#0f0f0f',
+    ...(isLinux ? { icon: path.join(__dirname, 'build', 'icon.png') } : {}),
+    webPreferences: {
+      partition: YOUTUBE_PARTITION,
+      contextIsolation: true,
+      sandbox: true,
+      nodeIntegration: false,
+      devTools: !app.isPackaged
+    }
+  })
+})
 
 function readSettings() {
   try {
@@ -90,7 +120,7 @@ function wireNavigation(window) {
   function openTarget(value) {
     const webUrl = parseWebUrl(value)
     if (webUrl && !trustedOrigins.has(webUrl.origin)) {
-      shell.openExternal(webUrl.href).catch(() => {})
+      openExternal(webUrl.href)
       return
     }
 
@@ -177,6 +207,10 @@ function wireIpc(window) {
     assertMainPage(event, isTrusted)
     return recordings.delete(senderOrigin(event), key)
   })
+  ipc.handle('youtube:open', (event) => {
+    assertMainPage(event, isTrusted)
+    youtube.open()
+  })
 }
 
 function showMainWindow() {
@@ -212,6 +246,7 @@ function showMainWindow() {
     window.on('closed', () => {
       powerSaveBlocker.stop(blocker)
       mainWindow = undefined
+      youtube.close()
     })
     // A site that cannot load (offline, server down) returns to the start page instead of a blank window.
     window.webContents.on('did-fail-load', (_event, code, _description, url, isMainFrame) => {

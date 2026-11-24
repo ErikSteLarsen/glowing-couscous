@@ -8,7 +8,16 @@ if (process.isMainFrame) {
       version: process.argv.find((argument) => argument.startsWith(prefix))?.slice(prefix.length),
       saveRecording: (key, json) => ipcRenderer.invoke('recording:save', key, json),
       listRecordings: () => ipcRenderer.invoke('recording:list'),
-      deleteRecording: (key) => ipcRenderer.invoke('recording:delete', key)
+      deleteRecording: (key) => ipcRenderer.invoke('recording:delete', key),
+      youtube: {
+        open: () => ipcRenderer.invoke('youtube:open'),
+        onVideo: (callback) => {
+          if (typeof callback !== 'function') throw new TypeError('onVideo needs a callback.')
+          const listener = (_event, video) => callback({ url: String(video.url), startSec: Number(video.startSec) })
+          ipcRenderer.on('youtube:video', listener)
+          return () => { ipcRenderer.removeListener('youtube:video', listener) }
+        }
+      }
     })
   } else if (location.protocol === 'file:' && location.pathname.endsWith('/start.html')) {
     contextBridge.exposeInMainWorld('tempoSetup', {

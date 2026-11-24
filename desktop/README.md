@@ -124,3 +124,32 @@ is where they were most likely written. If no site is saved, or a file with the
 same name already exists there, it moves them to `recordings/legacy/`, which no
 origin lists. Recover those by hand. The app never deletes backup files during
 this move.
+
+## Pick a video on YouTube
+
+The ride page can open a separate **YouTube** window on the real
+https://www.youtube.com with `window.tempoDesktop.youtube.open()`, so the rider
+browses their own home feed, subscriptions and search. Calling it again brings
+back the same window. When the rider opens a video there (a `/watch?v=`,
+`/shorts/` or `/live/` page, including YouTube's in-page navigation), Tempo
+Ride reads the player position, pauses and mutes YouTube, hides the window,
+focuses the ride window and calls each `youtube.onVideo(callback)` listener
+once with `{ url, startSec }`. The `url` is always the canonical
+`https://www.youtube.com/watch?v=<id>`, whatever page it came from, and
+`startSec` is whole seconds (the player position, else the link's `t`, else 0).
+`onVideo` returns a function that removes the listener. Opening the window
+again unmutes it and lets its video play. Only a trusted Tempo page can open
+the window or receive videos.
+
+The window stays on YouTube and Google sign-in (`accounts.google.com`,
+`accounts.youtube.com`, the consent pages and country `accounts.google.*`
+hosts). Other links and pop-ups open in the system browser. The window has no
+access to Tempo Ride: it runs sandboxed without the app bridge, denies
+camera, microphone, location, notifications, devices and downloads, and
+sends a desktop Chrome user agent without the Electron token.
+
+Privacy: YouTube runs in its own persistent session (`persist:youtube` in
+Electron's user data folder), separate from the Tempo session. You stay signed
+in between launches. Tempo never reads the YouTube account, cookies or
+history; it only sees the video you open. To sign out, use YouTube's own
+account menu → **Sign out** in that window.
