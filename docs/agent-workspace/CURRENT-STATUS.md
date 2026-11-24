@@ -7,8 +7,8 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
-- Ride entertainment (`RIDE-ENT-001`, 2026-11-24; deployed at `313e2bc`,
-  desktop fixes below on branch `ride-entertainment`).
+- Ride entertainment (`RIDE-ENT-001`, 2026-11-24; desktop fixes
+  released as Tempo Ride 0.3.0).
   The active ride has an **Entertainment** toggle (key V) with two views.
   YouTube (desktop widths only) has no in-app search: the rider browses
   YouTube itself and brings a video in with the Send to Tempo bookmark (a
