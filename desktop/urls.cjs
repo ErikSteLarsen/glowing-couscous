@@ -38,73 +38,25 @@ function isTrustedWebUrl(value, origins) {
 }
 
 const VIDEO_ID = /^[A-Za-z0-9_-]{11}$/
-const YOUTUBE_HOSTS = new Set(['www.youtube.com', 'youtube.com', 'm.youtube.com', 'music.youtube.com'])
-// Google sign-in hops through these before landing back on YouTube.
-const SIGN_IN_HOSTS = new Set([
-  'youtu.be', 'accounts.google.com', 'accounts.youtube.com', 'consent.youtube.com', 'consent.google.com'
-])
-// Sign-in can set cookies on a country domain such as accounts.google.no.
-const COUNTRY_ACCOUNTS_HOST = /^accounts\.google\.(?:com?\.)?[a-z]{2}$/
-const GOOGLE_SIGN_IN_PATH = /^\/(?:accounts|signin|sorry|recaptcha)(?:\/|$)/
+const MAX_START_SEC = 24 * 60 * 60
 
-function httpsUrl(value) {
-  const url = parseWebUrl(value)
-  return url && url.protocol === 'https:' && url.port === '' ? url : null
-}
-
-/** A page the YouTube window may show itself: YouTube and the Google sign-in it needs. */
-function isYouTubeWindowUrl(value) {
-  const url = httpsUrl(value)
-  if (!url) return false
-  const host = url.hostname
-  return YOUTUBE_HOSTS.has(host) || SIGN_IN_HOSTS.has(host) || COUNTRY_ACCOUNTS_HOST.test(host) ||
-    (host === 'www.google.com' && GOOGLE_SIGN_IN_PATH.test(url.pathname))
-}
-
-/**
- * What the YouTube window does with a navigation: 'allow' it, open it in the system browser
- * ('external'), or 'deny' it. Subframes (players, ads, sign-in helpers) may load any HTTPS page
- * inside the sandboxed window; the top-level page stays on YouTube and Google sign-in.
- */
-function youTubeNavigation(value, isMainFrame) {
-  if (!isMainFrame) {
-    return httpsUrl(value) || /^(?:about|blob|data):/i.test(String(value)) ? 'allow' : 'deny'
+/** The video in a `tempo-ride://video?v=<id>&t=<seconds>` link (t optional), or null. */
+function parseVideoLink(value) {
+  if (typeof value !== 'string') return null
+  const link = URL.parse(value)
+  if (!link || link.protocol !== `${SCHEME}:` || link.host !== 'video' ||
+      !['', '/'].includes(link.pathname) || link.username || link.password || link.hash) {
+    return null
   }
-  if (isYouTubeWindowUrl(value)) return 'allow'
-  return parseWebUrl(value) ? 'external' : 'deny'
-}
-
-/** Seconds from a `t` or `start` parameter such as 90, 90s or 1h2m3s. */
-function parseStartTime(value) {
-  if (typeof value !== 'string') return 0
-  const match = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/.exec(value)
-  if (!match || value === '') return 0
-  const [, hours = 0, minutes = 0, seconds = 0] = match
-  return Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds)
-}
-
-/**
- * The video a YouTube page shows, from /watch?v=, /shorts/, /live/ or a youtu.be link, as its
- * ID, a canonical watch URL and the start time the link asks for. Null for any other page.
- */
-function parseYouTubeVideo(value) {
-  const url = httpsUrl(value)
-  if (!url) return null
-
-  let id = null
-  if (url.hostname === 'youtu.be') {
-    id = /^\/([^/]+)\/?$/.exec(url.pathname)?.[1]
-  } else if (YOUTUBE_HOSTS.has(url.hostname)) {
-    if (/^\/watch\/?$/.test(url.pathname)) id = url.searchParams.get('v')
-    else id = /^\/(?:shorts|live)\/([^/]+)\/?$/.exec(url.pathname)?.[1]
+  const ids = link.searchParams.getAll('v')
+  const times = link.searchParams.getAll('t')
+  if (ids.length !== 1 || !VIDEO_ID.test(ids[0]) || times.length > 1 ||
+      link.searchParams.size !== ids.length + times.length) {
+    return null
   }
-  if (!id || !VIDEO_ID.test(id)) return null
-
-  return {
-    id,
-    url: `https://www.youtube.com/watch?v=${id}`,
-    startSec: parseStartTime(url.searchParams.get('t') ?? url.searchParams.get('start'))
-  }
+  const t = times[0] ?? '0'
+  if (!/^\d{1,6}$/.test(t) || Number(t) > MAX_START_SEC) return null
+  return { url: `https://www.youtube.com/watch?v=${ids[0]}`, startSec: Number(t) }
 }
 
 module.exports = {
@@ -113,7 +65,5 @@ module.exports = {
   parseRideLink,
   isTrustedWebUrl,
   isYouTubeEmbedUrl,
-  isYouTubeWindowUrl,
-  youTubeNavigation,
-  parseYouTubeVideo
+  parseVideoLink
 }

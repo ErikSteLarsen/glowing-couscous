@@ -7,13 +7,14 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
-- Ride entertainment (`RIDE-ENT-001`, 2026-11-24, local branch `ride-entertainment`).
+- Ride entertainment (`RIDE-ENT-001`, 2026-11-24; deployed at `313e2bc`,
+  desktop fixes below on branch `ride-entertainment`).
   The active ride has an **Entertainment** toggle (key V) with two views.
   YouTube (desktop widths only) has no in-app search: the rider browses
   YouTube itself and brings a video in with the Send to Tempo bookmark (a
   small `/athlete/ride/send` window that hands it to the ride tab over a
-  BroadcastChannel), drag and drop, Ctrl/Cmd+V or the Tempo Ride app's YouTube
-  window; each video gets a made-for-kids check (1 Data API unit) before the
+  BroadcastChannel), drag and drop, Ctrl/Cmd+V or a `tempo-ride://video` link
+  to the Tempo Ride app; each video gets a made-for-kids check (1 Data API unit) before the
   youtube-nocookie player plays it beside the stats. Phones get Ride a course
   only (stick-figure rider, speed from power and gradient).
   `pnpm exec tsc --noEmit -p .`, `pnpm lint`, `pnpm test` (618 passed, 17
@@ -33,17 +34,21 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   YouTube opens its own window; paste and drop are ignored under a modal
   dialog and stray drops never navigate; a restored video is checked again;
   the bookmark opens the window before pausing, sends an explicit 0 and none
-  for live; the app's YouTube window steps aside only after the page acks
-  (`youtube:video-ack`), cancels superseded picks and scopes permissions and
-  pop-ups to YouTube's own page. `pnpm test` 623 passed (17 skipped), desktop
-  tests 34 passed; headless Chromium 25 checks (key/confirm, login round trip,
-  two ride tabs, dialog paste, stray drop, restore kids card, blocked pop-up
-  and explicit 0, desktop sign-in hint) and headless Electron 45 with a stub
-  youtube.com 10 checks (ack/no-ack, cancelled picks, pop-up provenance).
-  Not verified: a real `YOUTUBE_API_KEY`, a real
-  drag from a YouTube window, the bookmark in a real bookmarks bar on
-  youtube.com, Google's real sign-in refusal in the app window, iOS Safari,
-  the packaged Tempo Ride app, and YouTube's logo attribution.
+  for live.
+  Desktop fixes (same day): the app's embedded YouTube window is removed
+  (Google can refuse sign-in there); the rider's own browser and
+  `tempo-ride://video` replace it. The player is driven by messages, with no
+  YouTube script in the ride page and a 15 s deadline. Apps at 0.2.2 and
+  earlier get an update notice instead of a blank player. `pnpm test` 627
+  passed (17 skipped), desktop 24 passed (YouTube window tests removed), lint,
+  types and build passed. Headless Electron 45 and the packaged Linux app each
+  passed 11 checks against the real youtube-nocookie player (Data API stubbed,
+  simulated trainer): link hand-off, pause/resume with ride and dialog, no
+  remote script, blocked player. Headless Chromium passed 5 (bookmark page
+  after sign-in, app link, send to ride tab, old-app notice and card).
+  Not verified: a real `YOUTUBE_API_KEY`, a real drag, the bookmark in a real
+  bookmarks bar, OS link prompts, Windows and macOS packages, iOS Safari, and
+  YouTube's logo attribution.
 
 - Post to Strava (2026-11-23, local). Workout pages for saved activities with
   recorded data show **Post to Strava** (preview sheet with editable title and

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 
 import { buttonFocusClassName, compactSecondaryButtonClassName, ghostButtonClassName } from '@/components/ui';
 import { youTubeWatchUrl } from '@/lib/youtube/youtube-url';
-import { loadYouTubeIframeApi, PLAYER_STATE, youTubeEmbedUrl, type YouTubePlayer } from './iframe-api';
+import { connectYouTubePlayer, PLAYER_STATE, youTubeEmbedUrl, type YouTubePlayer } from './iframe-api';
 import type { YouTubeVideoChoice } from './youtube-client';
 
 const PAUSE_WITH_RIDE_KEY = 'tempo-ride-youtube-pause-with-ride';
@@ -20,22 +20,22 @@ function readPauseWithRide(): boolean {
   }
 }
 
+/** Tempo's own code for a player that never answered. */
+const PLAYER_UNAVAILABLE = -1;
+
 /** What the rider sees for each IFrame API error code. */
 export function playerErrorMessage(code: number): string {
   if (code === 101 || code === 150) return 'This video can’t be played inside other apps.';
   if (code === 100) return 'This video is private or was removed.';
   if (code === 2) return 'This video link doesn’t work. Check the link and try again.';
+  if (code === PLAYER_UNAVAILABLE) return 'YouTube’s player didn’t load. Your connection or an ad blocker may be stopping it.';
   if (code === 153) return 'YouTube could not confirm where this video is playing. Reload the page and try again.';
   return 'This video stopped playing. Try again, or open it on YouTube.';
 }
 
 function isPlaying(player: YouTubePlayer): boolean {
-  try {
-    const state = player.getPlayerState();
-    return state === PLAYER_STATE.playing || state === PLAYER_STATE.buffering;
-  } catch {
-    return false;
-  }
+  const state = player.getPlayerState();
+  return state === PLAYER_STATE.playing || state === PLAYER_STATE.buffering;
 }
 
 /** The player box is never smaller than this (YouTube's minimum embed size), in CSS px. */
@@ -107,7 +107,7 @@ export function YouTubeWatch({
     const player = playerRef.current;
     if (!pausedByTempoRef.current || !player || !mayPlay()) return;
     pausedByTempoRef.current = false;
-    try { player.playVideo(); } catch { /* player gone */ }
+    player.playVideo();
   }, [mayPlay]);
 
   // Keep keyboard focus on the panel (not a button) so Space still pauses the ride.
@@ -129,7 +129,7 @@ export function YouTubeWatch({
     return () => observer.disconnect();
   }, []);
 
-  // Create the iframe and attach the IFrame API and the visibility observer; destroy all of them
+  // Create the iframe, connect to its player and watch its visibility; undo all of it
   // when leaving, switching videos, retrying or when the player no longer fits.
   useEffect(() => {
     const box = frameBoxRef.current;
@@ -141,20 +141,15 @@ export function YouTubeWatch({
     iframe.referrerPolicy = 'strict-origin-when-cross-origin';
     iframe.className = 'absolute inset-0 h-full w-full border-0';
     iframe.dataset.youtubePlayer = 'true';
-    box.append(iframe);
 
-    let cancelled = false;
-    let player: YouTubePlayer | null = null;
     const gate = gateRef.current;
     gate.inView = false;
 
     const sample = () => {
       const current = playerRef.current;
       if (!current) return;
-      try {
-        const time = current.getCurrentTime();
-        if (Number.isFinite(time) && time > 0) resumeAtRef.current = time;
-      } catch { /* player gone */ }
+      const time = current.getCurrentTime();
+      if (time > 0) resumeAtRef.current = time;
       wantsPlayRef.current = isPlaying(current) || pausedByTempoRef.current;
       onTimeRef.current(video.id, resumeAtRef.current, wantsPlayRef.current);
     };
@@ -163,9 +158,7 @@ export function YouTubeWatch({
     // YouTube policy: pause when the player leaves the screen; the rider presses Play again after.
     const pauseIfPlaying = () => {
       const current = playerRef.current;
-      if (current && isPlaying(current)) {
-        try { current.pauseVideo(); } catch { /* player gone */ }
-      }
+      if (current && isPlaying(current)) current.pauseVideo();
       pausedByTempoRef.current = false;
     };
     const observer = new IntersectionObserver(([entry]) => {
@@ -178,47 +171,36 @@ export function YouTubeWatch({
     };
     document.addEventListener('visibilitychange', onVisibility);
 
-    loadYouTubeIframeApi()
-      .then((YT) => {
-        if (cancelled) return;
-        player = new YT.Player(iframe, {
-          events: {
-            onReady: ({ target }) => {
-              if (cancelled) return;
-              playerRef.current = target;
-              // The rider chose this video (or it was playing before a remount): start it only
-              // when the ride and page allow it, and otherwise leave it to YouTube's Play button.
-              // If the browser blocks playback, that button stays too and Tempo does not retry.
-              if (!wantsPlayRef.current) return;
-              if (mayPlay()) {
-                try { target.playVideo(); } catch { /* the native Play button remains */ }
-              } else if (restoredRef.current && gate.inView && (gate.obscured || (gate.rideStatus === 'paused' && gate.pauseWithRide))) {
-                // Tempo had paused it before the remount; keep that, so resuming plays it again.
-                pausedByTempoRef.current = true;
-              }
-            },
-            onError: ({ data }) => {
-              if (!cancelled) setErrorCode(data);
-            },
-          },
-        });
-      })
-      .catch(() => {
-        // Without the API the player still works with its own controls; only ride sync is lost.
-      });
+    const player = connectYouTubePlayer(iframe, {
+      onReady: (target) => {
+        playerRef.current = target;
+        // The rider chose this video (or it was playing before a remount): start it only
+        // when the ride and page allow it, and otherwise leave it to YouTube's Play button.
+        // If the browser blocks playback, that button stays too and Tempo does not retry.
+        if (!wantsPlayRef.current) return;
+        if (mayPlay()) {
+          target.playVideo();
+        } else if (restoredRef.current && gate.inView && (gate.obscured || (gate.rideStatus === 'paused' && gate.pauseWithRide))) {
+          // Tempo had paused it before the remount; keep that, so resuming plays it again.
+          pausedByTempoRef.current = true;
+        }
+      },
+      onError: setErrorCode,
+      onUnavailable: () => setErrorCode(PLAYER_UNAVAILABLE),
+    });
+    box.append(iframe);
 
     return () => {
       sample();
       // A player built again (retry, room again) picks up the same way a remount does.
       restoredRef.current = true;
       setLinkStartSec(Math.floor(resumeAtRef.current));
-      cancelled = true;
       window.clearInterval(timer);
       observer.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
       playerRef.current = null;
       pausedByTempoRef.current = false;
-      try { player?.destroy(); } catch { /* already gone */ }
+      player.destroy();
       iframe.remove();
     };
   }, [video.id, video.title, errorCode, attempt, fits, mayPlay]);
@@ -231,7 +213,8 @@ export function YouTubeWatch({
     const player = playerRef.current;
     if (previous === 'running' && rideStatus === 'paused') {
       if (pauseWithRide && player && isPlaying(player)) {
-        try { player.pauseVideo(); pausedByTempoRef.current = true; } catch { /* player gone */ }
+        player.pauseVideo();
+        pausedByTempoRef.current = true;
       }
     } else if (previous === 'paused' && rideStatus === 'running') {
       resumeIfPausedByTempo();
@@ -243,7 +226,8 @@ export function YouTubeWatch({
     const player = playerRef.current;
     if (obscured) {
       if (player && isPlaying(player)) {
-        try { player.pauseVideo(); pausedByTempoRef.current = true; } catch { /* player gone */ }
+        player.pauseVideo();
+        pausedByTempoRef.current = true;
       }
     } else {
       resumeIfPausedByTempo();
@@ -337,7 +321,7 @@ export function YouTubeWatch({
             <p className="text-sm text-[var(--text)]">{playerErrorMessage(errorCode)}</p>
             <div className="flex flex-wrap justify-center gap-2">
               {openOnYouTube}
-              {errorCode === 5 || errorCode === 153 ? (
+              {errorCode === 5 || errorCode === 153 || errorCode === PLAYER_UNAVAILABLE ? (
                 <button type="button" className={compactSecondaryButtonClassName} onClick={() => { setErrorCode(null); setAttempt((value) => value + 1); }}>
                   Try again
                 </button>

@@ -98,6 +98,11 @@ export function sendToTempoBookmarklet(origin: string, key: string): string {
   return `javascript:${encodeURIComponent(body)}`;
 }
 
+/** Opens the Tempo Ride app, which hands the video to its ride. */
+export function rideAppVideoLink(videoId: string, startSec: number): string {
+  return `tempo-ride://video?v=${videoId}${startSec > 0 ? `&t=${startSec}` : ''}`;
+}
+
 /** Reads the `t` the bookmark sends: whole seconds (0 included), or undefined. */
 export function parseSentStart(value: string | null | undefined): number | undefined {
   if (!value || !/^\d{1,6}$/.test(value)) return undefined;

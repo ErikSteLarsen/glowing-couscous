@@ -7,8 +7,8 @@ const { wireBluetooth } = require('./bluetooth.cjs')
 const { openDesktopDialog } = require('./dialog.cjs')
 const { launchTarget, parseSettings, rememberSite, startPageSite } = require('./launch.cjs')
 const { createRecordingStore } = require('./recordings.cjs')
-const { SCHEME, isTrustedWebUrl, isYouTubeEmbedUrl, parseRideLink, parseWebUrl } = require('./urls.cjs')
-const { YOUTUBE_PARTITION, YOUTUBE_SIZE, createYouTubeBrowser } = require('./youtube.cjs')
+const { SCHEME, isTrustedWebUrl, isYouTubeEmbedUrl, parseRideLink, parseVideoLink, parseWebUrl } = require('./urls.cjs')
+const { createVideoHandOff } = require('./video-hand-off.cjs')
 
 const START_FILE = path.join(__dirname, 'ui', 'start.html')
 const START_URL = pathToFileURL(START_FILE).href
@@ -33,29 +33,7 @@ function openExternal(value) {
   if (url) shell.openExternal(url.href).catch(() => {})
 }
 
-// A separate window on youtube.com with its own signed-in session; see README.
-const youtube = createYouTubeBrowser({
-  getTempoWindow: () => mainWindow,
-  isTrusted,
-  openExternal,
-  createWindow: () => new BrowserWindow({
-    title: 'YouTube',
-    width: YOUTUBE_SIZE[0],
-    height: YOUTUBE_SIZE[1],
-    minWidth: 400,
-    minHeight: 300,
-    autoHideMenuBar: true,
-    backgroundColor: '#0f0f0f',
-    ...(isLinux ? { icon: path.join(__dirname, 'build', 'icon.png') } : {}),
-    webPreferences: {
-      partition: YOUTUBE_PARTITION,
-      contextIsolation: true,
-      sandbox: true,
-      nodeIntegration: false,
-      devTools: !app.isPackaged
-    }
-  })
-})
+const videoHandOff = createVideoHandOff({ getTempoWindow: () => mainWindow, isTrusted })
 
 function readSettings() {
   try {
@@ -207,18 +185,19 @@ function wireIpc(window) {
     assertMainPage(event, isTrusted)
     return recordings.delete(senderOrigin(event), key)
   })
-  ipc.handle('youtube:open', (event) => {
+  // The Send to Tempo bookmark is set up in the rider's own browser, where YouTube is signed in.
+  ipc.handle('youtube:open-bookmark-page', (event) => {
     assertMainPage(event, isTrusted)
-    youtube.open()
+    openExternal(new URL('/athlete/ride/send', senderOrigin(event)).href)
   })
-  // The page's onVideo callback ran for hand-off `id`; only then does the YouTube window step aside.
+  // The ride page took the video of hand-off `id`.
   ipc.on('youtube:video-ack', (event, id) => {
     try {
       assertMainPage(event, isTrusted)
     } catch {
       return
     }
-    if (Number.isSafeInteger(id)) youtube.ack(id)
+    if (Number.isSafeInteger(id)) videoHandOff.ack(id)
   })
 }
 
@@ -255,7 +234,6 @@ function showMainWindow() {
     window.on('closed', () => {
       powerSaveBlocker.stop(blocker)
       mainWindow = undefined
-      youtube.close()
     })
     // A site that cannot load (offline, server down) returns to the start page instead of a blank window.
     window.webContents.on('did-fail-load', (_event, code, _description, url, isMainFrame) => {
@@ -274,6 +252,19 @@ function showMainWindow() {
 
 async function openLink(value) {
   const window = showMainWindow()
+  const video = parseVideoLink(value)
+  if (video) {
+    // The message is not awaited, so it never holds up later links.
+    if (!await videoHandOff.send(video) && !window.isDestroyed()) {
+      dialog.showMessageBox(window, {
+        type: 'info',
+        message: 'No ride is open.',
+        detail: 'Start your ride in Tempo Ride, then send the video again.'
+      }).catch(() => {})
+    }
+    return
+  }
+
   const url = parseRideLink(value)
   if (!url) {
     await dialog.showMessageBox(window, {

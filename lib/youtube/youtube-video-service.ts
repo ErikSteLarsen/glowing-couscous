@@ -2,7 +2,7 @@
  * Checks one YouTube video before the ride screen embeds it, backed by the YouTube Data API v3.
  *
  * YouTube's Developer Policies require checking every embedded video's made-for-kids status, so a
- * video a rider brings from YouTube (bookmark, drop, paste, the desktop app's YouTube window or
+ * video a rider brings from YouTube (bookmark, drop, paste, the Tempo Ride app or
  * Recently played) is looked up first. One videos.list call costs 1 unit of the general bucket of
  * 10,000 units a day, which resets at midnight Pacific time. Lookups are cached for an hour,
  * identical lookups in flight share one call, and upstream calls are limited per user. Tempo makes

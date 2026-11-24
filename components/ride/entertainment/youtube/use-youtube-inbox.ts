@@ -33,7 +33,7 @@ function carriesLink(event: DragEvent): boolean {
 
 /**
  * Every way a YouTube video reaches the ride tab from outside Tempo: the "Send to Tempo" bookmark
- * (via its send window), the Tempo Ride app's YouTube window, a link dropped anywhere on the ride
+ * (via its send window), a link sent to the Tempo Ride app, a link dropped anywhere on the ride
  * screen and Ctrl/Cmd+V outside a text field. Lives in the ride screen, not the YouTube panel, so
  * it works while entertainment is off or showing the course. Returns whether a link is being
  * dragged over the page, for the drop highlight.
@@ -56,7 +56,7 @@ export function useYouTubeInbox(enabled: boolean, onVideo: (video: Delivery) => 
         if (!link) return;
         deliver({ videoId: link.videoId, startSec: startSec >= 1 ? Math.floor(startSec) : link.startSec });
       });
-    } catch { /* no desktop YouTube window */ }
+    } catch { /* no links sent to the Tempo Ride app */ }
 
     const onPaste = (event: ClipboardEvent) => {
       if (isTextField(event.target) || dialogOpen()) return;

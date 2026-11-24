@@ -18,24 +18,21 @@ const PLAYABILITY_MESSAGES: Record<Exclude<YouTubeVideoLookup['playability'], 'p
   not_found: 'Tempo couldn’t find this video. Check the link and try again.',
 };
 const NOT_CHECKED_MESSAGE = 'Tempo can’t check this video without a YouTube API key, so it opens on YouTube.';
+const PLAYER_BLOCKED_MESSAGE = 'This version of Tempo Ride can’t play videos, so it opens on YouTube.';
 const NOT_A_VIDEO_MESSAGE = 'That isn’t a YouTube video link. Drag a video’s thumbnail or title, or copy its link.';
 const YOUTUBE_HOME = 'https://www.youtube.com/';
 
 /**
  * A named window of its own, so the ride tab stays visible beside it (a hidden tab would pause the
- * player and slow the ride screen) and pressing the button again returns to the same window.
+ * player and slow the ride screen) and pressing the button again returns to the same window. The
+ * Tempo Ride app opens it in the system browser instead.
  */
 function openYouTubeWindow() {
   window.open(YOUTUBE_HOME, 'tempo-youtube', 'popup,width=1100,height=800');
 }
 
-function openYouTube() {
-  const desktop = window.tempoDesktop?.youtube;
-  if (desktop) {
-    desktop.open().catch(openYouTubeWindow);
-    return;
-  }
-  openYouTubeWindow();
+function openBookmarkPage() {
+  window.tempoDesktop?.youtube?.openBookmarkPage().catch(() => {});
 }
 
 type YouTubePanelProps = Pick<EntertainmentRide, 'sessionId' | 'userId' | 'status' | 'obscured'> & {
@@ -47,8 +44,8 @@ type YouTubePanelProps = Pick<EntertainmentRide, 'sessionId' | 'userId' | 'statu
 };
 
 /**
- * The ride screen's YouTube view. Riders browse YouTube itself (their own account, in another tab
- * or the Tempo Ride app's YouTube window) and bring a video here; Tempo checks it and plays it in
+ * The ride screen's YouTube view. Riders browse YouTube itself (their own account, in another
+ * window) and bring a video here; Tempo checks it and plays it in
  * YouTube's embedded player, with nothing drawn over the player. Fills its parent, which must give
  * it a definite size. Takes only the ride fields it uses, so the ride screen's four updates a
  * second don't re-render it. The video and time are kept for this tab, so a remount picks up
@@ -66,7 +63,8 @@ export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, stat
   const [recents, setRecents] = useState<YouTubeVideoChoice[]>(() => readRecentVideos(userId));
   const [notice, setNotice] = useState<PickNotice | null>(null);
   const [checking, setChecking] = useState(Boolean(saved?.video));
-  const [desktopApp] = useState(() => Boolean(window.tempoDesktop?.youtube));
+  const [desktopApp] = useState(() => Boolean(window.tempoDesktop));
+  const [playerBlocked] = useState(() => Boolean(window.tempoDesktop && !window.tempoDesktop.youtube));
   const playbackRef = useRef<{ videoId: string; timeSec: number; playing: boolean } | null>(
     saved?.video ? { videoId: saved.video.id, timeSec: saved.timeSec, playing: saved.playing } : null,
   );
@@ -147,9 +145,10 @@ export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, stat
   function play(video: YouTubeVideoChoice, { restoring = false } = {}) {
     lookupController.current?.abort();
     if (!restoring) restoreRef.current = null;
-    if (configuredRef.current === false) {
+    if (playerBlocked || configuredRef.current === false) {
       restoreRef.current = null;
-      showNotice({ tone: 'info', message: NOT_CHECKED_MESSAGE, video });
+      setChecking(false);
+      showNotice({ tone: 'info', message: playerBlocked ? PLAYER_BLOCKED_MESSAGE : NOT_CHECKED_MESSAGE, video });
       return;
     }
     const controller = new AbortController();
@@ -230,11 +229,13 @@ export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, stat
           <YouTubePick
             configured={configured}
             desktopApp={desktopApp}
+            playerBlocked={playerBlocked}
             recents={recents}
             notice={notice}
             checking={checking}
             dragActive={dragActive}
-            onOpenYouTube={openYouTube}
+            onOpenYouTube={openYouTubeWindow}
+            onGetBookmark={openBookmarkPage}
             onLink={playLink}
             onPlay={play}
             onNotice={setNotice}

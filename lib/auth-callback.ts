@@ -5,10 +5,11 @@ import { parseYouTubeLink } from './youtube/youtube-url.ts';
 const RIDE_PATH = /^\/athlete\/ride(?:\/[1-9]\d*)?$/;
 const RIDE_FROM = /^[a-z][a-z-]{0,31}$/;
 
-/** The Send to Tempo window, keeping only a YouTube link `u` and whole seconds `t`. The send key never travels here. */
+/** The Send to Tempo window (bookmark setup without a link), keeping only a YouTube link `u` and whole seconds `t`. The send key never travels here. */
 function sendCallbackPath(url: URL): string | null {
   const u = url.searchParams.get('u');
-  if (!u || !parseYouTubeLink(u)) return null;
+  if (!u) return SEND_PATH;
+  if (!parseYouTubeLink(u)) return null;
   const query = new URLSearchParams();
   const t = url.searchParams.get('t');
   query.set('u', u);

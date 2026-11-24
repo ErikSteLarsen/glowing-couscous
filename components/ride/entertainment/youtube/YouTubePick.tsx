@@ -9,9 +9,9 @@ import {
   ghostButtonClassName,
   noticeBoxClassNames,
 } from '@/components/ui';
-import { getOrCreateSendKey, sendToTempoBookmarklet } from '@/lib/youtube/send-to-ride';
 import { parseYouTubeLink, youTubeWatchUrl, type YouTubeLink } from '@/lib/youtube/youtube-url';
 import { thumbnailForVideo } from './recent-videos';
+import { SendToTempoBookmark } from './SendToTempoBookmark';
 import { VideoCard } from './VideoCard';
 import type { YouTubeVideoChoice } from './youtube-client';
 
@@ -35,40 +35,6 @@ function LinkOutVideo({ video }: { video: YouTubeVideoChoice }) {
         </a>
       </div>
     </div>
-  );
-}
-
-/**
- * The "Send to Tempo" bookmark. React refuses `javascript:` URLs, so the href is set after mount.
- * It carries this browser's send key, so the send window it opens plays without asking. Clicking
- * it here only explains where it goes.
- */
-function SendToTempoBookmark() {
-  const ref = useRef<HTMLAnchorElement>(null);
-  const [hint, setHint] = useState(false);
-  useEffect(() => {
-    ref.current?.setAttribute('href', sendToTempoBookmarklet(window.location.origin, getOrCreateSendKey()));
-  }, []);
-  return (
-    <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      <a
-        ref={ref}
-        draggable
-        data-send-to-tempo=""
-        title="Drag to your bookmarks bar"
-        onClick={(event) => {
-          event.preventDefault();
-          setHint(true);
-        }}
-        className="inline-flex min-h-8 cursor-grab items-center gap-1.5 rounded-full border border-dashed border-[var(--brand)] px-3 text-[13px] font-medium text-[var(--text)] active:cursor-grabbing"
-      >
-        <Bookmark aria-hidden="true" size={14} strokeWidth={1.7} className="text-[var(--brand)]" />
-        Send to Tempo
-      </a>
-      <span aria-live="polite" className="text-xs text-[var(--text-muted)]">
-        {hint ? 'Drag it to your bookmarks bar, then click it on a YouTube video.' : null}
-      </span>
-    </span>
   );
 }
 
@@ -134,17 +100,19 @@ function Way({ icon, title, children }: { icon: ReactNode; title: string; childr
 
 /**
  * The YouTube view before a video plays: open YouTube (the rider's own, signed-in site), then bring
- * a video back with the bookmark, a drag, or a pasted link. In the Tempo Ride app the YouTube
- * window sends videos by itself, so the bookmark is hidden and drop and paste stay as extras.
+ * a video back with the bookmark, a drag, or a pasted link. The Tempo Ride app
+ * opens YouTube in the rider's browser, where the bookmark sends the video to the app.
  */
 export function YouTubePick({
   configured,
   desktopApp,
+  playerBlocked,
   recents,
   notice,
   checking,
   dragActive,
   onOpenYouTube,
+  onGetBookmark,
   onLink,
   onPlay,
   onNotice,
@@ -154,11 +122,14 @@ export function YouTubePick({
   /** Tempo can check videos (a YouTube API key is set). null while unknown. */
   configured: boolean | null;
   desktopApp: boolean;
+  /** An older Tempo Ride app, which blocks the player. */
+  playerBlocked: boolean;
   recents: YouTubeVideoChoice[];
   notice: PickNotice | null;
   checking: boolean;
   dragActive: boolean;
   onOpenYouTube: () => void;
+  onGetBookmark: () => void;
   onLink: (link: YouTubeLink) => void;
   onPlay: (video: YouTubeVideoChoice) => void;
   onNotice: (notice: PickNotice) => void;
@@ -183,14 +154,9 @@ export function YouTubePick({
               <h2 className="text-base font-medium text-[var(--text)]">Pick a video on YouTube</h2>
               <p className="mt-1 text-[13px] leading-snug text-[var(--text-secondary)]">
                 {desktopApp
-                  ? 'Open YouTube, pick a video, and it starts here.'
+                  ? 'YouTube opens in your browser, with your account and recommendations. Bring a video back here and it plays beside your stats.'
                   : 'YouTube opens in its own window next to your ride, with your account and recommendations. Bring a video back here and it plays beside your stats.'}
               </p>
-              {desktopApp ? (
-                <p className="mt-1 text-xs leading-snug text-[var(--text-muted)]">
-                  Can’t sign in here? Use Open YouTube in your browser and paste the link.
-                </p>
-              ) : null}
             </div>
             <button type="button" className={`${compactPrimaryButtonClassName} shrink-0`} onClick={onOpenYouTube}>
               <ExternalLink aria-hidden="true" size={14} strokeWidth={1.7} />
@@ -198,7 +164,11 @@ export function YouTubePick({
             </button>
           </div>
 
-          {configured === false ? (
+          {playerBlocked ? (
+            <p className={noticeBoxClassNames.info}>
+              This version of Tempo Ride can’t play videos. Update the app, or ride in Chrome or Edge, to watch beside your stats.
+            </p>
+          ) : configured === false ? (
             <p className={noticeBoxClassNames.info}>
               Tempo can’t check videos on this server (no YouTube API key), so videos you bring here open on YouTube instead of playing beside your stats.
             </p>
@@ -214,19 +184,23 @@ export function YouTubePick({
           ) : null}
           {checking ? <p role="status" className="text-[13px] text-[var(--text-muted)]">Checking the video…</p> : null}
 
-          {desktopApp ? (
-            <div className="flex max-w-md flex-col gap-1.5">
-              <p className="text-[13px] text-[var(--text-secondary)]">Or drag a video here, or paste its link ({pasteKeys} anywhere on the ride screen).</p>
-              <PasteField onLink={onLink} onInvalid={invalid} />
-            </div>
-          ) : (
+          {playerBlocked ? null : (
             <ol aria-label="Ways to bring a video here" className="grid gap-3 rounded-xl border border-[var(--border)] p-3 @2xl:grid-cols-3 @2xl:gap-5 @2xl:p-4">
               <Way icon={<Bookmark size={15} strokeWidth={1.7} />} title="Send it with a bookmark">
-                <p className="text-[13px] leading-snug text-[var(--text-secondary)]">Drag this to your bookmarks bar. On any YouTube video, click it.</p>
-                <div className="mt-0.5"><SendToTempoBookmark /></div>
+                {desktopApp ? (
+                  <>
+                    <p className="text-[13px] leading-snug text-[var(--text-secondary)]">Add it once in your browser. On any YouTube video, click it, then Send to the Tempo Ride app.</p>
+                    <button type="button" className={`${ghostButtonClassName('compact')} self-start`} onClick={onGetBookmark}>Get the bookmark</button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-[13px] leading-snug text-[var(--text-secondary)]">Drag this to your bookmarks bar. On any YouTube video, click it.</p>
+                    <div className="mt-0.5"><SendToTempoBookmark /></div>
+                  </>
+                )}
               </Way>
               <Way icon={<MousePointerClick size={15} strokeWidth={1.7} />} title="Drag it here">
-                <p className="text-[13px] leading-snug text-[var(--text-secondary)]">Drag a video’s thumbnail or title from the YouTube window onto this panel.</p>
+                <p className="text-[13px] leading-snug text-[var(--text-secondary)]">Drag a video’s thumbnail or title from {desktopApp ? 'your browser' : 'the YouTube window'} onto this panel.</p>
               </Way>
               <Way icon={<ClipboardPaste size={15} strokeWidth={1.7} />} title="Paste the link">
                 <p className="text-[13px] leading-snug text-[var(--text-secondary)]">Copy the video’s link and press {pasteKeys} anywhere on the ride screen, or paste it here.</p>
@@ -243,7 +217,7 @@ export function YouTubePick({
               </div>
               <ul className="grid grid-cols-2 gap-x-3 gap-y-4 @xl:grid-cols-3 @3xl:grid-cols-4">
                 {recents.map((video) => (
-                  <VideoCard key={video.id} video={video} onPlay={onPlay} opensOnYouTube={configured === false} />
+                  <VideoCard key={video.id} video={video} onPlay={onPlay} opensOnYouTube={configured === false || playerBlocked} />
                 ))}
               </ul>
             </section>

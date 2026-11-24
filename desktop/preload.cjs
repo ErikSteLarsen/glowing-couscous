@@ -10,10 +10,10 @@ if (process.isMainFrame) {
       listRecordings: () => ipcRenderer.invoke('recording:list'),
       deleteRecording: (key) => ipcRenderer.invoke('recording:delete', key),
       youtube: {
-        open: () => ipcRenderer.invoke('youtube:open'),
+        openBookmarkPage: () => ipcRenderer.invoke('youtube:open-bookmark-page'),
         onVideo: (callback) => {
           if (typeof callback !== 'function') throw new TypeError('onVideo needs a callback.')
-          // Tell the app the page took the video once the callback returns, so it can hide YouTube.
+          // Tell the app the page took the video once the callback returns.
           const listener = (_event, video) => {
             callback({ url: String(video.url), startSec: Number(video.startSec) })
             if (Number.isSafeInteger(video.id)) ipcRenderer.send('youtube:video-ack', video.id)

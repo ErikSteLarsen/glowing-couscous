@@ -7,18 +7,14 @@ export type TempoDesktopBridge = {
   saveRecording(key: string, json: string): Promise<void>;
   listRecordings(): Promise<TempoDesktopRecording[]>;
   deleteRecording(key: string): Promise<void>;
-  /** The app's own YouTube window, where the rider browses signed in. Absent in older app versions. */
+  /** Absent in app versions that block the YouTube player (0.2.2 and earlier). */
   youtube?: TempoDesktopYouTube;
 };
 
 export type TempoDesktopYouTube = {
-  /** Open (or focus) the YouTube window. */
-  open(): Promise<void>;
-  /**
-   * Called when the rider opens a video in the YouTube window. Returns an unsubscribe function.
-   * Once the callback returns, the app hides the YouTube window and brings the ride forward; if
-   * no callback is registered (or it throws), the YouTube window stays as it is.
-   */
+  /** Opens this site's Send to Tempo bookmark page in the system browser. */
+  openBookmarkPage(): Promise<void>;
+  /** Called with a video sent by a `tempo-ride://video` link. Returns an unsubscribe function. */
   onVideo(callback: (video: { url: string; startSec: number }) => void): () => void;
 };
 

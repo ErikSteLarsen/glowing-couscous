@@ -4,19 +4,21 @@ import { CheckCircle2, CircleAlert, Clapperboard } from 'lucide-react';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
 import { compactPrimaryButtonClassName, compactSecondaryButtonClassName } from '@/components/ui';
-import { parseSentStart, readSendKey, sendKeyFromHash, sendVideoToRide } from '@/lib/youtube/send-to-ride';
+import { SendToTempoBookmark } from '@/components/ride/entertainment/youtube/SendToTempoBookmark';
+import { parseSentStart, readSendKey, rideAppVideoLink, sendKeyFromHash, sendVideoToRide } from '@/lib/youtube/send-to-ride';
 import { parseYouTubeLink, youTubeWatchUrl } from '@/lib/youtube/youtube-url';
 
-type State = 'loading' | 'confirm' | 'sending' | 'sent' | 'no-ride' | 'invalid';
+type State = 'loading' | 'setup' | 'confirm' | 'sending' | 'sent' | 'no-ride' | 'invalid';
 
 const CLOSE_AFTER_MS = 1000;
 
 const MESSAGES: Record<State, { title: string; body?: string }> = {
   loading: { title: '' },
+  setup: { title: 'Add the Send to Tempo bookmark', body: 'Drag it to your bookmarks bar. On any YouTube video, click it to send the video to your ride.' },
   confirm: { title: 'Send this video to your ride?' },
   sending: { title: 'Sending to your ride…' },
   sent: { title: 'Sent to your ride – you can close this window' },
-  'no-ride': { title: 'No ride is open in this browser.', body: 'Start your ride in Tempo, then send again.' },
+  'no-ride': { title: 'No ride is open in this browser.', body: 'Riding in the Tempo Ride app? Send it there. Otherwise start your ride in Tempo, then send again.' },
   invalid: { title: 'This isn’t a YouTube video.', body: 'Open a video on YouTube, then click Send to Tempo again.' },
 };
 
@@ -58,7 +60,9 @@ export function SendToRide({ url, startSec }: { url: string | null; startSec: st
     };
   }, [link, shouldSend, sentStart, id, attempt]);
 
-  const state: State = !link
+  const state: State = url === null
+    ? 'setup'
+    : !link
     ? 'invalid'
     : storedKey === undefined
       ? 'loading'
@@ -69,8 +73,10 @@ export function SendToRide({ url, startSec }: { url: string | null; startSec: st
           : 'sending';
 
   const message = MESSAGES[state];
-  const Icon = state === 'sent' ? CheckCircle2 : state === 'sending' || state === 'confirm' ? Clapperboard : CircleAlert;
+  const neutral = state === 'sending' || state === 'confirm' || state === 'setup';
+  const Icon = state === 'sent' ? CheckCircle2 : neutral ? Clapperboard : CircleAlert;
   const watchUrl = link ? youTubeWatchUrl(link.videoId, sentStart || undefined) : null;
+  const appLink = link ? rideAppVideoLink(link.videoId, sentStart) : null;
   return (
     <main className="grid min-h-dvh place-items-center bg-[var(--background)] p-4">
       {state === 'loading' ? null : (
@@ -79,7 +85,7 @@ export function SendToRide({ url, startSec }: { url: string | null; startSec: st
             aria-hidden="true"
             size={28}
             strokeWidth={1.6}
-            className={state === 'sent' ? 'text-[var(--status-success)]' : state === 'sending' || state === 'confirm' ? 'text-[var(--brand)]' : 'text-[var(--text-secondary)]'}
+            className={state === 'sent' ? 'text-[var(--status-success)]' : neutral ? 'text-[var(--brand)]' : 'text-[var(--text-secondary)]'}
           />
           <p className="text-[15px] font-medium text-[var(--text)]">{message.title}</p>
           {message.body ? <p className="text-[13px] leading-snug text-[var(--text-secondary)]">{message.body}</p> : null}
@@ -99,12 +105,15 @@ export function SendToRide({ url, startSec }: { url: string | null; startSec: st
               </div>
             </>
           ) : state === 'no-ride' ? (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap justify-center gap-2">
+              {appLink ? <a href={appLink} className={compactPrimaryButtonClassName}>Send to the Tempo Ride app</a> : null}
               <button type="button" className={compactSecondaryButtonClassName} onClick={() => setAttempt((value) => value + 1)}>
                 Send again
               </button>
               <button type="button" className={compactSecondaryButtonClassName} onClick={() => window.close()}>Close</button>
             </div>
+          ) : state === 'setup' ? (
+            <SendToTempoBookmark />
           ) : state === 'invalid' ? (
             <button type="button" className={compactSecondaryButtonClassName} onClick={() => window.close()}>Close</button>
           ) : null}

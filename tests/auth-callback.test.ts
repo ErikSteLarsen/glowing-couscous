@@ -38,9 +38,10 @@ test('the Send to Tempo window survives the sign-in round trip with its validate
     getSafeCallbackPath(`/athlete/ride/send?u=${encodeURIComponent(link)}&t=1e3&k=no&next=/coach`),
     `/athlete/ride/send?u=${encodeURIComponent(link)}`,
   );
-  // Without a YouTube video link there is nothing to return to.
+  // Without a link it is the bookmark setup page.
+  assert.equal(getSafeCallbackPath('/athlete/ride/send?next=/coach'), '/athlete/ride/send');
+  // Any other link is dropped.
   for (const value of [
-    '/athlete/ride/send',
     `/athlete/ride/send?u=${encodeURIComponent('https://evil.example/watch?v=aqz-KE-bpKQ')}`,
     '/athlete/ride/send?u=javascript:alert(1)',
     `/athlete/ride/send/extra?u=${encodeURIComponent(link)}`,

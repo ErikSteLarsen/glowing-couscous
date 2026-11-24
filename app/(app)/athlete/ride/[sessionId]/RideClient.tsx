@@ -267,8 +267,8 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   const status = recording.status;
   const active = status === 'running' || status === 'paused';
 
-  // A YouTube video brought in from outside Tempo (Send to Tempo bookmark, the Tempo Ride app's
-  // YouTube window, a dropped or pasted link) turns on the YouTube view and waits there until the
+  // A YouTube video brought in from outside Tempo (Send to Tempo bookmark, a link sent to the
+  // Tempo Ride app, a dropped or pasted link) turns on the YouTube view and waits there until the
   // view takes it. Desktop only: phones have no YouTube view.
   const [incomingVideo, setIncomingVideo] = useState<IncomingYouTubeVideo | null>(null);
   const incomingSeqRef = useRef(0);
