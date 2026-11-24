@@ -116,9 +116,8 @@ authorization changes are received through the webhook.
 ### Posting to Strava
 
 Tempo asks for `activity:read,activity:read_all,activity:write` when connecting.
-Connections made before posting existed only hold read scopes; the post sheet
-then asks the athlete to **Reconnect Strava**, which runs the same OAuth flow
-and returns to the activity. Apply `20261123120000_activity_strava_post`
+For a read-only connection, **Reconnect Strava** opens Strava’s consent screen
+again and returns the athlete to the activity. Apply `20261123120000_activity_strava_post`
 (`pnpm db:migrate`) before deploying. No new production environment variables
 are needed. `STRAVA_API_BASE_URL` is a development-only override (accepted only
 for `http://localhost` or `127.0.0.1`, ignored when `NODE_ENV=production`) for

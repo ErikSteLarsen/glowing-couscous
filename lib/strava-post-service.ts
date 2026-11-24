@@ -182,6 +182,7 @@ export const stravaPostService = {
         id: activity.id,
         athleteId: userId,
         stravaPostActivityId: null,
+        stravaPostUploadId: activity.stravaPostUploadId,
         OR: [{ stravaPostStartedAt: null }, { stravaPostStartedAt: { lt: new Date(now.getTime() - POST_CLAIM_MS) } }],
       },
       data: { stravaPostStartedAt: now },

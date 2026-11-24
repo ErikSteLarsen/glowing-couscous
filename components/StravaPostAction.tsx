@@ -205,7 +205,7 @@ export function StravaPostAction({
     actions = (
       <>
         <DialogClose type="button" className={secondaryButtonClassName}>Not now</DialogClose>
-        <a href={connectHref} className={primaryButtonClassName}>Reconnect Strava</a>
+        <a href={`${connectHref}&reconnect=1`} className={primaryButtonClassName}>Reconnect Strava</a>
       </>
     );
   } else {

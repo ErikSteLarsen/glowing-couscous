@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { setTimeout as delay } from 'node:timers/promises';
 import { buildActivityTcx } from '../lib/tcx-writer.ts';
 import { parseTcxActivity } from '../lib/tcx-activity.ts';
 import { parseActivityFile } from '../lib/activity-file-parser.ts';
@@ -243,6 +244,20 @@ test('upload client reports processing errors, auth failures and slow uploads', 
   const slow = mockFetch(Array.from({ length: 3 }, () => ({ status: 200, body: { id_str: '3', error: null, status: 'Your activity is still being processed.', activity_id: null } })));
   const pending = await createStravaUploadClient({ baseUrl: 'http://127.0.0.1:9', fetch: slow.fetch, sleep: async () => {}, maxPolls: 3 }).waitForActivity('t', '3');
   assert.deepEqual(pending, { status: 'processing', uploadId: '3' });
+});
+
+test('a stalled Strava poll keeps the upload pending so it can be resumed', async () => {
+  const client = createStravaUploadClient({
+    baseUrl: 'http://127.0.0.1:9',
+    pollIntervalMs: 1000,
+    pollBudgetMs: 1100,
+    sleep: async () => {},
+    fetch: async (_url, init) => {
+      await delay(5000, undefined, { signal: init?.signal ?? undefined });
+      throw new Error('Polling should time out before the response arrives');
+    },
+  });
+  assert.deepEqual(await client.waitForActivity('t', '42'), { status: 'processing', uploadId: '42' });
 });
 
 test('post chart draws power, heart rate and the plan without text', () => {

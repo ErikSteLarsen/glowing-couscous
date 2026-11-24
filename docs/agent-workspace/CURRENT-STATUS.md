@@ -1,6 +1,6 @@
 # Current status
 
-Last verified locally on **2026-11-23**. Source code and tests are authoritative.
+Last verified locally on **2026-11-24**. Source code and tests are authoritative.
 This is the current snapshot; ownership is in [WORK-INDEX.md](WORK-INDEX.md),
 contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 [VERIFICATION.md](../VERIFICATION.md).
@@ -21,6 +21,17 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   are not verified. `pnpm exec tsc --noEmit -p .`, `pnpm lint` and `pnpm test`
   (580 passed, 17 database cases skipped) passed; `pnpm build` was not run.
   Also fixed: TCX files with `Sport="Biking"` imported as Other.
+
+- Strava posting (2026-11-24). Tempo requests `activity:write` on connect.
+  Reconnect now forces Strava’s consent screen, and polling has a shared time
+  limit so a pending upload can be resumed. Authenticated HTTP on a disposable
+  local database with a Strava stub verified the consent redirects, return
+  after cancellation, saved trainer telemetry in the TCX, and one upload
+  across pending and completed retries. `pnpm test` (582 passed, 17 skipped),
+  `pnpm lint`, and `pnpm build` passed. The combined checkout with
+  `ride-entertainment` at `928e160` also passed the HTTP check, build, lint,
+  app tests (624 passed, 17 skipped), and desktop tests (34 passed). Live
+  Strava OAuth and upload remain open.
 
 - Indoor ride Focus candidate (2026-11-23, local redesign branch). The active
   view prioritizes three-second power, cadence, and current-interval average

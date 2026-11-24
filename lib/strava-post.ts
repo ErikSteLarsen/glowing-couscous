@@ -301,6 +301,7 @@ export type StravaUploadClientOptions = {
   /** Strava asks for at least one second between polls. */
   pollIntervalMs?: number;
   maxPolls?: number;
+  pollBudgetMs?: number;
 };
 
 type UploadRecord = { id?: unknown; id_str?: unknown; error?: unknown; status?: unknown; activity_id?: unknown };
@@ -357,6 +358,7 @@ export function createStravaUploadClient(options: StravaUploadClientOptions) {
   const sleep = options.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
   const pollIntervalMs = Math.max(1000, options.pollIntervalMs ?? 1500);
   const maxPolls = options.maxPolls ?? 8;
+  const pollBudgetMs = options.pollBudgetMs ?? 15_000;
   const base = options.baseUrl.replace(/\/+$/, '');
 
   return {
@@ -384,15 +386,23 @@ export function createStravaUploadClient(options: StravaUploadClientOptions) {
 
     /** GET /uploads/{id} until an activity id or an error appears, or the poll budget runs out. */
     async waitForActivity(token: string, uploadId: string): Promise<StravaUploadOutcome> {
-      for (let attempt = 0; attempt < maxPolls; attempt += 1) {
-        await sleep(pollIntervalMs);
-        const record = await readUploadResponse(await doFetch(`${base}/uploads/${encodeURIComponent(uploadId)}`, {
-          headers: { authorization: `Bearer ${token}` },
-          cache: 'no-store',
-          signal: AbortSignal.timeout(12_000),
-        }));
-        const outcome = interpretUpload(record);
-        if (outcome) return outcome;
+      const deadline = performance.now() + pollBudgetMs;
+      const signal = AbortSignal.timeout(pollBudgetMs);
+      try {
+        for (let attempt = 0; attempt < maxPolls && deadline - performance.now() >= pollIntervalMs; attempt += 1) {
+          await sleep(pollIntervalMs);
+          if (signal.aborted) break;
+          const record = await readUploadResponse(await doFetch(`${base}/uploads/${encodeURIComponent(uploadId)}`, {
+            headers: { authorization: `Bearer ${token}` },
+            cache: 'no-store',
+            signal,
+          }));
+          if (signal.aborted) break;
+          const outcome = interpretUpload(record);
+          if (outcome) return outcome;
+        }
+      } catch (error) {
+        if (!signal.aborted) throw error;
       }
       return { status: 'processing', uploadId };
     },

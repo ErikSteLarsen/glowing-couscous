@@ -16,6 +16,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'You can’t connect Strava right now.' }, { status: 503 });
   }
 
+  const url = new URL(request.url);
   const callbackBase = process.env.AUTH_URL?.trim() || request.url;
   const callback = process.env.STRAVA_OAUTH_REDIRECT_URI?.trim() || new URL('/api/strava/callback', callbackBase).toString();
   const state = `${randomBytes(24).toString('hex')}.${user.id}`;
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
     client_id: clientId,
     redirect_uri: callback,
     response_type: 'code',
-    approval_prompt: 'auto',
+    approval_prompt: url.searchParams.get('reconnect') === '1' ? 'force' : 'auto',
     scope: STRAVA_REQUESTED_SCOPES,
     state,
   }).toString();
@@ -32,16 +33,16 @@ export async function GET(request: Request) {
   const response = NextResponse.redirect(authorization);
   response.cookies.set(STATE_COOKIE, state, {
     httpOnly: true,
-    secure: new URL(request.url).protocol === 'https:',
+    secure: url.protocol === 'https:',
     sameSite: 'lax',
     path: '/api/strava/callback',
     maxAge: 600,
   });
   // After connecting from an activity, come back to it instead of the Import page.
-  const returnTo = safeStravaReturnPath(new URL(request.url).searchParams.get('returnTo'));
+  const returnTo = safeStravaReturnPath(url.searchParams.get('returnTo'));
   response.cookies.set(RETURN_COOKIE, returnTo ?? '', {
     httpOnly: true,
-    secure: new URL(request.url).protocol === 'https:',
+    secure: url.protocol === 'https:',
     sameSite: 'lax',
     path: '/api/strava/callback',
     maxAge: returnTo ? 600 : 0,
