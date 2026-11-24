@@ -7,7 +7,7 @@ const { wireBluetooth } = require('./bluetooth.cjs')
 const { openDesktopDialog } = require('./dialog.cjs')
 const { launchTarget, parseSettings, rememberSite, startPageSite } = require('./launch.cjs')
 const { createRecordingStore } = require('./recordings.cjs')
-const { SCHEME, isTrustedWebUrl, parseRideLink, parseWebUrl } = require('./urls.cjs')
+const { SCHEME, isTrustedWebUrl, isYouTubeEmbedUrl, parseRideLink, parseWebUrl } = require('./urls.cjs')
 
 const START_FILE = path.join(__dirname, 'ui', 'start.html')
 const START_URL = pathToFileURL(START_FILE).href
@@ -98,8 +98,16 @@ function wireNavigation(window) {
     if (target) setImmediate(() => openSite(window, target))
   }
 
+  // The ride's YouTube view frames the privacy-enhanced player directly inside the trusted page.
+  function isEmbeddedPlayer(event) {
+    const parent = event.frame?.parent
+    return !event.isMainFrame && parent != null &&
+      parent.frameTreeNodeId === contents.mainFrame.frameTreeNodeId &&
+      isTrusted(contents.getURL()) && isYouTubeEmbedUrl(event.url)
+  }
+
   function guard(event) {
-    if (isTrusted(event.url)) return
+    if (isTrusted(event.url) || isEmbeddedPlayer(event)) return
     event.preventDefault()
     if (event.isMainFrame) openTarget(event.url)
   }
@@ -114,15 +122,16 @@ function wireNavigation(window) {
 }
 
 function wirePermissions(contents) {
-  function allowBluetooth(sender, permission, url, isMainFrame) {
-    return sender === contents && permission === 'bluetooth' && isMainFrame &&
+  // Bluetooth for trainers and fullscreen for the ride screen, only for the trusted page itself.
+  function allowMainFrame(sender, permission, url, isMainFrame) {
+    return sender === contents && (permission === 'bluetooth' || permission === 'fullscreen') && isMainFrame &&
       isTrusted(url) && isTrusted(contents.getURL())
   }
 
   contents.session.setPermissionCheckHandler((sender, permission, origin, details) =>
-    allowBluetooth(sender, permission, origin, details.isMainFrame))
+    allowMainFrame(sender, permission, origin, details.isMainFrame))
   contents.session.setPermissionRequestHandler((sender, permission, callback, details) => {
-    callback(allowBluetooth(sender, permission, details.requestingUrl, details.isMainFrame))
+    callback(allowMainFrame(sender, permission, details.requestingUrl, details.isMainFrame))
   })
   // Electron currently routes Web Bluetooth through the chooser and pairing handler.
   contents.session.setDevicePermissionHandler(({ deviceType, origin }) =>

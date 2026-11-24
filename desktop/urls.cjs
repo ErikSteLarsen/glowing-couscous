@@ -24,9 +24,17 @@ function parseRideLink(value) {
   return ride && /^\/athlete\/ride(\/[^/]+)?\/?$/.test(ride.pathname) ? ride : null
 }
 
+const YOUTUBE_EMBED_ORIGIN = 'https://www.youtube-nocookie.com'
+
+/** The privacy-enhanced YouTube player for one video, the only foreign page a ride may frame. */
+function isYouTubeEmbedUrl(value) {
+  const url = parseWebUrl(value)
+  return url !== null && url.origin === YOUTUBE_EMBED_ORIGIN && /^\/embed\/[A-Za-z0-9_-]{11}$/.test(url.pathname)
+}
+
 function isTrustedWebUrl(value, origins) {
   const url = parseWebUrl(value)
   return url !== null && origins.has(url.origin)
 }
 
-module.exports = { SCHEME, parseWebUrl, parseRideLink, isTrustedWebUrl }
+module.exports = { SCHEME, parseWebUrl, parseRideLink, isTrustedWebUrl, isYouTubeEmbedUrl }
