@@ -1,8 +1,8 @@
-import type { YouTubeSearchPage, YouTubeVideoLookup, YouTubeVideoSummary } from '@/lib/youtube/youtube-search-service';
+import type { YouTubeVideoLookup, YouTubeVideoSummary } from '@/lib/youtube/youtube-video-service';
 
-export type { YouTubeSearchPage, YouTubeVideoLookup, YouTubeVideoSummary };
+export type { YouTubeVideoLookup, YouTubeVideoSummary };
 
-/** What the browse view needs to play a video; search results carry more. */
+/** What the panel needs to play a video; a checked video carries more. */
 export type YouTubeVideoChoice = Pick<YouTubeVideoSummary, 'id' | 'title' | 'channelTitle'> &
   Partial<Pick<YouTubeVideoSummary, 'channelId' | 'thumbnailUrl' | 'durationSec' | 'isLive'>> & { startSec?: number };
 
@@ -30,22 +30,11 @@ async function getJson<T>(url: string, signal?: AbortSignal): Promise<YouTubeApi
   return { ok: false, code, message };
 }
 
-export function searchYouTube(
-  params: { query?: string; channelId?: string; pageToken?: string | null },
-  signal?: AbortSignal,
-): Promise<YouTubeApiResult<YouTubeSearchPage>> {
-  const search = new URLSearchParams();
-  if (params.query) search.set('q', params.query);
-  if (params.channelId) search.set('channelId', params.channelId);
-  if (params.pageToken) search.set('pageToken', params.pageToken);
-  return getJson(`/api/youtube/search?${search}`, signal);
-}
-
 export function lookUpYouTubeVideo(videoId: string, signal?: AbortSignal): Promise<YouTubeApiResult<YouTubeVideoLookup>> {
   return getJson(`/api/youtube/video?id=${encodeURIComponent(videoId)}`, signal);
 }
 
-export function fetchYouTubeStatus(signal?: AbortSignal): Promise<YouTubeApiResult<{ searchConfigured: boolean }>> {
+export function fetchYouTubeStatus(signal?: AbortSignal): Promise<YouTubeApiResult<{ configured: boolean }>> {
   return getJson('/api/youtube/status', signal);
 }
 
@@ -56,24 +45,4 @@ export function formatVideoDuration(totalSec: number): string {
   const seconds = totalSec % 60;
   const pad = (value: number) => String(value).padStart(2, '0');
   return hours > 0 ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${minutes}:${pad(seconds)}`;
-}
-
-/** "3 days ago", "2 years ago" */
-export function formatVideoAge(publishedAt: string, now = Date.now()): string {
-  const published = Date.parse(publishedAt);
-  if (!Number.isFinite(published)) return '';
-  const seconds = Math.max(0, Math.round((now - published) / 1000));
-  const units: [Intl.RelativeTimeFormatUnit, number][] = [
-    ['year', 365 * 86400],
-    ['month', 30 * 86400],
-    ['week', 7 * 86400],
-    ['day', 86400],
-    ['hour', 3600],
-    ['minute', 60],
-  ];
-  const format = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
-  for (const [unit, size] of units) {
-    if (seconds >= size) return format.format(-Math.floor(seconds / size), unit);
-  }
-  return 'just now';
 }

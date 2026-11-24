@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAthlete } from '@/lib/api-auth';
-import { getYouTubeSearchService, isYouTubeVideoIdValue } from '@/lib/youtube/youtube-search-service';
+import { getYouTubeVideoService, isYouTubeVideoIdValue } from '@/lib/youtube/youtube-video-service';
 
 const noStore = { 'Cache-Control': 'no-store' };
 
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ code: 'invalid_input', error: 'Something went wrong. Reload the page and try again.' }, { status: 400, headers: noStore });
     }
 
-    const outcome = await getYouTubeSearchService().video({ userId: user.id, videoId });
+    const outcome = await getYouTubeVideoService().video({ userId: user.id, videoId });
     if (!outcome.ok) {
       return NextResponse.json({ code: outcome.code, error: outcome.error }, { status: outcome.status, headers: noStore });
     }

@@ -182,8 +182,8 @@ export function AppShell({
     });
   };
 
-  // Riding and the Ride home are full-bleed instruments: no sidebar, top bar or bottom nav.
-  if (/^\/athlete\/ride(?:\/\d+)?\/?$/.test(pathname)) {
+  // Riding, the Ride home and the small Send to Tempo window are full-bleed: no sidebar, top bar or bottom nav.
+  if (/^\/athlete\/ride(?:\/\d+|\/send)?\/?$/.test(pathname)) {
     return <div id="main" tabIndex={-1} className="ink-studio-app outline-none">{children}</div>;
   }
 

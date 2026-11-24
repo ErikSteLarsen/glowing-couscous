@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseYouTubeLink, parseYouTubeTimestamp, youTubeWatchUrl } from '../lib/youtube/youtube-url.ts';
+import { findYouTubeLink, parseYouTubeLink, parseYouTubeTimestamp, youTubeWatchUrl } from '../lib/youtube/youtube-url.ts';
 
 const ID = 'dQw4w9WgXcQ';
 
@@ -77,4 +77,15 @@ test('parses timestamps and ignores nonsense', () => {
 test('builds watch links for Open on YouTube', () => {
   assert.equal(youTubeWatchUrl(ID), `https://www.youtube.com/watch?v=${ID}`);
   assert.equal(youTubeWatchUrl(ID, 90), `https://www.youtube.com/watch?v=${ID}&t=90s`);
+});
+
+test('finds a link in dropped or pasted text', () => {
+  assert.deepEqual(findYouTubeLink(`# dragged from YouTube\r\nhttps://www.youtube.com/watch?v=${ID}&t=42s\r\n`), { videoId: ID, startSec: 42 });
+  assert.deepEqual(findYouTubeLink(`Watch this: https://youtu.be/${ID} so good`), { videoId: ID });
+  assert.deepEqual(findYouTubeLink(`https://example.com/a https://www.youtube.com/shorts/${ID}`), { videoId: ID });
+  assert.deepEqual(findYouTubeLink(`https://i.ytimg.com/vi/${ID}/hqdefault.jpg?sqp=abc`), { videoId: ID });
+  assert.equal(findYouTubeLink('https://www.youtube.com/'), null);
+  assert.equal(findYouTubeLink('documentary'), null);
+  assert.equal(findYouTubeLink(''), null);
+  assert.equal(findYouTubeLink(null), null);
 });

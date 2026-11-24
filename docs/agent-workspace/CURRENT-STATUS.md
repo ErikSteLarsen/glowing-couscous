@@ -8,21 +8,27 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 ## Verification
 
 - Ride entertainment (`RIDE-ENT-001`, 2026-11-24, local branch `ride-entertainment`).
-  The active ride has an **Entertainment** toggle (key V) with two views:
-  YouTube (search, channel uploads, pasted links, a youtube-nocookie player
-  beside the stats, made-for-kids check, per-process and per-account daily
-  search budgets) and Ride a course (stick-figure rider, speed from power and
-  gradient). `pnpm exec tsc --noEmit -p .`, `pnpm lint`, `pnpm test` (618
-  passed, 17 database cases skipped), desktop tests (20 passed) and
-  `pnpm build` passed. Headless Chromium against `tempo_ride_focus` with a
-  simulated FTMS trainer and a local Data API stub (never the real API):
-  search, channel, Load more, link paste with start time, real embed playback,
-  ride pause pausing the video, N after clicking into the player, dialogs
-  hiding the player, resize and V off/on keeping the video, 1440×900, 402×874
-  and 360×740 without page scroll. The course slowed from 31 to 13 km/h on
-  the climb at constant ERG watts and froze while paused; frames cost about
-  0.2 ms. Not verified: a real `YOUTUBE_API_KEY`, iOS Safari, the packaged
-  Tempo Ride app, and YouTube's logo attribution (text link only for now).
+  The active ride has an **Entertainment** toggle (key V) with two views.
+  YouTube (desktop widths only) has no in-app search: the rider browses
+  YouTube itself and brings a video in with the Send to Tempo bookmark (a
+  small `/athlete/ride/send` window that hands it to the ride tab over a
+  BroadcastChannel), drag and drop, Ctrl/Cmd+V or the Tempo Ride app's YouTube
+  window; each video gets a made-for-kids check (1 Data API unit) before the
+  youtube-nocookie player plays it beside the stats. Phones get Ride a course
+  only (stick-figure rider, speed from power and gradient).
+  `pnpm exec tsc --noEmit -p .`, `pnpm lint`, `pnpm test` (618 passed, 17
+  database cases skipped) and desktop tests (31 passed). Headless Chromium
+  with a simulated FTMS trainer and a local Data API stub (never the real
+  API or youtube.com pages): send window with and without a ride tab, the
+  real bookmark code run against a faked YouTube page (pauses, opens the send
+  window, ride plays at the video position), synthetic drop and paste while
+  watching and with entertainment off, made-for-kids card, non-video drop,
+  1440×900 and 1100×800, and 402×874 showing the course with no YouTube tab.
+  Earlier checks (ride pause pausing the video, dialogs hiding the player,
+  course physics) still apply. Not verified: a real `YOUTUBE_API_KEY`, a real
+  drag from a YouTube window, the bookmark in a real bookmarks bar on
+  youtube.com, iOS Safari, the packaged Tempo Ride app, and YouTube's logo
+  attribution.
 
 - Post to Strava (2026-11-23, local). Workout pages for saved activities with
   recorded data show **Post to Strava** (preview sheet with editable title and

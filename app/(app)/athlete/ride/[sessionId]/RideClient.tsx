@@ -39,8 +39,9 @@ import {
 import { clearRideCheckpoint, downloadRideBackup, listStoredRides, saveRideCheckpoint } from '@/lib/ride/recording-store';
 import { WorkoutProfileChart } from './WorkoutProfileChart';
 import { StravaPostAction } from '@/components/StravaPostAction';
-import { EntertainmentStage } from '@/components/ride/entertainment/EntertainmentStage';
+import { EntertainmentStage, type YouTubeInbox } from '@/components/ride/entertainment/EntertainmentStage';
 import type { EntertainmentMode, EntertainmentRide } from '@/components/ride/entertainment/types';
+import { useYouTubeInbox, type IncomingYouTubeVideo } from '@/components/ride/entertainment/youtube/use-youtube-inbox';
 
 const CHECKPOINT_INTERVAL_MS = 5000;
 const SAMPLE_INTERVAL_MS = 250;
@@ -265,6 +266,25 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
 
   const status = recording.status;
   const active = status === 'running' || status === 'paused';
+
+  // A YouTube video brought in from outside Tempo (Send to Tempo bookmark, the Tempo Ride app's
+  // YouTube window, a dropped or pasted link) turns on the YouTube view and waits there until the
+  // view takes it. Desktop only: phones have no YouTube view.
+  const [incomingVideo, setIncomingVideo] = useState<IncomingYouTubeVideo | null>(null);
+  const incomingSeqRef = useRef(0);
+  const receiveVideo = useCallback((video: { videoId: string; startSec?: number } | null) => {
+    incomingSeqRef.current += 1;
+    setIncomingVideo({ seq: incomingSeqRef.current, videoId: video?.videoId ?? null, ...(video?.startSec ? { startSec: video.startSec } : {}) });
+    if (video) setEntertainment('youtube');
+  }, [setEntertainment]);
+  const takeIncomingVideo = useCallback((seq: number) => {
+    setIncomingVideo((current) => (current?.seq === seq ? null : current));
+  }, []);
+  const { dragActive } = useYouTubeInbox(active && !isPhone, receiveVideo);
+  const youTubeInbox = useMemo<YouTubeInbox>(
+    () => ({ incoming: incomingVideo, onIncomingTaken: takeIncomingVideo, dragActive }),
+    [incomingVideo, takeIncomingVideo, dragActive],
+  );
 
   useEffect(() => {
     if (!active) return;
@@ -829,7 +849,10 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   );
 
   const entertainmentOn = entertainment !== 'off';
-  const entertainmentMode: EntertainmentMode | null = entertainment === 'off' || entertainment === 'choose' ? null : entertainment;
+  // Phones show the course only; a remembered YouTube view (or the picker) opens it there.
+  const entertainmentMode: EntertainmentMode | null = !entertainmentOn
+    ? null
+    : isPhone ? 'course' : entertainment === 'choose' ? null : entertainment;
   const entertainmentRide: EntertainmentRide = {
     sessionId,
     userId,
@@ -847,7 +870,15 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     blockColor: intervalColor,
   };
   const entertainmentStage = (compact: boolean) => (
-    <EntertainmentStage mode={entertainmentMode} ride={entertainmentRide} onModeChange={setEntertainment} onClose={() => setEntertainment('off')} compact={compact} />
+    <EntertainmentStage
+      mode={entertainmentMode}
+      ride={entertainmentRide}
+      inbox={youTubeInbox}
+      onModeChange={setEntertainment}
+      onClose={() => setEntertainment('off')}
+      compact={compact}
+      allowYouTube={!isPhone}
+    />
   );
   const entertainmentButton = (iconOnly: boolean) => (
     <button
@@ -857,7 +888,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       aria-pressed={entertainmentOn}
       aria-keyshortcuts="V"
       aria-label={iconOnly ? 'Entertainment' : undefined}
-      title={`${entertainmentOn ? 'Turn off' : 'Turn on'} entertainment: YouTube or a course (V)`}
+      title={`${entertainmentOn ? 'Turn off' : 'Turn on'} entertainment: ${isPhone ? 'ride a course' : 'YouTube or a course'} (V)`}
     >
       <Popcorn aria-hidden="true" size={16} strokeWidth={1.7} />
       {iconOnly ? null : 'Entertainment'}

@@ -57,7 +57,7 @@ export function rememberRecentVideo(userId: number, video: YouTubeVideoChoice, n
   try {
     window.localStorage.setItem(recentVideosKey(userId), JSON.stringify(next));
   } catch {
-    // Recently watched is a convenience on this device only.
+    // Recently played is a convenience on this device only.
   }
   return next.map(toChoice);
 }

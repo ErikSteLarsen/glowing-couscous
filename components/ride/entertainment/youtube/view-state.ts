@@ -1,16 +1,12 @@
 import { isYouTubeVideoId } from '../../../../lib/youtube/youtube-url.ts';
-import type { BrowseRoute } from './YouTubeBrowse';
 import type { YouTubeVideoChoice } from './youtube-client';
 
 /**
- * Where the rider was in the YouTube view, kept for this tab so the view survives a remount
- * (the ride screen swaps its phone and desktop layouts when the window crosses 640 px).
+ * What the YouTube view was playing, kept for this tab so the view survives a remount (turning
+ * entertainment off and on, switching to the course and back, window resizes).
  */
 export type SavedYouTubeView = {
-  route: BrowseRoute;
-  query: string;
-  scrollTop: number;
-  /** The video being watched, or null while browsing. */
+  /** The video being watched, or null while picking one. */
   video: YouTubeVideoChoice | null;
   /** Seconds into `video`. */
   timeSec: number;
@@ -23,15 +19,6 @@ export const youTubeViewKey = (sessionId: number) => `tempo.ride.youtube.view.${
 const CHANNEL_ID = /^UC[A-Za-z0-9_-]{22}$/;
 const text = (value: unknown, max: number) => (typeof value === 'string' ? value.slice(0, max) : '');
 const seconds = (value: unknown) => (typeof value === 'number' && Number.isFinite(value) && value > 0 ? Math.min(value, 1e6) : 0);
-
-function readRoute(value: unknown): BrowseRoute {
-  const route = (value ?? {}) as Record<string, unknown>;
-  if (route.kind === 'search' && typeof route.query === 'string' && route.query.trim()) return { kind: 'search', query: route.query.slice(0, 100) };
-  if (route.kind === 'channel' && typeof route.channelId === 'string' && CHANNEL_ID.test(route.channelId)) {
-    return { kind: 'channel', channelId: route.channelId, channelTitle: text(route.channelTitle, 200) };
-  }
-  return { kind: 'home' };
-}
 
 function readVideo(value: unknown): YouTubeVideoChoice | null {
   const video = value as Record<string, unknown> | null;
@@ -51,9 +38,6 @@ export function readYouTubeView(sessionId: number): SavedYouTubeView | null {
     if (!raw) return null;
     const saved = JSON.parse(raw) as Record<string, unknown>;
     return {
-      route: readRoute(saved.route),
-      query: text(saved.query, 2048),
-      scrollTop: seconds(saved.scrollTop),
       video: readVideo(saved.video),
       timeSec: seconds(saved.timeSec),
       playing: saved.playing === true,
@@ -65,8 +49,8 @@ export function readYouTubeView(sessionId: number): SavedYouTubeView | null {
 
 export function saveYouTubeView(sessionId: number, view: SavedYouTubeView): void {
   try {
-    window.sessionStorage.setItem(youTubeViewKey(sessionId), JSON.stringify({ ...view, scrollTop: Math.round(view.scrollTop), timeSec: Math.floor(view.timeSec) }));
+    window.sessionStorage.setItem(youTubeViewKey(sessionId), JSON.stringify({ ...view, timeSec: Math.floor(view.timeSec) }));
   } catch {
-    // Best effort: without storage the view starts over after a layout change.
+    // Best effort: without storage the view starts over after a remount.
   }
 }

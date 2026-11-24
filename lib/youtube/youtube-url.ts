@@ -62,7 +62,7 @@ function videoIdFromPath(url: URL, host: string): string | null {
 /**
  * Parses a pasted YouTube link (watch, youtu.be, shorts, live, embed, mobile and music hosts).
  * Returns null for anything else, including playlist-only links and bare words: an 11-character
- * search such as "documentary" is a search, not a video ID.
+ * word such as "documentary" is not a video ID.
  */
 export function parseYouTubeLink(raw: string): YouTubeLink | null {
   const input = raw.trim();
@@ -94,4 +94,22 @@ export function youTubeWatchUrl(videoId: string, startSec?: number): string {
   url.searchParams.set('v', videoId);
   if (startSec) url.searchParams.set('t', `${startSec}s`);
   return url.href;
+}
+
+const THUMBNAIL = /^https?:\/\/i\d?\.ytimg\.com\/(?:vi|vi_webp)\/([A-Za-z0-9_-]{11})\//i;
+
+/**
+ * Finds the first YouTube video link in dropped or pasted text: a `text/uri-list` (one URL per
+ * line, `#` lines are comments), a link among other words, or a dragged thumbnail's image URL.
+ */
+export function findYouTubeLink(text: string | null | undefined): YouTubeLink | null {
+  if (!text) return null;
+  for (const token of text.slice(0, 8192).split(/\s+/)) {
+    if (!token || token.startsWith('#')) continue;
+    const link = parseYouTubeLink(token);
+    if (link) return link;
+    const thumbnail = THUMBNAIL.exec(token);
+    if (thumbnail) return { videoId: thumbnail[1] };
+  }
+  return null;
 }

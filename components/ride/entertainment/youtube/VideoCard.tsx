@@ -4,37 +4,30 @@ import { ExternalLink } from 'lucide-react';
 
 import { youTubeWatchUrl } from '@/lib/youtube/youtube-url';
 import { thumbnailForVideo } from './recent-videos';
-import { formatVideoAge, formatVideoDuration, type YouTubeVideoChoice, type YouTubeVideoSummary } from './youtube-client';
+import { formatVideoDuration, type YouTubeVideoChoice } from './youtube-client';
 
 const stretchedClassName =
   'text-left after:absolute after:inset-0 after:rounded-lg after:content-[""] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-[var(--brand)] focus-visible:after:ring-offset-2 focus-visible:after:ring-offset-[var(--background)]';
 
-type CardVideo = YouTubeVideoChoice & Partial<Pick<YouTubeVideoSummary, 'publishedAt' | 'madeForKids'>>;
-
 /**
- * One video in the browse grid: the title button plays it (and covers the card), the channel
- * name opens that channel. Made-for-kids videos, and every video when Tempo can't check them
- * (`opensOnYouTube`), link out to YouTube instead of playing in Tempo.
+ * One Recently played video: the title button plays it again (after the usual check) and covers
+ * the card. When Tempo can't check videos (`opensOnYouTube`) it links out to YouTube instead.
  */
 export function VideoCard({
   video,
   onPlay,
-  onOpenChannel,
   opensOnYouTube = false,
 }: {
-  video: CardVideo;
-  onPlay: (video: CardVideo) => void;
-  onOpenChannel?: (channelId: string, channelTitle: string) => void;
+  video: YouTubeVideoChoice;
+  onPlay: (video: YouTubeVideoChoice) => void;
   opensOnYouTube?: boolean;
 }) {
-  const linksOut = opensOnYouTube || video.madeForKids;
-  const linkOutNote = video.madeForKids ? 'Made for kids, opens on YouTube' : 'Opens on YouTube';
-  const age = video.publishedAt ? formatVideoAge(video.publishedAt) : '';
   const badge = video.isLive ? 'LIVE' : video.durationSec ? formatVideoDuration(video.durationSec) : null;
 
   return (
     <li className="group relative flex min-w-0 flex-col">
-      <div className="relative aspect-video overflow-hidden rounded-lg bg-[var(--raised)]">
+      {/* At least 120 × 70 px, YouTube's minimum for a thumbnail that starts playback. */}
+      <div className="relative aspect-video min-w-[120px] overflow-hidden rounded-lg bg-[var(--raised)]">
         {/* eslint-disable-next-line @next/next/no-img-element -- YouTube thumbnails are served as-is from i.ytimg.com */}
         <img
           src={thumbnailForVideo(video)}
@@ -51,11 +44,11 @@ export function VideoCard({
           </span>
         ) : null}
       </div>
-      <h3 className="mt-2 line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text)]">
-        {linksOut ? (
+      <h3 className="mt-1.5 line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text)]">
+        {opensOnYouTube ? (
           <a href={youTubeWatchUrl(video.id)} target="_blank" rel="noopener noreferrer" className={stretchedClassName}>
             {video.title}
-            <span className="sr-only"> ({linkOutNote.toLowerCase()})</span>
+            <span className="sr-only"> (opens on YouTube)</span>
           </a>
         ) : (
           <button type="button" className={stretchedClassName} onClick={() => onPlay(video)}>
@@ -63,36 +56,13 @@ export function VideoCard({
           </button>
         )}
       </h3>
-      <p className="mt-0.5 flex min-w-0 items-center gap-1 text-xs text-[var(--text-muted)]">
-        {video.channelTitle && video.channelId && onOpenChannel ? (
-          <button
-            type="button"
-            className="relative z-10 min-w-0 truncate rounded text-left hover:text-[var(--text)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
-            onClick={() => onOpenChannel(video.channelId!, video.channelTitle)}
-          >
-            {video.channelTitle}
-          </button>
-        ) : video.channelTitle ? (
-          <span className="min-w-0 truncate">{video.channelTitle}</span>
-        ) : null}
-        {age ? <span className="shrink-0">{video.channelTitle ? '– ' : ''}{age}</span> : null}
-      </p>
-      {linksOut ? (
+      {video.channelTitle ? <p className="mt-0.5 truncate text-xs text-[var(--text-muted)]">{video.channelTitle}</p> : null}
+      {opensOnYouTube ? (
         <p aria-hidden="true" className="mt-0.5 flex items-center gap-1 text-xs text-[var(--text-muted)]">
           <ExternalLink aria-hidden="true" size={12} strokeWidth={1.6} />
-          {linkOutNote}
+          Opens on YouTube
         </p>
       ) : null}
-    </li>
-  );
-}
-
-export function VideoCardSkeleton() {
-  return (
-    <li aria-hidden="true" className="flex flex-col">
-      <div className="skeleton aspect-video rounded-lg" />
-      <div className="skeleton mt-2 h-3.5 w-11/12 rounded" />
-      <div className="skeleton mt-1.5 h-3 w-1/2 rounded" />
     </li>
   );
 }

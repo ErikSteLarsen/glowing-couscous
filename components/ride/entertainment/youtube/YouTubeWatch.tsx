@@ -54,6 +54,8 @@ export function YouTubeWatch({
   obscured,
   startPlaying,
   restored = false,
+  dragActive = false,
+  checking = false,
   onBack,
   onTime,
 }: {
@@ -64,6 +66,10 @@ export function YouTubeWatch({
   startPlaying: boolean;
   /** Picked up after a remount: a video Tempo had paused (ride paused, dialog) plays again on resume. */
   restored?: boolean;
+  /** A link is being dragged over the ride screen: the player lets it through and the stage is outlined. */
+  dragActive?: boolean;
+  /** A new video is being checked before it replaces this one. */
+  checking?: boolean;
   onBack: () => void;
   /** Reports the playback position (and whether it plays or Tempo paused it) every few seconds and when the player goes away. */
   onTime: (videoId: string, timeSec: number, playing: boolean) => void;
@@ -290,12 +296,16 @@ export function YouTubeWatch({
       <div className="@container flex min-h-11 shrink-0 items-center gap-2 pb-2">
         <button type="button" className={`${ghostButtonClassName('compact')} shrink-0 text-[var(--text-secondary)]`} onClick={onBack}>
           <ArrowLeft aria-hidden="true" size={15} strokeWidth={1.6} />
-          Browse
+          Change video
         </button>
-        <p className="min-w-0 flex-1 truncate text-[13px] text-[var(--text-secondary)]" title={video.channelTitle ? `${video.title} – ${video.channelTitle}` : video.title}>
-          <span className="font-medium text-[var(--text)]">{video.title}</span>
-          {video.channelTitle ? <span className="hidden @md:inline"> – {video.channelTitle}</span> : null}
-        </p>
+        {dragActive || checking ? (
+          <p role="status" className="min-w-0 flex-1 truncate text-[13px] font-medium text-[var(--brand)]">{dragActive ? 'Drop to play' : 'Checking the video…'}</p>
+        ) : (
+          <p className="min-w-0 flex-1 truncate text-[13px] text-[var(--text-secondary)]" title={video.channelTitle ? `${video.title} – ${video.channelTitle}` : video.title}>
+            <span className="font-medium text-[var(--text)]">{video.title}</span>
+            {video.channelTitle ? <span className="hidden @md:inline"> – {video.channelTitle}</span> : null}
+          </p>
+        )}
         <button
           type="button"
           aria-pressed={pauseWithRide}
@@ -310,10 +320,12 @@ export function YouTubeWatch({
 
       <div ref={stageRef} className="relative grid min-h-0 flex-1 content-start justify-items-center [container-type:size]">
         {errorCode === null && fits ? (
-          // 16:9 within the stage, letterboxed up to 200 px tall when 16:9 would be shorter.
+          // 16:9 within the stage, letterboxed up to 200 px tall when 16:9 would be shorter. While a
+          // link is dragged in, the player lets the drop through to the page and gets an outline
+          // around it (never over it).
           <div
             ref={frameBoxRef}
-            className={`relative h-[max(200px,calc(min(100cqw,calc(100cqh*16/9))*9/16))] w-[max(200px,min(100cqw,calc(100cqh*16/9)))] overflow-hidden rounded-lg bg-black ${obscured ? 'invisible' : ''}`}
+            className={`relative h-[max(200px,calc(min(100cqw,calc(100cqh*16/9))*9/16))] w-[max(200px,min(100cqw,calc(100cqh*16/9)))] overflow-hidden rounded-lg bg-black ${obscured ? 'invisible' : ''} ${dragActive ? 'pointer-events-none outline-2 outline-offset-4 outline-dashed outline-[var(--brand)]' : ''}`}
           />
         ) : errorCode === null ? (
           <div role="status" className="flex max-w-sm flex-col items-center gap-3 self-center px-4 text-center">
@@ -331,7 +343,7 @@ export function YouTubeWatch({
                 </button>
               ) : null}
               <button type="button" className={compactSecondaryButtonClassName} onClick={onBack}>
-                Back to browse
+                Change video
               </button>
             </div>
           </div>
