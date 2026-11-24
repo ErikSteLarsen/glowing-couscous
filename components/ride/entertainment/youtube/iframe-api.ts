@@ -3,6 +3,7 @@ export type YouTubePlayer = {
   playVideo(): void;
   pauseVideo(): void;
   getPlayerState(): number;
+  getCurrentTime(): number;
   destroy(): void;
 };
 
@@ -58,8 +59,8 @@ export function youTubeEmbedUrl(videoId: string, { startSec, origin }: { startSe
   const params: Record<string, string> = {
     enablejsapi: '1',
     origin,
-    // The rider chose this video with a click, so ask to start right away; the native Play button is the fallback.
-    autoplay: '1',
+    // Never start by itself: Tempo calls playVideo() only when the ride and the page allow it.
+    autoplay: '0',
     controls: '1',
     playsinline: '1',
     rel: '0',

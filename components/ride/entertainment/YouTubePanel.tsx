@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { parseYouTubeLink } from '@/lib/youtube/youtube-url';
 import type { EntertainmentRide } from './types';
-import { readRecentVideos, rememberRecentVideo } from './youtube/recent-videos';
+import { clearRecentVideos, readRecentVideos, rememberRecentVideo } from './youtube/recent-videos';
+import { readYouTubeView, saveYouTubeView } from './youtube/view-state';
 import { YouTubeBrowse, type BrowseEntry, type BrowseNotice, type BrowseRoute } from './youtube/YouTubeBrowse';
 import { fetchYouTubeStatus, lookUpYouTubeVideo, searchYouTube, type YouTubeVideoChoice, type YouTubeVideoLookup } from './youtube/youtube-client';
 import { YouTubeWatch } from './youtube/YouTubeWatch';
@@ -15,10 +16,11 @@ const PLAYABILITY_MESSAGES: Record<Exclude<YouTubeVideoLookup['playability'], 'p
   upcoming: 'This video hasn’t started yet. Try again when it’s live.',
   not_found: 'Tempo couldn’t find this video. Check the link and try again.',
 };
+const NOT_CHECKED_MESSAGE = 'Tempo can’t check this video without a YouTube API key, so it opens on YouTube.';
 
 let nextKey = 1;
 
-function newEntry(route: BrowseRoute): BrowseEntry {
+function newEntry(route: BrowseRoute, scrollTop = 0): BrowseEntry {
   return {
     key: nextKey++,
     route,
@@ -27,29 +29,74 @@ function newEntry(route: BrowseRoute): BrowseEntry {
     status: route.kind === 'home' ? 'ready' : 'loading',
     error: null,
     moreError: null,
-    scrollTop: 0,
+    scrollTop,
   };
 }
+
+type YouTubePanelProps = Pick<EntertainmentRide, 'sessionId' | 'userId' | 'status' | 'obscured'>;
 
 /**
  * The ride screen's YouTube view. Browse is Tempo's own search UI (YouTube itself can't be framed);
  * watching shows only YouTube's embedded player and a slim bar, never anything over the player.
- * Fills its parent, which must give it a definite size.
+ * Fills its parent, which must give it a definite size. Takes only the ride fields it uses, so the
+ * ride screen's four updates a second don't re-render it. Its place (search, scroll, video and
+ * time) is kept for this tab, so a remount (phone and desktop layouts swap) picks up where it was.
  */
-export function YouTubePanel({ ride }: { ride: EntertainmentRide }) {
-  const [stack, setStack] = useState<BrowseEntry[]>(() => [newEntry({ kind: 'home' })]);
-  const [query, setQuery] = useState('');
-  const [watching, setWatching] = useState<YouTubeVideoChoice | null>(null);
+export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, status, obscured }: YouTubePanelProps) {
+  // The live ride view never renders on the server, so browser storage is readable here.
+  const [saved] = useState(() => readYouTubeView(sessionId));
+  const [stack, setStack] = useState<BrowseEntry[]>(() => (
+    saved && saved.route.kind !== 'home' ? [newEntry({ kind: 'home' }), newEntry(saved.route, saved.scrollTop)] : [newEntry({ kind: 'home' }, saved?.scrollTop)]
+  ));
+  const [query, setQuery] = useState(saved?.query ?? '');
+  const [watching, setWatching] = useState<YouTubeVideoChoice | null>(() => (
+    saved?.video ? { ...saved.video, ...(saved.timeSec >= 1 ? { startSec: Math.floor(saved.timeSec) } : {}) } : null
+  ));
   const [searchConfigured, setSearchConfigured] = useState<boolean | null>(null);
-  // The live ride view never renders on the server, so local storage is readable here.
-  const [recents, setRecents] = useState<YouTubeVideoChoice[]>(readRecentVideos);
+  const [recents, setRecents] = useState<YouTubeVideoChoice[]>(() => readRecentVideos(userId));
   const [notice, setNotice] = useState<BrowseNotice | null>(null);
   const [checking, setChecking] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollTopRef = useRef(saved?.scrollTop ?? 0);
+  const playbackRef = useRef<{ videoId: string; timeSec: number; playing: boolean } | null>(
+    saved?.video ? { videoId: saved.video.id, timeSec: saved.timeSec, playing: saved.playing } : null,
+  );
+  /** The watched video came back from a remount rather than a click. */
+  const [restored, setRestored] = useState(saved?.video ? { videoId: saved.video.id, playing: saved.playing } : null);
   const browseRootRef = useRef<HTMLDivElement>(null);
   const controllers = useRef(new Map<number, AbortController>());
   const lookupController = useRef<AbortController | null>(null);
   const current = stack[stack.length - 1];
+
+  // Keep the latest place for this tab: on every change, every few seconds while watching and on unmount.
+  const latestRef = useRef({ route: current.route, query, watching });
+  const persist = useCallback(() => {
+    const { route, query: text, watching: video } = latestRef.current;
+    const playback = video && playbackRef.current?.videoId === video.id ? playbackRef.current : null;
+    saveYouTubeView(sessionId, {
+      route,
+      query: text,
+      scrollTop: scrollTopRef.current,
+      video,
+      timeSec: playback ? playback.timeSec : video?.startSec ?? 0,
+      playing: playback ? playback.playing : Boolean(video),
+    });
+  }, [sessionId]);
+  useEffect(() => {
+    latestRef.current = { route: current.route, query, watching };
+    persist();
+  }, [current.route, query, watching, persist]);
+  useEffect(() => {
+    window.addEventListener('pagehide', persist);
+    return () => {
+      window.removeEventListener('pagehide', persist);
+      persist();
+    };
+  }, [persist]);
+  const reportTime = useCallback((videoId: string, timeSec: number, playing: boolean) => {
+    playbackRef.current = { videoId, timeSec, playing };
+    persist();
+  }, [persist]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -110,20 +157,30 @@ export function YouTubePanel({ ride }: { ride: EntertainmentRide }) {
     setNotice(null);
     setStack((entries) => {
       const top = entries[entries.length - 1];
-      const saved = { ...top, scrollTop: scrollRef.current?.scrollTop ?? 0 };
-      return [...entries.slice(0, -1), saved, entry];
+      const left = { ...top, scrollTop: scrollRef.current?.scrollTop ?? 0 };
+      return [...entries.slice(0, -1), left, entry];
     });
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    scrollTopRef.current = 0;
     load(entry, null);
   }, [load]);
 
-  // Restore the scroll position when returning to an entry (Back, or Browse from the watch view).
-  const restoreScroll = useRef<number | null>(null);
+  // A restored search or channel loads again (from Tempo's server cache when it is fresh).
+  const restoredEntry = useRef(stack.length > 1 ? stack[stack.length - 1] : null);
+  useEffect(() => {
+    if (restoredEntry.current) load(restoredEntry.current, null);
+  }, [load]);
+
+  // Restore the scroll position when returning to an entry (Back, Browse from the watch view or
+  // a restored view), once its results are in.
+  const restoreScroll = useRef<number | null>(saved?.scrollTop || null);
   useLayoutEffect(() => {
     if (watching || restoreScroll.current === null || !scrollRef.current) return;
+    if (current.route.kind !== 'home' && current.status === 'loading') return;
     scrollRef.current.scrollTop = restoreScroll.current;
+    scrollTopRef.current = restoreScroll.current;
     restoreScroll.current = null;
-  }, [watching, current.key]);
+  }, [watching, current.key, current.route.kind, current.status]);
 
   // A notice or the "checking" line sits above the results; bring it into view.
   useEffect(() => {
@@ -145,15 +202,23 @@ export function YouTubePanel({ ride }: { ride: EntertainmentRide }) {
   function startWatching(video: YouTubeVideoChoice) {
     restoreScroll.current = scrollRef.current?.scrollTop ?? 0;
     setNotice(null);
+    setRestored(null);
     setWatching(video);
-    setRecents(rememberRecentVideo(video));
+    setRecents(rememberRecentVideo(userId, video));
   }
 
-  /** Plays a video. Anything not fresh from search is checked first (made for kids, embeddable). */
+  /**
+   * Plays a video. Anything not fresh from search is checked first (made for kids, embeddable);
+   * a video Tempo can't check (no key, lookup failed) is offered on YouTube instead of embedded.
+   */
   function play(video: YouTubeVideoChoice, verified: boolean) {
     lookupController.current?.abort();
-    if (verified || searchConfigured === false) {
+    if (verified) {
       startWatching(video);
+      return;
+    }
+    if (searchConfigured === false) {
+      setNotice({ tone: 'info', message: NOT_CHECKED_MESSAGE, video });
       return;
     }
     const controller = new AbortController();
@@ -166,17 +231,16 @@ export function YouTubePanel({ ride }: { ride: EntertainmentRide }) {
         setChecking(false);
         if (!result.ok) {
           if (result.code === 'not_configured') {
-            // Without a key there is nothing to check against; the player reports what it can't play.
             setSearchConfigured(false);
-            startWatching(video);
+            setNotice({ tone: 'info', message: NOT_CHECKED_MESSAGE, video });
           } else {
-            setNotice({ tone: 'danger', message: result.message, videoId: video.id });
+            setNotice({ tone: 'danger', message: `Tempo couldn’t check this video, so it can’t play here. ${result.message}`, video });
           }
           return;
         }
         const { playability, video: details } = result.data;
         if (playability !== 'playable' || !details) {
-          setNotice({ tone: 'info', message: PLAYABILITY_MESSAGES[playability === 'playable' ? 'not_found' : playability], videoId: video.id });
+          setNotice({ tone: 'info', message: PLAYABILITY_MESSAGES[playability === 'playable' ? 'not_found' : playability], video: details ? { ...details, ...(video.startSec ? { startSec: video.startSec } : {}) } : video });
           return;
         }
         startWatching({ ...details, ...(video.startSec ? { startSec: video.startSec } : {}) });
@@ -198,10 +262,6 @@ export function YouTubePanel({ ride }: { ride: EntertainmentRide }) {
     const text = query.trim();
     if (!text) return;
     if (playLink(text)) return;
-    if (searchConfigured === false) {
-      setNotice({ tone: 'info', message: 'That isn’t a YouTube link. Copy the address of a YouTube video and paste it here.' });
-      return;
-    }
     if (current.route.kind === 'search' && current.route.query === text && current.status !== 'error') return;
     navigate({ kind: 'search', query: text.slice(0, 100) });
   }
@@ -215,7 +275,16 @@ export function YouTubePanel({ ride }: { ride: EntertainmentRide }) {
   return (
     <div className="h-full w-full min-w-0">
       {watching ? (
-        <YouTubeWatch key={`${watching.id}-${watching.startSec ?? 0}`} video={watching} rideStatus={ride.status} onBack={leaveWatch} />
+        <YouTubeWatch
+          key={`${watching.id}-${watching.startSec ?? 0}`}
+          video={watching}
+          rideStatus={status}
+          obscured={obscured}
+          startPlaying={restored?.videoId === watching.id ? restored.playing : true}
+          restored={restored?.videoId === watching.id}
+          onBack={leaveWatch}
+          onTime={reportTime}
+        />
       ) : (
         <div ref={browseRootRef} tabIndex={-1} className="h-full outline-none">
           <YouTubeBrowse
@@ -247,9 +316,14 @@ export function YouTubePanel({ ride }: { ride: EntertainmentRide }) {
               load(current, current.nextPageToken);
             }}
             onDismissNotice={() => setNotice(null)}
+            onClearRecents={() => {
+              clearRecentVideos(userId);
+              setRecents([]);
+            }}
+            onScroll={(top) => { scrollTopRef.current = top; }}
           />
         </div>
       )}
     </div>
   );
-}
+});

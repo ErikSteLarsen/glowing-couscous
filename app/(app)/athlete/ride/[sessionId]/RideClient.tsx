@@ -190,6 +190,26 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   const savedRef = useRef(false);
   const connectionsRef = useRef<HTMLDialogElement>(null);
   const phoneSheetRef = useRef<HTMLDialogElement>(null);
+  // Open dialogs cover the entertainment stage; YouTube pauses and hides its player meanwhile.
+  const [connectionsOpen, setConnectionsOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const openConnections = useCallback(() => {
+    connectionsRef.current?.showModal();
+    setConnectionsOpen(true);
+  }, []);
+  const openSheet = useCallback(() => {
+    phoneSheetRef.current?.showModal();
+    setSheetOpen(true);
+  }, []);
+  // A layout swap (phone and desktop) unmounts an open dialog without a close event.
+  const attachConnections = useCallback((node: HTMLDialogElement | null) => {
+    connectionsRef.current = node;
+    if (!node) setConnectionsOpen(false);
+  }, []);
+  const attachSheet = useCallback((node: HTMLDialogElement | null) => {
+    phoneSheetRef.current = node;
+    if (!node) setSheetOpen(false);
+  }, []);
   const isPhone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE_QUERY).matches, () => false);
   // The live view never renders on the server, so reading storage here cannot cause a hydration mismatch.
   const [moreData, setMoreData] = useState(() => {
@@ -206,8 +226,13 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     try { window.localStorage.setItem(ENTERTAINMENT_KEY, next); } catch { /* preference only */ }
     setEntertainmentState(next);
   }, []);
+  // Turning it back on returns to the last view, so a video or course in progress is not lost behind the picker.
+  const lastModeRef = useRef<EntertainmentMode | null>(entertainment === 'youtube' || entertainment === 'course' ? entertainment : null);
+  useEffect(() => {
+    if (entertainment === 'youtube' || entertainment === 'course') lastModeRef.current = entertainment;
+  }, [entertainment]);
   const toggleEntertainment = useCallback(() => setEntertainmentState((current) => {
-    const next: EntertainmentSetting = current === 'off' ? 'choose' : 'off';
+    const next: EntertainmentSetting = current === 'off' ? lastModeRef.current ?? 'choose' : 'off';
     try { window.localStorage.setItem(ENTERTAINMENT_KEY, next); } catch { /* preference only */ }
     return next;
   }), []);
@@ -482,7 +507,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       <p role="status" className="text-sm text-[var(--text-secondary)]">
         {connectedCount === 0 ? 'No devices connected' : `${connectedCount} ${connectedCount === 1 ? 'device' : 'devices'} connected`}
       </p>
-      <button type="button" className={secondaryButtonClassName} aria-haspopup="dialog" onClick={() => connectionsRef.current?.showModal()}>
+      <button type="button" className={secondaryButtonClassName} aria-haspopup="dialog" onClick={openConnections}>
         Connections
       </button>
     </div>
@@ -490,7 +515,8 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
 
   const connectionsDialog = (
     <dialog
-      ref={connectionsRef}
+      ref={attachConnections}
+      onClose={() => setConnectionsOpen(false)}
       aria-labelledby="ride-connections-title"
       className="tempo-alert-dialog w-[calc(100%-2rem)] max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
     >
@@ -806,7 +832,9 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   const entertainmentMode: EntertainmentMode | null = entertainment === 'off' || entertainment === 'choose' ? null : entertainment;
   const entertainmentRide: EntertainmentRide = {
     sessionId,
+    userId,
     status: status === 'paused' ? 'paused' : 'running',
+    obscured: connectionsOpen || sheetOpen,
     reading: live,
     threeSecondPowerWatts: threeSecond,
     targetWatts,
@@ -887,7 +915,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
           </div>
           {entertainmentButton(true)}
           {ergButton}
-          <button type="button" className={iconControlClassName} aria-label="More controls and data" aria-haspopup="dialog" onClick={() => phoneSheetRef.current?.showModal()}>
+          <button type="button" className={iconControlClassName} aria-label="More controls and data" aria-haspopup="dialog" onClick={openSheet}>
             <Ellipsis aria-hidden="true" size={18} strokeWidth={1.8} />
           </button>
         </header>
@@ -929,7 +957,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
                 ) : null}
               </div>
               <p className="mt-1 flex items-baseline gap-1.5">
-                <span className="ride-numeral !leading-none text-[4.5rem]">{display(threeSecond)}</span>
+                <span className={`ride-numeral !leading-none ${entertainmentOn ? 'text-[3.5rem]' : 'text-[4.5rem]'}`}>{display(threeSecond)}</span>
                 {threeSecond !== null ? <span className="text-base text-[var(--text-muted)]">W</span> : null}
               </p>
               {deviation !== null ? (
@@ -969,7 +997,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
           </section>
 
           {entertainmentOn ? (
-            <div className="-mx-4 flex min-h-0 flex-1 flex-col px-2 pb-2 pt-3">{entertainmentStage(true)}</div>
+            <div className="-mx-4 flex min-h-0 flex-1 flex-col px-2 pb-1 pt-2">{entertainmentStage(true)}</div>
           ) : (
           <section aria-label="Workout profile" className="flex min-h-0 flex-1 flex-col pt-3">
             <p className="shrink-0 text-right text-[12px] text-[var(--text-secondary)]">
@@ -998,7 +1026,8 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         </footer>
 
         <dialog
-          ref={phoneSheetRef}
+          ref={attachSheet}
+          onClose={() => setSheetOpen(false)}
           aria-labelledby="ride-sheet-title"
           className="fixed inset-x-0 bottom-0 top-auto m-0 max-h-[85dvh] w-full max-w-full overflow-y-auto rounded-t-2xl backdrop:bg-black/60 border-t border-[var(--border)] bg-[var(--surface)] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-[var(--text)] shadow-[var(--shadow-overlay)]"
         >
@@ -1037,7 +1066,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
           </section>
 
           <div className="mt-5 flex flex-col gap-2 border-t border-[var(--border)] pt-4">
-            <button type="button" className={`${secondaryButtonClassName} !h-12 w-full`} aria-haspopup="dialog" onClick={() => { closeSheet(); connectionsRef.current?.showModal(); }}>
+            <button type="button" className={`${secondaryButtonClassName} !h-12 w-full`} aria-haspopup="dialog" onClick={() => { closeSheet(); openConnections(); }}>
               Connections – {connectedCount === 0 ? 'none connected' : `${connectedCount} connected`}
             </button>
             {fullscreenSupported ? <button type="button" className={`${secondaryButtonClassName} !h-12 w-full`} onClick={() => { closeSheet(); toggleFullscreen(); }}>{fullscreen ? 'Exit full screen' : 'Full screen'}</button> : null}

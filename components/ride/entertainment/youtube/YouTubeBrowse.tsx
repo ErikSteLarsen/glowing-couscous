@@ -12,6 +12,7 @@ import {
   noticeBoxClassNames,
 } from '@/components/ui';
 import { youTubeWatchUrl } from '@/lib/youtube/youtube-url';
+import { thumbnailForVideo } from './recent-videos';
 import { VideoCard, VideoCardSkeleton } from './VideoCard';
 import type { YouTubeApiErrorCode, YouTubeVideoChoice, YouTubeVideoSummary } from './youtube-client';
 
@@ -31,8 +32,8 @@ export type BrowseEntry = {
   scrollTop: number;
 };
 
-/** A message about a pasted or recent video that Tempo could not play. */
-export type BrowseNotice = { message: string; videoId?: string; tone: 'info' | 'danger' };
+/** A message about a pasted or recent video that Tempo could not play, with a link to it on YouTube. */
+export type BrowseNotice = { message: string; video?: YouTubeVideoChoice; tone: 'info' | 'danger' };
 
 export const RIDE_SUGGESTIONS = [
   'Scenic cycling 4K',
@@ -70,6 +71,21 @@ function Attribution() {
   );
 }
 
+/** A video Tempo won't play here, shown as a small card that opens it on YouTube. */
+function LinkOutVideo({ video }: { video: YouTubeVideoChoice }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      {/* eslint-disable-next-line @next/next/no-img-element -- YouTube thumbnails are served as-is from i.ytimg.com */}
+      <img src={thumbnailForVideo(video)} alt="" loading="lazy" decoding="async" className="aspect-video w-28 shrink-0 rounded-md bg-[var(--raised)] object-cover" />
+      <div className="flex min-w-0 flex-col items-start gap-1">
+        <p className="line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text)]">{video.title}</p>
+        {video.channelTitle ? <p className="truncate text-xs text-[var(--text-muted)]">{video.channelTitle}</p> : null}
+        <OpenYouTubeLink href={youTubeWatchUrl(video.id, video.startSec)}>Open on YouTube</OpenYouTubeLink>
+      </div>
+    </div>
+  );
+}
+
 function routeHeading(route: BrowseRoute): string {
   if (route.kind === 'search') return `Results for “${route.query}”`;
   if (route.kind === 'channel') return route.channelTitle ? `Latest from ${route.channelTitle}` : 'Latest from this channel';
@@ -95,6 +111,8 @@ export function YouTubeBrowse({
   onRetry,
   onLoadMore,
   onDismissNotice,
+  onClearRecents,
+  onScroll,
 }: {
   entry: BrowseEntry;
   canGoBack: boolean;
@@ -114,9 +132,11 @@ export function YouTubeBrowse({
   onRetry: () => void;
   onLoadMore: () => void;
   onDismissNotice: () => void;
+  onClearRecents: () => void;
+  onScroll: (scrollTop: number) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const placeholder = searchConfigured === false ? 'Paste a YouTube link' : 'Search YouTube or paste a link';
+  const placeholder = 'Search YouTube or paste a link';
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -132,59 +152,62 @@ export function YouTubeBrowse({
 
   return (
     <div className="@container flex h-full min-w-0 flex-col">
-      <form role="search" onSubmit={submit} className="flex shrink-0 items-center gap-2 pb-3">
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={!canGoBack}
-          aria-label="Back"
-          title="Back"
-          className={`inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors control-hover:bg-[var(--raised)] control-hover:text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-40 ${buttonFocusClassName}`}
-        >
-          <ArrowLeft aria-hidden="true" size={18} strokeWidth={1.6} />
-        </button>
-        <div className="relative min-w-0 flex-1">
-          <Search aria-hidden="true" size={16} strokeWidth={1.6} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-          <input
-            ref={inputRef}
-            type="search"
-            inputMode="search"
-            enterKeyHint="search"
-            autoComplete="off"
-            spellCheck={false}
-            maxLength={2048}
-            value={query}
-            placeholder={placeholder}
-            aria-label={placeholder}
-            onChange={(event) => onQueryChange(event.target.value)}
-            onPaste={paste}
-            onKeyDown={(event) => {
-              // Escape hands the keyboard back to the ride's shortcuts.
-              if (event.key === 'Escape') inputRef.current?.blur();
-            }}
-            className={`${formFieldClassName} pl-9`}
-          />
-        </div>
-        <button type="submit" className={`${compactSecondaryButtonClassName} min-h-10 shrink-0 px-3`} aria-label={searchConfigured === false ? 'Play link' : 'Search'}>
-          <span className="hidden @md:inline">{searchConfigured === false ? 'Play' : 'Search'}</span>
-          <Search aria-hidden="true" size={15} strokeWidth={1.6} className="@md:hidden" />
-        </button>
-      </form>
+      {/* Without a key there is no search, and pasted links could not be checked before playing. */}
+      {searchConfigured === false ? null : (
+        <form role="search" onSubmit={submit} className="flex shrink-0 items-center gap-2 pb-3">
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={!canGoBack}
+            aria-label="Back"
+            title="Back"
+            className={`inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors control-hover:bg-[var(--raised)] control-hover:text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-40 ${buttonFocusClassName}`}
+          >
+            <ArrowLeft aria-hidden="true" size={18} strokeWidth={1.6} />
+          </button>
+          <div className="relative min-w-0 flex-1">
+            <Search aria-hidden="true" size={16} strokeWidth={1.6} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+            <input
+              ref={inputRef}
+              type="search"
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={2048}
+              value={query}
+              placeholder={placeholder}
+              aria-label={placeholder}
+              onChange={(event) => onQueryChange(event.target.value)}
+              onPaste={paste}
+              onKeyDown={(event) => {
+                // Escape hands the keyboard back to the ride's shortcuts.
+                if (event.key === 'Escape') inputRef.current?.blur();
+              }}
+              className={`${formFieldClassName} pl-9`}
+            />
+          </div>
+          <button type="submit" className={`${compactSecondaryButtonClassName} min-h-10 shrink-0 px-3`} aria-label="Search">
+            <span className="hidden @md:inline">Search</span>
+            <Search aria-hidden="true" size={15} strokeWidth={1.6} className="@md:hidden" />
+          </button>
+        </form>
+      )}
 
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]">
+      <div ref={scrollRef} onScroll={(event) => onScroll(event.currentTarget.scrollTop)} className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]">
         {notice ? (
-          <div role={notice.tone === 'danger' ? 'alert' : 'status'} className={`${noticeBoxClassNames[notice.tone]} mb-3 flex flex-wrap items-center gap-x-3 gap-y-2`}>
-            <p className="min-w-0 flex-1">{notice.message}</p>
-            <div className="flex flex-wrap gap-1">
-              {notice.videoId ? <OpenYouTubeLink href={youTubeWatchUrl(notice.videoId)}>Open on YouTube</OpenYouTubeLink> : null}
+          <div role={notice.tone === 'danger' ? 'alert' : 'status'} className={`${noticeBoxClassNames[notice.tone]} mb-3 flex flex-col gap-3`}>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <p className="min-w-0 flex-1">{notice.message}</p>
               <button type="button" className={ghostButtonClassName('compact')} onClick={onDismissNotice}>Dismiss</button>
             </div>
+            {notice.video ? <LinkOutVideo video={notice.video} /> : null}
           </div>
         ) : null}
         {checking ? <p role="status" className="mb-3 text-[13px] text-[var(--text-muted)]">Checking the video…</p> : null}
 
-        {route.kind === 'home' ? (
-          <HomeView searchConfigured={searchConfigured} recents={recents} onSuggestion={onSuggestion} onPlay={onPlay} onOpenChannel={onOpenChannel} />
+        {route.kind === 'home' || searchConfigured === false ? (
+          <HomeView searchConfigured={searchConfigured} recents={recents} onSuggestion={onSuggestion} onPlay={onPlay} onOpenChannel={onOpenChannel} onClearRecents={onClearRecents} />
         ) : (
           <section aria-labelledby={`yt-results-${entry.key}`}>
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -205,19 +228,21 @@ function HomeView({
   onSuggestion,
   onPlay,
   onOpenChannel,
+  onClearRecents,
 }: {
   searchConfigured: boolean | null;
   recents: YouTubeVideoChoice[];
   onSuggestion: (query: string) => void;
   onPlay: (video: YouTubeVideoChoice, verified: boolean) => void;
   onOpenChannel: (channelId: string, channelTitle: string) => void;
+  onClearRecents: () => void;
 }) {
   return (
     <div className="flex flex-col gap-5">
       {searchConfigured === false ? (
         <div className={`${noticeBoxClassNames.info} flex flex-col gap-2`}>
-          <p className="font-medium text-[var(--text)]">Paste a YouTube link to watch it here.</p>
-          <p>Search needs a YouTube API key on the Tempo server (<code className="text-[12px]">YOUTUBE_API_KEY</code>). Until then, find a video on YouTube, copy its link and paste it above.</p>
+          <p className="font-medium text-[var(--text)]">Watch on YouTube in another tab</p>
+          <p>Search and playing videos in Tempo need a YouTube API key on the Tempo server (<code className="text-[12px]">YOUTUBE_API_KEY</code>). Without it Tempo can’t check that a video isn’t made for kids, so videos open on YouTube.</p>
           <div><OpenYouTubeLink /></div>
         </div>
       ) : (
@@ -238,10 +263,19 @@ function HomeView({
 
       {recents.length > 0 ? (
         <section aria-labelledby="yt-recent">
-          <h2 id="yt-recent" className="mb-2 text-sm font-medium text-[var(--text)]">Recently watched</h2>
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <h2 id="yt-recent" className="text-sm font-medium text-[var(--text)]">Recently watched</h2>
+            <button type="button" className={ghostButtonClassName('compact')} onClick={onClearRecents}>Clear</button>
+          </div>
           <ul className={gridClassName}>
             {recents.map((video) => (
-              <VideoCard key={video.id} video={video} onPlay={(choice) => onPlay(choice, false)} onOpenChannel={searchConfigured ? onOpenChannel : undefined} />
+              <VideoCard
+                key={video.id}
+                video={video}
+                onPlay={(choice) => onPlay(choice, false)}
+                onOpenChannel={searchConfigured ? onOpenChannel : undefined}
+                opensOnYouTube={searchConfigured === false}
+              />
             ))}
           </ul>
         </section>
@@ -290,7 +324,7 @@ function ResultsView({
     );
   }
 
-  if (entry.items.length === 0) {
+  if (entry.items.length === 0 && !entry.nextPageToken) {
     return (
       <EmptyState
         title="No videos found"
@@ -301,16 +335,21 @@ function ResultsView({
 
   return (
     <>
-      <ul className={gridClassName}>
-        {entry.items.map((video) => (
-          <VideoCard
-            key={video.id}
-            video={video}
-            onPlay={(choice) => onPlay(choice, true)}
-            onOpenChannel={entry.route.kind === 'channel' ? undefined : onOpenChannel}
-          />
-        ))}
-      </ul>
+      {entry.items.length === 0 ? (
+        // Every video on this page was filtered out (not embeddable, upcoming); later pages may have some.
+        <p className="py-4 text-center text-[13px] text-[var(--text-muted)]">No playable videos on this page.</p>
+      ) : (
+        <ul className={gridClassName}>
+          {entry.items.map((video) => (
+            <VideoCard
+              key={video.id}
+              video={video}
+              onPlay={(choice) => onPlay(choice, true)}
+              onOpenChannel={entry.route.kind === 'channel' ? undefined : onOpenChannel}
+            />
+          ))}
+        </ul>
+      )}
       {entry.nextPageToken || entry.moreError ? (
         <div className="flex flex-col items-center gap-2 py-4">
           {entry.moreError ? <p role="alert" className="text-[13px] text-[var(--status-danger)]">{entry.moreError}</p> : null}

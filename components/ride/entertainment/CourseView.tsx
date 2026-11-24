@@ -64,7 +64,7 @@ const textShadow = { textShadow: '0 1px 6px rgb(0 0 0 / 70%)' };
 export function CourseView({ ride }: { ride: EntertainmentRide }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rideRef = useRef(ride);
-  const engineRef = useRef<{ onRide: () => void } | null>(null);
+  const engineRef = useRef<{ onRide: (resumed: boolean) => void } | null>(null);
   const speedRef = useRef<HTMLSpanElement>(null);
   const distanceRef = useRef<HTMLSpanElement>(null);
   const gradientRef = useRef<HTMLSpanElement>(null);
@@ -95,17 +95,19 @@ export function CourseView({ ride }: { ride: EntertainmentRide }) {
     let lastStats = 0;
     let lastSave = performance.now();
 
+    // While the ride is paused the course stands still; the clock restarts on resume, so no jump.
     const advance = (now: number) => {
-      step(state, coursePower(rideRef.current).watts, (now - lastSim) / 1000);
+      if (rideRef.current.status !== 'paused') step(state, coursePower(rideRef.current).watts, (now - lastSim) / 1000);
       lastSim = now;
     };
+    const shownSpeed = () => (rideRef.current.status === 'paused' ? 0 : state.speedMps);
 
     const writeStats = (now: number) => {
       if (now - lastStats < 250) return;
       lastStats = now;
       const gradient = gradientAt(state.distanceM);
       const percent = Math.round(gradient * 1000) / 10;
-      if (speedRef.current) speedRef.current.textContent = (state.speedMps * 3.6).toFixed(1);
+      if (speedRef.current) speedRef.current.textContent = (shownSpeed() * 3.6).toFixed(1);
       if (distanceRef.current) distanceRef.current.textContent = (state.distanceM / 1000).toFixed(1);
       if (gradientRef.current) {
         gradientRef.current.textContent = `${percent > 0 ? '+' : percent < 0 ? '−' : ''}${Math.abs(percent).toFixed(1)}`;
@@ -126,12 +128,14 @@ export function CourseView({ ride }: { ride: EntertainmentRide }) {
     const render = (now: number, dtSec: number) => {
       const current = rideRef.current;
       const power = coursePower(current).watts;
+      // Paused: the rider stands still, sits up and waves (the scene's stopped pose).
+      const speed = shownSpeed();
       scene.draw(ctx, {
         distanceM: state.distanceM,
-        speedMps: state.speedMps,
+        speedMps: speed,
         powerWatts: power,
         targetWatts: current.targetWatts,
-        cadenceRpm: current.status === 'paused' ? 0 : current.reading.cadenceRpm ?? cadenceFromSpeed(state.speedMps, power),
+        cadenceRpm: current.status === 'paused' ? 0 : current.reading.cadenceRpm ?? cadenceFromSpeed(speed, power),
         accent: current.blockColor,
         reducedMotion,
       }, dtSec);
@@ -157,9 +161,10 @@ export function CourseView({ ride }: { ride: EntertainmentRide }) {
     };
     // While the loop is stopped (hidden tab, scrolled away), keep the rider moving on each ride update.
     engineRef.current = {
-      onRide: () => {
-        if (frame) return;
+      onRide: (resumed) => {
         const now = performance.now();
+        if (resumed) lastSim = now;
+        if (frame) return;
         advance(now);
         writeStats(now);
       },
@@ -203,8 +208,9 @@ export function CourseView({ ride }: { ride: EntertainmentRide }) {
   }, [sessionId, profile]);
 
   useEffect(() => {
+    const resumed = rideRef.current.status === 'paused' && ride.status !== 'paused';
     rideRef.current = ride;
-    engineRef.current?.onRide();
+    engineRef.current?.onRide(resumed);
   }, [ride]);
 
   const { source } = coursePower(ride);

@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {
   createYouTubeSearchService,
   decodeHtmlEntities,
+  YOUTUBE_API_BASE_URL,
+  youTubeServiceOptionsFromEnv,
   parseIsoDuration,
   parseYouTubeSearchQuery,
 } from '../lib/youtube/youtube-search-service.ts';
@@ -50,6 +52,9 @@ function fakeYouTube(overrides: { search?: () => Response; videos?: (ids: string
       });
     }
     if (endpoint === 'videos') {
+      if (url.searchParams.has('id') && url.searchParams.has('maxResults')) {
+        return json({ error: { code: 400, errors: [{ reason: 'incompatibleParameters' }] } }, 400);
+      }
       const ids = (url.searchParams.get('id') ?? '').split(',');
       if (overrides.videos) return overrides.videos(ids);
       return json({
@@ -107,6 +112,7 @@ test('search makes one search.list and one videos.list call and normalizes the v
   assert.equal(search.params.get('order'), 'relevance');
   assert.equal(videos.params.get('id'), IDS.join(','));
   assert.equal(videos.params.get('part'), 'snippet,contentDetails,status');
+  assert.equal(videos.params.has('maxResults'), false, 'videos.list by id must not send maxResults');
 
   assert.equal(outcome.page.nextPageToken, 'CBgQAA');
   assert.deepEqual(outcome.page.items, [
@@ -343,4 +349,58 @@ test('entity decoding and ISO durations', () => {
   assert.equal(parseIsoDuration('P0D'), null);
   assert.equal(parseIsoDuration('bogus'), null);
   assert.equal(parseIsoDuration(undefined), null);
+});
+
+test('each account has its own daily share of searches; cached searches and channels stay free', async () => {
+  const fake = fakeYouTube();
+  // 2026-11-24 07:00 UTC is 23:00 on 23 November in Los Angeles.
+  let clock = Date.UTC(2026, 10, 24, 7, 0, 0);
+  const limited = createYouTubeSearchService({ apiKey: 'k', fetch: fake.fetch, now: () => clock, dailySearchLimitPerUser: 2, log: () => {} });
+  assert.equal((await limited.search({ userId: 1, query: 'a' })).ok, true);
+  assert.equal((await limited.search({ userId: 1, query: 'b' })).ok, true);
+  const over = await limited.search({ userId: 1, query: 'c' });
+  assert.deepEqual(over.ok ? null : [over.code, over.status], ['quota_exceeded', 429]);
+  assert.match(over.ok ? '' : over.error, /You have used today’s searches/);
+  assert.equal((await limited.search({ userId: 1, query: 'a' })).ok, true, 'cached searches still work');
+  assert.equal((await limited.search({ userId: 1, channelId: CHANNEL })).ok, true, 'channel videos do not spend searches');
+  assert.equal((await limited.search({ userId: 2, query: 'c' })).ok, true, 'another account has its own share');
+  assert.equal(fake.calls.filter((call) => call.endpoint === 'search').length, 3);
+
+  clock = Date.UTC(2026, 10, 24, 8, 0, 1);
+  assert.equal((await limited.search({ userId: 1, query: 'd' })).ok, true, 'a new Pacific day');
+});
+
+test('a rate-limited search does not spend the account’s daily share', async () => {
+  const fake = fakeYouTube();
+  const { instance, advance } = service(fake, { rateLimit: { limit: 1, windowMs: 60_000 }, dailySearchLimitPerUser: 2 });
+  assert.equal((await instance.search({ userId: 1, query: 'a' })).ok, true);
+  assert.equal((await instance.search({ userId: 1, query: 'b' })).ok ? null : 'rate_limited', 'rate_limited');
+  advance(60_001);
+  assert.equal((await instance.search({ userId: 1, query: 'b' })).ok, true);
+});
+
+test('the uploads playlist cache expires within a day', async () => {
+  const fake = fakeYouTube();
+  const { instance, advance } = service(fake, { channelTtlMs: 60_000 });
+  await instance.search({ userId: 1, channelId: CHANNEL });
+  advance(60_001);
+  await instance.search({ userId: 1, channelId: CHANNEL });
+  assert.equal(fake.calls.filter((call) => call.endpoint === 'channels').length, 1, 'remembered within a day');
+  advance(24 * 3_600_000);
+  await instance.search({ userId: 1, channelId: CHANNEL });
+  assert.equal(fake.calls.filter((call) => call.endpoint === 'channels').length, 2, 'looked up again after a day');
+});
+
+test('a stub base URL is honoured only outside production', () => {
+  const stub = 'http://127.0.0.1:4599/youtube/v3';
+  assert.equal(youTubeServiceOptionsFromEnv({ NODE_ENV: 'development', YOUTUBE_API_BASE_URL: stub }).baseUrl, stub);
+  assert.equal(youTubeServiceOptionsFromEnv({ NODE_ENV: 'test', YOUTUBE_API_BASE_URL: ` ${stub} ` }).baseUrl, stub);
+  assert.equal(youTubeServiceOptionsFromEnv({ NODE_ENV: 'production', YOUTUBE_API_BASE_URL: stub }).baseUrl, YOUTUBE_API_BASE_URL);
+  assert.equal(YOUTUBE_API_BASE_URL, 'https://www.googleapis.com/youtube/v3');
+  assert.equal(youTubeServiceOptionsFromEnv({ NODE_ENV: 'development' }).baseUrl, YOUTUBE_API_BASE_URL);
+  assert.deepEqual(
+    youTubeServiceOptionsFromEnv({ NODE_ENV: 'production', YOUTUBE_API_KEY: ' k ', YOUTUBE_SEARCH_DAILY_LIMIT: '500', YOUTUBE_SEARCH_DAILY_LIMIT_PER_USER: '10' }),
+    { apiKey: 'k', baseUrl: YOUTUBE_API_BASE_URL, dailySearchLimit: 500, dailySearchLimitPerUser: 10 },
+  );
+  assert.deepEqual(youTubeServiceOptionsFromEnv({ YOUTUBE_SEARCH_DAILY_LIMIT_PER_USER: '-1', YOUTUBE_API_KEY: '' }), { apiKey: undefined, baseUrl: YOUTUBE_API_BASE_URL });
 });

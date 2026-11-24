@@ -3,7 +3,11 @@ import type { RideReading } from '@/lib/ride/recorder';
 /** What the active ride screen hands to an entertainment view. Updated about four times a second. */
 export type EntertainmentRide = {
   sessionId: number;
+  /** The signed-in account, for per-account storage such as Recently watched. */
+  userId: number;
   status: 'running' | 'paused';
+  /** A dialog (Connections, the phone's More controls sheet) covers the stage. */
+  obscured: boolean;
   /** Latest live sensor reading (null fields when a sensor is missing). */
   reading: RideReading;
   /** Three-second average power, the number the ride screen shows as "Now". */

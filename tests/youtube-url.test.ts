@@ -6,7 +6,6 @@ const ID = 'dQw4w9WgXcQ';
 
 test('reads the video ID from every common YouTube link shape', () => {
   for (const link of [
-    ID,
     `https://www.youtube.com/watch?v=${ID}`,
     `http://youtube.com/watch?feature=share&v=${ID}`,
     `www.youtube.com/watch?v=${ID}`,
@@ -40,11 +39,13 @@ test('reads start times and playlists', () => {
   assert.deepEqual(parseYouTubeLink(`https://www.youtube.com/watch?v=${ID}&t=0`), { videoId: ID });
 });
 
-test('rejects links that are not a playable YouTube video', () => {
+test('rejects links that are not a playable YouTube video, and bare words (an 11-character search is a search)', () => {
   for (const link of [
     '',
     '   ',
     'cycling music',
+    'documentary',
+    ID,
     'dQw4w9WgXc',
     'dQw4w9WgXcQQ',
     'https://www.youtube.com/',

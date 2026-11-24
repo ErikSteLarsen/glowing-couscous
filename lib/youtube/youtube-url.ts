@@ -1,4 +1,4 @@
-/** A YouTube video the ride screen can play, read from a link or a bare video ID. */
+/** A YouTube video the ride screen can play, read from a link. */
 export type YouTubeLink = {
   videoId: string;
   /** Seconds into the video to start from, when the link carries `t=` or `start=`. */
@@ -60,13 +60,13 @@ function videoIdFromPath(url: URL, host: string): string | null {
 }
 
 /**
- * Parses a pasted YouTube link (watch, youtu.be, shorts, live, embed, mobile and music hosts)
- * or a bare 11-character video ID. Returns null for anything else, including playlist-only links.
+ * Parses a pasted YouTube link (watch, youtu.be, shorts, live, embed, mobile and music hosts).
+ * Returns null for anything else, including playlist-only links and bare words: an 11-character
+ * search such as "documentary" is a search, not a video ID.
  */
 export function parseYouTubeLink(raw: string): YouTubeLink | null {
   const input = raw.trim();
   if (input === '' || input.length > 2048) return null;
-  if (isYouTubeVideoId(input)) return { videoId: input };
 
   const url = toUrl(input);
   if (!url) return null;

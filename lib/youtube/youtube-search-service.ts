@@ -6,7 +6,7 @@
  * 1 unit each from the general bucket of 10,000 units a day. Both reset at midnight Pacific time.
  * So search results are cached for hours, a channel's videos come from its uploads playlist,
  * identical requests in flight share one upstream call, and upstream calls are limited per user
- * and per project. Cached data stays far inside the 30-day refresh rule of the Developer Policies.
+ * and per server process (searches also per account and day). Cached data stays far inside the 30-day refresh rule of the Developer Policies.
  */
 
 export const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
@@ -16,6 +16,8 @@ export const YOUTUBE_PAGE_TOKEN_MAX_LENGTH = 200;
 export const YOUTUBE_SEARCH_ORDERS = ['relevance', 'date', 'viewCount'] as const;
 /** The default search.list allowance per project and Pacific day. */
 export const YOUTUBE_DEFAULT_DAILY_SEARCH_LIMIT = 100;
+/** The default share of that allowance one account may spend per Pacific day. */
+export const YOUTUBE_DEFAULT_DAILY_SEARCH_LIMIT_PER_USER = 25;
 
 export type YouTubeSearchOrder = (typeof YOUTUBE_SEARCH_ORDERS)[number];
 
@@ -81,8 +83,10 @@ const errors = {
   unavailable: { status: 502, error: 'Could not reach YouTube. Check your connection and try again.' },
 } satisfies Record<YouTubeSearchErrorCode, { status: number; error: string }>;
 
-function failure(code: YouTubeSearchErrorCode): Failure {
-  return { ok: false, code, ...errors[code] };
+const USER_SEARCH_LIMIT_ERROR = 'You have used today’s searches. Paste a YouTube link instead, or search again tomorrow.';
+
+function failure(code: YouTubeSearchErrorCode, error?: string): Failure {
+  return { ok: false, code, ...errors[code], ...(error ? { error } : {}) };
 }
 
 /** Validates raw query-string values. Returns null when the input is malformed. */
@@ -274,9 +278,11 @@ export function createYouTubeSearchService({
   liveTtlMs = 10 * MINUTE,
   channelTtlMs = 30 * MINUTE,
   videoTtlMs = HOUR,
+  uploadsPlaylistTtlMs = 24 * HOUR,
   cacheSize = 300,
   rateLimit = { limit: 20, windowMs: MINUTE },
   dailySearchLimit = YOUTUBE_DEFAULT_DAILY_SEARCH_LIMIT,
+  dailySearchLimitPerUser = YOUTUBE_DEFAULT_DAILY_SEARCH_LIMIT_PER_USER,
   log = (message: string) => console.warn(message),
 }: {
   apiKey: string | undefined;
@@ -291,18 +297,23 @@ export function createYouTubeSearchService({
   channelTtlMs?: number;
   /** Single-video lookups for pasted links. */
   videoTtlMs?: number;
+  /** A channel's uploads playlist ID. */
+  uploadsPlaylistTtlMs?: number;
   cacheSize?: number;
   /** Upstream round trips (cache misses) allowed per user within the window. */
   rateLimit?: { limit: number; windowMs: number };
-  /** search.list calls this project may make per Pacific day. */
+  /** search.list calls this server process may make per Pacific day. */
   dailySearchLimit?: number;
+  /** search.list calls one account may cause per Pacific day (cache hits are free). */
+  dailySearchLimitPerUser?: number;
   log?: (message: string) => void;
 }) {
   const pages = createCache<YouTubeSearchPage>(cacheSize);
   const lookups = createCache<YouTubeVideoLookup>(cacheSize);
-  const uploadsPlaylists = new Map<string, string>();
+  const uploadsPlaylists = createCache<string | null>(cacheSize);
   const callsByUser = new Map<number, number[]>();
   const searchCalls = { day: '', count: 0 };
+  const searchesByUser = { day: '', counts: new Map<number, number>() };
   const exhausted: Record<Bucket, string> = { search: '', general: '' };
   const root = baseUrl.replace(/\/+$/, '');
 
@@ -345,8 +356,8 @@ export function createYouTubeSearchService({
     if (ids.length === 0) return byId;
     const payload = await call('videos', {
       part: 'snippet,contentDetails,status',
+      // videos.list rejects maxResults together with id; the IDs alone bound the page.
       id: ids.join(','),
-      maxResults: String(ids.length),
     });
     for (const resource of items(payload)) {
       const lookup = normalizeVideo(resource as VideoResource);
@@ -386,15 +397,28 @@ export function createYouTubeSearchService({
   }
 
   async function uploadsPlaylistFor(channelId: string): Promise<string | null> {
-    const known = uploadsPlaylists.get(channelId);
-    if (known) return known;
-    const payload = await call('channels', { part: 'contentDetails', id: channelId });
-    const channel = items(payload)[0] as { contentDetails?: { relatedPlaylists?: { uploads?: unknown } } } | undefined;
-    const uploads = channel?.contentDetails?.relatedPlaylists?.uploads;
-    if (typeof uploads !== 'string' || !PLAYLIST_ID.test(uploads)) return null;
-    if (uploadsPlaylists.size >= cacheSize) uploadsPlaylists.clear();
-    uploadsPlaylists.set(channelId, uploads);
-    return uploads;
+    const at = now();
+    let entry = uploadsPlaylists.get(channelId, at);
+    if (!entry) {
+      entry = {
+        expiresAt: at + uploadsPlaylistTtlMs,
+        value: call('channels', { part: 'contentDetails', id: channelId }).then((payload) => {
+          const channel = items(payload)[0] as { contentDetails?: { relatedPlaylists?: { uploads?: unknown } } } | undefined;
+          const uploads = channel?.contentDetails?.relatedPlaylists?.uploads;
+          return typeof uploads === 'string' && PLAYLIST_ID.test(uploads) ? uploads : null;
+        }),
+      };
+      uploadsPlaylists.set(channelId, entry);
+    }
+    try {
+      const uploads = await entry.value;
+      // A missing playlist is not remembered: the channel may publish later.
+      if (uploads === null) uploadsPlaylists.settle(channelId, entry, null);
+      return uploads;
+    } catch (error) {
+      uploadsPlaylists.settle(channelId, entry, null);
+      throw error;
+    }
   }
 
   /** A channel's newest uploads through channels.list and playlistItems.list: general units, no search call. */
@@ -428,6 +452,16 @@ export function createYouTubeSearchService({
     return true;
   }
 
+  /** search.list calls the account has caused today; the map starts over each Pacific day. */
+  function userSearches(at: number) {
+    const day = pacificDay(at);
+    if (searchesByUser.day !== day) {
+      searchesByUser.day = day;
+      searchesByUser.counts.clear();
+    }
+    return searchesByUser.counts;
+  }
+
   function isExhausted(bucket: Bucket, at: number) {
     return exhausted[bucket] === pacificDay(at);
   }
@@ -459,7 +493,11 @@ export function createYouTubeSearchService({
     let entry = cache.get(key, at);
     if (!entry) {
       if (buckets.some((bucket) => isExhausted(bucket, at))) return failure('quota_exceeded');
+      const searches = buckets.includes('search') ? userSearches(at) : null;
+      const used = searches?.get(userId) ?? 0;
+      if (searches && used >= dailySearchLimitPerUser) return failure('quota_exceeded', USER_SEARCH_LIMIT_ERROR);
       if (!allowUpstreamCall(userId, at)) return failure('rate_limited');
+      searches?.set(userId, used + 1);
       entry = { expiresAt: at + ttlMs, value: load() };
       cache.set(key, entry);
     }
@@ -508,18 +546,31 @@ export type YouTubeSearchService = ReturnType<typeof createYouTubeSearchService>
 
 let defaultService: YouTubeSearchService | null = null;
 
+type YouTubeEnv = Partial<Record<'NODE_ENV' | 'YOUTUBE_API_KEY' | 'YOUTUBE_API_BASE_URL' | 'YOUTUBE_SEARCH_DAILY_LIMIT' | 'YOUTUBE_SEARCH_DAILY_LIMIT_PER_USER', string>>;
+
+function positiveInteger(value: string | undefined): number | undefined {
+  const number = Number(value);
+  return Number.isSafeInteger(number) && number > 0 ? number : undefined;
+}
+
 /**
- * The app-wide service, configured from `YOUTUBE_API_KEY`, optional `YOUTUBE_SEARCH_DAILY_LIMIT`
- * and, for local stubs only, `YOUTUBE_API_BASE_URL`.
+ * Service options from the environment: `YOUTUBE_API_KEY`, the optional daily limits and, outside
+ * production only, `YOUTUBE_API_BASE_URL` for a local stub. Production always calls Google.
  */
+export function youTubeServiceOptionsFromEnv(env: YouTubeEnv) {
+  const stubUrl = env.NODE_ENV !== 'production' ? env.YOUTUBE_API_BASE_URL?.trim() : undefined;
+  const dailySearchLimit = positiveInteger(env.YOUTUBE_SEARCH_DAILY_LIMIT);
+  const dailySearchLimitPerUser = positiveInteger(env.YOUTUBE_SEARCH_DAILY_LIMIT_PER_USER);
+  return {
+    apiKey: env.YOUTUBE_API_KEY?.trim() || undefined,
+    baseUrl: stubUrl || YOUTUBE_API_BASE_URL,
+    ...(dailySearchLimit ? { dailySearchLimit } : {}),
+    ...(dailySearchLimitPerUser ? { dailySearchLimitPerUser } : {}),
+  };
+}
+
+/** The app-wide service. Its caches and counters live in this server process only. */
 export function getYouTubeSearchService(): YouTubeSearchService {
-  if (!defaultService) {
-    const dailyLimit = Number(process.env.YOUTUBE_SEARCH_DAILY_LIMIT);
-    defaultService = createYouTubeSearchService({
-      apiKey: process.env.YOUTUBE_API_KEY?.trim() || undefined,
-      baseUrl: process.env.YOUTUBE_API_BASE_URL?.trim() || YOUTUBE_API_BASE_URL,
-      ...(Number.isSafeInteger(dailyLimit) && dailyLimit > 0 ? { dailySearchLimit: dailyLimit } : {}),
-    });
-  }
+  defaultService ??= createYouTubeSearchService(youTubeServiceOptionsFromEnv(process.env));
   return defaultService;
 }

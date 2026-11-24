@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowLeft, ExternalLink } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { buttonFocusClassName, compactSecondaryButtonClassName, ghostButtonClassName } from '@/components/ui';
 import { youTubeWatchUrl } from '@/lib/youtube/youtube-url';
@@ -38,38 +38,98 @@ function isPlaying(player: YouTubePlayer): boolean {
   }
 }
 
+/** The player box is never smaller than this (YouTube's minimum embed size), in CSS px. */
+const MIN_PLAYER_PX = 200;
+const SAMPLE_MS = 3000;
+
 /**
- * The watch view: a slim bar and the privacy-enhanced YouTube player, contained at 16:9.
- * Nothing is drawn over the player. Pauses with the ride, when hidden and when scrolled away.
+ * The watch view: a slim bar and the privacy-enhanced YouTube player, contained at 16:9 and never
+ * smaller than 200 × 200. Nothing is drawn over the player. Tempo starts playback only while the
+ * ride runs (or Pause with ride is off), the tab is visible, the player is at least half on screen
+ * and no dialog covers it; it pauses with the ride, under a dialog, when hidden and when scrolled away.
  */
 export function YouTubeWatch({
   video,
   rideStatus,
+  obscured,
+  startPlaying,
+  restored = false,
   onBack,
+  onTime,
 }: {
   video: YouTubeVideoChoice;
   rideStatus: 'running' | 'paused';
+  obscured: boolean;
+  /** The rider just chose this video, or it was playing before the view remounted. */
+  startPlaying: boolean;
+  /** Picked up after a remount: a video Tempo had paused (ride paused, dialog) plays again on resume. */
+  restored?: boolean;
   onBack: () => void;
+  /** Reports the playback position (and whether it plays or Tempo paused it) every few seconds and when the player goes away. */
+  onTime: (videoId: string, timeSec: number, playing: boolean) => void;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const frameBoxRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YouTubePlayer | null>(null);
-  const pausedByRideRef = useRef(false);
+  /** Tempo paused the video (ride paused, dialog opened), so Tempo may play it again. */
+  const pausedByTempoRef = useRef(false);
+  const resumeAtRef = useRef(video.startSec ?? 0);
+  const wantsPlayRef = useRef(startPlaying);
+  const restoredRef = useRef(restored);
   const [pauseWithRide, setPauseWithRide] = useState(readPauseWithRide);
   const [errorCode, setErrorCode] = useState<number | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [fits, setFits] = useState(true);
+  /** Where "Open on YouTube" starts: the position when the player last went away. */
+  const [linkStartSec, setLinkStartSec] = useState(video.startSec ?? 0);
+  const gateRef = useRef({ rideStatus, pauseWithRide, obscured, inView: false });
+  const onTimeRef = useRef(onTime);
+
+  useLayoutEffect(() => {
+    Object.assign(gateRef.current, { rideStatus, pauseWithRide, obscured });
+    onTimeRef.current = onTime;
+  });
+
+  /** Whether Tempo may start the video now. Anything else leaves it to YouTube's own Play button. */
+  const mayPlay = useCallback(() => {
+    const gate = gateRef.current;
+    return (gate.rideStatus === 'running' || !gate.pauseWithRide) && !gate.obscured && gate.inView && document.visibilityState === 'visible';
+  }, []);
+
+  const resumeIfPausedByTempo = useCallback(() => {
+    const player = playerRef.current;
+    if (!pausedByTempoRef.current || !player || !mayPlay()) return;
+    pausedByTempoRef.current = false;
+    try { player.playVideo(); } catch { /* player gone */ }
+  }, [mayPlay]);
 
   // Keep keyboard focus on the panel (not a button) so Space still pauses the ride.
   useEffect(() => {
     rootRef.current?.focus({ preventScroll: true });
   }, []);
 
-  // Create the iframe and attach the IFrame API; destroy both when leaving or switching videos.
+  // Too little room for a 200 × 200 player: offer YouTube instead of a player below the minimum.
+  useLayoutEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const measure = () => {
+      const { width, height } = stage.getBoundingClientRect();
+      setFits(width >= MIN_PLAYER_PX && height >= MIN_PLAYER_PX);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
+
+  // Create the iframe and attach the IFrame API and the visibility observer; destroy all of them
+  // when leaving, switching videos, retrying or when the player no longer fits.
   useEffect(() => {
     const box = frameBoxRef.current;
-    if (!box || errorCode !== null) return;
+    if (!box || errorCode !== null || !fits) return;
     const iframe = document.createElement('iframe');
-    iframe.src = youTubeEmbedUrl(video.id, { startSec: video.startSec, origin: window.location.origin });
+    iframe.src = youTubeEmbedUrl(video.id, { startSec: Math.floor(resumeAtRef.current) || undefined, origin: window.location.origin });
     iframe.title = `YouTube video player: ${video.title}`;
     iframe.allow = 'autoplay; encrypted-media';
     iframe.referrerPolicy = 'strict-origin-when-cross-origin';
@@ -79,6 +139,39 @@ export function YouTubeWatch({
 
     let cancelled = false;
     let player: YouTubePlayer | null = null;
+    const gate = gateRef.current;
+    gate.inView = false;
+
+    const sample = () => {
+      const current = playerRef.current;
+      if (!current) return;
+      try {
+        const time = current.getCurrentTime();
+        if (Number.isFinite(time) && time > 0) resumeAtRef.current = time;
+      } catch { /* player gone */ }
+      wantsPlayRef.current = isPlaying(current) || pausedByTempoRef.current;
+      onTimeRef.current(video.id, resumeAtRef.current, wantsPlayRef.current);
+    };
+    const timer = window.setInterval(sample, SAMPLE_MS);
+
+    // YouTube policy: pause when the player leaves the screen; the rider presses Play again after.
+    const pauseIfPlaying = () => {
+      const current = playerRef.current;
+      if (current && isPlaying(current)) {
+        try { current.pauseVideo(); } catch { /* player gone */ }
+      }
+      pausedByTempoRef.current = false;
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      gate.inView = Boolean(entry && entry.intersectionRatio >= 0.5);
+      if (!gate.inView) pauseIfPlaying();
+    }, { threshold: [0, 0.5, 1] });
+    observer.observe(box);
+    const onVisibility = () => {
+      if (document.hidden) pauseIfPlaying();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
     loadYouTubeIframeApi()
       .then((YT) => {
         if (cancelled) return;
@@ -87,9 +180,16 @@ export function YouTubeWatch({
             onReady: ({ target }) => {
               if (cancelled) return;
               playerRef.current = target;
-              // The rider's click chose this video: ask for playback now. If the browser blocks
-              // it, YouTube's own Play button stays available and Tempo does not retry.
-              try { target.playVideo(); } catch { /* the native Play button remains */ }
+              // The rider chose this video (or it was playing before a remount): start it only
+              // when the ride and page allow it, and otherwise leave it to YouTube's Play button.
+              // If the browser blocks playback, that button stays too and Tempo does not retry.
+              if (!wantsPlayRef.current) return;
+              if (mayPlay()) {
+                try { target.playVideo(); } catch { /* the native Play button remains */ }
+              } else if (restoredRef.current && gate.inView && (gate.obscured || (gate.rideStatus === 'paused' && gate.pauseWithRide))) {
+                // Tempo had paused it before the remount; keep that, so resuming plays it again.
+                pausedByTempoRef.current = true;
+              }
             },
             onError: ({ data }) => {
               if (!cancelled) setErrorCode(data);
@@ -102,13 +202,20 @@ export function YouTubeWatch({
       });
 
     return () => {
+      sample();
+      // A player built again (retry, room again) picks up the same way a remount does.
+      restoredRef.current = true;
+      setLinkStartSec(Math.floor(resumeAtRef.current));
       cancelled = true;
+      window.clearInterval(timer);
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
       playerRef.current = null;
-      pausedByRideRef.current = false;
+      pausedByTempoRef.current = false;
       try { player?.destroy(); } catch { /* already gone */ }
       iframe.remove();
     };
-  }, [video.id, video.startSec, video.title, errorCode, attempt]);
+  }, [video.id, video.title, errorCode, attempt, fits, mayPlay]);
 
   // Pause with the ride, and play again on resume only if Tempo paused it.
   const lastStatusRef = useRef(rideStatus);
@@ -118,42 +225,24 @@ export function YouTubeWatch({
     const player = playerRef.current;
     if (previous === 'running' && rideStatus === 'paused') {
       if (pauseWithRide && player && isPlaying(player)) {
-        try { player.pauseVideo(); pausedByRideRef.current = true; } catch { /* player gone */ }
+        try { player.pauseVideo(); pausedByTempoRef.current = true; } catch { /* player gone */ }
       }
     } else if (previous === 'paused' && rideStatus === 'running') {
-      if (pausedByRideRef.current && player) {
-        try { player.playVideo(); } catch { /* player gone */ }
-      }
-      pausedByRideRef.current = false;
+      resumeIfPausedByTempo();
     }
-  }, [rideStatus, pauseWithRide]);
+  }, [rideStatus, pauseWithRide, resumeIfPausedByTempo]);
 
-  // YouTube policy: pause when the player leaves the screen; the rider presses Play again after.
+  // A dialog over the stage (Connections, the phone's More sheet): pause and hide the player.
   useEffect(() => {
-    const box = frameBoxRef.current;
-    const pauseIfPlaying = () => {
-      const player = playerRef.current;
+    const player = playerRef.current;
+    if (obscured) {
       if (player && isPlaying(player)) {
-        try { player.pauseVideo(); } catch { /* player gone */ }
-        pausedByRideRef.current = false;
+        try { player.pauseVideo(); pausedByTempoRef.current = true; } catch { /* player gone */ }
       }
-    };
-    const onVisibility = () => {
-      if (document.hidden) pauseIfPlaying();
-    };
-    document.addEventListener('visibilitychange', onVisibility);
-    let observer: IntersectionObserver | null = null;
-    if (box && 'IntersectionObserver' in window) {
-      observer = new IntersectionObserver(([entry]) => {
-        if (entry && entry.intersectionRatio < 0.5) pauseIfPlaying();
-      }, { threshold: [0.5] });
-      observer.observe(box);
+    } else {
+      resumeIfPausedByTempo();
     }
-    return () => {
-      document.removeEventListener('visibilitychange', onVisibility);
-      observer?.disconnect();
-    };
-  }, []);
+  }, [obscured, resumeIfPausedByTempo]);
 
   // A click inside the player moves keyboard focus into YouTube, where the ride's Space/N/B/E/F
   // shortcuts can't reach. Return focus to the panel after a click; keep it there after a Tab.
@@ -184,11 +273,17 @@ export function YouTubeWatch({
   function togglePauseWithRide() {
     const next = !pauseWithRide;
     setPauseWithRide(next);
-    if (!next) pausedByRideRef.current = false;
+    if (!next) pausedByTempoRef.current = false;
     try { window.localStorage.setItem(PAUSE_WITH_RIDE_KEY, next ? '1' : '0'); } catch { /* preference only */ }
   }
 
-  const watchUrl = youTubeWatchUrl(video.id, video.startSec);
+  const watchUrl = youTubeWatchUrl(video.id, linkStartSec || undefined);
+  const openOnYouTube = (
+    <a href={watchUrl} target="_blank" rel="noopener noreferrer" className={compactSecondaryButtonClassName}>
+      <ExternalLink aria-hidden="true" size={14} strokeWidth={1.6} />
+      Open on YouTube
+    </a>
+  );
 
   return (
     <div ref={rootRef} tabIndex={-1} className="flex h-full w-full min-w-0 flex-col outline-none">
@@ -213,20 +308,23 @@ export function YouTubeWatch({
         </button>
       </div>
 
-      <div className="relative grid min-h-0 flex-1 content-start justify-items-center [container-type:size]">
-        {errorCode === null ? (
+      <div ref={stageRef} className="relative grid min-h-0 flex-1 content-start justify-items-center [container-type:size]">
+        {errorCode === null && fits ? (
+          // 16:9 within the stage, letterboxed up to 200 px tall when 16:9 would be shorter.
           <div
             ref={frameBoxRef}
-            className="relative aspect-video w-[min(100cqw,calc(100cqh*16/9))] overflow-hidden rounded-lg bg-black"
+            className={`relative h-[max(200px,calc(min(100cqw,calc(100cqh*16/9))*9/16))] w-[max(200px,min(100cqw,calc(100cqh*16/9)))] overflow-hidden rounded-lg bg-black ${obscured ? 'invisible' : ''}`}
           />
+        ) : errorCode === null ? (
+          <div role="status" className="flex max-w-sm flex-col items-center gap-3 self-center px-4 text-center">
+            <p className="text-sm text-[var(--text)]">There isn’t room for the player here.</p>
+            <div className="flex flex-wrap justify-center gap-2">{openOnYouTube}</div>
+          </div>
         ) : (
           <div role="alert" className="flex max-w-sm flex-col items-center gap-3 px-4 text-center">
             <p className="text-sm text-[var(--text)]">{playerErrorMessage(errorCode)}</p>
             <div className="flex flex-wrap justify-center gap-2">
-              <a href={watchUrl} target="_blank" rel="noopener noreferrer" className={compactSecondaryButtonClassName}>
-                <ExternalLink aria-hidden="true" size={14} strokeWidth={1.6} />
-                Open on YouTube
-              </a>
+              {openOnYouTube}
               {errorCode === 5 || errorCode === 153 ? (
                 <button type="button" className={compactSecondaryButtonClassName} onClick={() => { setErrorCode(null); setAttempt((value) => value + 1); }}>
                   Try again

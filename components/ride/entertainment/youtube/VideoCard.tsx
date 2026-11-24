@@ -13,17 +13,22 @@ type CardVideo = YouTubeVideoChoice & Partial<Pick<YouTubeVideoSummary, 'publish
 
 /**
  * One video in the browse grid: the title button plays it (and covers the card), the channel
- * name opens that channel. Made-for-kids videos link out to YouTube instead of playing in Tempo.
+ * name opens that channel. Made-for-kids videos, and every video when Tempo can't check them
+ * (`opensOnYouTube`), link out to YouTube instead of playing in Tempo.
  */
 export function VideoCard({
   video,
   onPlay,
   onOpenChannel,
+  opensOnYouTube = false,
 }: {
   video: CardVideo;
   onPlay: (video: CardVideo) => void;
   onOpenChannel?: (channelId: string, channelTitle: string) => void;
+  opensOnYouTube?: boolean;
 }) {
+  const linksOut = opensOnYouTube || video.madeForKids;
+  const linkOutNote = video.madeForKids ? 'Made for kids, opens on YouTube' : 'Opens on YouTube';
   const age = video.publishedAt ? formatVideoAge(video.publishedAt) : '';
   const badge = video.isLive ? 'LIVE' : video.durationSec ? formatVideoDuration(video.durationSec) : null;
 
@@ -47,10 +52,10 @@ export function VideoCard({
         ) : null}
       </div>
       <h3 className="mt-2 line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text)]">
-        {video.madeForKids ? (
+        {linksOut ? (
           <a href={youTubeWatchUrl(video.id)} target="_blank" rel="noopener noreferrer" className={stretchedClassName}>
             {video.title}
-            <span className="sr-only"> (made for kids, opens on YouTube)</span>
+            <span className="sr-only"> ({linkOutNote.toLowerCase()})</span>
           </a>
         ) : (
           <button type="button" className={stretchedClassName} onClick={() => onPlay(video)}>
@@ -72,10 +77,10 @@ export function VideoCard({
         ) : null}
         {age ? <span className="shrink-0">{video.channelTitle ? '– ' : ''}{age}</span> : null}
       </p>
-      {video.madeForKids ? (
-        <p className="mt-0.5 flex items-center gap-1 text-xs text-[var(--text-muted)]">
+      {linksOut ? (
+        <p aria-hidden="true" className="mt-0.5 flex items-center gap-1 text-xs text-[var(--text-muted)]">
           <ExternalLink aria-hidden="true" size={12} strokeWidth={1.6} />
-          Made for kids, opens on YouTube
+          {linkOutNote}
         </p>
       ) : null}
     </li>

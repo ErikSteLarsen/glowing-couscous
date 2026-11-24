@@ -7,6 +7,23 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- Ride entertainment (`RIDE-ENT-001`, 2026-11-24, local branch `ride-entertainment`).
+  The active ride has an **Entertainment** toggle (key V) with two views:
+  YouTube (search, channel uploads, pasted links, a youtube-nocookie player
+  beside the stats, made-for-kids check, per-process and per-account daily
+  search budgets) and Ride a course (stick-figure rider, speed from power and
+  gradient). `pnpm exec tsc --noEmit -p .`, `pnpm lint`, `pnpm test` (618
+  passed, 17 database cases skipped), desktop tests (20 passed) and
+  `pnpm build` passed. Headless Chromium against `tempo_ride_focus` with a
+  simulated FTMS trainer and a local Data API stub (never the real API):
+  search, channel, Load more, link paste with start time, real embed playback,
+  ride pause pausing the video, N after clicking into the player, dialogs
+  hiding the player, resize and V off/on keeping the video, 1440×900, 402×874
+  and 360×740 without page scroll. The course slowed from 31 to 13 km/h on
+  the climb at constant ERG watts and froze while paused; frames cost about
+  0.2 ms. Not verified: a real `YOUTUBE_API_KEY`, iOS Safari, the packaged
+  Tempo Ride app, and YouTube's logo attribution (text link only for now).
+
 - Post to Strava (2026-11-23, local). Workout pages for saved activities with
   recorded data show **Post to Strava** (preview sheet with editable title and
   description, chart PNG from `next/og`, Download image) and a .tcx download in
