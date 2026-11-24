@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import Link from 'next/link';
-import { ChevronDown, ChevronUp, Ellipsis, Maximize, Minimize, Minus, Pause, Play, Plus, SkipBack, SkipForward, Square } from 'lucide-react';
+import { ChevronDown, ChevronUp, Ellipsis, Maximize, Minimize, Minus, Pause, Play, Plus, Popcorn, SkipBack, SkipForward, Square } from 'lucide-react';
 import { BackLink, buttonFocusClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import type { BackTarget } from '@/lib/app-navigation';
 import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
@@ -39,6 +39,8 @@ import {
 import { clearRideCheckpoint, downloadRideBackup, listStoredRides, saveRideCheckpoint } from '@/lib/ride/recording-store';
 import { WorkoutProfileChart } from './WorkoutProfileChart';
 import { StravaPostAction } from '@/components/StravaPostAction';
+import { EntertainmentStage } from '@/components/ride/entertainment/EntertainmentStage';
+import type { EntertainmentMode, EntertainmentRide } from '@/components/ride/entertainment/types';
 
 const CHECKPOINT_INTERVAL_MS = 5000;
 const SAMPLE_INTERVAL_MS = 250;
@@ -48,6 +50,19 @@ const subscribeNever = () => () => undefined;
 const PROFILE_FTP_HREF = '/profile#cycling';
 const MORE_DATA_KEY = 'tempo.ride.moreData';
 const PHONE_QUERY = '(max-width: 639px)';
+const ENTERTAINMENT_KEY = 'tempo.ride.entertainment';
+
+/** Off, on with the view picker showing, or on with a chosen view. Remembered per browser. */
+type EntertainmentSetting = 'off' | 'choose' | EntertainmentMode;
+
+function readEntertainment(): EntertainmentSetting {
+  try {
+    const value = typeof window === 'undefined' ? null : window.localStorage.getItem(ENTERTAINMENT_KEY);
+    return value === 'choose' || value === 'youtube' || value === 'course' ? value : 'off';
+  } catch {
+    return 'off';
+  }
+}
 
 function subscribePhone(onChange: () => void) {
   const query = window.matchMedia(PHONE_QUERY);
@@ -183,6 +198,18 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   const toggleMoreData = useCallback(() => setMoreData((open) => {
     try { window.localStorage.setItem(MORE_DATA_KEY, open ? '0' : '1'); } catch { /* preference only */ }
     return !open;
+  }), []);
+
+  // Like More data, entertainment only shows in the live view, which never renders on the server.
+  const [entertainment, setEntertainmentState] = useState<EntertainmentSetting>(readEntertainment);
+  const setEntertainment = useCallback((next: EntertainmentSetting) => {
+    try { window.localStorage.setItem(ENTERTAINMENT_KEY, next); } catch { /* preference only */ }
+    setEntertainmentState(next);
+  }, []);
+  const toggleEntertainment = useCallback(() => setEntertainmentState((current) => {
+    const next: EntertainmentSetting = current === 'off' ? 'choose' : 'off';
+    try { window.localStorage.setItem(ENTERTAINMENT_KEY, next); } catch { /* preference only */ }
+    return next;
   }), []);
 
   useEffect(() => () => pendingSaveRef.current?.abort(), []);
@@ -421,12 +448,13 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       else if (event.key === 'n' || event.key === 'N') skip();
       else if (event.key === 'b' || event.key === 'B') goBack();
       else if (event.key === 'e' || event.key === 'E') toggleErg();
+      else if (event.key === 'v' || event.key === 'V') toggleEntertainment();
       else if (event.key === '+' || event.key === '=') bias(1);
       else if (event.key === '-' || event.key === '_') bias(-1);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [active, bias, goBack, skip, toggleErg, toggleFullscreen, togglePause]);
+  }, [active, bias, goBack, skip, toggleEntertainment, toggleErg, toggleFullscreen, togglePause]);
 
   const { samples, laps: recordedLaps, timerSec, stepIndex, stepElapsedSec } = recording;
   const lap = useMemo(() => currentLapStats({ samples, laps: recordedLaps }), [samples, recordedLaps]);
@@ -490,12 +518,13 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       <div className="flex items-center gap-1.5"><dt className="flex gap-1"><Kbd>B</Kbd><Kbd>N</Kbd></dt><dd>Previous / next block</dd></div>
       <div className="flex items-center gap-1.5"><dt><Kbd>E</Kbd></dt><dd>ERG</dd></div>
       <div className="flex items-center gap-1.5"><dt className="flex gap-1"><Kbd>+</Kbd><Kbd>−</Kbd></dt><dd>Intensity</dd></div>
+      {status === 'ready' ? null : <div className="flex items-center gap-1.5"><dt><Kbd>V</Kbd></dt><dd>Entertainment</dd></div>}
       {fullscreenSupported ? <div className="flex items-center gap-1.5"><dt><Kbd>F</Kbd></dt><dd>Full screen</dd></div> : null}
     </dl>
   );
 
-  const frame = (stateLabel: string, controls: ReactNode, body: ReactNode, label: string) => (
-    <div className="ride-mode flex min-h-dvh flex-col">
+  const frame = (stateLabel: string, controls: ReactNode, body: ReactNode, label: string, fill = false) => (
+    <div className={`ride-mode flex flex-col ${fill ? 'h-dvh overflow-hidden' : 'min-h-dvh'}`}>
       <header className="flex min-h-16 flex-wrap items-center gap-x-4 gap-y-2 border-b border-[var(--border)] px-3 py-2 sm:px-5">
         <div className="flex min-w-0 flex-1 basis-40 items-center gap-2">
           {backLink}
@@ -773,6 +802,58 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     </span>
   );
 
+  const entertainmentOn = entertainment !== 'off';
+  const entertainmentMode: EntertainmentMode | null = entertainment === 'off' || entertainment === 'choose' ? null : entertainment;
+  const entertainmentRide: EntertainmentRide = {
+    sessionId,
+    status: status === 'paused' ? 'paused' : 'running',
+    reading: live,
+    threeSecondPowerWatts: threeSecond,
+    targetWatts,
+    ergOn,
+    tone,
+    blockLabel: stepLabel(stepIndex),
+    blockLeftSec: currentStep ? stepTime : null,
+    blockNumber: currentStep ? stepIndex + 1 : null,
+    blockCount: plan.steps.length,
+    blockColor: intervalColor,
+  };
+  const entertainmentStage = (compact: boolean) => (
+    <EntertainmentStage mode={entertainmentMode} ride={entertainmentRide} onModeChange={setEntertainment} onClose={() => setEntertainment('off')} compact={compact} />
+  );
+  const entertainmentButton = (iconOnly: boolean) => (
+    <button
+      type="button"
+      className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border text-sm font-medium transition-colors ${iconOnly ? 'w-10 justify-center' : 'px-3'} ${buttonFocusClassName} ${entertainmentOn ? 'border-[var(--brand)] text-[var(--text)]' : 'border-[var(--border-strong)] text-[var(--text-secondary)] hover:bg-[var(--raised)] hover:text-[var(--text)]'}`}
+      onClick={toggleEntertainment}
+      aria-pressed={entertainmentOn}
+      aria-keyshortcuts="V"
+      aria-label={iconOnly ? 'Entertainment' : undefined}
+      title={`${entertainmentOn ? 'Turn off' : 'Turn on'} entertainment: YouTube or a course (V)`}
+    >
+      <Popcorn aria-hidden="true" size={16} strokeWidth={1.7} />
+      {iconOnly ? null : 'Entertainment'}
+    </button>
+  );
+  const deviationMeter = deviation !== null ? (
+    <div className="relative h-1.5 rounded-full bg-[var(--raised)]" role="meter" aria-label="Power versus target" aria-valuemin={-100} aria-valuemax={100} aria-valuenow={Math.round(deviation * 100)} aria-valuetext={delta ? `${Math.abs(delta)} watts ${delta > 0 ? 'above' : 'below'} target` : toneText}>
+      <span aria-hidden="true" className="absolute -top-0.5 left-1/2 h-2.5 w-px bg-[var(--text-muted)]" />
+      <span aria-hidden="true" className="ride-state-bar absolute top-0 h-1.5 rounded-full" style={{ left: `${50 + Math.min(0, deviation) * 50}%`, width: `${Math.abs(deviation) * 50}%`, background: toneColor }} />
+    </div>
+  ) : null;
+  const toneLine = deviation !== null ? (
+    <p className="text-[13px] font-medium" style={{ color: toneColor }}>
+      {toneText}{delta !== null && tone !== 'on' ? <> by <span className="data">{Math.abs(delta)}&nbsp;W</span></> : null}
+    </p>
+  ) : null;
+  const targetText = targetWatts !== null || prescribedTarget ? (
+    <span className="text-[13px] text-[var(--text-secondary)]">
+      {ergOn ? 'ERG target' : 'Target'}{' '}
+      <span className="ride-numeral text-xl !text-[var(--text-secondary)]">{targetWatts ?? prescribedTarget}</span>
+      {targetWatts !== null ? <span className="ml-1 text-[12px] text-[var(--text-muted)]">W</span> : null}
+    </span>
+  ) : null;
+
   if (isPhone) {
     const closeSheet = () => phoneSheetRef.current?.close();
     const sheetMetric = (label: string, value: string, unitText?: string, color?: string) => (
@@ -804,6 +885,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
               {status === 'paused' ? 'Paused' : 'Riding'}, {connectedCount === 0 ? 'no devices' : `${connectedCount} ${connectedCount === 1 ? 'device' : 'devices'}`}
             </p>
           </div>
+          {entertainmentButton(true)}
           {ergButton}
           <button type="button" className={iconControlClassName} aria-label="More controls and data" aria-haspopup="dialog" onClick={() => phoneSheetRef.current?.showModal()}>
             <Ellipsis aria-hidden="true" size={18} strokeWidth={1.8} />
@@ -878,12 +960,17 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
               </div>
             </dl>
 
-            <div className="mt-3 grid grid-cols-2 gap-4 border-t border-[var(--border)] pt-3">
-              {phoneAvg(currentStep ? 'Block avg' : 'Free ride avg', lap?.averagePowerWatts, lap?.averageHeartRateBpm)}
-              {phoneAvg('Workout avg', workout.averagePowerWatts, workout.averageHeartRateBpm)}
-            </div>
+            {entertainmentOn ? null : (
+              <div className="mt-3 grid grid-cols-2 gap-4 border-t border-[var(--border)] pt-3">
+                {phoneAvg(currentStep ? 'Block avg' : 'Free ride avg', lap?.averagePowerWatts, lap?.averageHeartRateBpm)}
+                {phoneAvg('Workout avg', workout.averagePowerWatts, workout.averageHeartRateBpm)}
+              </div>
+            )}
           </section>
 
+          {entertainmentOn ? (
+            <div className="-mx-4 flex min-h-0 flex-1 flex-col px-2 pb-2 pt-3">{entertainmentStage(true)}</div>
+          ) : (
           <section aria-label="Workout profile" className="flex min-h-0 flex-1 flex-col pt-3">
             <p className="shrink-0 text-right text-[12px] text-[var(--text-secondary)]">
               <span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <> – <span className="data">{formatClock(remainingSec)}</span> left</> : null}
@@ -892,6 +979,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
               <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} className="h-full" />
             </div>
           </section>
+          )}
         </main>
 
         <footer className="flex shrink-0 items-center gap-2 border-t border-[var(--border)] px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
@@ -963,7 +1051,14 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     );
   }
 
-  return frame(status === 'paused' ? 'Paused' : anyDevice ? 'Riding' : 'Riding, no devices', controls, (
+  const desktopControls = (
+    <>
+      {entertainmentButton(false)}
+      <span aria-hidden="true" className="mx-1 hidden h-6 w-px bg-[var(--border-strong)] sm:block" />
+      {controls}
+    </>
+  );
+  const banners = (
     <>
       {lostDevices.length ? (
         <p role="status" className="border-b border-[var(--status-warning-border)] bg-[var(--status-warning-tint)] px-5 py-2 text-[13px] text-[var(--text)] sm:px-7">
@@ -973,6 +1068,90 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       {status === 'paused' ? (
         <p role="status" className="border-b border-[var(--border)] bg-[var(--raised)] px-5 py-2 text-[13px] text-[var(--text)] sm:px-7">Paused. The timer is stopped.</p>
       ) : null}
+    </>
+  );
+  const stateLabel = status === 'paused' ? 'Paused' : anyDevice ? 'Riding' : 'Riding, no devices';
+
+  if (entertainmentOn) {
+    const railLabel = 'text-[12px] text-[var(--text-secondary)]';
+    const railCard = 'border-t border-[var(--border)] pt-3';
+    const withRails = entertainmentMode !== 'course';
+    const powerRail = (
+      <div className="flex min-w-0 flex-col justify-center gap-4">
+        <div className="space-y-2">
+          <p className={railLabel}>Power</p>
+          {nowValue(threeSecond, 'W', 'text-[3rem] xl:text-[3.75rem]')}
+          {targetText ? <p>{targetText}</p> : null}
+          {deviationMeter}
+          {toneLine}
+        </div>
+        <div className={railCard}><p className={`${railLabel} mb-1.5`}>{currentStep ? 'Block avg' : 'Free ride avg'}</p>{avgValue(lap?.averagePowerWatts, 'W')}</div>
+        <div className={railCard}><p className={`${railLabel} mb-1.5`}>Workout avg</p>{avgValue(workout.averagePowerWatts, 'W')}</div>
+      </div>
+    );
+    const bodyRail = (
+      <div className="flex min-w-0 flex-col justify-center gap-4">
+        <div><p className={`${railLabel} mb-1.5`}>Heart rate</p>{nowValue(live.heartRateBpm, 'bpm', 'text-[2.5rem] xl:text-[3rem]', 'var(--ride-hr)')}</div>
+        <div className={railCard}><p className={`${railLabel} mb-1.5`}>Cadence</p>{nowValue(live.cadenceRpm, 'rpm', 'text-[2.5rem] xl:text-[3rem]')}</div>
+        <div className={railCard}><p className={`${railLabel} mb-1.5`}>{currentStep ? 'Block avg HR' : 'Avg HR'}</p>{avgValue(lap?.averageHeartRateBpm, 'bpm', 'var(--ride-hr)')}</div>
+      </div>
+    );
+    return frame(stateLabel, desktopControls, (
+      <>
+        {banners}
+        <div className="mx-auto flex min-h-0 w-full max-w-[1680px] flex-1 flex-col gap-3 px-4 pb-3 pt-3 sm:px-6">
+          <section aria-label="Current block" className="shrink-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate text-base font-medium text-[var(--text)]">{stepLabel(stepIndex)}</h2>
+                <p className="truncate text-[13px] text-[var(--text-secondary)]">
+                  {currentStep ? `Block ${stepIndex + 1} of ${plan.steps.length}` : 'After workout plan'}
+                  {currentStep ? <span className="data">{nextStep ? ` – next ${stepLabel(stepIndex + 1)}${nextTarget !== null ? ` – ${nextTarget} W` : ''}` : ' – free ride next'}</span> : null}
+                </p>
+              </div>
+              <p className="flex shrink-0 items-baseline gap-2 text-sm text-[var(--text-secondary)]">
+                <span className="ride-numeral !leading-none text-[1.75rem]">{formatClock(stepTime)}</span>
+                {currentStep ? 'left' : 'in free ride'}
+              </p>
+              <div role="group" aria-label="Block navigation" className="flex shrink-0 items-center gap-2 border-l border-[var(--border)] pl-6">
+                <button type="button" className={`${secondaryButtonClassName} !h-9 gap-2`} onClick={goBack} disabled={!canGoBack} aria-keyshortcuts="B" title="Go back to the previous block (B)">
+                  <SkipBack aria-hidden="true" size={15} strokeWidth={1.7} />Previous
+                </button>
+                <button type="button" className={`${secondaryButtonClassName} !h-9 gap-2`} onClick={skip} disabled={!currentStep} aria-keyshortcuts="N" title="Skip to the next block (N)">
+                  Next block<SkipForward aria-hidden="true" size={15} strokeWidth={1.7} />
+                </button>
+              </div>
+            </div>
+            {currentStep ? <ProgressBar value={stepProgress} label="Block progress" color={intervalColor} className="h-1" /> : null}
+          </section>
+
+          {withRails ? (
+            <section aria-label="Ride metrics" className="flex shrink-0 flex-wrap items-end gap-x-8 gap-y-2 lg:hidden">
+              <div className="flex items-baseline gap-3">{nowValue(threeSecond, 'W', 'text-[2.25rem]')}{targetText}</div>
+              {nowValue(live.heartRateBpm, 'bpm', 'text-[1.75rem]', 'var(--ride-hr)')}
+              {nowValue(live.cadenceRpm, 'rpm', 'text-[1.75rem]')}
+            </section>
+          ) : null}
+
+          <div className={`grid min-h-0 flex-1 gap-6 ${withRails ? 'lg:grid-cols-[minmax(190px,250px)_minmax(0,1fr)_minmax(170px,220px)]' : ''}`}>
+            {withRails ? <section aria-label="Power" className="hidden min-h-0 lg:flex">{powerRail}</section> : null}
+            <div className="min-h-0 min-w-0">{entertainmentStage(false)}</div>
+            {withRails ? <section aria-label="Heart rate and cadence" className="hidden min-h-0 lg:flex">{bodyRail}</section> : null}
+          </div>
+
+          <section aria-label="Workout profile" className="shrink-0 space-y-1.5">
+            <p className="text-right text-[12px] text-[var(--text-secondary)]"><span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <> – <span className="data">{formatClock(remainingSec)}</span> left in plan</> : null}</p>
+            <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} className="mb-5 h-24 xl:h-28" />
+          </section>
+          <div className="shrink-0 border-t border-[var(--border)] pt-2.5">{shortcutLegend}</div>
+        </div>
+      </>
+    ), 'Ride', true);
+  }
+
+  return frame(stateLabel, desktopControls, (
+    <>
+      {banners}
 
       <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col px-4 sm:px-8">
         <section aria-label="Current block" className="space-y-3 py-4 sm:py-5">
