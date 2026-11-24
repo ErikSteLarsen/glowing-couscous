@@ -4,7 +4,7 @@ export type RideOs = 'windows' | 'macos' | 'linux' | 'other';
 export type RideDownload = { id: string; os: Exclude<RideOs, 'other'>; label: string; fileName: string; url: string };
 
 /** The released Tempo Ride version the website links to. Must match `desktop/package.json` (a test enforces it). */
-export const RIDE_DESKTOP_VERSION = '0.2.2';
+export const RIDE_DESKTOP_VERSION = '0.3.0';
 
 /** Pinned to the release tag so the links never depend on which GitHub release is marked latest. */
 export const DEFAULT_RIDE_DOWNLOAD_BASE = `https://github.com/ErikSteLarsen/glowing-couscous/releases/download/desktop-v${RIDE_DESKTOP_VERSION}`;
