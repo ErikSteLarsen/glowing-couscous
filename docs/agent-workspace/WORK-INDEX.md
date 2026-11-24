@@ -37,12 +37,14 @@ means compatibility code, not the extension point for new work.
 | `GPX-001` | GPX completed-activity import | `shipped` | `lib/gpx-activity.ts`, `lib/athlete-gpx-import-service.ts`, `lib/tcx-upload.ts`, `app/(app)/athlete/activity/ActivityImportForm.tsx` | `/athlete/activity`, `/api/athlete/activities/import/*` |
 | `FIT-001` | FIT device-activity import | `shipped` | `lib/athlete-fit-import-service.ts`, `lib/fit-activity.ts`, `lib/tcx-upload.ts`, `app/(app)/athlete/activity/*` | `/athlete/activity`, `/api/athlete/activities/import/*` |
 | `RIDE-001` | Indoor bike trainer ride (Web Bluetooth, ERG, crash-safe recording) | `in-progress` | `lib/ride/ble-parsers.ts`, `lib/ride/ftms-control.ts`, `lib/ride/ride-plan.ts`, `lib/ride/recorder.ts`, `lib/ride/ride-chart.ts`, `lib/ride/bluetooth.ts`, `lib/ride/recording-store.ts`, `types/tempo-desktop.d.ts`, `app/(app)/athlete/ride/[sessionId]/*`, `lib/ride/launch.ts`, `components/RideAppLaunch.tsx`, `components/WorkoutStartChooser.tsx`, `lib/workout-start.ts`, `components/UnsavedRidesNotice.tsx` | `/athlete/ride/[sessionId]` for BIKING sessions; targets-only or connected FTMS/Cycling Power/HR/CSC; saves through `/api/activity-imports`; real-hardware and browser acceptance remain |
+| `RIDE-ENT-001` | Ride entertainment: YouTube and a virtual course | `in-progress` | `components/ride/entertainment/*`, `lib/youtube/*`, `app/api/youtube/{search,video,status}`, `lib/ride/virtual-course.ts`, `desktop/urls.cjs` | **Entertainment** (key V) on the active ride: YouTube search and channel browsing through the Data API (server-only `YOUTUBE_API_KEY`), link paste, a youtube-nocookie player beside the stats; or a stick-figure rider whose speed comes from power and gradient. Verified with a stubbed Data API and a simulated trainer; real key, iOS Safari and the packaged desktop app remain |
 | `COMPAT-001` | Older coach session adapter | `transitional` | `lib/planner-service.ts` | `/api/coach/sessions/[sessionId]` |
 
 
 ## Active work
 
 - [Indoor ride screen redesign](tasks/2026-11-23-ride-screen-redesign.md) — local Focus candidate awaiting feedback.
+- Ride entertainment (`RIDE-ENT-001`, branch `ride-entertainment`) — awaiting Erik's feedback and a real YouTube API key.
 
 - [Trustworthy account controls, recoverable work and truthful Home](tasks/2026-09-30-account-recovery-home.md) — Home, workout/Profile/Live recovery, Account controls and safe deletion implemented; public trust facts, auth hardening and remaining acceptance are open. Downloads and email verification are deferred.
 

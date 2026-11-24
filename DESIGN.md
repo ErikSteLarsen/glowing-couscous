@@ -584,6 +584,14 @@ Mobile sticky editor actions sit above that clearance. The shell reserves one
 additional rem of content padding, so the final field remains reachable.
 Desktop sticky actions use the viewport bottom.
 
+### Ride entertainment
+
+- One header toggle, **Entertainment** (popcorn icon, key V), on the active ride only. Turning it on shows a two-card picker in the middle stage: **YouTube** and **Ride a course**. A small tab bar above the stage switches views; × or V turns it off. The choice is remembered per browser.
+- Desktop keeps the block row, a compact profile chart and the shortcut legend. With YouTube, power sits in a left rail and heart rate and cadence in a right rail. With a course, the stage is full width and the stats sit over the scene at its edges, never over the rider.
+- Phone: the stage replaces the profile chart and the block and workout averages, below the live power, heart rate and cadence. On phone the course overlay shows only speed, distance, gradient and the loop profile.
+- YouTube: nothing is drawn over the player, and the player is never smaller than 200 × 200 px. YouTube's own full screen is off, so the ride's full screen (F) keeps the stats in view. Search runs only on submit. Pasted links play directly. Videos made for kids open on YouTube instead.
+- Course: speed comes from power and gradient (constant ERG watts slow the rider on climbs). Reduced motion draws one still frame a second.
+
 ## Feature contracts (carried from main)
 
 ### Personal Calendar scheduling
