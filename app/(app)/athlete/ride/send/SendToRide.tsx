@@ -4,7 +4,7 @@ import { CheckCircle2, CircleAlert, Clapperboard } from 'lucide-react';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
 import { compactPrimaryButtonClassName, compactSecondaryButtonClassName } from '@/components/ui';
-import { parseSentStart, readSendKey, sendVideoToRide } from '@/lib/youtube/send-to-ride';
+import { parseSentStart, readSendKey, sendKeyFromHash, sendVideoToRide } from '@/lib/youtube/send-to-ride';
 import { parseYouTubeLink, youTubeWatchUrl } from '@/lib/youtube/youtube-url';
 
 type State = 'loading' | 'confirm' | 'sending' | 'sent' | 'no-ride' | 'invalid';
@@ -27,17 +27,19 @@ const subscribeNever = () => () => {};
  * took it. It sends by itself only when the link carries this browser's send key (the rider's own
  * bookmark); any other opener gets an explicit "Send to ride" button.
  */
-export function SendToRide({ url, startSec, sendKey }: { url: string | null; startSec: string | null; sendKey: string | null }) {
+export function SendToRide({ url, startSec }: { url: string | null; startSec: string | null }) {
   const [link] = useState(() => (url ? parseYouTubeLink(url) : null));
   // undefined during the server render and hydration, then this browser's key (or null).
   const storedKey = useSyncExternalStore(subscribeNever, readSendKey, () => undefined);
+  // The bookmark puts its key in the fragment, which the server never sees.
+  const sendKey = useSyncExternalStore(subscribeNever, () => sendKeyFromHash(window.location.hash), () => undefined);
   const [confirmed, setConfirmed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [outcome, setOutcome] = useState<{ attempt: number; acked: boolean } | null>(null);
   // One id per page, so a repeated send (React remounting the effect, Send again) plays only once.
   const [id] = useState(() => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`);
 
-  const trusted = storedKey !== undefined && storedKey !== null && sendKey === storedKey;
+  const trusted = typeof storedKey === 'string' && sendKey === storedKey;
   const shouldSend = Boolean(link) && (trusted || confirmed);
   const sentStart = parseSentStart(startSec) ?? link?.startSec ?? 0;
 

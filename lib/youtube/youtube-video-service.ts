@@ -45,6 +45,7 @@ const THROTTLE_REASONS = new Set(['rateLimitExceeded', 'userRateLimitExceeded'])
 const UPSTREAM_TIMEOUT_MS = 8000;
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
+const MAX_TRACKED_USERS = 1000;
 
 const errors = {
   not_configured: { status: 503, error: 'Playing videos in Tempo is not set up on this Tempo server.' },
@@ -240,15 +241,21 @@ export function createYouTubeVideoService({
   function allowUpstreamCall(userId: number, at: number): boolean {
     const since = at - rateLimit.windowMs;
     const recent = (callsByUser.get(userId) ?? []).filter((time) => time > since);
+    callsByUser.delete(userId); // re-inserted below, so map order tracks recent activity
     if (recent.length >= rateLimit.limit) {
       callsByUser.set(userId, recent);
       return false;
     }
     recent.push(at);
     callsByUser.set(userId, recent);
-    if (callsByUser.size > 1000) {
+    if (callsByUser.size > MAX_TRACKED_USERS) {
       for (const [user, times] of callsByUser) {
         if (times.every((time) => time <= since)) callsByUser.delete(user);
+      }
+      // Hard bound per server instance: forget the least recently active riders first.
+      for (const user of callsByUser.keys()) {
+        if (callsByUser.size <= MAX_TRACKED_USERS) break;
+        callsByUser.delete(user);
       }
     }
     return true;

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  sendKeyFromHash,
   listenForSentVideos,
   parseSentStart,
   readAckMessage,
@@ -51,7 +52,7 @@ function runBookmarklet(href: string, page: { url: string; videos?: FakeVideo[];
 }
 
 const sendUrl = (origin: string, link: string, t?: number) =>
-  `${origin}/athlete/ride/send?k=${KEY}&u=${encodeURIComponent(link)}${t === undefined ? '' : `&t=${t}`}`;
+  `${origin}/athlete/ride/send?u=${encodeURIComponent(link)}${t === undefined ? '' : `&t=${t}`}#k=${KEY}`;
 
 test('the bookmark opens the send window with the link, position and key, then pauses the video', () => {
   const href = sendToTempoBookmarklet('http://localhost:3301/', KEY);
@@ -163,4 +164,11 @@ test('with two ride tabs open only one plays the video', async () => {
 
 test('without a ride tab the send times out', async () => {
   assert.equal(await sendVideoToRide({ id: 'three', videoId: ID, startSec: 0 }, 50), false);
+});
+
+test('the send key is read only from a valid URL fragment', () => {
+  assert.equal(sendKeyFromHash(`#k=${KEY}`), KEY);
+  assert.equal(sendKeyFromHash(''), null);
+  assert.equal(sendKeyFromHash('#k=no'), null);
+  assert.equal(sendKeyFromHash('#other=1'), null);
 });

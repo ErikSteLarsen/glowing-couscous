@@ -26,8 +26,9 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   1440×900 and 1100×800, and 402×874 showing the course with no YouTube tab.
   Earlier checks (ride pause pausing the video, dialogs hiding the player,
   course physics) still apply. Review fixes (same day): the bookmark carries a
-  per-browser send key (`tempo.ride.sendKey`) and a send window without it
-  asks before sending; the send window survives sign-in; delivery is
+  per-browser send key (`tempo.ride.sendKey`) in the URL fragment (never sent
+  to the server or kept through sign-in) and a send window without it asks
+  before sending; the send window survives sign-in (then asks once); delivery is
   offer → available → addressed play → ack, so one ride tab plays; Open
   YouTube opens its own window; paste and drop are ignored under a modal
   dialog and stray drops never navigate; a restored video is checked again;

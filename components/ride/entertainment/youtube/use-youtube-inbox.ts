@@ -44,12 +44,19 @@ export function useYouTubeInbox(enabled: boolean, onVideo: (video: Delivery) => 
 
   useEffect(() => {
     if (!enabled) return;
-    const stopChannel = typeof BroadcastChannel === 'undefined' ? null : listenForSentVideos((video) => deliver(video));
-    const stopDesktop = window.tempoDesktop?.youtube?.onVideo(({ url, startSec }) => {
-      const link = parseYouTubeLink(url);
-      if (!link) return;
-      deliver({ videoId: link.videoId, startSec: startSec >= 1 ? Math.floor(startSec) : link.startSec });
-    });
+    // Optional extras: if either fails to start, the ride carries on without it.
+    let stopChannel: (() => void) | null = null;
+    let stopDesktop: (() => void) | undefined;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') stopChannel = listenForSentVideos((video) => deliver(video));
+    } catch { /* no Send to Tempo bookmark in this browser */ }
+    try {
+      stopDesktop = window.tempoDesktop?.youtube?.onVideo(({ url, startSec }) => {
+        const link = parseYouTubeLink(url);
+        if (!link) return;
+        deliver({ videoId: link.videoId, startSec: startSec >= 1 ? Math.floor(startSec) : link.startSec });
+      });
+    } catch { /* no desktop YouTube window */ }
 
     const onPaste = (event: ClipboardEvent) => {
       if (isTextField(event.target) || dialogOpen()) return;

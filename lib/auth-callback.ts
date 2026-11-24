@@ -1,18 +1,16 @@
 import { getSafeShareCallbackPath } from './share-link.ts';
-import { isSendKey, SEND_PATH } from './youtube/send-to-ride.ts';
+import { SEND_PATH } from './youtube/send-to-ride.ts';
 import { parseYouTubeLink } from './youtube/youtube-url.ts';
 
 const RIDE_PATH = /^\/athlete\/ride(?:\/[1-9]\d*)?$/;
 const RIDE_FROM = /^[a-z][a-z-]{0,31}$/;
 
-/** The Send to Tempo window, keeping only a YouTube link `u`, whole seconds `t` and a send key `k`. */
+/** The Send to Tempo window, keeping only a YouTube link `u` and whole seconds `t`. The send key never travels here. */
 function sendCallbackPath(url: URL): string | null {
   const u = url.searchParams.get('u');
   if (!u || !parseYouTubeLink(u)) return null;
   const query = new URLSearchParams();
-  const k = url.searchParams.get('k');
   const t = url.searchParams.get('t');
-  if (k && isSendKey(k)) query.set('k', k);
   query.set('u', u);
   if (t && /^\d{1,6}$/.test(t)) query.set('t', t);
   return `${SEND_PATH}?${query}`;

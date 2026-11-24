@@ -28,9 +28,10 @@ test('other or foreign callbacks are dropped', () => {
 
 test('the Send to Tempo window survives the sign-in round trip with its validated query', () => {
   const link = 'https://www.youtube.com/watch?v=aqz-KE-bpKQ&t=5s';
-  const key = '0f8e0f4c-7c1e-4d5e-9b0a-2f6c7d8e9f01';
-  const path = `/athlete/ride/send?k=${key}&u=${encodeURIComponent(link)}&t=83`;
+  const path = `/athlete/ride/send?u=${encodeURIComponent(link)}&t=83`;
   assert.equal(getSafeCallbackPath(path), path);
+  // A send key never survives into a callback; after sign-in the window asks before sending.
+  assert.equal(getSafeCallbackPath(`/athlete/ride/send?k=0f8e0f4c-7c1e-4d5e-9b0a-2f6c7d8e9f01&u=${encodeURIComponent(link)}&t=83`), path);
   assert.equal(loginPathFor(path), `/login?callbackUrl=${encodeURIComponent(path)}`);
   // Unknown parameters and malformed t or k are dropped; the link stays.
   assert.equal(

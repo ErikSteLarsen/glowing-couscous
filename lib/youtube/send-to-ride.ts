@@ -47,10 +47,24 @@ export function readSendKey(): string | null {
   }
 }
 
+/** A random id; `crypto.randomUUID` is missing outside secure contexts (plain-HTTP installs). */
+function randomId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/** The send key from a send window's URL fragment (`#k=…`), if it has a valid one. */
+export function sendKeyFromHash(hash: string): string | null {
+  const value = new URLSearchParams(hash.replace(/^#/, '')).get('k');
+  return value && isSendKey(value) ? value : null;
+}
+
 export function getOrCreateSendKey(): string {
   const existing = readSendKey();
   if (existing) return existing;
-  const key = crypto.randomUUID();
+  const key = randomId();
   try {
     window.localStorage.setItem(SEND_KEY_STORAGE, key);
   } catch {
@@ -66,7 +80,9 @@ export function getOrCreateSendKey(): string {
  * the largest visible) video, as whole seconds, 0 included; a live stream sends none.
  */
 export function sendToTempoBookmarklet(origin: string, key: string): string {
-  const target = JSON.stringify(`${origin.replace(/\/+$/, '')}${SEND_PATH}?k=${encodeURIComponent(key)}&u=`);
+  const target = JSON.stringify(`${origin.replace(/\/+$/, '')}${SEND_PATH}?u=`);
+  // The key rides in the fragment, so it never reaches a server log or a sign-in callback URL.
+  const fragment = JSON.stringify(`#k=${encodeURIComponent(key)}`);
   const body = [
     '(function(){',
     'var l=window.location,u=l.href;',
@@ -74,7 +90,7 @@ export function sendToTempoBookmarklet(origin: string, key: string): string {
     "var s=document.querySelectorAll('#movie_player video, ytd-shorts video[src], video'),v=null,b=-1,i,r,a;",
     'for(i=0;i<s.length;i++){r=s[i].getBoundingClientRect();a=Math.max(0,Math.min(r.right,window.innerWidth)-Math.max(r.left,0))*Math.max(0,Math.min(r.bottom,window.innerHeight)-Math.max(r.top,0))+(s[i].paused?0:1e9);if(a>b){b=a;v=s[i]}}',
     "var t=!v||document.querySelector('.ytp-live')||v.duration===Infinity?'':'&t='+(Math.floor(v.currentTime)||0);",
-    `var w=window.open(${target}+encodeURIComponent(u)+t,'tempo-send','popup,width=420,height=260');`,
+    `var w=window.open(${target}+encodeURIComponent(u)+t+${fragment},'tempo-send','popup,width=420,height=260');`,
     "if(!w){window.alert('Allow pop-ups for YouTube to send videos to Tempo.');return}",
     'if(v)try{v.pause()}catch(e){}',
     '})()',
@@ -162,7 +178,7 @@ export function sendVideoToRide(
  */
 export function listenForSentVideos(
   onPlay: (video: { videoId: string; startSec: number }) => void,
-  tabId: string = crypto.randomUUID(),
+  tabId: string = randomId(),
 ): () => void {
   const channel = new BroadcastChannel(RIDE_YOUTUBE_CHANNEL);
   const seen = new Set<string>();
