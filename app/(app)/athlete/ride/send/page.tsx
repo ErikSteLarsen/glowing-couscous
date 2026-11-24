@@ -15,12 +15,14 @@ export default async function SendToRidePage({ searchParams }: { searchParams: P
   const params = await searchParams;
   const url = first(params.u);
   const startSec = first(params.t);
+  const sendKey = first(params.k);
   const user = await getCurrentUser();
   if (!user || user.role !== 'ATHLETE') {
     const query = new URLSearchParams();
+    if (sendKey) query.set('k', sendKey);
     if (url) query.set('u', url);
     if (startSec) query.set('t', startSec);
     redirect(loginPathFor(`${SEND_PATH}${query.size ? `?${query}` : ''}`));
   }
-  return <SendToRide url={url} startSec={startSec} />;
+  return <SendToRide url={url} startSec={startSec} sendKey={sendKey} />;
 }

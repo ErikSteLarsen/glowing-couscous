@@ -14,7 +14,11 @@ export type TempoDesktopBridge = {
 export type TempoDesktopYouTube = {
   /** Open (or focus) the YouTube window. */
   open(): Promise<void>;
-  /** Called when the rider opens a video in the YouTube window. Returns an unsubscribe function. */
+  /**
+   * Called when the rider opens a video in the YouTube window. Returns an unsubscribe function.
+   * Once the callback returns, the app hides the YouTube window and brings the ride forward; if
+   * no callback is registered (or it throws), the YouTube window stays as it is.
+   */
   onVideo(callback: (video: { url: string; startSec: number }) => void): () => void;
 };
 

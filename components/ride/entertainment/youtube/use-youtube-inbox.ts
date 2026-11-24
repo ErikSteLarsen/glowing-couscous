@@ -15,12 +15,20 @@ const DRAG_LINGER_MS = 250;
 // The YouTube panel carries `data-youtube-panel`, so a link dropped on it that isn't a video can say so.
 
 function isTextField(target: EventTarget | null): boolean {
-  return target instanceof Element && Boolean(target.closest('input, textarea, select, [contenteditable="true"]'));
+  if (!(target instanceof Element)) return false;
+  return Boolean(target.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])'))
+    || (target instanceof HTMLElement && target.isContentEditable);
 }
 
+/** A modal dialog (Connections, the phone's More sheet) has the screen: links pasted or dropped then are not for the ride. */
+function dialogOpen(): boolean {
+  return document.querySelector('dialog[open]') !== null;
+}
+
+/** A drag that would navigate the page if dropped: a link, text or a file. */
 function carriesLink(event: DragEvent): boolean {
   const types = event.dataTransfer?.types;
-  return Boolean(types && Array.from(types).some((type) => type === 'text/uri-list' || type === 'text/plain'));
+  return Boolean(types && Array.from(types).some((type) => type === 'text/uri-list' || type === 'text/plain' || type === 'Files'));
 }
 
 /**
@@ -44,7 +52,7 @@ export function useYouTubeInbox(enabled: boolean, onVideo: (video: Delivery) => 
     });
 
     const onPaste = (event: ClipboardEvent) => {
-      if (isTextField(event.target)) return;
+      if (isTextField(event.target) || dialogOpen()) return;
       const link = findYouTubeLink(event.clipboardData?.getData('text/plain'));
       if (!link) return;
       event.preventDefault();
@@ -61,19 +69,24 @@ export function useYouTubeInbox(enabled: boolean, onVideo: (video: Delivery) => 
     };
     const onDragStart = () => { internalDrag = true; };
     const onDragEnd = () => { internalDrag = false; endDrag(); };
+    // Text fields keep their own drop. Everywhere else a drop is always taken, so a stray link
+    // never navigates away from the ride; it plays only when it comes from outside the page and
+    // no dialog is open.
     const onDragOver = (event: DragEvent) => {
-      if (internalDrag || !carriesLink(event) || isTextField(event.target)) return;
-      // Accepting the drop anywhere also keeps a dropped link from navigating away from the ride.
+      if (!carriesLink(event) || isTextField(event.target)) return;
       event.preventDefault();
-      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+      const accepts = !internalDrag && !dialogOpen();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = accepts ? 'copy' : 'none';
+      if (!accepts) return;
       setDragActive(true);
       window.clearTimeout(timer);
       timer = window.setTimeout(endDrag, DRAG_LINGER_MS);
     };
     const onDrop = (event: DragEvent) => {
       endDrag();
-      if (internalDrag || !carriesLink(event) || isTextField(event.target)) return;
+      if (!carriesLink(event) || isTextField(event.target)) return;
       event.preventDefault();
+      if (internalDrag || dialogOpen()) return;
       const data = event.dataTransfer;
       const link = findYouTubeLink(data?.getData('text/uri-list')) ?? findYouTubeLink(data?.getData('text/plain'));
       if (link) deliver(link);

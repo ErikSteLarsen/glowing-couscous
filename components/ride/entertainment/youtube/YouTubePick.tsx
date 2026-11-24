@@ -9,7 +9,7 @@ import {
   ghostButtonClassName,
   noticeBoxClassNames,
 } from '@/components/ui';
-import { sendToTempoBookmarklet } from '@/lib/youtube/send-to-ride';
+import { getOrCreateSendKey, sendToTempoBookmarklet } from '@/lib/youtube/send-to-ride';
 import { parseYouTubeLink, youTubeWatchUrl, type YouTubeLink } from '@/lib/youtube/youtube-url';
 import { thumbnailForVideo } from './recent-videos';
 import { VideoCard } from './VideoCard';
@@ -40,13 +40,14 @@ function LinkOutVideo({ video }: { video: YouTubeVideoChoice }) {
 
 /**
  * The "Send to Tempo" bookmark. React refuses `javascript:` URLs, so the href is set after mount.
- * Clicking it here only explains where it goes.
+ * It carries this browser's send key, so the send window it opens plays without asking. Clicking
+ * it here only explains where it goes.
  */
 function SendToTempoBookmark() {
   const ref = useRef<HTMLAnchorElement>(null);
   const [hint, setHint] = useState(false);
   useEffect(() => {
-    ref.current?.setAttribute('href', sendToTempoBookmarklet(window.location.origin));
+    ref.current?.setAttribute('href', sendToTempoBookmarklet(window.location.origin, getOrCreateSendKey()));
   }, []);
   return (
     <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -183,8 +184,13 @@ export function YouTubePick({
               <p className="mt-1 text-[13px] leading-snug text-[var(--text-secondary)]">
                 {desktopApp
                   ? 'Open YouTube, pick a video, and it starts here.'
-                  : 'YouTube opens in its own tab with your account and recommendations. Bring a video back here and it plays beside your stats.'}
+                  : 'YouTube opens in its own window next to your ride, with your account and recommendations. Bring a video back here and it plays beside your stats.'}
               </p>
+              {desktopApp ? (
+                <p className="mt-1 text-xs leading-snug text-[var(--text-muted)]">
+                  Can’t sign in here? Use Open YouTube in your browser and paste the link.
+                </p>
+              ) : null}
             </div>
             <button type="button" className={`${compactPrimaryButtonClassName} shrink-0`} onClick={onOpenYouTube}>
               <ExternalLink aria-hidden="true" size={14} strokeWidth={1.7} />

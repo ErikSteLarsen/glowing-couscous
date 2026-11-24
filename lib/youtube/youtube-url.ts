@@ -3,11 +3,9 @@ export type YouTubeLink = {
   videoId: string;
   /** Seconds into the video to start from, when the link carries `t=` or `start=`. */
   startSec?: number;
-  playlistId?: string;
 };
 
 const VIDEO_ID = /^[A-Za-z0-9_-]{11}$/;
-const PLAYLIST_ID = /^[A-Za-z0-9_-]{2,64}$/;
 const YOUTUBE_HOSTS = new Set([
   'youtube.com',
   'www.youtube.com',
@@ -78,14 +76,7 @@ export function parseYouTubeLink(raw: string): YouTubeLink | null {
 
   const hash = new URLSearchParams(url.hash.replace(/^#/, ''));
   const startSec = parseYouTubeTimestamp(url.searchParams.get('t') ?? url.searchParams.get('start') ?? hash.get('t'));
-  const list = url.searchParams.get('list');
-  const playlistId = list && PLAYLIST_ID.test(list) ? list : undefined;
-
-  return {
-    videoId,
-    ...(startSec !== undefined ? { startSec } : {}),
-    ...(playlistId ? { playlistId } : {}),
-  };
+  return { videoId, ...(startSec !== undefined ? { startSec } : {}) };
 }
 
 /** The youtube.com watch page for a video, for "Open on YouTube" links. */

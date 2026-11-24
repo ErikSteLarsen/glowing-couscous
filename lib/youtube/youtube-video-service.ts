@@ -17,7 +17,6 @@ export type YouTubeVideoSummary = {
   channelId: string;
   channelTitle: string;
   thumbnailUrl: string;
-  publishedAt: string;
   durationSec: number | null;
   isLive: boolean;
   /** Designated "made for kids": Tempo must not embed it and links out to YouTube instead. */
@@ -106,7 +105,6 @@ type VideoResource = {
     title?: unknown;
     channelId?: unknown;
     channelTitle?: unknown;
-    publishedAt?: unknown;
     liveBroadcastContent?: unknown;
     thumbnails?: Thumbnails;
   };
@@ -131,7 +129,6 @@ function normalizeVideo(video: VideoResource): YouTubeVideoLookup | null {
     channelId: typeof snippet.channelId === 'string' ? snippet.channelId : '',
     channelTitle: text(snippet.channelTitle),
     thumbnailUrl: thumbnailFor(id, snippet.thumbnails),
-    publishedAt: typeof snippet.publishedAt === 'string' ? snippet.publishedAt : '',
     durationSec: isLive ? null : parseIsoDuration(video.contentDetails?.duration),
     isLive,
     madeForKids,

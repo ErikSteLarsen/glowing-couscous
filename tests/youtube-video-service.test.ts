@@ -92,7 +92,6 @@ test('a lookup makes one videos.list call with the key in a header and normalize
       channelId: CHANNEL,
       channelTitle: 'GCN',
       thumbnailUrl: `https://i.ytimg.com/vi/${PLAYABLE}/mqdefault.jpg`,
-      publishedAt: '2026-10-01T10:00:00Z',
       durationSec: 3723,
       isLive: false,
       madeForKids: false,

@@ -132,21 +132,39 @@ https://www.youtube.com with `window.tempoDesktop.youtube.open()`, so the rider
 browses their own home feed, subscriptions and search. Calling it again brings
 back the same window. When the rider opens a video there (a `/watch?v=`,
 `/shorts/` or `/live/` page, including YouTube's in-page navigation), Tempo
-Ride reads the player position, pauses and mutes YouTube, hides the window,
-focuses the ride window and calls each `youtube.onVideo(callback)` listener
-once with `{ url, startSec }`. The `url` is always the canonical
-`https://www.youtube.com/watch?v=<id>`, whatever page it came from, and
-`startSec` is whole seconds (the player position, else the link's `t`, else 0).
-`onVideo` returns a function that removes the listener. Opening the window
-again unmutes it and lets its video play. Only a trusted Tempo page can open
-the window or receive videos.
+Ride reads the player position, pauses YouTube and calls each
+`youtube.onVideo(callback)` listener once with `{ url, startSec }`. The `url`
+is always the canonical `https://www.youtube.com/watch?v=<id>`, whatever page
+it came from, and `startSec` is whole seconds (the player position, else the
+link's `t`, else 0). `onVideo` returns a function that removes the listener.
+Once a callback has returned, the preload confirms it to the app
+(`youtube:video-ack`, accepted only from the trusted Tempo page's main frame);
+only then does the app mute and hide the YouTube window and focus the ride
+window. Without that confirmation within 1.5 s (no ride open, no listener, a
+callback that throws) the YouTube window stays as it is, its video may play
+again, and Tempo does not take focus. Only the latest pick can complete:
+moving to another page or video, reopening or closing the window cancels a
+hand-off still in progress. Opening the window again unmutes it and lets its
+video play. Only a trusted Tempo page can open the window or receive videos.
 
 The window stays on YouTube and Google sign-in (`accounts.google.com`,
 `accounts.youtube.com`, the consent pages and country `accounts.google.*`
-hosts). Other links and pop-ups open in the system browser. The window has no
-access to Tempo Ride: it runs sandboxed without the app bridge, denies
-camera, microphone, location, notifications, devices and downloads, and
-sends a desktop Chrome user agent without the Electron token.
+hosts). Other links and pop-ups open in the system browser, but only when
+YouTube's own top-level page started them: navigations from other frames (ads)
+and pop-ups whose referrer is not a YouTube page are dropped. The window has
+no access to Tempo Ride: it runs sandboxed without the app bridge, grants only
+fullscreen and YouTube's copy-link clipboard write, and only to its own page on
+a YouTube origin, denies everything else (camera, microphone, location,
+notifications, devices, downloads), and sends a desktop Chrome user agent
+without the Electron token.
+
+Signing in may not work. Google can refuse sign-in in embedded browsers and
+show its "This browser or app may not be secure" page
+(`accounts.google.com/v3/signin/rejected`, older `…/signin/rejected`). The app
+does nothing special there; the window stays open and YouTube keeps working
+signed out. In the app, the ride's YouTube panel says so: "Can't sign in
+here? Use Open YouTube in your browser and paste the link." A link copied
+from YouTube in any browser can be pasted on the ride screen.
 
 Privacy: YouTube runs in its own persistent session (`persist:youtube` in
 Electron's user data folder), separate from the Tempo session. You stay signed

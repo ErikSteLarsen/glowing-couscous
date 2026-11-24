@@ -20,6 +20,7 @@ function fakeWindow(url = '', { playerTime = 0 } = {}) {
   })
   const contents = Object.assign(new EventEmitter(), {
     session,
+    mainFrame: { get url() { return url } },
     sent: [],
     scripts: [],
     muted: false,
@@ -31,6 +32,7 @@ function fakeWindow(url = '', { playerTime = 0 } = {}) {
     loadURL: async (value) => { contents.loaded = value },
     executeJavaScript: (script) => {
       contents.scripts.push(script)
+      if (script === 'window.__tempoHandedOff = false') return Promise.resolve()
       return typeof playerTime === 'function' ? playerTime() : Promise.resolve(playerTime)
     },
     send: (channel, value) => contents.sent.push([channel, value])
@@ -52,23 +54,32 @@ function fakeWindow(url = '', { playerTime = 0 } = {}) {
   })
 }
 
-function setup({ tempoUrl = 'https://tempo.example/athlete/ride/1', playerTime, timeoutMs } = {}) {
+/** `autoAck`: the Tempo page confirms every video it receives, as the preload does after its callback. */
+function setup({ tempoUrl = 'https://tempo.example/athlete/ride/1', youtubeUrl = 'https://www.youtube.com/', playerTime, timeoutMs, ackTimeoutMs, autoAck = true } = {}) {
   const tempo = fakeWindow(tempoUrl)
   const external = []
   const created = []
   const youtube = createYouTubeBrowser({
     createWindow: () => {
-      const window = fakeWindow('', { playerTime })
+      const window = fakeWindow(youtubeUrl, { playerTime })
       created.push(window)
       return window
     },
     getTempoWindow: () => tempo,
     isTrusted: (url) => url.startsWith('https://tempo.example/'),
     openExternal: (url) => external.push(url),
-    timeoutMs
+    timeoutMs,
+    ackTimeoutMs
   })
+  const send = tempo.webContents.send
+  tempo.webContents.send = (channel, value) => {
+    send(channel, value)
+    if (autoAck && channel === 'youtube:video') setImmediate(() => youtube.ack(value.id))
+  }
   return { tempo, external, created, youtube }
 }
+
+const sentVideos = (tempo) => tempo.webContents.sent.map(([channel, { url, startSec }]) => [channel, { url, startSec }])
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 5))
 const navigate = (window, url) => window.webContents.emit('did-navigate', {}, url)
@@ -123,13 +134,25 @@ test('opens one YouTube window with a locked-down session and reuses it', () => 
   assert.equal(window.webContents.loaded, 'https://www.youtube.com/')
   assert.equal(window.webContents.userAgent, CHROME_UA)
   assert.equal(session.userAgent, CHROME_UA)
-  for (const permission of ['notifications', 'geolocation', 'media', 'midi', 'openExternal', 'display-capture']) {
-    assert.equal(session.check(null, permission), false, permission)
+  const own = window.webContents
+  const request = (contents, permission, requestingUrl) => {
     let granted
-    session.request(null, permission, (value) => { granted = value })
-    assert.equal(granted, false, permission)
+    session.request(contents, permission, (value) => { granted = value }, { requestingUrl })
+    return granted
   }
-  assert.equal(session.check(null, 'fullscreen'), true)
+  for (const permission of ['notifications', 'geolocation', 'media', 'midi', 'openExternal', 'display-capture']) {
+    assert.equal(session.check(own, permission, 'https://www.youtube.com'), false, permission)
+    assert.equal(request(own, permission, 'https://www.youtube.com/watch?v=M7lc1UVf-VE'), false, permission)
+  }
+  // Fullscreen and copy-link only for the YouTube window itself, on a YouTube origin.
+  assert.equal(session.check(own, 'fullscreen', 'https://www.youtube.com'), true)
+  assert.equal(session.check(own, 'clipboard-sanitized-write', 'https://m.youtube.com'), true)
+  assert.equal(request(own, 'fullscreen', 'https://www.youtube.com/watch?v=M7lc1UVf-VE'), true)
+  assert.equal(session.check(own, 'fullscreen', 'https://googleads.g.doubleclick.net'), false)
+  assert.equal(request(own, 'clipboard-sanitized-write', 'https://ads.example/frame'), false)
+  assert.equal(session.check(null, 'fullscreen', 'https://www.youtube.com'), false)
+  assert.equal(session.check(fakeWindow().webContents, 'fullscreen', 'https://www.youtube.com'), false)
+  assert.equal(request(own, 'fullscreen', undefined), false)
   assert.equal(session.device({ deviceType: 'usb' }), false)
   let downloadBlocked = false
   session.emit('will-download', { preventDefault: () => { downloadBlocked = true } })
@@ -148,23 +171,36 @@ test('opens one YouTube window with a locked-down session and reuses it', () => 
   assert.equal(created.length, 2)
 })
 
-test('guards navigation and popups in the YouTube window', () => {
+test('guards navigation and popups in the YouTube window', async () => {
   const { youtube, created, external } = setup()
   youtube.open()
   const contents = created[0].webContents
-  const attempt = (url, isMainFrame = true) => {
+  const adFrame = { url: 'https://googleads.g.doubleclick.net/x' }
+  const attempt = (url, isMainFrame = true, initiator = contents.mainFrame) => {
     let prevented = false
-    contents.emit('will-frame-navigate', { url, isMainFrame, preventDefault: () => { prevented = true } })
+    contents.emit('will-frame-navigate', { url, isMainFrame, initiator, preventDefault: () => { prevented = true } })
     return prevented
   }
   assert.equal(attempt('https://accounts.google.com/signin'), false)
   assert.equal(attempt('https://googleads.g.doubleclick.net/x', false), false)
   assert.equal(attempt('https://example.com/shop'), true)
   assert.equal(attempt('tempo-ride://open?url=x'), true)
+  // An ad frame steering the top page away is stopped and does not reach the system browser.
+  assert.equal(attempt('https://example.net/prize', true, adFrame), true)
   assert.deepEqual(external, ['https://example.com/shop'])
 
-  assert.deepEqual(contents.openHandler({ url: 'https://example.org/' }), { action: 'deny' })
-  assert.deepEqual(contents.openHandler({ url: 'file:///etc/passwd' }), { action: 'deny' })
+  const youTubePage = { url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE', policy: 'strict-origin-when-cross-origin' }
+  assert.deepEqual(contents.openHandler({ url: 'https://example.org/', referrer: youTubePage }), { action: 'deny' })
+  assert.deepEqual(contents.openHandler({ url: 'file:///etc/passwd', referrer: youTubePage }), { action: 'deny' })
+  // Pop-ups from ads or with the opener hidden neither open the browser nor move the window.
+  assert.deepEqual(contents.openHandler({ url: 'https://example.org/ad', referrer: { url: 'https://googleads.g.doubleclick.net/', policy: 'origin' } }), { action: 'deny' })
+  assert.deepEqual(contents.openHandler({ url: 'https://example.org/hidden', referrer: { url: '', policy: 'no-referrer' } }), { action: 'deny' })
+  contents.openHandler({ url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', referrer: { url: '', policy: 'no-referrer' } })
+  await settle()
+  assert.equal(contents.loaded, 'https://www.youtube.com/')
+  contents.openHandler({ url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', referrer: youTubePage })
+  await settle()
+  assert.equal(contents.loaded, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
   assert.deepEqual(external, ['https://example.com/shop', 'https://example.org/'])
 })
 
@@ -178,7 +214,8 @@ test('hands a chosen video to the Tempo page once, pauses YouTube and steps asid
   navigateInPage(window, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', false)
   await settle()
 
-  assert.deepEqual(tempo.webContents.sent, [['youtube:video', { url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE', startSec: 12 }]])
+  assert.deepEqual(sentVideos(tempo), [['youtube:video', { url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE', startSec: 12 }]])
+  assert.ok(Number.isSafeInteger(tempo.webContents.sent[0][1].id))
   assert.match(window.webContents.scripts[0], /"M7lc1UVf-VE"/)
   assert.match(window.webContents.scripts[0], /pause/)
   assert.equal(window.webContents.muted, true)
@@ -189,7 +226,71 @@ test('hands a chosen video to the Tempo page once, pauses YouTube and steps asid
   youtube.open()
   navigate(window, 'https://www.youtube.com/shorts/abcdefghi_-')
   await settle()
-  assert.deepEqual(tempo.webContents.sent.at(-1), ['youtube:video', { url: 'https://www.youtube.com/watch?v=abcdefghi_-', startSec: 12 }])
+  assert.deepEqual(sentVideos(tempo).at(-1), ['youtube:video', { url: 'https://www.youtube.com/watch?v=abcdefghi_-', startSec: 12 }])
+})
+
+test('without an ack from the Tempo page the YouTube window stays and Tempo is not focused', async () => {
+  const { youtube, created, tempo } = setup({ playerTime: 5, autoAck: false, ackTimeoutMs: 20 })
+  youtube.open()
+  const [window] = created
+  navigate(window, 'https://www.youtube.com/watch?v=M7lc1UVf-VE')
+  await settle()
+  assert.equal(tempo.webContents.sent.length, 1)
+  await new Promise((resolve) => setTimeout(resolve, 40))
+  assert.ok(window.isVisible())
+  assert.equal(window.webContents.muted, false)
+  assert.equal(tempo.focused, 0)
+  // The pause guard is lifted, so the rider can keep watching on YouTube.
+  assert.equal(window.webContents.scripts.at(-1), 'window.__tempoHandedOff = false')
+  // A late ack changes nothing.
+  youtube.ack(tempo.webContents.sent[0][1].id)
+  await settle()
+  assert.ok(window.isVisible())
+})
+
+test('only the latest pick completes: moving on cancels a hand-off in progress', async () => {
+  const reads = []
+  const playerTime = () => new Promise((resolve) => reads.push(resolve))
+  const { youtube, created, tempo } = setup({ playerTime })
+  youtube.open()
+  const [window] = created
+
+  // Picked A, then went back home before YouTube answered: nothing is sent.
+  navigateInPage(window, 'https://www.youtube.com/watch?v=M7lc1UVf-VE')
+  navigateInPage(window, 'https://www.youtube.com/')
+  reads.shift()(30)
+  await settle()
+  assert.deepEqual(tempo.webContents.sent, [])
+  assert.ok(window.isVisible())
+  assert.equal(window.webContents.scripts.at(-1), 'window.__tempoHandedOff = false')
+
+  // Picked A, then B: only B reaches Tempo.
+  navigateInPage(window, 'https://www.youtube.com/watch?v=M7lc1UVf-VE')
+  navigateInPage(window, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+  reads[1](20)
+  reads[0](10)
+  await settle()
+  assert.deepEqual(sentVideos(tempo), [['youtube:video', { url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', startSec: 20 }]])
+  assert.equal(window.isVisible(), false)
+})
+
+test('a pick waiting for its ack is cancelled by the next one', async () => {
+  const { youtube, created, tempo } = setup({ playerTime: 3, autoAck: false, ackTimeoutMs: 200 })
+  youtube.open()
+  const [window] = created
+  navigate(window, 'https://www.youtube.com/watch?v=M7lc1UVf-VE')
+  await settle()
+  const first = tempo.webContents.sent[0][1].id
+  navigate(window, 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+  await settle()
+  youtube.ack(first)
+  await settle()
+  assert.ok(window.isVisible(), 'the older pick does not hide YouTube')
+  assert.equal(tempo.focused, 0)
+  youtube.ack(tempo.webContents.sent[1][1].id)
+  await settle()
+  assert.equal(window.isVisible(), false)
+  assert.equal(tempo.focused, 1)
 })
 
 test('uses the link start time when the player cannot be read in time', async () => {
@@ -197,7 +298,7 @@ test('uses the link start time when the player cannot be read in time', async ()
   youtube.open()
   navigate(created[0], 'https://www.youtube.com/watch?v=M7lc1UVf-VE&t=1m5s')
   await new Promise((resolve) => setTimeout(resolve, 30))
-  assert.deepEqual(tempo.webContents.sent, [['youtube:video', { url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE', startSec: 65 }]])
+  assert.deepEqual(sentVideos(tempo), [['youtube:video', { url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE', startSec: 65 }]])
 })
 
 test('sends nothing to an untrusted page or while the window is hidden', async () => {

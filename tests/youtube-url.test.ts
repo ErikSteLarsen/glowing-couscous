@@ -26,7 +26,7 @@ test('reads the video ID from every common YouTube link shape', () => {
   }
 });
 
-test('reads start times and playlists', () => {
+test('reads start times and ignores playlists', () => {
   assert.deepEqual(parseYouTubeLink(`https://youtu.be/${ID}?t=90`), { videoId: ID, startSec: 90 });
   assert.deepEqual(parseYouTubeLink(`https://www.youtube.com/watch?v=${ID}&t=1m30s`), { videoId: ID, startSec: 90 });
   assert.deepEqual(parseYouTubeLink(`https://www.youtube.com/watch?v=${ID}&t=1h2m3s`), { videoId: ID, startSec: 3723 });
@@ -34,7 +34,7 @@ test('reads start times and playlists', () => {
   assert.deepEqual(parseYouTubeLink(`https://www.youtube.com/watch?v=${ID}#t=2m`), { videoId: ID, startSec: 120 });
   assert.deepEqual(
     parseYouTubeLink(`https://www.youtube.com/watch?v=${ID}&list=PLx0sYbCqOb8TBPRdmBHs5Iftvv9TPboYG&index=3`),
-    { videoId: ID, playlistId: 'PLx0sYbCqOb8TBPRdmBHs5Iftvv9TPboYG' },
+    { videoId: ID },
   );
   assert.deepEqual(parseYouTubeLink(`https://www.youtube.com/watch?v=${ID}&t=0`), { videoId: ID });
 });

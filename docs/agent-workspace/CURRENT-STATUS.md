@@ -25,10 +25,24 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   watching and with entertainment off, made-for-kids card, non-video drop,
   1440×900 and 1100×800, and 402×874 showing the course with no YouTube tab.
   Earlier checks (ride pause pausing the video, dialogs hiding the player,
-  course physics) still apply. Not verified: a real `YOUTUBE_API_KEY`, a real
+  course physics) still apply. Review fixes (same day): the bookmark carries a
+  per-browser send key (`tempo.ride.sendKey`) and a send window without it
+  asks before sending; the send window survives sign-in; delivery is
+  offer → available → addressed play → ack, so one ride tab plays; Open
+  YouTube opens its own window; paste and drop are ignored under a modal
+  dialog and stray drops never navigate; a restored video is checked again;
+  the bookmark opens the window before pausing, sends an explicit 0 and none
+  for live; the app's YouTube window steps aside only after the page acks
+  (`youtube:video-ack`), cancels superseded picks and scopes permissions and
+  pop-ups to YouTube's own page. `pnpm test` 623 passed (17 skipped), desktop
+  tests 34 passed; headless Chromium 25 checks (key/confirm, login round trip,
+  two ride tabs, dialog paste, stray drop, restore kids card, blocked pop-up
+  and explicit 0, desktop sign-in hint) and headless Electron 45 with a stub
+  youtube.com 10 checks (ack/no-ack, cancelled picks, pop-up provenance).
+  Not verified: a real `YOUTUBE_API_KEY`, a real
   drag from a YouTube window, the bookmark in a real bookmarks bar on
-  youtube.com, iOS Safari, the packaged Tempo Ride app, and YouTube's logo
-  attribution.
+  youtube.com, Google's real sign-in refusal in the app window, iOS Safari,
+  the packaged Tempo Ride app, and YouTube's logo attribution.
 
 - Post to Strava (2026-11-23, local). Workout pages for saved activities with
   recorded data show **Post to Strava** (preview sheet with editable title and

@@ -211,6 +211,15 @@ function wireIpc(window) {
     assertMainPage(event, isTrusted)
     youtube.open()
   })
+  // The page's onVideo callback ran for hand-off `id`; only then does the YouTube window step aside.
+  ipc.on('youtube:video-ack', (event, id) => {
+    try {
+      assertMainPage(event, isTrusted)
+    } catch {
+      return
+    }
+    if (Number.isSafeInteger(id)) youtube.ack(id)
+  })
 }
 
 function showMainWindow() {

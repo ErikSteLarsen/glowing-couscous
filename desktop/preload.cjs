@@ -13,7 +13,11 @@ if (process.isMainFrame) {
         open: () => ipcRenderer.invoke('youtube:open'),
         onVideo: (callback) => {
           if (typeof callback !== 'function') throw new TypeError('onVideo needs a callback.')
-          const listener = (_event, video) => callback({ url: String(video.url), startSec: Number(video.startSec) })
+          // Tell the app the page took the video once the callback returns, so it can hide YouTube.
+          const listener = (_event, video) => {
+            callback({ url: String(video.url), startSec: Number(video.startSec) })
+            if (Number.isSafeInteger(video.id)) ipcRenderer.send('youtube:video-ack', video.id)
+          }
           ipcRenderer.on('youtube:video', listener)
           return () => { ipcRenderer.removeListener('youtube:video', listener) }
         }

@@ -21,14 +21,21 @@ const NOT_CHECKED_MESSAGE = 'Tempo can’t check this video without a YouTube AP
 const NOT_A_VIDEO_MESSAGE = 'That isn’t a YouTube video link. Drag a video’s thumbnail or title, or copy its link.';
 const YOUTUBE_HOME = 'https://www.youtube.com/';
 
+/**
+ * A named window of its own, so the ride tab stays visible beside it (a hidden tab would pause the
+ * player and slow the ride screen) and pressing the button again returns to the same window.
+ */
+function openYouTubeWindow() {
+  window.open(YOUTUBE_HOME, 'tempo-youtube', 'popup,width=1100,height=800');
+}
+
 function openYouTube() {
   const desktop = window.tempoDesktop?.youtube;
   if (desktop) {
-    desktop.open().catch(() => window.open(YOUTUBE_HOME, 'tempo-youtube'));
+    desktop.open().catch(openYouTubeWindow);
     return;
   }
-  // A named tab, so pressing it again returns to the same YouTube tab.
-  window.open(YOUTUBE_HOME, 'tempo-youtube');
+  openYouTubeWindow();
 }
 
 type YouTubePanelProps = Pick<EntertainmentRide, 'sessionId' | 'userId' | 'status' | 'obscured'> & {
@@ -50,13 +57,15 @@ type YouTubePanelProps = Pick<EntertainmentRide, 'sessionId' | 'userId' | 'statu
 export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, status, obscured, incoming, onIncomingTaken, dragActive }: YouTubePanelProps) {
   // The live ride view never renders on the server, so browser storage is readable here.
   const [saved] = useState(() => readYouTubeView(sessionId));
-  const [watching, setWatching] = useState<YouTubeVideoChoice | null>(() => (
-    saved?.video ? { ...saved.video, ...(saved.timeSec >= 1 ? { startSec: Math.floor(saved.timeSec) } : {}) } : null
-  ));
+  // A saved video is checked again before its player comes back (its status may have changed).
+  const [watching, setWatching] = useState<YouTubeVideoChoice | null>(null);
+  const restoreRef = useRef<YouTubeVideoChoice | null>(
+    saved?.video ? { ...saved.video, ...(saved.timeSec >= 1 ? { startSec: Math.floor(saved.timeSec) } : {}) } : null,
+  );
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [recents, setRecents] = useState<YouTubeVideoChoice[]>(() => readRecentVideos(userId));
   const [notice, setNotice] = useState<PickNotice | null>(null);
-  const [checking, setChecking] = useState(false);
+  const [checking, setChecking] = useState(Boolean(saved?.video));
   const [desktopApp] = useState(() => Boolean(window.tempoDesktop?.youtube));
   const playbackRef = useRef<{ videoId: string; timeSec: number; playing: boolean } | null>(
     saved?.video ? { videoId: saved.video.id, timeSec: saved.timeSec, playing: saved.playing } : null,
@@ -70,7 +79,8 @@ export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, stat
   // Keep the latest video and time for this tab: on every change, every few seconds while watching and on unmount.
   const watchingRef = useRef(watching);
   const persist = useCallback(() => {
-    const video = watchingRef.current;
+    // While the saved video is being checked again, keep it saved as it was.
+    const video = watchingRef.current ?? restoreRef.current;
     const playback = video && playbackRef.current?.videoId === video.id ? playbackRef.current : null;
     saveYouTubeView(sessionId, {
       video,
@@ -109,9 +119,17 @@ export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, stat
     };
   }, []);
 
-  function startWatching(video: YouTubeVideoChoice) {
+  // A video kept from before a remount plays again only once the check passes.
+  const restoreSaved = useEffectEvent(() => {
+    if (restoreRef.current) play(restoreRef.current, { restoring: true });
+  });
+  useEffect(() => {
+    restoreSaved();
+  }, []);
+
+  function startWatching(video: YouTubeVideoChoice, restoring: boolean) {
     setNotice(null);
-    setRestored(null);
+    if (!restoring) setRestored(null);
     setWatching(video);
     setRecents(rememberRecentVideo(userId, video));
   }
@@ -126,9 +144,11 @@ export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, stat
    * check (no key, lookup failed) is offered on YouTube instead of embedded. A new video replaces
    * the one playing only once it passes the check.
    */
-  function play(video: YouTubeVideoChoice) {
+  function play(video: YouTubeVideoChoice, { restoring = false } = {}) {
     lookupController.current?.abort();
+    if (!restoring) restoreRef.current = null;
     if (configuredRef.current === false) {
+      restoreRef.current = null;
       showNotice({ tone: 'info', message: NOT_CHECKED_MESSAGE, video });
       return;
     }
@@ -139,6 +159,7 @@ export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, stat
     lookUpYouTubeVideo(video.id, controller.signal)
       .then((result) => {
         if (controller.signal.aborted) return;
+        restoreRef.current = null;
         setChecking(false);
         const startSec = video.startSec ? { startSec: video.startSec } : {};
         if (!result.ok) {
@@ -156,7 +177,7 @@ export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, stat
           showNotice({ tone: 'info', message: PLAYABILITY_MESSAGES[playability === 'playable' ? 'not_found' : playability], video: details ? { ...details, ...startSec } : video });
           return;
         }
-        startWatching({ ...details, ...startSec });
+        startWatching({ ...details, ...startSec }, restoring);
       })
       .catch(() => {
         if (!controller.signal.aborted) setChecking(false);
