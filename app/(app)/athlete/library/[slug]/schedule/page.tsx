@@ -44,6 +44,7 @@ export default async function ScheduleLibraryWorkoutPage({ params, searchParams 
         catalog={{
           slug: workout.slug,
           title: workout.name,
+          sport: workout.sport,
           durationSec: catalogWorkoutMetrics(workout).durationSec,
           back: { href: detailHref, destination: workout.name, label: `Back to ${workout.name}` },
         }}

@@ -153,11 +153,11 @@ export function FtpProfileNote({ ftpWatts }: { ftpWatts: number | null }) {
     : <>Targets in % of FTP. <Link href="/athlete/profile" className="text-[var(--brand)] underline-offset-4 hover:underline">Add your FTP</Link> to see watts.</>;
 }
 
-/** "50m", or for swim sets the distance first: "2,000 m, est. 50m". */
+/** "50m in total", or for swim sets the distance first: "2,000 m, est. 50m in total". */
 function repeatTotal(repeat: number, blocks: WorkoutDetailBlock[]) {
   const duration = formatDuration(blocks.reduce((sum, block) => sum + block.durationSec, 0) * repeat);
   const meters = blocks.reduce((sum, block) => sum + (block.distanceM ?? 0), 0) * repeat;
-  return meters ? `${formatMeters(meters)}, est.\u00A0${duration}` : duration;
+  return meters ? `${formatMeters(meters)}, est.\u00A0${duration} in total` : `${duration} in total`;
 }
 
 function BlockRow({ block }: { block: WorkoutDetailBlock }) {

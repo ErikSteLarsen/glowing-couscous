@@ -198,8 +198,9 @@ function readNumber(source: ParamSource, key: string, min: number, max: number):
 /** Reads the library filter state from URL search params; unknown values are dropped. */
 export function parseCatalogQuery(source: ParamSource): CatalogQuery {
   const sort = readParam(source, 'sort');
+  const sport = CATALOG_SPORTS.find((entry) => entry.param === readParam(source, 'sport'))?.id ?? DEFAULT_CATALOG_SPORT;
   return {
-    sport: CATALOG_SPORTS.find((entry) => entry.param === readParam(source, 'sport'))?.id ?? DEFAULT_CATALOG_SPORT,
+    sport,
     q: readParam(source, 'q').trim().slice(0, 80),
     categories: readList(source, 'category', isCatalogCategory),
     levels: readList(source, 'level', isCatalogLevel),
@@ -207,8 +208,9 @@ export function parseCatalogQuery(source: ParamSource): CatalogQuery {
     tags: readList(source, 'tag', (value): value is string => /^[a-z0-9][a-z0-9-]{0,39}$/i.test(value)),
     tssMin: readNumber(source, 'tssMin', 0, 1000),
     tssMax: readNumber(source, 'tssMax', 0, 1000),
-    ifMin: readNumber(source, 'ifMin', 0, 3),
-    ifMax: readNumber(source, 'ifMax', 0, 3),
+    // IF is a power metric, so it only filters bike workouts.
+    ifMin: sport === DEFAULT_CATALOG_SPORT ? readNumber(source, 'ifMin', 0, 3) : null,
+    ifMax: sport === DEFAULT_CATALOG_SPORT ? readNumber(source, 'ifMax', 0, 3) : null,
     sort: sortIds.has(sort as CatalogSort) ? sort as CatalogSort : 'name',
   };
 }

@@ -51,7 +51,7 @@ export type PlacementRoutine = {
 };
 
 /** A built-in Library workout placed as dated copies through the catalog schedule route. */
-export type PlacementCatalogSource = { slug: string; title: string; durationSec: number; back: BackTarget };
+export type PlacementCatalogSource = { slug: string; title: string; sport: string; durationSec: number; back: BackTarget };
 
 type Item = { key: string; id?: number; title: string; detail: string };
 
@@ -95,7 +95,7 @@ export function CalendarPlacement({
   const isRoutine = placement === 'template';
 
   const items: Item[] = catalog
-    ? [{ key: CATALOG_KEY, id: 0, title: catalog.title, detail: [getSportLabel('BIKING'), formatDuration(catalog.durationSec)].join('\u00A0– ') }]
+    ? [{ key: CATALOG_KEY, id: 0, title: catalog.title, detail: [getSportLabel(catalog.sport), formatDuration(catalog.durationSec)].join('\u00A0– ') }]
     : isRoutine
     ? [...routines.map((routine) => ({
         key: `template:${routine.id}`,
@@ -131,7 +131,7 @@ export function CalendarPlacement({
 
   const selected = items.find((item) => item.key === selectedKey) ?? null;
   const selectedWorkout = catalog
-    ? { title: catalog.title, sport: 'BIKING' }
+    ? { title: catalog.title, sport: catalog.sport }
     : isRoutine ? null : workouts.find((workout) => `workout:${workout.id}` === selectedKey) ?? null;
   const selectedRoutine = isRoutine ? routineForKey(selectedKey) : null;
   const builtInPlan = builtInPlans.find((plan) => `built-in-plan:${plan.slug}` === selectedKey);

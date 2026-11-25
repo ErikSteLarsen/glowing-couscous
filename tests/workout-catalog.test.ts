@@ -153,7 +153,7 @@ test('Customize prefills an unscheduled create draft with the complete workout a
   assert.equal(draft.templateId, null);
   assert.equal(draft.scheduledDate, null);
   assert.equal(draft.athleteId, null);
-  assert.deepEqual({ sport: draft.sport, title: draft.title, summary: draft.summary, blocks: draft.blocks }, input);
+  assert.deepEqual({ sport: draft.sport, title: draft.title, summary: draft.summary, blocks: draft.blocks }, { ...input, title: `${input.title} (my version)` });
   assert.equal(validateSessionEditorDraft(draft), null);
   assert.ok(!JSON.stringify(serializeSessionEditorDraft(draft)).includes(catalogWorkout.slug));
 });

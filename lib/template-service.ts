@@ -1,14 +1,10 @@
-import { z } from 'zod';
-
-import { parseTemplateRoutine, routineSelectionSchema, type RoutineEntry } from './template-routine.ts';
+import { isRoutineSelection, parseTemplateRoutine, type RoutineEntry } from './template-routine.ts';
 import { prisma } from './prisma.ts';
 import { getBuiltInPlan } from './plan-catalog/index.ts';
 import { workoutCatalog } from './workout-catalog/index.ts';
 import { findCatalogWorkout } from './workout-catalog/query.ts';
 import { catalogWorkoutToSourceEntry } from './workout-catalog/session.ts';
 import { createSessionEditorDraftFromPersisted, serializeSessionEditorDraft, createSessionEditorBlockData } from './session-editor.ts';
-
-const routineSelectionsSchema = z.array(routineSelectionSchema);
 
 export function createTemplateService({ db = prisma }: { db?: typeof prisma } = {}) {
   return {
@@ -21,27 +17,27 @@ export function createTemplateService({ db = prisma }: { db?: typeof prisma } = 
       const summary = typeof draft.summary === 'string' ? draft.summary.trim() : '';
       if (!name || name.length > 160 || summary.length > 2000) return { error: 'Enter a name (up to 160 characters) and a description up to 2,000 characters.' };
       if (!Array.isArray(draft.entries) || !draft.entries.length || draft.entries.length > 70) return { error: 'Add between 1 and 70 workouts.' };
-      const selections = routineSelectionsSchema.safeParse(draft.entries);
-      if (!selections.success) return { error: 'Choose a workout and a day for every entry.' };
+      const selections: unknown[] = draft.entries;
+      if (!selections.every(isRoutineSelection)) return { error: 'Choose a workout and a day for every entry.' };
       if (templateId !== undefined && (!Number.isSafeInteger(templateId) || templateId <= 0)) return { error: 'Training plan not found.' };
       return db.$transaction(async tx => {
         if (templateId !== undefined && !await tx.template.findFirst({ where: { id: templateId, ownerId } })) return { error: 'Training plan not found.' };
         const workouts = await tx.session.findMany({
-          where: { id: { in: selections.data.flatMap(entry => entry.workoutId === undefined ? [] : [entry.workoutId]) }, athleteId: ownerId, coachOwnerId: null, date: null, planId: null, trainingPlanId: null },
+          where: { id: { in: selections.flatMap(entry => entry.workoutId === undefined ? [] : [entry.workoutId]) }, athleteId: ownerId, coachOwnerId: null, date: null, planId: null, trainingPlanId: null },
           include: { blocks: { orderBy: { sortOrder: 'asc' } } },
         });
         const entries: RoutineEntry[] = [];
-        for (const selection of selections.data) {
+        for (const selection of selections) {
           if (selection.catalogWorkoutSlug !== undefined) {
             const workout = findCatalogWorkout(workoutCatalog, selection.catalogWorkoutSlug);
             if (!workout) return { error: 'One of these public workouts is unavailable. Choose another workout.' };
-            entries.push({ ...selection, ...catalogWorkoutToSourceEntry(workout) });
+            entries.push({ weekday: selection.weekday, catalogWorkoutSlug: workout.slug, ...catalogWorkoutToSourceEntry(workout) });
             continue;
           }
           const workout = workouts.find(item => item.id === selection.workoutId);
           if (!workout || !workout.blocks.length) return { error: 'One of these workouts was deleted. Choose another from My workouts.' };
           entries.push({
-            ...selection,
+            weekday: selection.weekday, workoutId: workout.id,
             ...(workout.catalogWorkoutSlug ? { sourceCatalogWorkoutSlug: workout.catalogWorkoutSlug } : {}),
             title: workout.title, sport: workout.sport, summary: workout.summary,
             sportMetricsJson: workout.sportMetricsJson,

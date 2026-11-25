@@ -76,7 +76,9 @@ export function createRideHubService({ db = prisma, now = () => new Date(), cata
         const metrics = deriveSessionEditorMetrics(createSessionEditorDraftFromPersisted('planned', session), ftpWatts);
         return [{ id: session.id, title: session.title, day, timeLabel: session.timeLabel, durationSec: metrics.durationSec, hasSteps: hasExecutionSteps(session.blocks), tss: metrics.tss, segments: metrics.segments, overdue: day < today }];
       });
-      const slugByName = new Map(catalog.map((workout) => [workout.name, workout.slug]));
+      const bikeWorkouts = catalog.filter((workout) => workout.sport === 'BIKING');
+      const slugByName = new Map(bikeWorkouts.map((workout) => [workout.name, workout.slug]));
+      const bikeSlugs = new Set(bikeWorkouts.map((workout) => workout.slug));
 
       return {
         today,
@@ -89,7 +91,7 @@ export function createRideHubService({ db = prisma, now = () => new Date(), cata
           durationSec: activity.durationSec,
           tss: activity.tss,
           distanceMeters: activity.distanceMeters,
-          catalogSlug: activity.session.catalogWorkoutSlug ?? slugByName.get(activity.session.title) ?? null,
+          catalogSlug: [activity.session.catalogWorkoutSlug].find((slug) => slug && bikeSlugs.has(slug)) ?? slugByName.get(activity.session.title) ?? null,
         })),
       };
     },

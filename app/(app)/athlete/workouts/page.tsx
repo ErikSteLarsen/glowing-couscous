@@ -35,7 +35,7 @@ export default async function AthleteWorkoutsPage({
     endpoint="/api/athlete/workouts"
     performanceProfile={account?.performanceProfile}
     initialWorkoutId={catalogWorkout ? null : initialWorkoutId}
-    initialCustomization={catalogWorkout ? { slug: catalogWorkout.slug, draft: createCatalogWorkoutDraft(catalogWorkout) } : null}
+    initialCustomization={catalogWorkout ? { slug: catalogWorkout.slug, name: catalogWorkout.name, draft: createCatalogWorkoutDraft(catalogWorkout) } : null}
     catalogEntries={showCatalog ? catalogEntries : null}
   />;
 }

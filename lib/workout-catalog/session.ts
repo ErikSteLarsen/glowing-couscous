@@ -61,7 +61,7 @@ export function catalogWorkoutToSourceEntry(workout: CatalogWorkout) {
 }
 
 export function createCatalogWorkoutDraft(workout: CatalogWorkout) {
-  return createEmptySessionEditorDraft({ ...catalogWorkoutToSessionInput(workout), source: 'athlete-library' });
+  return createEmptySessionEditorDraft({ ...catalogWorkoutToSessionInput(workout), title: `${workout.name} (my version)`, source: 'athlete-library' });
 }
 
 /** Segments in the shape `SessionBlockBar` draws, with intensity inside the zone for height and color. */

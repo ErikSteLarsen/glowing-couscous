@@ -59,6 +59,7 @@ type WorkoutRecord = {
   sportMetricsJson: string | null;
   date?: string | Date | null;
   updatedAt?: string | Date;
+  catalogWorkoutSlug?: string | null;
   blocks: PersistedSessionBlock[];
 };
 
@@ -90,7 +91,7 @@ export function WorkoutLibraryClient({
   endpoint: string;
   performanceProfile?: PerformanceProfile | null;
   initialWorkoutId?: number | null;
-  initialCustomization?: { slug: string; draft: SessionEditorDraft } | null;
+  initialCustomization?: { slug: string; name: string; draft: SessionEditorDraft } | null;
   collections?: {
     tab: WorkoutTab;
     onBrowse: () => void;
@@ -184,7 +185,9 @@ export function WorkoutLibraryClient({
     const currentRevision = original?.updatedAt ? new Date(original.updatedAt).toISOString() : '';
     const asCopy = record.resource !== 'new' && (!original || currentRevision !== record.baseline);
     recovery.discard();
-    setCatalogSource(record.resource === 'new' ? recovered.catalogSource : null);
+    // Opening as a copy creates a new workout, so it keeps the saved one's public source.
+    setCatalogSource(record.resource === 'new' ? recovered.catalogSource
+      : asCopy && original?.catalogWorkoutSlug ? { slug: original.catalogWorkoutSlug, name: original.title } : null);
     setSelectedWorkoutId(original && !asCopy ? original.id : null);
     setRevision(original && !asCopy ? currentRevision : '');
     setDraft({ ...recovered.draft, id: original && !asCopy ? original.id : null, mode: 'create', scheduledDate: null, planWeekday: null });
@@ -675,8 +678,8 @@ function MyWorkoutCard({ workout, summary, href, hasDraft, canSchedule, disabled
   );
 }
 
-function catalogSourceOf(customization: { slug: string; draft: SessionEditorDraft } | null) {
-  return customization ? { slug: customization.slug, name: customization.draft.title } : null;
+function catalogSourceOf(customization: { slug: string; name: string } | null) {
+  return customization ? { slug: customization.slug, name: customization.name } : null;
 }
 
 function draftForWorkout(workout: WorkoutRecord | null, role: 'COACH' | 'ATHLETE') {

@@ -103,7 +103,7 @@ export function TrainingTemplatesClient({ templates, workouts, publicWorkouts, b
 
   function customize(plan: BuiltInPlanPreview) {
     openDraft(
-      { name: `${plan.name} (my version)`, summary: plan.summary, catalogPlanSlug: plan.slug },
+      { name: `${plan.name} (my version)`, summary: '', catalogPlanSlug: plan.slug },
       selectPlanWorkouts(plan.slots, {}).map(({ weekday, option }) => ({
         weekday, title: option.title, sport: option.sport, catalogWorkoutSlug: option.id,
       })),
