@@ -1,7 +1,6 @@
 'use client';
 
 import { useId, useRef, useState, useSyncExternalStore } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Ellipsis, Play, X } from 'lucide-react';
 import { Dialog, DialogBackdrop, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@ui-sdk/react/dialog';
@@ -11,7 +10,7 @@ import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Men
 import {
   dangerTextClassName,
   sheetDialogClassName,
-  ghostButtonClassName, iconButtonClassName,
+  iconButtonClassName,
   primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName,
 } from '@/components/ui';
 import { withBackOrigin, type BackOrigin } from '@/lib/app-navigation';
@@ -25,7 +24,7 @@ import { canStartWorkout, getWorkoutStartOptions, type WorkoutStartEligibility, 
 type WorkoutSource =
   | { kind: 'session'; id: number; from: BackOrigin | null; liveSteps?: ExecutionStep[] }
   | { kind: 'catalog'; slug: string; from: 'library' | 'ride' }
-  /** A saved workout from My workouts: like a catalog workout, a copy is added to today first. */
+  /** A saved workout from My workouts. Like a catalog workout, it isn't in the Calendar. */
   | { kind: 'workout'; id: number; from: BackOrigin | null };
 
 type Props = {
@@ -152,7 +151,7 @@ function StartControl({ workout, source, triggerClassName }: Props) {
                 <DialogTitle className={sectionHeadingClassName}>{label}</DialogTitle>
                 <DialogDescription className="mt-1 break-words text-sm text-[var(--text-secondary)]">
                   {workout.title} <span className="data whitespace-nowrap">– {formatDuration(workout.durationSec)}</span>
-                  {source.kind !== 'session' ? <span className="mt-1 block">Adds this workout to today.</span> : null}
+                  {source.kind !== 'session' ? <span className="mt-1 block">Nothing is added to your Calendar until you finish and save it. If it’s planned for today, that one is marked as done.</span> : null}
                 </DialogDescription>
               </div>
               <DialogClose type="button" className={iconButtonClassName} aria-label="Close" disabled={busy}>
@@ -179,15 +178,9 @@ function StartControl({ workout, source, triggerClassName }: Props) {
                   </p>
                 </div>
               ))}
-              {busy ? <p role="status" className="text-sm text-[var(--text-secondary)]">Adding workout to today…</p> : null}
+              {busy ? <p role="status" className="text-sm text-[var(--text-secondary)]">Opening workout…</p> : null}
               {catalog.preparation.kind === 'error' ? (
                 <p role="alert" className={dangerTextClassName}>{catalog.preparation.message}</p>
-              ) : null}
-              {preparedId !== null ? (
-                <p role="status" className="flex flex-wrap items-center gap-x-1.5 text-sm text-[var(--text-secondary)]">
-                  Added to today.
-                  <Link href={withBackOrigin(`/athlete/session/${preparedId}`, source.from)} className={ghostButtonClassName('compact')}>Open workout</Link>
-                </p>
               ) : null}
               {app.state === 'opening' ? <p role="status" className="text-sm text-[var(--text-secondary)]">Opening Tempo Ride…</p> : null}
               {app.state === 'attempted' && sessionId !== null ? (

@@ -60,7 +60,7 @@ export default async function AthleteCalendarPage({
       title: session.title,
       sport: session.sport,
       timeLabel: session.timeLabel,
-      durationSec: session.durationSec,
+      durationSec: session.activityDurationSec ?? session.durationSec,
       distanceMeters: session.distanceMeters,
       tss: session.tss,
       compliance: session.compliance,

@@ -7,7 +7,7 @@ import { athleteService } from '@/lib/athlete-service';
 import { formatDuration, formatDurationExact } from '@/lib/format-duration';
 import { formatDistance } from '@/lib/format-distance';
 import { formatTcxDateTime } from '@/lib/tcx-time';
-import { parseBackOrigin, resolveBackTarget } from '@/lib/app-navigation';
+import { parseBackOrigin, resolveBackTarget, resolveStartedBackTarget } from '@/lib/app-navigation';
 import { SessionDetailClient } from './SessionDetailClient';
 import { isRecordedOutcome } from '@/lib/athlete-completion-service';
 import { LogCompletionLink, SessionAdjustProvider, SessionHeaderActions } from './SessionActions';
@@ -20,7 +20,9 @@ import { todayInZone } from '@/lib/user-time';
 import { ImportedActivityMeasurements } from '@/components/ImportedActivityMeasurements';
 import { buildWorkoutProfile } from '@/lib/workout-profile';
 import { SessionBlockDetails, SessionStructureProvider, SessionWorkoutProfileCard } from './SessionStructure';
+import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
+import { isStartedWorkout } from '@/lib/started-workout';
 import { canStartWorkout } from '@/lib/workout-start';
 import { stravaPostService } from '@/lib/strava-post-service';
 import { StravaPostAction, StravaPostedNote } from '@/components/StravaPostAction';
@@ -48,6 +50,21 @@ export default async function AthleteSessionPage({
   const timeZone = await getRequestTimeZone();
   const [detail, account] = await Promise.all([athleteService.loadSessionDetail(user.id, parsedSessionId, { timeZone }), accountService.getAccount(user.id)]);
   if (!detail) {
+    const started = await athleteService.loadSessionDetail(user.id, parsedSessionId, { timeZone, includeUnsaved: true });
+    if (started) {
+      const { id, title, sport, status, durationSec, hasSteps } = started.session;
+      return (
+        <PageShell size="wide">
+          <TopBar back={resolveStartedBackTarget(from)} title={title} />
+          <UnsavedRidesNotice userId={user.id} />
+          <EmptyState
+            title="Not in your Calendar"
+            description="You started this workout but haven’t saved a result. It’s added to your Calendar when you finish and save it."
+            action={<WorkoutStartChooser workout={{ title, sport, status, durationSec, hasSteps }} source={{ kind: 'session', id, from: parseBackOrigin('session', from) }} />}
+          />
+        </PageShell>
+      );
+    }
     return (
       <PageShell size="wide">
         <EmptyState title="Workout not found" description="It may have been removed, or it belongs to someone else." />
@@ -63,6 +80,9 @@ export default async function AthleteSessionPage({
   const isSkipped = status === 'skipped';
   // Imported activities with no matched workout show their recorded data instead of a plan.
   const importedWithoutWorkout = detail.session.importedActivityId !== null && detail.session.blocks.length === 0;
+  const unplanned = isStartedWorkout(detail.session);
+  // A started workout's own load is the workout's, not what was ridden.
+  const shownTss = unplanned ? detail.session.activityTss : detail.session.tss;
   const scoreDurationSec = importedWithoutWorkout
     ? detail.session.recordedDurationSec ?? detail.session.durationSec
     : detail.session.durationSec;
@@ -96,7 +116,7 @@ export default async function AthleteSessionPage({
         <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
           {importedWithoutWorkout
             ? 'Imported activity, not matched to a planned workout'
-            : 'The blocks of your planned workout.'}
+            : unplanned ? 'The blocks of the workout you did. It wasn’t planned.' : 'The blocks of your planned workout.'}
         </p>
       </div>
       <div className={importedWithoutWorkout
@@ -104,12 +124,12 @@ export default async function AthleteSessionPage({
         : 'flex flex-wrap gap-x-6 gap-y-2'}
       >
         <div className={importedWithoutWorkout ? 'py-3 pr-4 sm:pr-6' : ''}>
-          <p className="text-[11px] font-medium text-[var(--text-muted)]">{importedWithoutWorkout ? 'Duration' : 'Planned time'}</p>
+          <p className="text-[11px] font-medium text-[var(--text-muted)]">{importedWithoutWorkout ? 'Duration' : unplanned ? 'Workout length' : 'Planned time'}</p>
           <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{formatDurationExact(scoreDurationSec)}</p>
         </div>
         <div className={importedWithoutWorkout ? 'py-3 pl-4 sm:pl-6' : ''}>
           <p className="text-[11px] font-medium text-[var(--text-muted)]">Training load</p>
-          <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{detail.session.loadAvailable === false ? 'No data' : `${detail.session.tss}\u00A0TSS`}</p>
+          <p className="metric-text mt-1 text-[20px] font-semibold text-[var(--text)]">{detail.session.loadAvailable === false || shownTss === null ? 'No data' : `${shownTss}\u00A0TSS`}</p>
         </div>
       </div>
     </div>
@@ -183,7 +203,7 @@ export default async function AthleteSessionPage({
         <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
           {importedWithoutWorkout
             ? 'Charts of the data recorded in this activity.'
-            : 'Compare what you recorded with the planned workout.'}
+            : unplanned ? 'What you recorded.' : 'Compare what you recorded with the planned workout.'}
         </p>
       </div>
       <ImportedActivityMeasurements
@@ -206,6 +226,7 @@ export default async function AthleteSessionPage({
     sessionId={detail.session.id}
     initialDone={detail.session.status === 'completed'}
     isSkipped={isSkipped}
+    unplanned={unplanned}
     initialNotes={detail.session.notes}
     initialDraft={detail.session.editor}
     performanceProfile={account?.performanceProfile}
@@ -266,6 +287,7 @@ export default async function AthleteSessionPage({
               statusAction={detail.session.statusAction}
               canDelete={detail.session.canDelete}
               returnHref={returnTarget.href}
+              deleteActivityId={unplanned ? detail.session.importedActivityId : null}
               downloadTcxHref={stravaPost?.hasSamples ? `/api/athlete/activities/${stravaPost.activityId}/tcx` : null}
             />
           }
@@ -274,8 +296,9 @@ export default async function AthleteSessionPage({
         <div className="-mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">
           <span>{formatSessionWhen(detail.session.date, detail.session.timeLabel)}</span>
           <StatusBadge status={displayStatus} />
-          <MetricText>{formatDuration(detail.session.durationSec)}</MetricText>
-          <MetricText>{detail.session.tss === null ? 'No TSS' : `${detail.session.tss}\u00A0TSS`}</MetricText>
+          {unplanned ? <span>Unplanned</span> : null}
+          <MetricText>{formatDuration(detail.session.activityDurationSec ?? detail.session.durationSec)}</MetricText>
+          <MetricText>{shownTss === null ? 'No TSS' : `${shownTss}\u00A0TSS`}</MetricText>
           {detail.session.metricsSource === 'manual-planned' ? <span className="text-[12px]">Estimated</span> : null}
           {detail.session.targetLabel ? <span>{detail.session.targetLabel}</span> : null}
         </div>

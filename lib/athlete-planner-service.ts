@@ -494,7 +494,7 @@ function isPlacementRaceError(error: unknown) {
     && (error.code === 'P2002' || error.code === 'P1008' || error.code === 'P2028');
 }
 
-async function findOrCreatePlan(db: Pick<Prisma.TransactionClient, 'plan'>, athleteId: number, dateInput: string) {
+export async function findOrCreatePlan(db: Pick<Prisma.TransactionClient, 'plan'>, athleteId: number, dateInput: string) {
   const date = parseISO(dateInput);
   const startDate = startOfWeek(date, { weekStartsOn: 1 });
   const endDate = endOfWeek(date, { weekStartsOn: 1 });

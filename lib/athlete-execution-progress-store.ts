@@ -3,8 +3,22 @@ import { parseExecutionProgress, parseExecutionTimer, pauseExecutionTimer, seria
 const STORAGE_EVENT = 'tempo:live-progress-change';
 const fallbackProgress = new Map<string, string>();
 
+const KEY_PREFIX = 'tempo:live-progress:v1:';
+
 export function executionProgressKey(sessionId: number): string {
-  return `tempo:live-progress:v1:${sessionId}`;
+  return `${KEY_PREFIX}${sessionId}`;
+}
+
+/** Sessions with Follow along progress in this browser. The keys have no owner: confirm it with the server before use. */
+export function listExecutionProgressSessions(): number[] {
+  try {
+    return Object.keys(localStorage)
+      .filter((key) => key.startsWith(KEY_PREFIX))
+      .map((key) => Number(key.slice(KEY_PREFIX.length)))
+      .filter((id) => Number.isSafeInteger(id) && id > 0);
+  } catch {
+    return [];
+  }
 }
 
 function notifyProgressChanged(key: string): void {

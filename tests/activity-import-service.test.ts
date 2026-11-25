@@ -74,7 +74,7 @@ test('imports into a selected unfinished session without replacing its planned w
     id: 27,
     athleteId: 7,
     sport: 'RUNNING',
-    date: { not: null },
+    OR: [{ date: { not: null } }, { source: 'athlete-started' }],
     status: { not: 'completed' },
     activity: { is: null },
   });

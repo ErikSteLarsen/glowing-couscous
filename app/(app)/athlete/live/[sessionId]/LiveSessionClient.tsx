@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, Ellipsis, RotateCcw } from 'lucide-react';
 
@@ -18,6 +19,7 @@ import { Stepper } from '@/components/tempo/Stepper';
 import { WorkoutProfile } from '@/components/WorkoutProfile';
 import type { WorkoutProfileModel } from '@/lib/workout-profile';
 import { formatDuration } from '@/lib/format-duration';
+import { toDayKey } from '@/lib/training-load';
 import {
   advanceExecution,
   createExecutionState,
@@ -117,7 +119,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
       const response = await fetch(`/api/athlete/sessions/${sessionId}/completion`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isDone: true }),
+        body: JSON.stringify({ isDone: true, localDay: toDayKey(new Date()) }),
       });
       const payload = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) {
@@ -125,7 +127,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
         return;
       }
       clearExecutionProgress(progressKey);
-      setMessage('Workout marked as done.');
+      setMessage('Workout marked as done. It’s in your Calendar.');
       router.refresh();
     } catch {
       setError('Could not reach Tempo. Check your connection and try again.');
@@ -240,7 +242,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
           </div>
         </section>
       ) : null}
-      {isDone ? <p role="status" className={successTextClassName}>Workout done. To check or fix the result, open the workout page.</p> : null}
+      {isDone ? <p role="status" className={successTextClassName}>Workout done. To check or fix the result, <Link href={`/athlete/session/${sessionId}`} className="underline underline-offset-2">open the workout page</Link>.</p> : null}
       {message && !isDone ? <p role="status" className={successTextClassName}>{message}</p> : null}
       {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
       {hasBlocks ? (

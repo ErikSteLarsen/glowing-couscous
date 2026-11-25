@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
 import { format } from 'date-fns';
+import { parseCalendarDay } from './calendar-navigation.ts';
+import { STARTED_WORKOUT_SOURCE } from './started-workout.ts';
 import { prisma } from './prisma.ts';
 import { getTempoZoneMeta } from './tempo-blocks.ts';
 import { calculateOlympiatoppenHeartRateZones } from './profile-training-zones.ts';
@@ -31,6 +33,8 @@ export type ActivityImportInput = {
   elevationGainMeters: number | null;
   points: ActivitySeriesPoint[];
   plannedSessionId?: number | null;
+  /** The athlete's local day, for a started workout that gets its date from this activity. */
+  localDay?: string;
   laps?: ActivityLap[];
   analyzeWorkout?: boolean;
 };
@@ -57,7 +61,7 @@ type ImportDatabase = {
   user: { findUnique(args: unknown): Promise<{ performanceProfileJson: string | null } | null> };
   session: {
     findMany(args: unknown): Promise<Array<{ id: number; title: string; sport: string; date: Date | null }>>;
-    findFirst(args: unknown): Promise<{ id: number; status: string; sport: string } | null>;
+    findFirst(args: unknown): Promise<{ id: number; status: string; sport: string; date?: Date | null } | null>;
     create(args: unknown): Promise<{ id: number; activity: { id: number } }>;
     update(args: unknown): Promise<unknown>;
     updateMany(args: unknown): Promise<{ count: number }>;
@@ -153,6 +157,7 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
       ? value.plannedSessionId as number
       : 'invalid';
   if (plannedSessionId === 'invalid') return { ok: false, error: 'Choose a planned workout from the list.' };
+  const localDay = parseCalendarDay(value.localDay);
   const laps = validateActivityLaps(value.laps, durationSec as number);
   if (!laps) return { ok: false, error: 'This activity’s laps can’t be read.' };
   if (value.analyzeWorkout !== undefined && typeof value.analyzeWorkout !== 'boolean') return { ok: false, error: 'Choose whether to analyze this workout.' };
@@ -170,6 +175,7 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
       elevationGainMeters,
       points: cleanPoints,
       plannedSessionId,
+      ...(localDay ? { localDay } : {}),
     },
   };
 }
@@ -211,7 +217,7 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
             sessionId: numberValue(activity.sessionId),
             title: stringValue(activity.importTitle) || stringValue(session.title),
             sessionTitle: stringValue(session.title),
-            standalone: stringValue(session.source) === 'activity-import' && activity.importedSessionStatus == null,
+            standalone: (stringValue(session.source) === 'activity-import' && activity.importedSessionStatus == null) || stringValue(session.source) === STARTED_WORKOUT_SOURCE,
             sport: stringValue(session.sport),
             completedAt: dateValue(activity.completedAt)?.toISOString() ?? '',
             durationSec: numberValue(activity.durationSec),
@@ -350,8 +356,8 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
           let sessionId: number;
           if (value.plannedSessionId) {
             const planned = await transaction.session.findFirst({
-              where: { id: value.plannedSessionId, athleteId: userId, sport: value.sport, date: { not: null }, status: { not: 'completed' }, activity: { is: null } },
-              select: { id: true, status: true },
+              where: { id: value.plannedSessionId, athleteId: userId, sport: value.sport, OR: [{ date: { not: null } }, { source: STARTED_WORKOUT_SOURCE }], status: { not: 'completed' }, activity: { is: null } },
+              select: { id: true, status: true, date: true },
             });
             if (!planned) return { ok: false as const, status: 409 as const, error: 'That planned workout is no longer available for this sport.' };
             sessionId = planned.id;
@@ -359,7 +365,10 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
             // its status, so the claim matches nothing instead of attaching.
             const claim = await transaction.session.updateMany({
               where: { id: sessionId, status: planned.status, activity: { is: null } },
-              data: { status: 'completed' },
+              data: {
+                status: 'completed',
+                ...(planned.date === null ? { date: new Date(`${value.localDay ?? value.startedAt.slice(0, 10)}T00:00:00.000Z`) } : {}),
+              },
             });
             if (claim.count !== 1) return { ok: false as const, status: 409 as const, error: 'That planned workout is no longer available for this sport.' };
             const activity = await transaction.activity.create({
@@ -528,7 +537,8 @@ async function deleteImportedActivityInTransaction(transaction: ActivityImportTr
     return { ok: false as const, status: 404 as const, error: 'Activity not found.' };
   }
   const sessionId = numberValue(activity.sessionId);
-  if (stringValue(session.source) === 'activity-import' && activity.importedSessionStatus == null) {
+  // Sessions that exist only to hold this activity go with it.
+  if ((stringValue(session.source) === 'activity-import' && activity.importedSessionStatus == null) || stringValue(session.source) === STARTED_WORKOUT_SOURCE) {
     await transaction.session.delete({ where: { id: sessionId } });
     return { ok: true as const, deletedSession: true };
   }

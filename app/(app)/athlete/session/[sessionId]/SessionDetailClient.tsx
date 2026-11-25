@@ -25,6 +25,7 @@ export function SessionDetailClient({
   sessionId,
   initialDone,
   isSkipped = false,
+  unplanned = false,
   initialNotes,
   initialDraft,
   id,
@@ -35,6 +36,8 @@ export function SessionDetailClient({
   sessionId: number;
   initialDone: boolean;
   isSkipped?: boolean;
+  /** Never planned: without its result it leaves the Calendar. */
+  unplanned?: boolean;
   initialNotes: string;
   initialDraft: SessionEditorDraft;
   id?: string;
@@ -86,6 +89,11 @@ export function SessionDetailClient({
           return;
         }
 
+        if (unplanned && !nextDone) {
+          router.replace('/athlete/calendar');
+          router.refresh();
+          return;
+        }
         setMessageTone('success');
         setMessage(isRecorded ? 'Note saved.' : nextDone ? 'Workout marked as done.' : 'Workout marked as not done.');
         router.refresh();
@@ -144,9 +152,13 @@ export function SessionDetailClient({
         <p className="mt-1 text-[13px] text-[var(--text-secondary)]">
           {isRecorded ? (
             <>
-              This result comes from a recorded activity. You can edit the note. The recorded data stays as it is.
-              To remove the activity, delete it on the{' '}
-              <Link href="/athlete/import" className="text-[var(--brand)] underline-offset-4 hover:underline">Import</Link> page.
+              This result comes from a recorded activity. You can edit the note. The recorded data stays as it is.{' '}
+              {unplanned ? 'To remove the ride, choose Delete ride in the ⋯ menu.' : (
+                <>
+                  To remove the activity, delete it on the{' '}
+                  <Link href="/athlete/import" className="text-[var(--brand)] underline-offset-4 hover:underline">Import</Link> page.
+                </>
+              )}
             </>
           ) : isDone ? 'Check your result, or fix what was logged.' : 'Add a note if you like, then mark the workout as done.'}
           {isDone && compliancePct !== null ? ` Plan compliance: ${Math.round(compliancePct)}%.` : ''}
@@ -158,6 +170,7 @@ export function SessionDetailClient({
           <SessionComparisonDialog
             sessionId={sessionId}
             endpoint={`/api/athlete/sessions/${sessionId}/comparison`}
+            label={unplanned ? 'Compare workout and result' : undefined}
           />
           {isRecorded ? null : (
             <button type="button" className={compactSecondaryButtonClassName} disabled={isPending} onClick={() => {
@@ -245,11 +258,11 @@ export function SessionDetailClient({
             {isDone && !isRecorded ? (
               <button
                 type="button"
-                onClick={() => save(false)}
+                onClick={() => { if (!unplanned || window.confirm('Remove this workout from your Calendar? It wasn’t planned, so its result is deleted.')) save(false); }}
                 disabled={isPending}
                 className={secondaryButtonClassName}
               >
-                Mark as not done
+                {unplanned ? 'Remove from Calendar' : 'Mark as not done'}
               </button>
             ) : null}
             {isDone ? null : (

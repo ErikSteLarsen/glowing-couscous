@@ -5,7 +5,7 @@ import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
-import { parseBackOrigin, resolveBackTarget } from '@/lib/app-navigation';
+import { parseBackOrigin, resolveBackTarget, resolveStartedBackTarget } from '@/lib/app-navigation';
 import { accountService } from '@/lib/account-service';
 import { createExecutionSteps } from '@/lib/athlete-execution';
 import { formatSessionWhen } from '@/lib/session-display';
@@ -31,7 +31,7 @@ export default async function AthleteLivePage({
     notFound();
   }
 
-  const [detail, account] = await Promise.all([athleteService.loadSessionDetail(user.id, parsedSessionId), accountService.getAccount(user.id)]);
+  const [detail, account] = await Promise.all([athleteService.loadSessionDetail(user.id, parsedSessionId, { includeUnsaved: true }), accountService.getAccount(user.id)]);
   if (!detail) {
     return (
       <PageShell size="wide">
@@ -41,7 +41,7 @@ export default async function AthleteLivePage({
   }
 
   const sessionOrigin = parseBackOrigin('session-live', from);
-  const back = resolveBackTarget({ route: 'session-live', sessionId: detail.session.id, from });
+  const back = detail.session.unsaved ? resolveStartedBackTarget(from) : resolveBackTarget({ route: 'session-live', sessionId: detail.session.id, from });
   if (detail.session.status === 'skipped') {
     return (
       <PageShell size="wide">
@@ -85,9 +85,11 @@ export default async function AthleteLivePage({
       />
 
       <div className="flex flex-wrap items-center gap-3 border-y border-[var(--border)] py-3 text-[13px] text-[var(--text-secondary)]">
+        {detail.session.unsaved ? <span>Not in your Calendar yet. It’s added when you mark it as done.</span> : <>
         <span>Week of {format(startOfWeek(detail.session.date, { weekStartsOn: 1 }), 'd\u00A0MMM')}</span>
         <span>{formatSessionWhen(detail.session.date, detail.session.timeLabel)}</span>
         <StatusBadge status={detail.session.status} />
+        </>}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">

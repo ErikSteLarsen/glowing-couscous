@@ -64,6 +64,11 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   the space left; profile blocks show their effort when it fits. 23 headless
   Chromium checks passed (real player, stubbed Data API, simulated trainer),
   with the menu clear of the player at eight window sizes.
+  Starting unplanned workouts (same day, local, not deployed): nothing enters
+  the Calendar until a result is saved; unsaved work is recoverable from Home,
+  Ride and Activity; Finish offers Keep riding, Discard and Finish and save;
+  week totals keep unplanned work apart. A persona test plus 11 headless
+  Chromium checks with a simulated trainer.
   Data screen (same day): Now, This block and Workout columns with More data
   inside them, profile filling the window, block lengths on the profile, and
   recorded lines that stop at skipped time. Max HR, IF and distance are no

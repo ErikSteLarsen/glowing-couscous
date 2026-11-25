@@ -242,7 +242,8 @@ export default async function AthletePage() {
             <h2 id="week-heading" className={sectionHeadingClassName}>This week</h2>
             {thisWeek ? (
               <p className="data mt-0.5 text-[13px] text-[var(--text-muted)]">
-                {formatDuration(thisWeek.completed.durationSec)} of {formatDuration(thisWeek.planned.durationSec)}&nbsp;– {thisWeek.completed.unknownLoadSessions ? `no TSS for ${thisWeek.completed.unknownLoadSessions} activities` : `${thisWeek.completed.tss} of ${thisWeek.planned.tss}\u00A0TSS`}
+                {formatDuration(thisWeek.completed.durationSec - thisWeek.extra.durationSec)} of {formatDuration(thisWeek.planned.durationSec)} planned&nbsp;– {thisWeek.completed.unknownLoadSessions ? `no TSS for ${thisWeek.completed.unknownLoadSessions} activities` : `${thisWeek.completed.tss - thisWeek.extra.tss} of ${thisWeek.planned.tss}\u00A0TSS`}
+                {thisWeek.extra.sessions > 0 ? `\u00A0– plus ${formatDuration(thisWeek.extra.durationSec)} unplanned` : ''}
                 {thisWeek.missed > 0 ? `\u00A0– ${thisWeek.missed} missed` : ''}
               </p>
             ) : null}

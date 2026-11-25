@@ -42,6 +42,6 @@ if (root) createRoot(root).render(params.has('ride') ? (
     plannedTss={0}
     steps={[]}
     back={resolveBackTarget({ route: 'session-ride', sessionId: 1 })}
-    heartRateMaxBpm={null}
+    sessionHref="/athlete/session/1" notPlanned={false} heartRateMaxBpm={null}
   />
 ) : params.has('live') ? <LiveSessionClient sessionId={2} blocks={liveSteps} isDone={false} title="Live ride" profile={buildWorkoutProfile([{ id: 'warmup', kind: 'warmup', zone: 1, durationSec: 60, reps: null, target: { metric: 'power', mode: 'relative', reference: 'ftp', low: 50, high: 50 } }])} /> : <Fixture />);

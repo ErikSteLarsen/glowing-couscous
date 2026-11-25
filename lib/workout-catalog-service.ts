@@ -62,7 +62,7 @@ function asRecord(input: unknown): Record<string, unknown> {
 
 /**
  * Copies built-in catalog workouts into a person's own training. The catalog stays
- * read-only code. Ride now and Schedule use the existing planner validation.
+ * read-only code. Schedule uses the existing planner validation; starting one is `started-workout-service`.
  */
 export function createWorkoutCatalogService({
   catalog = workoutCatalog,
@@ -75,49 +75,6 @@ export function createWorkoutCatalogService({
 
   return {
     find,
-
-    /**
-     * Plans the workout on the rider's local today and returns the session to ride.
-     * Repeating Ride now on the same day reuses the still-unridden copy instead of
-     * stacking duplicates.
-     */
-    async rideNow(athleteId: number, slug: string, input: unknown): Promise<{ ok: true; sessionId: number; reused: boolean } | Failure> {
-      const workout = find(slug);
-      if (!workout) return notFound;
-      const date = parseCalendarDay(asRecord(input).date);
-      if (!date) return { ok: false, error: 'Choose a date.', status: 400 };
-
-      const sessionInput = catalogWorkoutToSessionInput(workout);
-      try {
-        return await db.$transaction(async (tx) => {
-          // Serialize Ride now per athlete + workout + local day so concurrent taps
-          // cannot both miss the reusable copy. Released when the transaction ends.
-          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`catalog-ride-now:${athleteId}:${slug}:${date}`}, 0))`;
-          const existing = await tx.session.findFirst({
-            where: {
-              athleteId,
-              date: new Date(`${date}T00:00:00.000Z`),
-              sport: sessionInput.sport,
-              title: sessionInput.title,
-              summary: sessionInput.summary,
-              source: 'athlete',
-              status: 'planned',
-              activity: { is: null },
-            },
-            orderBy: { id: 'desc' },
-            select: { id: true },
-          });
-          if (existing) return { ok: true as const, sessionId: existing.id, reused: true };
-
-          const result = await plannerFor(tx).saveSession(athleteId, { ...sessionInput, scheduledDate: date });
-          if (!result.ok) throw new CatalogError(result.error, result.status as Failure['status']);
-          return { ok: true as const, sessionId: result.sessionIds[0], reused: false };
-        });
-      } catch (error) {
-        if (error instanceof CatalogError) return { ok: false, error: error.message, status: error.status };
-        throw error;
-      }
-    },
 
     /** Places independent copies on one or more chosen dates. */
     async schedule(athleteId: number, slug: string, input: unknown): Promise<{ ok: true; sessionIds: number[]; dates: string[] } | Failure> {

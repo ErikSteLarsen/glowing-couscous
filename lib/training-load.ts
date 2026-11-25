@@ -256,6 +256,8 @@ export type WeekSummary = {
   weekStart: DayKey;
   planned: { durationSec: number; tss: number; sessions: number };
   completed: { durationSec: number; tss: number; sessions: number; unknownLoadSessions: number };
+  /** Done without being planned; part of `completed`. */
+  extra: { durationSec: number; tss: number; sessions: number };
   missed: number;
   bySport: Array<{ sport: string; durationSec: number; tss: number; unknownLoadSessions: number }>;
   /** Completed duration as a share of planned duration, or null without a plan. */
@@ -279,6 +281,7 @@ export function summarizeWeeks(sessions: WeekSession[], weekStarts: DayKey[]): W
       weekStart,
       planned: { durationSec: 0, tss: 0, sessions: 0 },
       completed: { durationSec: 0, tss: 0, sessions: 0, unknownLoadSessions: 0 },
+      extra: { durationSec: 0, tss: 0, sessions: 0 },
       missed: 0,
       bySport: [],
       completionPct: null,
@@ -295,7 +298,13 @@ export function summarizeWeeks(sessions: WeekSession[], weekStarts: DayKey[]): W
       if (session.actualDurationSec !== null || session.actualTss !== null) {
         const durationSec = session.actualDurationSec ?? 0;
         const tss = session.actualTss ?? 0;
-        if (session.compliance !== 'unplanned') completedOfPlannedSec += durationSec;
+        if (session.compliance === 'unplanned') {
+          summary.extra.durationSec += durationSec;
+          summary.extra.tss += tss;
+          summary.extra.sessions += 1;
+        } else {
+          completedOfPlannedSec += durationSec;
+        }
         summary.completed.durationSec += durationSec;
         if (session.actualTss !== null) summary.completed.tss += tss;
         else summary.completed.unknownLoadSessions += 1;

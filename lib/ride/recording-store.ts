@@ -104,19 +104,20 @@ export function classifyStoredRides(rides: StoredRide[], ownedStatuses: Readonly
   });
 }
 
-export type StandaloneSaveResult = { ok: true; sessionId: number; duplicate: boolean } | { ok: false; error: string };
+export type StoredRideSaveResult = { ok: true; sessionId: number; duplicate: boolean } | { ok: false; error: string };
 
 /**
- * Saves a ride whose session is gone, skipped or completed as its own completed activity, then clears its checkpoint.
+ * Saves an unsaved ride and clears its checkpoint: to its workout, or (`standalone`, when that is gone, skipped or
+ * completed) as its own completed activity.
  * Retries are safe: the importer returns the existing activity for the same recording.
  */
-export async function saveRideAsActivity(userId: number, recording: RideRecording, fetcher: typeof fetch = fetch): Promise<StandaloneSaveResult> {
+export async function saveStoredRide(userId: number, recording: RideRecording, { standalone }: { standalone: boolean }, fetcher: typeof fetch = fetch): Promise<StoredRideSaveResult> {
   let response: Response;
   try {
     response = await fetcher('/api/activity-imports', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(toImportPayload(recording, { standalone: true })),
+      body: JSON.stringify(toImportPayload(recording, { standalone })),
     });
   } catch {
     return { ok: false, error: 'Could not reach Tempo.' };

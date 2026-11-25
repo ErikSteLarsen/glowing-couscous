@@ -154,6 +154,7 @@ expansion until personal use is complete or explicitly requested.
   change. Unknown imported load is distinct from a valid rounded zero, and partial
   totals identify unavailable load. Empty calendar dates mean nothing scheduled,
   not an explicitly planned rest day.
+- Starting a workout never plans it. A library or saved workout that isn't in today's plan is kept outside the Calendar, plan and My workouts (`Session.source` `athlete-started`, no date) until its result is saved; it then gets the athlete's local day, shows as **Unplanned** and adds nothing to planned totals. If the same workout is planned for today, that copy is opened instead. Deleting its result removes it from the Calendar. Work started but not saved is listed on Home, Ride and Activity for this device, with **Continue**, **Save what I have** and **Discard**; unsaved started sessions without a result are cleaned up after 30 days.
 - Manually logged completed work is an athlete-owned, already-completed Session plus Activity. `Session.source` is `athlete-manual`; `Activity.metricsSource` is `manual-unplanned`. It has no workout blocks or planned baseline, and TSS is unknown unless load can be calculated from recorded facts.
 - A device-file import is athlete-owned, previewed before save, and deduplicated per athlete by a stable file fingerprint. Keep normalized recorded measurements, optional laps, summary metrics and provenance needed for review; do not retain raw uploads or route coordinates.
 

@@ -1,3 +1,4 @@
+import { isStartedWorkout } from './started-workout.ts';
 import { prisma } from './prisma.ts';
 import { derivePlannerSessionMetrics, type PlannerSessionMetricBlock } from './planner-source-metrics.ts';
 import { parsePerformanceProfileJson } from './performance-profile.ts';
@@ -72,10 +73,11 @@ const NO_PLAN = { durationSec: 0, tss: 0 };
  * kept the planned blocks. Without either, there is no plan to compare with.
  */
 export function plannedMetrics(
-  session: { sport: string; coachBaselineJson?: string | null; blocks: PlannerSessionMetricBlock[] },
+  session: { sport: string; source?: string | null; coachBaselineJson?: string | null; blocks: PlannerSessionMetricBlock[] },
   completion: { completed: boolean; metricsSource?: string | null },
   ftpWatts?: number | null,
 ) {
+  if (isStartedWorkout(session)) return NO_PLAN;
   if (!completion.completed) return derivePlannerSessionMetrics(session.blocks, session.sport, { ftpWatts });
   const baseline = deserializeSessionSnapshot('planned', session.coachBaselineJson);
   if (baseline) return deriveSessionEditorMetrics(baseline, ftpWatts);
@@ -119,6 +121,7 @@ export function createTrainingLoadService({ db = prisma }: TrainingLoadDeps = {}
           sport: true,
           title: true,
           status: true,
+          source: true,
           adjusted: true,
           coachBaselineJson: true,
           blocks: {
