@@ -53,11 +53,12 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 - YouTube terms, privacy notice and logo (2026-11-25, local branch
   `ride-entertainment`). First video per account and browser asks for agreement
   before any lookup or embed; the picker ends with YouTube's logo, terms and an
-  inline privacy notice. `pnpm test` 627 passed (17 skipped), types, lint and
-  build passed; headless Chromium 6 checks passed with a stubbed Data API.
-  Open before setting `YOUTUBE_API_KEY`: `iframe-api.ts` controls the player
-  with messages YouTube does not document (Developer Policies forbid
-  undocumented APIs), and the lookup limit is per server instance.
+  inline privacy notice. `pnpm test` 626 passed (17 skipped; earlier runs failed intermittently in `tests/athlete-calendar.test.ts`, cause unknown), types, lint and
+  build passed; headless Chromium 6 notice and 12 player checks passed (stubbed Data API, real player; the Tempo Ride app simulated).
+  The player is controlled by YouTube's documented IFrame Player API script in
+  browsers (the undocumented messages of 0.3.0 are gone). In the Tempo Ride app
+  that script would run next to the recording bridge, so the player there has
+  YouTube's own controls only. The lookup limit is per server instance.
 
 - Post to Strava (2026-11-23, local). Workout pages for saved activities with
   recorded data show **Post to Strava** (preview sheet with editable title and

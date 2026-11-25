@@ -20,7 +20,7 @@ function readPauseWithRide(): boolean {
   }
 }
 
-/** Tempo's own code for a player that never answered. */
+/** Tempo's own code for a player it couldn't load. */
 const PLAYER_UNAVAILABLE = -1;
 
 /** What the rider sees for each IFrame API error code. */
@@ -47,6 +47,7 @@ const SAMPLE_MS = 3000;
  * smaller than 200 × 200. Nothing is drawn over the player. Tempo starts playback only while the
  * ride runs (or Pause with ride is off), the tab is visible, the player is at least half on screen
  * and no dialog covers it; it pauses with the ride, under a dialog, when hidden and when scrolled away.
+ * In the Tempo Ride app the player is not controlled: the rider uses YouTube's own buttons.
  */
 export function YouTubeWatch({
   video,
@@ -84,6 +85,8 @@ export function YouTubeWatch({
   const wantsPlayRef = useRef(startPlaying);
   const restoredRef = useRef(restored);
   const [pauseWithRide, setPauseWithRide] = useState(readPauseWithRide);
+  // Read here, not from the server: the live ride view never renders there.
+  const [controlled] = useState(() => !window.tempoDesktop);
   const [errorCode, setErrorCode] = useState<number | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [fits, setFits] = useState(true);
@@ -135,12 +138,16 @@ export function YouTubeWatch({
     const box = frameBoxRef.current;
     if (!box || errorCode !== null || !fits) return;
     const iframe = document.createElement('iframe');
-    iframe.src = youTubeEmbedUrl(video.id, { startSec: Math.floor(resumeAtRef.current) || undefined, origin: window.location.origin });
+    iframe.src = youTubeEmbedUrl(video.id, { startSec: Math.floor(resumeAtRef.current) || undefined, origin: controlled ? window.location.origin : undefined });
     iframe.title = `YouTube video player: ${video.title}`;
     iframe.allow = 'autoplay; encrypted-media';
     iframe.referrerPolicy = 'strict-origin-when-cross-origin';
     iframe.className = 'absolute inset-0 h-full w-full border-0';
     iframe.dataset.youtubePlayer = 'true';
+    if (!controlled) {
+      box.append(iframe);
+      return () => iframe.remove();
+    }
 
     const gate = gateRef.current;
     gate.inView = false;
@@ -171,6 +178,7 @@ export function YouTubeWatch({
     };
     document.addEventListener('visibilitychange', onVisibility);
 
+    box.append(iframe);
     const player = connectYouTubePlayer(iframe, {
       onReady: (target) => {
         playerRef.current = target;
@@ -188,7 +196,6 @@ export function YouTubeWatch({
       onError: setErrorCode,
       onUnavailable: () => setErrorCode(PLAYER_UNAVAILABLE),
     });
-    box.append(iframe);
 
     return () => {
       sample();
@@ -203,7 +210,7 @@ export function YouTubeWatch({
       player.destroy();
       iframe.remove();
     };
-  }, [video.id, video.title, errorCode, attempt, fits, mayPlay]);
+  }, [video.id, video.title, errorCode, attempt, fits, mayPlay, controlled]);
 
   // Pause with the ride, and play again on resume only if Tempo paused it.
   const lastStatusRef = useRef(rideStatus);
@@ -290,16 +297,18 @@ export function YouTubeWatch({
             {video.channelTitle ? <span className="hidden @md:inline"> – {video.channelTitle}</span> : null}
           </p>
         )}
-        <button
-          type="button"
-          aria-pressed={pauseWithRide}
-          onClick={togglePauseWithRide}
-          title="Pause the video when you pause the ride"
-          className={`inline-flex min-h-8 shrink-0 items-center gap-2 rounded-lg border px-2.5 text-[13px] font-medium transition-colors ${buttonFocusClassName} ${pauseWithRide ? 'border-[var(--brand)] text-[var(--text)]' : 'border-[var(--border-strong)] text-[var(--text-secondary)] control-hover:bg-[var(--raised)] control-hover:text-[var(--text)]'}`}
-        >
-          <span aria-hidden="true" className={`size-2 rounded-full ${pauseWithRide ? 'bg-[var(--brand)]' : 'bg-[var(--border-strong)]'}`} />
-          Pause with ride
-        </button>
+        {controlled ? (
+          <button
+            type="button"
+            aria-pressed={pauseWithRide}
+            onClick={togglePauseWithRide}
+            title="Pause the video when you pause the ride"
+            className={`inline-flex min-h-8 shrink-0 items-center gap-2 rounded-lg border px-2.5 text-[13px] font-medium transition-colors ${buttonFocusClassName} ${pauseWithRide ? 'border-[var(--brand)] text-[var(--text)]' : 'border-[var(--border-strong)] text-[var(--text-secondary)] control-hover:bg-[var(--raised)] control-hover:text-[var(--text)]'}`}
+          >
+            <span aria-hidden="true" className={`size-2 rounded-full ${pauseWithRide ? 'bg-[var(--brand)]' : 'bg-[var(--border-strong)]'}`} />
+            Pause with ride
+          </button>
+        ) : null}
       </div>
 
       <div ref={stageRef} className="relative grid min-h-0 flex-1 content-start justify-items-center [container-type:size]">
@@ -309,7 +318,7 @@ export function YouTubeWatch({
           // around it (never over it).
           <div
             ref={frameBoxRef}
-            className={`relative h-[max(200px,calc(min(100cqw,calc(100cqh*16/9))*9/16))] w-[max(200px,min(100cqw,calc(100cqh*16/9)))] overflow-hidden rounded-lg bg-black ${obscured ? 'invisible' : ''} ${dragActive ? 'pointer-events-none outline-2 outline-offset-4 outline-dashed outline-[var(--brand)]' : ''}`}
+            className={`relative h-[max(200px,calc(min(100cqw,calc(100cqh*16/9))*9/16))] w-[max(200px,min(100cqw,calc(100cqh*16/9)))] overflow-hidden rounded-lg bg-black ${obscured && controlled ? 'invisible' : ''} ${dragActive ? 'pointer-events-none outline-2 outline-offset-4 outline-dashed outline-[var(--brand)]' : ''}`}
           />
         ) : errorCode === null ? (
           <div role="status" className="flex max-w-sm flex-col items-center gap-3 self-center px-4 text-center">

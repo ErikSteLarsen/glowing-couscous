@@ -140,6 +140,7 @@ Dropping or pasting a link on the ride screen also works.
 
 The app has no YouTube window of its own: Google can refuse sign-in inside
 embedded browsers. The only foreign page a ride may frame is the
-youtube-nocookie player, and the ride page loads no YouTube script. Versions
+youtube-nocookie player, and in the app the ride page loads no
+YouTube script, so the rider uses the player's own controls. Versions
 without `window.tempoDesktop.youtube` (0.2.2 and earlier) block that frame, so
 the page offers **Open on YouTube** there instead.
