@@ -24,14 +24,14 @@ type TargetProps =
   | ({ href?: undefined } & Omit<ComponentProps<'button'>, 'className' | 'type'>);
 
 /** Title row: the name is the card's link or button; `aside` is its leading value (duration). */
-export function WorkoutCardHeader({ aside, children, ...target }: TargetProps & { aside?: ReactNode; children: ReactNode }) {
+export function WorkoutCardHeader({ aside, children, level: Heading = 'h3', ...target }: TargetProps & { aside?: ReactNode; children: ReactNode; level?: 'h3' | 'h4' }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <h3 className="min-w-0 text-base font-medium leading-snug text-[var(--text)] [overflow-wrap:anywhere]">
+      <Heading className="min-w-0 text-base font-medium leading-snug text-[var(--text)] [overflow-wrap:anywhere]">
         {target.href !== undefined
           ? <Link {...target} data-card-target className={targetClassName}>{children}</Link>
           : <button type="button" {...target} data-card-target className={targetClassName}>{children}</button>}
-      </h3>
+      </Heading>
       {aside ? <span className="data shrink-0 text-[13px] text-[var(--text-secondary)]">{aside}</span> : null}
     </div>
   );

@@ -84,6 +84,18 @@ export function catalogSportLabel(sport: CatalogSport): string {
   return CATALOG_SPORTS.find((entry) => entry.id === sport)?.label ?? sport;
 }
 
+/** Workouts per sport that match the search text, ignoring every filter. */
+export function countCatalogBySport(entries: readonly CatalogEntry[], q = ''): Record<CatalogSport, number> {
+  const counts: Record<CatalogSport, number> = { BIKING: 0, RUNNING: 0, SWIMMING: 0 };
+  for (const { workout } of entries) if (matchesCatalogSearch(workout, q)) counts[workout.sport] += 1;
+  return counts;
+}
+
+/** The query after choosing another sport: search and sort stay, filters belong to the old sport. */
+export function switchCatalogSport(query: CatalogQuery, sport: CatalogSport): CatalogQuery {
+  return { ...EMPTY_CATALOG_QUERY, sport, q: query.q, sort: query.sort };
+}
+
 export function isCatalogCategory(value: unknown): value is CatalogCategory {
   return typeof value === 'string' && categoryIds.has(value as CatalogCategory);
 }

@@ -66,6 +66,10 @@ test('profile recovery preserves unfinished pace/time input but rejects malforme
   assert.equal(parseProfileRecovery('{"profile":{}}'), null);
   assert.equal(parseProfileRecovery('null'), null);
   assert.equal(parseWorkoutRecovery('{"draft":{"blocks":"bad"}}'), null);
+  const draft = { title: 'Easy Run', sport: 'RUNNING', blocks: [] };
+  const catalogSource = { slug: 'easy-run', name: 'Easy Run' };
+  assert.deepEqual(parseWorkoutRecovery(JSON.stringify({ draft, requestKey: '', catalogSource }))?.catalogSource, catalogSource);
+  assert.equal(parseWorkoutRecovery(JSON.stringify({ draft, requestKey: '', catalogSource: { slug: 7 } }))?.catalogSource, null);
 });
 
 test('draft age reads as recent minutes or hours before falling back to a date', () => {

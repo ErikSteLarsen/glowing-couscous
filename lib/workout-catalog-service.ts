@@ -84,6 +84,7 @@ export function createWorkoutCatalogService({
     async rideNow(athleteId: number, slug: string, input: unknown): Promise<{ ok: true; sessionId: number; reused: boolean } | Failure> {
       const workout = find(slug);
       if (!workout) return notFound;
+      if (workout.sport === 'SWIMMING') return { ok: false, error: 'Swim workouts can’t be started yet.', status: 400 };
       const date = parseCalendarDay(asRecord(input).date);
       if (!date) return { ok: false, error: 'Choose a date.', status: 400 };
 
@@ -93,23 +94,25 @@ export function createWorkoutCatalogService({
           // Serialize Ride now per athlete + workout + local day so concurrent taps
           // cannot both miss the reusable copy. Released when the transaction ends.
           await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`catalog-ride-now:${athleteId}:${slug}:${date}`}, 0))`;
+          const open = {
+            athleteId,
+            date: new Date(`${date}T00:00:00.000Z`),
+            sport: sessionInput.sport,
+            source: 'athlete',
+            status: 'planned',
+            activity: { is: null },
+          };
+          const latest = { orderBy: { id: 'desc' }, select: { id: true } } as const;
           const existing = await tx.session.findFirst({
-            where: {
-              athleteId,
-              date: new Date(`${date}T00:00:00.000Z`),
-              sport: sessionInput.sport,
-              title: sessionInput.title,
-              summary: sessionInput.summary,
-              source: 'athlete',
-              status: 'planned',
-              activity: { is: null },
-            },
-            orderBy: { id: 'desc' },
-            select: { id: true },
+            ...latest,
+            where: { ...open, catalogWorkoutSlug: slug },
+          }) ?? await tx.session.findFirst({
+            ...latest,
+            where: { ...open, catalogWorkoutSlug: null, title: sessionInput.title, summary: sessionInput.summary },
           });
           if (existing) return { ok: true as const, sessionId: existing.id, reused: true };
 
-          const result = await plannerFor(tx).saveSession(athleteId, { ...sessionInput, scheduledDate: date });
+          const result = await plannerFor(tx).saveSession(athleteId, { ...sessionInput, scheduledDate: date }, undefined, { catalogWorkoutSlug: workout.slug });
           if (!result.ok) throw new CatalogError(result.error, result.status as Failure['status']);
           return { ok: true as const, sessionId: result.sessionIds[0], reused: false };
         });
@@ -150,7 +153,7 @@ export function createWorkoutCatalogService({
           await tx.placementRequest.create({
             data: { userId: athleteId, requestKey: identity.userId_requestKey.requestKey, payloadHash, sessionIdsJson: '[]' },
           });
-          const result = await plannerFor(tx).saveSession(athleteId, { ...catalogWorkoutToSessionInput(workout), dates: sortedDates, timeLabel });
+          const result = await plannerFor(tx).saveSession(athleteId, { ...catalogWorkoutToSessionInput(workout), dates: sortedDates, timeLabel }, undefined, { catalogWorkoutSlug: workout.slug });
           if (!result.ok) throw new CatalogError(result.error, result.status as Failure['status']);
           await tx.placementRequest.update({ where: identity, data: { sessionIdsJson: JSON.stringify(result.sessionIds) } });
           return result.sessionIds;

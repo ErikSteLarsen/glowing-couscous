@@ -65,7 +65,7 @@ export function createRideHubService({ db = prisma, now = () => new Date(), cata
           where: { athleteId, session: { sport: 'BIKING' } },
           orderBy: [{ completedAt: 'desc' }, { id: 'desc' }],
           take: RECENT_LIMIT,
-          select: { sessionId: true, completedAt: true, durationSec: true, tss: true, distanceMeters: true, importTitle: true, session: { select: { title: true } } },
+          select: { sessionId: true, completedAt: true, durationSec: true, tss: true, distanceMeters: true, importTitle: true, session: { select: { title: true, catalogWorkoutSlug: true } } },
         }),
       ]);
 
@@ -89,7 +89,7 @@ export function createRideHubService({ db = prisma, now = () => new Date(), cata
           durationSec: activity.durationSec,
           tss: activity.tss,
           distanceMeters: activity.distanceMeters,
-          catalogSlug: slugByName.get(activity.session.title) ?? null,
+          catalogSlug: activity.session.catalogWorkoutSlug ?? slugByName.get(activity.session.title) ?? null,
         })),
       };
     },

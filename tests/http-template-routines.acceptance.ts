@@ -29,6 +29,20 @@ test('authenticated routes apply personal and built-in training plans and reload
     assert.equal(signedIn.status, 200);
     const identity = await (await request('/api/auth/session')).json();
     assert.equal(Number(identity.user.id), owner.id);
+    const freshPage = await request('/athlete/templates');
+    assert.equal(freshPage.status, 200);
+    const freshHtml = await freshPage.text();
+    assert.match(freshHtml, /Customize/);
+    assert.match(freshHtml, /href="\/athlete\/library\/swim-intervals-60-10x200"/);
+    assert.equal(await db.session.count({ where: { athleteId: owner.id } }), 0);
+    assert.equal((await post('/api/athlete/templates', {
+      name: 'HTTP personal triathlon plan',
+      catalogPlanSlug: 'triathlon-essentials',
+      entries: [{ weekday: 6, catalogWorkoutSlug: 'swim-intervals-60-20x100' }],
+    })).status, 201);
+    const personalized = await db.template.findFirstOrThrow({ where: { ownerId: owner.id } });
+    assert.equal(personalized.catalogPlanSlug, 'triathlon-essentials');
+    assert.equal(personalized.catalogPlanVersion, 1);
     const workout = { title: 'HTTP easy run', sport: 'RUNNING', blocks: [{ kind: 'work', zone: 1, durationSec: 1800, target: { metric: 'pace', mode: 'relative', reference: 'profile-pace-zone-1', low: 100, high: 100 } }] };
     const easyResponse = await post('/api/athlete/workouts', workout);
     assert.equal(easyResponse.status, 201);
@@ -38,7 +52,7 @@ test('authenticated routes apply personal and built-in training plans and reload
     const intervals = await intervalResponse.json();
     const entries = [0, 2, 4].map(weekday => ({ weekday, workoutId: easy.sessionId })).concat([1, 3].map(weekday => ({ weekday, workoutId: intervals.sessionId })));
     assert.equal((await post('/api/athlete/templates', { name: 'HTTP base week', summary: 'Five predefined sessions', entries })).status, 201);
-    const routine = await db.template.findFirstOrThrow({ where: { ownerId: owner.id } });
+    const routine = await db.template.findFirstOrThrow({ where: { ownerId: owner.id, name: 'HTTP base week' } });
     const templatePage = await request('/athlete/templates');
     assert.equal(templatePage.status, 200);
     const templateHtml = await templatePage.text();
@@ -85,7 +99,19 @@ test('authenticated routes apply personal and built-in training plans and reload
     assert.deepEqual(await builtInReplay.json(), copy);
     const appliedWeek = await request('/athlete/calendar?date=2026-12-07');
     assert.equal(appliedWeek.status, 200);
-    assert.match(await appliedWeek.text(), /Swim intervals — 20 × 100 m/);
+    assert.match(await appliedWeek.text(), /Swim Set 20 × 100 m/);
+
+    const personalPlacement = await request(`/athlete/calendar?place=template&source=template%3A${personalized.id}&date=2026-12-14`);
+    assert.equal(personalPlacement.status, 200);
+    assert.match(await personalPlacement.text(), /HTTP personal triathlon plan/);
+    assert.equal((await post('/api/athlete/planner/assignments', {
+      sourceKind: 'template', sourceId: personalized.id, dates: templateDatesForSelection('week', '2026-12-14'),
+      requestKey: crypto.randomUUID(),
+    })).status, 201);
+    const scheduledPublicWorkout = await db.session.findFirstOrThrow({ where: { templateId: personalized.id } });
+    assert.equal(scheduledPublicWorkout.catalogWorkoutSlug, 'swim-intervals-60-20x100');
+    assert.equal(scheduledPublicWorkout.catalogPlanSlug, 'triathlon-essentials');
+    assert.equal(scheduledPublicWorkout.catalogPlanVersion, 1);
   } finally {
     await db.user.delete({ where: { id: owner.id } });
     await db.$disconnect();

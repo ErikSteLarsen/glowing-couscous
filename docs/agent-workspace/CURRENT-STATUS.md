@@ -7,6 +7,17 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- Catalog lineage and personal plan copies (2026-11-25). Catalog workout and
+  plan copies keep their source slugs through saves, Calendar placement, edits,
+  rescheduling, and sharing. Built-in plans open editable drafts from their
+  defaults. Personal plans can use public workouts without any saved workouts.
+  On local `tempo_acceptance`, the additive migration and a legacy-row
+  backfill check passed. `pnpm test` passed (637 passed, 21 skipped), and
+  `pnpm test:db` passed (693 passed). Lint, types, build, authenticated HTTP
+  placement, and direct PostgreSQL routine acceptance passed. Fresh-account
+  HTTP covered a public-only personal plan. Interactive editor acceptance and
+  catalog lineage on stale workout drafts recovered as new copies remain open.
+
 - Built-in triathlon weeks (2026-11-25). Training plans and Calendar offer
   Essentials, Build and High Volume with selectable interval sets, recovery
   days and endurance alternatives. Applying a plan creates versioned workout

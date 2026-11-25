@@ -402,7 +402,10 @@ Every runnable workout shows one **Start workout** button that opens the shared
 chooser (`components/WorkoutStartChooser.tsx`; options from `lib/workout-start.ts`).
 The chooser lists only the modes this workout and device support, with one
 sentence each, and asks every time. Never add a direct Live, Ride or desktop
-link beside it; completed, skipped and stepless sessions show no start.
+link beside it; completed, skipped and stepless sessions show no start. Runs offer Follow along
+only. Swims can't be started: Schedule becomes the primary action on their detail
+pages with one line saying so, Mark as done is primary on the planned workout, and
+`/athlete/live/<id>` explains this with a link back to the workout.
 
 ### Primary and secondary actions
 
@@ -641,18 +644,26 @@ has saved workouts and **Public library** otherwise. The URL carries the
 explicit tab and any catalog filters. The mobile navigation drawer links to
 Training plans.
 
+Public library shows one sport at a time. Its results heading ("Bike workouts" and
+the count) states the sport and opens the menu that changes it; add no other sport
+control. Bike is the default and stays out of the URL. Changing sport keeps search
+and sort and clears the filters. Counts, the tab badge and "N of M" are for the
+chosen sport. Detail pages put the sport badge first. Run and swim workouts show
+zones, never FTP, IF, normalized power or watts; swim sets show distance, with their
+times marked "est.". **Used in plans** under the block list links to Training plans.
+
 Keep **New workout** on **My workouts**. Its menu includes **Start from
 public library**. Catalog cards open a read-only detail page and offer
 **Customize** and **Schedule** in their More options menu. On the detail
 page, keep **Start workout** and **Schedule** visible and **Customize** in
 More options. Catalog detail links opened from Workouts return to its
-Public library tab.
+Public library tab on the workout's sport.
 
 Hide the header and tabs while the editor is open. **Customize** prefills an
 unsaved copy of the catalog workout. Name the original and explain that
 Save adds your version to My workouts and the original stays as it is.
 Workouts are one concept. Both tabs share the `WorkoutCard` grid (the same
-%FTP or zone profile, meta line, TSS and IF), the search, Filters and sort
+%FTP or zone profile, meta line, TSS, and IF where efforts have power targets), the search, Filters and sort
 toolbar, and the count row. Every card opens a detail page rendered by the
 shared `WorkoutDetail` layout: public at `/athlete/library/<slug>`, saved at
 `/athlete/workouts/<id>`. Saved workouts differ only where ownership does: the
@@ -797,8 +808,12 @@ are saved. Unknown values may remain blank.
 
 ### Personal training plans
 
-Use the established Night Instrument surfaces and shared controls. **Training plans** (`/athlete/templates`) uses saved library workouts. Keep name and optional purpose together, followed by one saved-workout
-picker with multi-weekday selection and an ordered Monday–Sunday outline.
+Use the established Night Instrument surfaces and shared controls. Keep the
+plan name and optional purpose together. Follow them with a sport-filtered
+workout picker with My workouts and Public library groups, multi-weekday
+selection, and an ordered Monday-to-Sunday outline. Default the picker to Bike.
+Built-in plans offer Customize to open a new draft from their default workouts.
+Link each public workout in the built-in preview to its library page.
 Days without entries say No workout. Multiple entries expose accessible reorder
 and remove controls; at narrow widths their actions wrap below the workout
 selector. Show save failures beside Save and retain the draft. Cancelling or

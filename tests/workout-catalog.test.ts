@@ -5,7 +5,7 @@ import { workoutCatalog } from '../lib/workout-catalog/index.ts';
 import type { CatalogWorkout } from '../lib/workout-catalog/types.ts';
 import { catalogWorkoutMetrics, computeCatalogMetrics, expandCatalogItems, zoneForPct } from '../lib/workout-catalog/metrics.ts';
 import {
-  createCatalogEntries, durationBucketFor, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, matchesCatalogSearch, parseCatalogQuery, serializeCatalogQuery, withCatalogQuery,
+  countCatalogBySport, createCatalogEntries, durationBucketFor, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, matchesCatalogSearch, parseCatalogQuery, serializeCatalogQuery, switchCatalogSport, withCatalogQuery,
 } from '../lib/workout-catalog/query.ts';
 import { catalogStepNote, catalogWorkoutToEditorBlocks, catalogWorkoutToSessionInput, createCatalogWorkoutDraft } from '../lib/workout-catalog/session.ts';
 import { validateCatalog, validateCatalogWorkout } from '../lib/workout-catalog/validate.ts';
@@ -191,5 +191,28 @@ test('every catalog workout keeps the same planned TSS when copied into a sessio
   for (const workout of workoutCatalog) {
     const draft = createEmptySessionEditorDraft(catalogWorkoutToSessionInput(workout));
     assert.equal(deriveSessionEditorMetrics(draft).tss, catalogWorkoutMetrics(workout).tss, workout.name);
+  }
+});
+
+test('switching sport keeps search and sort, and drops filters that belong to the old sport', () => {
+  const query = parseCatalogQuery({ q: 'easy', category: 'tempo', level: 'advanced', duration: 'under-45', tag: 'pool', tssMin: '20', sort: 'tss-desc' });
+  const run = switchCatalogSport(query, 'RUNNING');
+  assert.equal(serializeCatalogQuery(run), 'sport=run&q=easy&sort=tss-desc');
+  assert.equal(serializeCatalogQuery(switchCatalogSport(run, 'BIKING')), 'q=easy&sort=tss-desc');
+});
+
+test('sport counts cover the whole catalog and follow the search text', () => {
+  const entries = createCatalogEntries([workout(), workout({ slug: 'r', sport: 'RUNNING', name: 'Easy jog' }), workout({ slug: 's', sport: 'SWIMMING', name: 'Easy lengths' })]);
+  assert.deepEqual(countCatalogBySport(entries), { BIKING: 1, RUNNING: 1, SWIMMING: 1 });
+  assert.deepEqual(countCatalogBySport(entries, 'lengths'), { BIKING: 0, RUNNING: 0, SWIMMING: 1 });
+});
+
+test('swim distance counts every repeat, and run and swim zone times match the copied session', () => {
+  const swim = workoutCatalog.find((entry) => entry.slug === 'swim-intervals-60-10x200')!;
+  assert.equal(catalogWorkoutMetrics(swim).distanceM, 2000);
+  assert.equal(catalogWorkoutMetrics(workout()).distanceM, 0);
+  for (const entry of workoutCatalog.filter(({ sport }) => sport !== 'BIKING')) {
+    const draft = createEmptySessionEditorDraft(catalogWorkoutToSessionInput(entry));
+    assert.deepEqual(catalogWorkoutMetrics(entry).zoneSec, deriveSessionEditorMetrics(draft).zoneDistributionSec, entry.slug);
   }
 });

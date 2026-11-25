@@ -106,8 +106,8 @@ workout.
    undo/redo, failure draft retention and explicit save feedback.
 3. Schedule multiple dates in Calendar; check week/month views after reload. Edit and
    cross-week reschedule personal work without requiring Assignment lineage.
-4. Compose saved workouts on weekdays in Training plans, apply one complete week or
-   whole month, preview the actual dated sessions, preserve within-day order,
+4. Customize a built-in plan and compose saved and public workouts in Training
+   plans. Apply one complete week or whole month, preview the actual dated sessions, preserve within-day order,
    and leave empty weekdays untouched. Refuse old block-template input and
    retired public/coach template paths. Verify snapshots after source deletion,
    owner isolation, relative targets, replay and rollback with

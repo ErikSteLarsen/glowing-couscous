@@ -1,4 +1,6 @@
-import { parseCatalogQuery, serializeCatalogQuery, type CatalogQuery } from './workout-catalog/query.ts';
+import type { BackTarget } from './app-navigation.ts';
+import { EMPTY_CATALOG_QUERY, isCatalogSport, parseCatalogQuery, serializeCatalogQuery, type CatalogQuery } from './workout-catalog/query.ts';
+import type { CatalogSport } from './workout-catalog/types.ts';
 
 export type WorkoutTab = 'mine' | 'library';
 
@@ -17,12 +19,22 @@ export function publicLibraryHref(query?: CatalogQuery) {
   return athleteWorkoutsHref(new URLSearchParams([['tab', 'library'], ...filters]));
 }
 
+/** A back target to the public library opens it on the workout's own sport; other targets stay as they are. */
+export function backToLibrarySport(back: BackTarget, sport: string): BackTarget {
+  return back.href === publicLibraryHref() && isCatalogSport(sport)
+    ? { ...back, href: publicLibraryHref({ ...EMPTY_CATALOG_QUERY, sport }) }
+    : back;
+}
+
 export function legacyLibraryRedirectHref(params: Record<string, string | string[] | undefined>) {
   return publicLibraryHref(parseCatalogQuery(params));
 }
 
-export function customizeWorkoutHref(slug: string) {
-  return athleteWorkoutsHref(new URLSearchParams({ customize: slug }));
+/** Keeps the sport in the URL, so closing the editor returns to the list the workout came from. */
+export function customizeWorkoutHref(slug: string, sport: CatalogSport) {
+  return athleteWorkoutsHref(new URLSearchParams([
+    ['customize', slug], ...new URLSearchParams(serializeCatalogQuery({ ...EMPTY_CATALOG_QUERY, sport })),
+  ]));
 }
 
 /** Detail page of one saved workout, the owned counterpart of `/athlete/library/<slug>`. */

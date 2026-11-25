@@ -9,6 +9,7 @@ import { ComplianceMark } from '@/components/tempo/ComplianceMark';
 import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
 import { MetricPair } from '@/components/tempo/MetricPair';
 import { SessionRow } from '@/components/tempo/SessionRow';
+import { canStartWorkout } from '@/lib/workout-start';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { HomeSummaryDialog } from '@/components/HomeSummaryDialog';
 import { MiniBars, Sparkline, type MiniBar } from '@/components/charts/Sparklines';
@@ -18,7 +19,7 @@ import {
   Surface,
   ghostButtonClassName,
   PageShell,
-  secondaryButtonClassName,
+  primaryButtonClassName, secondaryButtonClassName,
   sectionHeadingClassName,
   StatTile,
   TopBar,
@@ -164,7 +165,7 @@ export default async function AthletePage() {
                   workout={{ title: nextAction.title, sport: nextAction.sport, status: nextAction.status, durationSec: nextAction.durationSec, hasSteps: nextAction.hasSteps }}
                   source={{ kind: 'session', id: nextAction.id, from: 'home' }}
                 />
-                <Link href={`/athlete/session/${nextAction.id}?from=home`} className={`${secondaryButtonClassName} max-md:min-h-11`}>
+                <Link href={`/athlete/session/${nextAction.id}?from=home`} className={`${canStartWorkout(nextAction) ? secondaryButtonClassName : primaryButtonClassName} max-md:min-h-11`}>
                   Details
                 </Link>
               </div>

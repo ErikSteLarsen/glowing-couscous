@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import { isAssignmentDate, validateTemplateDateRange } from './template-period.ts';
 
 export const ROUTINE_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
@@ -8,8 +10,14 @@ export type RoutineBlock = {
   targetLowDecimal?: string | null; targetHighDecimal?: string | null;
   note: string | null; skipped?: boolean; sortOrder: number;
 };
-export type RoutineEntry = {
-  weekday: number; workoutId: number; title: string; sport: string;
+export const routineSelectionSchema = z.union([
+  z.object({ weekday: z.number().int().min(0).max(6), workoutId: z.number().int().positive(), catalogWorkoutSlug: z.never().optional() }),
+  z.object({ weekday: z.number().int().min(0).max(6), workoutId: z.never().optional(), catalogWorkoutSlug: z.string().min(1).max(160) }),
+]);
+export type RoutineSelection = z.infer<typeof routineSelectionSchema>;
+export type RoutineEntry = RoutineSelection & {
+  title: string; sport: string;
+  sourceCatalogWorkoutSlug?: string;
   summary: string | null; sportMetricsJson: string | null;
   blocks: RoutineBlock[];
 };
@@ -20,8 +28,8 @@ export function parseTemplateRoutine(json: string | null | undefined): TemplateR
   try {
     const value = JSON.parse(json) as TemplateRoutine;
     if (value.version !== 1 || !Array.isArray(value.entries) || !value.entries.length || value.entries.length > 70) return null;
-    if (value.entries.some(entry => !Number.isInteger(entry.weekday) || entry.weekday < 0 || entry.weekday > 6 ||
-      !Number.isSafeInteger(entry.workoutId) || entry.workoutId <= 0 || typeof entry.title !== 'string' ||
+    if (value.entries.some(entry => !routineSelectionSchema.safeParse(entry).success ||
+      (entry.sourceCatalogWorkoutSlug !== undefined && typeof entry.sourceCatalogWorkoutSlug !== 'string') || typeof entry.title !== 'string' ||
       typeof entry.sport !== 'string' || !Array.isArray(entry.blocks) || !entry.blocks.length ||
       entry.blocks.some(block => !Number.isFinite(block.durationSec) || block.durationSec <= 0 || !Number.isInteger(block.sortOrder)))) return null;
     return value;

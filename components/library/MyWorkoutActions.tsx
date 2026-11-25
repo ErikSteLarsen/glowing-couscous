@@ -8,9 +8,10 @@ import { ShareLinkResult, useShareLink } from '@/components/ShareLinkButton';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { dangerTextClassName, iconButtonClassName, secondaryButtonClassName } from '@/components/ui';
-import { startTriggerClassName } from '@/components/library/LibraryWorkoutActions';
+import { ScheduleLink, startTriggerClassName, SwimStartNote } from '@/components/library/LibraryWorkoutActions';
 import { editWorkoutHref, myWorkoutsHref } from '@/lib/athlete-workouts-navigation';
 import { getCalendarPlacementHref } from '@/lib/calendar-navigation';
+import { canStartWorkout } from '@/lib/workout-start';
 
 type Share = ReturnType<typeof useShareLink>;
 
@@ -67,6 +68,7 @@ export function MyWorkoutMenu({ id, name, share, disabled = false, onEdit, onDel
 
 /** Detail page actions, laid out like `LibraryWorkoutActions`: Start workout, Schedule, Edit and ⋯. */
 export function MyWorkoutActions({ id, name, sport, durationSec, hasSteps }: { id: number; name: string; sport: string; durationSec: number; hasSteps: boolean }) {
+  const workout = { title: name, durationSec, sport, status: 'planned', hasSteps };
   const router = useRouter();
   const share = useShareLink('session', id);
   const [isPending, startTransition] = useTransition();
@@ -95,18 +97,17 @@ export function MyWorkoutActions({ id, name, sport, durationSec, hasSteps }: { i
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <WorkoutStartChooser
-          workout={{ title: name, durationSec, sport, status: 'planned', hasSteps }}
+          workout={workout}
           source={{ kind: 'workout', id, from: null }}
           triggerClassName={startTriggerClassName}
         />
-        <Link href={myWorkoutScheduleHref(id)} className={`${secondaryButtonClassName} max-md:min-h-11`}>
-          <CalendarPlus aria-hidden="true" size={16} strokeWidth={1.6} />Schedule
-        </Link>
+        <ScheduleLink href={myWorkoutScheduleHref(id)} primary={!canStartWorkout(workout)} />
         <Link href={editWorkoutHref(id, 'detail')} className={`${secondaryButtonClassName} max-md:min-h-11`}>
           <Pencil aria-hidden="true" size={16} strokeWidth={1.6} />Edit
         </Link>
         <MyWorkoutMenu id={id} name={name} share={share} disabled={isPending} showEdit={false} onDelete={deleteWorkout} />
       </div>
+      {sport === 'SWIMMING' ? <SwimStartNote /> : null}
       {isPending ? <p role="status" className="text-sm text-[var(--text-secondary)]">Deleting workout…</p> : null}
       {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
       {share.message || share.shareUrl ? <div className="max-w-xl space-y-2"><ShareLinkResult share={share} showAudience /></div> : null}

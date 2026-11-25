@@ -1,7 +1,7 @@
 import { createEmptySessionEditorDraft, createSessionEditorBlockData, serializeSessionEditorDraft, type SessionEditorBlock } from '../session-editor.ts';
 import { chartIntensityFraction, zoneForTarget } from '../workout-zone-intensity.ts';
 import type { WorkoutTarget } from '../workout-targets.ts';
-import { expandCatalogItems, zoneForPct, type CatalogFlatStep } from './metrics.ts';
+import { catalogStepZone, expandCatalogItems, type CatalogFlatStep } from './metrics.ts';
 import type { CatalogStep, CatalogWorkout } from './types.ts';
 
 export function catalogStepTarget(step: Pick<CatalogStep, 'lowPct' | 'highPct'>): WorkoutTarget {
@@ -28,7 +28,7 @@ export function catalogWorkoutToEditorBlocks(workout: Pick<CatalogWorkout, 'slug
       clientId: `catalog-${workout.slug}-${step.index}`,
       id: null,
       kind: step.kind,
-      zone: target ? zoneForTarget(target, 'BIKING', null) ?? 1 : step.kind === 'pause' ? 1 : zoneForPct((step.lowPct + step.highPct) / 2),
+      zone: target ? zoneForTarget(target, 'BIKING', null) ?? 1 : catalogStepZone(step),
       durationSec: step.durationSec,
       reps: null,
       target,

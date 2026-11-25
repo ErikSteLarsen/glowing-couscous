@@ -66,7 +66,7 @@ and ownership guards; page visibility is not API authorization.
   workout profile, start actions, and Calendar placement
 - `/athlete/ride` - Ride home (no app chrome; Tempo Ride's default page): today's and recent open bike sessions, recent rides, and the library with Ride now
 - `/athlete/planner` - retired; redirects `date`/`source` to Calendar placement (`getPlannerRedirectHref`)
-- `/athlete/templates` - built-in one-week training plans and private weekly plans composed from saved workouts
+- `/athlete/templates` - built-in one-week training plans and private weekly plans composed from saved and public workouts
 - `/athlete/session/[sessionId]` - read-only workout profile, block inspector and outcome review; `lib/session-structure.ts` groups identical instructions, `lib/workout-profile.ts` unrolls them into the shared `components/WorkoutProfile.tsx`, and the route's `SessionStructure.tsx` owns selection/disclosure
 - `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion
 - `/athlete/ride/[sessionId]` - indoor bike ride for BIKING sessions: targets-only timer or Web Bluetooth trainer/HR/cadence with ERG targets, 1 Hz recording checkpointed to localStorage (and `window.tempoDesktop` when present), saved through `POST /api/activity-imports` as a `file-import` attached to the planned session
@@ -88,7 +88,7 @@ navigation.
 - `/api/coach/requests/*` - coach request decisions
 - `/api/coach/planner/*`, `/api/coach/assignments`, `/api/coach/sessions/*` - coach planning
 - `/api/coach/workouts/*`, `/api/athlete/workouts/*` - standalone libraries
-- `/api/athlete/templates/*` - training plans built from saved workouts
+- `/api/athlete/templates/*` - training plans built from saved and public workouts
 - `/api/athlete/library/[slug]/{ride,schedule}` - copy a catalog workout to today or chosen dates
 - `/api/athlete/planner/*`, `/api/athlete/sessions/*` - athlete planning and outcomes
 - `/api/athlete/workouts/generate` - private guided workout draft generation from bounded choices and recent completed training
@@ -131,7 +131,7 @@ navigation.
 | Strava sync | `lib/strava-service.ts`, `lib/strava-inbox-service.ts`, `app/api/strava/*`, `components/StravaImportPanel.tsx`, `prisma/schema.prisma` | User-scoped OAuth, durable inbox review state, leased webhook queue and retry recovery, explicit newest-first Import inbox review, server-side stream normalization, explicit import via the shared importer, and existing disconnect/revocation cleanup |
 | Indoor rides | `lib/ride/*`, `app/(app)/athlete/ride/[sessionId]/*` | Pure BLE characteristic parsers and FTMS control encoders, ride plan (ERG midpoint watts, warm-up/cool-down ramps, free ride without power target), recorder/summary/import payload/checkpoint; client-only Web Bluetooth manager with backoff reconnect and crash-safe local storage. No ride-specific server code: persistence reuses `activityImportService.importForUser` |
 | Ride entertainment | `components/ride/entertainment/*`, `lib/youtube/*`, `app/api/youtube/{video,status}`, `app/(app)/athlete/ride/send`, `lib/ride/virtual-course.ts` | Optional middle stage on the active ride, loaded on demand. YouTube (desktop widths only): riders browse YouTube itself and bring a video in through the Send to Tempo bookmark (`lib/youtube/send-to-ride.ts`: a popup at `/athlete/ride/send` posts on `BroadcastChannel('tempo-ride-youtube')` and waits for an ack from the ride tab), a dropped or pasted link, or a `tempo-ride://video` link to the Tempo Ride app (`window.tempoDesktop.youtube.onVideo`). `useYouTubeInbox` in the ride screen collects all four. `createYouTubeVideoService` checks each video server-side with one `videos.list` call (made for kids, embeddable, live), cached for an hour with a per-user upstream rate limit; no search calls. `YOUTUBE_API_BASE_URL` (a local stub) is ignored in production. Routes use `requireAthlete` (signed-in athletes, plus coaches as that guard allows) and never expose the key. Production without `YOUTUBE_API_KEY` never embeds: videos open on YouTube. Riders agree to YouTube's terms and privacy notice (`youtube-consent.ts`, `YouTubeNotice.tsx`) before the first lookup or embed. The client embeds only `youtube-nocookie.com/embed`, controls it in browsers with YouTube's IFrame Player API script, loaded with the first player (`iframe-api.ts`; in the Tempo Ride app that script would run next to the recording bridge, so the player there is uncontrolled) and never draws over the player. Course: pure physics (power, rolling and air resistance, gradient) in `virtual-course.ts`, canvas drawing in the client only |
-| Workout catalog | `lib/workout-catalog/*`, `lib/workout-catalog-service.ts`, `lib/ride-hub-service.ts`, `components/library/*` | Read-only catalog data in code (not the database); pure expansion, %FTP metrics (NP estimate, IF, TSS, time in zone), duration buckets, filter/search/sort and URL state, schema validation, and conversion to canonical relative-FTP editor blocks (sets unrolled, cue and cadence in the block note, warm-up/cool-down ranges ridden as ramps). Ride now and Schedule copy through `athletePlannerService.saveSession`. Customize builds an unsaved editor draft. Saving goes through `workoutLibraryService.saveForOwner` without catalog lineage. Slugs are stable URLs |
+| Workout catalog | `lib/workout-catalog/*`, `lib/workout-catalog-service.ts`, `lib/ride-hub-service.ts`, `components/library/*` | Read-only catalog data in code (not the database); pure expansion, %FTP metrics (NP estimate, IF, TSS, time in zone), duration buckets, filter/search/sort and URL state, schema validation, and conversion to canonical relative-FTP editor blocks (sets unrolled, cue and cadence in the block note, warm-up/cool-down ranges ridden as ramps). Ride now and Schedule copy through `athletePlannerService.saveSession`. Customize builds an unsaved editor draft. Saving goes through `workoutLibraryService.saveForOwner`, which records the validated public workout slug. Ride now accepts bike and run workouts. Swim workouts can be scheduled. Slugs are stable URLs |
 | Sharing | `lib/share-link.ts`, `lib/share-link-service.ts` | Sanitized snapshots, opaque tokens, public lookup, and explicit recipient copies |
 
 ## Data Ownership
@@ -252,8 +252,8 @@ See [operations](docs/OPERATIONS.md) for setup/deployment and
 variants by stable slug. Placement takes a plan slug, version, per-workout
 choices, and one complete Monday-starting week. The planner resolves choices
 against the catalog and creates independent session snapshots in the same
-transaction as the retry record. The sessions carry the source plan slug,
-version and workout slug in `Session.source`, including after edits. A change
+transaction as the retry record. Each session stores the plan slug, plan version, and public workout slug in
+indexed lineage fields that survive edits and rescheduling. A change
 to a published plan's workouts or choices needs a version bump. Swim sets keep
 distance and repeat rest in the written instructions because workout blocks
 use elapsed time.
@@ -261,24 +261,33 @@ use elapsed time.
 ### Personal training plans
 
 `Template.routineJson` holds a versioned weekly pattern of weekday entries and
-server-captured library workout snapshots. Personal authoring uses this required
+server-captured snapshots of saved or public workouts. Personal authoring uses this required
 field. The current schema also retains legacy sport/cadence columns and Block
 and ShareLink relations, restored by the personal-training-loop migration;
 they do not add a second personal authoring model. Session.templateId retains
 training plan lineage with on-delete SET NULL, preserving independent calendar copies.
-Personal training plan POST/PATCH uses `template-service.saveForOwner`, accepting
-only library workout IDs, weekdays, name and summary. It checks ownership and
-standalone-library scope within the save transaction; submitted blocks, titles,
-targets and arbitrary snapshot data are never trusted. Duplication retains the
-snapshots. Deleted or edited source workouts do not alter a saved training plan;
-saving again requires available library workouts and captures current versions.
+Personal training plan POST/PATCH uses `template-service.saveForOwner`. Each
+entry accepts a weekday and either a saved workout ID or a public workout slug.
+The service checks ownership and standalone-library scope for saved workouts and
+resolves public slugs against the catalog. It captures the blocks from those
+sources, and retains the public workout slug when a saved workout has one.
+Existing v1 entries with only a saved workout ID still load.
+
+Customize opens an unsaved draft with the built-in plan's default choices.
+Creation resolves its optional plan slug against the catalog and records the
+current version. Duplication retains the snapshots and catalog lineage. Plan
+edits retain the original plan lineage. A saved plan keeps its snapshots when
+source workouts change or are deleted. Saving the plan again requires available
+workouts and captures their current versions.
 
 `template-routine` owns parsing and deterministic date/weekday expansion.
 `athlete-planner-service.assignSource` validates a complete Monday-starting week
 or calendar month, then creates each dated workout copy and placement identity
 in one transaction. Empty weekdays leave existing calendar content unchanged.
 Within-day entry order is preserved in creation order, which Calendar reads by
-session ID after date. Relative references and decimal targets survive copying.
+session ID after date. Copies carry public workout lineage from each entry and
+public plan lineage from the saved plan. Relative references and decimal targets
+survive copying.
 Workouts never loads a template as one workout; standalone saves refuse template
 lineage. Coach assignment supports library sessions and training plans only.
 Public links publish individual workout definitions. An Athlete can explicitly

@@ -36,6 +36,8 @@ export type CatalogMetrics = {
   zoneSec: [number, number, number, number, number];
   workSec: number;
   intervalCount: number;
+  /** Meters in blocks with a set distance (swim sets); 0 when no block has one. */
+  distanceM: number;
 };
 
 export function isCatalogRepeat(item: CatalogItem): item is Extract<CatalogItem, { repeat: number }> {
@@ -93,6 +95,11 @@ export function zoneForPct(pct: number): TempoZone {
   return 5;
 }
 
+/** The single zone that guides a run or swim step. */
+export function catalogStepZone(step: Pick<CatalogStep, 'kind' | 'lowPct' | 'highPct'>): TempoZone {
+  return step.kind === 'pause' ? 1 : zoneForPct((step.lowPct + step.highPct) / 2);
+}
+
 /** Mean of x^n over a linear ramp from a to b. */
 function rampPowerMean(a: number, b: number, n: number): number {
   if (a === b) return a ** n;
@@ -140,17 +147,18 @@ export function computeCatalogMetrics(items: readonly CatalogItem[]): CatalogMet
     zoneSec: zoneSec.map((seconds) => Math.round(seconds)) as CatalogMetrics['zoneSec'],
     workSec: workSteps.reduce((sum, step) => sum + step.durationSec, 0),
     intervalCount: workSteps.length,
+    distanceM: steps.reduce((sum, step) => sum + (step.distanceM ?? 0), 0),
   };
 }
 
-/** Bike load comes from %FTP; run and swim load is the shared zone estimate a copied session shows. */
+/** Bike load comes from %FTP; run and swim load and zone times match what a copied session shows. */
 export function catalogWorkoutMetrics(workout: Pick<CatalogWorkout, 'items' | 'sport'>): CatalogMetrics {
   const metrics = computeCatalogMetrics(workout.items);
   if (workout.sport === 'BIKING') return metrics;
-  const { tss } = deriveSessionMetrics(expandCatalogItems(workout.items).map((step) => ({
-    kind: step.kind, zone: zoneForPct((step.lowPct + step.highPct) / 2), durationSec: step.durationSec, reps: null, target: null,
+  const { tss, zoneDistributionSec } = deriveSessionMetrics(expandCatalogItems(workout.items).map((step) => ({
+    kind: step.kind, zone: catalogStepZone(step), durationSec: step.durationSec, reps: null, target: null,
   })), workout.sport);
-  return { ...metrics, tss };
+  return { ...metrics, tss, zoneSec: zoneDistributionSec as CatalogMetrics['zoneSec'] };
 }
 
 /** Watts for a %FTP value, rounded to whole watts. */

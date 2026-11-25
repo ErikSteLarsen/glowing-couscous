@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
+import { catalogLineageOf, type CatalogLineage } from './catalog-lineage.ts';
 import { catalogWorkoutToSourceEntry } from './workout-catalog/session.ts';
 import { getBuiltInPlan } from './plan-catalog/index.ts';
 import { selectPlanWorkouts } from './plan-catalog/selection.ts';
@@ -35,7 +36,7 @@ const planSelectionSchema = z.object({
   choices: z.record(z.string(), z.string()),
 });
 
-const BUILT_IN_PLAN_SOURCE_PREFIX = 'athlete-plan-catalog:';
+const BUILT_IN_PLAN_SOURCE = 'athlete-plan-catalog';
 
 type AthletePlannerDeps = {
   db?: typeof prisma;
@@ -202,6 +203,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
             date: string;
             entry: Pick<Parameters<typeof createSourceCopyData>[0], 'sport' | 'title' | 'summary' | 'sportMetricsJson' | 'blocks'>;
             source: string;
+            lineage: CatalogLineage;
           }>;
           let templateId: number | null = null;
 
@@ -223,7 +225,8 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
               ? [{
                   date: requestedDates[weekday],
                   entry: catalogWorkoutToSourceEntry(option.workout),
-                  source: `${BUILT_IN_PLAN_SOURCE_PREFIX}${plan.slug}:v${plan.version}:${option.id}`,
+                  source: BUILT_IN_PLAN_SOURCE,
+                  lineage: { catalogWorkoutSlug: option.id, catalogPlanSlug: plan.slug, catalogPlanVersion: plan.version },
                 }]
               : []);
           } else if (sourceKind === 'template' && typeof sourceId === 'number') {
@@ -234,7 +237,15 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
             const rangeError = validateRoutineDates(requestedDates);
             if (rangeError) throw new PlacementError(rangeError, 400);
             templateId = template.id;
-            placements = expandTemplateRoutine(routine, requestedDates).map((placement) => ({ ...placement, source: 'athlete-template' }));
+            placements = expandTemplateRoutine(routine, requestedDates).map((placement) => ({
+              ...placement,
+              source: 'athlete-template',
+              lineage: {
+                catalogWorkoutSlug: placement.entry.catalogWorkoutSlug ?? placement.entry.sourceCatalogWorkoutSlug ?? null,
+                catalogPlanSlug: template.catalogPlanSlug,
+                catalogPlanVersion: template.catalogPlanVersion,
+              },
+            }));
           } else if (sourceKind === 'workout' && typeof sourceId === 'number') {
             const workout = await tx.session.findFirst({
               where: {
@@ -248,7 +259,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
               include: { blocks: { orderBy: { sortOrder: 'asc' } } },
             });
             if (!workout) throw new PlacementError('Workout not found in your library.', 404);
-            placements = requestedDates.map(date => ({ date, entry: workout, source: 'athlete-library-copy' }));
+            placements = requestedDates.map(date => ({ date, entry: workout, source: 'athlete-library-copy', lineage: catalogLineageOf(workout) }));
           } else {
             throw new PlacementError('Choose a workout or training plan.', 400);
           }
@@ -258,7 +269,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
           });
 
           const createdSessionIds: number[] = [];
-          for (const { date, entry, source } of placements) {
+          for (const { date, entry, source, lineage } of placements) {
             const plan = await findOrCreatePlan(tx, athleteId, date);
             const created = await tx.session.create({
               data: createSourceCopyData({
@@ -267,6 +278,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
                 date,
                 templateId,
                 source,
+                lineage,
                 sport: entry.sport,
                 title: entry.title,
                 summary: entry.summary,
@@ -299,7 +311,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
         throw error;
       }
     },
-    async saveSession(athleteId: number, input: unknown, sessionId?: number) {
+    async saveSession(athleteId: number, input: unknown, sessionId?: number, lineage?: Partial<CatalogLineage>) {
       const inputRecord = asRecord(input);
       const rawDates = Array.isArray(inputRecord.dates) ? inputRecord.dates : [];
       const dates = uniqueDates(
@@ -344,7 +356,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       if (sessionId !== undefined) {
         const existing = await db.session.findFirst({
           where: { id: sessionId, athleteId },
-          select: { id: true, source: true, status: true, updatedAt: true, activity: { select: { id: true } } },
+          select: { id: true, status: true, updatedAt: true, activity: { select: { id: true } } },
         });
         if (!existing) return { ok: false as const, error: 'Workout not found.', status: 404 };
         if (existing.activity || existing.status === 'completed') {
@@ -357,10 +369,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
         const claimed = await db.$transaction(async (tx) => {
           const claim = await tx.session.updateMany({
             where: { id: sessionId, athleteId, status: existing.status, updatedAt: existing.updatedAt, activity: { is: null } },
-            data: {
-              ...sessionData,
-              source: existing.source?.startsWith(BUILT_IN_PLAN_SOURCE_PREFIX) ? existing.source : sessionData.source,
-            },
+            data: sessionData,
           });
           if (claim.count !== 1) return false;
           await tx.block.deleteMany({ where: { sessionId } });
@@ -378,7 +387,11 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       for (const date of dates) {
         const plan = await findOrCreatePlan(db, athleteId, date);
         const created = await db.session.create({
-          data: createSessionData(athleteId, plan.id, serialized, blocks, date),
+          data: {
+            ...createSessionData(athleteId, plan.id, serialized, blocks, date),
+            source: serialized.templateId ? 'athlete-template' : 'athlete',
+            ...lineage,
+          },
         });
         sessionIds.push(created.id);
       }
@@ -581,7 +594,6 @@ function createSessionData(
     rpe: serialized.rpe,
     sportMetricsJson: JSON.stringify(serialized.sportMetrics),
     status: 'planned',
-    source: serialized.templateId ? 'athlete-template' : 'athlete',
     adjusted: false,
     blocks: { create: blocks },
   };
@@ -593,6 +605,7 @@ function createSourceCopyData(input: {
   date: string;
   templateId: number | null;
   source: string;
+  lineage: CatalogLineage;
   sport: string;
   title: string;
   summary: string | null;
@@ -634,6 +647,7 @@ function createSourceCopyData(input: {
     sportMetricsJson: input.sportMetricsJson,
     status: 'planned',
     source: input.source,
+    ...input.lineage,
     adjusted: false,
     blocks: {
       create: input.blocks.map((block) => ({

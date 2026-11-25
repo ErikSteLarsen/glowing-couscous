@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+import { catalogLineageOf } from '../lib/catalog-lineage.ts';
+import { createRideHubService } from '../lib/ride-hub-service.ts';
+import { createShareLinkService, hashShareToken } from '../lib/share-link-service.ts';
+import { parseTemplateRoutine } from '../lib/template-routine.ts';
+import { createTemplateService } from '../lib/template-service.ts';
+import { createWorkoutCatalogService } from '../lib/workout-catalog-service.ts';
+import { createWorkoutLibraryService } from '../lib/workout-library-service.ts';
 import { createAthletePlannerService } from '../lib/athlete-planner-service.ts';
 import { getCalendarPlacementHref } from '../lib/calendar-navigation.ts';
 import { builtInPlanPreviews, builtInPlans, getBuiltInPlan, plansWithWorkout } from '../lib/plan-catalog/index.ts';
@@ -117,16 +124,201 @@ test('built-in placement validates the week, choices and version, then copies on
     assert.ok(sessions.every(({ athleteId, date, templateId, timeLabel }) =>
       athleteId === owner.id && date !== null && templateId === null && timeLabel === null));
     assert.equal(sessions[1].blocks.filter(({ durationSec, zone }) => durationSec === 40 && zone === 5).length, 30);
-    assert.match(sessions[4].summary ?? '', /40 × 50 m with 15s rest/);
-    assert.equal(sessions[5].source, 'athlete-plan-catalog:triathlon-build:v1:long-ride');
+    assert.match(sessions[4].summary ?? '', /40 × 50 m with 15 seconds rest/);
+    assert.deepEqual(sessions.map(session => session.catalogWorkoutSlug), [
+      'recovery-ride', 'run-intervals-75-40-20-vo2', 'swim-technique', 'bike-intervals-90-5x10-lt2', 'swim-intervals-60-40x50', 'long-ride',
+    ]);
+    assert.ok(sessions.every(session => session.source === 'athlete-plan-catalog' &&
+      session.catalogPlanSlug === 'triathlon-build' && session.catalogPlanVersion === 1));
     const changed = await planner.saveSession(owner.id, {
       scheduledDate: week[6], title: 'Edited long ride', sport: 'BIKING',
       blocks: [{ kind: 'work', zone: 2, durationSec: 6600 }],
+      catalogWorkoutSlug: 'easy-ride', catalogPlanSlug: 'triathlon-essentials', catalogPlanVersion: 8,
     }, sessions[5].id);
     assert.ok(changed.ok);
     const edited = await db.session.findUniqueOrThrow({ where: { id: sessions[5].id } });
     assert.equal(edited.title, 'Edited long ride');
     assert.equal(edited.source, sessions[5].source);
+    assert.deepEqual(catalogLineageOf(edited), catalogLineageOf(sessions[5]));
+    const moved = await planner.rescheduleSession(owner.id, edited.id, { date: week[0] });
+    assert.ok(moved.ok);
+    assert.deepEqual(catalogLineageOf(await db.session.findUniqueOrThrow({ where: { id: edited.id } })), catalogLineageOf(edited));
     assert.equal(await db.template.count(), 0);
+  });
+});
+
+const simpleBlocks = [{ kind: 'work', zone: 2, durationSec: 300 }];
+const savedWorkoutDraft = { title: 'My interval ride', sport: 'BIKING', blocks: simpleBlocks };
+
+test('version 1 routines still parse saved-workout entries without catalog lineage', () => {
+  const routine = {
+    version: 1,
+    entries: [{
+      weekday: 0, workoutId: 16, title: 'Existing workout', sport: 'BIKING', summary: null, sportMetricsJson: null,
+      blocks: [{ ...simpleBlocks[0], sortOrder: 0, reps: null, targetType: null, targetLow: null, targetHigh: null, note: null }],
+    }],
+  };
+  assert.deepEqual(parseTemplateRoutine(JSON.stringify(routine)), routine);
+  const dualReference = { ...routine, entries: [{ ...routine.entries[0], catalogWorkoutSlug: 'long-ride' }] };
+  assert.equal(parseTemplateRoutine(JSON.stringify(dualReference)), null);
+});
+
+test('catalog starts and schedules persist workout lineage, and swims can only be scheduled', { skip: disposableDatabaseSkip }, async () => {
+  await withDisposableDatabase(async (db) => {
+    const owner = await db.user.create({ data: { email: 'catalog-start@example.test', role: 'ATHLETE' } });
+    const catalog = createWorkoutCatalogService({ db });
+
+    assert.deepEqual(await catalog.rideNow(owner.id, 'swim-technique', { date: week[0] }), {
+      ok: false, status: 400, error: 'Swim workouts can’t be started yet.',
+    });
+    assert.equal(await db.session.count(), 0);
+
+    const run = await catalog.rideNow(owner.id, 'easy-run', { date: week[0] });
+    assert.ok(run.ok);
+    const scheduled = await catalog.schedule(owner.id, 'swim-technique', {
+      dates: [week[0]], requestKey: 'schedule-public-swim',
+    });
+    assert.ok(scheduled.ok);
+    assert.deepEqual(
+      (await db.session.findMany({ orderBy: { id: 'asc' } })).map(({ sport, catalogWorkoutSlug }) => [sport, catalogWorkoutSlug]),
+      [['RUNNING', 'easy-run'], ['SWIMMING', 'swim-technique']],
+    );
+    await db.session.update({ where: { id: run.sessionId }, data: { title: 'Renamed run', summary: null } });
+    assert.deepEqual(await catalog.rideNow(owner.id, 'easy-run', { date: week[0] }), {
+      ok: true, sessionId: run.sessionId, reused: true,
+    });
+
+    const bike = await catalog.rideNow(owner.id, 'long-ride', { date: week[0] });
+    assert.ok(bike.ok);
+    const legacy = await catalog.rideNow(owner.id, 'easy-ride', { date: week[0] });
+    assert.ok(legacy.ok);
+    await db.session.update({ where: { id: legacy.sessionId }, data: { catalogWorkoutSlug: null } });
+    assert.deepEqual(await catalog.rideNow(owner.id, 'easy-ride', { date: week[0] }), {
+      ok: true, sessionId: legacy.sessionId, reused: true,
+    });
+
+    for (const id of [bike.sessionId, legacy.sessionId]) {
+      await db.session.update({
+        where: { id },
+        data: {
+          status: 'completed',
+          ...(id === bike.sessionId ? { title: 'Renamed ride' } : {}),
+          activity: { create: {
+            athleteId: owner.id, completedAt: new Date(week[0]), durationSec: 1800, zoneDistributionJson: '{}', segmentsJson: '[]',
+          } },
+        },
+      });
+    }
+    const hub = await createRideHubService({ db }).load(owner.id);
+    assert.deepEqual(new Map(hub.recent.map(ride => [ride.sessionId, ride.catalogSlug])), new Map([
+      [bike.sessionId, 'long-ride'], [legacy.sessionId, 'easy-ride'],
+    ]));
+  });
+});
+
+test('customized workouts preserve validated lineage through edits, placement and share intake', { skip: disposableDatabaseSkip }, async () => {
+  await withDisposableDatabase(async (db) => {
+    const owner = await db.user.create({ data: { email: 'custom-workout@example.test', role: 'ATHLETE' } });
+    const recipient = await db.user.create({ data: { email: 'share-recipient@example.test', role: 'ATHLETE' } });
+    const library = createWorkoutLibraryService({ db });
+    const planner = createAthletePlannerService({ db });
+    const shares = createShareLinkService({ db, workoutLibraryPersistence: library, athletePlannerPersistence: planner });
+    const forged = { catalogWorkoutSlug: 'does-not-exist', catalogPlanSlug: 'triathlon-build', catalogPlanVersion: 99 };
+    const invalid = await library.saveForOwner('athlete', owner.id, { ...savedWorkoutDraft, ...forged });
+    assert.ok(invalid.ok);
+    assert.deepEqual(catalogLineageOf(await db.session.findUniqueOrThrow({ where: { id: invalid.sessionId } })), {
+      catalogWorkoutSlug: null, catalogPlanSlug: null, catalogPlanVersion: null,
+    });
+    const saved = await library.saveForOwner('athlete', owner.id, { ...savedWorkoutDraft, ...forged, catalogWorkoutSlug: 'long-ride' });
+    assert.ok(saved.ok);
+    assert.ok((await library.saveForOwner('athlete', owner.id, {
+      ...savedWorkoutDraft, title: 'My revised ride', ...forged, catalogWorkoutSlug: 'easy-ride',
+    }, saved.sessionId)).ok);
+    const workout = await db.session.findUniqueOrThrow({ where: { id: saved.sessionId } });
+    assert.equal(workout.title, 'My revised ride');
+    assert.deepEqual(catalogLineageOf(workout), { catalogWorkoutSlug: 'long-ride', catalogPlanSlug: null, catalogPlanVersion: null });
+    const placed = await planner.assignSource(owner.id, {
+      sourceKind: 'workout', sourceId: saved.sessionId, dates: [week[1]], requestKey: 'custom-workout-placement', ...forged,
+    });
+    assert.ok(placed.ok);
+    const planned = await db.session.findUniqueOrThrow({ where: { id: placed.sessionIds[0] } });
+    assert.deepEqual(catalogLineageOf(planned), catalogLineageOf(workout));
+
+    const link = await shares.createForUser(owner.id, 'session', planned.id);
+    assert.ok(link.ok);
+    const token = link.url.slice('/share/'.length);
+    const preview = await shares.loadPreview(token);
+    assert.ok(preview);
+    assert.equal('catalogLineage' in preview, false);
+    const shared = await shares.savePlannerCopy(recipient.id, 'ATHLETE', token, { scheduledDate: week[2], ...forged });
+    assert.ok(shared.ok);
+    assert.deepEqual(catalogLineageOf(await db.session.findUniqueOrThrow({ where: { id: shared.sessionIds[0] } })), catalogLineageOf(workout));
+
+    await db.shareLink.update({ where: { tokenHash: hashShareToken(token) }, data: { snapshotJson: JSON.stringify(preview) } });
+    const legacyShare = await shares.savePlannerCopy(recipient.id, 'ATHLETE', token, { scheduledDate: week[3] });
+    assert.ok(legacyShare.ok);
+    assert.deepEqual(catalogLineageOf(await db.session.findUniqueOrThrow({ where: { id: legacyShare.sessionIds[0] } })), catalogLineageOf(workout));
+  });
+});
+
+test('personal plan copies snapshot public and saved workouts, and keep catalog lineage after edit and duplication', { skip: disposableDatabaseSkip }, async () => {
+  await withDisposableDatabase(async (db) => {
+    const owner = await db.user.create({ data: { email: 'custom-plan@example.test', role: 'ATHLETE' } });
+    const templates = createTemplateService({ db });
+    const library = createWorkoutLibraryService({ db });
+    const planner = createAthletePlannerService({ db });
+    const plan = getBuiltInPlan('triathlon-essentials');
+    assert.ok(plan);
+    const defaults = selectPlanWorkouts(plan.slots, {}).map(({ weekday, option }) => ({
+      weekday, catalogWorkoutSlug: option.id,
+    }));
+
+    assert.ok((await templates.saveForOwner(owner.id, {
+      name: 'Unknown public workout', entries: [{ weekday: 0, catalogWorkoutSlug: 'invented-slug' }],
+    })).error);
+    const name = `${plan.name} (my version)`;
+    const creation = await templates.saveForOwner(owner.id, {
+      name, catalogPlanSlug: plan.slug, catalogPlanVersion: 99,
+      entries: defaults.map(entry => ({ ...entry, title: 'Client title', blocks: simpleBlocks })),
+    });
+    assert.equal(creation.error, null);
+    const [created] = await templates.listForOwner(owner.id);
+    assert.equal(created.catalogPlanSlug, plan.slug);
+    assert.equal(created.catalogPlanVersion, plan.version);
+    const routine = parseTemplateRoutine(created.routineJson);
+    assert.ok(routine);
+    assert.deepEqual(routine.entries.map(entry => entry.catalogWorkoutSlug), defaults.map(entry => entry.catalogWorkoutSlug));
+    assert.equal(routine.entries[0].title, plan.slots[0].options[0].title);
+    assert.equal(routine.entries[0].blocks.reduce((sum, block) => sum + block.durationSec, 0), 75 * 60);
+    assert.equal(await db.session.count(), 0);
+
+    const saved = await library.saveForOwner('athlete', owner.id, { ...savedWorkoutDraft, catalogWorkoutSlug: 'long-ride' });
+    assert.ok(saved.ok);
+    assert.equal((await templates.saveForOwner(owner.id, {
+      name: 'Edited copy', catalogPlanSlug: 'triathlon-build', catalogPlanVersion: 2,
+      entries: [...defaults.slice(1), { weekday: 0, workoutId: saved.sessionId, sourceCatalogWorkoutSlug: 'easy-ride' }],
+    }, created.id)).error, null);
+    assert.equal((await templates.duplicateForOwner(owner.id, created.id)).error, null);
+    const [edited, duplicate] = await templates.listForOwner(owner.id);
+    assert.equal(edited.catalogPlanSlug, plan.slug);
+    assert.equal(edited.catalogPlanVersion, plan.version);
+    assert.equal(duplicate.catalogPlanSlug, plan.slug);
+    assert.equal(duplicate.catalogPlanVersion, plan.version);
+    assert.equal(duplicate.routineJson, edited.routineJson);
+
+    const placed = await planner.assignSource(owner.id, {
+      sourceKind: 'template', sourceId: duplicate.id, dates: week, requestKey: 'personal-plan-placement',
+    });
+    assert.ok(placed.ok);
+    const sessions = await db.session.findMany({ where: { templateId: duplicate.id }, orderBy: { date: 'asc' } });
+    assert.deepEqual(sessions.map(session => session.catalogWorkoutSlug), ['long-ride', ...defaults.slice(1).map(entry => entry.catalogWorkoutSlug)]);
+    assert.ok(sessions.every(session => session.catalogPlanSlug === plan.slug && session.catalogPlanVersion === plan.version));
+
+    assert.equal((await templates.saveForOwner(owner.id, {
+      name: 'Unknown source plan', catalogPlanSlug: 'forged-plan', entries: defaults,
+    })).error, null);
+    const noSource = await db.template.findFirstOrThrow({ where: { name: 'Unknown source plan' } });
+    assert.equal(noSource.catalogPlanSlug, null);
+    assert.equal(noSource.catalogPlanVersion, null);
   });
 });

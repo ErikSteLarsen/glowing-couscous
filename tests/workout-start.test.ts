@@ -29,14 +29,15 @@ test('bike choices follow Web Bluetooth capability, desktop platform and host ap
   }
 });
 
-test('open non-bike workouts follow along, and terminal, rest and stepless workouts have no start', () => {
+test('open runs, strength and stretching follow along; swims, terminal, rest and stepless workouts have no start', () => {
   const runtime: WorkoutStartRuntime = { os: 'macos', webBluetooth: true, inTempoRide: false };
-  for (const sport of ['RUNNING', 'SWIMMING', 'STRENGTH', 'STRETCHING']) {
+  for (const sport of ['RUNNING', 'STRENGTH', 'STRETCHING']) {
     assert.deepEqual(choices({ ...bike, sport }, runtime), [follow]);
   }
   for (const workout of [
     { ...bike, status: 'completed' },
     { ...bike, status: 'skipped' },
+    { ...bike, sport: 'SWIMMING' },
     { ...bike, sport: 'REST' },
     { ...bike, hasSteps: hasExecutionSteps([]) },
     { ...bike, hasSteps: hasExecutionSteps([{ skipped: true }]) },

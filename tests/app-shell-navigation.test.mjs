@@ -108,7 +108,7 @@ test('Workouts has one New workout entry, and saved workouts keep Schedule and s
   assert.match(workoutsClientSource, /Build with guidance/);
   assert.match(workoutsClientSource, /Build from scratch/);
   assert.match(workoutsClientSource, /Start from public library/);
-  assert.match(myActionsSource, />Schedule\s*<\/Link>/);
+  assert.match(myActionsSource, /<ScheduleLink href=\{myWorkoutScheduleHref\(id\)\}/);
   assert.match(myActionsSource, />Schedule\s*<\/MenuItem>/);
   assert.match(myActionsSource, />Edit<\/MenuItem>/);
   assert.doesNotMatch(workoutsClientSource, /Plan this|Build guided workout|Create manually/);
@@ -143,7 +143,7 @@ test('Library detail keeps Start workout and Schedule visible and schedules thro
   assert.doesNotMatch(actionsSource, /type="date"/);
   assert.match(actionsSource, /<LibraryWorkoutMenu/);
   const menuSource = await read('components/library/LibraryWorkoutMenu.tsx');
-  assert.match(menuSource, /href=\{customizeWorkoutHref\(slug\)\}/);
+  assert.match(menuSource, /href=\{customizeWorkoutHref\(slug, sport\)\}/);
   assert.match(menuSource, />Customize/);
   assert.match(detailSource, /<WorkoutDetail/);
   assert.match(layoutSource, /Workout details/);

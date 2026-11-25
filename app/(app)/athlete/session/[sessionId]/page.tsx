@@ -21,6 +21,7 @@ import { ImportedActivityMeasurements } from '@/components/ImportedActivityMeasu
 import { buildWorkoutProfile } from '@/lib/workout-profile';
 import { SessionBlockDetails, SessionStructureProvider, SessionWorkoutProfileCard } from './SessionStructure';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
+import { backToLibrarySport } from '@/lib/athlete-workouts-navigation';
 import { canStartWorkout } from '@/lib/workout-start';
 import { stravaPostService } from '@/lib/strava-post-service';
 import { StravaPostAction, StravaPostedNote } from '@/components/StravaPostAction';
@@ -57,7 +58,7 @@ export default async function AthleteSessionPage({
 
   const stravaPost = detail.session.activityId === null ? null : await stravaPostService.loadForUser(user.id, detail.session.activityId);
   const sessionOrigin = parseBackOrigin('session', from);
-  const returnTarget = resolveBackTarget({ route: 'session', from });
+  const returnTarget = backToLibrarySport(resolveBackTarget({ route: 'session', from }), detail.session.sport);
   const displayStatus = detail.session.isOverdue ? 'missed' : detail.session.status;
   const { id, title, sport, status, durationSec, hasSteps } = detail.session;
   const isSkipped = status === 'skipped';
