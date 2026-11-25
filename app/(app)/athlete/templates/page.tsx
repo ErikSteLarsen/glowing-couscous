@@ -13,11 +13,12 @@ import { workoutCatalog } from '@/lib/workout-catalog';
 import { catalogWorkoutMetrics } from '@/lib/workout-catalog/metrics';
 import { TrainingTemplatesClient } from '@/components/TrainingTemplatesClient';
 
-export default async function AthleteTemplatesPage() {
+export default async function AthleteTemplatesPage({ searchParams }: { searchParams: Promise<{ plan?: string | string[] }> }) {
   const user = await getCurrentUser();
   if (!user) redirect('/login');
   if (!hasAppRole(user)) redirect('/setup');
 
+  const { plan } = await searchParams;
   const [templates, workouts] = await Promise.all([
     templateService.listForOwner(user.id),
     workoutLibraryService.listForOwner('athlete', user.id),
@@ -31,6 +32,7 @@ export default async function AthleteTemplatesPage() {
       />
       <MobileLibrarySwitch active="templates" />
       <TrainingTemplatesClient
+        openPlanSlug={typeof plan === 'string' ? plan : null}
         builtInPlans={builtInPlanPreviews}
         templates={templates.map(({ id, name, summary, routineJson }) => ({
           id, name, summary,

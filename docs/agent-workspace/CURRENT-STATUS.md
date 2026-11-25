@@ -7,16 +7,18 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
-- Catalog lineage and personal plan copies (2026-11-25). Catalog workout and
-  plan copies keep their source slugs through saves, Calendar placement, edits,
-  rescheduling, and sharing. Built-in plans open editable drafts from their
-  defaults. Personal plans can use public workouts without any saved workouts.
-  On local `tempo_acceptance`, the additive migration and a legacy-row
-  backfill check passed. `pnpm test` passed (637 passed, 21 skipped), and
-  `pnpm test:db` passed (693 passed). Lint, types, build, authenticated HTTP
-  placement, and direct PostgreSQL routine acceptance passed. Fresh-account
-  HTTP covered a public-only personal plan. Interactive editor acceptance and
-  catalog lineage on stale workout drafts recovered as new copies remain open.
+- Multi-sport public library, plan copies and lineage (2026-11-25). The library
+  holds bike, run and swim workouts, opens on bike, and states and changes sport
+  in its results heading. Runs offer Follow along only; swims have no start.
+  Built-in plan workouts are public workouts with the same slug. Customize makes
+  an editable copy of a workout or plan; copies keep their source slugs in
+  `Session` and `Template` columns (additive migration). Local checks passed:
+  `pnpm test:db` (693), lint, types, dead code and build. Chromium as a fresh
+  athlete at 1440, 390 and 320 px had no overflow or page errors, and three
+  first-time-user passes (bike only, triathlete, phone runner) had no blockers.
+  Known limits: saved and planned swims keep distances only in block notes, and
+  personal plans with public workouts need this parser (not readable after a
+  rollback). Production deployment remains.
 
 - Built-in triathlon weeks (2026-11-25). Training plans and Calendar offer
   Essentials, Build and High Volume with selectable interval sets, recovery

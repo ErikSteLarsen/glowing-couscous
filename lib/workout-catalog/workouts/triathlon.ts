@@ -146,7 +146,7 @@ const swimWorkouts: CatalogWorkout[] = [
     category: 'endurance',
     level: 'beginner',
     summary: 'Familiar drills, then steady distance with a relaxed stroke.',
-    description: ['Use drills you already know, then carry the same feel into the steady swim.', poolNote],
+    description: ['Use drills you already know, then carry the same feel into the steady swim. New to drills? Swim easy lengths instead.', 'This one goes by time, not distance: swim each block for the listed minutes and rest at the wall whenever you need to.'],
     tags: ['technique', 'pool'],
   }, [
     step('warmup', 600, EASY, 'Swim easy.'),
@@ -154,7 +154,7 @@ const swimWorkouts: CatalogWorkout[] = [
     step('work', 1500, ENDURANCE, 'Swim steadily and carry the drill cues into your stroke.'),
     step('cooldown', 300, EASY, 'Finish with an easy swim.'),
   ]),
-  steady('morning-swim', 'Easy Morning Swim', 'SWIMMING', 60, EASY, 'recovery', 'beginner', 'A relaxed swim with breaks whenever you want them.', ['Keep every length easy and rest at the wall as needed.', poolNote], ['pool']),
+  steady('morning-swim', 'Easy Morning Swim', 'SWIMMING', 60, EASY, 'recovery', 'beginner', 'A relaxed swim with breaks whenever you want them.', ['Keep every length easy and rest at the wall as needed. This one goes by time, not distance.'], ['pool']),
 ];
 
 export const triathlonWorkouts: CatalogWorkout[] = [...bikeWorkouts, ...runWorkouts, ...swimWorkouts];

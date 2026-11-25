@@ -30,7 +30,7 @@ const targetsOnly = {
 type WorkoutStartOption = { mode: 'live' | 'ride' | 'app'; label: string; description: string };
 
 /** Swims have no guided mode: they are scheduled, read and marked done. */
-export const swimStartNote = 'Swims can’t be started in Tempo yet. Schedule the workout, then mark it done after your swim.';
+export const swimStartNote = 'Swims can’t be started here yet. Schedule the workout, then mark it done after your swim.';
 
 export function canStartWorkout({ sport, status, hasSteps }: WorkoutStartEligibility): boolean {
   return hasSteps && sport !== 'REST' && sport !== 'SWIMMING' && status !== 'completed' && status !== 'skipped';

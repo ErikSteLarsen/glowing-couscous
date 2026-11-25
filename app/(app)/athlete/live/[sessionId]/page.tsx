@@ -59,7 +59,7 @@ export default async function AthleteLivePage({
       <PageShell size="wide">
         <TopBar back={back} title={title} />
         <EmptyState
-          title="Swims can’t be started in Tempo yet"
+          title="Swims can’t be started here yet"
           description={status === 'completed' ? 'This swim is already marked done.' : 'Read the blocks on the workout page and mark it done after your swim.'}
           action={<ActionLink href={withBackOrigin(`/athlete/session/${id}`, sessionOrigin)}>Open workout</ActionLink>}
         />

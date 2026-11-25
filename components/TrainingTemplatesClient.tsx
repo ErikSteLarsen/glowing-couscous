@@ -39,14 +39,18 @@ function WorkoutOptions({ choices }: { choices: WorkoutChoice[] }) {
   ));
 }
 
-export function TrainingTemplatesClient({ templates, workouts, publicWorkouts, builtInPlans }: {
+export function TrainingTemplatesClient({ templates, workouts, publicWorkouts, builtInPlans, openPlanSlug }: {
   templates: Template[];
   workouts: Workout[];
   publicWorkouts: PublicWorkout[];
   builtInPlans: BuiltInPlanPreview[];
+  openPlanSlug: string | null;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [openedDraft, setOpenedDraft] = useState<Draft | null>(null);
+  // Every edit replaces the draft object, so identity tells whether anything changed.
+  const dirty = draft !== null && draft !== openedDraft;
   const [filter, setFilter] = useState('');
   const [busy, setBusy] = useState(false);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
@@ -62,11 +66,11 @@ export function TrainingTemplatesClient({ templates, workouts, publicWorkouts, b
   const inFlight = useRef(false);
   const editorHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (!draft) return;
+    if (!dirty) return;
     const guard = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
     window.addEventListener('beforeunload', guard);
     return () => window.removeEventListener('beforeunload', guard);
-  }, [draft]);
+  }, [dirty]);
 
   const choices: WorkoutChoice[] = [
     ...workouts.map(item => ({ ...item, value: `my:${item.id}` })),
@@ -82,13 +86,15 @@ export function TrainingTemplatesClient({ templates, workouts, publicWorkouts, b
   ];
 
   function openDraft(nextDraft: Omit<Draft, 'entries'>, entries: PlanEntry[]) {
-    setDraft({
+    const opened: Draft = {
       ...nextDraft,
       entries: entries.map(({ weekday, title, sport, workoutId, catalogWorkoutSlug }) => ({
         key: nextKey.current++, weekday, title, sport,
         workoutValue: workoutId === undefined ? `public:${catalogWorkoutSlug}` : `my:${workoutId}`,
       })),
-    });
+    };
+    setDraft(opened);
+    setOpenedDraft(opened);
     setNotice(null);
     setNotesOpen(false);
     setSport(DEFAULT_CATALOG_SPORT);
@@ -144,12 +150,13 @@ export function TrainingTemplatesClient({ templates, workouts, publicWorkouts, b
   const visible = templates.filter(template => `${template.name} ${template.summary ?? ''}`.toLowerCase().includes(filter.toLowerCase().trim()));
   return <div className="space-y-6">
     {notice && !draft && !confirmationOpen && <p role={notice.error ? 'alert' : 'status'} className={notice.error ? dangerTextClassName : successTextClassName}>{notice.text}</p>}
-    {!draft && <BuiltInTrainingPlans plans={builtInPlans} onCustomize={customize} busy={busy} />}
+    {!draft && <BuiltInTrainingPlans openSlug={openPlanSlug} plans={builtInPlans} onCustomize={customize} busy={busy} />}
     {!draft && <h2 className={sectionHeadingClassName}>My training plans</h2>}
     {draft ? <Surface className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 ref={editorHeading} tabIndex={-1} className={sectionHeadingClassName}>{draft.id ? 'Edit training plan' : 'New training plan'}</h2>
         <button type="button" disabled={busy} className={`${secondaryButtonClassName} max-md:min-h-11`} onClick={(event) => {
+          if (!dirty) { setDraft(null); return; }
           confirmationTrigger.current = event.currentTarget;
           setConfirmation({ kind: 'discard' });
           setConfirmationOpen(true);

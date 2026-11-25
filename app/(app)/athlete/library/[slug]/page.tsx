@@ -104,7 +104,7 @@ export default async function LibraryWorkoutPage({ params, searchParams }: Param
         ] : [{ label: 'Hardest zone', value: hardestZone.label, unit: hardestZone.name }]),
       ]}
       zoneSec={metrics.zoneSec}
-      usedIn={plansWithWorkout(workout.slug).map((plan) => ({ label: plan.name, href: '/athlete/templates' }))}
+      usedIn={plansWithWorkout(workout.slug).map((plan) => ({ label: plan.name, href: `/athlete/templates?plan=${plan.slug}#plan-${plan.slug}` }))}
       tags={workout.tags.map((tag) => ({ label: tag, href: publicLibraryHref({ ...EMPTY_CATALOG_QUERY, sport: workout.sport, tags: [tag] }) }))}
     />
   );

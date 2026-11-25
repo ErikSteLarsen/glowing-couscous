@@ -23,8 +23,10 @@ function PreviewWorkout({ option, showDuration }: { option: PlanWorkoutOption; s
   );
 }
 
-export function BuiltInTrainingPlans({ plans, onCustomize, busy }: {
+export function BuiltInTrainingPlans({ plans, openSlug, onCustomize, busy }: {
   plans: BuiltInPlanPreview[];
+  /** Plan whose week starts expanded, from a workout's "Used in plans" link. */
+  openSlug: string | null;
   onCustomize: (plan: BuiltInPlanPreview) => void;
   busy: boolean;
 }) {
@@ -36,7 +38,7 @@ export function BuiltInTrainingPlans({ plans, onCustomize, busy }: {
           const workouts = selectPlanWorkouts(plan.slots, {});
           const durationSec = workouts.reduce((sum, { option }) => sum + option.durationSec, 0);
           return (
-            <article key={plan.slug} className="space-y-3 py-4 first:pt-0 last:pb-0">
+            <article key={plan.slug} id={`plan-${plan.slug}`} className="scroll-mt-20 space-y-3 py-4 first:pt-0 last:pb-0">
               <div className="flex flex-wrap items-start justify-between gap-x-5 gap-y-3">
                 <div className="space-y-1">
                   <h3 className={sectionHeadingClassName}>{plan.name}</h3>
@@ -54,7 +56,7 @@ export function BuiltInTrainingPlans({ plans, onCustomize, busy }: {
                   </button>
                 </div>
               </div>
-              <details className="group">
+              <details className="group" open={plan.slug === openSlug || undefined}>
                 <summary className={`inline-flex min-h-9 cursor-pointer list-none items-center gap-1 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] max-md:min-h-11 [&::-webkit-details-marker]:hidden ${buttonFocusClassName}`}>
                   Preview week<span className="sr-only"> for {plan.name}</span>
                   <ChevronDown aria-hidden="true" size={16} className="transition-transform group-open:rotate-180" />
@@ -77,6 +79,7 @@ export function BuiltInTrainingPlans({ plans, onCustomize, busy }: {
                               <div key={slot.id}>
                                 <p>
                                   {slot.label}{sameDuration ? <span className="data text-[var(--text-muted)]"> &nbsp;/&nbsp; {formatDurationExact(first.durationSec)}</span> : null}
+                                  <span className="text-[13px] text-[var(--text-muted)]">, choose one (first is the default)</span>
                                 </p>
                                 <ul className="mt-1 space-y-0.5 text-[13px] text-[var(--text-muted)]">
                                   {slot.options.map((option) => (

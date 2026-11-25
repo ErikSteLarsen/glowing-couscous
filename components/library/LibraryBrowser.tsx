@@ -154,7 +154,7 @@ function SportHeading({ sport, counts, onChange }: { sport: CatalogSport; counts
       <Menu>
         <MenuTrigger
           aria-label={`${sportWorkouts(sport)}, change sport`}
-          className={`-ml-2 inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2 transition-colors control-hover:bg-[var(--raised)] max-md:min-h-11 ${buttonFocusClassName}`}
+          className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[var(--border-strong)] px-3 transition-colors control-hover:bg-[var(--raised)] max-md:min-h-11 ${buttonFocusClassName}`}
         >
           {sportWorkouts(sport)}
           <ChevronDown aria-hidden="true" size={16} strokeWidth={1.8} className="text-[var(--text-muted)]" />
