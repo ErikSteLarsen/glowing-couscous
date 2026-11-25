@@ -1,4 +1,4 @@
-import type { RidePlan, RidePlanStep } from './ride-plan.ts';
+import { applyBias, type RidePlan, type RidePlanStep } from './ride-plan.ts';
 import type { RideRecording } from './recorder.ts';
 
 export type RideChartBucket = { x: number; width: number; power: number | null; target: number | null; heartRate: number | null };
@@ -55,4 +55,31 @@ export function stepIntensityZone(step: Pick<RidePlanStep, 'startWatts' | 'endWa
   if (!ftpWatts || step.startWatts === null || step.endWatts === null) return step.zone;
   const fraction = (step.startWatts + step.endWatts) / 2 / ftpWatts;
   return fraction < 0.55 ? 1 : fraction < 0.75 ? 2 : fraction < 0.9 ? 3 : fraction < 1.05 ? 4 : 5;
+}
+
+/** Generous average glyph width of the chart's numerals, in em. */
+const LABEL_CHAR_EM = 0.62;
+const LABEL_PADDING_PX = 7;
+const LABEL_MIN_HEIGHT_PX = 22;
+
+/**
+ * The effort to write inside a block of the profile ("300 W", "150–250 W", "Z2" without watts), in
+ * the longest form that fits, or null when none does.
+ */
+export function blockEffortLabel(
+  step: Pick<RidePlanStep, 'kind' | 'zone' | 'startWatts' | 'endWatts'>,
+  room: { widthPx: number; heightPx: number; fontPx: number },
+  biasPct = 0,
+): string | null {
+  if (room.heightPx < LABEL_MIN_HEIGHT_PX) return null;
+  let forms: string[];
+  if (step.startWatts !== null && step.endWatts !== null) {
+    const start = applyBias(step.startWatts, biasPct);
+    const end = applyBias(step.endWatts, biasPct);
+    const watts = start === end ? `${start}` : `${start}–${end}`;
+    forms = [`${watts} W`, watts];
+  } else {
+    forms = step.kind === 'pause' ? [] : [`Z${step.zone}`];
+  }
+  return forms.find((form) => form.length * LABEL_CHAR_EM * room.fontPx + LABEL_PADDING_PX <= room.widthPx) ?? null;
 }

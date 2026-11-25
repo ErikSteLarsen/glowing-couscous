@@ -3,7 +3,7 @@
 import { memo, useCallback, useEffect, useEffectEvent, useRef, useState } from 'react';
 
 import type { YouTubeLink } from '@/lib/youtube/youtube-url';
-import type { EntertainmentRide } from './types';
+import type { EntertainmentRide, TrackActivity } from './types';
 import { clearRecentVideos, readRecentVideos, rememberRecentVideo } from './youtube/recent-videos';
 import type { IncomingYouTubeVideo } from './youtube/use-youtube-inbox';
 import { readYouTubeView, saveYouTubeView } from './youtube/view-state';
@@ -42,6 +42,7 @@ type YouTubePanelProps = Pick<EntertainmentRide, 'sessionId' | 'userId' | 'statu
   onIncomingTaken: (seq: number) => void;
   /** A link is being dragged over the ride screen. */
   dragActive: boolean;
+  trackActivity: TrackActivity;
 };
 
 /**
@@ -52,7 +53,7 @@ type YouTubePanelProps = Pick<EntertainmentRide, 'sessionId' | 'userId' | 'statu
  * second don't re-render it. The video and time are kept for this tab, so a remount picks up
  * where it was.
  */
-export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, status, obscured, incoming, onIncomingTaken, dragActive }: YouTubePanelProps) {
+export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, status, obscured, incoming, onIncomingTaken, dragActive, trackActivity }: YouTubePanelProps) {
   // The live ride view never renders on the server, so browser storage is readable here.
   const [saved] = useState(() => readYouTubeView(sessionId));
   // A saved video is checked again before its player comes back (its status may have changed).
@@ -247,6 +248,7 @@ export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, stat
           restored={restored?.videoId === watching.id}
           dragActive={dragActive}
           checking={checking}
+          trackActivity={trackActivity}
           onBack={leaveWatch}
           onTime={reportTime}
         />

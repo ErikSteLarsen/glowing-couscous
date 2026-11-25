@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { intensityColor } from '@/lib/intensity-color';
 import type { RidePlan } from '@/lib/ride/ride-plan';
-import { stepIntensityZone, type RideChartBucket } from '@/lib/ride/ride-chart';
+import { blockEffortLabel, stepIntensityZone, type RideChartBucket } from '@/lib/ride/ride-chart';
 
 const HEIGHT = 200;
 const WIDTH = 1000;
 const CORNER_PX = 4;
+const LABEL_PX = 11;
 
 /** Block outline with softly rounded top corners; rx/ry are in viewBox units so the curve stays circular on screen. */
 function blockPath(x0: number, x1: number, yStart: number, yEnd: number, rxUnits: number, ryUnits: number): string {
@@ -29,13 +30,15 @@ function clockLabel(totalSec: number): string {
  * trace, a heart-rate line on its own scale, and a "now" cursor. Text labels sit in
  * HTML so they do not stretch with the SVG.
  */
-export function WorkoutProfileChart({ plan, positionSec, buckets, domainSec, heartRateMaxBpm = null, activeStepIndex = null, className = 'h-40 sm:h-48' }: {
+export function WorkoutProfileChart({ plan, positionSec, buckets, domainSec, heartRateMaxBpm = null, activeStepIndex = null, biasPct = 0, className = 'h-40 sm:h-48' }: {
   plan: RidePlan;
   positionSec: number | null;
   buckets: RideChartBucket[];
   domainSec: number;
   heartRateMaxBpm?: number | null;
   activeStepIndex?: number | null;
+  /** The rider's intensity change, applied to the efforts written in blocks still to ride. */
+  biasPct?: number;
   className?: string;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -119,6 +122,28 @@ export function WorkoutProfileChart({ plan, positionSec, buckets, domainSec, hea
           </>
         ) : null}
       </svg>
+      {pixelSize ? (
+        <div aria-hidden="true" className="data pointer-events-none absolute inset-0 text-[11px] leading-none text-[var(--text)] [text-shadow:0_0_3px_rgb(0_0_0/80%)]">
+          {plan.steps.map((step, index) => {
+            const done = positionSec !== null && step.startSec + step.durationSec <= positionSec;
+            const lowestWatts = Math.min(step.startWatts ?? zoneWatts(step.zone), step.endWatts ?? zoneWatts(step.zone));
+            const label = blockEffortLabel(step, {
+              widthPx: (step.durationSec / domain) * pixelSize.width,
+              heightPx: (1 - y(lowestWatts) / HEIGHT) * pixelSize.height,
+              fontPx: LABEL_PX,
+            }, done ? 0 : biasPct);
+            return label ? (
+              <span
+                key={step.id}
+                className={`absolute bottom-1.5 -translate-x-1/2 whitespace-nowrap ${done ? 'opacity-60' : index === activeStepIndex ? 'font-semibold' : ''}`}
+                style={{ left: `${((step.startSec + step.durationSec / 2) / domain) * 100}%` }}
+              >
+                {label}
+              </span>
+            ) : null;
+          })}
+        </div>
+      ) : null}
       {plan.ftpWatts ? (
         <span className="data pointer-events-none absolute right-1 -translate-y-full pb-0.5 text-[11px] text-[var(--text-muted)]" style={{ top: `${(y(plan.ftpWatts) / HEIGHT) * 100}%` }}>FTP {plan.ftpWatts}&nbsp;W</span>
       ) : null}

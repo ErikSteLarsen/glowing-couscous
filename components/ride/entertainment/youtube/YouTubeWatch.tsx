@@ -6,6 +6,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { buttonFocusClassName, compactSecondaryButtonClassName, ghostButtonClassName } from '@/components/ui';
 import { youTubeWatchUrl } from '@/lib/youtube/youtube-url';
 import { connectYouTubePlayer, PLAYER_STATE, youTubeEmbedUrl, type YouTubePlayer } from './iframe-api';
+import type { TrackActivity } from '../types';
 import type { YouTubeVideoChoice } from './youtube-client';
 
 const PAUSE_WITH_RIDE_KEY = 'tempo-ride-youtube-pause-with-ride';
@@ -57,6 +58,7 @@ export function YouTubeWatch({
   restored = false,
   dragActive = false,
   checking = false,
+  trackActivity,
   onBack,
   onTime,
 }: {
@@ -71,6 +73,7 @@ export function YouTubeWatch({
   dragActive?: boolean;
   /** A new video is being checked before it replaces this one. */
   checking?: boolean;
+  trackActivity: TrackActivity;
   onBack: () => void;
   /** Reports the playback position (and whether it plays or Tempo paused it) every few seconds and when the player goes away. */
   onTime: (videoId: string, timeSec: number, playing: boolean) => void;
@@ -212,6 +215,18 @@ export function YouTubeWatch({
     };
   }, [video.id, video.title, errorCode, attempt, fits, mayPlay, controlled]);
 
+  // Playing, about to play, or paused only by Tempo counts as watching. In the Tempo Ride app the
+  // player's state is unknown, so an open video does.
+  useEffect(() => {
+    if (errorCode !== null || !fits) return;
+    trackActivity(() => {
+      const player = playerRef.current;
+      if (!controlled) return true;
+      return player ? isPlaying(player) || pausedByTempoRef.current : wantsPlayRef.current;
+    });
+    return () => trackActivity(null);
+  }, [controlled, errorCode, fits, trackActivity]);
+
   // Pause with the ride, and play again on resume only if Tempo paused it.
   const lastStatusRef = useRef(rideStatus);
   useEffect(() => {
@@ -284,7 +299,7 @@ export function YouTubeWatch({
 
   return (
     <div ref={rootRef} tabIndex={-1} className="flex h-full w-full min-w-0 flex-col outline-none">
-      <div className="@container flex min-h-11 shrink-0 items-center gap-2 pb-2">
+      <div className="@container flex min-h-10 shrink-0 items-center gap-2 pb-1.5">
         <button type="button" className={`${ghostButtonClassName('compact')} shrink-0 text-[var(--text-secondary)]`} onClick={onBack}>
           <ArrowLeft aria-hidden="true" size={15} strokeWidth={1.6} />
           Change video
@@ -311,7 +326,7 @@ export function YouTubeWatch({
         ) : null}
       </div>
 
-      <div ref={stageRef} className="relative grid min-h-0 flex-1 content-start justify-items-center [container-type:size]">
+      <div ref={stageRef} className="relative grid min-h-0 flex-1 content-center justify-items-center [container-type:size]">
         {errorCode === null && fits ? (
           // 16:9 within the stage, letterboxed up to 200 px tall when 16:9 would be shorter. While a
           // link is dragged in, the player lets the drop through to the page and gets an outline

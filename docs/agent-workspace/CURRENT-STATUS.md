@@ -59,6 +59,11 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   browsers (the undocumented messages of 0.3.0 are gone). In the Tempo Ride app
   that script would run next to the recording bridge, so the player there has
   YouTube's own controls only. The lookup limit is per server instance.
+  Same day: entertainment is a header menu with a direct way back to data and
+  a confirmation when a video plays or a course is under way; the player fills
+  the space left; profile blocks show their effort when it fits. 23 headless
+  Chromium checks passed (real player, stubbed Data API, simulated trainer),
+  with the menu clear of the player at eight window sizes.
 
 - Post to Strava (2026-11-23, local). Workout pages for saved activities with
   recorded data show **Post to Strava** (preview sheet with editable title and

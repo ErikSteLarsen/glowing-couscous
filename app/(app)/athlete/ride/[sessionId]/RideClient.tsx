@@ -40,7 +40,8 @@ import { clearRideCheckpoint, downloadRideBackup, listStoredRides, saveRideCheck
 import { WorkoutProfileChart } from './WorkoutProfileChart';
 import { StravaPostAction } from '@/components/StravaPostAction';
 import { EntertainmentStage, type YouTubeInbox } from '@/components/ride/entertainment/EntertainmentStage';
-import type { EntertainmentMode, EntertainmentRide } from '@/components/ride/entertainment/types';
+import { EntertainmentMenu } from '@/components/ride/entertainment/EntertainmentMenu';
+import type { ActivityCheck, EntertainmentMode, EntertainmentRide, TrackActivity } from '@/components/ride/entertainment/types';
 import { useYouTubeInbox, type IncomingYouTubeVideo } from '@/components/ride/entertainment/youtube/use-youtube-inbox';
 
 const CHECKPOINT_INTERVAL_MS = 5000;
@@ -53,13 +54,16 @@ const MORE_DATA_KEY = 'tempo.ride.moreData';
 const PHONE_QUERY = '(max-width: 639px)';
 const ENTERTAINMENT_KEY = 'tempo.ride.entertainment';
 
-/** Off, on with the view picker showing, or on with a chosen view. Remembered per browser. */
-type EntertainmentSetting = 'off' | 'choose' | EntertainmentMode;
+/** Off, or on with a chosen view. Remembered per browser. */
+type EntertainmentSetting = 'off' | EntertainmentMode;
+type SentVideo = { videoId: string; startSec?: number };
+/** A change of view waiting for the rider's answer, with the video that asked for it, if any. */
+type PendingSwitch = { to: EntertainmentSetting; video?: SentVideo };
 
 function readEntertainment(): EntertainmentSetting {
   try {
     const value = typeof window === 'undefined' ? null : window.localStorage.getItem(ENTERTAINMENT_KEY);
-    return value === 'choose' || value === 'youtube' || value === 'course' ? value : 'off';
+    return value === 'youtube' || value === 'course' ? value : 'off';
   } catch {
     return 'off';
   }
@@ -165,6 +169,18 @@ function ProgressBar({ value, label, color = 'var(--brand)', className = 'h-2' }
   );
 }
 
+function switchConsequence(leavingVideo: boolean): string {
+  if (!leavingVideo) return 'Tempo keeps your place on the loop.';
+  if (window.tempoDesktop) return 'It starts over when you come back.';
+  return 'Tempo keeps your place in it for this ride.';
+}
+
+function switchLabel({ to, video }: PendingSwitch): string {
+  if (video) return 'Play the video';
+  if (to === 'youtube') return 'Switch to YouTube';
+  return to === 'course' ? 'Switch to the course' : 'Back to data only';
+}
+
 export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, steps, back, heartRateMaxBpm }: {
   userId: number;
   sessionId: number;
@@ -227,16 +243,38 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     try { window.localStorage.setItem(ENTERTAINMENT_KEY, next); } catch { /* preference only */ }
     setEntertainmentState(next);
   }, []);
-  // Turning it back on returns to the last view, so a video or course in progress is not lost behind the picker.
-  const lastModeRef = useRef<EntertainmentMode | null>(entertainment === 'youtube' || entertainment === 'course' ? entertainment : null);
+  // Turning it back on returns to the last view.
+  const lastModeRef = useRef<EntertainmentMode | null>(entertainment === 'off' ? null : entertainment);
   useEffect(() => {
-    if (entertainment === 'youtube' || entertainment === 'course') lastModeRef.current = entertainment;
+    if (entertainment !== 'off') lastModeRef.current = entertainment;
   }, [entertainment]);
-  const toggleEntertainment = useCallback(() => setEntertainmentState((current) => {
-    const next: EntertainmentSetting = current === 'off' ? lastModeRef.current ?? 'choose' : 'off';
-    try { window.localStorage.setItem(ENTERTAINMENT_KEY, next); } catch { /* preference only */ }
-    return next;
-  }), []);
+  const [entertainmentMenuOpen, setEntertainmentMenuOpen] = useState(false);
+
+  // Leaving a video that plays or a course under way asks first.
+  const activityRef = useRef<ActivityCheck | null>(null);
+  const trackActivity = useCallback<TrackActivity>((check) => { activityRef.current = check; }, []);
+  const switchDialogRef = useRef<HTMLDialogElement>(null);
+  const [pendingSwitch, setPendingSwitch] = useState<PendingSwitch | null>(null);
+  const attachSwitchDialog = useCallback((node: HTMLDialogElement | null) => {
+    switchDialogRef.current = node;
+    if (!node) setPendingSwitch(null);
+  }, []);
+  const requestEntertainment = useCallback((to: EntertainmentSetting, video?: SentVideo) => {
+    if (to === entertainment) return;
+    if (!activityRef.current?.()) {
+      setEntertainment(to);
+      return;
+    }
+    // Asked again (another video sent meanwhile): the dialog stays and takes the newer request.
+    setPendingSwitch({ to, video });
+    if (!switchDialogRef.current?.open) switchDialogRef.current?.showModal();
+  }, [entertainment, setEntertainment]);
+  const toggleEntertainment = useCallback(() => {
+    if (entertainment !== 'off') requestEntertainment('off');
+    else if (isPhone) setEntertainment('course');
+    else if (lastModeRef.current) setEntertainment(lastModeRef.current);
+    else setEntertainmentMenuOpen(true);
+  }, [entertainment, isPhone, requestEntertainment, setEntertainment]);
 
   useEffect(() => () => pendingSaveRef.current?.abort(), []);
 
@@ -272,11 +310,24 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   // view takes it. Desktop only: phones have no YouTube view.
   const [incomingVideo, setIncomingVideo] = useState<IncomingYouTubeVideo | null>(null);
   const incomingSeqRef = useRef(0);
-  const receiveVideo = useCallback((video: { videoId: string; startSec?: number } | null) => {
+  const deliverVideo = useCallback((video: SentVideo | null) => {
     incomingSeqRef.current += 1;
     setIncomingVideo({ seq: incomingSeqRef.current, videoId: video?.videoId ?? null, ...(video?.startSec ? { startSec: video.startSec } : {}) });
+  }, []);
+  const receiveVideo = useCallback((video: SentVideo | null) => {
+    if (video && entertainment === 'course' && activityRef.current?.()) {
+      requestEntertainment('youtube', video);
+      return;
+    }
+    deliverVideo(video);
     if (video) setEntertainment('youtube');
-  }, [setEntertainment]);
+  }, [deliverVideo, entertainment, requestEntertainment, setEntertainment]);
+  const confirmSwitch = () => {
+    if (!pendingSwitch) return;
+    if (pendingSwitch.video) deliverVideo(pendingSwitch.video);
+    setEntertainment(pendingSwitch.to);
+    switchDialogRef.current?.close();
+  };
   const takeIncomingVideo = useCallback((seq: number) => {
     setIncomingVideo((current) => (current?.seq === seq ? null : current));
   }, []);
@@ -484,7 +535,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
-      if (connectionsRef.current?.open || phoneSheetRef.current?.open || event.metaKey || event.ctrlKey || event.altKey || target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      if (connectionsRef.current?.open || switchDialogRef.current?.open || phoneSheetRef.current?.open || event.metaKey || event.ctrlKey || event.altKey || target?.closest('input, textarea, select, [contenteditable="true"]')) return;
       // A focused control keeps its native Space activation; letter shortcuts still work after a click.
       if (event.key === ' ' && target?.closest('button, a, summary')) return;
       if ((event.key === 'f' || event.key === 'F') && document.fullscreenEnabled) { toggleFullscreen(); return; }
@@ -558,6 +609,26 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     </dialog>
   );
 
+  const leavingVideo = entertainment === 'youtube' && !isPhone;
+  const switchDialog = (
+    <dialog
+      ref={attachSwitchDialog}
+      onClose={() => setPendingSwitch(null)}
+      aria-labelledby="ride-switch-title"
+      aria-describedby="ride-switch-text"
+      className="tempo-alert-dialog w-[calc(100%-2rem)] max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
+    >
+      <h2 id="ride-switch-title" className="text-base font-medium">{leavingVideo ? 'Leave the video?' : 'Leave the course?'}</h2>
+      <p id="ride-switch-text" className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+        {switchConsequence(leavingVideo)} Your ride keeps recording.
+      </p>
+      <div className="mt-5 flex flex-wrap justify-end gap-2">
+        <button type="button" className={secondaryButtonClassName} onClick={() => switchDialogRef.current?.close()}>{leavingVideo ? 'Keep watching' : 'Keep riding it'}</button>
+        <button type="button" className={primaryButtonClassName} onClick={confirmSwitch}>{pendingSwitch ? switchLabel(pendingSwitch) : 'Leave'}</button>
+      </div>
+    </dialog>
+  );
+
   const shortcutLegend = (
     <dl aria-label="Keyboard shortcuts" className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-[var(--text-muted)] [@media(pointer:coarse)]:hidden">
       <div className="flex items-center gap-1.5"><dt><Kbd>Space</Kbd></dt><dd>Pause</dd></div>
@@ -589,6 +660,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       </header>
       <main id="ride" aria-label={label} className="flex min-h-0 flex-1 flex-col">{body}</main>
       {connectionsDialog}
+      {active ? switchDialog : null}
     </div>
   );
 
@@ -849,15 +921,14 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   );
 
   const entertainmentOn = entertainment !== 'off';
-  // Phones show the course only; a remembered YouTube view (or the picker) opens it there.
-  const entertainmentMode: EntertainmentMode | null = !entertainmentOn
-    ? null
-    : isPhone ? 'course' : entertainment === 'choose' ? null : entertainment;
+  // Phones show the course only; a remembered YouTube view opens it there.
+  let entertainmentMode: EntertainmentMode | null = null;
+  if (entertainment !== 'off') entertainmentMode = isPhone ? 'course' : entertainment;
   const entertainmentRide: EntertainmentRide = {
     sessionId,
     userId,
     status: status === 'paused' ? 'paused' : 'running',
-    obscured: connectionsOpen || sheetOpen,
+    obscured: connectionsOpen || sheetOpen || pendingSwitch !== null,
     reading: live,
     threeSecondPowerWatts: threeSecond,
     targetWatts,
@@ -869,29 +940,27 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     blockCount: plan.steps.length,
     blockColor: intervalColor,
   };
-  const entertainmentStage = (compact: boolean) => (
+  const entertainmentStage = entertainmentMode ? (
     <EntertainmentStage
       mode={entertainmentMode}
       ride={entertainmentRide}
       inbox={youTubeInbox}
-      onModeChange={setEntertainment}
+      trackActivity={trackActivity}
       onClose={() => setEntertainment('off')}
-      compact={compact}
-      allowYouTube={!isPhone}
     />
-  );
-  const entertainmentButton = (iconOnly: boolean) => (
+  ) : null;
+  // Phones have one view, so the button turns it on and off.
+  const phoneEntertainmentButton = (
     <button
       type="button"
-      className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border text-sm font-medium transition-colors ${iconOnly ? 'w-10 justify-center' : 'px-3'} ${buttonFocusClassName} ${entertainmentOn ? 'border-[var(--brand)] text-[var(--text)]' : 'border-[var(--border-strong)] text-[var(--text-secondary)] hover:bg-[var(--raised)] hover:text-[var(--text)]'}`}
+      className={`inline-flex size-10 shrink-0 items-center justify-center rounded-lg border transition-colors ${buttonFocusClassName} ${entertainmentOn ? 'border-[var(--brand)] text-[var(--text)]' : 'border-[var(--border-strong)] text-[var(--text-secondary)] hover:bg-[var(--raised)] hover:text-[var(--text)]'}`}
       onClick={toggleEntertainment}
       aria-pressed={entertainmentOn}
       aria-keyshortcuts="V"
-      aria-label={iconOnly ? 'Entertainment' : undefined}
-      title={`${entertainmentOn ? 'Turn off' : 'Turn on'} entertainment: ${isPhone ? 'ride a course' : 'YouTube or a course'} (V)`}
+      aria-label="Ride a course"
+      title={entertainmentOn ? 'Back to data only (V)' : 'Ride a course (V)'}
     >
       <Popcorn aria-hidden="true" size={16} strokeWidth={1.7} />
-      {iconOnly ? null : 'Entertainment'}
     </button>
   );
   const deviationMeter = deviation !== null ? (
@@ -944,7 +1013,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
               {status === 'paused' ? 'Paused' : 'Riding'}, {connectedCount === 0 ? 'no devices' : `${connectedCount} ${connectedCount === 1 ? 'device' : 'devices'}`}
             </p>
           </div>
-          {entertainmentButton(true)}
+          {phoneEntertainmentButton}
           {ergButton}
           <button type="button" className={iconControlClassName} aria-label="More controls and data" aria-haspopup="dialog" onClick={openSheet}>
             <Ellipsis aria-hidden="true" size={18} strokeWidth={1.8} />
@@ -1028,14 +1097,14 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
           </section>
 
           {entertainmentOn ? (
-            <div className="-mx-4 flex min-h-0 flex-1 flex-col px-2 pb-1 pt-2">{entertainmentStage(true)}</div>
+            <div className="-mx-4 flex min-h-0 flex-1 flex-col px-2 pb-1 pt-2">{entertainmentStage}</div>
           ) : (
           <section aria-label="Workout profile" className="flex min-h-0 flex-1 flex-col pt-3">
             <p className="shrink-0 text-right text-[12px] text-[var(--text-secondary)]">
               <span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <> – <span className="data">{formatClock(remainingSec)}</span> left</> : null}
             </p>
             <div className="min-h-12 flex-1 pb-6 pt-2">
-              <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} className="h-full" />
+              <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} biasPct={recording.biasPct} className="h-full" />
             </div>
           </section>
           )}
@@ -1107,13 +1176,19 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
           </div>
         </dialog>
         {connectionsDialog}
+        {switchDialog}
       </div>
     );
   }
 
   const desktopControls = (
     <>
-      {entertainmentButton(false)}
+      <EntertainmentMenu
+        value={entertainment}
+        open={entertainmentMenuOpen}
+        onOpenChange={setEntertainmentMenuOpen}
+        onChoose={requestEntertainment}
+      />
       <span aria-hidden="true" className="mx-1 hidden h-6 w-px bg-[var(--border-strong)] sm:block" />
       {controls}
     </>
@@ -1140,7 +1215,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       <div className="flex min-w-0 flex-col justify-center gap-4">
         <div className="space-y-2">
           <p className={railLabel}>Power</p>
-          {nowValue(threeSecond, 'W', 'text-[3rem] xl:text-[3.75rem]')}
+          {nowValue(threeSecond, 'W', 'text-[2.75rem] xl:text-[3.25rem]')}
           {targetText ? <p>{targetText}</p> : null}
           {deviationMeter}
           {toneLine}
@@ -1159,7 +1234,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     return frame(stateLabel, desktopControls, (
       <>
         {banners}
-        <div className="mx-auto flex min-h-0 w-full max-w-[1680px] flex-1 flex-col gap-3 px-4 pb-3 pt-3 sm:px-6">
+        <div className="mx-auto flex min-h-0 w-full flex-1 flex-col gap-2 px-4 pb-2 pt-2 sm:px-6">
           <section aria-label="Current block" className="shrink-0 space-y-2">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
               <div className="min-w-0 flex-1">
@@ -1169,6 +1244,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
                   {currentStep ? <span className="data">{nextStep ? ` – next ${stepLabel(stepIndex + 1)}${nextTarget !== null ? ` – ${nextTarget} W` : ''}` : ' – free ride next'}</span> : null}
                 </p>
               </div>
+              <p className="shrink-0 text-right text-[12px] text-[var(--text-secondary)] max-md:hidden"><span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <><br /><span className="data">{formatClock(remainingSec)}</span> left in plan</> : null}</p>
               <p className="flex shrink-0 items-baseline gap-2 text-sm text-[var(--text-secondary)]">
                 <span className="ride-numeral !leading-none text-[1.75rem]">{formatClock(stepTime)}</span>
                 {currentStep ? 'left' : 'in free ride'}
@@ -1193,17 +1269,16 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
             </section>
           ) : null}
 
-          <div className={`grid min-h-0 flex-1 gap-6 ${withRails ? 'lg:grid-cols-[minmax(190px,250px)_minmax(0,1fr)_minmax(170px,220px)]' : ''}`}>
+          <div className={`grid min-h-0 flex-1 gap-4 ${withRails ? 'lg:grid-cols-[9.5rem_minmax(0,1fr)_8rem] xl:grid-cols-[10rem_minmax(0,1fr)_8.5rem]' : ''}`}>
             {withRails ? <section aria-label="Power" className="hidden min-h-0 lg:flex">{powerRail}</section> : null}
-            <div className="min-h-0 min-w-0">{entertainmentStage(false)}</div>
+            <div className="min-h-0 min-w-0">{entertainmentStage}</div>
             {withRails ? <section aria-label="Heart rate and cadence" className="hidden min-h-0 lg:flex">{bodyRail}</section> : null}
           </div>
 
-          <section aria-label="Workout profile" className="shrink-0 space-y-1.5">
-            <p className="text-right text-[12px] text-[var(--text-secondary)]"><span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <> – <span className="data">{formatClock(remainingSec)}</span> left in plan</> : null}</p>
-            <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} className="mb-5 h-24 xl:h-28" />
+          <section aria-label="Workout profile" className="shrink-0 pt-3">
+            <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} biasPct={recording.biasPct} className="mb-5 h-24 xl:h-28" />
           </section>
-          <div className="shrink-0 border-t border-[var(--border)] pt-2.5">{shortcutLegend}</div>
+          <div className="shrink-0 border-t border-[var(--border)] pt-2 [@media(max-height:820px)]:hidden">{shortcutLegend}</div>
         </div>
       </>
     ), 'Ride', true);
@@ -1332,7 +1407,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
             ) : null}
             <p className="ml-auto"><span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <> – <span className="data">{formatClock(remainingSec)}</span> left in plan</> : null}</p>
           </div>
-          <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} className="h-36 md:h-48 xl:h-56" />
+          <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} biasPct={recording.biasPct} className="h-36 md:h-48 xl:h-56" />
         </section>
 
         <div className="border-t border-[var(--border)] pb-5 pt-3">{shortcutLegend}</div>

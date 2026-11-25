@@ -27,3 +27,9 @@ export type EntertainmentRide = {
 };
 
 export type EntertainmentMode = 'youtube' | 'course';
+
+/** Whether leaving the current view now would interrupt something (a video playing, a course under way). */
+export type ActivityCheck = () => boolean;
+
+/** A view registers its check while it is mounted. */
+export type TrackActivity = (check: ActivityCheck | null) => void;

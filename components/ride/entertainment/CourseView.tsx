@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 
 import { cadenceFromSpeed, courseProfile, createRiderState, gradientAt, lakesideLoop, lapDistance, step, type RiderState } from '@/lib/ride/virtual-course';
 import { CourseScene } from './course/scene';
-import type { EntertainmentRide } from './types';
+import type { EntertainmentRide, TrackActivity } from './types';
 
 type PowerSource = 'live' | 'target' | 'none' | 'paused';
 
@@ -57,11 +57,13 @@ function gradientColor(gradient: number) {
 
 const toneColor = { on: 'var(--ride-on)', under: 'var(--ride-under)', over: 'var(--ride-over)', none: 'var(--text)' } as const;
 
+/** Riding this far since the view opened counts as being in the middle of the course. */
+const UNDER_WAY_M = 50;
 const PROFILE_POINTS = 160;
 const textShadow = { textShadow: '0 1px 6px rgb(0 0 0 / 70%)' };
 
 /** Virtual course: a stick-figure rider on the Lakeside Loop, moved by the rider's watts. */
-export function CourseView({ ride }: { ride: EntertainmentRide }) {
+export function CourseView({ ride, trackActivity }: { ride: EntertainmentRide; trackActivity: TrackActivity }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rideRef = useRef(ride);
   const engineRef = useRef<{ onRide: (resumed: boolean) => void } | null>(null);
@@ -86,6 +88,8 @@ export function CourseView({ ride }: { ride: EntertainmentRide }) {
     if (!canvas || !ctx) return;
     const scene = new CourseScene();
     const state = loadState(sessionId);
+    const openedAtM = state.distanceM;
+    trackActivity(() => state.distanceM - openedAtM >= UNDER_WAY_M);
     const reducedQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     let reducedMotion = reducedQuery.matches;
     let frame = 0;
@@ -195,6 +199,7 @@ export function CourseView({ ride }: { ride: EntertainmentRide }) {
     writeStats(performance.now());
 
     return () => {
+      trackActivity(null);
       cancelAnimationFrame(frame);
       frame = 0;
       engineRef.current = null;
@@ -205,7 +210,7 @@ export function CourseView({ ride }: { ride: EntertainmentRide }) {
       window.removeEventListener('pagehide', onHide);
       saveState(sessionId, state);
     };
-  }, [sessionId, profile]);
+  }, [sessionId, profile, trackActivity]);
 
   useEffect(() => {
     const resumed = rideRef.current.status === 'paused' && ride.status !== 'paused';
