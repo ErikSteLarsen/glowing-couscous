@@ -60,26 +60,42 @@ export function stepIntensityZone(step: Pick<RidePlanStep, 'startWatts' | 'endWa
 /** Generous average glyph width of the chart's numerals, in em. */
 const LABEL_CHAR_EM = 0.62;
 const LABEL_PADDING_PX = 7;
-const LABEL_MIN_HEIGHT_PX = 22;
+const LABEL_LINE_EM = 1.25;
+/** Space under and over a label inside its block. */
+const LABEL_MARGIN_PX = 8;
+
+/** A block's length as short as it reads: "45s", "5m", "2:30", "75m". */
+export function shortDuration(totalSec: number): string {
+  if (totalSec < 60) return `${totalSec}s`;
+  const seconds = totalSec % 60;
+  const minutes = Math.floor(totalSec / 60);
+  return seconds ? `${minutes}:${String(seconds).padStart(2, '0')}` : `${minutes}m`;
+}
 
 /**
- * The effort to write inside a block of the profile ("300 W", "150–250 W", "Z2" without watts), in
- * the longest form that fits, or null when none does.
+ * The lines to write inside a block of the profile: its length and effort on one line
+ * ("5m – 300 W"), else on two, else the effort alone, else the bare watts, else nothing. The effort
+ * is a ramp ("150–250 W") or, without watts, the zone ("Z2"); a pause has only its length.
  */
-export function blockEffortLabel(
-  step: Pick<RidePlanStep, 'kind' | 'zone' | 'startWatts' | 'endWatts'>,
+export function blockLabelLines(
+  step: Pick<RidePlanStep, 'kind' | 'zone' | 'durationSec' | 'startWatts' | 'endWatts'>,
   room: { widthPx: number; heightPx: number; fontPx: number },
   biasPct = 0,
-): string | null {
-  if (room.heightPx < LABEL_MIN_HEIGHT_PX) return null;
-  let forms: string[];
+): string[] {
+  const duration = shortDuration(step.durationSec);
+  let forms: string[][];
   if (step.startWatts !== null && step.endWatts !== null) {
     const start = applyBias(step.startWatts, biasPct);
     const end = applyBias(step.endWatts, biasPct);
     const watts = start === end ? `${start}` : `${start}–${end}`;
-    forms = [`${watts} W`, watts];
+    forms = [[`${duration} – ${watts} W`], [duration, `${watts} W`], [`${watts} W`], [duration, watts], [watts]];
+  } else if (step.kind === 'pause') {
+    forms = [[duration]];
   } else {
-    forms = step.kind === 'pause' ? [] : [`Z${step.zone}`];
+    forms = [[`${duration} – Z${step.zone}`], [duration, `Z${step.zone}`], [`Z${step.zone}`]];
   }
-  return forms.find((form) => form.length * LABEL_CHAR_EM * room.fontPx + LABEL_PADDING_PX <= room.widthPx) ?? null;
+  const fits = (lines: string[]) =>
+    Math.max(...lines.map((line) => line.length)) * LABEL_CHAR_EM * room.fontPx + LABEL_PADDING_PX <= room.widthPx
+    && lines.length * LABEL_LINE_EM * room.fontPx + LABEL_MARGIN_PX <= room.heightPx;
+  return forms.find(fits) ?? [];
 }

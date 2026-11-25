@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { intensityColor } from '@/lib/intensity-color';
 import type { RidePlan } from '@/lib/ride/ride-plan';
-import { blockEffortLabel, stepIntensityZone, type RideChartBucket } from '@/lib/ride/ride-chart';
+import { blockLabelLines, stepIntensityZone, type RideChartBucket } from '@/lib/ride/ride-chart';
 
 const HEIGHT = 200;
 const WIDTH = 1000;
 const CORNER_PX = 4;
+/** A chart at least this tall has room for its legend and larger block labels. */
+const TALL_PX = 160;
 const LABEL_PX = 11;
+const TALL_LABEL_PX = 13;
 
 /** Block outline with softly rounded top corners; rx/ry are in viewBox units so the curve stays circular on screen. */
 function blockPath(x0: number, x1: number, yStart: number, yEnd: number, rxUnits: number, ryUnits: number): string {
@@ -72,8 +75,12 @@ export function WorkoutProfileChart({ plan, positionSec, buckets, domainSec, hea
   const segments = (pick: (bucket: RideChartBucket) => number | null, toY: (value: number) => number, stepped: boolean) => {
     const paths: string[] = [];
     let current = '';
+    let previousEnd = 0;
     for (const bucket of buckets) {
       const value = pick(bucket);
+      // Skipped time was never ridden: the line stops there.
+      if (current && bucket.x > previousEnd) { paths.push(current); current = ''; }
+      previousEnd = bucket.x + bucket.width;
       if (value === null) { if (current) paths.push(current); current = ''; continue; }
       const x0 = x(bucket.x);
       const x1 = x(bucket.x + bucket.width);
@@ -85,6 +92,7 @@ export function WorkoutProfileChart({ plan, positionSec, buckets, domainSec, hea
   };
   const powerPaths = segments((bucket) => bucket.power, y, true);
   const hrPaths = segments((bucket) => bucket.heartRate, hrY, false);
+  const tall = pixelSize !== null && pixelSize.height >= TALL_PX;
   const ticks = [0.25, 0.5, 0.75].map((fraction) => Math.round((domain * fraction) / 60) * 60);
   const hasTrace = powerPaths.length > 0 || hrPaths.length > 0;
 
@@ -123,22 +131,26 @@ export function WorkoutProfileChart({ plan, positionSec, buckets, domainSec, hea
         ) : null}
       </svg>
       {pixelSize ? (
-        <div aria-hidden="true" className="data pointer-events-none absolute inset-0 text-[11px] leading-none text-[var(--text)] [text-shadow:0_0_3px_rgb(0_0_0/80%)]">
+        <div aria-hidden="true" className="data pointer-events-none absolute inset-0 text-center leading-tight text-[var(--text)] [text-shadow:0_0_3px_rgb(0_0_0/80%)]">
           {plan.steps.map((step, index) => {
             const done = positionSec !== null && step.startSec + step.durationSec <= positionSec;
             const lowestWatts = Math.min(step.startWatts ?? zoneWatts(step.zone), step.endWatts ?? zoneWatts(step.zone));
-            const label = blockEffortLabel(step, {
-              widthPx: (step.durationSec / domain) * pixelSize.width,
-              heightPx: (1 - y(lowestWatts) / HEIGHT) * pixelSize.height,
-              fontPx: LABEL_PX,
-            }, done ? 0 : biasPct);
-            return label ? (
+            const widthPx = (step.durationSec / domain) * pixelSize.width;
+            const heightPx = (1 - y(lowestWatts) / HEIGHT) * pixelSize.height;
+            const linesAt = (size: number) => blockLabelLines(step, { widthPx, heightPx, fontPx: size }, done ? 0 : biasPct);
+            let fontPx = tall ? TALL_LABEL_PX : LABEL_PX;
+            let lines = linesAt(fontPx);
+            if (!lines.length && tall) {
+              fontPx = LABEL_PX;
+              lines = linesAt(fontPx);
+            }
+            return lines.length ? (
               <span
                 key={step.id}
-                className={`absolute bottom-1.5 -translate-x-1/2 whitespace-nowrap ${done ? 'opacity-60' : index === activeStepIndex ? 'font-semibold' : ''}`}
-                style={{ left: `${((step.startSec + step.durationSec / 2) / domain) * 100}%` }}
+                className={`absolute bottom-1 -translate-x-1/2 whitespace-nowrap ${done ? 'opacity-60' : index === activeStepIndex ? 'font-semibold' : ''}`}
+                style={{ fontSize: fontPx, left: `${((step.startSec + step.durationSec / 2) / domain) * 100}%` }}
               >
-                {label}
+                {lines.map((line) => <span key={line} className="block">{line}</span>)}
               </span>
             ) : null;
           })}
@@ -151,7 +163,7 @@ export function WorkoutProfileChart({ plan, positionSec, buckets, domainSec, hea
         {ticks.map((tick) => <span key={tick} className="absolute -translate-x-1/2" style={{ left: `${(tick / domain) * 100}%` }}>{clockLabel(tick)}</span>)}
         <span className="absolute right-0">{clockLabel(domain)}</span>
       </div>
-      {hasTrace ? (
+      {hasTrace && tall ? (
         <figcaption className="pointer-events-none absolute left-1 top-1 flex gap-3 text-[11px] text-[var(--text-secondary)]">
           <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="h-0.5 w-3 bg-[var(--text)]" />Power</span>
           {hrPaths.length ? <span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className="h-0.5 w-3 bg-[var(--ride-hr)]" />Heart rate</span> : null}

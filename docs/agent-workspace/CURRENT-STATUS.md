@@ -64,6 +64,10 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   the space left; profile blocks show their effort when it fits. 23 headless
   Chromium checks passed (real player, stubbed Data API, simulated trainer),
   with the menu clear of the player at eight window sizes.
+  Data screen after a design review (same day): labelled clocks in the block
+  row, larger live numbers and target meter, More data beside Next, profile
+  sized to the window, block lengths on the profile, and recorded lines that
+  stop at skipped time.
 
 - Post to Strava (2026-11-23, local). Workout pages for saved activities with
   recorded data show **Post to Strava** (preview sheet with editable title and

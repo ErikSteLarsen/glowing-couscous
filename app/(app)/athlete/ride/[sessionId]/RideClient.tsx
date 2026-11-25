@@ -142,6 +142,16 @@ function Stat({ label, value, unit }: { label: string; value: string; unit?: str
   );
 }
 
+/** A clock with its label underneath, so several in a row can't be mistaken for each other. */
+function RideClock({ label, value, size, primary = false }: { label: string; value: string; size: string; primary?: boolean }) {
+  return (
+    <div className="flex flex-col-reverse gap-1 text-right">
+      <dt className="whitespace-nowrap text-[12px] leading-none text-[var(--text-secondary)]">{label}</dt>
+      <dd className={`ride-numeral !leading-none ${size} ${primary ? '' : '!text-[var(--text-secondary)]'}`}>{value}</dd>
+    </div>
+  );
+}
+
 function RideMetric({ label, value, unit, size, color }: {
   label: string;
   value: string;
@@ -920,6 +930,14 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     </span>
   );
 
+  // Every clock in one place: the block first, then the workout.
+  const rideClocks = (compact: boolean) => (
+    <dl aria-label="Time" className={`flex shrink-0 items-end ${compact ? 'gap-5' : 'gap-5 lg:gap-8'}`}>
+      <RideClock label="Elapsed" value={formatClock(timerSec)} size={compact ? 'text-xl' : 'text-[1.75rem]'} />
+      {remainingSec > 0 ? <RideClock label="Workout left" value={formatClock(remainingSec)} size={compact ? 'text-xl' : 'text-[1.75rem]'} /> : null}
+      <RideClock label={currentStep ? 'Block left' : 'Free ride'} value={formatClock(stepTime)} size={compact ? 'text-[1.75rem]' : 'text-[2.5rem]'} primary />
+    </dl>
+  );
   const entertainmentOn = entertainment !== 'off';
   // Phones show the course only; a remembered YouTube view opens it there.
   let entertainmentMode: EntertainmentMode | null = null;
@@ -1038,14 +1056,18 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
               </div>
               <p className="flex shrink-0 items-baseline gap-1.5 text-[12px] text-[var(--text-secondary)]">
                 <span className="ride-numeral !leading-none text-[1.75rem]">{formatClock(stepTime)}</span>
-                {currentStep ? 'left' : 'free'}
+                {currentStep ? 'block left' : 'free ride'}
               </p>
             </div>
             {currentStep ? <ProgressBar value={stepProgress} label="Block progress" color={intervalColor} className="mt-2 h-1" /> : null}
+            <dl aria-label="Time" className="mt-2 flex items-baseline justify-between gap-3 text-[12px] text-[var(--text-secondary)]">
+              <div className="flex items-baseline gap-1.5"><dt>Elapsed</dt><dd className="ride-numeral !leading-none text-lg">{formatClock(timerSec)}</dd></div>
+              {remainingSec > 0 ? <div className="flex items-baseline gap-1.5"><dt>Workout left</dt><dd className="ride-numeral !leading-none text-lg">{formatClock(remainingSec)}</dd></div> : null}
+            </dl>
           </section>
 
           <section aria-label="Ride metrics" className="shrink-0">
-            <div className="pt-4">
+            <div className="pt-3">
               <div className="flex items-baseline justify-between gap-3 text-[12px] text-[var(--text-secondary)]">
                 <span>3 s power</span>
                 {targetWatts !== null || prescribedTarget ? (
@@ -1100,9 +1122,6 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
             <div className="-mx-4 flex min-h-0 flex-1 flex-col px-2 pb-1 pt-2">{entertainmentStage}</div>
           ) : (
           <section aria-label="Workout profile" className="flex min-h-0 flex-1 flex-col pt-3">
-            <p className="shrink-0 text-right text-[12px] text-[var(--text-secondary)]">
-              <span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <> – <span className="data">{formatClock(remainingSec)}</span> left</> : null}
-            </p>
             <div className="min-h-12 flex-1 pb-6 pt-2">
               <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} biasPct={recording.biasPct} className="h-full" />
             </div>
@@ -1237,19 +1256,15 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         <div className="mx-auto flex min-h-0 w-full flex-1 flex-col gap-2 px-4 pb-2 pt-2 sm:px-6">
           <section aria-label="Current block" className="shrink-0 space-y-2">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 basis-40">
                 <h2 className="truncate text-base font-medium text-[var(--text)]">{stepLabel(stepIndex)}</h2>
                 <p className="truncate text-[13px] text-[var(--text-secondary)]">
                   {currentStep ? `Block ${stepIndex + 1} of ${plan.steps.length}` : 'After workout plan'}
                   {currentStep ? <span className="data">{nextStep ? ` – next ${stepLabel(stepIndex + 1)}${nextTarget !== null ? ` – ${nextTarget} W` : ''}` : ' – free ride next'}</span> : null}
                 </p>
               </div>
-              <p className="shrink-0 text-right text-[12px] text-[var(--text-secondary)] max-md:hidden"><span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <><br /><span className="data">{formatClock(remainingSec)}</span> left in plan</> : null}</p>
-              <p className="flex shrink-0 items-baseline gap-2 text-sm text-[var(--text-secondary)]">
-                <span className="ride-numeral !leading-none text-[1.75rem]">{formatClock(stepTime)}</span>
-                {currentStep ? 'left' : 'in free ride'}
-              </p>
-              <div role="group" aria-label="Block navigation" className="flex shrink-0 items-center gap-2 border-l border-[var(--border)] pl-6">
+              {rideClocks(true)}
+              <div role="group" aria-label="Block navigation" className="flex shrink-0 items-center gap-2 md:border-l md:border-[var(--border)] md:pl-6">
                 <button type="button" className={`${secondaryButtonClassName} !h-9 gap-2`} onClick={goBack} disabled={!canGoBack} aria-keyshortcuts="B" title="Go back to the previous block (B)">
                   <SkipBack aria-hidden="true" size={15} strokeWidth={1.7} />Previous
                 </button>
@@ -1291,15 +1306,12 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col px-4 sm:px-8">
         <section aria-label="Current block" className="space-y-3 py-4 sm:py-5">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 basis-40">
               <h2 className="break-words text-lg font-medium text-[var(--text)]">{stepLabel(stepIndex)}</h2>
               <p className="text-sm text-[var(--text-secondary)]">{currentStep ? `Block ${stepIndex + 1} of ${plan.steps.length}` : 'After workout plan'}</p>
             </div>
-            <p className="flex shrink-0 items-baseline gap-2 text-sm text-[var(--text-secondary)]">
-              <span className="ride-numeral !leading-none text-[1.75rem]">{formatClock(stepTime)}</span>
-              {currentStep ? 'left' : 'in free ride'}
-            </p>
-            <div role="group" aria-label="Block navigation" className="flex shrink-0 items-center gap-2 max-sm:w-full sm:border-l sm:border-[var(--border)] sm:pl-6">
+            {rideClocks(false)}
+            <div role="group" aria-label="Block navigation" className="flex shrink-0 items-center gap-2 max-sm:w-full md:border-l md:border-[var(--border)] md:pl-6">
               <button type="button" className={`${secondaryButtonClassName} !h-10 gap-2 max-sm:flex-1`} onClick={goBack} disabled={!canGoBack} aria-keyshortcuts="B" title="Go back to the previous block (B)">
                 <SkipBack aria-hidden="true" size={16} strokeWidth={1.7} />Previous
               </button>
@@ -1332,22 +1344,22 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
                 <th scope="row" className={rowLabel}>Power</th>
                 <td className={nowCell}>
                   <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                    {nowValue(threeSecond, 'W', 'text-[2.5rem] sm:text-[3.25rem]')}
+                    {nowValue(threeSecond, 'W', 'text-[2.5rem] sm:text-[3.25rem] [@media(min-width:1024px)_and_(min-height:860px)]:text-[4.5rem]')}
                     {targetWatts !== null || prescribedTarget ? (
                       <span className="text-sm text-[var(--text-secondary)]">
                         {ergOn ? 'ERG target' : 'Target'}{' '}
-                        <span className="ride-numeral text-xl !text-[var(--text-secondary)] sm:text-2xl">{targetWatts ?? prescribedTarget}</span>
+                        <span className="ride-numeral text-xl sm:text-[2rem]">{targetWatts ?? prescribedTarget}</span>
                         {targetWatts !== null ? <span className="ml-1 text-[12px] text-[var(--text-muted)]">W</span> : null}
                       </span>
                     ) : null}
                   </div>
                   {deviation !== null ? (
-                    <div className="mt-2.5 max-w-xs space-y-1.5">
-                      <div className="relative h-1.5 rounded-full bg-[var(--raised)]" role="meter" aria-label="Power versus target" aria-valuemin={-100} aria-valuemax={100} aria-valuenow={Math.round(deviation * 100)} aria-valuetext={delta ? `${Math.abs(delta)} watts ${delta > 0 ? 'above' : 'below'} target` : toneText}>
-                        <span aria-hidden="true" className="absolute -top-0.5 left-1/2 h-2.5 w-px bg-[var(--text-muted)]" />
-                        <span aria-hidden="true" className="ride-state-bar absolute top-0 h-1.5 rounded-full" style={{ left: `${50 + Math.min(0, deviation) * 50}%`, width: `${Math.abs(deviation) * 50}%`, background: toneColor }} />
+                    <div className="mt-3 max-w-sm space-y-2">
+                      <div className="relative h-2.5 rounded-full bg-[var(--raised)]" role="meter" aria-label="Power versus target" aria-valuemin={-100} aria-valuemax={100} aria-valuenow={Math.round(deviation * 100)} aria-valuetext={delta ? `${Math.abs(delta)} watts ${delta > 0 ? 'above' : 'below'} target` : toneText}>
+                        <span aria-hidden="true" className="absolute -top-1 left-1/2 h-[1.125rem] w-0.5 -translate-x-1/2 bg-[var(--text-muted)]" />
+                        <span aria-hidden="true" className="ride-state-bar absolute top-0 h-2.5 min-w-2 rounded-full" style={{ [deviation < 0 ? 'right' : 'left']: '50%', width: `${Math.abs(deviation) * 50}%`, background: toneColor }} />
                       </div>
-                      <p className="text-sm font-medium" style={{ color: toneColor }}>
+                      <p className="text-lg font-medium leading-tight" style={{ color: toneColor }}>
                         {toneText}{delta !== null && tone !== 'on' ? <> by <span className="data">{Math.abs(delta)}&nbsp;W</span></> : null}
                       </p>
                     </div>
@@ -1364,53 +1376,49 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
               </tr>
               <tr className="border-t border-[var(--border)]">
                 <th scope="row" className={rowLabel}>Heart rate</th>
-                <td className={nowCell}>{nowValue(live.heartRateBpm, 'bpm', 'text-[2rem] sm:text-[2.5rem]', 'var(--ride-hr)')}</td>
+                <td className={nowCell}>{nowValue(live.heartRateBpm, 'bpm', 'text-[2rem] sm:text-[2.5rem] [@media(min-width:1024px)_and_(min-height:860px)]:text-[3.25rem]', 'var(--ride-hr)')}</td>
                 <td className={`${avgCell} border-l border-[var(--border)]`}>{avgValue(lap?.averageHeartRateBpm, 'bpm', 'var(--ride-hr)')}</td>
                 <td className={avgCell}>{avgValue(workout.averageHeartRateBpm, 'bpm', 'var(--ride-hr)')}</td>
               </tr>
               <tr className="border-t border-[var(--border)]">
                 <th scope="row" className={rowLabel}>Cadence</th>
-                <td className={nowCell}>{nowValue(live.cadenceRpm, 'rpm', 'text-[2rem] sm:text-[2.5rem]')}</td>
+                <td className={nowCell}>{nowValue(live.cadenceRpm, 'rpm', 'text-[2rem] sm:text-[2.5rem] [@media(min-width:1024px)_and_(min-height:860px)]:text-[3.25rem]')}</td>
                 <td className={`${avgCell} border-l border-[var(--border)]`}>{avgValue(lap?.averageCadenceRpm, 'rpm')}</td>
                 <td className={avgCell}>{avgValue(workout.averageCadenceRpm, 'rpm')}</td>
               </tr>
             </tbody>
           </table>
-
-          <div className="mt-2 border-t border-[var(--border)] pt-3">
-            <button type="button" className={`inline-flex items-center gap-1.5 rounded-md text-sm text-[var(--text-secondary)] hover:text-[var(--text)] ${buttonFocusClassName}`} aria-expanded={moreData} aria-controls="ride-more-data" onClick={toggleMoreData}>
-              {moreData ? 'Less data' : 'More data'}
-              {moreData ? <ChevronUp aria-hidden="true" size={15} /> : <ChevronDown aria-hidden="true" size={15} />}
-            </button>
-            {moreData ? (
-              <dl id="ride-more-data" className="mt-3 grid grid-cols-3 gap-x-6 gap-y-4 sm:grid-cols-4 xl:grid-cols-8">
-                <RideMetric label="% FTP now" value={display(ftpPercent)} unit={unit(ftpPercent, '%')} size="text-lg" />
-                <RideMetric label="Normalized" value={display(workout.normalizedPowerWatts)} unit={unit(workout.normalizedPowerWatts, 'W')} size="text-lg" />
-                <RideMetric label="Max power" value={display(workout.maxPowerWatts)} unit={unit(workout.maxPowerWatts, 'W')} size="text-lg" />
-                <RideMetric label="Max HR" value={display(workout.maxHeartRateBpm)} unit={unit(workout.maxHeartRateBpm, 'bpm')} size="text-lg" />
-                <RideMetric label="Work" value={display(workout.workKj)} unit={unit(workout.workKj, 'kJ')} size="text-lg" />
-                <RideMetric label="TSS" value={display(workout.tss)} size="text-lg" />
-                <RideMetric label="IF" value={display(workout.intensityFactor, 2)} size="text-lg" />
-                <RideMetric label="Distance" value={workout.distanceMeters > 0 ? formatDistance(workout.distanceMeters) : '--'} size="text-lg" />
-              </dl>
-            ) : null}
-          </div>
         </section>
 
         <section aria-label="Workout profile" className="flex flex-col gap-3 py-4 sm:py-5">
-          <div className="flex flex-wrap justify-between gap-x-6 gap-y-1 text-sm text-[var(--text-secondary)]">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 text-base text-[var(--text-secondary)]">
             {currentStep ? (
-              <p className="min-w-0 break-words">
+              <p className="min-w-0 break-words text-[var(--text)]">
                 <span className="text-[var(--text-muted)]">Next </span>
                 {nextStep ? <>{stepLabel(stepIndex + 1)}<span className="data">{nextTarget !== null ? ` – ${nextTarget} W` : nextPrescription ? ` – ${nextPrescription}` : ` – Z${nextStep.zone}`} – {formatClock(nextStep.durationSec)}</span></> : 'Free ride'}
               </p>
             ) : null}
-            <p className="ml-auto"><span className="data">{formatClock(timerSec)}</span> elapsed{remainingSec > 0 ? <> – <span className="data">{formatClock(remainingSec)}</span> left in plan</> : null}</p>
+            <button type="button" className={`ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-md text-sm text-[var(--text-secondary)] hover:text-[var(--text)] ${buttonFocusClassName}`} aria-expanded={moreData} aria-controls="ride-more-data" onClick={toggleMoreData}>
+              {moreData ? 'Less data' : 'More data'}
+              {moreData ? <ChevronUp aria-hidden="true" size={15} /> : <ChevronDown aria-hidden="true" size={15} />}
+            </button>
           </div>
-          <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} biasPct={recording.biasPct} className="h-36 md:h-48 xl:h-56" />
+          {moreData ? (
+            <dl id="ride-more-data" className="grid grid-cols-3 gap-x-6 gap-y-4 sm:grid-cols-4 xl:grid-cols-8">
+              <RideMetric label="% FTP now" value={display(ftpPercent)} unit={unit(ftpPercent, '%')} size="text-lg" />
+              <RideMetric label="Normalized" value={display(workout.normalizedPowerWatts)} unit={unit(workout.normalizedPowerWatts, 'W')} size="text-lg" />
+              <RideMetric label="Max power" value={display(workout.maxPowerWatts)} unit={unit(workout.maxPowerWatts, 'W')} size="text-lg" />
+              <RideMetric label="Max HR" value={display(workout.maxHeartRateBpm)} unit={unit(workout.maxHeartRateBpm, 'bpm')} size="text-lg" />
+              <RideMetric label="Work" value={display(workout.workKj)} unit={unit(workout.workKj, 'kJ')} size="text-lg" />
+              <RideMetric label="TSS" value={display(workout.tss)} size="text-lg" />
+              <RideMetric label="IF" value={display(workout.intensityFactor, 2)} size="text-lg" />
+              <RideMetric label="Distance" value={workout.distanceMeters > 0 ? formatDistance(workout.distanceMeters) : '--'} size="text-lg" />
+            </dl>
+          ) : null}
+          <WorkoutProfileChart plan={plan} positionSec={positionSec} buckets={buckets} domainSec={domainSec} heartRateMaxBpm={heartRateMaxBpm} activeStepIndex={currentStep ? stepIndex : null} biasPct={recording.biasPct} className="mb-6 h-36 md:h-[clamp(8rem,calc(100dvh-44rem),26rem)]" />
         </section>
 
-        <div className="border-t border-[var(--border)] pb-5 pt-3">{shortcutLegend}</div>
+        <div className="border-t border-[var(--border)] pb-5 pt-3 [@media(max-height:820px)]:hidden">{shortcutLegend}</div>
       </div>
     </>
   ), 'Ride');
