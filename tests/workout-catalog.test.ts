@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { workoutCatalog } from '../lib/workout-catalog/index.ts';
 import type { CatalogWorkout } from '../lib/workout-catalog/types.ts';
-import { computeCatalogMetrics, expandCatalogItems, zoneForPct } from '../lib/workout-catalog/metrics.ts';
+import { catalogWorkoutMetrics, computeCatalogMetrics, expandCatalogItems, zoneForPct } from '../lib/workout-catalog/metrics.ts';
 import {
   createCatalogEntries, durationBucketFor, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, matchesCatalogSearch, parseCatalogQuery, serializeCatalogQuery, withCatalogQuery,
 } from '../lib/workout-catalog/query.ts';
@@ -141,7 +141,7 @@ test('conversion produces valid canonical relative-FTP blocks with notes', () =>
 
   const input = catalogWorkoutToSessionInput(workout());
   assert.equal(input.summary, 'Two long threshold efforts.\n\nRide steady.\n\nStay seated.');
-  assert.equal(validateSessionEditorDraft(createEmptySessionEditorDraft({ ...input, sport: 'BIKING' })), null);
+  assert.equal(validateSessionEditorDraft(createEmptySessionEditorDraft(input)), null);
 });
 
 test('Customize prefills an unscheduled create draft with the complete workout and no stored lineage', () => {
@@ -182,7 +182,7 @@ test('the shipped catalog satisfies the schema contract', () => {
   assert.deepEqual(validateCatalog(workoutCatalog), []);
   for (const entry of workoutCatalog) {
     const input = catalogWorkoutToSessionInput(entry);
-    assert.equal(validateSessionEditorDraft(createEmptySessionEditorDraft({ ...input, sport: 'BIKING' })), null, entry.slug);
+    assert.equal(validateSessionEditorDraft(createEmptySessionEditorDraft(input)), null, entry.slug);
     assert.ok(computeCatalogMetrics(entry.items).durationSec > 0, entry.slug);
   }
 });
@@ -190,6 +190,6 @@ test('the shipped catalog satisfies the schema contract', () => {
 test('every catalog workout keeps the same planned TSS when copied into a session', () => {
   for (const workout of workoutCatalog) {
     const draft = createEmptySessionEditorDraft(catalogWorkoutToSessionInput(workout));
-    assert.equal(deriveSessionEditorMetrics(draft).tss, computeCatalogMetrics(workout.items).tss, workout.name);
+    assert.equal(deriveSessionEditorMetrics(draft).tss, catalogWorkoutMetrics(workout).tss, workout.name);
   }
 });

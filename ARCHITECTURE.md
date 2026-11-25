@@ -66,7 +66,7 @@ and ownership guards; page visibility is not API authorization.
   workout profile, start actions, and Calendar placement
 - `/athlete/ride` - Ride home (no app chrome; Tempo Ride's default page): today's and recent open bike sessions, recent rides, and the library with Ride now
 - `/athlete/planner` - retired; redirects `date`/`source` to Calendar placement (`getPlannerRedirectHref`)
-- `/athlete/templates` - private weekly training plans composed from saved workouts
+- `/athlete/templates` - built-in one-week training plans and private weekly plans composed from saved workouts
 - `/athlete/session/[sessionId]` - read-only workout profile, block inspector and outcome review; `lib/session-structure.ts` groups identical instructions, `lib/workout-profile.ts` unrolls them into the shared `components/WorkoutProfile.tsx`, and the route's `SessionStructure.tsx` owns selection/disclosure
 - `/athlete/live/[sessionId]` - local countdown-based block execution and explicit completion
 - `/athlete/ride/[sessionId]` - indoor bike ride for BIKING sessions: targets-only timer or Web Bluetooth trainer/HR/cadence with ERG targets, 1 Hz recording checkpointed to localStorage (and `window.tempoDesktop` when present), saved through `POST /api/activity-imports` as a `file-import` attached to the planned session
@@ -116,7 +116,7 @@ navigation.
 | Library | `lib/workout-library-service.ts`, `lib/coach-session-library-service.ts` | Unscheduled owner-scoped workout definitions |
 | Guided workout creation | `lib/guided-workout.ts`, `lib/guided-workout-service.ts`, `lib/workout-llm.ts`, `components/GuidedWorkoutForm.tsx` | Owner-scoped recent-training summary, validated full model-authored workouts, app-wide provider health cache, standard fallback patterns, and unsaved draft handoff to the shared builder |
 | Training plans | `lib/coach-training-plan-service.ts` | Reusable weekday-based coach plans |
-| Personal training plans | `lib/template-service.ts`, `lib/template-routine.ts`, `components/TrainingTemplatesClient.tsx` | Owner-scoped training plan composition from saved workouts, snapshot validation and weekday expansion; `lib/template-period.ts` validates week/month application |
+| Athlete training plans | `lib/plan-catalog/*`, `lib/template-service.ts`, `lib/template-routine.ts`, `components/BuiltInTrainingPlans.tsx`, `components/TrainingTemplatesClient.tsx` | Built-in week definitions and choices, owner-scoped personal authoring, workout snapshots and Calendar application |
 | Activity navigation | `lib/activity-navigation.ts` | Validated history filters, page size, and pagination URLs |
 | Athlete events | `lib/athlete-event-service.ts`, `lib/athlete-service.ts` | Athlete-owned event validation, results, explicit completed-activity search/link/unlink, and Home and Calendar read models |
 | Manual activity | `lib/athlete-manual-activity-service.ts`, `lib/athlete-import-pairing.ts` | Athlete-owned manual summaries, eligible self-planned candidates, explicit pairing or standalone logging, atomic completion, and version-checked manual corrections |
@@ -246,7 +246,19 @@ transactions with UI-only guards.
 See [operations](docs/OPERATIONS.md) for setup/deployment and
 [current status](docs/agent-workspace/CURRENT-STATUS.md) for unresolved gates.
 
-## Personal training plans
+## Training plans
+
+`lib/plan-catalog` defines versioned built-in weeks and their reusable workout
+variants by stable slug. Placement takes a plan slug, version, per-workout
+choices, and one complete Monday-starting week. The planner resolves choices
+against the catalog and creates independent session snapshots in the same
+transaction as the retry record. The sessions carry the source plan slug,
+version and workout slug in `Session.source`, including after edits. A change
+to a published plan's workouts or choices needs a version bump. Swim sets keep
+distance and repeat rest in the written instructions because workout blocks
+use elapsed time.
+
+### Personal training plans
 
 `Template.routineJson` holds a versioned weekly pattern of weekday entries and
 server-captured library workout snapshots. Personal authoring uses this required

@@ -1,8 +1,8 @@
 import { isCatalogRepeat } from './metrics.ts';
-import { isCatalogCategory, isCatalogLevel } from './query.ts';
+import { isCatalogCategory, isCatalogLevel, isCatalogSport } from './query.ts';
 import type { CatalogStep, CatalogWorkout } from './types.ts';
 
-const STEP_KINDS = new Set(['warmup', 'work', 'recovery', 'cooldown']);
+const STEP_KINDS = new Set(['warmup', 'work', 'recovery', 'cooldown', 'pause']);
 export const CATALOG_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const CATALOG_MIN_PCT = 30;
 export const CATALOG_MAX_PCT = 300;
@@ -19,6 +19,7 @@ function validateStep(step: CatalogStep, where: string): string[] {
     const [low, high] = Array.isArray(step.cadence) ? step.cadence : [NaN, NaN];
     if (!Number.isInteger(low) || !Number.isInteger(high) || low < 30 || high > 200 || low > high) errors.push(`${where}: cadence must be [low, high] rpm between 30 and 200.`);
   }
+  if (step.distanceM !== undefined && (!Number.isInteger(step.distanceM) || step.distanceM <= 0)) errors.push(`${where}: distanceM must be a positive whole number of meters.`);
   if (step.cue !== undefined && (typeof step.cue !== 'string' || !step.cue.trim())) errors.push(`${where}: cue must be non-empty text when present.`);
   return errors;
 }
@@ -29,7 +30,7 @@ export function validateCatalogWorkout(workout: CatalogWorkout): string[] {
   const errors: string[] = [];
   if (!CATALOG_SLUG_PATTERN.test(workout.slug)) errors.push(`${label}: slug must be kebab-case.`);
   if (!workout.name?.trim()) errors.push(`${label}: name is required.`);
-  if (workout.sport !== 'BIKING') errors.push(`${label}: sport must be BIKING.`);
+  if (!isCatalogSport(workout.sport)) errors.push(`${label}: sport must be BIKING, RUNNING or SWIMMING.`);
   if (!isCatalogCategory(workout.category)) errors.push(`${label}: unknown category "${String(workout.category)}".`);
   if (!isCatalogLevel(workout.level)) errors.push(`${label}: unknown level "${String(workout.level)}".`);
   if (!workout.summary?.trim()) errors.push(`${label}: summary is required.`);

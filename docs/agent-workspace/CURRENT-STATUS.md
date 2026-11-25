@@ -1,12 +1,23 @@
 # Current status
 
-Last verified locally on **2026-11-24**. Source code and tests are authoritative.
+Last verified locally on **2026-11-25**. Source code and tests are authoritative.
 This is the current snapshot; ownership is in [WORK-INDEX.md](WORK-INDEX.md),
 contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 [VERIFICATION.md](../VERIFICATION.md).
 
 ## Verification
 
+- Built-in triathlon weeks (2026-11-25). Training plans and Calendar offer
+  Essentials, Build and High Volume with selectable interval sets, recovery
+  days and endurance alternatives. Applying a plan creates versioned workout
+  copies for one Monday-starting week. Chromium as a fresh Athlete at 1440,
+  390 and 320 px verified discovery, previews, default and explicit dates,
+  applying selected alternatives and Calendar reload. The temporary account
+  was removed. `pnpm test` passed (562 passed, 18 database cases skipped),
+  `pnpm test:db` passed (615 passed), and `pnpm lint`, `pnpm check:deadcode`,
+  `pnpm build`, the PostgreSQL routine check and authenticated HTTP acceptance
+  passed. The build and acceptance used disposable local `tempo_acceptance`.
+  Physical phone and production deployment remain unverified.
 - Ride entertainment (`RIDE-ENT-001`, 2026-11-24; desktop fixes
   released as Tempo Ride 0.3.0).
   The active ride has an **Entertainment** toggle (key V) with two views.

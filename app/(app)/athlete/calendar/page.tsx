@@ -16,12 +16,14 @@ import {
 import { resolvePlannerSourceSelection } from '@/lib/planner-source-selection';
 import { getRequestTimeZone } from '@/lib/request-time-zone';
 import { todayInZone } from '@/lib/user-time';
+import { addDayKeys, weekStartOf } from '@/lib/training-load';
 import { workoutLibraryService } from '@/lib/workout-library-service';
 import { AthleteCalendar, type CalendarDay, type CalendarWeek } from './AthleteCalendar';
 import { CalendarPlacement, type PlacementRoutine } from './CalendarPlacement';
 import { parsePlacedCount } from '@/lib/calendar-placement';
 import { derivePlannerSourceDurationSec } from '@/lib/planner-source-metrics';
 import { getTemplateCadence } from '@/lib/template-cadence';
+import { builtInPlanPreviews } from '@/lib/plan-catalog';
 import { parseTemplateRoutine } from '@/lib/template-routine';
 import { loadPlacementWorkspace } from './placement-existing';
 
@@ -40,10 +42,15 @@ export default async function AthleteCalendarPage({
   const timeZone = await getRequestTimeZone();
   const today = todayInZone(timeZone);
   // yyyy-MM-dd is a local calendar day; anything else falls back to today.
-  const day = parseCalendarDay(date) ?? parseCalendarDay(weekStart) ?? today;
+  const requestedDay = parseCalendarDay(date) ?? parseCalendarDay(weekStart);
+  const day = requestedDay ?? today;
   const placement = parseCalendarPlacement(place);
   if (placement) {
-    return <PlacementPage userId={user.id} view={selectedView} day={day} placement={placement} source={source} />;
+    const planLink = builtInPlanPreviews.some(({ slug }) => source === `built-in-plan:${slug}`);
+    const startDay = !requestedDay && planLink && weekStartOf(today) !== today
+      ? addDayKeys(weekStartOf(today), 7)
+      : day;
+    return <PlacementPage userId={user.id} view={selectedView} day={startDay} placement={placement} source={source} />;
   }
   const showTotals = parseCalendarTotals((await cookies()).get(CALENDAR_TOTALS_COOKIE)?.value);
   const calendar = await athleteService.loadCalendarView(user.id, day, selectedView, { timeZone });
@@ -99,6 +106,7 @@ async function PlacementPage({ userId, view, day, placement, source }: {
   const initialSource = resolvePlannerSourceSelection(source, {
     workoutIds: workouts.map((workout) => workout.id),
     templateIds: workspace.templates.map((template) => template.id),
+    builtInSlugs: builtInPlanPreviews.map((plan) => plan.slug),
   });
   const initialMessage = source && !initialSource ? 'That workout or training plan is no longer in your library.' : '';
   const routines: PlacementRoutine[] = workspace.templates.map((template) => ({
@@ -118,6 +126,7 @@ async function PlacementPage({ userId, view, day, placement, source }: {
           .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
           .map((workout) => ({ id: workout.id, title: workout.title, sport: workout.sport, summary: workout.summary, durationSec: derivePlannerSourceDurationSec(workout.blocks) }))}
         routines={routines}
+        builtInPlans={placement === 'template' || initialSource?.tab === 'template' ? builtInPlanPreviews : undefined}
         existing={existing}
         initialDate={day}
         initialSourceKey={initialSource?.key ?? ''}

@@ -12,6 +12,7 @@ import {
   compactSecondaryButtonClassName,
   formFieldClassName,
   formLabelClassName,
+  formSelectClassName,
   getSegmentedChoiceClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
@@ -34,10 +35,11 @@ import {
   type PlacementKind,
   type RoutinePeriod,
 } from '@/lib/calendar-placement';
-import { formatDuration } from '@/lib/format-duration';
+import { formatDuration, formatDurationExact } from '@/lib/format-duration';
 import { parsePlannedTime } from '@/lib/planned-time';
 import { getSportLabel } from '@/lib/sport';
-import { routineWeekday } from '@/lib/template-routine';
+import { selectPlanWorkouts, type BuiltInPlanPreview } from '@/lib/plan-catalog/selection';
+import { routineWeekday, ROUTINE_DAYS } from '@/lib/template-routine';
 
 export type PlacementWorkout = { id: number; title: string; sport: string; summary: string | null; durationSec: number };
 export type PlacementRoutine = {
@@ -51,7 +53,7 @@ export type PlacementRoutine = {
 /** A built-in Library workout placed as dated copies through the catalog schedule route. */
 export type PlacementCatalogSource = { slug: string; title: string; durationSec: number; back: BackTarget };
 
-type Item = { key: string; id: number; title: string; detail: string };
+type Item = { key: string; id?: number; title: string; detail: string };
 
 const CATALOG_KEY = 'catalog';
 
@@ -66,6 +68,7 @@ export function CalendarPlacement({
   placement,
   workouts,
   routines,
+  builtInPlans = [],
   existing,
   initialDate,
   initialSourceKey,
@@ -77,6 +80,7 @@ export function CalendarPlacement({
   /** Most recently changed first. */
   workouts: PlacementWorkout[];
   routines: PlacementRoutine[];
+  builtInPlans?: BuiltInPlanPreview[];
   /** Sessions already planned, for the repeated-placement warning. */
   existing: ExistingSessionsByDate;
   initialDate: string;
@@ -93,12 +97,16 @@ export function CalendarPlacement({
   const items: Item[] = catalog
     ? [{ key: CATALOG_KEY, id: 0, title: catalog.title, detail: [getSportLabel('BIKING'), formatDuration(catalog.durationSec)].join('\u00A0– ') }]
     : isRoutine
-    ? routines.map((routine) => ({
+    ? [...routines.map((routine) => ({
         key: `template:${routine.id}`,
         id: routine.id,
         title: routine.name,
         detail: `${routine.entries.length} workout${routine.entries.length === 1 ? '' : 's'} a week`,
-      }))
+      })), ...builtInPlans.map((plan) => ({
+        key: `built-in-plan:${plan.slug}`,
+        title: plan.name,
+        detail: 'Built-in plan / 1 week',
+      }))]
     : workouts.map((workout) => ({
         key: `workout:${workout.id}`,
         id: workout.id,
@@ -113,7 +121,8 @@ export function CalendarPlacement({
   const [extraDate, setExtraDate] = useState('');
   const [showMoreDates, setShowMoreDates] = useState(false);
   const routineForKey = (key: string) => routines.find((routine) => `template:${routine.id}` === key) ?? null;
-  const [period, setPeriod] = useState<RoutinePeriod>(routineForKey(selectedKey)?.defaultPeriod ?? 'week');
+  const [personalPeriod, setPeriod] = useState<RoutinePeriod>(routineForKey(selectedKey)?.defaultPeriod ?? 'week');
+  const [planChoices, setPlanChoices] = useState<Record<string, string>>({});
   const [routineDate, setRoutineDate] = useState(initialDate);
   const [startTime, setStartTime] = useState('');
   const [error, setError] = useState(initialMessage);
@@ -125,12 +134,18 @@ export function CalendarPlacement({
     ? { title: catalog.title, sport: 'BIKING' }
     : isRoutine ? null : workouts.find((workout) => `workout:${workout.id}` === selectedKey) ?? null;
   const selectedRoutine = isRoutine ? routineForKey(selectedKey) : null;
+  const builtInPlan = builtInPlans.find((plan) => `built-in-plan:${plan.slug}` === selectedKey);
+  const period = builtInPlan ? 'week' : personalPeriod;
+  const builtInWorkouts = builtInPlan ? selectPlanWorkouts(builtInPlan.slots, planChoices) : [];
+  const builtInDuration = builtInWorkouts.reduce((total, { option }) => total + option.durationSec, 0);
 
   const needle = query.trim().toLowerCase();
   const visibleItems = needle ? items.filter((item) => `${item.title} ${item.detail}`.toLowerCase().includes(needle)) : items;
 
   const targetDates = isRoutine ? getRoutineDates(period, routineDate) : dates;
-  const routinePlacements = selectedRoutine
+  const routinePlacements = builtInPlan
+    ? targetDates.length ? builtInWorkouts.map(({ weekday, option }) => ({ date: targetDates[weekday], ...option })) : []
+    : selectedRoutine
     ? targetDates.flatMap((date) => selectedRoutine.entries
         .filter((entry) => entry.weekday === routineWeekday(date))
         .map((entry) => ({ date, title: entry.title, sport: entry.sport })))
@@ -139,7 +154,7 @@ export function CalendarPlacement({
     ? targetDates.map((date) => ({ date, title: selectedWorkout.title, sport: selectedWorkout.sport }))
     : routinePlacements;
   const repeatedDates = findRepeatedPlacementDates(placements, existing);
-  const plannedTime = parsePlannedTime(startTime.trim());
+  const plannedTime = builtInPlan ? parsePlannedTime('') : parsePlannedTime(startTime.trim());
   const canPlace = Boolean(selected) && targetDates.length > 0 && plannedTime.ok && !isPending;
 
   function choose(item: Item) {
@@ -147,6 +162,7 @@ export function CalendarPlacement({
     setPicking(false);
     setQuery('');
     setError('');
+    if (item.key !== selectedKey) setPlanChoices({});
     const routine = routineForKey(item.key);
     if (routine) setPeriod(routine.defaultPeriod);
   }
@@ -161,6 +177,8 @@ export function CalendarPlacement({
     if (!plannedTime.ok) { setError(plannedTime.error); return; }
     const body = catalog
       ? { dates: targetDates, timeLabel: plannedTime.timeLabel }
+      : builtInPlan
+      ? { sourceKind: 'built-in-plan', sourceId: builtInPlan.slug, version: builtInPlan.version, choices: planChoices, dates: targetDates }
       : { sourceKind: placement, sourceId: selected.id, dates: targetDates, timeLabel: plannedTime.timeLabel };
     const endpoint = catalog ? `/api/athlete/library/${encodeURIComponent(catalog.slug)}/schedule` : '/api/athlete/planner/assignments';
     const signature = JSON.stringify(body);
@@ -231,7 +249,7 @@ export function CalendarPlacement({
             {items.length > 5 ? (
               <SearchField label={`Search ${noun}s`} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${noun}s`} className="max-md:min-h-11" />
             ) : null}
-            <ul className="flex flex-col divide-y divide-[var(--border)] max-h-[280px] overflow-y-auto rounded-xl border border-[var(--border)]" aria-label={`Saved ${noun}s`}>
+            <ul className="flex flex-col divide-y divide-[var(--border)] max-h-[280px] overflow-y-auto rounded-xl border border-[var(--border)]" aria-label={`Available ${noun}s`}>
               {visibleItems.map((item) => (
                 <li key={item.key}>
                   <button
@@ -254,17 +272,50 @@ export function CalendarPlacement({
         )}
       </section>
 
+      {builtInPlan && !picking ? (
+        <details className="group rounded-xl border border-[var(--border)]">
+          <summary className={`flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-2 text-sm hover:bg-[var(--raised)] ${buttonFocusClassName}`}>
+            <span>Workout options</span>
+            <span className="flex items-center gap-1 text-[13px] text-[var(--text-secondary)]">
+              <span className="data">{formatDurationExact(builtInDuration)}</span>
+              <ChevronDown aria-hidden="true" size={16} className="transition-transform group-open:rotate-180" />
+            </span>
+          </summary>
+          <div className="space-y-3 px-4 pb-4 pt-1">
+            {builtInPlan.slots.filter((slot) => slot.options.length > 1).map((slot) => (
+              <label key={slot.id} className="block space-y-1">
+                <span className={formLabelClassName}>{ROUTINE_DAYS[slot.weekday]} / {slot.label}</span>
+                <select
+                  className={`${formSelectClassName} max-md:min-h-11`}
+                  value={planChoices[slot.id] ?? slot.options[0].id}
+                  onChange={(event) => {
+                    setPlanChoices({ ...planChoices, [slot.id]: event.target.value });
+                    setError('');
+                  }}
+                >
+                  {slot.options.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.title}{option.durationSec ? ` / ${formatDurationExact(option.durationSec)}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ))}
+          </div>
+        </details>
+      ) : null}
+
       <section aria-labelledby={`${ids}-when`} className="flex flex-col gap-3">
         <h2 id={`${ids}-when`} className={sectionHeadingClassName}>When</h2>
         {isRoutine ? (
           <>
-            <div className="flex gap-2" role="group" aria-label="Apply for">
+            {!builtInPlan ? <div className="flex gap-2" role="group" aria-label="Apply for">
               {(['week', 'month'] as const).map((option) => (
                 <button key={option} type="button" aria-pressed={period === option} onClick={() => setPeriod(option)} className={`${getSegmentedChoiceClassName(period === option)} max-md:min-h-11`}>
                   {option === 'week' ? 'One week' : 'Whole month'}
                 </button>
               ))}
-            </div>
+            </div> : null}
             <label className="block">
               <span className={formLabelClassName}>{period === 'week' ? 'Any day in the week' : 'Any day in the month'}</span>
               <input type="date" required value={routineDate} onChange={(event) => setRoutineDate(event.target.value || routineDate)} className={`${formFieldClassName} max-md:min-h-11`} />
@@ -274,14 +325,14 @@ export function CalendarPlacement({
                 <summary className={`flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-2 text-sm hover:bg-[var(--raised)] max-md:min-h-11 ${buttonFocusClassName}`}>
                   <span className="data text-[var(--text)]">{getRoutineRangeLabel(targetDates)}</span>
                   <span className="flex items-center gap-1 text-[13px] text-[var(--text-secondary)]">
-                    {selectedRoutine ? `${routinePlacements.length} workout${routinePlacements.length === 1 ? '' : 's'}` : null}
+                    {(selectedRoutine || builtInPlan) ? `${routinePlacements.length} workout${routinePlacements.length === 1 ? '' : 's'}` : null}
                     <ChevronDown aria-hidden="true" size={16} className="transition-transform group-open:rotate-180" />
                   </span>
                 </summary>
-                {selectedRoutine ? (
+                {selectedRoutine || builtInPlan ? (
                   <ul className="data mt-2 flex flex-col gap-1 px-4 text-[13px] text-[var(--text-secondary)]">
                     {routinePlacements.map((entry, index) => (
-                      <li key={`${entry.date}:${index}`} className="flex gap-3"><span className="w-24 shrink-0 text-[var(--text-muted)]">{formatPlacementDate(entry.date)}</span><span className="truncate">{entry.title}</span></li>
+                      <li key={`${entry.date}:${index}`} className="flex gap-3"><span className="w-24 shrink-0 text-[var(--text-muted)]">{formatPlacementDate(entry.date)}</span><span className="min-w-0 break-words">{entry.title}</span></li>
                     ))}
                   </ul>
                 ) : null}
@@ -319,7 +370,7 @@ export function CalendarPlacement({
         )}
       </section>
 
-      <details className="group">
+      {!builtInPlan ? <details className="group">
         <summary className={`inline-flex min-h-10 cursor-pointer list-none items-center gap-1 max-md:min-h-11 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] ${buttonFocusClassName}`}>
           Advanced<ChevronDown aria-hidden="true" size={16} className="transition-transform group-open:rotate-180" />
         </summary>
@@ -327,7 +378,7 @@ export function CalendarPlacement({
           <span className={formLabelClassName}>Start time</span>
           <input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} className={`${formFieldClassName} max-md:min-h-11`} />
         </label>
-      </details>
+      </details> : null}
 
       <div className="flex flex-col gap-3">
         {repeatedDates.length ? (

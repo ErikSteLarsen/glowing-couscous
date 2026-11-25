@@ -1,5 +1,13 @@
 import { catalogWorkoutMetrics, type CatalogMetrics } from './metrics.ts';
-import type { CatalogCategory, CatalogLevel, CatalogWorkout } from './types.ts';
+import type { CatalogCategory, CatalogLevel, CatalogSport, CatalogWorkout } from './types.ts';
+
+export const CATALOG_SPORTS: readonly { id: CatalogSport; param: string; label: string }[] = [
+  { id: 'BIKING', param: 'bike', label: 'Bike' },
+  { id: 'RUNNING', param: 'run', label: 'Run' },
+  { id: 'SWIMMING', param: 'swim', label: 'Swim' },
+];
+
+export const DEFAULT_CATALOG_SPORT: CatalogSport = 'BIKING';
 
 export const CATALOG_CATEGORIES: readonly { id: CatalogCategory; label: string }[] = [
   { id: 'recovery', label: 'Recovery' },
@@ -43,6 +51,7 @@ export const CATALOG_SORTS: readonly { id: CatalogSort; label: string }[] = [
 ];
 
 export type CatalogQuery = {
+  sport: CatalogSport;
   q: string;
   categories: CatalogCategory[];
   levels: CatalogLevel[];
@@ -58,13 +67,22 @@ export type CatalogQuery = {
 export type CatalogEntry = { workout: CatalogWorkout; metrics: CatalogMetrics; bucket: DurationBucket };
 
 export const EMPTY_CATALOG_QUERY: CatalogQuery = {
-  q: '', categories: [], levels: [], durations: [], tags: [], tssMin: null, tssMax: null, ifMin: null, ifMax: null, sort: 'name',
+  sport: DEFAULT_CATALOG_SPORT, q: '', categories: [], levels: [], durations: [], tags: [], tssMin: null, tssMax: null, ifMin: null, ifMax: null, sort: 'name',
 };
 
 const categoryIds = new Set(CATALOG_CATEGORIES.map((category) => category.id));
 const levelIds = new Set(CATALOG_LEVELS.map((level) => level.id));
 const bucketIds = new Set(DURATION_BUCKETS.map((bucket) => bucket.id));
 const sortIds = new Set(CATALOG_SORTS.map((sort) => sort.id));
+
+export function isCatalogSport(value: unknown): value is CatalogSport {
+  return CATALOG_SPORTS.some((sport) => sport.id === value);
+}
+
+/** "Bike", "Run" or "Swim": the library's short sport name. */
+export function catalogSportLabel(sport: CatalogSport): string {
+  return CATALOG_SPORTS.find((entry) => entry.id === sport)?.label ?? sport;
+}
 
 export function isCatalogCategory(value: unknown): value is CatalogCategory {
   return typeof value === 'string' && categoryIds.has(value as CatalogCategory);
@@ -121,7 +139,8 @@ export function matchesCatalogSearch(workout: CatalogWorkout, q: string): boolea
 export function filterCatalog(entries: readonly CatalogEntry[], query: CatalogQuery): CatalogEntry[] {
   const tags = query.tags.map(fold);
   const filtered = entries.filter(({ workout, metrics, bucket }) =>
-    (query.categories.length === 0 || query.categories.includes(workout.category))
+    workout.sport === query.sport
+    && (query.categories.length === 0 || query.categories.includes(workout.category))
     && (query.levels.length === 0 || query.levels.includes(workout.level))
     && (query.durations.length === 0 || query.durations.includes(bucket))
     && (tags.length === 0 || tags.every((tag) => workout.tags.some((candidate) => fold(candidate) === tag)))
@@ -168,6 +187,7 @@ function readNumber(source: ParamSource, key: string, min: number, max: number):
 export function parseCatalogQuery(source: ParamSource): CatalogQuery {
   const sort = readParam(source, 'sort');
   return {
+    sport: CATALOG_SPORTS.find((entry) => entry.param === readParam(source, 'sport'))?.id ?? DEFAULT_CATALOG_SPORT,
     q: readParam(source, 'q').trim().slice(0, 80),
     categories: readList(source, 'category', isCatalogCategory),
     levels: readList(source, 'level', isCatalogLevel),
@@ -184,6 +204,7 @@ export function parseCatalogQuery(source: ParamSource): CatalogQuery {
 /** Serializes only non-default values, so an unfiltered library has a clean URL. */
 export function serializeCatalogQuery(query: CatalogQuery): string {
   const params = new URLSearchParams();
+  if (query.sport !== DEFAULT_CATALOG_SPORT) params.set('sport', CATALOG_SPORTS.find((entry) => entry.id === query.sport)!.param);
   if (query.q.trim()) params.set('q', query.q.trim());
   if (query.categories.length) params.set('category', query.categories.join(','));
   if (query.levels.length) params.set('level', query.levels.join(','));
@@ -199,7 +220,7 @@ export function serializeCatalogQuery(query: CatalogQuery): string {
 
 export function withCatalogQuery(params: URLSearchParams, query: CatalogQuery) {
   const result = new URLSearchParams(params);
-  for (const key of ['q', 'category', 'level', 'duration', 'tag', 'tssMin', 'tssMax', 'ifMin', 'ifMax', 'sort']) {
+  for (const key of ['sport', 'q', 'category', 'level', 'duration', 'tag', 'tssMin', 'tssMax', 'ifMin', 'ifMax', 'sort']) {
     result.delete(key);
   }
   for (const [key, value] of new URLSearchParams(serializeCatalogQuery(query))) result.set(key, value);
@@ -207,7 +228,7 @@ export function withCatalogQuery(params: URLSearchParams, query: CatalogQuery) {
 }
 
 export function isCatalogQueryFiltered(query: CatalogQuery): boolean {
-  return serializeCatalogQuery({ ...query, sort: 'name' }) !== '';
+  return serializeCatalogQuery({ ...query, sport: DEFAULT_CATALOG_SPORT, sort: 'name' }) !== '';
 }
 
 export type CatalogFilterChip = { key: string; label: string; remove: Partial<CatalogQuery> };

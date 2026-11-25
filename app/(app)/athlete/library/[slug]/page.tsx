@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return { title: workout ? workout.name : 'Public library' };
 }
 
-const KIND_LABEL: Record<CatalogStep['kind'], string> = { warmup: 'Warm-up', work: 'Effort', recovery: 'Recovery', cooldown: 'Cool-down' };
+const KIND_LABEL: Record<CatalogStep['kind'], string> = { warmup: 'Warm-up', work: 'Effort', recovery: 'Recovery', cooldown: 'Cool-down', pause: 'Rest' };
 
 export default async function LibraryWorkoutPage({ params, searchParams }: Params) {
   const user = await getCurrentUser();

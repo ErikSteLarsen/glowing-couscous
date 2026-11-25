@@ -7,6 +7,7 @@ import { templateService } from '@/lib/template-service';
 import { workoutLibraryService } from '@/lib/workout-library-service';
 import { derivePlannerSourceDurationSec } from '@/lib/planner-source-metrics';
 
+import { BuiltInTrainingPlans } from '@/components/BuiltInTrainingPlans';
 import { TrainingTemplatesClient } from '@/components/TrainingTemplatesClient';
 
 export default async function AthleteTemplatesPage() {
@@ -23,10 +24,10 @@ export default async function AthleteTemplatesPage() {
     <PageShell>
       <TopBar
         title="Training plans"
-        description="Build a weekly training plan from your saved workouts, then add it to your Calendar for a week or a month."
+        description="Choose a built-in week or build your own training plan from saved workouts."
       />
       <MobileLibrarySwitch active="templates" />
-      <TrainingTemplatesClient templates={templates} workouts={workouts.map(workout => ({
+      <TrainingTemplatesClient builtInPlans={<BuiltInTrainingPlans />} templates={templates} workouts={workouts.map(workout => ({
         id: workout.id, title: workout.title, sport: workout.sport,
         durationSec: derivePlannerSourceDurationSec(workout.blocks),
       }))} />

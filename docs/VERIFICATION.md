@@ -121,6 +121,12 @@ workout.
    `tests/http-template-routines.acceptance.ts` for authenticated API saves,
    page reload, assignment/replay, old-path refusal and template deletion.
    These integration files remain outside the default unit-test glob.
+   With a fresh Athlete account, preview a built-in triathlon week in Training
+   plans. Apply Triathlon Build with one optional recovery workout, a swim-set
+   alternative and the long ride. Check the selected duration, empty rest day,
+   dated workouts and Calendar reload. The PostgreSQL case in
+   `tests/built-in-training-plans.test.ts` checks plan version, week boundaries,
+   option validation, snapshot lineage and an idempotent retry.
 5. Follow Live: start, pause, previous, next, skip, restart, final zero and
    explicit completion. Live does not collect device/sensor telemetry.
 6. Complete, correct actuals, compare Planned/Actual and reopen History after

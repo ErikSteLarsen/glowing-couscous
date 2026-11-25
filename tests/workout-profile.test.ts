@@ -75,7 +75,7 @@ test('separate repeated sets are numbered and adjacent single blocks with the sa
 });
 
 test('every catalog workout unrolls to the same timeline as the ride plan', () => {
-  for (const workout of workoutCatalog) {
+  for (const workout of workoutCatalog.filter(({ sport }) => sport === 'BIKING')) {
     const model = buildWorkoutProfile(catalogWorkoutToEditorBlocks(workout).map((entry) => ({ ...entry, id: entry.clientId })));
     const flat = expandCatalogItems(workout.items);
     assert.equal(model.steps.length, flat.length, workout.slug);

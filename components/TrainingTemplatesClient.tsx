@@ -3,7 +3,7 @@
 import { AlertDialog } from '@ui-sdk/react/alert-dialog';
 import { ConfirmationDialogContent } from '@/components/tempo/ConfirmationDialogContent';
 import { SearchField } from '@/components/tempo/SearchField';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowDown, ArrowUp, Copy, Plus, Trash2 } from 'lucide-react';
 import { Menu, MenuContent, MenuItem, MenuSeparator, OverflowMenuTrigger } from '@/components/tempo/Menu';
@@ -19,7 +19,7 @@ type Selection = { key: number; weekday: number; workoutId: number };
 type Confirmation = { kind: 'discard' } | { kind: 'delete'; template: Template };
 type Draft = { id?: number; name: string; summary: string; entries: Selection[] };
 
-export function TrainingTemplatesClient({ templates, workouts }: { templates: Template[]; workouts: Workout[] }) {
+export function TrainingTemplatesClient({ templates, workouts, builtInPlans }: { templates: Template[]; workouts: Workout[]; builtInPlans: ReactNode }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [filter, setFilter] = useState('');
@@ -84,6 +84,8 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
   const visible = templates.filter(template => `${template.name} ${template.summary ?? ''}`.toLowerCase().includes(filter.toLowerCase().trim()));
   return <div className="space-y-6">
     {notice && !draft && !confirmationOpen && <p role={notice.error ? 'alert' : 'status'} className={notice.error ? dangerTextClassName : successTextClassName}>{notice.text}</p>}
+    {!draft && builtInPlans}
+    {!draft && <h2 className={sectionHeadingClassName}>My training plans</h2>}
     {draft ? <Surface className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 ref={editorHeading} tabIndex={-1} className={sectionHeadingClassName}>{draft.id ? 'Edit training plan' : 'New training plan'}</h2>

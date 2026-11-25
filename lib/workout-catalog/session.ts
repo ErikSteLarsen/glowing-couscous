@@ -1,7 +1,7 @@
-import { createEmptySessionEditorDraft, type SessionEditorBlock } from '../session-editor.ts';
+import { createEmptySessionEditorDraft, createSessionEditorBlockData, serializeSessionEditorDraft, type SessionEditorBlock } from '../session-editor.ts';
 import { chartIntensityFraction, zoneForTarget } from '../workout-zone-intensity.ts';
 import type { WorkoutTarget } from '../workout-targets.ts';
-import { expandCatalogItems, type CatalogFlatStep } from './metrics.ts';
+import { expandCatalogItems, zoneForPct, type CatalogFlatStep } from './metrics.ts';
 import type { CatalogStep, CatalogWorkout } from './types.ts';
 
 export function catalogStepTarget(step: Pick<CatalogStep, 'lowPct' | 'highPct'>): WorkoutTarget {
@@ -20,14 +20,15 @@ export function catalogStepNote(step: Pick<CatalogFlatStep, 'cue' | 'cadence'>):
  * block's `reps` repeats only that one block; the ride plan ramps warm-up and cool-down
  * ranges in the same direction the catalog intends.
  */
-export function catalogWorkoutToEditorBlocks(workout: Pick<CatalogWorkout, 'slug' | 'items'>): SessionEditorBlock[] {
+export function catalogWorkoutToEditorBlocks(workout: Pick<CatalogWorkout, 'slug' | 'sport' | 'items'>): SessionEditorBlock[] {
   return expandCatalogItems(workout.items).map((step) => {
-    const target = catalogStepTarget(step);
+    // Only bike workouts carry power targets; run and swim blocks are guided by zone.
+    const target = workout.sport === 'BIKING' && step.kind !== 'pause' ? catalogStepTarget(step) : null;
     return {
       clientId: `catalog-${workout.slug}-${step.index}`,
       id: null,
       kind: step.kind,
-      zone: zoneForTarget(target, 'BIKING', null) ?? 1,
+      zone: target ? zoneForTarget(target, 'BIKING', null) ?? 1 : step.kind === 'pause' ? 1 : zoneForPct((step.lowPct + step.highPct) / 2),
       durationSec: step.durationSec,
       reps: null,
       target,
@@ -52,12 +53,19 @@ export function catalogWorkoutToSessionInput(workout: CatalogWorkout) {
   };
 }
 
+/** Persistable copy of a public workout, for placements and saved training plans. */
+export function catalogWorkoutToSourceEntry(workout: CatalogWorkout) {
+  const input = catalogWorkoutToSessionInput(workout);
+  const { blocks } = serializeSessionEditorDraft(createEmptySessionEditorDraft(input));
+  return { sport: input.sport, title: input.title, summary: input.summary, sportMetricsJson: null, blocks: createSessionEditorBlockData(blocks) };
+}
+
 export function createCatalogWorkoutDraft(workout: CatalogWorkout) {
   return createEmptySessionEditorDraft({ ...catalogWorkoutToSessionInput(workout), source: 'athlete-library' });
 }
 
 /** Segments in the shape `SessionBlockBar` draws, with intensity inside the zone for height and color. */
-export function catalogBlockBarSegments(workout: Pick<CatalogWorkout, 'slug' | 'items'>) {
+export function catalogBlockBarSegments(workout: Pick<CatalogWorkout, 'slug' | 'sport' | 'items'>) {
   return catalogWorkoutToEditorBlocks(workout).map((block, index) => ({
     key: `${block.clientId}-${index}`,
     zone: block.zone,
