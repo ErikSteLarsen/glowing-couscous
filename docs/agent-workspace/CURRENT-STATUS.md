@@ -50,6 +50,15 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   bookmarks bar, OS link prompts, Windows and macOS packages, iOS Safari, and
   YouTube's logo attribution.
 
+- YouTube terms, privacy notice and logo (2026-11-25, local branch
+  `ride-entertainment`). First video per account and browser asks for agreement
+  before any lookup or embed; the picker ends with YouTube's logo, terms and an
+  inline privacy notice. `pnpm test` 627 passed (17 skipped), types, lint and
+  build passed; headless Chromium 6 checks passed with a stubbed Data API.
+  Open before setting `YOUTUBE_API_KEY`: `iframe-api.ts` controls the player
+  with messages YouTube does not document (Developer Policies forbid
+  undocumented APIs), and the lookup limit is per server instance.
+
 - Post to Strava (2026-11-23, local). Workout pages for saved activities with
   recorded data show **Post to Strava** (preview sheet with editable title and
   description, chart PNG from `next/og`, Download image) and a .tcx download in

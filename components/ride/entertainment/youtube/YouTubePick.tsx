@@ -13,6 +13,7 @@ import { parseYouTubeLink, youTubeWatchUrl, type YouTubeLink } from '@/lib/youtu
 import { thumbnailForVideo } from './recent-videos';
 import { SendToTempoBookmark } from './SendToTempoBookmark';
 import { VideoCard } from './VideoCard';
+import { YouTubeConsent, YouTubeFooter } from './YouTubeNotice';
 import type { YouTubeVideoChoice } from './youtube-client';
 
 /** A message about a video Tempo could not play, with a link to it on YouTube. */
@@ -110,7 +111,10 @@ export function YouTubePick({
   recents,
   notice,
   checking,
+  awaitingConsent,
   dragActive,
+  onAcceptConsent,
+  onCancelConsent,
   onOpenYouTube,
   onGetBookmark,
   onLink,
@@ -127,7 +131,11 @@ export function YouTubePick({
   recents: YouTubeVideoChoice[];
   notice: PickNotice | null;
   checking: boolean;
+  /** A video waits for the rider to agree to YouTube's terms. */
+  awaitingConsent: boolean;
   dragActive: boolean;
+  onAcceptConsent: () => void;
+  onCancelConsent: () => void;
   onOpenYouTube: () => void;
   onGetBookmark: () => void;
   onLink: (link: YouTubeLink) => void;
@@ -142,8 +150,8 @@ export function YouTubePick({
 
   // A notice or the "checking" line sits at the top; bring it into view.
   useEffect(() => {
-    if ((notice || checking) && scrollRef.current) scrollRef.current.scrollTop = 0;
-  }, [notice, checking]);
+    if ((notice || checking || awaitingConsent) && scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [notice, checking, awaitingConsent]);
 
   return (
     <div className="@container relative h-full min-w-0">
@@ -182,6 +190,7 @@ export function YouTubePick({
               {notice.video ? <LinkOutVideo video={notice.video} /> : null}
             </div>
           ) : null}
+          {awaitingConsent ? <YouTubeConsent onAccept={onAcceptConsent} onCancel={onCancelConsent} /> : null}
           {checking ? <p role="status" className="text-[13px] text-[var(--text-muted)]">Checking the video…</p> : null}
 
           {playerBlocked ? null : (
@@ -222,6 +231,8 @@ export function YouTubePick({
               </ul>
             </section>
           ) : null}
+
+          <YouTubeFooter showPrivacy={!awaitingConsent} />
         </div>
       </div>
 

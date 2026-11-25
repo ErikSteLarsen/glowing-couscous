@@ -9,6 +9,7 @@ import type { IncomingYouTubeVideo } from './youtube/use-youtube-inbox';
 import { readYouTubeView, saveYouTubeView } from './youtube/view-state';
 import { YouTubePick, type PickNotice } from './youtube/YouTubePick';
 import { fetchYouTubeStatus, lookUpYouTubeVideo, type YouTubeVideoChoice, type YouTubeVideoLookup } from './youtube/youtube-client';
+import { hasYouTubeConsent, saveYouTubeConsent } from './youtube/youtube-consent';
 import { YouTubeWatch } from './youtube/YouTubeWatch';
 
 const PLAYABILITY_MESSAGES: Record<Exclude<YouTubeVideoLookup['playability'], 'playable'>, string> = {
@@ -70,6 +71,10 @@ export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, stat
   );
   /** The watched video came back from a remount rather than a pick. */
   const [restored, setRestored] = useState(saved?.video ? { videoId: saved.video.id, playing: saved.playing } : null);
+  /** Agreed in this view, even where the browser keeps no storage. */
+  const consentedRef = useRef(false);
+  /** A video waiting for the rider to agree to YouTube's terms. */
+  const [awaitingConsent, setAwaitingConsent] = useState<{ video: YouTubeVideoChoice; restoring: boolean } | null>(null);
   const pickRootRef = useRef<HTMLDivElement>(null);
   const lookupController = useRef<AbortController | null>(null);
   const configuredRef = useRef<boolean | null>(null);
@@ -145,10 +150,17 @@ export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, stat
   function play(video: YouTubeVideoChoice, { restoring = false } = {}) {
     lookupController.current?.abort();
     if (!restoring) restoreRef.current = null;
+    setAwaitingConsent(null);
     if (playerBlocked || configuredRef.current === false) {
       restoreRef.current = null;
       setChecking(false);
       showNotice({ tone: 'info', message: playerBlocked ? PLAYER_BLOCKED_MESSAGE : NOT_CHECKED_MESSAGE, video });
+      return;
+    }
+    if (!consentedRef.current && !hasYouTubeConsent(userId)) {
+      setChecking(false);
+      setNotice(null);
+      setAwaitingConsent({ video, restoring });
       return;
     }
     const controller = new AbortController();
@@ -181,6 +193,20 @@ export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, stat
       .catch(() => {
         if (!controller.signal.aborted) setChecking(false);
       });
+  }
+
+  function acceptConsent() {
+    if (!awaitingConsent) return;
+    consentedRef.current = true;
+    saveYouTubeConsent(userId);
+    setAwaitingConsent(null);
+    play(awaitingConsent.video, { restoring: awaitingConsent.restoring });
+  }
+
+  function cancelConsent() {
+    restoreRef.current = null;
+    setAwaitingConsent(null);
+    persist();
   }
 
   function playLink(link: Pick<YouTubeLink, 'videoId' | 'startSec'>) {
@@ -233,7 +259,10 @@ export const YouTubePanel = memo(function YouTubePanel({ sessionId, userId, stat
             recents={recents}
             notice={notice}
             checking={checking}
+            awaitingConsent={awaitingConsent !== null}
             dragActive={dragActive}
+            onAcceptConsent={acceptConsent}
+            onCancelConsent={cancelConsent}
             onOpenYouTube={openYouTubeWindow}
             onGetBookmark={openBookmarkPage}
             onLink={playLink}
