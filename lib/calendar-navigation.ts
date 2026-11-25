@@ -80,8 +80,8 @@ export function getCalendarHref(view: CalendarView, day: DayKey, options: { plac
 }
 
 /** Opens Calendar placement with a saved workout or template already chosen. */
-export function getCalendarPlacementHref(source: `${CalendarPlacement}:${number}`) {
-  const place = source.startsWith('template:') ? 'template' : 'workout';
+export function getCalendarPlacementHref(source: `${CalendarPlacement}:${number}` | `built-in-plan:${string}`) {
+  const place = source.startsWith('workout:') ? 'workout' : 'template';
   return `/athlete/calendar?${new URLSearchParams({ place, source }).toString()}`;
 }
 

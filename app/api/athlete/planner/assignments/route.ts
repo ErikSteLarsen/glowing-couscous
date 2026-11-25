@@ -13,16 +13,18 @@ export async function POST(request: NextRequest) {
     if (!body.ok) return NextResponse.json({ error: 'Something went wrong. Reload the page and try again.' }, { status: 400 });
 
     const sourceKind = body.value.sourceKind;
-    if (sourceKind !== 'workout' && sourceKind !== 'template') {
+    if (sourceKind !== 'workout' && sourceKind !== 'template' && sourceKind !== 'built-in-plan') {
       return NextResponse.json({ error: 'Choose a workout or training plan.' }, { status: 400 });
     }
 
-    const sourceId = parsePositiveInteger(body.value.sourceId);
+    const sourceId = sourceKind === 'built-in-plan' ? body.value.sourceId : parsePositiveInteger(body.value.sourceId);
     if (sourceId === null) return NextResponse.json({ error: 'Choose a workout or training plan.' }, { status: 400 });
 
     const result = await athletePlannerService.assignSource(user.id, {
       sourceKind,
       sourceId,
+      version: body.value.version,
+      choices: body.value.choices,
       dates: body.value.dates,
       requestKey: body.value.requestKey,
       timeLabel: body.value.timeLabel,

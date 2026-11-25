@@ -184,6 +184,9 @@ model Session {
   sportMetricsJson  String?
   status            String        @default("planned")
   source            String
+  catalogWorkoutSlug String?
+  catalogPlanSlug    String?
+  catalogPlanVersion Int?
   adjusted          Boolean       @default(false)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -203,6 +206,8 @@ model Session {
   @@index([planId, date])
   @@index([coachOwnerId, date])
   @@index([trainingPlanId, planWeekday])
+  @@index([catalogWorkoutSlug])
+  @@index([catalogPlanSlug, catalogPlanVersion])
 }
 
 model Block {
@@ -238,12 +243,16 @@ model Template {
   cadence    String      @default("day")
   summary    String?
   routineJson String
+  catalogPlanSlug String?
+  catalogPlanVersion Int?
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
   owner      User        @relation("TemplateOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   sessions   Session[]
   blocks     Block[]
   shareLinks ShareLink[] @relation("TemplateShareLinks")
+
+  @@index([catalogPlanSlug, catalogPlanVersion])
 }
 
 model ShareLink {

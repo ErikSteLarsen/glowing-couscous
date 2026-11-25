@@ -6,7 +6,7 @@ import { LibraryBrowser } from '@/components/library/LibraryBrowser';
 import { WorkoutLibraryClient } from '@/components/WorkoutLibraryClient';
 import { TopBar, getSwitchOptionClassName, switchTrackClassName } from '@/components/ui';
 import { athleteWorkoutsHref, myWorkoutHref, resolveWorkoutTab, type WorkoutTab } from '@/lib/athlete-workouts-navigation';
-import { parseCatalogQuery, type CatalogEntry } from '@/lib/workout-catalog/query';
+import { countCatalogBySport, parseCatalogQuery, type CatalogEntry } from '@/lib/workout-catalog/query';
 
 const labels = {
   mine: { title: 'My workouts', hint: 'Workouts you’ve saved. Open one to start, schedule or edit it.' },
@@ -20,9 +20,10 @@ type Props = Omit<ComponentProps<typeof WorkoutLibraryClient>, 'role' | 'listInt
 export function FocusWorkouts({ catalogEntries, ...libraryProps }: Props) {
   const searchParams = useSearchParams();
   const tab = resolveWorkoutTab(searchParams.get('tab'), libraryProps.workouts.length);
+  const catalogQuery = parseCatalogQuery(new URLSearchParams(searchParams));
   const tabs = [
     { id: 'mine', count: libraryProps.workouts.length },
-    { id: 'library', count: catalogEntries?.length ?? 0 },
+    { id: 'library', count: catalogEntries ? countCatalogBySport(catalogEntries)[catalogQuery.sport] : 0 },
   ] satisfies { id: WorkoutTab; count: number }[];
 
   function selectTab(next: WorkoutTab, focus = false) {
@@ -53,7 +54,7 @@ export function FocusWorkouts({ catalogEntries, ...libraryProps }: Props) {
         <TopBar
           title="Workouts"
           description={catalogEntries
-            ? 'Your saved workouts and a library of ready-made bike workouts.'
+            ? 'Your saved workouts and a library of ready-made ones.'
             : 'Workouts you can reuse. Adding one to your Calendar puts a copy there, so this version stays as it is.'}
         />
       </div>
@@ -100,7 +101,7 @@ export function FocusWorkouts({ catalogEntries, ...libraryProps }: Props) {
           onBrowse: () => selectTab('library', true),
           otherPanels: [{
             id: 'library',
-            content: <LibraryBrowser entries={catalogEntries} urlQuery={parseCatalogQuery(new URLSearchParams(searchParams))} />,
+            content: <LibraryBrowser entries={catalogEntries} urlQuery={catalogQuery} />,
           }],
         } : null}
       />

@@ -1,4 +1,5 @@
 import { powerStepTss, powerTargetEndpoints } from '../planned-power-load.ts';
+import { deriveSessionMetrics } from '../session-math.ts';
 import type { TempoZone } from '../tempo-blocks.ts';
 import { ZONE_BANDS } from '../workout-zone-intensity.ts';
 import type { CatalogItem, CatalogStep, CatalogStepKind, CatalogWorkout } from './types.ts';
@@ -16,6 +17,7 @@ export type CatalogFlatStep = {
   ramp: boolean;
   cadence: [number, number] | null;
   cue: string | null;
+  distanceM: number | null;
   /** Index of the source item in `workout.items`, and the repetition within a set (1-based) when repeated. */
   itemIndex: number;
   set: { repetition: number; of: number } | null;
@@ -34,6 +36,8 @@ export type CatalogMetrics = {
   zoneSec: [number, number, number, number, number];
   workSec: number;
   intervalCount: number;
+  /** Meters in blocks with a set distance (swim sets); 0 when no block has one. */
+  distanceM: number;
 };
 
 export function isCatalogRepeat(item: CatalogItem): item is Extract<CatalogItem, { repeat: number }> {
@@ -63,6 +67,7 @@ export function expandCatalogItems(items: readonly CatalogItem[]): CatalogFlatSt
       ...stepEndpoints(step),
       cadence: step.cadence ? [step.cadence[0], step.cadence[1]] : null,
       cue: step.cue?.trim() || null,
+      distanceM: step.distanceM ?? null,
       itemIndex,
       set,
     });
@@ -88,6 +93,11 @@ export function zoneForPct(pct: number): TempoZone {
   if (pct < bands[4].low) return 3;
   if (pct < bands[5].low) return 4;
   return 5;
+}
+
+/** The single zone that guides a run or swim step. */
+export function catalogStepZone(step: Pick<CatalogStep, 'kind' | 'lowPct' | 'highPct'>): TempoZone {
+  return step.kind === 'pause' ? 1 : zoneForPct((step.lowPct + step.highPct) / 2);
 }
 
 /** Mean of x^n over a linear ramp from a to b. */
@@ -123,7 +133,7 @@ export function computeCatalogMetrics(items: readonly CatalogItem[]): CatalogMet
     fourth += rampPowerMean(a, b, 4) * step.durationSec;
     linear += rampPowerMean(a, b, 1) * step.durationSec;
     maxPct = Math.max(maxPct, step.startPct, step.endPct);
-    for (let zone = 0; zone < 5; zone += 1) zoneSec[zone] += rampSecondsWithin(step, edges[zone], edges[zone + 1]);
+    if (step.kind !== 'pause') for (let zone = 0; zone < 5; zone += 1) zoneSec[zone] += rampSecondsWithin(step, edges[zone], edges[zone + 1]);
   }
   const np = durationSec > 0 ? (fourth / durationSec) ** 0.25 : 0;
   const workSteps = steps.filter((step) => step.kind === 'work');
@@ -137,11 +147,18 @@ export function computeCatalogMetrics(items: readonly CatalogItem[]): CatalogMet
     zoneSec: zoneSec.map((seconds) => Math.round(seconds)) as CatalogMetrics['zoneSec'],
     workSec: workSteps.reduce((sum, step) => sum + step.durationSec, 0),
     intervalCount: workSteps.length,
+    distanceM: steps.reduce((sum, step) => sum + (step.distanceM ?? 0), 0),
   };
 }
 
-export function catalogWorkoutMetrics(workout: Pick<CatalogWorkout, 'items'>): CatalogMetrics {
-  return computeCatalogMetrics(workout.items);
+/** Bike load comes from %FTP; run and swim load and zone times match what a copied session shows. */
+export function catalogWorkoutMetrics(workout: Pick<CatalogWorkout, 'items' | 'sport'>): CatalogMetrics {
+  const metrics = computeCatalogMetrics(workout.items);
+  if (workout.sport === 'BIKING') return metrics;
+  const { tss, zoneDistributionSec } = deriveSessionMetrics(expandCatalogItems(workout.items).map((step) => ({
+    kind: step.kind, zone: catalogStepZone(step), durationSec: step.durationSec, reps: null, target: null,
+  })), workout.sport);
+  return { ...metrics, tss, zoneSec: zoneDistributionSec as CatalogMetrics['zoneSec'] };
 }
 
 /** Watts for a %FTP value, rounded to whole watts. */

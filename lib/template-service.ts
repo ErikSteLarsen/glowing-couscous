@@ -1,5 +1,9 @@
-import { type RoutineEntry, parseTemplateRoutine } from './template-routine.ts';
+import { isRoutineSelection, parseTemplateRoutine, type RoutineEntry } from './template-routine.ts';
 import { prisma } from './prisma.ts';
+import { getBuiltInPlan } from './plan-catalog/index.ts';
+import { workoutCatalog } from './workout-catalog/index.ts';
+import { findCatalogWorkout } from './workout-catalog/query.ts';
+import { catalogWorkoutToSourceEntry } from './workout-catalog/session.ts';
 import { createSessionEditorDraftFromPersisted, serializeSessionEditorDraft, createSessionEditorBlockData } from './session-editor.ts';
 
 export function createTemplateService({ db = prisma }: { db?: typeof prisma } = {}) {
@@ -12,34 +16,46 @@ export function createTemplateService({ db = prisma }: { db?: typeof prisma } = 
       const name = typeof draft.name === 'string' ? draft.name.trim() : '';
       const summary = typeof draft.summary === 'string' ? draft.summary.trim() : '';
       if (!name || name.length > 160 || summary.length > 2000) return { error: 'Enter a name (up to 160 characters) and a description up to 2,000 characters.' };
-      if (!Array.isArray(draft.entries) || !draft.entries.length || draft.entries.length > 70) return { error: 'Add between 1 and 70 saved workouts.' };
-      const selections = draft.entries as Array<{ weekday: number; workoutId: number }>;
-      if (selections.some(entry => !entry || !Number.isInteger(entry.weekday) || entry.weekday < 0 || entry.weekday > 6 || !Number.isSafeInteger(entry.workoutId) || entry.workoutId <= 0)) return { error: 'Choose a saved workout and a day for every entry.' };
+      if (!Array.isArray(draft.entries) || !draft.entries.length || draft.entries.length > 70) return { error: 'Add between 1 and 70 workouts.' };
+      const selections: unknown[] = draft.entries;
+      if (!selections.every(isRoutineSelection)) return { error: 'Choose a workout and a day for every entry.' };
       if (templateId !== undefined && (!Number.isSafeInteger(templateId) || templateId <= 0)) return { error: 'Training plan not found.' };
       return db.$transaction(async tx => {
         if (templateId !== undefined && !await tx.template.findFirst({ where: { id: templateId, ownerId } })) return { error: 'Training plan not found.' };
         const workouts = await tx.session.findMany({
-          where: { id: { in: selections.map(entry => entry.workoutId) }, athleteId: ownerId, coachOwnerId: null, date: null, planId: null, trainingPlanId: null },
+          where: { id: { in: selections.flatMap(entry => entry.workoutId === undefined ? [] : [entry.workoutId]) }, athleteId: ownerId, coachOwnerId: null, date: null, planId: null, trainingPlanId: null },
           include: { blocks: { orderBy: { sortOrder: 'asc' } } },
         });
         const entries: RoutineEntry[] = [];
         for (const selection of selections) {
+          if (selection.catalogWorkoutSlug !== undefined) {
+            const workout = findCatalogWorkout(workoutCatalog, selection.catalogWorkoutSlug);
+            if (!workout) return { error: 'One of these public workouts is unavailable. Choose another workout.' };
+            entries.push({ weekday: selection.weekday, catalogWorkoutSlug: workout.slug, ...catalogWorkoutToSourceEntry(workout) });
+            continue;
+          }
           const workout = workouts.find(item => item.id === selection.workoutId);
           if (!workout || !workout.blocks.length) return { error: 'One of these workouts was deleted. Choose another from My workouts.' };
-          entries.push({ weekday: selection.weekday, workoutId: selection.workoutId, title: workout.title, sport: workout.sport, summary: workout.summary,
+          entries.push({
+            weekday: selection.weekday, workoutId: workout.id,
+            ...(workout.catalogWorkoutSlug ? { sourceCatalogWorkoutSlug: workout.catalogWorkoutSlug } : {}),
+            title: workout.title, sport: workout.sport, summary: workout.summary,
             sportMetricsJson: workout.sportMetricsJson,
             blocks: createSessionEditorBlockData(serializeSessionEditorDraft(createSessionEditorDraftFromPersisted('create', workout)).blocks),
           });
         }
         const data = { name, summary: summary || null, routineJson: JSON.stringify({ version: 1, entries }) };
-        if (templateId === undefined) await tx.template.create({ data: { ...data, ownerId } });
-        else {
+        if (templateId === undefined) {
+          const plan = typeof draft.catalogPlanSlug === 'string' ? getBuiltInPlan(draft.catalogPlanSlug) : undefined;
+          await tx.template.create({
+            data: { ...data, ownerId, catalogPlanSlug: plan?.slug, catalogPlanVersion: plan?.version },
+          });
+        } else {
           await tx.template.update({ where: { id: templateId }, data });
         }
         return { error: null };
       });
     },
-
 
     async deleteForOwner(ownerId: number, templateId: number) {
       const template = await db.template.findFirst({ where: { id: templateId, ownerId } });
@@ -51,7 +67,14 @@ export function createTemplateService({ db = prisma }: { db?: typeof prisma } = 
       const template = await db.template.findFirst({ where: { id: templateId, ownerId } });
       if (!template) return { error: 'Training plan not found.' };
       if (!parseTemplateRoutine(template.routineJson)) return { error: 'This training plan can’t be read. Edit it and save again.' };
-      await db.template.create({ data: { ownerId, name: `${template.name} (Copy)`, summary: template.summary, routineJson: template.routineJson } });
+      await db.template.create({ data: {
+        ownerId,
+        name: `${template.name} (Copy)`,
+        summary: template.summary,
+        routineJson: template.routineJson,
+        catalogPlanSlug: template.catalogPlanSlug,
+        catalogPlanVersion: template.catalogPlanVersion,
+      } });
       return { error: null };
     },
   };

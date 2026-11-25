@@ -1,7 +1,8 @@
 /**
  * Built-in workout catalog. Ships with the code (not the database) so every
- * deployment has the same library. Targets are % of FTP; blocks expand to the
- * canonical session-editor block shape when a workout is ridden, copied or scheduled.
+ * deployment has the same library. Bike targets are % of FTP. Run and swim steps use the
+ * same 50–125 effort scale, shown and copied as a zone without a power target. Blocks
+ * expand to the canonical session-editor shape when a workout is ridden, copied or scheduled.
  */
 
 export type CatalogCategory =
@@ -21,7 +22,10 @@ export type CatalogCategory =
 
 export type CatalogLevel = 'beginner' | 'intermediate' | 'advanced';
 
-export type CatalogStepKind = 'warmup' | 'work' | 'recovery' | 'cooldown';
+/** Sports the public library offers, in display order; the first is the default. */
+export type CatalogSport = 'BIKING' | 'RUNNING' | 'SWIMMING';
+
+export type CatalogStepKind = 'warmup' | 'work' | 'recovery' | 'cooldown' | 'pause';
 
 /** One steady (lowPct === highPct) or ranged/ramped step. Ramps: warmup rises low→high, cooldown falls high→low. */
 export type CatalogStep = {
@@ -32,6 +36,8 @@ export type CatalogStep = {
   highPct: number;
   /** Optional cadence cue in rpm, e.g. [95, 105]. */
   cadence?: [number, number];
+  /** Swim distance in meters; `durationSec` is then an estimate. */
+  distanceM?: number;
   /** Short rider-facing cue shown during the step. */
   cue?: string;
 };
@@ -45,7 +51,7 @@ export type CatalogWorkout = {
   /** Stable kebab-case id, unique, never renamed once shipped (used in URLs). */
   slug: string;
   name: string;
-  sport: 'BIKING';
+  sport: CatalogSport;
   category: CatalogCategory;
   level: CatalogLevel;
   /** One sentence for cards. */

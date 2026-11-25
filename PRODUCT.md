@@ -31,7 +31,7 @@ Workout Planner joins reusable structured workout authoring, Monday-first person
 The first MVP is used as a recurring personal training workspace:
 
 1. Sign up and enter the personal Athlete workspace directly.
-2. Create, edit, save, and reuse a structured workout, then group saved workouts into a reusable training plan.
+2. Create, edit, save, and reuse a structured workout, then group workouts from My workouts or the Public library into a reusable training plan.
 3. Schedule personal content on selected dates and review or remove planned sessions.
 4. Open and follow a session, then record completion, notes, and actual outcomes.
 5. Review persisted results in Activity and session detail after refreshing or signing in again.
@@ -138,12 +138,15 @@ expansion until personal use is complete or explicitly requested.
 - Short pause blocks sit between efforts or repeats. They count toward elapsed time but do not contribute training load.
 - Duration, training load, zones, and timelines are derived from structured blocks.
 - `Workouts` stores private reusable definitions without dates or assignments
-  in **My workouts**. **Public library** offers built-in indoor bike workouts.
+  in **My workouts**. **Public library** offers built-in bike, run, and swim workouts
+  and opens on bike. Runs start with Follow along only. Swims can't be started yet;
+  they are scheduled and marked done.
   **Customize** starts a draft that becomes an owned workout when saved.
 - Personal `Calendar` provides week/month review and rescheduling, handing selected dates to the separate `Planner` desk to schedule independent copies. Coach `Planner` places content onto athlete dates or training-plan weekdays. Workouts can target multiple dates; training plans apply their weekday schedule to a complete week or calendar month.
-- Personal **Training plans** groups saved workouts into a Monday–Sunday schedule, with a name and optional purpose/notes. Multiple workouts may be ordered on a weekday; empty weekdays add nothing. Apply one training plan to a Monday-starting week or repeat it through a whole calendar month. Training plans use saved workouts.
-- Saving a training plan captures server-owned library workout snapshots. Later library edits/deletions do not change saved training plans. Saving the plan again captures the selected library versions. Scheduled sessions are independent copies. Relative targets resolve against the person's Profile; absolute targets remain fixed.
-- Block-backed templates, cadence settings, workout-editor template loading, and coach template assignment are removed. An Athlete may explicitly save a shared workout into their library and a one-entry Monday training plan; public links still publish workout definitions only. Public training plan sharing and curated training plans remain future work; public sharing supports individual workouts only.
+- **Training plans** offers built-in one-week triathlon plans and reusable personal plans. Athletes choose workout alternatives and a Monday-starting week before applying a built-in plan. **Customize** opens a draft with the built-in plan's default workouts. Saving makes an editable personal copy.
+- Personal plans group saved and public workouts into a Monday-to-Sunday schedule. Apply a plan to one week or repeat it through a calendar month. Order multiple workouts on the same day or leave days empty.
+- Saving a training plan captures snapshots of the selected workouts. Later edits or deletions of the source workouts leave those snapshots in place. Saving the plan again captures the current workouts. Scheduled sessions are independent copies. Relative targets resolve against the person's Profile. Absolute targets stay fixed.
+- Block-backed templates, cadence settings, workout-editor template loading, and coach template assignment are removed. An Athlete may explicitly save a shared workout into their library and a one-entry Monday training plan; public links still publish workout definitions only. Public sharing supports individual workouts only.
 - Completion stores performed metrics, notes, and the latest actual snapshot in `Activity`.
 - Home separates scheduled structure by Session date from completed outcomes by
   Activity date. Standalone imports contribute only to completed totals; matched

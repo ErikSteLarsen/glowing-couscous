@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 
 import { workoutCatalog } from '../lib/workout-catalog/index.ts';
 import type { CatalogWorkout } from '../lib/workout-catalog/types.ts';
-import { computeCatalogMetrics, expandCatalogItems, zoneForPct } from '../lib/workout-catalog/metrics.ts';
+import { catalogWorkoutMetrics, computeCatalogMetrics, expandCatalogItems, zoneForPct } from '../lib/workout-catalog/metrics.ts';
 import {
-  createCatalogEntries, durationBucketFor, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, matchesCatalogSearch, parseCatalogQuery, serializeCatalogQuery, withCatalogQuery,
+  countCatalogBySport, createCatalogEntries, durationBucketFor, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, matchesCatalogSearch, parseCatalogQuery, serializeCatalogQuery, switchCatalogSport, withCatalogQuery,
 } from '../lib/workout-catalog/query.ts';
 import { catalogStepNote, catalogWorkoutToEditorBlocks, catalogWorkoutToSessionInput, createCatalogWorkoutDraft } from '../lib/workout-catalog/session.ts';
 import { validateCatalog, validateCatalogWorkout } from '../lib/workout-catalog/validate.ts';
@@ -141,7 +141,7 @@ test('conversion produces valid canonical relative-FTP blocks with notes', () =>
 
   const input = catalogWorkoutToSessionInput(workout());
   assert.equal(input.summary, 'Two long threshold efforts.\n\nRide steady.\n\nStay seated.');
-  assert.equal(validateSessionEditorDraft(createEmptySessionEditorDraft({ ...input, sport: 'BIKING' })), null);
+  assert.equal(validateSessionEditorDraft(createEmptySessionEditorDraft(input)), null);
 });
 
 test('Customize prefills an unscheduled create draft with the complete workout and no stored lineage', () => {
@@ -153,7 +153,7 @@ test('Customize prefills an unscheduled create draft with the complete workout a
   assert.equal(draft.templateId, null);
   assert.equal(draft.scheduledDate, null);
   assert.equal(draft.athleteId, null);
-  assert.deepEqual({ sport: draft.sport, title: draft.title, summary: draft.summary, blocks: draft.blocks }, input);
+  assert.deepEqual({ sport: draft.sport, title: draft.title, summary: draft.summary, blocks: draft.blocks }, { ...input, title: `${input.title} (my version)` });
   assert.equal(validateSessionEditorDraft(draft), null);
   assert.ok(!JSON.stringify(serializeSessionEditorDraft(draft)).includes(catalogWorkout.slug));
 });
@@ -182,7 +182,7 @@ test('the shipped catalog satisfies the schema contract', () => {
   assert.deepEqual(validateCatalog(workoutCatalog), []);
   for (const entry of workoutCatalog) {
     const input = catalogWorkoutToSessionInput(entry);
-    assert.equal(validateSessionEditorDraft(createEmptySessionEditorDraft({ ...input, sport: 'BIKING' })), null, entry.slug);
+    assert.equal(validateSessionEditorDraft(createEmptySessionEditorDraft(input)), null, entry.slug);
     assert.ok(computeCatalogMetrics(entry.items).durationSec > 0, entry.slug);
   }
 });
@@ -190,6 +190,29 @@ test('the shipped catalog satisfies the schema contract', () => {
 test('every catalog workout keeps the same planned TSS when copied into a session', () => {
   for (const workout of workoutCatalog) {
     const draft = createEmptySessionEditorDraft(catalogWorkoutToSessionInput(workout));
-    assert.equal(deriveSessionEditorMetrics(draft).tss, computeCatalogMetrics(workout.items).tss, workout.name);
+    assert.equal(deriveSessionEditorMetrics(draft).tss, catalogWorkoutMetrics(workout).tss, workout.name);
+  }
+});
+
+test('switching sport keeps search and sort, and drops filters that belong to the old sport', () => {
+  const query = parseCatalogQuery({ q: 'easy', category: 'tempo', level: 'advanced', duration: 'under-45', tag: 'pool', tssMin: '20', sort: 'tss-desc' });
+  const run = switchCatalogSport(query, 'RUNNING');
+  assert.equal(serializeCatalogQuery(run), 'sport=run&q=easy&sort=tss-desc');
+  assert.equal(serializeCatalogQuery(switchCatalogSport(run, 'BIKING')), 'q=easy&sort=tss-desc');
+});
+
+test('sport counts cover the whole catalog and follow the search text', () => {
+  const entries = createCatalogEntries([workout(), workout({ slug: 'r', sport: 'RUNNING', name: 'Easy jog' }), workout({ slug: 's', sport: 'SWIMMING', name: 'Easy lengths' })]);
+  assert.deepEqual(countCatalogBySport(entries), { BIKING: 1, RUNNING: 1, SWIMMING: 1 });
+  assert.deepEqual(countCatalogBySport(entries, 'lengths'), { BIKING: 0, RUNNING: 0, SWIMMING: 1 });
+});
+
+test('swim distance counts every repeat, and run and swim zone times match the copied session', () => {
+  const swim = workoutCatalog.find((entry) => entry.slug === 'swim-intervals-60-10x200')!;
+  assert.equal(catalogWorkoutMetrics(swim).distanceM, 2000);
+  assert.equal(catalogWorkoutMetrics(workout()).distanceM, 0);
+  for (const entry of workoutCatalog.filter(({ sport }) => sport !== 'BIKING')) {
+    const draft = createEmptySessionEditorDraft(catalogWorkoutToSessionInput(entry));
+    assert.deepEqual(catalogWorkoutMetrics(entry).zoneSec, deriveSessionEditorMetrics(draft).zoneDistributionSec, entry.slug);
   }
 });

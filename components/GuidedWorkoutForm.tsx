@@ -13,7 +13,7 @@ export function GuidedWorkoutForm({ onGenerated, onCancel }: {
   onGenerated: (draft: SessionEditorDraft, info: GuidedWorkoutInfo) => void;
   onCancel: () => void;
 }) {
-  const [sport, setSport] = useState<GuidedWorkoutInput['sport']>('RUNNING');
+  const [sport, setSport] = useState<GuidedWorkoutInput['sport']>('BIKING');
   const [durationMinutes, setDurationMinutes] = useState<GuidedWorkoutInput['durationMinutes']>(45);
   const [intensity, setIntensity] = useState<GuidedWorkoutInput['intensity']>('easy');
   const [intervals, setIntervals] = useState(false);

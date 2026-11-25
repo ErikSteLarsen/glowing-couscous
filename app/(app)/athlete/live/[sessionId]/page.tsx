@@ -1,11 +1,11 @@
 import { notFound, redirect } from 'next/navigation';
 import { format, startOfWeek } from 'date-fns';
-import { EmptyState, PageShell, secondaryButtonClassName, Surface, TopBar } from '@/components/ui';
+import { ActionLink, EmptyState, PageShell, secondaryButtonClassName, Surface, TopBar } from '@/components/ui';
 import { StatusBadge } from '@/components/tempo/StatusBadge';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';
-import { parseBackOrigin, resolveBackTarget } from '@/lib/app-navigation';
+import { parseBackOrigin, resolveBackTarget, withBackOrigin } from '@/lib/app-navigation';
 import { accountService } from '@/lib/account-service';
 import { createExecutionSteps } from '@/lib/athlete-execution';
 import { formatSessionWhen } from '@/lib/session-display';
@@ -54,6 +54,18 @@ export default async function AthleteLivePage({
     );
   }
   const { id, title, sport, status, durationSec } = detail.session;
+  if (sport === 'SWIMMING') {
+    return (
+      <PageShell size="wide">
+        <TopBar back={back} title={title} />
+        <EmptyState
+          title="Swims can’t be started here yet"
+          description={status === 'completed' ? 'This swim is already marked done.' : 'Read the blocks on the workout page and mark it done after your swim.'}
+          action={<ActionLink href={withBackOrigin(`/athlete/session/${id}`, sessionOrigin)}>Open workout</ActionLink>}
+        />
+      </PageShell>
+    );
+  }
   const steps = createExecutionSteps(detail.session.editor.blocks, sport, account?.performanceProfile);
   const workout = { title, sport, status, durationSec, hasSteps: steps.length > 0 };
   const ftpWatts = account?.performanceProfile.cycling.ftpWatts ?? null;

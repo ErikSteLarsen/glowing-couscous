@@ -1,8 +1,13 @@
-import { parseTemplateRoutine, expandTemplateRoutine, validateRoutineDates, type TemplateRoutine } from './template-routine.ts';
+import { parseTemplateRoutine, expandTemplateRoutine, validateRoutineDates } from './template-routine.ts';
 import { createHash } from 'node:crypto';
 
 import { Prisma } from '@prisma/client';
-import { isAssignmentDate } from './template-period.ts';
+import { z } from 'zod';
+import { catalogLineageOf, type CatalogLineage } from './catalog-lineage.ts';
+import { catalogWorkoutToSourceEntry } from './workout-catalog/session.ts';
+import { getBuiltInPlan } from './plan-catalog/index.ts';
+import { selectPlanWorkouts } from './plan-catalog/selection.ts';
+import { isAssignmentDate, validateTemplateDateRange } from './template-period.ts';
 import { addDays, differenceInCalendarDays, endOfMonth, endOfWeek, format, formatISO, isValid, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 
 import { prisma } from './prisma.ts';
@@ -24,6 +29,14 @@ const plannerSessionInclude = {
   activity: { select: { durationSec: true, distanceMeters: true, tss: true, segmentsJson: true } },
   athlete: { select: { performanceProfileJson: true } },
 } satisfies Prisma.SessionInclude;
+
+const planSelectionSchema = z.object({
+  sourceId: z.string().min(1).max(80),
+  version: z.number().int().positive(),
+  choices: z.record(z.string(), z.string()),
+});
+
+const BUILT_IN_PLAN_SOURCE = 'athlete-plan-catalog';
 
 type AthletePlannerDeps = {
   db?: typeof prisma;
@@ -125,12 +138,20 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
 
     async assignSource(athleteId: number, input: unknown) {
       const record = asRecord(input);
-      const sourceKind = record.sourceKind === 'workout' || record.sourceKind === 'template'
-        ? record.sourceKind
-        : null;
-      const sourceId = typeof record.sourceId === 'number' && Number.isInteger(record.sourceId) && record.sourceId > 0
-        ? record.sourceId
-        : null;
+      const sourceKind = record.sourceKind;
+      const builtIn = sourceKind === 'built-in-plan';
+      if (!builtIn && sourceKind !== 'workout' && sourceKind !== 'template') {
+        return { ok: false as const, error: 'Choose a workout or training plan.', status: 400 };
+      }
+      const sourceId = record.sourceId;
+      const planSelection = builtIn ? planSelectionSchema.safeParse(record) : null;
+      if (planSelection && !planSelection.success) {
+        return { ok: false as const, error: 'Choose a valid training plan and its workout options.', status: 400 };
+      }
+      if (!builtIn && (typeof sourceId !== 'number' || !Number.isSafeInteger(sourceId) || sourceId <= 0)) {
+        return { ok: false as const, error: 'Choose a workout or training plan.', status: 400 };
+      }
+      const selection = planSelection?.data;
       const requestKey = typeof record.requestKey === 'string' && record.requestKey.trim().length > 0 && record.requestKey.length <= 128
         ? record.requestKey.trim()
         : null;
@@ -139,9 +160,6 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       }
       const requestedDates = uniqueDates(record.dates);
 
-      if (!sourceKind || sourceId === null) {
-        return { ok: false as const, error: 'Choose a workout or training plan.', status: 400 };
-      }
       if (!requestKey) {
         return { ok: false as const, error: 'Something went wrong. Reload the page and try again.', status: 400 };
       }
@@ -153,9 +171,16 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
         return { ok: false as const, error: plannedTime.error, status: 400 };
       }
       const timeLabel = plannedTime.timeLabel;
+      if (selection && timeLabel !== null) {
+        return { ok: false as const, error: 'Set a start time on each workout after adding the plan.', status: 400 };
+      }
+      const planIdentity = selection ? {
+        version: selection.version,
+        choices: Object.entries(selection.choices).sort(([a], [b]) => a.localeCompare(b)),
+      } : null;
 
       const payloadHash = createHash('sha256')
-        .update(JSON.stringify({ sourceKind, sourceId, dates: requestedDates, timeLabel }))
+        .update(JSON.stringify({ sourceKind, sourceId, dates: requestedDates, timeLabel, ...planIdentity }))
         .digest('hex');
       const replay = await db.placementRequest.findUnique({
         where: { userId_requestKey: { userId: athleteId, requestKey } },
@@ -174,37 +199,54 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
             return result.sessionIds;
           }
 
-          let source:
-            | {
-                kind: 'template' | 'workout';
-                id: number;
-                sport: string;
-                title: string;
-                summary: string | null;
-                sportMetricsJson: string | null;
-                blocks: Parameters<typeof createSourceCopyData>[0]['blocks'];
-              };
+          let placements: Array<{
+            date: string;
+            entry: Pick<Parameters<typeof createSourceCopyData>[0], 'sport' | 'title' | 'summary' | 'sportMetricsJson' | 'blocks'>;
+            source: string;
+            lineage: CatalogLineage;
+          }>;
+          let templateId: number | null = null;
 
-          let routine: TemplateRoutine | null = null;
-          if (sourceKind === 'template') {
-            const template = await tx.template.findFirst({
-              where: { id: sourceId, ownerId: athleteId },
-            });
+          if (selection) {
+            const plan = getBuiltInPlan(selection.sourceId);
+            if (!plan) throw new PlacementError('Training plan not found.', 404);
+            if (plan.version !== selection.version) {
+              throw new PlacementError('This training plan has changed. Reload the page to see the latest version.', 409);
+            }
+            const rangeError = validateTemplateDateRange(requestedDates, 'week');
+            if (rangeError) throw new PlacementError(rangeError, 400);
+            for (const [slotId, optionId] of Object.entries(selection.choices)) {
+              const slot = plan.slots.find((item) => item.id === slotId);
+              if (!slot?.options.some((option) => option.id === optionId)) {
+                throw new PlacementError('One of those workout options is unavailable. Choose another option.', 400);
+              }
+            }
+            placements = selectPlanWorkouts(plan.slots, selection.choices).flatMap(({ weekday, option }) => option.workout
+              ? [{
+                  date: requestedDates[weekday],
+                  entry: catalogWorkoutToSourceEntry(option.workout),
+                  source: BUILT_IN_PLAN_SOURCE,
+                  lineage: { catalogWorkoutSlug: option.id, catalogPlanSlug: plan.slug, catalogPlanVersion: plan.version },
+                }]
+              : []);
+          } else if (sourceKind === 'template' && typeof sourceId === 'number') {
+            const template = await tx.template.findFirst({ where: { id: sourceId, ownerId: athleteId } });
             if (!template) throw new PlacementError('Training plan not found.', 404);
-            routine = parseTemplateRoutine(template.routineJson);
+            const routine = parseTemplateRoutine(template.routineJson);
             if (!routine) throw new PlacementError('This training plan can’t be read. Edit it and save it again.', 400);
             const rangeError = validateRoutineDates(requestedDates);
             if (rangeError) throw new PlacementError(rangeError, 400);
-            source = {
-              kind: 'template',
-              id: template.id,
-              sport: routine.entries[0].sport,
-              title: template.name,
-              summary: template.summary,
-              sportMetricsJson: null,
-              blocks: routine.entries[0].blocks,
-            };
-          } else {
+            templateId = template.id;
+            placements = expandTemplateRoutine(routine, requestedDates).map((placement) => ({
+              ...placement,
+              source: 'athlete-template',
+              lineage: {
+                catalogWorkoutSlug: placement.entry.catalogWorkoutSlug ?? placement.entry.sourceCatalogWorkoutSlug ?? null,
+                catalogPlanSlug: template.catalogPlanSlug,
+                catalogPlanVersion: template.catalogPlanVersion,
+              },
+            }));
+          } else if (sourceKind === 'workout' && typeof sourceId === 'number') {
             const workout = await tx.session.findFirst({
               where: {
                 id: sourceId,
@@ -217,15 +259,9 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
               include: { blocks: { orderBy: { sortOrder: 'asc' } } },
             });
             if (!workout) throw new PlacementError('Workout not found in your library.', 404);
-            source = {
-              kind: 'workout',
-              id: workout.id,
-              sport: workout.sport,
-              title: workout.title,
-              summary: workout.summary,
-              sportMetricsJson: workout.sportMetricsJson,
-              blocks: workout.blocks,
-            };
+            placements = requestedDates.map(date => ({ date, entry: workout, source: 'athlete-library-copy', lineage: catalogLineageOf(workout) }));
+          } else {
+            throw new PlacementError('Choose a workout or training plan.', 400);
           }
 
           await tx.placementRequest.create({
@@ -233,16 +269,16 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
           });
 
           const createdSessionIds: number[] = [];
-          const placements = routine ? expandTemplateRoutine(routine, requestedDates) : requestedDates.map(date => ({ date, entry: source }));
-          for (const { date, entry } of placements) {
+          for (const { date, entry, source, lineage } of placements) {
             const plan = await findOrCreatePlan(tx, athleteId, date);
             const created = await tx.session.create({
               data: createSourceCopyData({
                 athleteId,
                 planId: plan.id,
                 date,
-                templateId: source.kind === 'template' ? source.id : null,
-                source: source.kind === 'template' ? 'athlete-template' : 'athlete-library-copy',
+                templateId,
+                source,
+                lineage,
                 sport: entry.sport,
                 title: entry.title,
                 summary: entry.summary,
@@ -275,7 +311,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
         throw error;
       }
     },
-    async saveSession(athleteId: number, input: unknown, sessionId?: number) {
+    async saveSession(athleteId: number, input: unknown, sessionId?: number, lineage?: Partial<CatalogLineage>) {
       const inputRecord = asRecord(input);
       const rawDates = Array.isArray(inputRecord.dates) ? inputRecord.dates : [];
       const dates = uniqueDates(
@@ -351,7 +387,11 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
       for (const date of dates) {
         const plan = await findOrCreatePlan(db, athleteId, date);
         const created = await db.session.create({
-          data: createSessionData(athleteId, plan.id, serialized, blocks, date),
+          data: {
+            ...createSessionData(athleteId, plan.id, serialized, blocks, date),
+            source: serialized.templateId ? 'athlete-template' : 'athlete',
+            ...lineage,
+          },
         });
         sessionIds.push(created.id);
       }
@@ -554,7 +594,6 @@ function createSessionData(
     rpe: serialized.rpe,
     sportMetricsJson: JSON.stringify(serialized.sportMetrics),
     status: 'planned',
-    source: serialized.templateId ? 'athlete-template' : 'athlete',
     adjusted: false,
     blocks: { create: blocks },
   };
@@ -566,6 +605,7 @@ function createSourceCopyData(input: {
   date: string;
   templateId: number | null;
   source: string;
+  lineage: CatalogLineage;
   sport: string;
   title: string;
   summary: string | null;
@@ -607,6 +647,7 @@ function createSourceCopyData(input: {
     sportMetricsJson: input.sportMetricsJson,
     status: 'planned',
     source: input.source,
+    ...input.lineage,
     adjusted: false,
     blocks: {
       create: input.blocks.map((block) => ({

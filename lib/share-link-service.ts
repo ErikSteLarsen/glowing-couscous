@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 
+import { catalogLineageOf, readSnapshotCatalogLineage, type CatalogLineage } from './catalog-lineage.ts';
 import { prisma } from './prisma.ts';
 import {
   createSessionEditorDraftFromSharedProjection,
@@ -32,7 +33,7 @@ type ShareLinkServiceDeps = {
   workoutLibraryPersistence?: Pick<typeof workoutLibraryService, 'saveForOwner'>;
 };
 
-type SessionShareSource = {
+type SessionShareSource = CatalogLineage & {
   id: number;
   athleteId: number | null;
   coachOwnerId: number | null;
@@ -55,7 +56,22 @@ export function createShareLinkService({
   templatePersistence = templateService,
   workoutLibraryPersistence = workoutLibraryService,
 }: ShareLinkServiceDeps = {}) {
-  const service = {
+  async function loadSnapshot(token: string) {
+    if (!isShareToken(token)) return null;
+    const link = await db.shareLink.findUnique({
+      where: { tokenHash: hashShareToken(token) },
+      include: { session: { select: { catalogWorkoutSlug: true, catalogPlanSlug: true, catalogPlanVersion: true } } },
+    });
+    if (!link || (!link.ownerDeleted && link.sessionId === null)) return null;
+    const projection = parseSharedWorkoutProjection(link.snapshotJson);
+    if (!projection) return null;
+    return {
+      projection: link.ownerDeleted ? { ...projection, ownerDeleted: true as const } : projection,
+      lineage: readSnapshotCatalogLineage(link.snapshotJson) ?? link.session ?? undefined,
+    };
+  }
+
+  return {
     async createForUser(userId: number, sourceKind: ShareLinkSourceKind, sourceId: number) {
       if (!Number.isSafeInteger(userId) || userId <= 0 || !Number.isSafeInteger(sourceId) || sourceId <= 0) {
         return { ok: false as const, error: NOT_FOUND, status: 404 };
@@ -65,6 +81,11 @@ export function createShareLinkService({
       if (!source) return { ok: false as const, error: NOT_FOUND, status: 404 };
 
       const projection = projectSessionSource(source.value);
+      const lineage = catalogLineageOf(source.value);
+      const snapshot = {
+        ...projection,
+        catalogLineage: lineage.catalogWorkoutSlug || lineage.catalogPlanSlug ? lineage : undefined,
+      };
       const token = createToken();
       if (!isOpaqueShareToken(token)) {
         throw new Error('Share token generator returned an invalid token.');
@@ -75,7 +96,7 @@ export function createShareLinkService({
           tokenHash: hashShareToken(token),
           sessionId: source.value.id,
           createdById: userId,
-          snapshotJson: JSON.stringify(projection),
+          snapshotJson: JSON.stringify(snapshot),
         },
       });
 
@@ -88,29 +109,22 @@ export function createShareLinkService({
     },
 
     async loadPreview(token: string): Promise<(SharedWorkoutProjection & { ownerDeleted?: boolean }) | null> {
-      if (!isShareToken(token)) return null;
-      const link = await db.shareLink.findUnique({
-        where: { tokenHash: hashShareToken(token) },
-      });
-      if (!link || (!link.ownerDeleted && link.sessionId === null)) return null;
-      const projection = parseSharedWorkoutProjection(link.snapshotJson);
-      return projection && link.ownerDeleted ? { ...projection, ownerDeleted: true } : projection;
+      return (await loadSnapshot(token))?.projection ?? null;
     },
 
     async saveTemplateCopy(userId: number, token: string, input: unknown) {
-      const projection = await service.loadPreview(token);
-      if (!projection) return { ok: false as const, error: NOT_FOUND, status: 404 };
-      const draftResult = createImportedDraft(projection, input, null);
+      const snapshot = await loadSnapshot(token);
+      if (!snapshot) return { ok: false as const, error: NOT_FOUND, status: 404 };
+      const draftResult = createImportedDraft(snapshot.projection, input, null);
       if (!draftResult.ok) return draftResult;
 
-      // Routines compose saved library workouts, so the shared definition is
-      // first copied into the recipient's library and the routine references it.
+      // The plan references the saved recipient copy of the shared workout.
       const serialized = serializeSessionEditorDraft(draftResult.draft);
       const workout = await workoutLibraryPersistence.saveForOwner('athlete', userId, {
         ...serialized,
         scheduledDate: null,
         templateId: null,
-      });
+      }, undefined, snapshot.lineage);
       if (!workout.ok) return workout;
       const template = await templatePersistence.saveForOwner(userId, {
         name: serialized.title,
@@ -122,9 +136,9 @@ export function createShareLinkService({
     },
 
     async savePlannerCopy(userId: number, role: ShareLinkRole, token: string, input: unknown) {
-      const projection = await service.loadPreview(token);
-      if (!projection) return { ok: false as const, error: NOT_FOUND, status: 404 };
-      const draftResult = createImportedDraft(projection, input, role === 'ATHLETE' ? 'planner' : null);
+      const snapshot = await loadSnapshot(token);
+      if (!snapshot) return { ok: false as const, error: NOT_FOUND, status: 404 };
+      const draftResult = createImportedDraft(snapshot.projection, input, role === 'ATHLETE' ? 'planner' : null);
       if (!draftResult.ok) return draftResult;
 
       const serialized = serializeSessionEditorDraft(draftResult.draft);
@@ -133,7 +147,7 @@ export function createShareLinkService({
           ...serialized,
           dates: serialized.scheduledDate ? [serialized.scheduledDate] : [],
           templateId: null,
-        });
+        }, undefined, snapshot.lineage);
         if (!result.ok) return result;
         return { ok: true as const, sessionIds: result.sessionIds };
       }
@@ -142,13 +156,11 @@ export function createShareLinkService({
         ...serialized,
         scheduledDate: null,
         templateId: null,
-      });
+      }, undefined, snapshot.lineage);
       if (!result.ok) return result;
       return { ok: true as const, sessionIds: [result.sessionId] };
     },
   };
-
-  return service;
 }
 
 export function hashShareToken(token: string) {

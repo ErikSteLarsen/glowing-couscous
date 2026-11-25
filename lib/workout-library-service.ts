@@ -1,4 +1,7 @@
 import { prisma } from './prisma.ts';
+import type { CatalogLineage } from './catalog-lineage.ts';
+import { workoutCatalog } from './workout-catalog/index.ts';
+import { findCatalogWorkout } from './workout-catalog/query.ts';
 import { createHash } from 'node:crypto';
 import {
   normalizeSessionEditorDraft,
@@ -63,8 +66,8 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
       });
     },
 
-    async saveForOwner(owner: WorkoutLibraryOwner, ownerId: number, input: unknown, sessionId?: number) {
-      const safety = input && typeof input === 'object' ? input as { requestKey?: unknown; expectedUpdatedAt?: unknown } : {};
+    async saveForOwner(owner: WorkoutLibraryOwner, ownerId: number, input: unknown, sessionId?: number, lineage?: CatalogLineage) {
+      const safety = input && typeof input === 'object' ? input as { requestKey?: unknown; expectedUpdatedAt?: unknown; catalogWorkoutSlug?: unknown } : {};
       if (safety.requestKey !== undefined && (typeof safety.requestKey !== 'string' || !/^[a-zA-Z0-9-]{16,80}$/.test(safety.requestKey))) return { ok: false as const, error: 'Something went wrong. Reload the page and try again.', status: 400 };
       if (safety.expectedUpdatedAt !== undefined && (typeof safety.expectedUpdatedAt !== 'string' || !Number.isFinite(Date.parse(safety.expectedUpdatedAt)))) return { ok: false as const, error: 'Something went wrong. Reload the page and try again.', status: 400 };
       const normalized = normalizeWorkoutDraft(input);
@@ -109,9 +112,13 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
       };
 
       if (!sessionId) {
+        const catalogWorkout = owner === 'athlete' && typeof safety.catalogWorkoutSlug === 'string'
+          ? findCatalogWorkout(workoutCatalog, safety.catalogWorkoutSlug)
+          : null;
+        const createData = { ...data, ...(lineage ?? (catalogWorkout ? { catalogWorkoutSlug: catalogWorkout.slug } : {})) };
         if (typeof safety.requestKey === 'string') {
           const identity = { userId: ownerId, owner, requestKey: safety.requestKey };
-          const payloadHash = createHash('sha256').update(JSON.stringify(data)).digest('hex');
+          const payloadHash = createHash('sha256').update(JSON.stringify(createData)).digest('hex');
           const replay = async () => {
             const prior = await db.workoutSaveRequest.findUnique({ where: { userId_owner_requestKey: identity } });
             if (!prior || prior.payloadHash !== payloadHash || prior.sessionId === null) return { ok: false as const, error: 'Wattonaut couldn’t confirm your earlier save. Keep your changes and save again.', status: 409 };
@@ -122,7 +129,7 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
           try {
             return await db.$transaction(async (tx) => {
               const request = await tx.workoutSaveRequest.create({ data: { ...identity, payloadHash } });
-              const created = await tx.session.create({ data, select: { id: true, updatedAt: true } });
+              const created = await tx.session.create({ data: createData, select: { id: true, updatedAt: true } });
               await tx.workoutSaveRequest.update({ where: { id: request.id }, data: { sessionId: created.id } });
               return { ok: true as const, sessionId: created.id, updatedAt: created.updatedAt.toISOString() };
             });
@@ -131,7 +138,7 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
             throw error;
           }
         }
-        const created = await db.session.create({ data });
+        const created = await db.session.create({ data: createData });
         return { ok: true as const, sessionId: created.id };
       }
 

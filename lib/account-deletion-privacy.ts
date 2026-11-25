@@ -1,3 +1,4 @@
+import { readSnapshotCatalogLineage } from './catalog-lineage.ts';
 import { createSharedWorkoutProjection, parseSharedWorkoutProjection } from './share-link.ts';
 import { deserializeSessionSnapshot, serializeSessionSnapshot } from './session-snapshot-service.ts';
 import { SPORT_OPTIONS } from './sport.ts';
@@ -5,13 +6,14 @@ import { SPORT_OPTIONS } from './sport.ts';
 // Retained content uses an allowlist; free text cannot reliably be classified as personal.
 export function anonymizeSharedWorkout(snapshotJson: string) {
   const source = parseSharedWorkoutProjection(snapshotJson);
-  return JSON.stringify(createSharedWorkoutProjection({
+  const projection = createSharedWorkoutProjection({
     sourceKind: source?.sourceKind ?? 'session',
     sport: safeRetainedSport(source?.sport),
     title: 'Shared workout',
     summary: '',
     blocks: (source?.blocks ?? []).map((block) => ({ ...block, note: '' })),
-  }));
+  });
+  return JSON.stringify({ ...projection, catalogLineage: readSnapshotCatalogLineage(snapshotJson) });
 }
 
 export function safeRetainedSport(sport: string | undefined) {

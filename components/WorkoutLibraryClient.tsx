@@ -59,6 +59,7 @@ type WorkoutRecord = {
   sportMetricsJson: string | null;
   date?: string | Date | null;
   updatedAt?: string | Date;
+  catalogWorkoutSlug?: string | null;
   blocks: PersistedSessionBlock[];
 };
 
@@ -90,7 +91,7 @@ export function WorkoutLibraryClient({
   endpoint: string;
   performanceProfile?: PerformanceProfile | null;
   initialWorkoutId?: number | null;
-  initialCustomization?: { slug: string; draft: SessionEditorDraft } | null;
+  initialCustomization?: { slug: string; name: string; draft: SessionEditorDraft } | null;
   collections?: {
     tab: WorkoutTab;
     onBrowse: () => void;
@@ -115,13 +116,13 @@ export function WorkoutLibraryClient({
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<number | null>(() => initialWorkout?.id ?? null);
   const entry = initialCustomization ? `customize:${initialCustomization.slug}` : initialWorkout ? `edit:${initialWorkout.id}` : null;
   const [editorEntry, setEditorEntry] = useState(entry);
-  const [catalogName, setCatalogName] = useState(initialCustomization?.draft.title ?? null);
+  const [catalogSource, setCatalogSource] = useState(() => catalogSourceOf(initialCustomization));
   const [editorOpen, setEditorOpen] = useState(() => entry !== null);
   const [isDirty, setIsDirty] = useState(false);
   const [pendingDraftAction, setPendingDraftAction] = useState<PendingDraftAction | null>(null);
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
-  const [draft, setDraft] = useState(() => initialCustomization?.draft ?? draftForWorkout(initialWorkout));
+  const [draft, setDraft] = useState(() => initialCustomization?.draft ?? draftForWorkout(initialWorkout, role));
   const [guidedFormOpen, setGuidedFormOpen] = useState(false);
   const [guidedInfo, setGuidedInfo] = useState<GuidedWorkoutInfo | null>(null);
   const clientMounted = useSyncExternalStore(subscribeToNothing, clientSnapshot, serverSnapshot);
@@ -130,7 +131,7 @@ export function WorkoutLibraryClient({
   const editorResource = selectedWorkoutId === null ? 'new' : String(selectedWorkoutId);
   const recovery = useDraftRecovery({
     userId: previewMode ? null : ownerId, surface: 'workout', resource: editorResource, baseline: revision,
-    payload: JSON.stringify({ draft, requestKey }), dirty: editorOpen && isDirty,
+    payload: JSON.stringify({ draft, requestKey, catalogSource }), dirty: editorOpen && isDirty,
     isRedundant: (record) => isWorkoutDraftRedundant(record, workouts),
   });
   const draftEntries = recovery.candidates.map((record) => ({ key: recoveryKey(record), savedAt: record.savedAt, ...describeWorkoutDraft(record, workouts) }));
@@ -159,8 +160,8 @@ export function WorkoutLibraryClient({
     setEditorEntry(entry);
     if (initialCustomization || (initialWorkout && (!editorOpen || selectedWorkoutId !== initialWorkout.id)) || (!entry && editorOpen)) {
       setSelectedWorkoutId(initialWorkout?.id ?? null);
-      setCatalogName(initialCustomization?.draft.title ?? null);
-      setDraft(initialCustomization?.draft ?? draftForWorkout(initialWorkout));
+      setCatalogSource(catalogSourceOf(initialCustomization));
+      setDraft(initialCustomization?.draft ?? draftForWorkout(initialWorkout, role));
       setRevision(initialWorkout?.updatedAt ? new Date(initialWorkout.updatedAt).toISOString() : '');
       setRequestKey('');
       setIsDirty(false);
@@ -184,7 +185,9 @@ export function WorkoutLibraryClient({
     const currentRevision = original?.updatedAt ? new Date(original.updatedAt).toISOString() : '';
     const asCopy = record.resource !== 'new' && (!original || currentRevision !== record.baseline);
     recovery.discard();
-    setCatalogName(null);
+    // Opening as a copy creates a new workout, so it keeps the saved one's public source.
+    setCatalogSource(record.resource === 'new' ? recovered.catalogSource
+      : asCopy && original?.catalogWorkoutSlug ? { slug: original.catalogWorkoutSlug, name: original.title } : null);
     setSelectedWorkoutId(original && !asCopy ? original.id : null);
     setRevision(original && !asCopy ? currentRevision : '');
     setDraft({ ...recovered.draft, id: original && !asCopy ? original.id : null, mode: 'create', scheduledDate: null, planWeekday: null });
@@ -231,22 +234,22 @@ export function WorkoutLibraryClient({
     recovery.discard();
     setRequestKey(crypto.randomUUID());
     setRevision(action.kind === 'workout' && action.workout.updatedAt ? new Date(action.workout.updatedAt).toISOString() : '');
-    setCatalogName(null);
+    setCatalogSource(null);
     setGuidedInfo(null);
     setGuidedFormOpen(false);
     if (action.kind !== 'close') rememberListPosition(action.kind === 'workout' ? action.workout.id : null);
     if (action.kind === 'new') {
       setSelectedWorkoutId(null);
-      setDraft(createNewDraft());
+      setDraft(createNewDraft(role));
       setEditorOpen(true);
     } else if (action.kind === 'workout') {
       setSelectedWorkoutId(action.workout.id);
-      setDraft(draftForWorkout(action.workout));
+      setDraft(draftForWorkout(action.workout, role));
       setEditorOpen(true);
       if (initialWorkoutId !== null) router.replace(`/athlete/workouts?edit=${action.workout.id}`, { scroll: false });
     } else {
       setSelectedWorkoutId(null);
-      setDraft(createNewDraft());
+      setDraft(createNewDraft(role));
       setEditorOpen(false);
       const returnToDetail = initialWorkout && workoutHref && new URLSearchParams(window.location.search).get('from') === 'detail';
       if (returnToDetail) {
@@ -303,6 +306,7 @@ export function WorkoutLibraryClient({
           source: role === 'COACH' ? 'coach-library' : 'athlete-library',
           ...(selectedWorkoutId && revision ? { expectedUpdatedAt: revision } : {}),
           ...(saveKey ? { requestKey: saveKey } : {}),
+          ...(selectedWorkoutId === null && catalogSource ? { catalogWorkoutSlug: catalogSource.slug } : {}),
         };
         const response = await fetch(selectedWorkoutId ? `${endpoint}/${selectedWorkoutId}` : endpoint, {
           method: selectedWorkoutId ? 'PATCH' : 'POST',
@@ -323,11 +327,12 @@ export function WorkoutLibraryClient({
         setIsDirty(!untouched);
         if (!selectedWorkoutId && payloadResponse.sessionId) {
           setSelectedWorkoutId(payloadResponse.sessionId);
+          setCatalogSource(null);
           setDraft((current) => ({ ...current, id: payloadResponse.sessionId! }));
           if (!initialCustomization && untouched) setEditorOpen(false);
         }
         if (initialCustomization && payloadResponse.sessionId) {
-          setCatalogName(null);
+          setCatalogSource(null);
           const params = new URLSearchParams(window.location.search);
           params.delete('customize');
           params.set('edit', String(payloadResponse.sessionId));
@@ -548,9 +553,9 @@ export function WorkoutLibraryClient({
           </p>
         ) : null}
 
-        {catalogName ? (
+        {catalogSource ? (
           <p className="text-sm text-[var(--text-secondary)]">
-            Based on <strong className="font-semibold text-[var(--text)]">{catalogName}</strong> from the public library. Saving adds your version to My workouts. The original stays as it is.
+            Based on <strong className="font-semibold text-[var(--text)]">{catalogSource.name}</strong> from the public library. Saving adds your version to My workouts. The original stays as it is.
           </p>
         ) : null}
 
@@ -673,19 +678,23 @@ function MyWorkoutCard({ workout, summary, href, hasDraft, canSchedule, disabled
   );
 }
 
-function draftForWorkout(workout: WorkoutRecord | null) {
-  return workout
-    ? createSessionEditorDraftFromPersisted('create', { ...workout, date: null, scheduledDate: null })
-    : createNewDraft();
+function catalogSourceOf(customization: { slug: string; name: string } | null) {
+  return customization ? { slug: customization.slug, name: customization.name } : null;
 }
 
-function createNewDraft(sport = 'RUNNING', title = '') {
+function draftForWorkout(workout: WorkoutRecord | null, role: 'COACH' | 'ATHLETE') {
+  return workout
+    ? createSessionEditorDraftFromPersisted('create', { ...workout, date: null, scheduledDate: null })
+    : createNewDraft(role);
+}
+
+/** Athletes start on the bike, Wattonaut's default sport; the coach editor keeps its own default. */
+function createNewDraft(role: 'COACH' | 'ATHLETE') {
   return createEmptySessionEditorDraft({
     mode: 'create',
     scheduledDate: null,
     planWeekday: null,
-    sport,
-    title,
+    ...(role === 'ATHLETE' ? { sport: 'BIKING' } : {}),
     blocks: [],
   });
 }

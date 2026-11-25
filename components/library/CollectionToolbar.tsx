@@ -8,10 +8,14 @@ export function CollectionToolbar({ search, children }: { search: ReactNode; chi
 }
 
 /** Result count under the toolbar, with an optional reset action on the right. */
-export function CollectionSummary({ children, action }: { children: ReactNode; action?: ReactNode }) {
+/** `heading` names the list when it is more than "N workouts"; the count then sits beside it. */
+export function CollectionSummary({ heading, children, action }: { heading?: ReactNode; children: ReactNode; action?: ReactNode }) {
   return (
     <div className="flex min-h-8 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-[var(--border)] pb-3">
-      <p aria-live="polite" className="data text-[13px] text-[var(--text-muted)]">{children}</p>
+      <div className="flex min-w-0 flex-wrap items-center gap-x-1">
+        {heading}
+        <p aria-live="polite" className="data text-[13px] text-[var(--text-muted)]">{children}</p>
+      </div>
       {action}
     </div>
   );

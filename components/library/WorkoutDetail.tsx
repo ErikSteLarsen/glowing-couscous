@@ -1,15 +1,16 @@
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { WorkoutProfileExplorer } from '@/components/WorkoutProfile';
 import { Badge, PageShell, StatTile, Surface, TopBar, buttonFocusClassName, sectionHeadingClassName } from '@/components/ui';
 import type { BackTarget } from '@/lib/app-navigation';
+import { formatMeters } from '@/lib/format-distance';
 import { formatDuration, formatDurationExact } from '@/lib/format-duration';
 import { getTempoZoneMeta } from '@/lib/tempo-blocks';
 import type { WorkoutProfileModel } from '@/lib/workout-profile';
 
 /** One row of the block list: a single block, drawn with its colour, duration and target. */
-export type WorkoutDetailBlock = { label: string; note: string | null; durationSec: number; target: string | null; unit: string | null; color: string };
+export type WorkoutDetailBlock = { label: string; note: string | null; durationSec: number; /** Swim distance; the duration is then an estimate. */ distanceM?: number | null; target: string | null; unit: string | null; color: string };
 /** A single block, or a repeat of blocks done `repeat` times in a row. */
 export type WorkoutDetailItem = { repeat: number | null; blocks: WorkoutDetailBlock[] };
 
@@ -21,7 +22,7 @@ export type WorkoutDetailItem = { repeat: number | null; blocks: WorkoutDetailBl
 export function WorkoutDetail({
   back, title, description, badges, durationSec, actions,
   profile, profileNote, profileLabel, ftpWatts,
-  about, items, itemsSummary, stats, zoneSec, tags,
+  about, items, itemsSummary, stats, zoneSec, tags, usedIn,
 }: {
   back: BackTarget;
   title: string;
@@ -39,6 +40,8 @@ export function WorkoutDetail({
   stats: { label: string; value: string; unit?: string }[];
   zoneSec: readonly number[];
   tags?: { label: string; href: string }[];
+  /** Built-in training plans that offer this workout. */
+  usedIn?: { label: string; href: string }[];
 }) {
   return (
     <PageShell size="wide">
@@ -78,13 +81,24 @@ export function WorkoutDetail({
         <ol className="mt-3 divide-y divide-[var(--border)] border-y border-[var(--border)]">
           {items.map((item, itemIndex) => item.repeat ? (
             <li key={itemIndex} className="py-2">
-              <p className="data py-1.5 text-[13px] font-medium text-[var(--text)]">{item.repeat} ×<span className="ml-2 font-normal text-[var(--text-muted)]">{formatDuration(item.blocks.reduce((sum, block) => sum + block.durationSec, 0) * item.repeat)}</span></p>
+              <p className="data py-1.5 text-[13px] font-medium text-[var(--text)]">{item.repeat} ×<span className="ml-2 font-normal text-[var(--text-muted)]">{repeatTotal(item.repeat, item.blocks)}</span></p>
               <ol className="ml-3 border-l border-[var(--border-strong)] pl-3">
                 {item.blocks.map((block, blockIndex) => <BlockRow key={blockIndex} block={block} />)}
               </ol>
             </li>
           ) : item.blocks.map((block, blockIndex) => <BlockRow key={`${itemIndex}-${blockIndex}`} block={block} />))}
         </ol>
+        {usedIn?.length ? (
+          <p className="mt-3 text-[13px] leading-relaxed text-[var(--text-muted)]">
+            Used in plans:{' '}
+            {usedIn.map((plan, index) => (
+              <Fragment key={plan.label}>
+                {index ? ', ' : null}
+                <Link href={plan.href} className="rounded-sm text-[var(--text-secondary)] underline decoration-[var(--border-strong)] underline-offset-4 hover:text-[var(--text)] focus-visible:outline-2 focus-visible:outline-[var(--brand)]">{plan.label}</Link>
+              </Fragment>
+            ))}
+          </p>
+        ) : null}
       </section>
 
       <details className="group border-y border-[var(--border)]">
@@ -139,6 +153,13 @@ export function FtpProfileNote({ ftpWatts }: { ftpWatts: number | null }) {
     : <>Targets in % of FTP. <Link href="/athlete/profile" className="text-[var(--brand)] underline-offset-4 hover:underline">Add your FTP</Link> to see watts.</>;
 }
 
+/** "50m in total", or for swim sets the distance first: "2,000 m, est. 50m in total". */
+function repeatTotal(repeat: number, blocks: WorkoutDetailBlock[]) {
+  const duration = formatDuration(blocks.reduce((sum, block) => sum + block.durationSec, 0) * repeat);
+  const meters = blocks.reduce((sum, block) => sum + (block.distanceM ?? 0), 0) * repeat;
+  return meters ? `${formatMeters(meters)}, est.\u00A0${duration} in total` : `${duration} in total`;
+}
+
 function BlockRow({ block }: { block: WorkoutDetailBlock }) {
   return (
     <li className="flex gap-3 py-2.5 text-[13px]">
@@ -150,7 +171,7 @@ function BlockRow({ block }: { block: WorkoutDetailBlock }) {
         </div>
         <div className="flex items-baseline justify-between gap-3 sm:contents">
           <span className="min-w-0 text-[var(--text-muted)] sm:order-2 sm:flex-1">{block.note}</span>
-          <span className="data whitespace-nowrap text-right text-[var(--text-secondary)] sm:order-3 sm:w-24 sm:shrink-0">{formatDurationExact(block.durationSec)}</span>
+          <span className="data whitespace-nowrap text-right text-[var(--text-secondary)] sm:order-3 sm:w-36 sm:shrink-0">{block.distanceM ? <>{formatMeters(block.distanceM)}<span className="ml-2 text-[var(--text-muted)]">est. {formatDurationExact(block.durationSec)}</span></> : formatDurationExact(block.durationSec)}</span>
         </div>
       </div>
     </li>

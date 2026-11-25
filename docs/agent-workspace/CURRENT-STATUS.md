@@ -1,12 +1,45 @@
 # Current status
 
-Last verified locally on **2026-11-24**. Source code and tests are authoritative.
+Last verified locally on **2026-11-25**. Source code and tests are authoritative.
 This is the current snapshot; ownership is in [WORK-INDEX.md](WORK-INDEX.md),
 contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 [VERIFICATION.md](../VERIFICATION.md).
 
 ## Verification
 
+- Wattonaut rename (2026-11-25). The product name, mark, icons, share image and
+  desktop shell say Wattonaut; `brand/kit` owns the logo. `tempo-ride://`, the
+  desktop app ID, installer names, storage keys and Strava external IDs keep
+  their old names, and the desktop app keeps the `Tempo Ride` data folder. On the
+  combination with the multi-sport library: `pnpm test:db` (693), desktop tests
+  (24), lint, types, dead code, build and Chromium at 1280 and 390 px passed.
+  Desktop installers were not built, and published downloads are still Tempo
+  Ride 0.3.0. Entries below use the old name. Production deployment remains.
+
+- Multi-sport public library, plan copies and lineage (2026-11-25). The library
+  holds bike, run and swim workouts, opens on bike, and states and changes sport
+  in its results heading. Runs offer Follow along only; swims have no start.
+  Built-in plan workouts are public workouts with the same slug. Customize makes
+  an editable copy of a workout or plan; copies keep their source slugs in
+  `Session` and `Template` columns (additive migration). Local checks passed:
+  `pnpm test:db` (693), lint, types, dead code and build. Chromium as a fresh
+  athlete at 1440, 390 and 320 px had no overflow or page errors, and three
+  first-time-user passes (bike only, triathlete, phone runner) had no blockers.
+  Known limits: saved and planned swims keep distances only in block notes, and
+  personal plans with public workouts need this parser (not readable after a
+  rollback). Production deployment remains.
+
+- Built-in triathlon weeks (2026-11-25). Training plans and Calendar offer
+  Essentials, Build and High Volume with selectable interval sets, recovery
+  days and endurance alternatives. Applying a plan creates versioned workout
+  copies for one Monday-starting week. Chromium as a fresh Athlete at 1440,
+  390 and 320 px verified discovery, previews, default and explicit dates,
+  applying selected alternatives and Calendar reload. The temporary account
+  was removed. `pnpm test` passed (562 passed, 18 database cases skipped),
+  `pnpm test:db` passed (615 passed), and `pnpm lint`, `pnpm check:deadcode`,
+  `pnpm build`, the PostgreSQL routine check and authenticated HTTP acceptance
+  passed. The build and acceptance used disposable local `tempo_acceptance`.
+  Physical phone and production deployment remain unverified.
 - Ride entertainment (`RIDE-ENT-001`, 2026-11-24; desktop fixes
   released as Tempo Ride 0.3.0).
   The active ride has an **Entertainment** toggle (key V) with two views.

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { customizeWorkoutHref, editWorkoutHref, legacyLibraryRedirectHref, myWorkoutHref, myWorkoutsHref, resolveWorkoutTab } from '../lib/athlete-workouts-navigation.ts';
+import { backToLibrarySport, customizeWorkoutHref, editWorkoutHref, legacyLibraryRedirectHref, myWorkoutHref, myWorkoutsHref, resolveWorkoutTab } from '../lib/athlete-workouts-navigation.ts';
+import { resolveBackTarget } from '../lib/app-navigation.ts';
 import { ownedWorkoutDetailItems, splitWorkoutNotes, summarizeOwnedWorkout } from '../lib/owned-workout-summary.ts';
 
 test('explicit workout tabs override the default based on the saved workout count', () => {
@@ -20,7 +21,17 @@ test('legacy library redirects preserve catalog filters without entering the edi
 });
 
 test('Customize links open a catalog draft by slug', () => {
-  assert.equal(customizeWorkoutHref('gentle-spin-30'), '/athlete/workouts?customize=gentle-spin-30');
+  assert.equal(customizeWorkoutHref('gentle-spin-30', 'BIKING'), '/athlete/workouts?customize=gentle-spin-30');
+  assert.equal(customizeWorkoutHref('easy-run', 'RUNNING'), '/athlete/workouts?customize=easy-run&sport=run');
+});
+
+test('library back targets open the workout’s own sport and other origins stay as they are', () => {
+  const library = resolveBackTarget({ route: 'library-workout', from: 'library' });
+  assert.deepEqual(backToLibrarySport(library, 'BIKING'), library);
+  assert.equal(backToLibrarySport(library, 'SWIMMING').href, '/athlete/workouts?tab=library&sport=swim');
+  assert.deepEqual(backToLibrarySport(library, 'STRENGTH'), library);
+  const ride = resolveBackTarget({ route: 'library-workout', from: 'ride' });
+  assert.deepEqual(backToLibrarySport(ride, 'RUNNING'), ride);
 });
 
 test('saved workouts have a detail page, and Edit from it returns there', () => {

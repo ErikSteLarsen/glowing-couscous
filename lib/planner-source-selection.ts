@@ -5,9 +5,12 @@ export type PlannerSourceSelection = {
 
 export function resolvePlannerSourceSelection(
   value: unknown,
-  catalog: { workoutIds: readonly number[]; templateIds: readonly number[] },
+  catalog: { workoutIds: readonly number[]; templateIds: readonly number[]; builtInSlugs?: readonly string[] },
 ): PlannerSourceSelection | null {
   if (typeof value !== 'string') return null;
+
+  const builtIn = /^built-in-plan:([a-z0-9-]+)$/.exec(value);
+  if (builtIn && catalog.builtInSlugs?.includes(builtIn[1])) return { key: value, tab: 'template' };
 
   const match = /^(workout|template):([1-9]\d*)$/.exec(value);
   if (!match) return null;

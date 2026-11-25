@@ -20,7 +20,7 @@ import { formatDuration } from '@/lib/format-duration';
 import { rideHubService, type RideHubRecent, type RideHubSession } from '@/lib/ride-hub-service';
 import { fromDayKey } from '@/lib/training-load';
 import { workoutCatalog } from '@/lib/workout-catalog';
-import { createCatalogListEntries, parseCatalogQuery } from '@/lib/workout-catalog/query';
+import { createCatalogListEntries, DEFAULT_CATALOG_SPORT, parseCatalogQuery } from '@/lib/workout-catalog/query';
 
 export const metadata: Metadata = { title: 'Ride' };
 
@@ -35,7 +35,7 @@ export default async function RideHubPage({ searchParams }: { searchParams: Prom
   const ftp = account?.performanceProfile.cycling.ftpWatts ?? null;
   const [firstToday, ...laterToday] = hub.todaySessions;
   const earlierCount = hub.overdueSessions.length + hub.recent.length;
-  const libraryHref = publicLibraryHref(parseCatalogQuery(params));
+  const libraryHref = publicLibraryHref({ ...parseCatalogQuery(params), sport: DEFAULT_CATALOG_SPORT });
   const ftpLink = (
     <Link href="/profile#cycling" className={`${ghostButtonClassName('compact')} max-md:min-h-11`}>
       {ftp ? `FTP ${ftp}\u00A0W` : 'Set cycling FTP'}

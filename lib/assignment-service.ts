@@ -1,3 +1,4 @@
+import { catalogLineageOf, type CatalogLineage } from './catalog-lineage.ts';
 import { addDays, endOfWeek, format, isValid, parseISO, startOfWeek } from 'date-fns';
 import { prisma } from './prisma.ts';
 import { createSessionSnapshotJson } from './session-snapshot-service.ts';
@@ -19,7 +20,7 @@ export type AssignSourceCommand = {
   weekStart?: string;
 };
 
-type SourceSession = {
+type SourceSession = CatalogLineage & {
   id: number;
   sport: string;
   title: string;
@@ -151,6 +152,7 @@ async function assignLibrarySession(db: SourceAssignmentDb, command: AssignSourc
         sportMetricsJson: source.sportMetricsJson,
         status: 'planned',
         source: 'library-copy',
+        ...catalogLineageOf(source),
         adjusted: false,
         coachBaselineJson: createSessionSnapshotJson({
           athleteId: command.athleteId,
@@ -234,6 +236,7 @@ async function assignTrainingPlan(db: SourceAssignmentDb, command: AssignSourceC
           sportMetricsJson: sourceSession.sportMetricsJson,
           status: 'planned',
           source: 'training-plan-copy',
+          ...catalogLineageOf(sourceSession),
           adjusted: false,
           coachBaselineJson: createSessionSnapshotJson({
             athleteId: command.athleteId,

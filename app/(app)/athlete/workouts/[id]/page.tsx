@@ -53,7 +53,7 @@ export default async function MyWorkoutPage({ params }: Params) {
       actions={<MyWorkoutActions id={workout.id} name={workout.title} sport={workout.sport} durationSec={summary.durationSec} hasSteps={blocks > 0} />}
       profile={summary.profile}
       profileNote={power ? <FtpProfileNote ftpWatts={ftp} /> : 'Height shows each block’s zone.'}
-      profileLabel={`${workout.title} intensity profile: ${formatDuration(summary.durationSec)}, ${blocks} blocks${power ? `, peak ${Math.round(summary.maxPct)}% of FTP` : ''}. Every block is listed under Intervals below.`}
+      profileLabel={`${workout.title} intensity profile: ${formatDuration(summary.durationSec)}, ${blocks} blocks${power ? `, peak ${Math.round(summary.maxPct)}% of FTP` : ''}. Every block is listed under Blocks below.`}
       ftpWatts={ftp}
       about={{ heading: 'Notes', paragraphs: summary.details }}
       items={ownedWorkoutDetailItems(summary.profile, ftp)}

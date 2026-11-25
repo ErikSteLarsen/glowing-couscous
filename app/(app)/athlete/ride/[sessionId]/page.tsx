@@ -65,9 +65,11 @@ export default async function AthleteRidePage({
         <EmptyState
           title="Trainer rides are for bike workouts"
           description={canFollowAlong ? 'Follow this workout block by block.' : 'Open the workout page to check the plan.'}
-          action={canFollowAlong ? (
-            <ActionLink href={withBackOrigin(`/athlete/live/${detail.session.id}`, parseBackOrigin('session-live', from))}>Follow along</ActionLink>
-          ) : undefined}
+          action={(
+            <ActionLink href={withBackOrigin(`/athlete/${canFollowAlong ? 'live' : 'session'}/${detail.session.id}`, parseBackOrigin('session-live', from))}>
+              {canFollowAlong ? 'Follow along' : 'Open workout'}
+            </ActionLink>
+          )}
         />
       </PageShell>
     );
@@ -75,19 +77,6 @@ export default async function AthleteRidePage({
 
   const profile = account?.performanceProfile;
   const steps = createExecutionSteps(detail.session.editor.blocks, detail.session.sport, profile);
-  if (detail.session.sport !== 'BIKING') {
-    return (
-      <PageShell size="wide">
-        <TopBar back={back} title={`Ride ${detail.session.title}`} />
-        <EmptyState
-          title="Trainer rides are for bike workouts"
-          description={steps.length > 0 ? 'Use live guidance to follow this workout block by block.' : 'This workout has no blocks to follow.'}
-          action={steps.length > 0 ? <ActionLink href={withBackOrigin(`/athlete/live/${detail.session.id}`, parseBackOrigin('session-live', from))}>Follow along</ActionLink> : undefined}
-        />
-      </PageShell>
-    );
-  }
-
   const plan = createRidePlan(detail.session.editor.blocks, profile);
 
   return (
