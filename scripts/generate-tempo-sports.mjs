@@ -204,7 +204,7 @@ for (const id of Object.keys(pose(0))) {
 animationStyle += '@media(prefers-reduced-motion:reduce){*{animation:none!important}.swimmer{opacity:1}.cyclist,.runner{display:none}}';
 const initial = pose(.125);
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220" role="img" aria-labelledby="tempo-title tempo-desc">
-<title id="tempo-title">Tempo – triatlon</title>
+<title id="tempo-title">Wattonaut – triatlon</title>
 <desc id="tempo-desc">En svømmer, en syklist og en løper avløser hverandre i en tolv sekunders loop. Vannet og bakken glir bakover, og sykkelhjulene roterer. Transparent bakgrunn. Ved redusert bevegelse vises en stillestående svømmer.</desc>
 ${defs}<style>${baseStyle}${animationStyle}</style>
 <g class="swimmer">${swimmer(initial, 0, true)}</g>

@@ -213,7 +213,7 @@ test('session editor adds, updates, removes, and reorders blocks immutably', () 
   assert.equal(removed.blocks[0].kind, 'cooldown');
 });
 
-test('session editor represents skipped blocks and excludes them from Tempo metrics', () => {
+test('session editor represents skipped blocks and excludes them from Wattonaut metrics', () => {
   const draft = addSessionEditorBlock(createEmptySessionEditorDraft(), {
     kind: 'work',
     zone: 4,

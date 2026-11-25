@@ -11,7 +11,7 @@ const followAlong = {
 
 const openApp = {
   mode: 'app',
-  label: 'Open in Tempo Ride',
+  label: 'Open in Wattonaut Ride',
   description: 'Connect your trainer and sensors in the desktop app.',
 } as const;
 
@@ -24,7 +24,7 @@ const browserRide = {
 const targetsOnly = {
   mode: 'ride',
   label: 'Ride without devices',
-  description: 'Tempo times each block and shows its target. Your ride time is saved at the end.',
+  description: 'Wattonaut times each block and shows its target. Your ride time is saved at the end.',
 } as const;
 
 type WorkoutStartOption = { mode: 'live' | 'ride' | 'app'; label: string; description: string };
@@ -39,7 +39,7 @@ export function getWorkoutStartOptions(workout: WorkoutStartEligibility, runtime
 
   if (runtime.inTempoRide) {
     return [
-      { ...(runtime.webBluetooth ? browserRide : targetsOnly), label: 'Ride in Tempo Ride' },
+      { ...(runtime.webBluetooth ? browserRide : targetsOnly), label: 'Ride in Wattonaut Ride' },
       followAlong,
     ];
   }

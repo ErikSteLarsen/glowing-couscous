@@ -79,7 +79,7 @@ function DurationFields({ label, value, onChange, disabled }: { label: string; v
   </div></fieldset>;
 }
 
-/** A Tempo modal for one short form; pending work keeps it open. */
+/** A Wattonaut modal for one short form; pending work keeps it open. */
 function FormDialog({ open, onOpenChange, pending, title, description, children }: { open: boolean; onOpenChange: (open: boolean) => void; pending: boolean; title: string; description?: string; children: ReactNode }) {
   return <Dialog open={open} onOpenChange={(next, details) => { if (pending) { details.cancel(); return; } onOpenChange(next); }}>
     <DialogBackdrop className="fixed inset-0 z-50 bg-black/60" />

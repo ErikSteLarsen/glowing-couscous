@@ -30,7 +30,7 @@ function removeEverywhere(key: string) {
 const retiredLegacySessions = new Set<number>();
 
 /**
- * Writes the checkpoint to this browser and, inside Tempo Ride desktop, to its disk store.
+ * Writes the checkpoint to this browser and, inside Wattonaut Ride desktop, to its disk store.
  * Only call it for a session the server has confirmed belongs to `userId`; a legacy copy of it is then retired.
  */
 export function saveRideCheckpoint(userId: number, recording: RideRecording): void {
@@ -119,11 +119,11 @@ export async function saveRideAsActivity(userId: number, recording: RideRecordin
       body: JSON.stringify(toImportPayload(recording, { standalone: true })),
     });
   } catch {
-    return { ok: false, error: 'Could not reach Tempo.' };
+    return { ok: false, error: 'Could not reach Wattonaut.' };
   }
   const body = (await response.json().catch(() => null)) as { sessionId?: unknown; duplicate?: unknown; error?: unknown } | null;
   if (!response.ok || typeof body?.sessionId !== 'number') {
-    return { ok: false, error: typeof body?.error === 'string' ? body.error : 'Tempo could not save this ride.' };
+    return { ok: false, error: typeof body?.error === 'string' ? body.error : 'Wattonaut could not save this ride.' };
   }
   clearRideCheckpoint(userId, recording.sessionId);
   return { ok: true, sessionId: body.sessionId, duplicate: body.duplicate === true };

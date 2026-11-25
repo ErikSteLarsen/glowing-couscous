@@ -1,4 +1,4 @@
-/** Bridge exposed by the Tempo Ride desktop app (Electron preload). Absent in browsers. */
+/** Bridge exposed by the Wattonaut Ride desktop app (Electron preload). Absent in browsers. */
 export type TempoDesktopRecording = { key: string; savedAt: string; json: string };
 
 export type TempoDesktopBridge = {
@@ -12,7 +12,7 @@ export type TempoDesktopBridge = {
 };
 
 export type TempoDesktopYouTube = {
-  /** Opens this site's Send to Tempo bookmark page in the system browser. */
+  /** Opens this site's Send to Wattonaut bookmark page in the system browser. */
   openBookmarkPage(): Promise<void>;
   /** Called with a video sent by a `tempo-ride://video` link. Returns an unsubscribe function. */
   onVideo(callback: (video: { url: string; startSec: number }) => void): () => void;

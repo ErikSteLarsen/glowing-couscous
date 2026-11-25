@@ -2,10 +2,10 @@
  * Checks one YouTube video before the ride screen embeds it, backed by the YouTube Data API v3.
  *
  * YouTube's Developer Policies require checking every embedded video's made-for-kids status, so a
- * video a rider brings from YouTube (bookmark, drop, paste, the Tempo Ride app or
+ * video a rider brings from YouTube (bookmark, drop, paste, the Wattonaut Ride app or
  * Recently played) is looked up first. One videos.list call costs 1 unit of the general bucket of
  * 10,000 units a day, which resets at midnight Pacific time. Lookups are cached for an hour,
- * identical lookups in flight share one call, and upstream calls are limited per user. Tempo makes
+ * identical lookups in flight share one call, and upstream calls are limited per user. Wattonaut makes
  * no search calls. Cached data stays far inside the 30-day refresh rule of the Developer Policies.
  */
 
@@ -19,11 +19,11 @@ export type YouTubeVideoSummary = {
   thumbnailUrl: string;
   durationSec: number | null;
   isLive: boolean;
-  /** Designated "made for kids": Tempo must not embed it and links out to YouTube instead. */
+  /** Designated "made for kids": Wattonaut must not embed it and links out to YouTube instead. */
   madeForKids: boolean;
 };
 
-/** Whether a single video can play inside Tempo, and why not. */
+/** Whether a single video can play inside Wattonaut, and why not. */
 export type YouTubeVideoPlayability = 'playable' | 'made_for_kids' | 'not_embeddable' | 'upcoming' | 'not_found';
 
 export type YouTubeVideoLookup = {
@@ -48,10 +48,10 @@ const HOUR = 60 * MINUTE;
 const MAX_TRACKED_USERS = 1000;
 
 const errors = {
-  not_configured: { status: 503, error: 'Playing videos in Tempo is not set up on this Tempo server.' },
+  not_configured: { status: 503, error: 'Playing videos in Wattonaut is not set up on this Wattonaut server.' },
   invalid_input: { status: 400, error: 'Something went wrong. Reload the page and try again.' },
   rate_limited: { status: 429, error: 'You are switching videos quickly. Wait a moment and try again.' },
-  quota_exceeded: { status: 429, error: 'Tempo has checked as many videos as YouTube allows today. Try again tomorrow, or open the video on YouTube.' },
+  quota_exceeded: { status: 429, error: 'Wattonaut has checked as many videos as YouTube allows today. Try again tomorrow, or open the video on YouTube.' },
   unavailable: { status: 502, error: 'Could not reach YouTube. Check your connection and try again.' },
 } satisfies Record<YouTubeVideoErrorCode, { status: number; error: string }>;
 
@@ -122,7 +122,7 @@ function normalizeVideo(video: VideoResource): YouTubeVideoLookup | null {
   const snippet = video.snippet;
   if (!VIDEO_ID.test(id) || !snippet) return null;
   const isLive = snippet.liveBroadcastContent === 'live';
-  // Without a readable status Tempo cannot confirm the video is not made for kids, so it links out.
+  // Without a readable status Wattonaut cannot confirm the video is not made for kids, so it links out.
   const madeForKids = video.status?.madeForKids !== false;
   const summary: YouTubeVideoSummary = {
     id,

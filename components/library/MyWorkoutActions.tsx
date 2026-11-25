@@ -86,7 +86,7 @@ export function MyWorkoutActions({ id, name, sport, durationSec, hasSteps }: { i
         router.replace(myWorkoutsHref());
         router.refresh();
       } catch {
-        setError('Could not reach Tempo. Check your connection and try again.');
+        setError('Could not reach Wattonaut. Check your connection and try again.');
       }
     });
   }

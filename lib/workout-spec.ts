@@ -28,7 +28,7 @@ export function validateWorkoutBlocks(blocks: WorkoutBlockDraft[], allowedTypes:
     }
 
     if (!allowedTypes.includes(block.blockType)) {
-      return 'One of the blocks has a type Tempo doesn’t recognize.';
+      return 'One of the blocks has a type Wattonaut doesn’t recognize.';
     }
   }
 

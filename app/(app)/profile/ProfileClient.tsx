@@ -259,7 +259,7 @@ export function ProfileClient({ account }: { account: Account }) {
       if (profileSaved) {
         setMessage('Profile saved. If your name doesn’t update, reload the page.');
       } else {
-        setError('Could not reach Tempo. Your changes are still here. Try saving again.');
+        setError('Could not reach Wattonaut. Your changes are still here. Try saving again.');
       }
     }
     setSaving(false);
@@ -294,7 +294,7 @@ export function ProfileClient({ account }: { account: Account }) {
 
           <fieldset id="training-metrics" disabled={saving} className="scroll-mt-20 space-y-3 border-t border-[var(--border)] pt-5">
             <legend className="text-base font-semibold text-[var(--text)]">Training targets</legend>
-            <p className="max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">Optional. Tempo uses these to turn zones into heart rate, power and pace targets. Leave blank anything you don’t know.</p>
+            <p className="max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">Optional. Wattonaut uses these to turn zones into heart rate, power and pace targets. Leave blank anything you don’t know.</p>
             <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
               <TargetRow id="heart-rate" title="Heart rate" metric="Maximum heart rate" value={performanceProfile.heartRateMaxBpm ? `${performanceProfile.heartRateMaxBpm}\u00A0bpm` : null} open={openSections.has('heart-rate')} onToggle={() => toggleSection('heart-rate')}>
                 <div className="sm:max-w-xs">
@@ -342,7 +342,7 @@ export function ProfileClient({ account }: { account: Account }) {
                   <div className="space-y-3">
                     <div>
                       <h3 className="text-sm font-semibold text-[var(--text)]">Running pace zones</h3>
-                      <p className="mt-1 max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">Tempo starts with 65–75%, 75–85%, 85–93%, 93–103% and 103–115% of your race speed. These are Tempo’s estimates, not Olympiatoppen pace zones. You can edit them.</p>
+                      <p className="mt-1 max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)]">Wattonaut starts with 65–75%, 75–85%, 85–93%, 93–103% and 103–115% of your race speed. These are Wattonaut’s estimates, not Olympiatoppen pace zones. You can edit them.</p>
                     </div>
                     <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)] gap-2 border-b border-[var(--border)] pb-2 text-xs font-semibold text-[var(--text-secondary)] sm:gap-4">
                       <span>Zone</span><span>Fastest /km</span><span>Slowest /km</span>

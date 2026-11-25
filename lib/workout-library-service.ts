@@ -114,7 +114,7 @@ export function createWorkoutLibraryService({ db = prisma }: WorkoutLibraryDeps 
           const payloadHash = createHash('sha256').update(JSON.stringify(data)).digest('hex');
           const replay = async () => {
             const prior = await db.workoutSaveRequest.findUnique({ where: { userId_owner_requestKey: identity } });
-            if (!prior || prior.payloadHash !== payloadHash || prior.sessionId === null) return { ok: false as const, error: 'Tempo couldn’t confirm your earlier save. Keep your changes and save again.', status: 409 };
+            if (!prior || prior.payloadHash !== payloadHash || prior.sessionId === null) return { ok: false as const, error: 'Wattonaut couldn’t confirm your earlier save. Keep your changes and save again.', status: 409 };
             const saved = await db.session.findFirst({ where: { id: prior.sessionId, ...standaloneWhere(owner, ownerId) }, select: { id: true, updatedAt: true } });
             return saved ? { ok: true as const, sessionId: saved.id, updatedAt: saved.updatedAt.toISOString() } : { ok: false as const, error: 'The workout you saved earlier was deleted.', status: 409 };
           };

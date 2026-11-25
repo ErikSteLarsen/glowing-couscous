@@ -16,12 +16,12 @@ import { VideoCard } from './VideoCard';
 import { YouTubeConsent, YouTubeFooter } from './YouTubeNotice';
 import type { YouTubeVideoChoice } from './youtube-client';
 
-/** A message about a video Tempo could not play, with a link to it on YouTube. */
+/** A message about a video Wattonaut could not play, with a link to it on YouTube. */
 export type PickNotice = { message: string; video?: YouTubeVideoChoice; tone: 'info' | 'danger' };
 
 const NOT_A_LINK = 'That isn’t a YouTube video link. Copy the link of a video and try again.';
 
-/** A video Tempo won't play here, shown as a small card that opens it on YouTube. */
+/** A video Wattonaut won't play here, shown as a small card that opens it on YouTube. */
 function LinkOutVideo({ video }: { video: YouTubeVideoChoice }) {
   return (
     <div className="flex min-w-0 items-center gap-3">
@@ -101,7 +101,7 @@ function Way({ icon, title, children }: { icon: ReactNode; title: string; childr
 
 /**
  * The YouTube view before a video plays: open YouTube (the rider's own, signed-in site), then bring
- * a video back with the bookmark, a drag, or a pasted link. The Tempo Ride app
+ * a video back with the bookmark, a drag, or a pasted link. The Wattonaut Ride app
  * opens YouTube in the rider's browser, where the bookmark sends the video to the app.
  */
 export function YouTubePick({
@@ -123,10 +123,10 @@ export function YouTubePick({
   onDismissNotice,
   onClearRecents,
 }: {
-  /** Tempo can check videos (a YouTube API key is set). null while unknown. */
+  /** Wattonaut can check videos (a YouTube API key is set). null while unknown. */
   configured: boolean | null;
   desktopApp: boolean;
-  /** An older Tempo Ride app, which blocks the player. */
+  /** An older Wattonaut Ride app, which blocks the player. */
   playerBlocked: boolean;
   recents: YouTubeVideoChoice[];
   notice: PickNotice | null;
@@ -174,11 +174,11 @@ export function YouTubePick({
 
           {playerBlocked ? (
             <p className={noticeBoxClassNames.info}>
-              This version of Tempo Ride can’t play videos. Update the app, or ride in Chrome or Edge, to watch beside your stats.
+              This version of Wattonaut Ride can’t play videos. Update the app, or ride in Chrome or Edge, to watch beside your stats.
             </p>
           ) : configured === false ? (
             <p className={noticeBoxClassNames.info}>
-              Tempo can’t check videos on this server (no YouTube API key), so videos you bring here open on YouTube instead of playing beside your stats.
+              Wattonaut can’t check videos on this server (no YouTube API key), so videos you bring here open on YouTube instead of playing beside your stats.
             </p>
           ) : null}
           {notice ? (
@@ -198,7 +198,7 @@ export function YouTubePick({
               <Way icon={<Bookmark size={15} strokeWidth={1.7} />} title="Send it with a bookmark">
                 {desktopApp ? (
                   <>
-                    <p className="text-[13px] leading-snug text-[var(--text-secondary)]">Add it once in your browser. On any YouTube video, click it, then Send to the Tempo Ride app.</p>
+                    <p className="text-[13px] leading-snug text-[var(--text-secondary)]">Add it once in your browser. On any YouTube video, click it, then Send to the Wattonaut Ride app.</p>
                     <button type="button" className={`${ghostButtonClassName('compact')} self-start`} onClick={onGetBookmark}>Get the bookmark</button>
                   </>
                 ) : (

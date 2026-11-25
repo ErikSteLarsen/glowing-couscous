@@ -1,6 +1,6 @@
-# Tempo
+# Wattonaut
 
-Tempo is an app for planning and following your own endurance training. The
+Wattonaut is an app for planning and following your own endurance training. The
 first MVP focuses on creating reusable workouts, scheduling them in a
 Monday-based calendar, following sessions, and recording and reviewing outcomes
 without needing a coach. The Athlete workspace is the personal experience.

@@ -1,9 +1,9 @@
-/** Operating systems the Tempo Ride desktop app ships installers for. */
+/** Operating systems the Wattonaut Ride desktop app ships installers for. */
 export type RideOs = 'windows' | 'macos' | 'linux' | 'other';
 
 export type RideDownload = { id: string; os: Exclude<RideOs, 'other'>; label: string; fileName: string; url: string };
 
-/** The released Tempo Ride version the website links to. Must match `desktop/package.json` (a test enforces it). */
+/** The released Wattonaut Ride version the website links to. Must match `desktop/package.json` (a test enforces it). */
 export const RIDE_DESKTOP_VERSION = '0.3.0';
 
 /** Pinned to the release tag so the links never depend on which GitHub release is marked latest. */
@@ -65,21 +65,21 @@ export function rideInstallHints(os: RideOs): string[] {
     case 'windows':
       return [
         'Run the installer. If Windows warns about an unrecognized app, choose More info, then Run anyway.',
-        'After that, Tempo can open Tempo Ride for you.',
+        'After that, Wattonaut can open Wattonaut Ride for you.',
       ];
     case 'macos':
       return [
-        'Open the .dmg and drag Tempo Ride to Applications.',
+        'Open the .dmg and drag Wattonaut Ride to Applications.',
         'The app isn’t signed yet. The first time, Control-click it in Applications, choose Open, then choose Open again.',
       ];
     case 'linux':
       return [
-        'AppImage: move it to a folder you keep (for example ~/Applications), make it executable with chmod +x Tempo-Ride-Linux.AppImage, then open it once. After that, Tempo can open it for you.',
+        'AppImage: move it to a folder you keep (for example ~/Applications), make it executable with chmod +x Tempo-Ride-Linux.AppImage, then open it once. After that, Wattonaut can open it for you.',
         'Or install the .deb with sudo apt install ./Tempo-Ride-Linux.deb.',
         'Allow Bluetooth access when asked. Your Linux user may need to be in the bluetooth group.',
       ];
     default:
-      return ['Tempo Ride runs on Windows, macOS and Linux. On this device, ride in your browser instead.'];
+      return ['Wattonaut Ride runs on Windows, macOS and Linux. On this device, ride in your browser instead.'];
   }
 }
 

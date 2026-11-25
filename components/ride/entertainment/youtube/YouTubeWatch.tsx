@@ -21,7 +21,7 @@ function readPauseWithRide(): boolean {
   }
 }
 
-/** Tempo's own code for a player it couldn't load. */
+/** Wattonaut's own code for a player it couldn't load. */
 const PLAYER_UNAVAILABLE = -1;
 
 /** What the rider sees for each IFrame API error code. */
@@ -45,10 +45,10 @@ const SAMPLE_MS = 3000;
 
 /**
  * The watch view: a slim bar and the privacy-enhanced YouTube player, contained at 16:9 and never
- * smaller than 200 × 200. Nothing is drawn over the player. Tempo starts playback only while the
+ * smaller than 200 × 200. Nothing is drawn over the player. Wattonaut starts playback only while the
  * ride runs (or Pause with ride is off), the tab is visible, the player is at least half on screen
  * and no dialog covers it; it pauses with the ride, under a dialog, when hidden and when scrolled away.
- * In the Tempo Ride app the player is not controlled: the rider uses YouTube's own buttons.
+ * In the Wattonaut Ride app the player is not controlled: the rider uses YouTube's own buttons.
  */
 export function YouTubeWatch({
   video,
@@ -67,7 +67,7 @@ export function YouTubeWatch({
   obscured: boolean;
   /** The rider just chose this video, or it was playing before the view remounted. */
   startPlaying: boolean;
-  /** Picked up after a remount: a video Tempo had paused (ride paused, dialog) plays again on resume. */
+  /** Picked up after a remount: a video Wattonaut had paused (ride paused, dialog) plays again on resume. */
   restored?: boolean;
   /** A link is being dragged over the ride screen: the player lets it through and the stage is outlined. */
   dragActive?: boolean;
@@ -75,14 +75,14 @@ export function YouTubeWatch({
   checking?: boolean;
   trackActivity: TrackActivity;
   onBack: () => void;
-  /** Reports the playback position (and whether it plays or Tempo paused it) every few seconds and when the player goes away. */
+  /** Reports the playback position (and whether it plays or Wattonaut paused it) every few seconds and when the player goes away. */
   onTime: (videoId: string, timeSec: number, playing: boolean) => void;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const frameBoxRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YouTubePlayer | null>(null);
-  /** Tempo paused the video (ride paused, dialog opened), so Tempo may play it again. */
+  /** Wattonaut paused the video (ride paused, dialog opened), so Wattonaut may play it again. */
   const pausedByTempoRef = useRef(false);
   const resumeAtRef = useRef(video.startSec ?? 0);
   const wantsPlayRef = useRef(startPlaying);
@@ -103,7 +103,7 @@ export function YouTubeWatch({
     onTimeRef.current = onTime;
   });
 
-  /** Whether Tempo may start the video now. Anything else leaves it to YouTube's own Play button. */
+  /** Whether Wattonaut may start the video now. Anything else leaves it to YouTube's own Play button. */
   const mayPlay = useCallback(() => {
     const gate = gateRef.current;
     return (gate.rideStatus === 'running' || !gate.pauseWithRide) && !gate.obscured && gate.inView && document.visibilityState === 'visible';
@@ -187,12 +187,12 @@ export function YouTubeWatch({
         playerRef.current = target;
         // The rider chose this video (or it was playing before a remount): start it only
         // when the ride and page allow it, and otherwise leave it to YouTube's Play button.
-        // If the browser blocks playback, that button stays too and Tempo does not retry.
+        // If the browser blocks playback, that button stays too and Wattonaut does not retry.
         if (!wantsPlayRef.current) return;
         if (mayPlay()) {
           target.playVideo();
         } else if (restoredRef.current && gate.inView && (gate.obscured || (gate.rideStatus === 'paused' && gate.pauseWithRide))) {
-          // Tempo had paused it before the remount; keep that, so resuming plays it again.
+          // Wattonaut had paused it before the remount; keep that, so resuming plays it again.
           pausedByTempoRef.current = true;
         }
       },
@@ -215,7 +215,7 @@ export function YouTubeWatch({
     };
   }, [video.id, video.title, errorCode, attempt, fits, mayPlay, controlled]);
 
-  // Playing, about to play, or paused only by Tempo counts as watching. In the Tempo Ride app the
+  // Playing, about to play, or paused only by Wattonaut counts as watching. In the Wattonaut Ride app the
   // player's state is unknown, so an open video does.
   useEffect(() => {
     if (errorCode !== null || !fits) return;
@@ -227,7 +227,7 @@ export function YouTubeWatch({
     return () => trackActivity(null);
   }, [controlled, errorCode, fits, trackActivity]);
 
-  // Pause with the ride, and play again on resume only if Tempo paused it.
+  // Pause with the ride, and play again on resume only if Wattonaut paused it.
   const lastStatusRef = useRef(rideStatus);
   useEffect(() => {
     const previous = lastStatusRef.current;

@@ -54,7 +54,7 @@ export function SessionDeleteAction({
       else if (returnHref) router.replace(returnHref);
       else router.refresh();
     } catch {
-      setError('Could not reach Tempo. Check your connection and try again.');
+      setError('Could not reach Wattonaut. Check your connection and try again.');
     } finally {
       setIsPending(false);
     }

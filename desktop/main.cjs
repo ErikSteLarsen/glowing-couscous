@@ -80,7 +80,7 @@ function showStartPage(window, error = '') {
 
 function buildMenu() {
   const changeSite = {
-    label: 'Change Tempo site…',
+    label: 'Change Wattonaut site…',
     click: () => showStartPage(showMainWindow())
   }
   const isMac = process.platform === 'darwin'
@@ -153,11 +153,11 @@ function wireIpc(window) {
   function assertMainPage(event, isAllowed) {
     const frame = event.senderFrame
     if (!frame || frame !== contents.mainFrame || !isAllowed(frame.url)) {
-      throw new Error('Tempo Ride denied access to this page.')
+      throw new Error('Wattonaut Ride denied access to this page.')
     }
   }
 
-  // Backups are scoped to the page's origin so one Tempo server never sees another's rides.
+  // Backups are scoped to the page's origin so one Wattonaut server never sees another's rides.
   const senderOrigin = (event) => new URL(event.senderFrame.url).origin
   const isStart = (url) => url === START_URL
   ipc.handle('setup:get', (event) => {
@@ -169,7 +169,7 @@ function wireIpc(window) {
   ipc.handle('setup:open-site', (event, value) => {
     assertMainPage(event, isStart)
     const url = parseWebUrl(value)
-    if (!url) throw new Error('Enter a full Tempo site URL starting with https:// or http://.')
+    if (!url) throw new Error('Enter a full Wattonaut site URL starting with https:// or http://.')
 
     openChosenSite(window, new URL('/athlete/ride', url.origin))
   })
@@ -185,7 +185,7 @@ function wireIpc(window) {
     assertMainPage(event, isTrusted)
     return recordings.delete(senderOrigin(event), key)
   })
-  // The Send to Tempo bookmark is set up in the rider's own browser, where YouTube is signed in.
+  // The Send to Wattonaut bookmark is set up in the rider's own browser, where YouTube is signed in.
   ipc.handle('youtube:open-bookmark-page', (event) => {
     assertMainPage(event, isTrusted)
     openExternal(new URL('/athlete/ride/send', senderOrigin(event)).href)
@@ -206,7 +206,7 @@ function showMainWindow() {
     const home = launchTarget(settings)
     const [width, height] = home ? RIDE_SIZE : START_SIZE
     const window = new BrowserWindow({
-      title: 'Tempo Ride',
+      title: 'Wattonaut Ride',
       width,
       height,
       minWidth: 400,
@@ -239,7 +239,7 @@ function showMainWindow() {
     window.webContents.on('did-fail-load', (_event, code, _description, url, isMainFrame) => {
       const origin = parseWebUrl(url)?.origin
       if (!isMainFrame || code === ABORTED || !origin) return
-      showStartPage(window, `Tempo Ride could not reach ${origin}. Check your connection and try again.`)
+      showStartPage(window, `Wattonaut Ride could not reach ${origin}. Check your connection and try again.`)
     })
     if (home) window.loadURL(home.href).catch(() => {})
     else window.loadFile(START_FILE).catch(() => {})
@@ -259,7 +259,7 @@ async function openLink(value) {
       dialog.showMessageBox(window, {
         type: 'info',
         message: 'No ride is open.',
-        detail: 'Start your ride in Tempo Ride, then send the video again.'
+        detail: 'Start your ride in Wattonaut Ride, then send the video again.'
       }).catch(() => {})
     }
     return
@@ -269,8 +269,8 @@ async function openLink(value) {
   if (!url) {
     await dialog.showMessageBox(window, {
       type: 'warning',
-      message: 'Tempo Ride could not open this link.',
-      detail: 'Open the ride again from the Tempo website.'
+      message: 'Wattonaut Ride could not open this link.',
+      detail: 'Open the ride again from the Wattonaut website.'
     })
     return
   }
@@ -292,7 +292,7 @@ function findLink(argv) {
 function start(startupLink) {
   function enqueueLink(link) {
     pendingLink = pendingLink.then(() => openLink(link)).catch((error) => {
-      dialog.showErrorBox('Tempo Ride', error.message)
+      dialog.showErrorBox('Wattonaut Ride', error.message)
     })
   }
 
@@ -336,12 +336,14 @@ function start(startupLink) {
     if (startupLink) enqueueLink(startupLink)
     else showMainWindow()
   }).catch((error) => {
-    dialog.showErrorBox('Tempo Ride', error.message)
+    dialog.showErrorBox('Wattonaut Ride', error.message)
     app.quit()
   })
 }
 
-app.setName('Tempo Ride')
+app.setName('Wattonaut Ride')
+// Versions up to 0.3.0 were called Tempo Ride. Keep their folder so settings, sign-ins and ride backups carry over.
+app.setPath('userData', path.join(app.getPath('appData'), 'Tempo Ride'))
 if (isLinux) {
   const features = app.commandLine.getSwitchValue('enable-features')
   app.commandLine.appendSwitch('enable-features', [features, 'WebBluetooth'].filter(Boolean).join(','))

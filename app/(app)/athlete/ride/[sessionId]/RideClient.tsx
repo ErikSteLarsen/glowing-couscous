@@ -198,9 +198,9 @@ function ProgressBar({ value, label, color = 'var(--brand)', className = 'h-2' }
 }
 
 function switchConsequence(leavingVideo: boolean): string {
-  if (!leavingVideo) return 'Tempo keeps your place on the loop.';
+  if (!leavingVideo) return 'Wattonaut keeps your place on the loop.';
   if (window.tempoDesktop) return 'It starts over when you come back.';
-  return 'Tempo keeps your place in it for this ride.';
+  return 'Wattonaut keeps your place in it for this ride.';
 }
 
 function switchLabel({ to, video }: PendingSwitch): string {
@@ -333,8 +333,8 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   const status = recording.status;
   const active = status === 'running' || status === 'paused';
 
-  // A YouTube video brought in from outside Tempo (Send to Tempo bookmark, a link sent to the
-  // Tempo Ride app, a dropped or pasted link) turns on the YouTube view and waits there until the
+  // A YouTube video brought in from outside Wattonaut (Send to Wattonaut bookmark, a link sent to the
+  // Wattonaut Ride app, a dropped or pasted link) turns on the YouTube view and waits there until the
   // view takes it. Desktop only: phones have no YouTube view.
   const [incomingVideo, setIncomingVideo] = useState<IncomingYouTubeVideo | null>(null);
   const incomingSeqRef = useRef(0);
@@ -519,9 +519,9 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         }
         const retryable = !response || response.status >= 500 || response.status === 429;
         if (!retryable || attempt >= SAVE_RETRY_LIMIT) {
-          const error = response?.ok ? 'Tempo could not confirm that this ride was saved.'
+          const error = response?.ok ? 'Wattonaut could not confirm that this ride was saved.'
             : typeof payload?.error === 'string' ? payload.error
-              : response ? 'Tempo could not save this ride.' : 'Could not reach Tempo.';
+              : response ? 'Wattonaut could not save this ride.' : 'Could not reach Wattonaut.';
           setSaveState({ kind: 'failed', error: `${error} Your ride is still on this device.` });
           return;
         }
@@ -536,7 +536,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         });
       }
     } catch {
-      setSaveState({ kind: 'failed', error: 'Tempo could not get this ride ready to save. Your ride is still on this device.' });
+      setSaveState({ kind: 'failed', error: 'Wattonaut could not get this ride ready to save. Your ride is still on this device.' });
     } finally {
       pendingSaveRef.current = null;
     }
@@ -631,7 +631,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         </ul>
       ) : (
         <p role="status" className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
-          This browser can’t connect to Bluetooth devices. You can ride without devices, or connect them in the <GetTempoRideLink>Tempo Ride desktop app</GetTempoRideLink>.
+          This browser can’t connect to Bluetooth devices. You can ride without devices, or connect them in the <GetTempoRideLink>Wattonaut Ride desktop app</GetTempoRideLink>.
         </p>
       )}
     </dialog>
@@ -740,7 +740,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       </>
     ) : (
       <button type="button" className={primaryButtonClassName} disabled={saveState.kind === 'saving'} onClick={() => void save()}>
-        {saveState.kind === 'saving' ? (saveState.attempt > 1 ? `Retrying (${saveState.attempt})…` : 'Saving…') : saveState.kind === 'failed' ? 'Try again' : 'Save to Tempo'}
+        {saveState.kind === 'saving' ? (saveState.attempt > 1 ? `Retrying (${saveState.attempt})…` : 'Saving…') : saveState.kind === 'failed' ? 'Try again' : 'Save to Wattonaut'}
       </button>
     );
     return frame('Ride complete', null, (
@@ -752,9 +752,9 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
               {saveState.kind === 'saved' ? <p role="status" className="text-[var(--status-success)]">Saved. The workout is marked as done.{saveState.note ? ` ${saveState.note}` : ''}</p> : null}
               {saveState.kind === 'saved' && saveState.activityId !== null ? <p className="mt-1 text-[var(--text-secondary)]">Post it to Strava now, or later from the workout page.</p> : null}
               {saveState.kind === 'failed' ? <p role="alert" className="text-[var(--status-danger)]">{saveState.error}</p> : null}
-              {saveState.kind === 'saving' ? <p role="status" className="text-[var(--text-secondary)]">Saving to Tempo…</p> : null}
+              {saveState.kind === 'saving' ? <p role="status" className="text-[var(--text-secondary)]">Saving to Wattonaut…</p> : null}
               {timerSec >= MAX_ACTIVITY_IMPORT_DURATION_SEC ? <p className="text-[var(--text-secondary)]">This ride reached the 36-hour recording limit.</p> : null}
-            {saveState.kind === 'idle' ? <p className="text-[var(--text-secondary)]">Your ride stays on this device until it’s saved to Tempo.</p> : null}
+            {saveState.kind === 'idle' ? <p className="text-[var(--text-secondary)]">Your ride stays on this device until it’s saved to Wattonaut.</p> : null}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">

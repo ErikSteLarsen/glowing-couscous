@@ -24,7 +24,7 @@ form.addEventListener('submit', async (event) => {
   try {
     await window.tempoSetup.openSite(site.value)
   } catch {
-    error.textContent = 'Enter a valid Tempo site URL or try again.'
+    error.textContent = 'Enter a valid Wattonaut site URL or try again.'
   } finally {
     submit.disabled = false
     quickOption.disabled = false

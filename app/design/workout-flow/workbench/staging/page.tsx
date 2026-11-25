@@ -1,7 +1,7 @@
 import { WorkoutFlowPreviews } from '@/components/design/WorkoutFlowPreviews';
 
 export const metadata = {
-  title: 'Tempo / Workout flow / Workbench / Staging',
+  title: 'Wattonaut / Workout flow / Workbench / Staging',
   description: 'Workbench staging direction preview for assembling repeated blocks before finalizing.',
 };
 

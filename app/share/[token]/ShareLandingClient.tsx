@@ -128,7 +128,7 @@ export function ShareLandingClient({
         router.refresh();
       } catch {
         setMessageTone('danger');
-        setMessage('Could not reach Tempo. Your changes are still here. Check your connection and save again.');
+        setMessage('Could not reach Wattonaut. Your changes are still here. Check your connection and save again.');
       }
     });
   }
@@ -151,7 +151,7 @@ export function ShareLandingClient({
                   <Badge>{projection.metrics.tss}&nbsp;TSS</Badge>
                 </div>
                 <p className="text-[15px] leading-[1.6] text-[var(--text-secondary)]">
-                  {projection.summary || 'A workout shared from Tempo.'}
+                  {projection.summary || 'A workout shared from Wattonaut.'}
                 </p>
                 <div className="space-y-3">
                   <h2 className="text-base font-medium text-[var(--text)]">Blocks</h2>

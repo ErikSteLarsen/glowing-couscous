@@ -23,7 +23,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { getPrimaryNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import { AppProfileMenu } from '@/components/AppProfileMenu';
-import { BrandMark } from '@/components/BrandMark';
+import { BrandMark, BrandName } from '@/components/BrandMark';
 import { Badge, buttonFocusClassName } from '@/components/ui';
 
 const navIcons: Record<string, LucideIcon> = {
@@ -120,10 +120,10 @@ export function AppSidebar(props: {
               href={navItems[0]?.href ?? '/'}
               onClick={onNavigate}
               className={`flex min-w-0 items-center gap-2.5 rounded-lg hover:bg-[var(--raised)] max-md:min-h-11 ${buttonFocusClassName}`}
-              aria-label="Tempo home"
+              aria-label="Wattonaut home"
             >
               <BrandMark />
-              <span className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--text)]">Tempo</span>
+              <BrandName />
               {props.user.role === 'COACH' ? (
                 <Badge>Coach</Badge>
               ) : null}

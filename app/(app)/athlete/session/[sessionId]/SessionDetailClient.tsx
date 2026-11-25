@@ -91,7 +91,7 @@ export function SessionDetailClient({
         router.refresh();
       } catch {
         setMessageTone('danger');
-        setMessage('Could not reach Tempo. Check your connection and try again.');
+        setMessage('Could not reach Wattonaut. Check your connection and try again.');
       }
     });
   }
@@ -121,7 +121,7 @@ export function SessionDetailClient({
         router.refresh();
       } catch {
         setMessageTone('danger');
-        setMessage('Could not reach Tempo. Check your connection and try again.');
+        setMessage('Could not reach Wattonaut. Check your connection and try again.');
       }
     });
   }

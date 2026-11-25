@@ -339,7 +339,7 @@ export function WorkoutLibraryClient({
         if (!untouched) setMessage('Workout saved, but you made more changes while it was saving. Save again to keep them.');
       } catch {
         setMessageTone('danger');
-        setMessage('Could not reach Tempo. Check your connection and try again.');
+        setMessage('Could not reach Wattonaut. Check your connection and try again.');
       }
     });
   }
@@ -368,7 +368,7 @@ export function WorkoutLibraryClient({
         router.refresh();
       } catch {
         setMessageTone('danger');
-        setMessage('Could not reach Tempo. Check your connection and try again.');
+        setMessage('Could not reach Wattonaut. Check your connection and try again.');
       }
     });
   }
@@ -615,7 +615,7 @@ function NewWorkoutMenu({ onGuided, onScratch, onBrowse }: { onGuided: () => voi
       <MenuContent align="start" className="max-w-[min(22rem,calc(100vw-2rem))]">
         <MenuItem onSelect={onGuided} className="flex-col items-start gap-0.5 py-2">
           <span className="font-medium">Build with guidance</span>
-          <span className="text-xs text-[var(--text-secondary)]">Pick a sport, length and effort. Tempo suggests a workout you can edit.</span>
+          <span className="text-xs text-[var(--text-secondary)]">Pick a sport, length and effort. Wattonaut suggests a workout you can edit.</span>
         </MenuItem>
         <MenuItem onSelect={onScratch} className="flex-col items-start gap-0.5 py-2">
           <span className="font-medium">Build from scratch</span>

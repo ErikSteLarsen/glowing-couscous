@@ -6,10 +6,10 @@ import { getWorkoutStartOptions, type WorkoutStartRuntime } from '../lib/workout
 
 const bike = { sport: 'BIKING', status: 'planned', hasSteps: true };
 const follow = ['live', 'Follow along'];
-const openApp = ['app', 'Open in Tempo Ride'];
+const openApp = ['app', 'Open in Wattonaut Ride'];
 const rideInBrowser = ['ride', 'Ride in this browser'];
 const targetsOnly = ['ride', 'Ride without devices'];
-const rideInApp = ['ride', 'Ride in Tempo Ride'];
+const rideInApp = ['ride', 'Ride in Wattonaut Ride'];
 
 function choices(workout: typeof bike, runtime: WorkoutStartRuntime) {
   return getWorkoutStartOptions(workout, runtime).map(({ mode, label }) => [mode, label]);

@@ -21,7 +21,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
         `}</style>
         <main style={{ boxSizing: 'border-box', display: 'grid', minHeight: '100vh', placeItems: 'center', padding: '32px 20px' }}>
           <section style={{ boxSizing: 'border-box', width: '100%', maxWidth: 520, border: '1px solid #D4D3CD', background: '#FBFAF7', padding: 28, textAlign: 'center' }}>
-            <h1 style={{ margin: 0, fontSize: 32, fontWeight: 400, letterSpacing: '-0.04em' }}>Tempo couldn’t start</h1>
+            <h1 style={{ margin: 0, fontSize: 32, fontWeight: 400, letterSpacing: '-0.04em' }}>Wattonaut couldn’t start</h1>
             <p style={{ margin: '16px 0 24px', color: '#53606B', fontSize: 15, lineHeight: 1.55 }}>Something went wrong while loading the app. Try again, or return to the home page.</p>
             {error.digest ? <p style={{ color: '#7F8588', fontSize: 12 }}>Error code: {error.digest}</p> : null}
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 12 }}>

@@ -14,8 +14,8 @@ function desktopEntry(appImagePath) {
   return [
     '[Desktop Entry]',
     'Type=Application',
-    'Name=Tempo Ride',
-    'Comment=Desktop companion for Tempo indoor bike workouts',
+    'Name=Wattonaut Ride',
+    'Comment=Desktop companion for Wattonaut indoor bike workouts',
     `Exec=${exec} %u`,
     'Icon=tempo-ride',
     'Terminal=false',

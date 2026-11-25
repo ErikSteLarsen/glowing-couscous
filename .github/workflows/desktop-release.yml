@@ -1,4 +1,4 @@
-name: Tempo Ride release
+name: Wattonaut Ride release
 
 on:
   push:
@@ -80,6 +80,6 @@ jobs:
             gh release upload "$TAG" "${files[@]}" --clobber
             gh release edit "$TAG" --draft=false --prerelease=false --latest
           else
-            gh release create "$TAG" "${files[@]}" --verify-tag --latest --title "Tempo Ride ${TAG#desktop-v}" \
+            gh release create "$TAG" "${files[@]}" --verify-tag --latest --title "Wattonaut Ride ${TAG#desktop-v}" \
               --notes "The Windows installer is unsigned. The macOS apps use ad hoc signatures and are not notarized. See desktop/README.md for installation."
           fi

@@ -70,7 +70,7 @@ export function ImportedWorkoutAnalysis({ activityId }: { activityId: number }) 
       </div>
       {candidate ? <p className="text-sm"><span className="font-semibold">Probably planned as: </span>{candidate.label}{candidate.recoverySec === null ? '' : ` with ${formatAnalysisDuration(candidate.recoverySec)} easy recovery`}</p> : null}
       {result.targetPaceSecPerKm ? <p className="text-sm text-[var(--text-secondary)]">Likely target pace is {formatAnalysisPace(result.targetPaceSecPerKm)}, from the middle of your efforts.</p> : null}
-      <p className="text-sm text-[var(--text-secondary)]">{result.emphasis}&nbsp;– {result.confidence === 'moderate' ? 'Moderate' : 'Low'} confidence – {result.source === 'ai' ? 'Explained by AI from your data' : 'Calculated by Tempo'}</p>
+      <p className="text-sm text-[var(--text-secondary)]">{result.emphasis}&nbsp;– {result.confidence === 'moderate' ? 'Moderate' : 'Low'} confidence – {result.source === 'ai' ? 'Explained by AI from your data' : 'Calculated by Wattonaut'}</p>
       {view?.profileChanged ? <p className="text-sm text-[var(--text-secondary)]">Your Profile zones have changed since this analysis. Analyze again to use them.</p> : null}
       <details className="border-t border-[var(--border)] pt-3">
         <summary className="rounded-[var(--radius-control)] py-2 hover:bg-[var(--raised)] text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--brand)]">Reps and details</summary>

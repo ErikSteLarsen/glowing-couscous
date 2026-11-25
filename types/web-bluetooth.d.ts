@@ -1,4 +1,4 @@
-/** Minimal Web Bluetooth surface used by Tempo Ride (Chromium only). */
+/** Minimal Web Bluetooth surface used by Wattonaut Ride (Chromium only). */
 declare global {
   type BluetoothServiceUUID = number | string;
   type BluetoothCharacteristicUUID = number | string;

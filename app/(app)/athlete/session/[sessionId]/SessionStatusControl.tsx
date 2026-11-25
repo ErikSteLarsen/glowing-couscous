@@ -33,7 +33,7 @@ export function useSessionStatusAction(sessionId: number) {
         router.refresh();
       } catch {
         setMessageTone('danger');
-        setMessage('Could not reach Tempo. Check your connection and try again.');
+        setMessage('Could not reach Wattonaut. Check your connection and try again.');
       }
     });
   }

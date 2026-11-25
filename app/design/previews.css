@@ -273,7 +273,7 @@
   .tempo-demo *, .tempo-demo *::before, .tempo-demo *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
 
-/* Workout flow direction previews. They use the authenticated Tempo tokens but
+/* Workout flow direction previews. They use the authenticated Wattonaut tokens but
    keep their alternate topology scoped to the public design-preview routes. */
 .workout-preview {
   min-height: 100vh;

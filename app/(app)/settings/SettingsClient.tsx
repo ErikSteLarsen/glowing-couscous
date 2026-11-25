@@ -62,7 +62,7 @@ export function SettingsClient({
       } catch {
         setOverviewCards(overviewCards);
         setMessageTone('danger');
-        setMessage('Could not reach Tempo. Your settings didn’t change. Try again.');
+        setMessage('Could not reach Wattonaut. Your settings didn’t change. Try again.');
       }
     });
   }
@@ -112,7 +112,7 @@ export function DesktopAppSettings() {
     <Surface>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
-          <h2 className={sectionHeadingClassName}>Tempo Ride desktop app</h2>
+          <h2 className={sectionHeadingClassName}>Wattonaut Ride desktop app</h2>
           <p className="mt-1 text-[13px] leading-[1.5] text-[var(--text-secondary)]">
             Ride indoor bike workouts with your Bluetooth trainer on Windows, macOS or Linux.
           </p>
@@ -130,7 +130,7 @@ export function AboutSettings() {
         About these settings
       </summary>
       <div className="space-y-2 pb-4 text-sm text-[var(--text-secondary)]">
-        <p>Tempo uses metric units for distance and pace.</p>
+        <p>Wattonaut uses metric units for distance and pace.</p>
         <p>Email and push notifications are not available yet.</p>
       </div>
     </details>

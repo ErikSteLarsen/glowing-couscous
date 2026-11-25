@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Menu, PanelLeftOpen } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { AppSidebar, navIconFor } from '@/components/AppSidebar';
-import { BrandMark } from '@/components/BrandMark';
+import { BrandMark, BrandName } from '@/components/BrandMark';
 import { buttonFocusClassName, iconButtonClassName } from '@/components/ui';
 import { getMobileNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import type { SessionUser } from '@/lib/auth-session';
@@ -182,7 +182,7 @@ export function AppShell({
     });
   };
 
-  // Riding, the Ride home and the small Send to Tempo window are full-bleed: no sidebar, top bar or bottom nav.
+  // Riding, the Ride home and the small Send to Wattonaut window are full-bleed: no sidebar, top bar or bottom nav.
   if (/^\/athlete\/ride(?:\/\d+|\/send)?\/?$/.test(pathname)) {
     return <div id="main" tabIndex={-1} className="ink-studio-app outline-none">{children}</div>;
   }
@@ -216,9 +216,9 @@ export function AppShell({
         inert={mobileOpen && isMobileViewport ? true : undefined}
       >
         <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/90 px-4 backdrop-blur-md md:hidden">
-          <Link href={navItems[0]?.href ?? '/'} aria-label="Tempo home" className={`flex min-h-11 items-center gap-2.5 rounded-lg hover:bg-[var(--raised)] ${buttonFocusClassName}`}>
+          <Link href={navItems[0]?.href ?? '/'} aria-label="Wattonaut home" className={`flex min-h-11 items-center gap-2.5 rounded-lg hover:bg-[var(--raised)] ${buttonFocusClassName}`}>
             <BrandMark />
-            <span className="text-[15px] font-semibold text-[var(--text)]">Tempo</span>
+            <BrandName />
           </Link>
           <button
             type="button"

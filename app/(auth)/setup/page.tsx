@@ -45,7 +45,7 @@ export default function SetupPage() {
     <AuthPageShell>
       <TopBar
         title="Set up your account"
-        description="Plan workouts and track your training in Tempo."
+        description="Plan workouts and track your training in Wattonaut."
         align="center"
       />
       <Surface className="mx-auto w-full max-w-md">

@@ -12,7 +12,7 @@ export type PostChartInput = {
   height: number;
 };
 
-/** Tempo's dark palette, written out because the PNG renderer has no CSS variables. */
+/** Wattonaut's dark palette, written out because the PNG renderer has no CSS variables. */
 export const POST_CHART_COLORS = {
   ground: '#0B0F15',
   rule: '#1F2732',

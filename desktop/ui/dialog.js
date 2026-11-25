@@ -85,7 +85,7 @@ window.tempoDialog.onUpdate((state) => {
     updateDevices(state.devices)
     submit.textContent = 'Connect'
   } else if (mode === 'trust') {
-    title.textContent = 'Trust this Tempo site?'
+    title.textContent = 'Trust this Wattonaut site?'
     origin.textContent = state.origin
     status.textContent = 'This site can ask to connect to Bluetooth devices and access your local ride backups. Continue if you recognize the address.'
     submit.textContent = 'Trust and open'

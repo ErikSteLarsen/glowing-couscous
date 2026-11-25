@@ -1,7 +1,7 @@
 import { WorkoutFlowPreviews } from '@/components/design/WorkoutFlowPreviews';
 
 export const metadata = {
-  title: 'Tempo / Workout flow / Workbench',
+  title: 'Wattonaut / Workout flow / Workbench',
   description: 'Workbench direction preview for a durable workout editor.',
 };
 

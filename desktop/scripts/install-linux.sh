@@ -39,8 +39,8 @@ fi
 cat > "$applications/tempo-ride.desktop" <<ENTRY
 [Desktop Entry]
 Type=Application
-Name=Tempo Ride
-Comment=Desktop companion for Tempo indoor bike workouts
+Name=Wattonaut Ride
+Comment=Desktop companion for Wattonaut indoor bike workouts
 Exec=$exec_field %u
 Icon=tempo-ride
 Terminal=false

@@ -101,7 +101,7 @@ test('a blocked pop-up asks to allow pop-ups and leaves the video playing', () =
   const href = sendToTempoBookmarklet('https://tempo.example', KEY);
   const calls = runBookmarklet(href, { url: `https://www.youtube.com/watch?v=${ID}`, videos: [{ currentTime: 12, paused: false }], blocked: true });
   assert.equal(calls.opened.length, 1);
-  assert.deepEqual(calls.alerts, ['Allow pop-ups for YouTube to send videos to Tempo.']);
+  assert.deepEqual(calls.alerts, ['Allow pop-ups for YouTube to send videos to Wattonaut.']);
   assert.deepEqual(calls.paused, []);
 });
 

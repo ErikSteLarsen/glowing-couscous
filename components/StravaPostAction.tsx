@@ -95,7 +95,7 @@ export function StravaPostAction({
         setName((payload as StravaPostView).draft.name);
         setDescription((payload as StravaPostView).draft.description);
       })
-      .catch(() => { if (!cancelled) setLoadError('Could not reach Tempo. Check your connection and try again.'); });
+      .catch(() => { if (!cancelled) setLoadError('Could not reach Wattonaut. Check your connection and try again.'); });
     return () => { cancelled = true; };
   }, [open, view, activityId]);
 
@@ -115,7 +115,7 @@ export function StravaPostAction({
       });
       payload = await response.json().catch(() => null);
     } catch {
-      setState({ kind: 'failed', message: 'Could not reach Tempo. Check your connection and try again.' });
+      setState({ kind: 'failed', message: 'Could not reach Wattonaut. Check your connection and try again.' });
       return;
     }
     if (response.ok && payload?.url) {
@@ -156,7 +156,7 @@ export function StravaPostAction({
       <div className="space-y-4">
         <p role="status" className="flex items-start gap-2 text-[15px] text-[var(--text)]">
           <Check aria-hidden="true" size={18} strokeWidth={1.8} className="mt-0.5 shrink-0 text-[var(--status-success)]" />
-          {state.duplicate ? 'This activity was already on Strava, so Tempo linked to it instead of posting it again.' : 'Posted to Strava.'}
+          {state.duplicate ? 'This activity was already on Strava, so Wattonaut linked to it instead of posting it again.' : 'Posted to Strava.'}
         </p>
         <p className="text-[13px] leading-relaxed text-[var(--text-secondary)]">
           The picture wasn’t posted: Strava only lets its partner apps attach photos. Download it and add it to the activity in the Strava app.
@@ -179,8 +179,8 @@ export function StravaPostAction({
         <p className="text-[15px] text-[var(--text)]">Connect Strava to post this activity.</p>
         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
           {access.canConnect
-            ? 'You’ll sign in on Strava, allow Tempo to read and upload activities, and come straight back here.'
-            : 'Strava isn’t set up on this Tempo server yet.'}
+            ? 'You’ll sign in on Strava, allow Wattonaut to read and upload activities, and come straight back here.'
+            : 'Strava isn’t set up on this Wattonaut server yet.'}
         </p>
         {manualFallback}
       </div>
@@ -196,7 +196,7 @@ export function StravaPostAction({
       <div className="space-y-3">
         <p className="text-[15px] text-[var(--text)]">Reconnect Strava to allow posting.</p>
         <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
-          Tempo can read your Strava activities but isn’t allowed to upload them yet. Reconnect,
+          Wattonaut can read your Strava activities but isn’t allowed to upload them yet. Reconnect,
           keep the permission to upload activities ticked on Strava, and you’ll come back here to post.
         </p>
         {manualFallback}
@@ -251,13 +251,13 @@ export function StravaPostAction({
           </summary>
           <div className="space-y-3 px-4 pb-4">
             <p className="text-[13px] leading-relaxed text-[var(--text-secondary)]">
-              Strava only lets its partner apps, like Zwift and Garmin, attach photos, so Tempo can’t post this picture.
+              Strava only lets its partner apps, like Zwift and Garmin, attach photos, so Wattonaut can’t post this picture.
               Download it and add it to the activity in the Strava app.
             </p>
             <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--background)]">
               {imageReady ? null : <div className="skeleton absolute inset-0" aria-hidden="true" />}
               {showImage ? (
-                // eslint-disable-next-line @next/next/no-img-element -- a generated PNG served by Tempo, not a static asset
+                // eslint-disable-next-line @next/next/no-img-element -- a generated PNG served by Wattonaut, not a static asset
                 <img
                   src={imageHref}
                   alt={`Chart of ${name || 'this activity'}: recorded power and heart rate over the planned blocks.`}
@@ -319,7 +319,7 @@ export function StravaPostAction({
               <DialogDescription className="mt-1 text-[13px] text-[var(--text-secondary)]">
                 {state.kind === 'posted' ? 'Your activity is on Strava.'
                   : access?.state === 'not-connected' ? 'Strava isn’t connected yet.'
-                    : access?.state === 'needs-scope' ? 'Tempo needs one more permission.'
+                    : access?.state === 'needs-scope' ? 'Wattonaut needs one more permission.'
                       : 'This title and description go to Strava. Edit them before you post.'}
               </DialogDescription>
             </div>

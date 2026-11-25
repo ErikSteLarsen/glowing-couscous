@@ -25,5 +25,5 @@ export function DraftRecoveryNotice({ candidates, status, onRestore, onDiscard, 
 /** Where local recovery stands for the open form: kept on this browser, or unavailable. */
 export function DraftRecoveryStatus({ status, live = false }: { status: 'idle' | 'kept' | 'unavailable'; live?: boolean }) {
   if (status === 'idle') return null;
-  return <p role="status" className="text-sm text-[var(--text-secondary)]">{status === 'kept' ? live ? 'Your progress is backed up on this device. Choose Finish workout to save it.' : 'Your changes are backed up on this device until you save.' : live ? 'Tempo can’t back up your progress on this device. Keep this page open until you finish.' : 'Tempo can’t back up your changes on this device. Save before you leave this page.'}</p>;
+  return <p role="status" className="text-sm text-[var(--text-secondary)]">{status === 'kept' ? live ? 'Your progress is backed up on this device. Choose Finish workout to save it.' : 'Your changes are backed up on this device until you save.' : live ? 'Wattonaut can’t back up your progress on this device. Keep this page open until you finish.' : 'Wattonaut can’t back up your changes on this device. Save before you leave this page.'}</p>;
 }

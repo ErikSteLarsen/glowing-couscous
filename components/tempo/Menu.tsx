@@ -28,7 +28,7 @@ export function OverflowMenuTrigger({ compact = false, className = '', ...props 
 }
 
 /**
- * Tempo styling for the UI SDK Menu: a raised overlay with hairline rules,
+ * Wattonaut styling for the UI SDK Menu: a raised overlay with hairline rules,
  * 40px rows (44px on touch), and the trace for the highlighted row.
  */
 const itemClassName =

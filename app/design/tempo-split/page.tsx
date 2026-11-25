@@ -1,8 +1,8 @@
 import { TempoDirectionDemo } from '@/components/design/TempoDirectionDemo';
 
 export const metadata = {
-  title: 'Tempo – Split board direction',
-  description: 'A Tempo visual system direction preview.',
+  title: 'Wattonaut – Split board direction',
+  description: 'A Wattonaut visual system direction preview.',
 };
 
 export default function TempoSplitDirectionPage() {

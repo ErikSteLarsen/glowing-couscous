@@ -86,7 +86,7 @@ function harness(now = new Date('2026-09-27T12:00:00.000Z')) {
       AUTH_URL: 'http://localhost:3000',
       NODE_ENV: 'test',
       RESEND_API_KEY: 'test-key',
-      PASSWORD_RESET_FROM_EMAIL: 'Tempo <accounts@example.com>',
+      PASSWORD_RESET_FROM_EMAIL: 'Wattonaut <accounts@example.com>',
     },
     now: () => currentNow,
     fetcher: async (_url, init) => {
@@ -155,7 +155,7 @@ test('password recovery rejects insecure production URLs and overlong bcrypt pas
     AUTH_URL: 'http://tempo.example',
     NODE_ENV: 'production',
     RESEND_API_KEY: 'test-key',
-    PASSWORD_RESET_FROM_EMAIL: 'Tempo <accounts@example.com>',
+    PASSWORD_RESET_FROM_EMAIL: 'Wattonaut <accounts@example.com>',
   }), null);
   assert.equal(await testHarness.service.completeReset('x'.repeat(43), 'x'.repeat(73)), false);
 });

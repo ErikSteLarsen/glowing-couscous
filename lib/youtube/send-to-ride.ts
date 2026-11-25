@@ -1,7 +1,7 @@
 /**
  * Bringing a YouTube video from the rider's own browser into an open ride tab.
  *
- * The "Send to Tempo" bookmark runs on a YouTube video page: it opens a small Tempo window at
+ * The "Send to Wattonaut" bookmark runs on a YouTube video page: it opens a small Wattonaut window at
  * `SEND_PATH` with the page URL, the player's position and this browser's send key, then pauses
  * the video. That window hands the video to one ride tab over a BroadcastChannel in two steps:
  * it offers the send, every open ride tab answers that it is available, and the window addresses
@@ -74,7 +74,7 @@ export function getOrCreateSendKey(): string {
 }
 
 /**
- * The bookmark's `javascript:` URL for this Tempo origin and send key. Kept to plain ES5 so it runs
+ * The bookmark's `javascript:` URL for this Wattonaut origin and send key. Kept to plain ES5 so it runs
  * from any bookmarks bar. Outside a YouTube video page it only says so. It opens the send window
  * first and pauses YouTube only if that window opened. The position comes from the playing (else
  * the largest visible) video, as whole seconds, 0 included; a live stream sends none.
@@ -91,14 +91,14 @@ export function sendToTempoBookmarklet(origin: string, key: string): string {
     'for(i=0;i<s.length;i++){r=s[i].getBoundingClientRect();a=Math.max(0,Math.min(r.right,window.innerWidth)-Math.max(r.left,0))*Math.max(0,Math.min(r.bottom,window.innerHeight)-Math.max(r.top,0))+(s[i].paused?0:1e9);if(a>b){b=a;v=s[i]}}',
     "var t=!v||document.querySelector('.ytp-live')||v.duration===Infinity?'':'&t='+(Math.floor(v.currentTime)||0);",
     `var w=window.open(${target}+encodeURIComponent(u)+t+${fragment},'tempo-send','popup,width=420,height=260');`,
-    "if(!w){window.alert('Allow pop-ups for YouTube to send videos to Tempo.');return}",
+    "if(!w){window.alert('Allow pop-ups for YouTube to send videos to Wattonaut.');return}",
     'if(v)try{v.pause()}catch(e){}',
     '})()',
   ].join('');
   return `javascript:${encodeURIComponent(body)}`;
 }
 
-/** Opens the Tempo Ride app, which hands the video to its ride. */
+/** Opens the Wattonaut Ride app, which hands the video to its ride. */
 export function rideAppVideoLink(videoId: string, startSec: number): string {
   return `tempo-ride://video?v=${videoId}${startSec > 0 ? `&t=${startSec}` : ''}`;
 }

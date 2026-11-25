@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { PasswordResetClient } from '@/components/PasswordResetClient';
 
 export const metadata: Metadata = {
-  title: 'Reset your Tempo password',
+  title: 'Reset your Wattonaut password',
   robots: { index: false, follow: false },
   referrer: 'no-referrer',
 };

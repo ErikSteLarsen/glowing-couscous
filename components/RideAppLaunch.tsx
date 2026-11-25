@@ -31,13 +31,13 @@ function isInTempoRide(): boolean {
   return window.tempoDesktop?.isDesktop === true;
 }
 
-/** True inside the Tempo Ride desktop app; false during server rendering. */
+/** True inside the Wattonaut Ride desktop app; false during server rendering. */
 export function useInTempoRide(): boolean {
   return useSyncExternalStore(subscribeToNothing, isInTempoRide, () => false);
 }
 
 /** Link to the public download page; opens a new tab so an in-progress workout stays put. */
-export function GetTempoRideLink({ children = 'Get Tempo Ride', className = 'text-[var(--brand)] underline-offset-4 hover:underline' }: { children?: ReactNode; className?: string }) {
+export function GetTempoRideLink({ children = 'Get Wattonaut Ride', className = 'text-[var(--brand)] underline-offset-4 hover:underline' }: { children?: ReactNode; className?: string }) {
   return (
     <Link href="/download" target="_blank" rel="noopener" className={className}>
       {children}<span className="sr-only"> (opens in a new tab)</span>
@@ -116,9 +116,9 @@ export function RideAppInstallHelp({ os, onRetry }: { os: RideOs; onRetry: () =>
 
   return (
     <div className="space-y-3 border-t border-[var(--border)] pt-4 text-sm text-[var(--text-secondary)]">
-      <p role="status" className="font-medium text-[var(--text)]">Tempo Ride may not have opened</p>
+      <p role="status" className="font-medium text-[var(--text)]">Wattonaut Ride may not have opened</p>
       <div className="flex flex-wrap gap-2">
-        <button type="button" className={compactSecondaryButtonClassName} onClick={onRetry}>Try opening Tempo Ride again</button>
+        <button type="button" className={compactSecondaryButtonClassName} onClick={onRetry}>Try opening Wattonaut Ride again</button>
         {primary.map((download) => (
           <a key={download.id} href={download.url} className={compactSecondaryButtonClassName}>
             <Download aria-hidden="true" size={14} strokeWidth={1.7} />{download.label}

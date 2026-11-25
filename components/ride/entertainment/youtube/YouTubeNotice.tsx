@@ -8,15 +8,15 @@ function ExternalTextLink({ href, children }: { href: string; children: string }
 
 const termsLink = <ExternalTextLink href="https://www.youtube.com/t/terms">YouTube Terms of Service</ExternalTextLink>;
 
-/** Unfolds in place: a page of its own would leave the ride in the Tempo Ride app. */
+/** Unfolds in place: a page of its own would leave the ride in the Wattonaut Ride app. */
 function PrivacyNotice() {
   return (
     <details className="min-w-0 open:basis-full">
       <summary className={`w-fit cursor-pointer ${linkClassName}`}>YouTube privacy notice</summary>
       <div className="mt-2 flex max-w-prose flex-col gap-1.5 leading-relaxed">
-        <p>Tempo uses YouTube API Services to check the video you pick and YouTube’s player to show it.</p>
-        <p>Tempo’s server sends YouTube the video’s ID, not your name, account or ride data. It keeps the video’s details for up to an hour and counts your lookups for a short time to limit them. Tempo doesn’t access your YouTube account.</p>
-        <p>This browser keeps your recently played videos for up to 30 days (Clear removes them), your place in the video for this tab, your choices here and a key for the Send to Tempo bookmark.</p>
+        <p>Wattonaut uses YouTube API Services to check the video you pick and YouTube’s player to show it.</p>
+        <p>Wattonaut’s server sends YouTube the video’s ID, not your name, account or ride data. It keeps the video’s details for up to an hour and counts your lookups for a short time to limit them. Wattonaut doesn’t access your YouTube account.</p>
+        <p>This browser keeps your recently played videos for up to 30 days (Clear removes them), your place in the video for this tab, your choices here and a key for the Send to Wattonaut bookmark.</p>
         <p>The player and thumbnails load from YouTube, which receives your IP address and browser details, may show ads, and may store or read cookies and similar data on your device. Google handles that under the <ExternalTextLink href="https://policies.google.com/privacy">Google Privacy Policy</ExternalTextLink>.</p>
       </div>
     </details>

@@ -10,7 +10,7 @@ export type SavedYouTubeView = {
   video: YouTubeVideoChoice | null;
   /** Seconds into `video`. */
   timeSec: number;
-  /** The video was playing, or Tempo had paused it (ride paused, dialog open). */
+  /** The video was playing, or Wattonaut had paused it (ride paused, dialog open). */
   playing: boolean;
 };
 

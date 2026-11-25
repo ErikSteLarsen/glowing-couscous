@@ -121,7 +121,7 @@ test('post draft is a clean card: grouped numbers, then the work, with no app fo
     draft.description,
     `⚡ 210 W avg – ${stats.normalizedPowerWatts} W NP\n❤️ ${stats.averageHeartRateBpm} bpm avg – ${stats.maxHeartRateBpm} max\n⏱ 20 min – TSS 41\n\n🔥 4 × 4 min Z5`,
   );
-  assert.doesNotMatch(draft.description, /Tempo/);
+  assert.doesNotMatch(draft.description, /Wattonaut/);
   const bare = buildStravaPostDraft({ title: 'Spin', stats: statsFromPoints([{ elapsedSec: 0 }], 5400, null), blocks: [] });
   assert.equal(bare.description, '⏱ 1h 30m');
 });

@@ -184,7 +184,7 @@ export function ActivityImportClient({
         {fileError ? <p role="alert" className={dangerTextClassName}>{fileError}</p> : null}
         {notice ? <p role="status" className={successTextClassName}>{notice}</p> : null}
         <p className="text-[12px] leading-[1.5] text-[var(--text-muted)]">
-          Your file is read on this device and never uploaded. Tempo saves the activity’s totals and recorded data, such as heart rate and power, until you delete it.
+          Your file is read on this device and never uploaded. Wattonaut saves the activity’s totals and recorded data, such as heart rate and power, until you delete it.
         </p>
       </Surface>
 

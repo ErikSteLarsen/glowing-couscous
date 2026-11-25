@@ -49,9 +49,9 @@ export function TempoDirectionDemo({ direction }: { direction: Direction }) {
       <div className="tempo-demo__layout">
         <aside className={`tempo-demo__sidebar ${menuOpen ? 'is-open' : ''}`}>
           <div className="tempo-demo__brand-row">
-            <Link href="/design/tempo-split" className="tempo-demo__brand" aria-label="Tempo design previews">
+            <Link href="/design/tempo-split" className="tempo-demo__brand" aria-label="Wattonaut design previews">
               <span className="tempo-demo__brand-mark"><span /></span>
-              <span>Tempo</span>
+              <span>Wattonaut</span>
             </Link>
             <button type="button" className="tempo-demo__close-menu" onClick={() => setMenuOpen(false)} aria-label="Close navigation">
               <X size={18} aria-hidden="true" />
@@ -145,7 +145,7 @@ export function TempoDirectionDemo({ direction }: { direction: Direction }) {
             </aside>
           </div>
 
-          <footer className="tempo-demo__footer"><span>Tempo design direction preview</span><span>Sample athlete data – not connected to your account</span></footer>
+          <footer className="tempo-demo__footer"><span>Wattonaut design direction preview</span><span>Sample athlete data – not connected to your account</span></footer>
         </section>
       </div>
     </main>

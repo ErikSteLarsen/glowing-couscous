@@ -26,7 +26,7 @@ test('other or foreign callbacks are dropped', () => {
   assert.equal(loginPathFor('/athlete/settings'), '/login');
 });
 
-test('the Send to Tempo window survives the sign-in round trip with its validated query', () => {
+test('the Send to Wattonaut window survives the sign-in round trip with its validated query', () => {
   const link = 'https://www.youtube.com/watch?v=aqz-KE-bpKQ&t=5s';
   const path = `/athlete/ride/send?u=${encodeURIComponent(link)}&t=83`;
   assert.equal(getSafeCallbackPath(path), path);

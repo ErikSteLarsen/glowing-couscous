@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { ComponentProps, ReactNode } from 'react';
 
 /**
- * The shared workout card: Workouts (both tabs), Tempo Ride and Activity.
+ * The shared workout card: Workouts (both tabs), Wattonaut Ride and Activity.
  * The title owns the card's one primary target and stretches over the whole card;
  * footer actions sit above that overlay. Compose with the parts below.
  */

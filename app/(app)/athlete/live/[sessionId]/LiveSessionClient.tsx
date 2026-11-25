@@ -128,7 +128,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, profile, ftpWatts
       setMessage('Workout marked as done.');
       router.refresh();
     } catch {
-      setError('Could not reach Tempo. Check your connection and try again.');
+      setError('Could not reach Wattonaut. Check your connection and try again.');
     } finally {
       setPending(false);
     }

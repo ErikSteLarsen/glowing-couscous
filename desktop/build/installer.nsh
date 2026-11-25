@@ -1,5 +1,5 @@
 !macro customInstall
-  WriteRegStr HKCU "Software\Classes\tempo-ride" "" "URL:Tempo Ride"
+  WriteRegStr HKCU "Software\Classes\tempo-ride" "" "URL:Wattonaut Ride"
   WriteRegStr HKCU "Software\Classes\tempo-ride" "URL Protocol" ""
   WriteRegStr HKCU "Software\Classes\tempo-ride\shell\open\command" "" '"$INSTDIR\${APP_EXECUTABLE_FILENAME}" "%1"'
 !macroend

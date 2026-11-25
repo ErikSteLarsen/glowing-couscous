@@ -8,7 +8,7 @@ import { build } from 'esbuild';
 import { chromium } from '@playwright/test';
 
 // Isolated real components: router navigation is outside this interaction test.
-for (const width of [390, 1440]) test(`Tempo controls preserve keyboard, focus, and workout actions at ${width}px`, async () => {
+for (const width of [390, 1440]) test(`Wattonaut controls preserve keyboard, focus, and workout actions at ${width}px`, async () => {
   const directory = await mkdtemp(join(tmpdir(), 'tempo-ui-'));
   let browser;
   try {

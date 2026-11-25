@@ -515,10 +515,13 @@ body {
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  color: var(--brand);
 }
+
+/* The logo keeps its own two blues per theme; interface tokens do not change with it. */
+.brand-mark-sky { fill: #1C7BA2; }
+.brand-mark-ground { fill: #5EB6D8; }
+:root[data-workspace-theme="light"] .brand-mark-sky { fill: #0F4A64; }
+:root[data-workspace-theme="light"] .brand-mark-ground { fill: #1C7BA2; }
 
 /* Tiles: squares of reading instead of heavy cards. */
 
@@ -736,7 +739,7 @@ button.tile:where(:not(:disabled, [aria-disabled="true"], [data-disabled])):hove
   }
 }
 
-/* Tempo visual direction previews. These are intentionally scoped so the
+/* Wattonaut visual direction previews. These are intentionally scoped so the
    authenticated product stays unchanged until a direction is selected. */
 .tempo-demo {
   --demo-bg: #f1f5f8;
@@ -976,7 +979,7 @@ button.tile:where(:not(:disabled, [aria-disabled="true"], [data-disabled])):hove
   .tempo-demo *, .tempo-demo *::before, .tempo-demo *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
 
-/* Workout flow direction previews. They use the authenticated Tempo tokens but
+/* Workout flow direction previews. They use the authenticated Wattonaut tokens but
    keep their alternate topology scoped to the public design-preview routes. */
 .workout-preview {
   min-height: 100vh;
@@ -1982,7 +1985,7 @@ body[data-workspace-theme="dark"] .profile-savebar {
   .training-calendar__grid--month .training-calendar__date { min-height: 72px; }
 }
 
-/* SDK alert dialogs use the native top layer; retain Tempo's visual tokens. */
+/* SDK alert dialogs use the native top layer; retain Wattonaut's visual tokens. */
 .tempo-alert-dialog {
   position: fixed;
   inset: 0;

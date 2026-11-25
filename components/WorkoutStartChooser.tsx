@@ -175,7 +175,7 @@ function StartControl({ workout, source, triggerClassName }: Props) {
                   </button>
                   <p id={`${dialogId}-${mode}`} className="px-1 text-[13px] leading-relaxed text-[var(--text-secondary)]">
                     {description}
-                    {mode === 'app' ? <> <GetTempoRideLink>Don’t have it yet? Get Tempo Ride</GetTempoRideLink></> : null}
+                    {mode === 'app' ? <> <GetTempoRideLink>Don’t have it yet? Get Wattonaut Ride</GetTempoRideLink></> : null}
                   </p>
                 </div>
               ))}
@@ -189,7 +189,7 @@ function StartControl({ workout, source, triggerClassName }: Props) {
                   <Link href={withBackOrigin(`/athlete/session/${preparedId}`, source.from)} className={ghostButtonClassName('compact')}>Open workout</Link>
                 </p>
               ) : null}
-              {app.state === 'opening' ? <p role="status" className="text-sm text-[var(--text-secondary)]">Opening Tempo Ride…</p> : null}
+              {app.state === 'opening' ? <p role="status" className="text-sm text-[var(--text-secondary)]">Opening Wattonaut Ride…</p> : null}
               {app.state === 'attempted' && sessionId !== null ? (
                 <RideAppInstallHelp os={runtime.os} onRetry={() => openApp(sessionId)} />
               ) : null}

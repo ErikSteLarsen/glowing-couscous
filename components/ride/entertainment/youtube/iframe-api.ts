@@ -10,7 +10,7 @@ export type YouTubePlayer = {
 export type YouTubePlayerEvents = {
   onReady: (player: YouTubePlayer) => void;
   onError: (code: number) => void;
-  /** The API or the player didn't load (blocked or offline), so Tempo can't control it. */
+  /** The API or the player didn't load (blocked or offline), so Wattonaut can't control it. */
   onUnavailable: () => void;
 };
 
@@ -59,7 +59,7 @@ function loadYouTubeIframeApi(): Promise<YouTubeNamespace> {
 
 /**
  * Controls the player in `iframe` (already in the page) with YouTube's IFrame Player API. Browsers
- * only: in the Tempo Ride app its script would run next to the recording bridge.
+ * only: in the Wattonaut Ride app its script would run next to the recording bridge.
  */
 export function connectYouTubePlayer(iframe: HTMLIFrameElement, events: YouTubePlayerEvents): { destroy(): void } {
   let cancelled = false;
@@ -102,12 +102,12 @@ export function connectYouTubePlayer(iframe: HTMLIFrameElement, events: YouTubeP
 export function youTubeEmbedUrl(videoId: string, { startSec, origin }: { startSec?: number; origin?: string }): string {
   const url = new URL(`${YOUTUBE_EMBED_ORIGIN}/embed/${videoId}`);
   const params: Record<string, string> = {
-    // Never start by itself: Tempo calls playVideo() only when the ride and the page allow it.
+    // Never start by itself: Wattonaut calls playVideo() only when the ride and the page allow it.
     autoplay: '0',
     controls: '1',
     playsinline: '1',
     rel: '0',
-    // YouTube's own full screen would hide the ride stats; Tempo's F full screen keeps them.
+    // YouTube's own full screen would hide the ride stats; Wattonaut's F full screen keeps them.
     fs: '0',
   };
   if (origin) Object.assign(params, { enablejsapi: '1', origin });

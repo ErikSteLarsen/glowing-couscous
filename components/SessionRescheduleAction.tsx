@@ -50,7 +50,7 @@ async function moveSession(sessionId: number, date: string): Promise<MoveResult>
       : 'Could not move this workout.';
     return { ok: false, error };
   } catch {
-    return { ok: false, error: 'Could not reach Tempo. Check your connection and try again.' };
+    return { ok: false, error: 'Could not reach Wattonaut. Check your connection and try again.' };
   }
 }
 

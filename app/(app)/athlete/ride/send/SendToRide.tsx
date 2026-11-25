@@ -14,12 +14,12 @@ const CLOSE_AFTER_MS = 1000;
 
 const MESSAGES: Record<State, { title: string; body?: string }> = {
   loading: { title: '' },
-  setup: { title: 'Add the Send to Tempo bookmark', body: 'Drag it to your bookmarks bar. On any YouTube video, click it to send the video to your ride.' },
+  setup: { title: 'Add the Send to Wattonaut bookmark', body: 'Drag it to your bookmarks bar. On any YouTube video, click it to send the video to your ride.' },
   confirm: { title: 'Send this video to your ride?' },
   sending: { title: 'Sending to your ride…' },
   sent: { title: 'Sent to your ride – you can close this window' },
-  'no-ride': { title: 'No ride is open in this browser.', body: 'Riding in the Tempo Ride app? Send it there. Otherwise start your ride in Tempo, then send again.' },
-  invalid: { title: 'This isn’t a YouTube video.', body: 'Open a video on YouTube, then click Send to Tempo again.' },
+  'no-ride': { title: 'No ride is open in this browser.', body: 'Riding in the Wattonaut Ride app? Send it there. Otherwise start your ride in Wattonaut, then send again.' },
+  invalid: { title: 'This isn’t a YouTube video.', body: 'Open a video on YouTube, then click Send to Wattonaut again.' },
 };
 
 const subscribeNever = () => () => {};
@@ -106,7 +106,7 @@ export function SendToRide({ url, startSec }: { url: string | null; startSec: st
             </>
           ) : state === 'no-ride' ? (
             <div className="flex flex-wrap justify-center gap-2">
-              {appLink ? <a href={appLink} className={compactPrimaryButtonClassName}>Send to the Tempo Ride app</a> : null}
+              {appLink ? <a href={appLink} className={compactPrimaryButtonClassName}>Send to the Wattonaut Ride app</a> : null}
               <button type="button" className={compactSecondaryButtonClassName} onClick={() => setAttempt((value) => value + 1)}>
                 Send again
               </button>

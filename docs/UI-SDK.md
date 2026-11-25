@@ -1,7 +1,7 @@
 # UI SDK integration
 
-Tempo uses `@ui-sdk/react` and its `@ui-sdk/core` peer, pinned together to
-0.1.0-beta.6. React 19 is already installed. The SDK is unstyled; Tempo's
+Wattonaut uses `@ui-sdk/react` and its `@ui-sdk/core` peer, pinned together to
+0.1.0-beta.6. React 19 is already installed. The SDK is unstyled; Wattonaut's
 semantic tokens and shared classes remain the visual contract. No provider,
 global SDK stylesheet, or agent access to private account actions is needed.
 
@@ -34,7 +34,7 @@ global SDK stylesheet, or agent access to private account actions is needed.
   tile is the trigger, so focus returns to it; Escape, a labelled title,
   contained scrolling, a bottom sheet on phones and a centered panel from
   `md`. Charts inside only consume Escape while a point is selected.
-- `components/tempo/Menu.tsx`: Tempo-styled SDK Menu parts (content, items,
+- `components/tempo/Menu.tsx`: Wattonaut-styled SDK Menu parts (content, items,
   checkbox/radio items, indicator, label, separator). Calendar uses it for the
   header More menu and each session's overflow actions. `WorkoutBuilder` uses
   it for Add step and each step or set ⋯ menu; actions that add, duplicate or

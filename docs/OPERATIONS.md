@@ -53,7 +53,7 @@ check the host and port in `DATABASE_URL` with `pg_isready -h <host> -p <port>`.
 If its PostgreSQL container is stopped, start the existing container to restore
 access to the seeded accounts and their data.
 
-## Tempo Ride (indoor trainer)
+## Wattonaut Ride (indoor trainer)
 
 `/athlete/ride/[sessionId]` uses Web Bluetooth, which needs Chrome or Edge
 (desktop or Android) on HTTPS or `localhost`. Safari and Firefox get a
@@ -108,14 +108,14 @@ Verify the public callback challenge, create an activity in a connected Strava
 account, then visit Import and check the inbox and planned-session/standalone outcomes. No new
 storage allowance or retention deletion is implemented by this feature.
 
-Disconnecting in Tempo clears the connection and its imported Strava sessions,
+Disconnecting in Wattonaut clears the connection and its imported Strava sessions,
 then attempts to revoke the provider token. If Strava does not confirm
 revocation, the page links to Strava's connected-app settings. Strava-side
 authorization changes are received through the webhook.
 
 ### Posting to Strava
 
-Tempo asks for `activity:read,activity:read_all,activity:write` when connecting.
+Wattonaut asks for `activity:read,activity:read_all,activity:write` when connecting.
 For a read-only connection, **Reconnect Strava** opens Strava’s consent screen
 again and returns the athlete to the activity. Apply `20261123120000_activity_strava_post`
 (`pnpm db:migrate`) before deploying. No new production environment variables
@@ -161,10 +161,10 @@ The seed command creates these local accounts:
 ## Guided Workout Creator
 
 Athletes can build an editable workout draft from four choices in Workouts:
-sport, length, effort, and whether to use intervals. Tempo reads only their
+sport, length, effort, and whether to use intervals. Wattonaut reads only their
 completed sessions from the past 28 days to summarize recent training. A
 server-side model call, when a model key is configured and its shared health
-check succeeds, designs a complete workout with its own title and blocks. Tempo
+check succeeds, designs a complete workout with its own title and blocks. Wattonaut
 validates sport, exact duration, block structure, zone limits, and cautious
 limits for sparse same-sport history or a recent high-RPE session. If the model
 is unavailable or returns an invalid draft, the creator chooses a validated

@@ -65,7 +65,7 @@ export function TrainingTemplatesClient({ templates, workouts }: { templates: Te
       setNotice({ text: method === 'DELETE' ? 'Training plan deleted. Workouts already on your Calendar stay.' : path.endsWith('/duplicate') ? 'Training plan copied.' : 'Training plan saved. Use Apply to Calendar to add it to a week or month.', error: false });
       router.refresh();
     } catch (error) {
-      setNotice({ text: error instanceof Error ? error.message : 'Could not reach Tempo. Your changes are still here. Try again.', error: true });
+      setNotice({ text: error instanceof Error ? error.message : 'Could not reach Wattonaut. Your changes are still here. Try again.', error: true });
     } finally { inFlight.current = false; setBusy(false); }
   }
 

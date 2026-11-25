@@ -11,7 +11,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
 
   return (
     <AuthPageShell>
-      <TopBar title="We couldn’t load this page" description="Try again, or return to Tempo Home." align="center" />
+      <TopBar title="We couldn’t load this page" description="Try again, or return to Wattonaut Home." align="center" />
       <Surface className="mx-auto w-full max-w-md space-y-4 text-center">
         <p role="alert" className="text-sm text-[var(--text-secondary)]">An unexpected error stopped this page from loading.</p>
         {error.digest ? <p className="text-xs text-[var(--text-muted)]">Error code: {error.digest}</p> : null}

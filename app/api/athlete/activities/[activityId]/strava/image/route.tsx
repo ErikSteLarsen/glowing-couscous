@@ -51,7 +51,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ acti
           </div>
           <div style={{ display: 'flex', alignItems: 'center', fontSize: 20, color: C.ink3 }}>
             <div style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: C.trace, marginRight: 10 }} />
-            Recorded with Tempo
+            Recorded with Wattonaut
           </div>
         </div>
       </div>

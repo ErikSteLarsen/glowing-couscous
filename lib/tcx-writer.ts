@@ -90,9 +90,9 @@ export function buildActivityTcx(input: TcxWriterInput): string {
     '<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd">',
     `<Activities><Activity Sport="${sport}"><Id>${isoSecond(input.startedAt)}</Id>${laps.join('')}`,
     `<Notes>${escapeXml(input.title)}</Notes>`,
-    '<Creator xsi:type="Device_t"><Name>Tempo</Name><UnitId>0</UnitId><ProductID>0</ProductID><Version><VersionMajor>1</VersionMajor><VersionMinor>0</VersionMinor></Version></Creator>',
+    '<Creator xsi:type="Device_t"><Name>Wattonaut</Name><UnitId>0</UnitId><ProductID>0</ProductID><Version><VersionMajor>1</VersionMajor><VersionMinor>0</VersionMinor></Version></Creator>',
     '</Activity></Activities>',
-    '<Author xsi:type="Application_t"><Name>Tempo</Name><Build><Version><VersionMajor>1</VersionMajor><VersionMinor>0</VersionMinor></Version></Build><LangID>en</LangID><PartNumber>000-00000-00</PartNumber></Author>',
+    '<Author xsi:type="Application_t"><Name>Wattonaut</Name><Build><Version><VersionMajor>1</VersionMajor><VersionMinor>0</VersionMinor></Version></Build><LangID>en</LangID><PartNumber>000-00000-00</PartNumber></Author>',
     '</TrainingCenterDatabase>',
     '',
   ].join('\n');

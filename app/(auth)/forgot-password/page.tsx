@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
         setError(result.error ?? 'We couldn’t send a reset link. Try again later.');
         return;
       }
-      setMessage(result.message ?? 'If this email has a Tempo password, we’ll send you a reset link shortly.');
+      setMessage(result.message ?? 'If this email has a Wattonaut password, we’ll send you a reset link shortly.');
     } catch {
       setError('We couldn’t send a reset link. Check your connection and try again.');
     } finally {
