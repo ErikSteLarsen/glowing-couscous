@@ -6,10 +6,11 @@ import { createAthletePlannerService } from '../lib/athlete-planner-service.ts';
 import { createTrainingLoadService } from '../lib/training-load-service.ts';
 import { createCoachService } from '../lib/coach-service.ts';
 import { getActivityHref, parseActivityFilters } from '../lib/activity-navigation.ts';
+import { describeActivitySource } from '../lib/activity-source.ts';
 import { disposableDatabaseSkip, withDisposableDatabase } from './disposable-postgres.ts';
 
 test('activity navigation validates query values and preserves filters between pages', () => {
-  assert.deepEqual(parseActivityFilters({ page: ['2'], q: ['run'], sport: 'CYCLING' }), { page: 1, query: '', sport: null });
+  assert.deepEqual(parseActivityFilters({ page: ['2'], q: ['run'], sport: 'CYCLING' }), { page: 1, query: '', sport: null, source: null });
   for (const page of ['-1', '0', '1.5', 'Infinity', '99999999999999']) {
     assert.equal(parseActivityFilters({ page }).page, 1);
   }
@@ -19,6 +20,21 @@ test('activity navigation validates query values and preserves filters between p
   assert.equal(url.searchParams.get('sport'), 'RUNNING');
   assert.equal(url.searchParams.get('page'), '3');
   assert.equal(getActivityHref(parseActivityFilters({})), '/athlete/activity');
+  assert.equal(parseActivityFilters({ source: 'recorded' }).source, 'recorded');
+  assert.equal(parseActivityFilters({ source: 'elsewhere' }).source, null);
+  assert.equal(getActivityHref(parseActivityFilters({ source: 'imported', sport: 'RUNNING' })), '/athlete/activity?sport=RUNNING&source=imported');
+});
+
+test('activities say where they came from: recorded here, imported or by hand', () => {
+  const describe = (metricsSource: string, recordedWith: string | null = null, externalSource: string | null = null) => describeActivitySource({ metricsSource, recordedWith, externalSource });
+  assert.deepEqual(describe('file-import', 'ride'), { group: 'recorded', kind: 'ride', label: 'Recorded with Ride' });
+  assert.deepEqual(describe('manual-actual', 'live'), { group: 'recorded', kind: 'live', label: 'Followed in TempoBuilder' });
+  assert.equal(describe('file-import').label, 'Activity file');
+  assert.equal(describe('fit-import').group, 'imported');
+  assert.equal(describe('strava-import', null, 'STRAVA').kind, 'strava');
+  assert.equal(describe('manual-unplanned').label, 'Logged by hand');
+  assert.equal(describe('manual-actual').label, 'Marked done');
+  assert.equal(describe('manual-planned').group, 'manual');
 });
 
 test('activity history pages and filtered totals retain outcomes and athlete isolation in PostgreSQL', { skip: disposableDatabaseSkip }, async (t) => {
@@ -98,6 +114,24 @@ test('activity history pages and filtered totals retain outcomes and athlete iso
         assert.equal(feed.activities[0].title, '90% FTP_under\\hill');
         assert.deepEqual(feed.totals, { durationSec: 600, tss: 10, unknownLoad: 0 });
       }
+    });
+
+    await t.test('source tabs count and filter recorded, imported and hand-logged activities', async () => {
+      const [ride, file] = await db.activity.findMany({ where: { athleteId: athlete.id }, orderBy: { id: 'asc' }, take: 2 });
+      await db.activity.update({ where: { id: ride.id }, data: { metricsSource: 'file-import', recordedWith: 'ride' } });
+      await db.activity.update({ where: { id: file.id }, data: { metricsSource: 'fit-import' } });
+      const all = await service.loadActivityFeed(athlete.id);
+      assert.deepEqual(all?.sourceCounts, { recorded: 1, imported: 1, manual: 24 });
+      const recorded = await service.loadActivityFeed(athlete.id, parseActivityFilters({ source: 'recorded' }));
+      assert.equal(recorded?.count, 1);
+      assert.equal(recorded?.activities[0].id, ride.id);
+      assert.deepEqual(recorded?.activities[0].source, { group: 'recorded', kind: 'ride', label: 'Recorded with Ride' });
+      // Counts ignore the chosen source so every tab keeps its number.
+      assert.deepEqual(recorded?.sourceCounts, all?.sourceCounts);
+      const imported = await service.loadActivityFeed(athlete.id, parseActivityFilters({ source: 'imported' }));
+      assert.deepEqual(imported?.activities.map((item) => item.id), [file.id]);
+      await db.activity.update({ where: { id: ride.id }, data: { metricsSource: 'manual-planned', recordedWith: null } });
+      await db.activity.update({ where: { id: file.id }, data: { metricsSource: 'manual-planned' } });
     });
 
     await t.test('manual logging is owner-scoped, idempotent, unplanned, and visible on the completion date', async () => {

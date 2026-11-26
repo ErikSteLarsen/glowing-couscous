@@ -35,7 +35,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Your note can’t be saved. Check it and try again.' }, { status: 400 });
     }
     const result = isDone
-      ? await athleteCompletionService.completeSession(user.id, parsedSessionId, { notes, localDay: typeof body.localDay === 'string' ? body.localDay : undefined })
+      ? await athleteCompletionService.completeSession(user.id, parsedSessionId, { notes, localDay: typeof body.localDay === 'string' ? body.localDay : undefined, via: body.via === 'live' ? 'live' : undefined })
       : await athleteCompletionService.reopenSession(user.id, parsedSessionId, { notes });
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: result.status });

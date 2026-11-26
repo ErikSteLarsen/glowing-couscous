@@ -321,7 +321,7 @@ test('athlete planner rejects incomplete template ranges before any session writ
 
 test('athlete placement API and UI carry a stable retry key', async () => {
   const route = await readFile(path.join(process.cwd(), 'app/api/athlete/planner/assignments/route.ts'), 'utf8');
-  const request = await readFile(path.join(process.cwd(), 'app/(app)/athlete/calendar/AddDialogFrame.tsx'), 'utf8');
+  const request = await readFile(path.join(process.cwd(), 'components/AddDialogFrame.tsx'), 'utf8');
   const workoutDialog = await readFile(path.join(process.cwd(), 'app/(app)/athlete/calendar/AddWorkoutDialog.tsx'), 'utf8');
 
   assert.match(route, /requestKey: body\.value\.requestKey/);

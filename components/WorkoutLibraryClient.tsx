@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from 'react';
-import { ChevronDown, Plus, Trash2, X } from 'lucide-react';
+import { CalendarPlus, ChevronDown, Plus, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -24,7 +24,8 @@ import { GuidedWorkoutForm, type GuidedWorkoutInfo } from '@/components/GuidedWo
 import { ShareLinkResult, useShareLink } from '@/components/ShareLinkButton';
 import { Menu, MenuContent, MenuItem, MenuTrigger, OverflowMenuTrigger } from '@/components/tempobuilder/Menu';
 import { CatalogProfile } from '@/components/library/CatalogProfile';
-import { MyWorkoutMenu } from '@/components/library/MyWorkoutActions';
+import { MyWorkoutMenu, myWorkoutScheduleHref } from '@/components/library/MyWorkoutActions';
+import { ReturnHereLink } from '@/components/ReturnHereLink';
 import { formatDuration } from '@/lib/format-duration';
 import {
   createEmptySessionEditorDraft,
@@ -126,6 +127,8 @@ export function WorkoutLibraryClient({
   const [isDirty, setIsDirty] = useState(false);
   const [pendingDraftAction, setPendingDraftAction] = useState<PendingDraftAction | null>(null);
   const [message, setMessage] = useState('');
+  // The workout just saved for the first time; its message offers Add to Calendar.
+  const [newlySaved, setNewlySaved] = useState<{ id: number; message: string } | null>(null);
   const [messageTone, setMessageTone] = useState<'success' | 'danger'>('success');
   const [draft, setDraft] = useState(() => initialCustomization?.draft ?? draftForWorkout(initialWorkout, role));
   const [guidedFormOpen, setGuidedFormOpen] = useState(false);
@@ -311,7 +314,8 @@ export function WorkoutLibraryClient({
         const untouched = JSON.stringify(draftRef.current) === submittedSnapshot;
         if (untouched) recovery.discard();
         if (payloadResponse.updatedAt) setRevision(payloadResponse.updatedAt);
-        setMessage(selectedWorkoutId ? 'Workout saved.' : 'Workout saved to My workouts. You can now add it to your Calendar.');
+        setMessage(selectedWorkoutId ? 'Workout saved.' : NEW_WORKOUT_SAVED);
+        if (!selectedWorkoutId && payloadResponse.sessionId) setNewlySaved({ id: payloadResponse.sessionId, message: NEW_WORKOUT_SAVED });
         setIsDirty(!untouched);
         if (!selectedWorkoutId && payloadResponse.sessionId) {
           setSelectedWorkoutId(payloadResponse.sessionId);
@@ -455,9 +459,11 @@ export function WorkoutLibraryClient({
           setMessage('');
         }} /> : null}
         {message ? (
-          <p role={messageTone === 'danger' ? 'alert' : 'status'} className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>
-            {message}
-          </p>
+          <SaveMessage
+            message={message}
+            tone={messageTone}
+            scheduleId={role === 'ATHLETE' && newlySaved?.message === message ? newlySaved.id : null}
+          />
         ) : null}
         {visibleWorkouts.length === 0 && guidedFormOpen ? null : visibleWorkouts.length === 0 ? workouts.length === 0 ? (
           <EmptyState
@@ -541,9 +547,11 @@ export function WorkoutLibraryClient({
         ) : null}
 
         {message ? (
-          <p role={messageTone === 'danger' ? 'alert' : 'status'} className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>
-            {message}
-          </p>
+          <SaveMessage
+            message={message}
+            tone={messageTone}
+            scheduleId={role === 'ATHLETE' && newlySaved?.message === message ? newlySaved.id : null}
+          />
         ) : null}
 
         {catalogSource ? (
@@ -631,6 +639,24 @@ function NewWorkoutMenu({ onGuided, onScratch, onBrowse }: { onGuided: () => voi
  * duration, sport and hardest zone, notes, TSS and IF, and one ⋯ menu. With a
  * detail page the name opens it; otherwise (coach) it opens the editor.
  */
+const NEW_WORKOUT_SAVED = 'Workout saved to My workouts.';
+
+/** The page's status line; a workout saved for the first time can go straight to the Calendar. */
+function SaveMessage({ message, tone, scheduleId }: { message: string; tone: string; scheduleId: number | null }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <p role={tone === 'danger' ? 'alert' : 'status'} className={tone === 'success' ? successTextClassName : dangerTextClassName}>
+        {message}
+      </p>
+      {scheduleId === null ? null : (
+        <ReturnHereLink href={myWorkoutScheduleHref(scheduleId)} className={`${secondaryButtonClassName} max-md:min-h-11`}>
+          <CalendarPlus aria-hidden="true" size={15} strokeWidth={1.8} />Add to Calendar
+        </ReturnHereLink>
+      )}
+    </div>
+  );
+}
+
 function MyWorkoutCard({ workout, summary, href, hasDraft, canSchedule, disabled, onEdit, onDelete }: {
   workout: WorkoutRecord; summary: OwnedWorkoutSummary; href: string | null; hasDraft: boolean;
   canSchedule: boolean; disabled: boolean; onEdit: () => void; onDelete: () => void;

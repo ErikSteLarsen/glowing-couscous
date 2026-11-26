@@ -369,6 +369,8 @@ export type RideImportPayload = {
   localDay: string;
   points: RideImportPoint[];
   laps: Array<{ startSec: number; endSec: number; timerSec: number; origin: 'device' }>;
+  /** Marks the activity as recorded in TempoBuilder, not imported. */
+  recorder: 'ride';
 };
 
 function inRange(value: number | null | undefined, min: number, max: number): number | undefined {
@@ -431,6 +433,7 @@ export function toImportPayload(recording: RideRecording, { standalone = false }
     ...(standalone ? {} : { plannedSessionId: recording.sessionId }),
     points,
     laps,
+    recorder: 'ride',
   };
 }
 

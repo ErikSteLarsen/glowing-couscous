@@ -7,6 +7,19 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- My activities and shared add paths (2026-11-26, branch
+  `t3/picker-share-move-activities`). Activity is now My activities, with
+  source tabs (All, Recorded here, Imported, Logged by hand) and counts, instant
+  search and sport, month groups and a source pill per card. New nullable
+  `Activity.recordedWith` (migration `20261126120000_activity_recorded_with`):
+  Ride uploads send `recorder: 'ride'`, the guided player's Mark as done sends
+  `via: 'live'`; older activities are not backfilled. The training plan editor
+  picks workouts with the Calendar's workout browser (`PlanWorkoutDialog`), a
+  newly saved workout offers Add to Calendar, athletes add a shared workout
+  through a My workouts copy and the Calendar dialog (`action: 'library'`), and
+  Move workout uses the shared dialog frame. `pnpm test`, `pnpm test:db`, lint,
+  dead code and build passed; Chromium at 1440 and 390 px covered each flow.
+
 - Calendar add flows (2026-11-26, branch `t3/calendar-workout-plan-flows`, not
   released). Add workout and Add training plan are dialogs over the Calendar
   (`?place=workout|template`). Add workout offers every saved workout and the

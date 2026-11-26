@@ -7,8 +7,9 @@ import { Dialog, DialogBackdrop, DialogClose, DialogContent, DialogDescription, 
 import { iconButtonClassName, sectionHeadingClassName, sheetDialogClassName } from '@/components/ui';
 
 /**
- * The Calendar's add dialogs: a bottom sheet on phones and a centered panel
- * wider up. A fixed header (title, step trail, close), a body that scrolls on
+ * The Calendar's add and move dialogs: a bottom sheet on phones and a centered
+ * panel wider up. `size="compact"` fits its content (Move workout); the default
+ * keeps one tall height so browsing does not jump. A fixed header (title, step trail, close), a body that scrolls on
  * its own, and a fixed footer for the step's main action. Closing while a
  * request is in flight is blocked so a placement is never left half-confirmed.
  */
@@ -20,6 +21,7 @@ export function AddDialogFrame({
   onClose,
   footer,
   children,
+  size = 'tall',
 }: {
   title: string;
   description?: ReactNode;
@@ -29,6 +31,7 @@ export function AddDialogFrame({
   onClose: () => void;
   footer: ReactNode;
   children: ReactNode;
+  size?: 'tall' | 'compact';
 }) {
   // The chosen row or step button leaves the page on a step change; put focus on
   // the new step's title instead of letting it fall back to the document.
@@ -49,7 +52,9 @@ export function AddDialogFrame({
       <DialogBackdrop className="fixed inset-0 bg-black/60" />
       <DialogContent
         initialFocus="content"
-        className={`${sheetDialogClassName} z-50 max-w-2xl grid-rows-[auto_minmax(0,1fr)_auto] max-md:h-[calc(100dvh-1rem)] md:h-[min(46rem,calc(100dvh-4rem))] md:w-[calc(100%-4rem)]`}
+        className={`${sheetDialogClassName} z-50 grid-rows-[auto_minmax(0,1fr)_auto] text-left md:w-[calc(100%-4rem)] ${size === 'tall'
+          ? 'max-w-2xl max-md:h-[calc(100dvh-1rem)] md:h-[min(46rem,calc(100dvh-4rem))]'
+          : 'max-w-md'}`}
       >
         <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-5 pt-5 pb-4">
           <div className="min-w-0 space-y-1">

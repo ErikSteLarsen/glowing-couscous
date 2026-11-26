@@ -222,6 +222,12 @@ test('import payload passes the activity import validator and downsamples long r
   assert.deepEqual(payload.laps.map((lap) => [lap.startSec, lap.endSec]), [[0, 4], [4, 7], [7, 10], [10, 12], [12, 13]]);
   const validated = validateActivityImport(payload);
   assert.equal(validated.ok, true, validated.ok ? '' : validated.error);
+  // Ride marks its uploads so My activities lists them as recorded here.
+  assert.equal(payload.recorder, 'ride');
+  assert.equal(validated.ok && validated.value.recorder, 'ride');
+  assert.equal(validateActivityImport({ ...payload, recorder: 'garmin' }).ok, false);
+  const fromFile = validateActivityImport({ ...payload, recorder: undefined });
+  assert.equal(fromFile.ok && fromFile.value.recorder, undefined);
 
   const samples: RideSample[] = Array.from({ length: 45000 }, (_, t) => ({ t, p: t % 2 ? 100 : 200, hr: 150, cad: 90, spd: 9, d: t * 9, tgt: null }));
   const points = downsampleSamples(samples);

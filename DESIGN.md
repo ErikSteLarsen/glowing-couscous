@@ -653,7 +653,12 @@ chosen workout (profile, sport, focus, level, duration, TSS, IF, description)
 and one Day field, already set to the day it was opened for, with its long
 date beside it. Start time and extra days are under a collapsed **More
 options** row that names what is set. The button names the result ("Add to
-Sat 28 Nov", "Add to 3 days"). Explain that each day gets its own copy. The
+Sat 28 Nov", "Add to 3 days"). Explain that each day gets its own copy. Saving
+a new workout in Workouts offers Add to Calendar beside "Workout saved", and a
+shared workout's Add to Calendar (athletes) saves a copy to My workouts and
+opens this dialog on it (Cancel returns to the share page). Move workout uses
+the same frame in its compact size: Today and Tomorrow chips, any day, and a
+button naming the new day. The
 same workout may be planned more than once on a day, so nothing warns about
 repeats.
 
@@ -830,12 +835,21 @@ header; once posted it reads **Posted to Strava** with a **View on Strava** link
 shows the chart image, then editable Title and Description, with **Not now** and
 **Post to Strava**; Download image and the .tcx fallback stay in the sheet.
 
-### Activity
+### My activities
 
-Completed work is a `WorkoutCard` grid: title, date and sport, duration, a slim
-block bar, one-line notes, TSS and compliance, and Compare where a planned
-baseline exists. The card opens the session outcome. Search, sport filter,
-totals and pagination stay above and below the grid.
+`/athlete/activity` ("My activities" in the menu) is the training history and
+says where each activity came from. Source tabs with counts sit under the title:
+All, **Recorded here** (`Activity.recordedWith`: `ride` from the Ride recorder,
+`live` when finished in the guided player), **Imported** (FIT/TCX/GPX files,
+Strava) and **Logged by hand** (logged activities and planned workouts marked
+done); one line under the tabs explains the chosen one. Search and sport apply
+as they change and stay in the URL; tab counts ignore the chosen tab. Totals
+add "Recorded here N of M" on All. Cards are grouped by month: title, date and
+sport, a source pill (brand-tinted for recorded here), a slim block bar,
+one-line notes, TSS and compliance, and Compare where a planned baseline
+exists. Each empty tab says how to fill it (start a workout, import, Add
+activity). Activities saved before `recordedWith` existed stay Imported or
+Marked done.
 
 ### Home overview
 
@@ -870,14 +884,18 @@ are saved. Unknown values may remain blank.
 ### Personal training plans
 
 Use the established Night Instrument surfaces and shared controls. Keep the
-plan name and optional purpose together. Follow them with a sport-filtered
-workout picker with My workouts and Public library groups, multi-weekday
-selection, and an ordered Monday-to-Sunday outline. Default the picker to Bike.
+plan name and optional purpose together. Follow them with Your weekly plan: a
+Monday-to-Sunday outline where each day has its own Add workout (Add another
+once filled) and the header has Add a workout. Both open `PlanWorkoutDialog`,
+the Calendar's workout browser (`WorkoutBrowser`: My workouts and the public
+library with search, focus, sport, profiles, TSS and IF), then a Days step of
+weekday chips (the clicked day preselected). Rows show the workout's sport,
+duration, TSS and focus, with Change (the browser again, replacing that row),
+reorder and remove.
 Built-in plans offer Customize to open a new draft from their default workouts.
 Link each public workout in the built-in preview to its library page.
 Days without entries say No workout. Multiple entries expose accessible reorder
-and remove controls; at narrow widths their actions wrap below the workout
-selector. Show save failures beside Save and retain the draft. Cancelling or
+and remove controls; at narrow widths their actions wrap below the workout. Show save failures beside Save and retain the draft. Cancelling or
 leaving the browser requires an unsaved-change safeguard.
 
 The library previews only the weekdays that have workouts, with the session count.

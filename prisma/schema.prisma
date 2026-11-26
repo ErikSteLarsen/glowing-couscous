@@ -296,6 +296,8 @@ model Activity {
   externalSource        String?
   externalActivityId    String?
   sourceMetadataJson    String?
+  // 'ride' (Ride recorder) or 'live' (guided player) when recorded in TempoBuilder; null otherwise.
+  recordedWith          String?
   distanceMeters       Float?
   elevationGainMeters  Float?
   rpe                  Int?

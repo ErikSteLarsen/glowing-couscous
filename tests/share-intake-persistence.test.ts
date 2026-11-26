@@ -59,6 +59,16 @@ test('shared copies persist independently in the correct recipient workspace in 
     assert.equal(scheduled.athleteNotes, null);
     assert.equal(scheduled.coachNotes, null);
 
+    // Add to Calendar first saves an undated copy to My workouts, then the Calendar dialog places it.
+    const libraryCopy = await service.saveLibraryCopy(athlete.id, token, input);
+    assert.ok(libraryCopy.ok);
+    const saved = await db.session.findUniqueOrThrow({ where: { id: libraryCopy.sessionIds[0] } });
+    assert.equal(saved.athleteId, athlete.id);
+    assert.equal(saved.date, null);
+    assert.equal(saved.templateId, null);
+    assert.equal(saved.athleteNotes, null);
+    assert.ok((await createWorkoutLibraryService({ db }).listForOwner('athlete', athlete.id)).some((workout) => workout.id === saved.id));
+
     assert.deepEqual(await service.saveTemplateCopy(athlete.id, token, input), { ok: true });
     const templates = await createTemplateService({ db }).listForOwner(athlete.id);
     assert.equal(templates.length, 1);

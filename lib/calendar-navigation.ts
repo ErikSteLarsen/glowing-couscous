@@ -74,11 +74,13 @@ export function parseCalendarTotals(value: unknown): boolean {
 }
 
 /**
- * `back` is the page an add dialog returns to when it is cancelled, e.g. Home
- * or the workout it was opened from. Only app paths outside Calendar count.
+ * `back` is the page an add dialog returns to when it is cancelled, e.g. Home,
+ * the workout it was opened from or a shared workout. Only app paths outside
+ * Calendar count.
  */
 export function parseCalendarReturn(value: unknown): string | null {
   if (typeof value !== 'string' || value.length > 512) return null;
+  if (/^\/share\/[A-Za-z0-9_-]+$/.test(value)) return value;
   const isAthletePage = /^\/athlete(?:[/?]|$)/.test(value);
   const isCalendar = /^\/athlete\/calendar(?:[/?]|$)/.test(value);
   // `//`, backslashes and whitespace could make a browser read it as another origin.

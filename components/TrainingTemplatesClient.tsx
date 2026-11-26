@@ -5,44 +5,31 @@ import { ConfirmationDialogContent } from '@/components/tempobuilder/Confirmatio
 import { SearchField } from '@/components/tempobuilder/SearchField';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowDown, ArrowUp, Copy, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Copy, Plus, Repeat2, Trash2 } from 'lucide-react';
 import { Menu, MenuContent, MenuItem, MenuSeparator, OverflowMenuTrigger } from '@/components/tempobuilder/Menu';
-import { sectionHeadingClassName, ActionLink, buttonFocusClassName, Surface, EmptyState, primaryButtonClassName, secondaryButtonClassName, compactSecondaryButtonClassName, compactDangerButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, dangerTextClassName, successTextClassName, formTextareaClassName } from '@/components/ui';
+import { sectionHeadingClassName, ActionLink, buttonFocusClassName, Surface, EmptyState, primaryButtonClassName, secondaryButtonClassName, compactSecondaryButtonClassName, compactDangerButtonClassName, formFieldClassName, formLabelClassName, ghostButtonClassName, dangerTextClassName, successTextClassName, formTextareaClassName } from '@/components/ui';
+import { PlanWorkoutDialog, type PlanWorkoutRequest } from '@/components/PlanWorkoutDialog';
+import { SportBadge } from '@/components/tempobuilder/SportBadge';
 import { BuiltInTrainingPlans } from '@/components/BuiltInTrainingPlans';
 import { selectPlanWorkouts, type BuiltInPlanPreview } from '@/lib/plan-catalog/selection';
-import { CATALOG_SPORTS, DEFAULT_CATALOG_SPORT } from '@/lib/workout-catalog/query';
 import { ROUTINE_DAYS, type RoutineSelection } from '@/lib/template-routine';
-import { getSportLabel } from '@/lib/sport';
 import { getCalendarPlacementHref } from '@/lib/calendar-navigation';
 import { formatDuration } from '@/lib/format-duration';
+import type { AddableWorkout } from '@/lib/placement-options';
 
 type PlanEntry = RoutineSelection & { title: string; sport: string };
 type Template = { id: number; name: string; summary: string | null; entries: PlanEntry[] | null };
-type Workout = { id: number; title: string; sport: string; durationSec: number };
-type PublicWorkout = { slug: string; title: string; sport: string; durationSec: number };
-type WorkoutChoice = (Workout | PublicWorkout) & { value: string };
 type Selection = { key: number; weekday: number; workoutValue: string; sport: string; title: string };
 type Confirmation = { kind: 'discard' } | { kind: 'delete'; template: Template };
 type Draft = { id?: number; catalogPlanSlug?: string; name: string; summary: string; entries: Selection[] };
 
-function WorkoutOptions({ choices }: { choices: WorkoutChoice[] }) {
-  const groups = [
-    { label: 'My workouts', workouts: choices.filter(item => 'id' in item) },
-    { label: 'Public library', workouts: choices.filter(item => 'slug' in item) },
-  ];
-  return groups.map(group => group.workouts.length > 0 && (
-    <optgroup key={group.label} label={group.label}>
-      {group.workouts.map(workout => (
-        <option key={workout.value} value={workout.value}>{workout.title} ({formatDuration(workout.durationSec)})</option>
-      ))}
-    </optgroup>
-  ));
-}
+/** A plan holds at most this many workouts a week (the template contract). */
+const MAX_PLAN_ENTRIES = 70;
 
-export function TrainingTemplatesClient({ templates, workouts, publicWorkouts, builtInPlans, openPlanSlug }: {
+export function TrainingTemplatesClient({ templates, workouts, builtInPlans, openPlanSlug }: {
   templates: Template[];
-  workouts: Workout[];
-  publicWorkouts: PublicWorkout[];
+  /** Saved and public workouts, keyed `workout:<id>` / `catalog:<slug>`. */
+  workouts: AddableWorkout[];
   builtInPlans: BuiltInPlanPreview[];
   openPlanSlug: string | null;
 }) {
@@ -58,9 +45,7 @@ export function TrainingTemplatesClient({ templates, workouts, publicWorkouts, b
   const confirmationTrigger = useRef<HTMLElement | null>(null);
   const newTemplateButton = useRef<HTMLButtonElement>(null);
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
-  const [sport, setSport] = useState<string>(DEFAULT_CATALOG_SPORT);
-  const [workoutValue, setWorkoutValue] = useState('');
-  const [weekdays, setWeekdays] = useState<number[]>([0]);
+  const [picker, setPicker] = useState<PlanWorkoutRequest | null>(null);
   const [notesOpen, setNotesOpen] = useState(false);
   const nextKey = useRef(0);
   const inFlight = useRef(false);
@@ -72,34 +57,21 @@ export function TrainingTemplatesClient({ templates, workouts, publicWorkouts, b
     return () => window.removeEventListener('beforeunload', guard);
   }, [dirty]);
 
-  const choices: WorkoutChoice[] = [
-    ...workouts.map(item => ({ ...item, value: `my:${item.id}` })),
-    ...publicWorkouts.map(item => ({ ...item, value: `public:${item.slug}` })),
-  ];
-  const sportChoices = choices.filter(item => item.sport === sport);
-  const workout = sportChoices.find(item => item.value === workoutValue) ?? sportChoices[0];
-  const sports = [
-    ...CATALOG_SPORTS,
-    ...Array.from(new Set(workouts.map(item => item.sport)))
-      .filter(id => !CATALOG_SPORTS.some(item => item.id === id))
-      .map(id => ({ id, label: getSportLabel(id) })),
-  ];
+  const byKey = new Map(workouts.map(item => [item.key, item]));
 
   function openDraft(nextDraft: Omit<Draft, 'entries'>, entries: PlanEntry[]) {
     const opened: Draft = {
       ...nextDraft,
       entries: entries.map(({ weekday, title, sport, workoutId, catalogWorkoutSlug }) => ({
         key: nextKey.current++, weekday, title, sport,
-        workoutValue: workoutId === undefined ? `public:${catalogWorkoutSlug}` : `my:${workoutId}`,
+        workoutValue: workoutId === undefined ? `catalog:${catalogWorkoutSlug}` : `workout:${workoutId}`,
       })),
     };
     setDraft(opened);
     setOpenedDraft(opened);
     setNotice(null);
     setNotesOpen(false);
-    setSport(DEFAULT_CATALOG_SPORT);
-    setWorkoutValue('');
-    setWeekdays([0]);
+    setPicker(null);
     requestAnimationFrame(() => { editorHeading.current?.focus(); editorHeading.current?.scrollIntoView({ block: 'nearest' }); });
   }
 
@@ -171,65 +143,59 @@ export function TrainingTemplatesClient({ templates, workouts, publicWorkouts, b
             <label className="mt-2 block max-w-xl"><span className="sr-only">Purpose or notes (optional)</span><textarea maxLength={2000} value={draft.summary} rows={2} className={formTextareaClassName} onChange={event => setDraft({ ...draft, summary: event.target.value })} placeholder="A relaxed base week with two interval days" /></label>
           </details>
         </div>
-        <div className="space-y-4 border-y border-[var(--border)] py-5">
-          <h3 className="font-semibold">Add a workout</h3>
-          <div className="grid gap-3 sm:grid-cols-[8rem_minmax(0,1fr)]">
-            <label className="block min-w-0"><span className={formLabelClassName}>Sport</span>
-              <select className={formSelectClassName} value={sport} onChange={event => { setSport(event.target.value); setWorkoutValue(''); }}>
-                {sports.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
-              </select>
-            </label>
-            <label className="block min-w-0"><span className={formLabelClassName}>Workout</span>
-              <select className={formSelectClassName} value={workout?.value ?? ''} onChange={event => setWorkoutValue(event.target.value)}>
-                {!workout && <option value="">No workouts for this sport</option>}
-                <WorkoutOptions choices={sportChoices} />
-              </select>
-            </label>
+        <div className="space-y-3 border-t border-[var(--border)] pt-5">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="space-y-1">
+              <h3 className="font-semibold">Your weekly plan</h3>
+              <p role="status" aria-live="polite" className="text-sm text-[var(--text-secondary)]">{draft.entries.length} {draft.entries.length === 1 ? 'workout' : 'workouts'} a week. Days without workouts stay empty on your Calendar.</p>
+            </div>
+            <button type="button" disabled={draft.entries.length >= MAX_PLAN_ENTRIES} className={`${secondaryButtonClassName} max-md:min-h-11`} onClick={() => setPicker({ kind: 'add', weekdays: [] })}><Plus aria-hidden="true" size={16} />Add a workout</button>
           </div>
-          <fieldset className="space-y-2"><legend className={formLabelClassName}>Days for this workout</legend><div className="flex flex-wrap gap-3">{ROUTINE_DAYS.map((day, weekday) => <label key={day} className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={weekdays.includes(weekday)} onChange={event => setWeekdays(current => event.target.checked ? [...current, weekday].sort() : current.filter(value => value !== weekday))} />{day}</label>)}</div></fieldset>
-          <button type="button" disabled={!workout || !weekdays.length || draft.entries.length + weekdays.length > 70} className={`${secondaryButtonClassName} max-md:min-h-11`} onClick={() => {
-            if (!workout) return;
-            const added = weekdays.map(weekday => ({ key: nextKey.current++, weekday, workoutValue: workout.value, sport: workout.sport, title: workout.title }));
-            setDraft({ ...draft, entries: [...draft.entries, ...added] });
-          }}><Plus size={16} />Add to {weekdays.length || 'selected'} {weekdays.length === 1 ? 'day' : 'days'}</button>
-        </div>
-        <div className="space-y-2">
-          <h3 className="font-semibold">Your weekly plan</h3>
-          <p role="status" aria-live="polite" className="text-sm text-[var(--text-secondary)]">{draft.entries.length} workouts a week. Days without workouts stay empty on your Calendar.</p>
-          <div className="divide-y divide-[var(--border)]">{ROUTINE_DAYS.map((day, weekday) => {
+          <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">{ROUTINE_DAYS.map((day, weekday) => {
             const entries = draft.entries.filter(entry => entry.weekday === weekday);
-            return <section key={day} className="grid gap-3 py-4 md:grid-cols-[120px_minmax(0,1fr)]"><h4 className="text-sm font-semibold">{day}</h4><div className="min-w-0 space-y-3">{entries.length ? entries.map((entry, index) => {
-              const rowChoices = choices.filter(item => item.sport === entry.sport || item.value === entry.workoutValue);
-              return <div key={entry.key} className="flex flex-wrap items-center gap-2">
-                <label className="min-w-0 flex-1 basis-40"><span className="sr-only">{day} workout {index + 1}</span>
-                  <select className={formSelectClassName} value={entry.workoutValue} onChange={event => {
-                    const replacement = rowChoices.find(item => item.value === event.target.value);
-                    if (!replacement) return;
-                    setDraft({ ...draft, entries: draft.entries.map(item => item.key === entry.key
-                      ? { ...item, workoutValue: replacement.value, sport: replacement.sport, title: replacement.title }
-                      : item) });
-                  }}>
-                    {!rowChoices.some(item => item.value === entry.workoutValue) && <option value={entry.workoutValue} disabled>{entry.title} (unavailable)</option>}
-                    <WorkoutOptions choices={rowChoices} />
-                  </select>
-                </label>
-                <div className="flex w-full justify-end gap-1 sm:w-auto">{entries.length > 1 && <><button type="button" aria-label={`Move ${day} workout ${index + 1} earlier`} disabled={index === 0} className={`${compactSecondaryButtonClassName} max-md:min-h-11 max-md:min-w-11`} onClick={() => move(entry.key, -1)}><ArrowUp size={16} /></button><button type="button" aria-label={`Move ${day} workout ${index + 1} later`} disabled={index === entries.length - 1} className={`${compactSecondaryButtonClassName} max-md:min-h-11 max-md:min-w-11`} onClick={() => move(entry.key, 1)}><ArrowDown size={16} /></button></>}<button type="button" aria-label={`Remove ${day} workout ${index + 1}`} className={`${compactDangerButtonClassName} max-md:min-h-11 max-md:min-w-11`} onClick={() => setDraft({ ...draft, entries: draft.entries.filter(item => item.key !== entry.key) })}><Trash2 size={16} /></button></div>
-              </div>;
-            }) : <p className="text-sm text-[var(--text-muted)]">No workout</p>}</div></section>;
+            return <section key={day} aria-label={day} className="grid gap-2 py-3 md:grid-cols-[120px_minmax(0,1fr)] md:gap-3">
+              <h4 className="text-sm font-semibold md:pt-2">{day}</h4>
+              <div className="min-w-0 space-y-2">
+                {entries.map((entry, index) => {
+                  const workout = byKey.get(entry.workoutValue);
+                  return <div key={entry.key} className="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2">
+                    <div className="min-w-0 flex-1 basis-48">
+                      <p className="truncate text-sm font-medium text-[var(--text)]">{entry.title}{workout ? null : <span className="font-normal text-[var(--status-warning)]"> (unavailable, change it)</span>}</p>
+                      <p className="mt-0.5 flex items-center gap-2 text-[12px] text-[var(--text-muted)]">
+                        <SportBadge sport={entry.sport} />
+                        {workout ? <span className="data">{formatDuration(workout.durationSec)}{workout.tss === null ? '' : ` · ${workout.tss} TSS`}</span> : null}
+                        {workout?.focus ? <span className="truncate">{workout.focus}</span> : null}
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      <button type="button" aria-label={`Change ${day} workout ${index + 1}: ${entry.title}`} className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={() => setPicker({ kind: 'replace', weekday, currentKey: entry.workoutValue, entryKey: entry.key })}><Repeat2 aria-hidden="true" size={16} /><span className="max-sm:sr-only">Change</span></button>
+                      {entries.length > 1 && <><button type="button" aria-label={`Move ${day} workout ${index + 1} earlier`} disabled={index === 0} className={`${compactSecondaryButtonClassName} max-md:min-h-11 max-md:min-w-11`} onClick={() => move(entry.key, -1)}><ArrowUp size={16} /></button><button type="button" aria-label={`Move ${day} workout ${index + 1} later`} disabled={index === entries.length - 1} className={`${compactSecondaryButtonClassName} max-md:min-h-11 max-md:min-w-11`} onClick={() => move(entry.key, 1)}><ArrowDown size={16} /></button></>}
+                      <button type="button" aria-label={`Remove ${day} workout ${index + 1}`} className={`${compactDangerButtonClassName} max-md:min-h-11 max-md:min-w-11`} onClick={() => setDraft({ ...draft, entries: draft.entries.filter(item => item.key !== entry.key) })}><Trash2 size={16} /></button>
+                    </div>
+                  </div>;
+                })}
+                <div className="flex flex-wrap items-center gap-x-3">
+                  {entries.length ? null : <p className="text-sm text-[var(--text-muted)]">No workout</p>}
+                  <button type="button" disabled={draft.entries.length >= MAX_PLAN_ENTRIES} aria-label={`Add a workout on ${day}`} className={`${ghostButtonClassName('compact')} ${entries.length ? '-ml-2' : ''} max-md:min-h-11`} onClick={() => setPicker({ kind: 'add', weekdays: [weekday] })}>
+                    <Plus aria-hidden="true" size={14} strokeWidth={1.8} />{entries.length ? 'Add another' : 'Add workout'}
+                  </button>
+                </div>
+              </div>
+            </section>;
           })}</div>
         </div>
         <p className="text-sm leading-6 text-[var(--text-secondary)]">Saving copies these workouts as they are now. Targets based on your Profile (pace, power, heart rate) update with it; fixed targets stay fixed. Editing a workout later doesn’t change this training plan or workouts already on your Calendar.</p>
         {notice && <p role={notice.error ? 'alert' : 'status'} className={notice.error ? dangerTextClassName : successTextClassName}>{notice.text}</p>}
-        <button type="button" disabled={!draft.name.trim() || !draft.entries.length || draft.entries.some(entry => !choices.some(item => item.value === entry.workoutValue))} className={`${primaryButtonClassName} max-md:min-h-11`} onClick={() => void mutate(
+        <button type="button" disabled={!draft.name.trim() || !draft.entries.length || draft.entries.some(entry => !byKey.has(entry.workoutValue))} className={`${primaryButtonClassName} max-md:min-h-11`} onClick={() => void mutate(
           draft.id ? `/api/athlete/templates/${draft.id}` : '/api/athlete/templates',
           draft.id ? 'PATCH' : 'POST',
           {
             name: draft.name,
             summary: draft.summary,
             catalogPlanSlug: draft.catalogPlanSlug,
-            entries: draft.entries.map(({ weekday, workoutValue }) => workoutValue.startsWith('my:')
-              ? { weekday, workoutId: Number(workoutValue.slice('my:'.length)) }
-              : { weekday, catalogWorkoutSlug: workoutValue.slice('public:'.length) }),
+            entries: draft.entries.map(({ weekday, workoutValue }) => workoutValue.startsWith('workout:')
+              ? { weekday, workoutId: Number(workoutValue.slice('workout:'.length)) }
+              : { weekday, catalogWorkoutSlug: workoutValue.slice('catalog:'.length) }),
           },
         )}>{busy ? 'Saving…' : 'Save training plan'}</button>
       </fieldset>
@@ -270,6 +236,23 @@ export function TrainingTemplatesClient({ templates, workouts, publicWorkouts, b
         <div className="max-md:[&>a]:min-h-11"><ActionLink href={getCalendarPlacementHref(`template:${template.id}`, { back: '/athlete/templates' })} size="compact">Add to Calendar<span className="sr-only">: {template.name}</span></ActionLink></div>
       </Surface>;
     })}</div> : <EmptyState title={templates.length ? 'No matching training plans' : 'Build your first training plan'} description={templates.length ? 'Try a different search.' : 'Choose workouts for the days you train. Days left empty add nothing when you apply it.'} />)}
+    {draft && picker ? <PlanWorkoutDialog
+      key={JSON.stringify(picker)}
+      workouts={workouts}
+      request={picker}
+      room={MAX_PLAN_ENTRIES - draft.entries.length}
+      onClose={() => setPicker(null)}
+      onAdd={(workout, weekdays) => {
+        const added = weekdays.map(weekday => ({ key: nextKey.current++, weekday, workoutValue: workout.key, sport: workout.sport, title: workout.title }));
+        setDraft({ ...draft, entries: [...draft.entries, ...added] });
+        setPicker(null);
+      }}
+      onReplace={(workout) => {
+        if (picker.kind !== 'replace') return;
+        setDraft({ ...draft, entries: draft.entries.map(item => item.key === picker.entryKey ? { ...item, workoutValue: workout.key, sport: workout.sport, title: workout.title } : item) });
+        setPicker(null);
+      }}
+    /> : null}
     <AlertDialog open={confirmationOpen} onOpenChange={(open, details) => {
       if (busy) { details.cancel(); return; }
       setConfirmationOpen(open);

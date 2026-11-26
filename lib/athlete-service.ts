@@ -19,6 +19,7 @@ import { addDayKeys, classifyCompliance, fromDayKey, summarizeWeeks, toDayKey, t
 import { endOfDayInZone, startOfDayInZone, todayInZone } from './user-time.ts';
 import { parseCalendarDay } from './calendar-navigation.ts';
 import { ACTIVITY_PAGE_SIZE, parseActivityFilters, type ActivityFilters } from './activity-navigation.ts';
+import { describeActivitySource, IMPORTED_METRICS_SOURCES, type ActivitySourceGroup } from './activity-source.ts';
 import { getSessionDisplayStatus, getSessionStatusAction, SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
 
 type AthleteServiceDeps = {
@@ -630,13 +631,25 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         return null;
       }
       // PostgreSQL: camelCase Prisma columns must stay quoted; the name filter is a case-insensitive substring match.
-      const scope = Prisma.sql`
+      // The source group mirrors `describeActivitySource`.
+      const sourceGroup = Prisma.sql`CASE
+        WHEN a."recordedWith" IS NOT NULL THEN 'recorded'
+        WHEN a."metricsSource" IN (${Prisma.join([...IMPORTED_METRICS_SOURCES])}) OR a."externalSource" = 'STRAVA' THEN 'imported'
+        ELSE 'manual' END`;
+      const unsourcedScope = Prisma.sql`
         FROM "Activity" a JOIN "Session" s ON s."id" = a."sessionId"
         WHERE a."athleteId" = ${userId} AND s."athleteId" = ${userId}
           AND (${filters.sport}::text IS NULL OR s."sport" = ${filters.sport}::text)
           AND strpos(lower(s."title"), lower(${filters.query}::text)) > 0
       `;
+      const scope = Prisma.sql`${unsourcedScope} AND (${filters.source}::text IS NULL OR ${sourceGroup} = ${filters.source}::text)`;
       return db.$transaction(async (tx) => {
+        // Counts per source ignore the source filter, so every source chip shows what it would show.
+        const groups = await tx.$queryRaw<Array<{ source: ActivitySourceGroup; count: bigint }>>(Prisma.sql`
+          SELECT ${sourceGroup} AS source, COUNT(*) AS count ${unsourcedScope} GROUP BY 1
+        `);
+        const sourceCounts: Record<ActivitySourceGroup, number> = { recorded: 0, imported: 0, manual: 0 };
+        for (const group of groups) sourceCounts[group.source] = Number(group.count);
         const [summary] = await tx.$queryRaw<Array<{ count: bigint; durationSec: bigint; tss: bigint; unknownLoad: bigint }>>(Prisma.sql`
           SELECT COUNT(*) AS count, COALESCE(SUM(a."durationSec"), 0) AS "durationSec",
             COALESCE(SUM(a."tss"), 0) AS tss, COALESCE(SUM(CASE WHEN a."tss" IS NULL THEN 1 ELSE 0 END), 0) AS "unknownLoad" ${scope}
@@ -662,6 +675,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
           page,
           totalPages,
           totals: { durationSec: Number(summary.durationSec), tss: Number(summary.tss), unknownLoad: Number(summary.unknownLoad) },
+          sourceCounts,
           activities: activities.map((activity) => ({
             id: activity.id,
             sessionId: activity.sessionId,
@@ -681,6 +695,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
             loadAvailable: !(['file-import', 'strava-import'].includes(activity.metricsSource) && activity.tss === 0),
             compliancePct: activity.compliancePct,
             metricsSource: activity.metricsSource,
+            source: describeActivitySource(activity),
             notes: activity.notes,
             segments: parseActivitySegments(activity.segmentsJson),
           })),

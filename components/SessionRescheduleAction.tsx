@@ -1,21 +1,23 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { CalendarDays, Ellipsis } from 'lucide-react';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempobuilder/Menu';
+import { AddDialogFrame } from '@/components/AddDialogFrame';
+import { filterChipClassName } from '@/components/library/CollectionFilters';
 import {
-  overlayPanelClassName, dialogActionsClassName,
-  compactSecondaryButtonClassName,
   dangerTextClassName,
   formFieldClassName,
   formLabelClassName,
   iconButtonClassName,
+  primaryButtonClassName,
   secondaryButtonClassName,
   successTextClassName,
 } from '@/components/ui';
-import { fromDayKey } from '@/lib/training-load';
+import { parseCalendarDay } from '@/lib/calendar-navigation';
+import { addDayKeys, fromDayKey } from '@/lib/training-load';
 
 type ActionProps = {
   sessionId: number;
@@ -97,27 +99,32 @@ function QuickMoveAction({ sessionId, title, targetDay, onMoved }: ActionProps &
 
 function RescheduleDialog({ sessionId, title, currentDay, today, open, onOpenChange }: ActionProps & { mode: 'dialog' }) {
   const router = useRouter();
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const [date, setDate] = useState(today);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const tomorrow = addDayKeys(today, 1);
+  // Today, or tomorrow when the workout is already on today.
+  const suggestedDay = today === currentDay ? tomorrow : today;
+  const [date, setDate] = useState(suggestedDay);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const controlled = open !== undefined;
+  const isOpen = controlled ? open : internalOpen;
+  const quickDays = [
+    { day: today, label: 'Today' },
+    { day: tomorrow, label: 'Tomorrow' },
+  ];
 
-  function showDialog() {
-    setDate(today);
-    setError('');
-    dialogRef.current?.showModal();
+  function setOpen(next: boolean) {
+    if (controlled) onOpenChange?.(next);
+    else setInternalOpen(next);
   }
 
-  // The native dialog is an external system: mirror the controlled open state into it.
-  useEffect(() => {
-    if (!controlled) return;
-    const dialog = dialogRef.current;
-    if (open && !dialog?.open) showDialog();
-    if (!open && dialog?.open) dialog.close();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [controlled, open]);
+  // Each opening starts fresh on the suggested day.
+  const [seenOpen, setSeenOpen] = useState(isOpen);
+  if (seenOpen !== isOpen) {
+    setSeenOpen(isOpen);
+    if (isOpen) { setDate(suggestedDay); setError(''); }
+  }
 
   async function moveTo(day: string) {
     if (day === currentDay) {
@@ -134,60 +141,60 @@ function RescheduleDialog({ sessionId, title, currentDay, today, open, onOpenCha
       return;
     }
 
-    dialogRef.current?.close();
+    setOpen(false);
     setNotice(`Moved ${title} to ${formatDay(day)}.`);
     router.refresh();
   }
 
+  const canMove = Boolean(parseCalendarDay(date)) && date !== currentDay && !isPending;
   return (
     <>
       {controlled ? null : (
-        <button type="button" className={`${secondaryButtonClassName} min-h-11`} onClick={showDialog}>
+        <button type="button" className={`${secondaryButtonClassName} min-h-11`} onClick={() => setOpen(true)}>
           Move to another day…
         </button>
       )}
       {notice ? <p role="status" className={successTextClassName}>{notice}</p> : null}
-      <dialog
-        ref={dialogRef}
-        aria-modal="true"
-        aria-labelledby={`reschedule-session-title-${sessionId}`}
-        aria-describedby={`reschedule-session-description-${sessionId}`}
-        className={`${overlayPanelClassName} fixed inset-0 m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border border-[var(--border)] p-5 backdrop:bg-black/60`}
-        onCancel={(event) => {
-          if (isPending) event.preventDefault();
-        }}
-        onClose={() => onOpenChange?.(false)}
-      >
-        <div className="space-y-2">
-          <h2 id={`reschedule-session-title-${sessionId}`} className="text-base font-medium">Move workout</h2>
-          <p id={`reschedule-session-description-${sessionId}`} className="text-sm text-[var(--text-secondary)]">
-            Choose when to do “{title}”. The blocks and start time stay the same.
-          </p>
-        </div>
-        <label className="mt-5 block">
-          <span className={formLabelClassName}>New date</span>
-          <input
-            autoFocus
-            type="date"
-            className={formFieldClassName}
-            value={date}
-            onChange={(event) => setDate(event.target.value)}
-            disabled={isPending}
-          />
-        </label>
-        {error ? <p role="alert" className={`${dangerTextClassName} mt-3`}>{error}</p> : null}
-        <div className={`mt-5 ${dialogActionsClassName}`}>
-          <button type="button" className={`${compactSecondaryButtonClassName} min-h-11 sm:min-h-8`} disabled={isPending} onClick={() => dialogRef.current?.close()}>
-            Cancel
-          </button>
-          <button type="button" className={`${compactSecondaryButtonClassName} min-h-11 sm:min-h-8`} disabled={isPending || today === currentDay} onClick={() => void moveTo(today)}>
-            Move to today
-          </button>
-          <button type="button" className={`${secondaryButtonClassName} min-h-11`} disabled={isPending || !date || date === currentDay} onClick={() => void moveTo(date)}>
-            {isPending ? 'Moving…' : 'Move workout'}
-          </button>
-        </div>
-      </dialog>
+      {isOpen ? (
+        <AddDialogFrame
+          size="compact"
+          title="Move workout"
+          description={<>“{title}” is on <span className="data">{formatDay(currentDay)}</span>. Its blocks and start time stay the same.</>}
+          busy={isPending}
+          onClose={() => setOpen(false)}
+          footer={<>
+            <button type="button" className={`${secondaryButtonClassName} max-md:min-h-11`} disabled={isPending} onClick={() => setOpen(false)}>Cancel</button>
+            <button type="button" className={`${primaryButtonClassName} max-md:min-h-11`} disabled={!canMove} onClick={() => void moveTo(date)}>
+              {isPending ? 'Moving…' : canMove ? `Move to ${formatDay(date)}` : 'Choose a new day'}
+            </button>
+          </>}
+        >
+          <div className="flex flex-col gap-4">
+            <div role="group" aria-label="Quick days" className="flex flex-wrap gap-2">
+              {quickDays.map(({ day, label }) => (
+                <button key={day} type="button" aria-pressed={date === day} disabled={day === currentDay || isPending} onClick={() => { setDate(day); setError(''); }} className={filterChipClassName(date === day)}>
+                  {label}<span className="data text-[12px] text-[var(--text-muted)]">{formatDay(day)}</span>
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+              <label className="block w-full max-w-xs">
+                <span className={formLabelClassName}>Or pick a day</span>
+                <input
+                  type="date"
+                  className={`${formFieldClassName} data max-md:min-h-11`}
+                  value={date}
+                  onChange={(event) => { setDate(event.target.value); setError(''); }}
+                  disabled={isPending}
+                />
+              </label>
+              {parseCalendarDay(date) ? <p className="data pb-2.5 text-sm text-[var(--text-secondary)]">{format(fromDayKey(date), 'EEEE\u00A0d\u00A0MMMM')}</p> : null}
+            </div>
+            {date === currentDay ? <p className="text-[13px] text-[var(--text-muted)]">That is the day it is on now.</p> : null}
+            <div role="alert" className="empty:hidden">{error ? <p className={dangerTextClassName}>{error}</p> : null}</div>
+          </div>
+        </AddDialogFrame>
+      ) : null}
     </>
   );
 }
