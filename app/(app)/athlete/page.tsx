@@ -301,10 +301,18 @@ export default async function AthletePage() {
                       </span>
                     ) : null}
                   </div>
-                  <div className="mt-1.5 space-y-1.5 max-md:[&>a]:min-h-11">
+                  <div className="mt-1.5 space-y-1.5">
                     {day.sessions.length > 0 ? (
+                      // Phones show one full-width day, so its rows carry the workout's stats.
                       day.sessions.map((session) => (
-                        <SessionRow key={session.id} session={session} href={`/athlete/session/${session.id}?from=home`} variant="month" />
+                        <div key={session.id}>
+                          <div className="md:hidden [&>a]:min-h-11">
+                            <SessionRow session={session} href={`/athlete/session/${session.id}?from=home`} variant="day" />
+                          </div>
+                          <div className="max-md:hidden">
+                            <SessionRow session={session} href={`/athlete/session/${session.id}?from=home`} variant="month" />
+                          </div>
+                        </div>
                       ))
                     ) : (
                       <p className="px-0.5 py-0.5 text-xs text-[var(--text-muted)]">Rest</p>

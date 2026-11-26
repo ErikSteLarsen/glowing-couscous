@@ -820,7 +820,8 @@ each opens its full chart and explanation in `HomeSummaryDialog`. Settings
 switches hide their tiles and the row reflows. Missed sessions appear only in
 the week strip summary and on Calendar. Phones stack in the same order.
 On phones the week strip is seven day chips (one dot per workout, colored by
-compliance, hollow when planned) above the selected day's workouts; today is
+compliance, hollow when planned) above the selected day's workouts, each with
+one stats line (time, sport, duration, TSS); today is
 selected on load. Wider screens show every day as a top-aligned column that is
 only as tall as its own workouts.
 

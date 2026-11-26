@@ -44,9 +44,10 @@ export function SessionRow({
   session: SessionRowData;
   href: string;
   actionLabel?: string;
-  variant?: 'compact' | 'month';
+  /** `day` is the month row with one line of stats, for a single full-width day. */
+  variant?: 'compact' | 'month' | 'day';
 }) {
-  const month = variant === 'month';
+  const month = variant === 'month' || variant === 'day';
   const loadUnavailable = session.loadAvailable === false || session.tss === null;
   const loadLabel = loadUnavailable ? 'No TSS' : `${session.tss}\u00A0TSS`;
   const averageZone = month ? getAverageSessionZone(session.segments) : null;
@@ -83,6 +84,11 @@ export function SessionRow({
           {!month ? (
             <p className="data mt-1 text-xs text-[var(--text-secondary)]">
               {[session.dateLabel, session.timeLabel, getSportLabel(session.sport)].filter(Boolean).join('\u00A0– ')}
+            </p>
+          ) : null}
+          {variant === 'day' ? (
+            <p className="data mt-0.5 text-xs text-[var(--text-secondary)]">
+              {[session.timeLabel, getSportLabel(session.sport), formatDuration(session.durationSec), loadLabel].filter(Boolean).join('\u00A0– ')}
             </p>
           ) : null}
         </div>
