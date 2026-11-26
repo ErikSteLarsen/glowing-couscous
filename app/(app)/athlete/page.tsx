@@ -338,12 +338,76 @@ export default async function AthletePage() {
         <section aria-labelledby="insights-heading" className="space-y-2.5">
           <h2 id="insights-heading" className="sr-only">Training summary</h2>
           <div className="flex flex-col gap-3 md:flex-row md:flex-wrap">
+            {cards.has('weekLoad') ? (
+              <HomeSummaryDialog
+                label="Weekly volume"
+                description="Outlines show planned hours. Filled bars show hours done."
+                className="md:flex-[1_1_0%]"
+                summary={
+                  <span className="flex items-end justify-between gap-4">
+                    <span className="min-w-0">
+                      <span className="data block text-xl font-medium leading-none tracking-[-0.02em] text-[var(--text)]">
+                        {thisWeek ? formatDuration(thisWeek.completed.durationSec) : '–'}
+                      </span>
+                      <span className="data mt-1.5 block text-xs text-[var(--text-muted)]">
+                        {thisWeek ? `of ${formatDuration(thisWeek.planned.durationSec)} this week` : 'No plan this week'}
+                      </span>
+                    </span>
+                    <MiniBars bars={volumeBars} className="w-24 shrink-0" />
+                  </span>
+                }
+              >
+                <WeeklyVolumeChart weeks={volumeWeeks} />
+              </HomeSummaryDialog>
+            ) : null}
+            {cards.has('lastActivity') ? (
+              dashboard.lastActivity ? (
+                <HomeSummaryDialog
+                  label="Last activity"
+                  description={`${format(dashboard.lastActivity.completedAt, 'EEE\u00A0d\u00A0MMM')}\u00A0– ${getSportLabel(dashboard.lastActivity.sport)}`}
+                  className="md:flex-[1_1_0%]"
+                  summary={
+                    <span className="min-w-0">
+                      <span className="block truncate text-base font-medium text-[var(--text)]">{dashboard.lastActivity.title}</span>
+                      <span className="data mt-1 block text-xs text-[var(--text-muted)]">
+                        {format(dashboard.lastActivity.completedAt, 'EEE\u00A0d\u00A0MMM')}&nbsp;– {formatDuration(dashboard.lastActivity.durationSec)}&nbsp;– {dashboard.lastActivity.tss}&nbsp;TSS
+                      </span>
+                    </span>
+                  }
+                >
+                  <div className="flex flex-col gap-4">
+                    <p className="text-lg font-medium text-[var(--text)] [overflow-wrap:anywhere]">{dashboard.lastActivity.title}</p>
+                    <dl className="grid grid-cols-3 gap-3">
+                      {[
+                        ['Time', formatDuration(dashboard.lastActivity.durationSec)],
+                        ['TSS', String(dashboard.lastActivity.tss)],
+                        ['RPE', dashboard.lastActivity.rpe ? `${dashboard.lastActivity.rpe}/10` : '–'],
+                      ].map(([label, value]) => (
+                        <MetricPair key={label} label={label} value={value} />
+                      ))}
+                    </dl>
+                    {dashboard.lastActivity.notes ? (
+                      <p className="text-sm text-[var(--text-secondary)]">&ldquo;{dashboard.lastActivity.notes}&rdquo;</p>
+                    ) : null}
+                    <Link href={`/athlete/session/${dashboard.lastActivity.sessionId}?from=home`} className={`${ghostButtonClassName('compact')} self-start max-md:min-h-11`}>
+                      Open activity
+                      <ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />
+                    </Link>
+                  </div>
+                </HomeSummaryDialog>
+              ) : (
+                <div className="tile flex flex-col gap-3 rounded-2xl p-4 md:flex-[1_1_0%]">
+                  <p className="text-sm text-[var(--text-secondary)]">Last activity</p>
+                  <p className="text-xs text-[var(--text-muted)]">Your latest activity shows up here.</p>
+                </div>
+              )
+            ) : null}
             {cards.has('trend') ? (
               <HomeSummaryDialog
                 label="Training trends"
                 title="Fitness and form"
                 description="Last 12 weeks and the next two, from your plan"
-                className="md:basis-full xl:flex-[2_1_0%]"
+                className="md:basis-full"
                 summary={
                   <span className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4">
                     <span className="grid grid-cols-4 gap-3">
@@ -408,70 +472,6 @@ export default async function AthletePage() {
                   </Link>
                 </div>
               </HomeSummaryDialog>
-            ) : null}
-            {cards.has('weekLoad') ? (
-              <HomeSummaryDialog
-                label="Weekly volume"
-                description="Outlines show planned hours. Filled bars show hours done."
-                className="md:flex-[1_1_0%]"
-                summary={
-                  <span className="flex items-end justify-between gap-4">
-                    <span className="min-w-0">
-                      <span className="data block text-xl font-medium leading-none tracking-[-0.02em] text-[var(--text)]">
-                        {thisWeek ? formatDuration(thisWeek.completed.durationSec) : '–'}
-                      </span>
-                      <span className="data mt-1.5 block text-xs text-[var(--text-muted)]">
-                        {thisWeek ? `of ${formatDuration(thisWeek.planned.durationSec)} this week` : 'No plan this week'}
-                      </span>
-                    </span>
-                    <MiniBars bars={volumeBars} className="w-24 shrink-0" />
-                  </span>
-                }
-              >
-                <WeeklyVolumeChart weeks={volumeWeeks} />
-              </HomeSummaryDialog>
-            ) : null}
-            {cards.has('lastActivity') ? (
-              dashboard.lastActivity ? (
-                <HomeSummaryDialog
-                  label="Last activity"
-                  description={`${format(dashboard.lastActivity.completedAt, 'EEE\u00A0d\u00A0MMM')}\u00A0– ${getSportLabel(dashboard.lastActivity.sport)}`}
-                  className="md:flex-[1_1_0%]"
-                  summary={
-                    <span className="min-w-0">
-                      <span className="block truncate text-base font-medium text-[var(--text)]">{dashboard.lastActivity.title}</span>
-                      <span className="data mt-1 block text-xs text-[var(--text-muted)]">
-                        {format(dashboard.lastActivity.completedAt, 'EEE\u00A0d\u00A0MMM')}&nbsp;– {formatDuration(dashboard.lastActivity.durationSec)}&nbsp;– {dashboard.lastActivity.tss}&nbsp;TSS
-                      </span>
-                    </span>
-                  }
-                >
-                  <div className="flex flex-col gap-4">
-                    <p className="text-lg font-medium text-[var(--text)] [overflow-wrap:anywhere]">{dashboard.lastActivity.title}</p>
-                    <dl className="grid grid-cols-3 gap-3">
-                      {[
-                        ['Time', formatDuration(dashboard.lastActivity.durationSec)],
-                        ['TSS', String(dashboard.lastActivity.tss)],
-                        ['RPE', dashboard.lastActivity.rpe ? `${dashboard.lastActivity.rpe}/10` : '–'],
-                      ].map(([label, value]) => (
-                        <MetricPair key={label} label={label} value={value} />
-                      ))}
-                    </dl>
-                    {dashboard.lastActivity.notes ? (
-                      <p className="text-sm text-[var(--text-secondary)]">&ldquo;{dashboard.lastActivity.notes}&rdquo;</p>
-                    ) : null}
-                    <Link href={`/athlete/session/${dashboard.lastActivity.sessionId}?from=home`} className={`${ghostButtonClassName('compact')} self-start max-md:min-h-11`}>
-                      Open activity
-                      <ArrowRight aria-hidden="true" size={14} strokeWidth={1.8} />
-                    </Link>
-                  </div>
-                </HomeSummaryDialog>
-              ) : (
-                <div className="tile flex flex-col gap-3 rounded-2xl p-4 md:flex-[1_1_0%]">
-                  <p className="text-sm text-[var(--text-secondary)]">Last activity</p>
-                  <p className="text-xs text-[var(--text-muted)]">Your latest activity shows up here.</p>
-                </div>
-              )
             ) : null}
           </div>
         </section>
