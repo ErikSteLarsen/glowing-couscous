@@ -1,7 +1,7 @@
 'use client';
 
-import { SessionRowText } from '@/components/tempo/SessionRowText';
-import { MetricPair } from '@/components/tempo/MetricPair';
+import { SessionRowText } from '@/components/wattonaut/SessionRowText';
+import { MetricPair } from '@/components/wattonaut/MetricPair';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -9,8 +9,8 @@ import { differenceInCalendarDays, format } from 'date-fns';
 import { CalendarDays, Ellipsis, Link2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogBackdrop, DialogContent, DialogDescription, DialogTitle } from '@ui-sdk/react/dialog';
 import { AlertDialog } from '@ui-sdk/react/alert-dialog';
-import { ConfirmationDialogContent } from '@/components/tempo/ConfirmationDialogContent';
-import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, OverflowMenuTrigger } from '@/components/tempo/Menu';
+import { ConfirmationDialogContent } from '@/components/wattonaut/ConfirmationDialogContent';
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, OverflowMenuTrigger } from '@/components/wattonaut/Menu';
 import {
   successTextClassName,
   sectionHeadingClassName,

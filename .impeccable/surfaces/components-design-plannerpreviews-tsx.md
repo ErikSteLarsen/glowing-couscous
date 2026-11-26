@@ -5,7 +5,7 @@
 - **Job:** Understand what is already assigned, choose a source, and place it on a day, week, or month without losing calendar context.
 - **Primary action:** Drag or add a selected source to an explicit calendar target; keep an explicit button path for keyboard and touch users.
 - **Proof/content:** A Monday-first week, a readable month overview, assigned session summaries, source types, cadence, and an immediate confirmation of the selected target.
-- **Constraints:** Preview-only routes under `/design/*`; use synthetic sample data; do not change planner persistence; preserve Tempo's established visual system and accessible text states.
+- **Constraints:** Preview-only routes under `/design/*`; use synthetic sample data; do not change planner persistence; preserve Wattonaut's established visual system and accessible text states.
 
 These are historical developer-only studies; their paper/indigo palette does
 not override production Monolith in DESIGN.md.
@@ -16,7 +16,7 @@ not override production Monolith in DESIGN.md.
 The planner is a placement surface, not a form with a calendar beside it. These previews refuse the category-default dashboard of equal cards by making the schedule the primary object and keeping source selection close to the exact drop target.
 
 ### OWN-WORLD
-Warm paper, indigo ink, blue-gray connective rules, compact session marks, and a narrow source index carry the established Tempo studio. Calendar cells are quiet paper fields; only the active target and one forward action use signal ink. Status colors explain completion or adjustment without becoming decoration.
+Warm paper, indigo ink, blue-gray connective rules, compact session marks, and a narrow source index carry the established Wattonaut studio. Calendar cells are quiet paper fields; only the active target and one forward action use signal ink. Status colors explain completion or adjustment without becoming decoration.
 
 ### STORY
 The visitor sees the week or month, recognizes the already-planned rhythm, selects a reusable workout or template, and places it where it belongs. Dragging remains a shortcut in the week and dispatch directions; Atlas uses explicit date selection and one assignment action. Every placement leaves the calendar visibly changed.

@@ -6,7 +6,7 @@ import { ChevronDown, ChevronUp, Ellipsis, Maximize, Minimize, Minus, Pause, Pla
 import { BackLink, buttonFocusClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import type { BackTarget } from '@/lib/app-navigation';
 import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
-import { GetTempoRideLink } from '@/components/RideAppLaunch';
+import { GetWattonautRideLink } from '@/components/RideAppLaunch';
 import { MAX_ACTIVITY_IMPORT_DURATION_SEC } from '@/lib/activity-import-limits';
 import type { ExecutionStep } from '@/lib/athlete-execution';
 import { formatDistance } from '@/lib/format-distance';
@@ -617,7 +617,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       ref={attachConnections}
       onClose={() => setConnectionsOpen(false)}
       aria-labelledby="ride-connections-title"
-      className="tempo-alert-dialog w-[calc(100%-2rem)] max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
+      className="wattonaut-alert-dialog w-[calc(100%-2rem)] max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
     >
       <div className="flex items-center justify-between gap-3">
         <h2 id="ride-connections-title" className="text-base font-medium">Connections</h2>
@@ -631,7 +631,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         </ul>
       ) : (
         <p role="status" className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
-          This browser can’t connect to Bluetooth devices. You can ride without devices, or connect them in the <GetTempoRideLink>Wattonaut Ride desktop app</GetTempoRideLink>.
+          This browser can’t connect to Bluetooth devices. You can ride without devices, or connect them in the <GetWattonautRideLink>Wattonaut Ride desktop app</GetWattonautRideLink>.
         </p>
       )}
     </dialog>
@@ -644,7 +644,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       onClose={() => setPendingSwitch(null)}
       aria-labelledby="ride-switch-title"
       aria-describedby="ride-switch-text"
-      className="tempo-alert-dialog w-[calc(100%-2rem)] max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
+      className="wattonaut-alert-dialog w-[calc(100%-2rem)] max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
     >
       <h2 id="ride-switch-title" className="text-base font-medium">{leavingVideo ? 'Leave the video?' : 'Leave the course?'}</h2>
       <p id="ride-switch-text" className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">

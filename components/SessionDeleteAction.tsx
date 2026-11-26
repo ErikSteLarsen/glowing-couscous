@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AlertDialog, AlertDialogTrigger } from '@ui-sdk/react/alert-dialog';
-import { ConfirmationDialogContent } from '@/components/tempo/ConfirmationDialogContent';
+import { ConfirmationDialogContent } from '@/components/wattonaut/ConfirmationDialogContent';
 import { useRouter } from 'next/navigation';
 import { dangerButtonClassName, dangerTextClassName } from '@/components/ui';
 

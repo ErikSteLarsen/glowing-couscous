@@ -91,7 +91,7 @@ test('input-heavy app screens reuse shared form field helpers', async () => {
 
 test('high-impact dialogs and execution controls expose complete accessible state', async () => {
   const comparisonSource = await read('components/SessionComparisonDialog.tsx');
-  const stepperSource = await read('components/tempo/Stepper.tsx');
+  const stepperSource = await read('components/wattonaut/Stepper.tsx');
   const liveSource = await read('app/(app)/athlete/live/[sessionId]/LiveSessionClient.tsx');
 
   assert.match(comparisonSource, /<dialog/);

@@ -6,15 +6,15 @@ const ACK_TIMEOUT_MS = 1500
  * (`{ url, startSec, id }`). Resolves true once that page confirms with `youtube:video-ack`, and
  * false when no ride takes it. A newer video supersedes one still waiting.
  */
-function createVideoHandOff({ getTempoWindow, isTrusted, ackTimeoutMs = ACK_TIMEOUT_MS }) {
+function createVideoHandOff({ getAppWindow, isTrusted, ackTimeoutMs = ACK_TIMEOUT_MS }) {
   let lastId = 0
   let pending = null
 
   return {
     send(video) {
       pending?.settle(false)
-      const tempo = getTempoWindow()
-      if (!tempo || tempo.isDestroyed() || !isTrusted(tempo.webContents.getURL())) return Promise.resolve(false)
+      const appWindow = getAppWindow()
+      if (!appWindow || appWindow.isDestroyed() || !isTrusted(appWindow.webContents.getURL())) return Promise.resolve(false)
 
       const id = ++lastId
       return new Promise((resolve) => {
@@ -25,7 +25,7 @@ function createVideoHandOff({ getTempoWindow, isTrusted, ackTimeoutMs = ACK_TIME
         }
         const timer = setTimeout(() => settle(false), ackTimeoutMs)
         pending = { id, settle }
-        tempo.webContents.send('youtube:video', { ...video, id })
+        appWindow.webContents.send('youtube:video', { ...video, id })
       })
     },
     ack(id) {

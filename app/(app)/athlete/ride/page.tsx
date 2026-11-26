@@ -1,4 +1,4 @@
-import { SessionRowText } from '@/components/tempo/SessionRowText';
+import { SessionRowText } from '@/components/wattonaut/SessionRowText';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -8,8 +8,8 @@ import { ArrowRight, CalendarDays, Ellipsis, House, RotateCcw } from 'lucide-rea
 import { BrandMark } from '@/components/BrandMark';
 import { publicLibraryHref } from '@/lib/athlete-workouts-navigation';
 import { LibraryCard } from '@/components/library/LibraryCard';
-import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
-import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/wattonaut/Menu';
+import { SessionBlockBar } from '@/components/wattonaut/SessionBlockBar';
 import { EmptyState, buttonFocusClassName, compactSecondaryButtonClassName, Disclosure, ghostButtonClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';

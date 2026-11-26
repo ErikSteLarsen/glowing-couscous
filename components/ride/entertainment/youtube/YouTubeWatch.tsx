@@ -83,7 +83,7 @@ export function YouTubeWatch({
   const frameBoxRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YouTubePlayer | null>(null);
   /** Wattonaut paused the video (ride paused, dialog opened), so Wattonaut may play it again. */
-  const pausedByTempoRef = useRef(false);
+  const pausedByWattonautRef = useRef(false);
   const resumeAtRef = useRef(video.startSec ?? 0);
   const wantsPlayRef = useRef(startPlaying);
   const restoredRef = useRef(restored);
@@ -109,10 +109,10 @@ export function YouTubeWatch({
     return (gate.rideStatus === 'running' || !gate.pauseWithRide) && !gate.obscured && gate.inView && document.visibilityState === 'visible';
   }, []);
 
-  const resumeIfPausedByTempo = useCallback(() => {
+  const resumeIfPausedByWattonaut = useCallback(() => {
     const player = playerRef.current;
-    if (!pausedByTempoRef.current || !player || !mayPlay()) return;
-    pausedByTempoRef.current = false;
+    if (!pausedByWattonautRef.current || !player || !mayPlay()) return;
+    pausedByWattonautRef.current = false;
     player.playVideo();
   }, [mayPlay]);
 
@@ -160,7 +160,7 @@ export function YouTubeWatch({
       if (!current) return;
       const time = current.getCurrentTime();
       if (time > 0) resumeAtRef.current = time;
-      wantsPlayRef.current = isPlaying(current) || pausedByTempoRef.current;
+      wantsPlayRef.current = isPlaying(current) || pausedByWattonautRef.current;
       onTimeRef.current(video.id, resumeAtRef.current, wantsPlayRef.current);
     };
     const timer = window.setInterval(sample, SAMPLE_MS);
@@ -169,7 +169,7 @@ export function YouTubeWatch({
     const pauseIfPlaying = () => {
       const current = playerRef.current;
       if (current && isPlaying(current)) current.pauseVideo();
-      pausedByTempoRef.current = false;
+      pausedByWattonautRef.current = false;
     };
     const observer = new IntersectionObserver(([entry]) => {
       gate.inView = Boolean(entry && entry.intersectionRatio >= 0.5);
@@ -193,7 +193,7 @@ export function YouTubeWatch({
           target.playVideo();
         } else if (restoredRef.current && gate.inView && (gate.obscured || (gate.rideStatus === 'paused' && gate.pauseWithRide))) {
           // Wattonaut had paused it before the remount; keep that, so resuming plays it again.
-          pausedByTempoRef.current = true;
+          pausedByWattonautRef.current = true;
         }
       },
       onError: setErrorCode,
@@ -209,7 +209,7 @@ export function YouTubeWatch({
       observer.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
       playerRef.current = null;
-      pausedByTempoRef.current = false;
+      pausedByWattonautRef.current = false;
       player.destroy();
       iframe.remove();
     };
@@ -222,7 +222,7 @@ export function YouTubeWatch({
     trackActivity(() => {
       const player = playerRef.current;
       if (!controlled) return true;
-      return player ? isPlaying(player) || pausedByTempoRef.current : wantsPlayRef.current;
+      return player ? isPlaying(player) || pausedByWattonautRef.current : wantsPlayRef.current;
     });
     return () => trackActivity(null);
   }, [controlled, errorCode, fits, trackActivity]);
@@ -236,12 +236,12 @@ export function YouTubeWatch({
     if (previous === 'running' && rideStatus === 'paused') {
       if (pauseWithRide && player && isPlaying(player)) {
         player.pauseVideo();
-        pausedByTempoRef.current = true;
+        pausedByWattonautRef.current = true;
       }
     } else if (previous === 'paused' && rideStatus === 'running') {
-      resumeIfPausedByTempo();
+      resumeIfPausedByWattonaut();
     }
-  }, [rideStatus, pauseWithRide, resumeIfPausedByTempo]);
+  }, [rideStatus, pauseWithRide, resumeIfPausedByWattonaut]);
 
   // A dialog over the stage (Connections, the phone's More sheet): pause and hide the player.
   useEffect(() => {
@@ -249,12 +249,12 @@ export function YouTubeWatch({
     if (obscured) {
       if (player && isPlaying(player)) {
         player.pauseVideo();
-        pausedByTempoRef.current = true;
+        pausedByWattonautRef.current = true;
       }
     } else {
-      resumeIfPausedByTempo();
+      resumeIfPausedByWattonaut();
     }
-  }, [obscured, resumeIfPausedByTempo]);
+  }, [obscured, resumeIfPausedByWattonaut]);
 
   // A click inside the player moves keyboard focus into YouTube, where the ride's Space/N/B/E/F
   // shortcuts can't reach. Return focus to the panel after a click; keep it there after a Tab.
@@ -285,7 +285,7 @@ export function YouTubeWatch({
   function togglePauseWithRide() {
     const next = !pauseWithRide;
     setPauseWithRide(next);
-    if (!next) pausedByTempoRef.current = false;
+    if (!next) pausedByWattonautRef.current = false;
     try { window.localStorage.setItem(PAUSE_WITH_RIDE_KEY, next ? '1' : '0'); } catch { /* preference only */ }
   }
 

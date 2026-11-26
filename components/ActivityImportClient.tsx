@@ -1,13 +1,13 @@
 'use client';
 
-import { SessionRowText } from '@/components/tempo/SessionRowText';
+import { SessionRowText } from '@/components/wattonaut/SessionRowText';
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { formatStravaMetadata, StravaImportPanel } from '@/components/StravaImportPanel';
-import { MetricPair } from '@/components/tempo/MetricPair';
+import { MetricPair } from '@/components/wattonaut/MetricPair';
 import { successTextClassName, sectionHeadingClassName, EmptyState, Surface, buttonFocusClassName, dangerButtonClassName, dangerTextClassName, formFieldClassName, formLabelClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName, formSelectClassName } from '@/components/ui';
 import { parseActivityFile, type ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { ImportableSession, ImportedActivityHistory } from '@/lib/activity-import-service';

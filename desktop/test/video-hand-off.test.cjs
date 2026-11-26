@@ -5,15 +5,15 @@ const { createVideoHandOff } = require('../video-hand-off.cjs')
 
 const VIDEO = { url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE', startSec: 90 }
 
-function tempoWindow(url = 'https://tempo.example/athlete/ride/1') {
+function appWindow(url = 'https://wattonaut.example/athlete/ride/1') {
   const sent = []
   return { sent, isDestroyed: () => false, webContents: { getURL: () => url, send: (channel, video) => sent.push([channel, video]) } }
 }
 
 function handOff(window) {
   return createVideoHandOff({
-    getTempoWindow: () => window,
-    isTrusted: (url) => url.startsWith('https://tempo.example/'),
+    getAppWindow: () => window,
+    isTrusted: (url) => url.startsWith('https://wattonaut.example/'),
     ackTimeoutMs: 20
   })
 }
@@ -40,7 +40,7 @@ test('reads a video link and rejects anything else', () => {
 })
 
 test('resolves true only when the page acks that video', async () => {
-  const window = tempoWindow()
+  const window = appWindow()
   const sender = handOff(window)
   const result = sender.send(VIDEO)
   assert.deepEqual(window.sent, [['youtube:video', { ...VIDEO, id: 1 }]])
@@ -51,7 +51,7 @@ test('resolves true only when the page acks that video', async () => {
 })
 
 test('a newer video supersedes one still waiting', async () => {
-  const sender = handOff(tempoWindow())
+  const sender = handOff(appWindow())
   const first = sender.send(VIDEO)
   const second = sender.send(VIDEO)
   assert.equal(await first, false)
@@ -61,7 +61,7 @@ test('a newer video supersedes one still waiting', async () => {
 })
 
 test('sends nothing to an untrusted page or without a window', async () => {
-  const start = tempoWindow('file:///start.html')
+  const start = appWindow('file:///start.html')
   assert.equal(await handOff(start).send(VIDEO), false)
   assert.deepEqual(start.sent, [])
   assert.equal(await handOff(undefined).send(VIDEO), false)

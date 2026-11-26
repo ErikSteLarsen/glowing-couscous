@@ -3,25 +3,25 @@
 import { Bookmark } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-import { getOrCreateSendKey, sendToTempoBookmarklet } from '@/lib/youtube/send-to-ride';
+import { getOrCreateSendKey, sendToWattonautBookmarklet } from '@/lib/youtube/send-to-ride';
 
 /**
  * The "Send to Wattonaut" bookmark. React refuses `javascript:` URLs, so the href is set after mount.
  * It carries this browser's send key, so the send window it opens plays without asking. Clicking
  * it here only explains where it goes.
  */
-export function SendToTempoBookmark() {
+export function SendToWattonautBookmark() {
   const ref = useRef<HTMLAnchorElement>(null);
   const [hint, setHint] = useState(false);
   useEffect(() => {
-    ref.current?.setAttribute('href', sendToTempoBookmarklet(window.location.origin, getOrCreateSendKey()));
+    ref.current?.setAttribute('href', sendToWattonautBookmarklet(window.location.origin, getOrCreateSendKey()));
   }, []);
   return (
     <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
       <a
         ref={ref}
         draggable
-        data-send-to-tempo=""
+        data-send-to-wattonaut=""
         title="Drag to your bookmarks bar"
         onClick={(event) => {
           event.preventDefault();

@@ -52,13 +52,13 @@ uses the desktop lockfile.
 
 ```sh
 pnpm install --frozen-lockfile
-TEMPO_URL=https://tempo.example pnpm dev
+WATTONAUT_URL=https://wattonaut.example pnpm dev
 ```
 
-In PowerShell, set `$env:TEMPO_URL = 'https://tempo.example'`, then run
-`pnpm dev`. `TEMPO_URL` trusts the given origin for that app process and
+In PowerShell, set `$env:WATTONAUT_URL = 'https://wattonaut.example'`, then run
+`pnpm dev`. `WATTONAUT_URL` trusts the given origin for that app process and
 prefills the start page unless a site is already saved. With neither, the start
-page is prefilled with the production site from `tempoDefaultSite` in
+page is prefilled with the production site from `wattonautDefaultSite` in
 `package.json`; that site is only trusted once you choose **Open Wattonaut**.
 
 The last site you opened, from the start page or a ride link, is saved as the

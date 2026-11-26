@@ -156,8 +156,8 @@ test('coach request UI surfaces failures and blocks duplicate actions', async ()
 
 test('athlete home uses the overhaul composition with explicit session actions', async () => {
   const athleteRouteSource = await read('app/(app)/athlete/page.tsx');
-  const sessionRowSource = await read('components/tempo/SessionRow.tsx');
-  const statusBadgeSource = await read('components/tempo/StatusBadge.tsx');
+  const sessionRowSource = await read('components/wattonaut/SessionRow.tsx');
+  const statusBadgeSource = await read('components/wattonaut/StatusBadge.tsx');
 
   assert.match(athleteRouteSource, /HomeTrainingSetup/);
   assert.match(athleteRouteSource, /next-event-heading/);
@@ -218,7 +218,7 @@ test('planner places sources while libraries own live editing', async () => {
 test('live route delegates execution state to an accessible client', async () => {
   const livePageSource = await read('app/(app)/athlete/live/[sessionId]/page.tsx');
   const liveClientSource = await read('app/(app)/athlete/live/[sessionId]/LiveSessionClient.tsx');
-  const stepperSource = await read('components/tempo/Stepper.tsx');
+  const stepperSource = await read('components/wattonaut/Stepper.tsx');
 
   assert.match(livePageSource, /LiveSessionClient/);
   assert.match(liveClientSource, /advanceExecution/);

@@ -1,9 +1,9 @@
 /**
  * Rebuild the dependency-free public SVG with Node:
- *   node scripts/generate-tempo-sports.mjs
+ *   node scripts/generate-wattonaut-sports.mjs
  * Optional PNG frames/contact sheet (requires Sharp, no browser):
- *   node scripts/generate-tempo-sports.mjs --preview-dir <directory>
- * TEMPO_SHARP_MODULE can point to an existing bundled Sharp installation.
+ *   node scripts/generate-wattonaut-sports.mjs --preview-dir <directory>
+ * WATTONAUT_SHARP_MODULE can point to an existing bundled Sharp installation.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -114,8 +114,8 @@ function pose(t) {
 }
 const dynamic = (id, p, cls) => `<path class="${cls} ${id}" d="${p[id]}"/>`;
 const defs = `<defs>
-  <linearGradient id="tempo-flow-fade"><stop stop-color="black"/><stop offset=".14" stop-color="white"/><stop offset=".86" stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient>
-  <mask id="tempo-flow-mask" maskUnits="userSpaceOnUse" x="65" y="0" width="270" height="220"><rect x="65" width="270" height="220" fill="url(#tempo-flow-fade)"/></mask>
+  <linearGradient id="wattonaut-flow-fade"><stop stop-color="black"/><stop offset=".14" stop-color="white"/><stop offset=".86" stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient>
+  <mask id="wattonaut-flow-mask" maskUnits="userSpaceOnUse" x="65" y="0" width="270" height="220"><rect x="65" width="270" height="220" fill="url(#wattonaut-flow-fade)"/></mask>
 </defs>`;
 function water(time = 0, animated = false) {
   const paths = Array.from({ length: 7 }, (_, i) => {
@@ -123,7 +123,7 @@ function water(time = 0, animated = false) {
     return `<path class="water" d="M${x} 144q12-5 24 0t24 0"/><path class="water quiet" d="M${x + 36} 164q10-4 20 0t20 0"/>`;
   }).join('');
   const shift = -TILE * fraction(time / 1.5);
-  return `<g mask="url(#tempo-flow-mask)"><g ${animated ? 'class="water-flow"' : `transform="translate(${round(shift)} 0)"`}>${paths}</g></g>`;
+  return `<g mask="url(#wattonaut-flow-mask)"><g ${animated ? 'class="water-flow"' : `transform="translate(${round(shift)} 0)"`}>${paths}</g></g>`;
 }
 function road(time = 0, kind = 'bike', animated = false) {
   const period = kind === 'bike' ? BIKE_ROAD_PERIOD : RUN_ROAD_PERIOD;
@@ -132,7 +132,7 @@ function road(time = 0, kind = 'bike', animated = false) {
     return `<path class="ground" d="M${x} 198h36m24 0h8"/><path class="ground quiet" d="M${x + 34} 208h12"/>`;
   }).join('');
   const shift = -TILE * fraction(time / period);
-  return `<g mask="url(#tempo-flow-mask)"><g ${animated ? `class="${kind}-road"` : `transform="translate(${round(shift)} 0)"`}>${paths}</g></g>`;
+  return `<g mask="url(#wattonaut-flow-mask)"><g ${animated ? `class="${kind}-road"` : `transform="translate(${round(shift)} 0)"`}>${paths}</g></g>`;
 }
 function swimmer(p, time = 0, animated = false) {
   return `${dynamic('swim-far', p, 'limb rear')}${dynamic('kick-far', p, 'limb rear')}${dynamic('kick-near', p, 'limb')}
@@ -203,19 +203,19 @@ for (const id of Object.keys(pose(0))) {
 }
 animationStyle += '@media(prefers-reduced-motion:reduce){*{animation:none!important}.swimmer{opacity:1}.cyclist,.runner{display:none}}';
 const initial = pose(.125);
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220" role="img" aria-labelledby="tempo-title tempo-desc">
-<title id="tempo-title">Wattonaut – triatlon</title>
-<desc id="tempo-desc">En svømmer, en syklist og en løper avløser hverandre i en tolv sekunders loop. Vannet og bakken glir bakover, og sykkelhjulene roterer. Transparent bakgrunn. Ved redusert bevegelse vises en stillestående svømmer.</desc>
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220" role="img" aria-labelledby="wattonaut-title wattonaut-desc">
+<title id="wattonaut-title">Wattonaut – triatlon</title>
+<desc id="wattonaut-desc">En svømmer, en syklist og en løper avløser hverandre i en tolv sekunders loop. Vannet og bakken glir bakover, og sykkelhjulene roterer. Transparent bakgrunn. Ved redusert bevegelse vises en stillestående svømmer.</desc>
 ${defs}<style>${baseStyle}${animationStyle}</style>
 <g class="swimmer">${swimmer(initial, 0, true)}</g>
 <g class="cyclist">${cyclist(initial, 0, true)}</g>
 <g class="runner">${runner(initial, 0, true)}</g>
 </svg>\n`;
-fs.writeFileSync(path.resolve(import.meta.dirname, '../public/tempo-sports-loop.svg'), svg);
+fs.writeFileSync(path.resolve(import.meta.dirname, '../public/wattonaut-sports-loop.svg'), svg);
 console.log(`Wrote triathlon SVG (${Buffer.byteLength(svg)} bytes).`);
 
 async function renderPreview(output) {
-  const sharp = loadModule(process.env.TEMPO_SHARP_MODULE || 'sharp');
+  const sharp = loadModule(process.env.WATTONAUT_SHARP_MODULE || 'sharp');
   const framesDir = path.join(output, 'triathlon-frames');
   fs.mkdirSync(framesDir, { recursive: true });
   const sampleIndexes = [0, 7, 14, 21, 105, 110, 115, 120, 210, 215, 220, 225];
@@ -234,7 +234,7 @@ async function renderPreview(output) {
   }
   await sharp({ create: { width: 2400, height: 990, channels: 3, background: '#f5f4ef' } })
     .composite(samples.map((input, i) => ({ input, left: i % 4 * 600, top: Math.floor(i / 4) * 330 })))
-    .png().toFile(path.join(output, 'tempo-triathlon-contact-sheet.png'));
+    .png().toFile(path.join(output, 'wattonaut-triathlon-contact-sheet.png'));
   console.log(`Rendered ${LOOP * 25} frames and a 12-pose contact sheet.`);
 }
 const previewIndex = process.argv.indexOf('--preview-dir');

@@ -7,7 +7,7 @@ related_targets: ["app/(app)/athlete/session/[sessionId]/SessionDetailClient.tsx
 
 SCOPE: The authenticated athlete session detail route. Mode: Operate. The athlete needs to understand the scheduled copy, inspect its full block sequence, and choose the next action without mistaking it for the reusable workout definition.
 
-AUDIENCE AND TASK: An athlete opens a calendar session to understand its structure, timing, target, and status, then starts it or follows a source-workout link when one is safely editable. The detail view is read-only; live completion remains an explicit action in the live flow. Preserve ownership boundaries and the established Tempo shell.
+AUDIENCE AND TASK: An athlete opens a calendar session to understand its structure, timing, target, and status, then starts it or follows a source-workout link when one is safely editable. The detail view is read-only; live completion remains an explicit action in the live flow. Preserve ownership boundaries and the established Wattonaut shell.
 
 THESIS: The scheduled session is a readable score, not an inline editor. It rejects editable forms on the dated copy and puts the full workout sequence ahead of metadata.
 

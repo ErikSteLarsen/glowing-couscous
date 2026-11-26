@@ -372,7 +372,7 @@ test('Import leads with file intake and keeps local inbox refresh in the options
   assert.doesNotMatch(inbox, /server environment|webhooks are not configured/);
 });
 
-test('legacy coach planner surfaces were removed after Tempo convergence', async () => {
+test('legacy coach planner surfaces were removed after the planner convergence', async () => {
   const plannerServiceSource = await read('lib/planner-service.ts');
 
   assert.equal(

@@ -1,6 +1,6 @@
 'use client';
 
-import { SearchField } from '@/components/tempo/SearchField';
+import { SearchField } from '@/components/wattonaut/SearchField';
 import { addMonths, format, parseISO, startOfMonth, startOfWeek, subMonths } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -35,7 +35,7 @@ import {
   successTextClassName,
   switchTrackClassName,
 } from '@/components/ui';
-import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { SessionBlockBar } from '@/components/wattonaut/SessionBlockBar';
 import { formatDuration } from '@/lib/format-duration';
 import { parsePlannedTime } from '@/lib/planned-time';
 import { getSportLabel } from '@/lib/sport';

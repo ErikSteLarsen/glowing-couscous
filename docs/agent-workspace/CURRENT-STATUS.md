@@ -7,6 +7,14 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- Wattonaut rename, second pass (2026-11-26). d75739f is in production. This
+  pass renames internal names: `components/wattonaut/`, CSS classes and DOM
+  IDs, design preview routes, TypeScript and desktop identifiers, the package
+  name, and the dev env vars `WATTONAUT_URL`, `WATTONAUT_TEST_DATABASE_URL` and
+  `WATTONAUT_SHARP_MODULE`. `NEXT_PUBLIC_WATTONAUT_RIDE_DOWNLOAD_URL` replaces
+  the Tempo name, which is still read. Downloaded ride files are now named
+  `wattonaut-ride-*`. ARCHITECTURE rule 16 lists the persisted names that stay.
+
 - Wattonaut rename (2026-11-25). The product name, mark, icons, share image and
   desktop shell say Wattonaut; `brand/kit` owns the logo. `tempo-ride://`, the
   desktop app ID, installer names, storage keys and Strava external IDs keep

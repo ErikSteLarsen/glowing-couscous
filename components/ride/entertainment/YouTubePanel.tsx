@@ -29,7 +29,7 @@ const YOUTUBE_HOME = 'https://www.youtube.com/';
  * Wattonaut Ride app opens it in the system browser instead.
  */
 function openYouTubeWindow() {
-  window.open(YOUTUBE_HOME, 'tempo-youtube', 'popup,width=1100,height=800');
+  window.open(YOUTUBE_HOME, 'wattonaut-youtube', 'popup,width=1100,height=800');
 }
 
 function openBookmarkPage() {

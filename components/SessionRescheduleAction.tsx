@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { CalendarDays, Ellipsis } from 'lucide-react';
-import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/wattonaut/Menu';
 import {
   overlayPanelClassName, dialogActionsClassName,
   compactSecondaryButtonClassName,

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CalendarPlus, Ellipsis, Link2, Pencil, Trash2 } from 'lucide-react';
 import { ShareLinkResult, useShareLink } from '@/components/ShareLinkButton';
-import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/wattonaut/Menu';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { dangerTextClassName, iconButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { ScheduleLink, startTriggerClassName, SwimStartNote } from '@/components/library/LibraryWorkoutActions';

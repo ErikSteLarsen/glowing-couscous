@@ -1,7 +1,7 @@
 import type { RideOs } from './ride/launch.ts';
 
 export type WorkoutStartEligibility = { sport: string; status: string; hasSteps: boolean };
-export type WorkoutStartRuntime = { os: RideOs; webBluetooth: boolean; inTempoRide: boolean };
+export type WorkoutStartRuntime = { os: RideOs; webBluetooth: boolean; inWattonautRide: boolean };
 
 const followAlong = {
   mode: 'live',
@@ -40,7 +40,7 @@ export function getWorkoutStartOptions(workout: WorkoutStartEligibility, runtime
   if (!canStartWorkout(workout)) return [];
   if (workout.sport !== 'BIKING') return [followAlong];
 
-  if (runtime.inTempoRide) {
+  if (runtime.inWattonautRide) {
     return [
       { ...(runtime.webBluetooth ? browserRide : targetsOnly), label: 'Ride in Wattonaut Ride' },
       followAlong,

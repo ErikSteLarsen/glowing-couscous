@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Ellipsis, Play, X } from 'lucide-react';
 import { Dialog, DialogBackdrop, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@ui-sdk/react/dialog';
-import { getRideOs, GetTempoRideLink, RideAppInstallHelp, useRideAppLaunch } from '@/components/RideAppLaunch';
+import { getRideOs, GetWattonautRideLink, RideAppInstallHelp, useRideAppLaunch } from '@/components/RideAppLaunch';
 import { useCatalogRide } from '@/components/library/useCatalogRide';
-import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/wattonaut/Menu';
 import {
   dangerTextClassName,
   sheetDialogClassName,
@@ -69,7 +69,7 @@ function StartControl({ workout, source, triggerClassName }: Props) {
     setRuntime({
       os: getRideOs(),
       webBluetooth: isWebBluetoothAvailable(),
-      inTempoRide: window.tempoDesktop?.isDesktop === true,
+      inWattonautRide: window.tempoDesktop?.isDesktop === true,
     });
     setOpen(true);
   }
@@ -175,7 +175,7 @@ function StartControl({ workout, source, triggerClassName }: Props) {
                   </button>
                   <p id={`${dialogId}-${mode}`} className="px-1 text-[13px] leading-relaxed text-[var(--text-secondary)]">
                     {description}
-                    {mode === 'app' ? <> <GetTempoRideLink>Don’t have it yet? Get Wattonaut Ride</GetTempoRideLink></> : null}
+                    {mode === 'app' ? <> <GetWattonautRideLink>Don’t have it yet? Get Wattonaut Ride</GetWattonautRideLink></> : null}
                   </p>
                 </div>
               ))}

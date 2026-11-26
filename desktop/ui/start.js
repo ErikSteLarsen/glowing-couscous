@@ -4,7 +4,7 @@ const error = document.querySelector('#error')
 const submit = document.querySelector('button[type="submit"]')
 const quickOption = document.querySelector('.quick-option')
 
-window.tempoSetup.getSetup().then(({ site: value, offerLocalhost, error: loadError }) => {
+window.wattonautSetup.getSetup().then(({ site: value, offerLocalhost, error: loadError }) => {
   if (!site.value) site.value = value
   error.textContent = loadError
   quickOption.hidden = !offerLocalhost
@@ -22,7 +22,7 @@ form.addEventListener('submit', async (event) => {
   quickOption.disabled = true
   error.textContent = ''
   try {
-    await window.tempoSetup.openSite(site.value)
+    await window.wattonautSetup.openSite(site.value)
   } catch {
     error.textContent = 'Enter a valid Wattonaut site URL or try again.'
   } finally {

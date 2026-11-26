@@ -555,8 +555,8 @@ test('desktop launch preserves the same encoded return destination as the browse
   const { rideAppLink, rideSessionPath } = await import('../lib/ride/launch.ts');
   const path = rideSessionPath(7, 'home');
   assert.equal(path, '/athlete/ride/7?from=home');
-  const url = new URL(rideAppLink(new URL(path, 'https://tempo.example').href));
-  assert.equal(url.searchParams.get('url'), 'https://tempo.example/athlete/ride/7?from=home');
+  const url = new URL(rideAppLink(new URL(path, 'https://wattonaut.example').href));
+  assert.equal(url.searchParams.get('url'), 'https://wattonaut.example/athlete/ride/7?from=home');
   assert.equal(rideSessionPath(7, 'home&device=hr'), '/athlete/ride/7?from=home%26device%3Dhr');
 });
 

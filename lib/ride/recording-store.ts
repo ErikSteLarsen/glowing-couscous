@@ -134,7 +134,7 @@ export function downloadRideBackup(recording: RideRecording): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `tempo-ride-${recording.sessionId}-${new Date(recording.startedAtMs ?? Date.now()).toISOString().slice(0, 19).replace(/:/g, '')}.json`;
+  link.download = `wattonaut-ride-${recording.sessionId}-${new Date(recording.startedAtMs ?? Date.now()).toISOString().slice(0, 19).replace(/:/g, '')}.json`;
   document.body.appendChild(link);
   link.click();
   link.remove();

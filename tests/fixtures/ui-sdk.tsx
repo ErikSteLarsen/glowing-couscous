@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SessionComparisonDialog } from '../../components/SessionComparisonDialog';
 import { createEmptySessionEditorDraft } from '../../lib/session-editor';
-import { Toggle } from '../../components/tempo/Toggle';
+import { Toggle } from '../../components/wattonaut/Toggle';
 import { SessionDeleteAction } from '../../components/SessionDeleteAction';
 import { RideClient } from '../../app/(app)/athlete/ride/[sessionId]/RideClient';
 import { LiveSessionClient } from '../../app/(app)/athlete/live/[sessionId]/LiveSessionClient';

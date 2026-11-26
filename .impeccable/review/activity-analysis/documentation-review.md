@@ -1,6 +1,6 @@
 # Imported workout interpretation documentation review
 
-Reviewed 2026-10-01. Ordinary extension of Tempo's incumbent system; no new
+Reviewed 2026-10-01. Ordinary extension of Wattonaut's incumbent system; no new
 visual world, tokens, or shipping raster assets. Preserve `DESIGN.md` and
 `.impeccable/design.json`. The finish review's **ship** disposition remains
 limited to its supplied actual-component screenshots and source review.
@@ -12,7 +12,7 @@ limited to its supplied actual-component screenshots and source review.
 - Theme aliases and zone tokens in `app/globals.css`, shared fields/actions in
   `components/ui.tsx`, and the existing sidecar's identity metadata.
 - Finished `components/ImportedWorkoutAnalysis.tsx`,
-  `lib/activity-analysis-view.ts`, `components/tempo/SessionBlockBar.tsx`,
+  `lib/activity-analysis-view.ts`, `components/wattonaut/SessionBlockBar.tsx`,
   and `lib/intensity-color.ts`; direction contract and finish-review report.
 - Opened `desktop-light.jpg`, `desktop-dark.jpg`, `mobile-dark-focused.jpg`,
   and `mobile-correction.jpg` from this directory individually. The mobile

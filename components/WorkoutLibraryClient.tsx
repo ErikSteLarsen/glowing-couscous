@@ -22,7 +22,7 @@ import {
 import { WorkoutBuilder } from '@/components/WorkoutBuilder';
 import { GuidedWorkoutForm, type GuidedWorkoutInfo } from '@/components/GuidedWorkoutForm';
 import { ShareLinkResult, useShareLink } from '@/components/ShareLinkButton';
-import { Menu, MenuContent, MenuItem, MenuTrigger, OverflowMenuTrigger } from '@/components/tempo/Menu';
+import { Menu, MenuContent, MenuItem, MenuTrigger, OverflowMenuTrigger } from '@/components/wattonaut/Menu';
 import { CatalogProfile } from '@/components/library/CatalogProfile';
 import { ActiveFilterChips, FilterChipGroup, FiltersButton, FiltersDialog, SortSelect } from '@/components/library/CollectionFilters';
 import { MyWorkoutMenu } from '@/components/library/MyWorkoutActions';
@@ -40,7 +40,7 @@ import type { PerformanceProfile } from '@/lib/performance-profile';
 import { useDraftRecovery } from '@/components/useDraftRecovery';
 import { DraftRecoveryStatus } from '@/components/DraftRecoveryNotice';
 import { DraftsPopover } from '@/components/DraftsPopover';
-import { SearchField } from '@/components/tempo/SearchField';
+import { SearchField } from '@/components/wattonaut/SearchField';
 import { CollectionSummary, CollectionToolbar } from '@/components/library/CollectionToolbar';
 import { WorkoutCard, WorkoutCardFooter, WorkoutCardGrid, WorkoutCardHeader, WorkoutCardMeta, WorkoutCardProfile, WorkoutCardSummary } from '@/components/library/WorkoutCard';
 import { describeWorkoutDraft, isWorkoutDraftRedundant, parseWorkoutRecovery } from '@/lib/workout-recovery';

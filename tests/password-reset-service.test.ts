@@ -152,7 +152,7 @@ test('password recovery rejects insecure production URLs and overlong bcrypt pas
   const testHarness = harness();
   assert.equal(testHarness.service.isConfigured(), true);
   assert.equal(getPasswordResetEmailConfig({
-    AUTH_URL: 'http://tempo.example',
+    AUTH_URL: 'http://wattonaut.example',
     NODE_ENV: 'production',
     RESEND_API_KEY: 'test-key',
     PASSWORD_RESET_FROM_EMAIL: 'Wattonaut <accounts@example.com>',

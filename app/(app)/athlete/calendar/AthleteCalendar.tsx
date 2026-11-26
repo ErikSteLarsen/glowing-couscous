@@ -23,8 +23,8 @@ import {
   type DragStartEvent,
   type KeyboardCoordinateGetter,
 } from '@dnd-kit/core';
-import { ComplianceMark, complianceColors } from '@/components/tempo/ComplianceMark';
-import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { ComplianceMark, complianceColors } from '@/components/wattonaut/ComplianceMark';
+import { SessionBlockBar } from '@/components/wattonaut/SessionBlockBar';
 import { SessionDeleteAction } from '@/components/SessionDeleteAction';
 import {
   Menu,
@@ -39,9 +39,9 @@ import {
   MenuSeparator,
   MenuTrigger,
   OverflowMenuTrigger,
-} from '@/components/tempo/Menu';
-import { MetricPair } from '@/components/tempo/MetricPair';
-import { SessionRowText } from '@/components/tempo/SessionRowText';
+} from '@/components/wattonaut/Menu';
+import { MetricPair } from '@/components/wattonaut/MetricPair';
+import { SessionRowText } from '@/components/wattonaut/SessionRowText';
 import {
   noticeBoxClassNames,
   Surface,

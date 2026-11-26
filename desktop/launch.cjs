@@ -1,8 +1,8 @@
 const { parseWebUrl } = require('./urls.cjs')
-const { tempoDefaultSite } = require('./package.json')
+const { wattonautDefaultSite } = require('./package.json')
 
 const RIDE_PATH = '/athlete/ride'
-const DEFAULT_SITE = parseWebUrl(tempoDefaultSite)?.origin
+const DEFAULT_SITE = parseWebUrl(wattonautDefaultSite)?.origin
 
 const toOrigin = (value) => parseWebUrl(value)?.origin
 

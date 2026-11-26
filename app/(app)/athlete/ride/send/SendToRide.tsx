@@ -4,7 +4,7 @@ import { CheckCircle2, CircleAlert, Clapperboard } from 'lucide-react';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
 import { compactPrimaryButtonClassName, compactSecondaryButtonClassName } from '@/components/ui';
-import { SendToTempoBookmark } from '@/components/ride/entertainment/youtube/SendToTempoBookmark';
+import { SendToWattonautBookmark } from '@/components/ride/entertainment/youtube/SendToWattonautBookmark';
 import { parseSentStart, readSendKey, rideAppVideoLink, sendKeyFromHash, sendVideoToRide } from '@/lib/youtube/send-to-ride';
 import { parseYouTubeLink, youTubeWatchUrl } from '@/lib/youtube/youtube-url';
 
@@ -113,7 +113,7 @@ export function SendToRide({ url, startSec }: { url: string | null; startSec: st
               <button type="button" className={compactSecondaryButtonClassName} onClick={() => window.close()}>Close</button>
             </div>
           ) : state === 'setup' ? (
-            <SendToTempoBookmark />
+            <SendToWattonautBookmark />
           ) : state === 'invalid' ? (
             <button type="button" className={compactSecondaryButtonClassName} onClick={() => window.close()}>Close</button>
           ) : null}

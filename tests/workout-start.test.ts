@@ -17,20 +17,20 @@ function choices(workout: typeof bike, runtime: WorkoutStartRuntime) {
 
 test('bike choices follow Web Bluetooth capability, desktop platform and host app', () => {
   for (const os of ['windows', 'macos', 'linux'] as const) {
-    assert.deepEqual(choices(bike, { os, webBluetooth: true, inTempoRide: false }), [openApp, rideInBrowser, follow]);
-    assert.deepEqual(choices(bike, { os, webBluetooth: false, inTempoRide: false }), [openApp, follow, targetsOnly]);
+    assert.deepEqual(choices(bike, { os, webBluetooth: true, inWattonautRide: false }), [openApp, rideInBrowser, follow]);
+    assert.deepEqual(choices(bike, { os, webBluetooth: false, inWattonautRide: false }), [openApp, follow, targetsOnly]);
   }
-  assert.deepEqual(choices(bike, { os: 'other', webBluetooth: true, inTempoRide: false }), [rideInBrowser, follow]);
-  assert.deepEqual(choices(bike, { os: 'other', webBluetooth: false, inTempoRide: false }), [follow, targetsOnly]);
+  assert.deepEqual(choices(bike, { os: 'other', webBluetooth: true, inWattonautRide: false }), [rideInBrowser, follow]);
+  assert.deepEqual(choices(bike, { os: 'other', webBluetooth: false, inWattonautRide: false }), [follow, targetsOnly]);
   for (const webBluetooth of [true, false]) {
-    const options = getWorkoutStartOptions(bike, { os: 'linux', webBluetooth, inTempoRide: true });
+    const options = getWorkoutStartOptions(bike, { os: 'linux', webBluetooth, inWattonautRide: true });
     assert.deepEqual(options.map(({ mode, label }) => [mode, label]), [rideInApp, follow]);
     assert.match(options[0].description, webBluetooth ? /over Bluetooth/ : /ride time is saved/);
   }
 });
 
 test('open runs, strength and stretching follow along; swims, terminal, rest and stepless workouts have no start', () => {
-  const runtime: WorkoutStartRuntime = { os: 'macos', webBluetooth: true, inTempoRide: false };
+  const runtime: WorkoutStartRuntime = { os: 'macos', webBluetooth: true, inWattonautRide: false };
   for (const sport of ['RUNNING', 'STRENGTH', 'STRETCHING']) {
     assert.deepEqual(choices({ ...bike, sport }, runtime), [follow]);
   }

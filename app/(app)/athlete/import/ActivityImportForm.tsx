@@ -1,6 +1,6 @@
 'use client';
 
-import { MetricPair } from '@/components/tempo/MetricPair';
+import { MetricPair } from '@/components/wattonaut/MetricPair';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';

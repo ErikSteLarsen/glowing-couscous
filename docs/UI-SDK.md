@@ -11,16 +11,16 @@ global SDK stylesheet, or agent access to private account actions is needed.
 |---|---|
 | Buttons and action links | Use the primary, secondary, danger, ghost, compact, and round icon classes in `components/ui.tsx`. Use `ActionLink` for navigation with button styling. Keep `control-hover` for enabled-only feedback on native buttons and SDK controls. |
 | Fields and groups | Use `formFieldClassName`, `formSelectClassName`, `formTextareaClassName`, and `formLabelClassName` with native elements. Keep native number fields and group related choices with a labelled fieldset. Associate field-specific hints and errors with the input via `aria-describedby`. |
-| Search and filters | Use `components/tempo/SearchField.tsx` for labelled search, and `CollectionToolbar` for the Workouts tabs. Activity submits its native GET form. The public library applies changes immediately and keeps its query parameters in the URL. |
+| Search and filters | Use `components/wattonaut/SearchField.tsx` for labelled search, and `CollectionToolbar` for the Workouts tabs. Activity submits its native GET form. The public library applies changes immediately and keeps its query parameters in the URL. |
 | View and value choices | Use `switchTrackClassName` and `getSwitchOptionClassName` for view controls, preserving the caller's link or tab semantics. Use `getSegmentedChoiceClassName` for form values, SDK segmented radios for single-select filters, and SDK Menu radio or checkbox items for choices inside a menu. |
-| Overflow | Use `OverflowMenuTrigger` for a row or editor ellipsis, and the round icon class for a toolbar trigger. Give each trigger an accessible name. Use the SDK parts from `components/tempo/Menu.tsx` for keyboard navigation and focus return. |
+| Overflow | Use `OverflowMenuTrigger` for a row or editor ellipsis, and the round icon class for a toolbar trigger. Give each trigger an accessible name. Use the SDK parts from `components/wattonaut/Menu.tsx` for keyboard navigation and focus return. |
 | Dialogs and popovers | Start with `centeredDialogClassName`, `sheetDialogClassName`, or `nativeDialogClassName` for the matching layout. `overlayPanelClassName` supplies the surface for menus and popovers. Use a labelled title, the round icon class for an icon-only close button, and `dialogActionsClassName` for end-aligned footer actions. For a dialog opened from a menu, return focus to the menu trigger or a surviving control if the action removes it. |
-| Confirmations | Use SDK AlertDialog with `components/tempo/ConfirmationDialogContent.tsx` for destructive actions. Focus lands on the safe action. While a request is pending, disable the actions and prevent dismissal. On failure, keep the dialog open and show the error. |
+| Confirmations | Use SDK AlertDialog with `components/wattonaut/ConfirmationDialogContent.tsx` for destructive actions. Focus lands on the safe action. While a request is pending, disable the actions and prevent dismissal. On failure, keep the dialog open and show the error. |
 | Save feedback | Use `successTextClassName` with `role="status"` for inline success and `dangerTextClassName` with `role="alert"` for errors. Use a specific pending label and disable the initiating control or fieldset while a write is pending. |
 
 ## Owners
 
-- `components/tempo/Toggle.tsx`: controlled SDK Switch for settings, retaining
+- `components/wattonaut/Toggle.tsx`: controlled SDK Switch for settings, retaining
   the existing checked/onChange contract and pending-write disabling.
 - `components/SessionDeleteAction.tsx`: SDK AlertDialog for explicit deletion,
   safe initial focus, focus containment and return, and Escape dismissal.
@@ -34,7 +34,7 @@ global SDK stylesheet, or agent access to private account actions is needed.
   tile is the trigger, so focus returns to it; Escape, a labelled title,
   contained scrolling, a bottom sheet on phones and a centered panel from
   `md`. Charts inside only consume Escape while a point is selected.
-- `components/tempo/Menu.tsx`: Wattonaut-styled SDK Menu parts (content, items,
+- `components/wattonaut/Menu.tsx`: Wattonaut-styled SDK Menu parts (content, items,
   checkbox/radio items, indicator, label, separator). Calendar uses it for the
   header More menu and each session's overflow actions. `WorkoutBuilder` uses
   it for Add step and each step or set ⋯ menu; actions that add, duplicate or

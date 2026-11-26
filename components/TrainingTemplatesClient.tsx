@@ -1,12 +1,12 @@
 'use client';
 
 import { AlertDialog } from '@ui-sdk/react/alert-dialog';
-import { ConfirmationDialogContent } from '@/components/tempo/ConfirmationDialogContent';
-import { SearchField } from '@/components/tempo/SearchField';
+import { ConfirmationDialogContent } from '@/components/wattonaut/ConfirmationDialogContent';
+import { SearchField } from '@/components/wattonaut/SearchField';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowDown, ArrowUp, Copy, Plus, Trash2 } from 'lucide-react';
-import { Menu, MenuContent, MenuItem, MenuSeparator, OverflowMenuTrigger } from '@/components/tempo/Menu';
+import { Menu, MenuContent, MenuItem, MenuSeparator, OverflowMenuTrigger } from '@/components/wattonaut/Menu';
 import { sectionHeadingClassName, ActionLink, buttonFocusClassName, Surface, EmptyState, primaryButtonClassName, secondaryButtonClassName, compactSecondaryButtonClassName, compactDangerButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, dangerTextClassName, successTextClassName, formTextareaClassName } from '@/components/ui';
 import { BuiltInTrainingPlans } from '@/components/BuiltInTrainingPlans';
 import { selectPlanWorkouts, type BuiltInPlanPreview } from '@/lib/plan-catalog/selection';

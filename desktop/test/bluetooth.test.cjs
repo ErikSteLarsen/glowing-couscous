@@ -5,7 +5,7 @@ const { wireBluetooth } = require('../bluetooth.cjs')
 
 test('cancels the active picker once and declines late scan updates during navigation', () => {
   const contents = Object.assign(new EventEmitter(), {
-    getURL: () => 'https://tempo.example/athlete/ride/42',
+    getURL: () => 'https://wattonaut.example/athlete/ride/42',
     session: { setBluetoothPairingHandler() {} }
   })
   const window = Object.assign(new EventEmitter(), { webContents: contents })

@@ -42,7 +42,7 @@ Use this order for interface work:
 
 1. Read `DESIGN.md` for durable visual rules and reusable component patterns.
 2. Read `app/globals.css` for the implemented semantic tokens and state colors.
-3. Reuse owners in `components/ui.tsx`, `components/tempo/`, `AppShell`, and
+3. Reuse owners in `components/ui.tsx`, `components/wattonaut/`, `AppShell`, and
    `WorkoutBuilder` before adding route-local styles.
 4. Treat `app/design/*` as visual experiments only. They are not production
    screens and their tokens must not be copied into authenticated routes.

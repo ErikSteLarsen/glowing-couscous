@@ -11,7 +11,7 @@ import {
 } from '@/components/ui';
 import { parseYouTubeLink, youTubeWatchUrl, type YouTubeLink } from '@/lib/youtube/youtube-url';
 import { thumbnailForVideo } from './recent-videos';
-import { SendToTempoBookmark } from './SendToTempoBookmark';
+import { SendToWattonautBookmark } from './SendToWattonautBookmark';
 import { VideoCard } from './VideoCard';
 import { YouTubeConsent, YouTubeFooter } from './YouTubeNotice';
 import type { YouTubeVideoChoice } from './youtube-client';
@@ -204,7 +204,7 @@ export function YouTubePick({
                 ) : (
                   <>
                     <p className="text-[13px] leading-snug text-[var(--text-secondary)]">Drag this to your bookmarks bar. On any YouTube video, click it.</p>
-                    <div className="mt-0.5"><SendToTempoBookmark /></div>
+                    <div className="mt-0.5"><SendToWattonautBookmark /></div>
                   </>
                 )}
               </Way>

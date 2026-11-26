@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { Download } from 'lucide-react';
-import { useInTempoRide, useMacArchitecture, useRideOs } from '@/components/RideAppLaunch';
+import { useInWattonautRide, useMacArchitecture, useRideOs } from '@/components/RideAppLaunch';
 import { Surface, buttonFocusClassName, primaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
-import { RIDE_DESKTOP_VERSION, rideDownloadBase, rideDownloadChoices, rideInstallHints, type RideDownload, type RideOs } from '@/lib/ride/launch';
+import { RIDE_DESKTOP_VERSION, configuredRideDownloadBase, rideDownloadChoices, rideInstallHints, type RideDownload, type RideOs } from '@/lib/ride/launch';
 
 const osNames: Record<Exclude<RideOs, 'other'>, string> = { windows: 'Windows', macos: 'macOS', linux: 'Linux' };
 const desktopSystems = Object.keys(osNames) as Array<Exclude<RideOs, 'other'>>;
@@ -20,15 +20,15 @@ function HintList({ os }: { os: RideOs }) {
 
 export function RideDownloadPage() {
   const os = useRideOs();
-  const inTempoRide = useInTempoRide();
+  const inWattonautRide = useInWattonautRide();
   const architecture = useMacArchitecture(os);
-  const { recommended, others } = rideDownloadChoices(os ?? 'other', rideDownloadBase(process.env.NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL), architecture);
+  const { recommended, others } = rideDownloadChoices(os ?? 'other', configuredRideDownloadBase(), architecture);
   const detected = os && os !== 'other' ? os : null;
   const otherSystems = desktopSystems.filter((system) => system !== detected);
 
   return (
     <div className="space-y-5">
-      {inTempoRide ? (
+      {inWattonautRide ? (
         <p role="status" className="rounded-2xl border border-[var(--border)] px-5 py-4 text-sm text-[var(--text-secondary)]">
           You are already using Wattonaut Ride on this computer. The installers below are for your other computers.
         </p>

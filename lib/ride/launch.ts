@@ -36,6 +36,11 @@ export function rideDownloadBase(override?: string | null): string {
   return trimmed || DEFAULT_RIDE_DOWNLOAD_BASE;
 }
 
+/** The configured release asset base. The old `NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL` name is still read in case a deployment sets it. */
+export function configuredRideDownloadBase(): string {
+  return rideDownloadBase(process.env.NEXT_PUBLIC_WATTONAUT_RIDE_DOWNLOAD_URL || process.env.NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL);
+}
+
 export type MacArchitecture = 'arm' | 'x86';
 
 const MAC_DOWNLOAD_IDS: Record<MacArchitecture, string> = { arm: 'macos-arm64', x86: 'macos-x64' };

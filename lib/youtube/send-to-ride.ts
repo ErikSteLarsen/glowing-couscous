@@ -16,7 +16,7 @@
 import { isYouTubeVideoId } from './youtube-url.ts';
 
 export const SEND_PATH = '/athlete/ride/send';
-export const RIDE_YOUTUBE_CHANNEL = 'tempo-ride-youtube';
+export const RIDE_YOUTUBE_CHANNEL = 'wattonaut-ride-youtube';
 export const SEND_KEY_STORAGE = 'tempo.ride.sendKey';
 /** How long the send window waits for a ride tab to take the video. */
 export const ACK_TIMEOUT_MS = 1500;
@@ -79,7 +79,7 @@ export function getOrCreateSendKey(): string {
  * first and pauses YouTube only if that window opened. The position comes from the playing (else
  * the largest visible) video, as whole seconds, 0 included; a live stream sends none.
  */
-export function sendToTempoBookmarklet(origin: string, key: string): string {
+export function sendToWattonautBookmarklet(origin: string, key: string): string {
   const target = JSON.stringify(`${origin.replace(/\/+$/, '')}${SEND_PATH}?u=`);
   // The key rides in the fragment, so it never reaches a server log or a sign-in callback URL.
   const fragment = JSON.stringify(`#k=${encodeURIComponent(key)}`);
@@ -90,7 +90,7 @@ export function sendToTempoBookmarklet(origin: string, key: string): string {
     "var s=document.querySelectorAll('#movie_player video, ytd-shorts video[src], video'),v=null,b=-1,i,r,a;",
     'for(i=0;i<s.length;i++){r=s[i].getBoundingClientRect();a=Math.max(0,Math.min(r.right,window.innerWidth)-Math.max(r.left,0))*Math.max(0,Math.min(r.bottom,window.innerHeight)-Math.max(r.top,0))+(s[i].paused?0:1e9);if(a>b){b=a;v=s[i]}}',
     "var t=!v||document.querySelector('.ytp-live')||v.duration===Infinity?'':'&t='+(Math.floor(v.currentTime)||0);",
-    `var w=window.open(${target}+encodeURIComponent(u)+t+${fragment},'tempo-send','popup,width=420,height=260');`,
+    `var w=window.open(${target}+encodeURIComponent(u)+t+${fragment},'wattonaut-send','popup,width=420,height=260');`,
     "if(!w){window.alert('Allow pop-ups for YouTube to send videos to Wattonaut.');return}",
     'if(v)try{v.pause()}catch(e){}',
     '})()',

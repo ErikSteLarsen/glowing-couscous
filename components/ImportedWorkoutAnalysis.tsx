@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useState } from 'react';
-import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { SessionBlockBar } from '@/components/wattonaut/SessionBlockBar';
 import { dangerTextClassName, formFieldClassName, formLabelClassName, secondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
 import { formatAnalysisDuration, formatAnalysisPace } from '@/lib/activity-analysis';
 import { analysisTimelineSegments } from '@/lib/activity-analysis-view';

@@ -68,7 +68,7 @@ function updateDevices(list) {
   if (restoreFocus) (selectedDevice() ?? devices.querySelector('input') ?? cancel).focus()
 }
 
-window.tempoDialog.onUpdate((state) => {
+window.wattonautDialog.onUpdate((state) => {
   const initial = mode === undefined
   mode = state.mode
   picker.hidden = mode !== 'devices'
@@ -106,15 +106,15 @@ window.tempoDialog.onUpdate((state) => {
 
 devices.addEventListener('change', updateSubmit)
 pin.addEventListener('input', updateSubmit)
-cancel.addEventListener('click', () => window.tempoDialog.submit(''))
+cancel.addEventListener('click', () => window.wattonautDialog.submit(''))
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') window.tempoDialog.submit('')
+  if (event.key === 'Escape') window.wattonautDialog.submit('')
 })
 document.querySelector('form').addEventListener('submit', (event) => {
   event.preventDefault()
   if (submit.disabled) return
   const value = { devices: selectedDevice()?.value, providePin: pin.value }[mode] ?? 'confirm'
-  window.tempoDialog.submit(value)
+  window.wattonautDialog.submit(value)
 })
 
-window.tempoDialog.ready()
+window.wattonautDialog.ready()

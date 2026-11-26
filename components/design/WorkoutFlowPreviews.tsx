@@ -49,8 +49,8 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from '@/components/ui';
-import { MetricText } from '@/components/tempo/MetricText';
-import { SessionBlockBar } from '@/components/tempo/SessionBlockBar';
+import { MetricText } from '@/components/wattonaut/MetricText';
+import { SessionBlockBar } from '@/components/wattonaut/SessionBlockBar';
 import { TEMPO_ZONE_META, type TempoZone } from '@/lib/tempo-blocks';
 
 type Direction = 'flowline' | 'workbench' | 'trail';

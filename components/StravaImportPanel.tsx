@@ -1,6 +1,6 @@
 'use client';
 
-import { SessionRowText } from '@/components/tempo/SessionRowText';
+import { SessionRowText } from '@/components/wattonaut/SessionRowText';
 import { SegmentedControl, SegmentedControlItem } from '@ui-sdk/react/segmented-control';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
@@ -9,8 +9,8 @@ import { Ellipsis } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
-import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
-import { MetricPair } from '@/components/tempo/MetricPair';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/wattonaut/Menu';
+import { MetricPair } from '@/components/wattonaut/MetricPair';
 import { successTextClassName, sectionHeadingClassName, Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, getSegmentedChoiceClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName, nativeDialogClassName, formSelectClassName } from '@/components/ui';
 import type { ImportableSession } from '@/lib/activity-import-service';
 import type { ImportedActivityFile } from '@/lib/activity-file-parser';

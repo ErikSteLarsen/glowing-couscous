@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { format, startOfWeek } from 'date-fns';
 import { ActionLink, EmptyState, PageShell, secondaryButtonClassName, Surface, TopBar } from '@/components/ui';
-import { StatusBadge } from '@/components/tempo/StatusBadge';
+import { StatusBadge } from '@/components/wattonaut/StatusBadge';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration } from '@/lib/format-duration';

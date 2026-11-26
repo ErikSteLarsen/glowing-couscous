@@ -13,8 +13,8 @@ import {
   sectionHeadingClassName,
   successTextClassName,
 } from '@/components/ui';
-import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempo/Menu';
-import { Stepper } from '@/components/tempo/Stepper';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/wattonaut/Menu';
+import { Stepper } from '@/components/wattonaut/Stepper';
 import { WorkoutProfile } from '@/components/WorkoutProfile';
 import type { WorkoutProfileModel } from '@/lib/workout-profile';
 import { formatDuration } from '@/lib/format-duration';

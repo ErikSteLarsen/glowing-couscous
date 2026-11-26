@@ -2,8 +2,8 @@
 
 import { useDeferredValue, useMemo, useRef, useState } from 'react';
 import { Check, ChevronDown, X } from 'lucide-react';
-import { Menu, MenuContent, MenuItemIndicator, MenuRadioGroup, MenuRadioItem, MenuTrigger } from '@/components/tempo/Menu';
-import { SearchField } from '@/components/tempo/SearchField';
+import { Menu, MenuContent, MenuItemIndicator, MenuRadioGroup, MenuRadioItem, MenuTrigger } from '@/components/wattonaut/Menu';
+import { SearchField } from '@/components/wattonaut/SearchField';
 import { ActiveFilterChips, FilterChipGroup, FiltersButton, FiltersDialog, SortSelect } from '@/components/library/CollectionFilters';
 import { CollectionSummary, CollectionToolbar } from '@/components/library/CollectionToolbar';
 import { LibraryCard } from '@/components/library/LibraryCard';

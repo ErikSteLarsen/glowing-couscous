@@ -5,8 +5,8 @@ import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { stravaService, StravaConnectionConflictError } from '@/lib/strava-service';
 import { safeStravaReturnPath } from '@/lib/strava-post';
 
-const STATE_COOKIE = 'tempo_strava_oauth_state';
-const RETURN_COOKIE = 'tempo_strava_return';
+const STATE_COOKIE = 'wattonaut_strava_oauth_state';
+const RETURN_COOKIE = 'wattonaut_strava_return';
 const IMPORT_PATH = '/athlete/import';
 
 function redirectToImport(request: Request, result: string, returnTo: string | null = null) {

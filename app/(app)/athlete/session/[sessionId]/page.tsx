@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { EmptyState, PageShell, Surface, TopBar, sectionHeadingClassName } from '@/components/ui';
-import { MetricText } from '@/components/tempo/MetricText';
-import { StatusBadge } from '@/components/tempo/StatusBadge';
+import { MetricText } from '@/components/wattonaut/MetricText';
+import { StatusBadge } from '@/components/wattonaut/StatusBadge';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration, formatDurationExact } from '@/lib/format-duration';

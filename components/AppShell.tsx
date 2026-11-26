@@ -15,10 +15,10 @@ let sessionTheme: ColorTheme = 'dark';
 
 function subscribeToTheme(onChange: () => void) {
   window.addEventListener('storage', onChange);
-  window.addEventListener('tempo-theme-changed', onChange);
+  window.addEventListener('wattonaut-theme-changed', onChange);
   return () => {
     window.removeEventListener('storage', onChange);
-    window.removeEventListener('tempo-theme-changed', onChange);
+    window.removeEventListener('wattonaut-theme-changed', onChange);
   };
 }
 
@@ -33,10 +33,10 @@ let sessionMenuHidden = false;
 let menuStorageUnavailable = false;
 function subscribeToMenu(onChange: () => void) {
   window.addEventListener('storage', onChange);
-  window.addEventListener('tempo-menu-changed', onChange);
+  window.addEventListener('wattonaut-menu-changed', onChange);
   return () => {
     window.removeEventListener('storage', onChange);
-    window.removeEventListener('tempo-menu-changed', onChange);
+    window.removeEventListener('wattonaut-menu-changed', onChange);
   };
 }
 function getMenuHidden() {
@@ -73,7 +73,7 @@ export function AppShell({
     sessionTheme = next;
     try { window.localStorage.setItem('tempo-theme', next); } catch { /* Keep this session's choice. */ }
     document.documentElement.dataset.workspaceTheme = next;
-    window.dispatchEvent(new Event('tempo-theme-changed'));
+    window.dispatchEvent(new Event('wattonaut-theme-changed'));
   };
 
   useEffect(() => {
@@ -83,14 +83,14 @@ export function AppShell({
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 767px)');
     const updateViewport = (event?: MediaQueryListEvent) => {
-      const sidebarHadFocus = document.getElementById('tempo-sidebar')?.contains(document.activeElement);
+      const sidebarHadFocus = document.getElementById('wattonaut-sidebar')?.contains(document.activeElement);
       setIsMobileViewport(mediaQuery.matches);
       if (!mediaQuery.matches) setMobileOpenPath(null);
       if (event) requestAnimationFrame(() => {
         // CSS may hide the focused control before the media-query event fires.
         if (!sidebarHadFocus && document.activeElement !== document.body) return;
         if (mediaQuery.matches || getMenuHidden()) (window.matchMedia('(max-width: 767px)').matches ? menuButtonRef : desktopMenuButtonRef).current?.focus();
-        else document.getElementById('tempo-hide-menu')?.focus();
+        else document.getElementById('wattonaut-hide-menu')?.focus();
       });
     };
     updateViewport();
@@ -131,7 +131,7 @@ export function AppShell({
       const touch = event.touches[0];
       // Leave the outer edge to native browser history gestures.
       if (!mobileOpen && (touch.clientX < 20 || touch.clientX > 48)) return;
-      if (mobileOpen && !target.closest('#tempo-sidebar')) return;
+      if (mobileOpen && !target.closest('#wattonaut-sidebar')) return;
       start = { x: touch.clientX, y: touch.clientY, time: Date.now() };
     };
     const onEnd = (event: TouchEvent) => {
@@ -175,10 +175,10 @@ export function AppShell({
     sessionMenuHidden = hidden;
     try { window.localStorage.setItem('tempo-menu-hidden', String(hidden)); }
     catch { menuStorageUnavailable = true; }
-    window.dispatchEvent(new Event('tempo-menu-changed'));
+    window.dispatchEvent(new Event('wattonaut-menu-changed'));
     requestAnimationFrame(() => {
       if (hidden) (window.matchMedia('(max-width: 767px)').matches ? menuButtonRef : desktopMenuButtonRef).current?.focus();
-      else document.getElementById('tempo-hide-menu')?.focus();
+      else document.getElementById('wattonaut-hide-menu')?.focus();
     });
   };
 
@@ -189,7 +189,7 @@ export function AppShell({
 
   return (
     <div
-      className="ink-studio-app tempo-shell relative min-h-screen bg-[var(--background)] text-[var(--text-secondary)]"
+      className="ink-studio-app wattonaut-shell relative min-h-screen bg-[var(--background)] text-[var(--text-secondary)]"
       data-menu-hidden={menuHidden}
     >
       <Link
@@ -222,7 +222,7 @@ export function AppShell({
           </Link>
           <button
             type="button"
-            aria-controls="tempo-sidebar"
+            aria-controls="wattonaut-sidebar"
             aria-expanded={mobileOpen}
             aria-label="Open menu"
             title="Show menu"
@@ -233,10 +233,10 @@ export function AppShell({
             <Menu aria-hidden="true" size={18} strokeWidth={1.6} />
           </button>
         </header>
-        <div className="tempo-menu-bar">
+        <div className="wattonaut-menu-bar">
           <button
             type="button"
-            aria-controls="tempo-sidebar"
+            aria-controls="wattonaut-sidebar"
             aria-expanded={isMobileViewport ? mobileOpen : !menuHidden}
             ref={desktopMenuButtonRef}
             aria-label="Show menu"

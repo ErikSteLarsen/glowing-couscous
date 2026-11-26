@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 import { getCurrentUser, hasAppRole } from '@/lib/auth-session';
 import { safeStravaReturnPath, STRAVA_REQUESTED_SCOPES } from '@/lib/strava-post';
 
-const STATE_COOKIE = 'tempo_strava_oauth_state';
-const RETURN_COOKIE = 'tempo_strava_return';
+const STATE_COOKIE = 'wattonaut_strava_oauth_state';
+const RETURN_COOKIE = 'wattonaut_strava_return';
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();

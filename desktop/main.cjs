@@ -18,7 +18,7 @@ const RIDE_SIZE = [1200, 800]
 const START_SIZE = [500, 390]
 // Chromium's ERR_ABORTED: a navigation replaced by another one, not a failure.
 const ABORTED = -3
-const environmentOrigin = parseWebUrl(process.env.TEMPO_URL)?.origin
+const environmentOrigin = parseWebUrl(process.env.WATTONAUT_URL)?.origin
 const trustedOrigins = new Set(environmentOrigin ? [environmentOrigin] : [])
 
 let mainWindow
@@ -33,7 +33,7 @@ function openExternal(value) {
   if (url) shell.openExternal(url.href).catch(() => {})
 }
 
-const videoHandOff = createVideoHandOff({ getTempoWindow: () => mainWindow, isTrusted })
+const videoHandOff = createVideoHandOff({ getAppWindow: () => mainWindow, isTrusted })
 
 function readSettings() {
   try {

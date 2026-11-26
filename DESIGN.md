@@ -250,7 +250,7 @@ always travels with a "Z1" to "Z5" label or accessible text.
   `tabular-nums`. Required for durations, TSS, RPE, dates, counts, and chart axes.
 
 Use `StatTile` for a standalone metric with a large tabular value, a quiet unit,
-and optional detail. Use `MetricPair` from `components/tempo/` inside a `dl` for
+and optional detail. Use `MetricPair` from `components/wattonaut/` inside a `dl` for
 compact summaries. Stack the label above the value by default, or use `inline`
 for totals that read across. Use `MetricText` for a number within ordinary text.
 

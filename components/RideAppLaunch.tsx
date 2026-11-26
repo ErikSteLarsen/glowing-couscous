@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } fro
 import Link from 'next/link';
 import { Download } from 'lucide-react';
 import { buttonFocusClassName, compactSecondaryButtonClassName } from '@/components/ui';
-import { detectRideOs, macArchitectureFromHints, rideAppLink, rideDownloadBase, rideDownloadChoices, rideInstallHints, rideSessionPath, RIDE_APP_LAUNCH_TIMEOUT_MS, type MacArchitecture, type RideOs } from '@/lib/ride/launch';
+import { detectRideOs, macArchitectureFromHints, rideAppLink, configuredRideDownloadBase, rideDownloadChoices, rideInstallHints, rideSessionPath, RIDE_APP_LAUNCH_TIMEOUT_MS, type MacArchitecture, type RideOs } from '@/lib/ride/launch';
 
 type UserAgentData = {
   platform?: string;
@@ -27,17 +27,17 @@ export function useRideOs(): RideOs | null {
   return useSyncExternalStore(subscribeToNothing, getRideOs, () => null);
 }
 
-function isInTempoRide(): boolean {
+function isInWattonautRide(): boolean {
   return window.tempoDesktop?.isDesktop === true;
 }
 
 /** True inside the Wattonaut Ride desktop app; false during server rendering. */
-export function useInTempoRide(): boolean {
-  return useSyncExternalStore(subscribeToNothing, isInTempoRide, () => false);
+export function useInWattonautRide(): boolean {
+  return useSyncExternalStore(subscribeToNothing, isInWattonautRide, () => false);
 }
 
 /** Link to the public download page; opens a new tab so an in-progress workout stays put. */
-export function GetTempoRideLink({ children = 'Get Wattonaut Ride', className = 'text-[var(--brand)] underline-offset-4 hover:underline' }: { children?: ReactNode; className?: string }) {
+export function GetWattonautRideLink({ children = 'Get Wattonaut Ride', className = 'text-[var(--brand)] underline-offset-4 hover:underline' }: { children?: ReactNode; className?: string }) {
   return (
     <Link href="/download" target="_blank" rel="noopener" className={className}>
       {children}<span className="sr-only"> (opens in a new tab)</span>
@@ -112,7 +112,7 @@ export function useRideAppLaunch() {
 
 export function RideAppInstallHelp({ os, onRetry }: { os: RideOs; onRetry: () => void }) {
   const architecture = useMacArchitecture(os);
-  const { recommended: primary, others } = rideDownloadChoices(os, rideDownloadBase(process.env.NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL), architecture);
+  const { recommended: primary, others } = rideDownloadChoices(os, configuredRideDownloadBase(), architecture);
 
   return (
     <div className="space-y-3 border-t border-[var(--border)] pt-4 text-sm text-[var(--text-secondary)]">
@@ -135,7 +135,7 @@ export function RideAppInstallHelp({ os, onRetry }: { os: RideOs; onRetry: () =>
             <li key={download.id}><a href={download.url} className="text-[var(--brand)] underline-offset-4 hover:underline">{download.label}</a></li>
           ))}
         </ul>
-        <p className="mt-2"><GetTempoRideLink>All downloads and install steps</GetTempoRideLink></p>
+        <p className="mt-2"><GetWattonautRideLink>All downloads and install steps</GetWattonautRideLink></p>
       </details>
     </div>
   );

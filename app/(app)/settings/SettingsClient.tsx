@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { OVERVIEW_CARD_IDS, type OverviewCardId } from '@/lib/overview-preferences';
-import { Toggle } from '@/components/tempo/Toggle';
+import { Toggle } from '@/components/wattonaut/Toggle';
 import Link from 'next/link';
 import { dangerTextClassName, successTextClassName, Surface, buttonFocusClassName, compactSecondaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
 

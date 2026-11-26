@@ -1,7 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
 if (process.isMainFrame && location.protocol === 'file:') {
-  contextBridge.exposeInMainWorld('tempoDialog', {
+  contextBridge.exposeInMainWorld('wattonautDialog', {
     onUpdate: (listener) => {
       ipcRenderer.on('dialog:update', (_event, state) => listener(state))
     },
