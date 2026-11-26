@@ -92,6 +92,29 @@ test('interval alternatives keep the prescribed efforts, pool distances and rest
   }
 });
 
+test('built-in placement repeats the chosen week for every week in the range', { skip: disposableDatabaseSkip }, async () => {
+  await withDisposableDatabase(async (db) => {
+    const owner = await db.user.create({ data: { email: 'plan-weeks@example.test', role: 'ATHLETE' } });
+    const planner = createAthletePlannerService({ db });
+    const twoWeeks = [...week, ...week.map((date) => {
+      const next = new Date(`${date}T12:00:00Z`);
+      next.setUTCDate(next.getUTCDate() + 7);
+      return next.toISOString().slice(0, 10);
+    })];
+    const result = await planner.assignSource(owner.id, {
+      sourceKind: 'built-in-plan', sourceId: 'triathlon-essentials', version: 1, dates: twoWeeks, requestKey: 'essentials-two-weeks', choices: {},
+    });
+    assert.ok(result.ok);
+    const sessions = await db.session.findMany({ orderBy: { date: 'asc' } });
+    const firstWeek = sessions.filter(({ date }) => date!.toISOString().slice(0, 10) <= week[6]);
+    assert.equal(sessions.length, firstWeek.length * 2);
+    assert.deepEqual(
+      sessions.slice(firstWeek.length).map(({ title, date }) => [title, date!.getUTCDay()]),
+      firstWeek.map(({ title, date }) => [title, date!.getUTCDay()]),
+    );
+  });
+});
+
 test('built-in placement validates the week, choices and version, then copies only selected workouts with retry safety', { skip: disposableDatabaseSkip }, async () => {
   await withDisposableDatabase(async (db) => {
     const owner = await db.user.create({ data: { email: 'plan-test@example.test', role: 'ATHLETE' } });

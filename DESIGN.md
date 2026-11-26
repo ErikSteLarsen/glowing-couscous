@@ -629,33 +629,49 @@ padding includes the device safe area (`env(safe-area-inset-bottom)`).
 
 ### Personal Calendar scheduling
 
-`TrainingCalendar` owns the personal browsing and placement composition.
-Opening Add session from a day seeds its date and focuses the inline composer
-heading while retaining the date grid. Reuse shared buttons, segmented choices,
-fields, and `SessionRow`; the composer uses the existing field surface and
-rounded panel language. Workouts and Training plans have searchable saved
-lists, explicit pressed selection, workout or training plan details, and contextual creation
-links for empty results. Only the source results scroll independently, capped
-at 280px; date review and Schedule remain outside that scroll area.
+The Calendar has one way in for each goal: **Add workout** (primary) and
+**Add training plan** (secondary; "Add plan" on phones) in the header, plus a
+day's own Add or + for that day. Plans are not repeated in the ⋯ menu. Every
+other "Add to Calendar" (saved and public workout detail and cards, Training
+plans, Home "Plan a workout" and each Home day's Add from today on) opens the
+same dialogs through `?place=workout|template&source=…&date=…`, so the flow is
+identical wherever it starts. Those links carry `back=` (an `/athlete` path
+outside Calendar): Cancel and Close return there, to the same list filters,
+instead of leaving the person on Calendar. Adding still opens Calendar to show
+where it landed. The dialogs (`AddWorkoutDialog`, `AddPlanDialog` in
+`app/(app)/athlete/calendar/`, framed by `AddDialogFrame`) sit over the
+Calendar: a bottom sheet on phones, a centered panel wider up, with a fixed
+header holding a numbered step trail, a body that scrolls on its own and a
+fixed footer for the step's main action. Closing during a request is blocked.
 
-Workout dates toggle through calendar buttons and can also be added through an
-explicit date field or removed through labelled date chips. Training plan selection
-uses one reference date: show its full Monday-first week or calendar-month
-range in both the calendar selection and a dated range summary before Schedule.
-The selected-day agenda follows the reference date, while the range identifies
-the entire placement. Explain that each planned workout is its own copy
-and the saved workout stays as it is. Keep Schedule disabled until a source and
-valid dates are selected.
+Add workout has two steps. **Workout** browses everything placeable: My
+workouts and the whole public library (a switch with counts; the library is the
+default when nothing is saved), search, a Focus select for the library and
+sport chips. Rows show the intensity profile, name, duration, sport badge,
+focus, TSS and IF; the library list is grouped by focus. **Day** shows the
+chosen workout (profile, sport, focus, level, duration, TSS, IF, description)
+and one Day field, already set to the day it was opened for, with its long
+date beside it. Start time and extra days are under a collapsed **More
+options** row that names what is set. The button names the result ("Add to
+Sat 28 Nov", "Add to 3 days"). Explain that each day gets its own copy. The
+same workout may be planned more than once on a day, so nothing warns about
+repeats.
 
-Escape or the explicit close control dismisses the composer and returns focus
-to the page Add session action. During persistence, show Scheduling and disable
-conflicting controls; confirm success only after the server response. Failure
-retains the source and dates for retry with visible feedback. Unfinished
-scheduled sessions expose a separate labelled removal action with confirmation;
-completed sessions remain review links without that removal action. Reserve
-space within session rows for the removal target, increasing it to 44px on
-phones. Date selection, source selection, scheduling, and removal all have
-explicit keyboard and touch controls.
+Add training plan has three steps. **Plan** lists your plans, then the
+built-in weeks, each with its workouts and hours a week and a count per sport.
+**Dates** offers This week / Next week chips or any day in the start week, and
+1, 2, 4, 8 or 12 weeks; the same week repeats. Built-in alternatives are under a
+collapsed **Workout choices** row. The default start is the viewed week unless
+it has begun, then next week. **Review** lists every dated workout by week
+(Rest for empty days) with the totals; the button counts them ("Add 20
+workouts to Calendar"). Explain that existing sessions stay and each workout is
+its own copy. After adding, the Calendar opens on the first day (a plan longer
+than a week opens that month) and confirms the count.
+
+Unfinished scheduled sessions expose a separate labelled removal action with
+confirmation; completed sessions remain review links without that removal
+action. Reserve space within session rows for the removal target, increasing
+it to 44px on phones.
 
 ### Athlete Workouts
 
@@ -866,9 +882,7 @@ leaving the browser requires an unsaved-change safeguard.
 
 The library previews only the weekdays that have workouts, with the session count.
 The title opens the editor, and Duplicate and Delete live in the card's ⋯ menu.
-Apply to Calendar opens scheduling for the chosen training plan with options
-for One week or Whole month, an explicit full date range, and the actual dated
-workout list/count before saving. Explain that existing sessions remain, empty
-days add nothing, relative targets use Profile and fixed targets remain fixed.
+Add to Calendar opens the Calendar's Add training plan dialog on that plan's Dates
+step (see Personal Calendar scheduling).
 Training plans use one weekly schedule model. Keep cadence controls, workout block
 authoring, and loading a training plan as a single workout out of the editor.

@@ -7,6 +7,28 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- Calendar add flows (2026-11-26, branch `t3/calendar-workout-plan-flows`, not
+  released). Add workout and Add training plan are dialogs over the Calendar
+  (`?place=workout|template`). Add workout offers every saved workout and the
+  whole public library (bike, run, swim) with search, focus, sport, profiles,
+  TSS and IF; only the day is needed, start time and extra days sit under More
+  options. Add training plan goes Plan → Dates (start week, 1–12 weeks,
+  built-in choices) → Review. The server now accepts 1–12 whole Monday weeks
+  for built-in and personal plans (built-in weeks repeat; one calendar month
+  is still accepted for personal plans). The Calendar ⋯ menu no longer repeats
+  plans; library Schedule, My workouts and Training plans buttons are "Add to
+  Calendar" and open the same dialogs (the old `/athlete/library/<slug>/schedule`
+  URL redirects). One placement adds at most 150 workouts (plan rows are looked
+  up once per week, 20 s transaction). Calendar shortcuts are off while a
+  dialog is open; closing replaces the history entry and returns to the page
+  that opened the dialog (`back=`: Home, Workouts with its filters, a workout,
+  Training plans). Home's days from today on each have an Add; Plan a workout
+  picks tomorrow once today is done. Repeats on a day are allowed and not
+  warned about. `pnpm test` (648 passed), `pnpm test:db` (706 passed),
+  types, lint and dead code passed. Chromium on a local dev server at 1440 and
+  390 px: a fresh account added a public workout and a 4-week built-in plan;
+  the demo athlete browsed saved and library workouts and plans.
+
 - Workouts controls and shared filters (2026-11-26, branch
   `t3/workouts-shared-filters`). Both tabs share one URL-backed query
   (`useCollectionQuery`), one toolbar (`CollectionControls`) and one filter

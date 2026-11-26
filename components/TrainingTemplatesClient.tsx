@@ -128,7 +128,7 @@ export function TrainingTemplatesClient({ templates, workouts, publicWorkouts, b
         setConfirmationOpen(false);
       }
       if (method === 'PATCH' || (method === 'POST' && body)) setDraft(null);
-      setNotice({ text: method === 'DELETE' ? 'Training plan deleted. Workouts already on your Calendar stay.' : path.endsWith('/duplicate') ? 'Training plan copied.' : 'Training plan saved. Use Apply to Calendar to add it to a week or month.', error: false });
+      setNotice({ text: method === 'DELETE' ? 'Training plan deleted. Workouts already on your Calendar stay.' : path.endsWith('/duplicate') ? 'Training plan copied.' : 'Training plan saved. Use Add to Calendar to put it on your weeks.', error: false });
       router.refresh();
     } catch (error) {
       setNotice({ text: error instanceof Error ? error.message : 'Could not reach TempoBuilder. Your changes are still here. Try again.', error: true });
@@ -267,7 +267,7 @@ export function TrainingTemplatesClient({ templates, workouts, publicWorkouts, b
           </Menu>
         </div>
         {filledDays.length ? <dl className="grid gap-x-6 gap-y-2 md:grid-cols-2">{filledDays.map(({ day, titles }) => <div key={day} className="flex min-w-0 gap-3 text-sm"><dt className="w-24 shrink-0 text-[var(--text-secondary)]">{day}</dt><dd className="break-words min-w-0">{titles.join(', ')}</dd></div>)}</dl> : null}
-        <div className="max-md:[&>a]:min-h-11"><ActionLink href={getCalendarPlacementHref(`template:${template.id}`)} size="compact">Apply to Calendar</ActionLink></div>
+        <div className="max-md:[&>a]:min-h-11"><ActionLink href={getCalendarPlacementHref(`template:${template.id}`, { back: '/athlete/templates' })} size="compact">Add to Calendar<span className="sr-only">: {template.name}</span></ActionLink></div>
       </Surface>;
     })}</div> : <EmptyState title={templates.length ? 'No matching training plans' : 'Build your first training plan'} description={templates.length ? 'Try a different search.' : 'Choose workouts for the days you train. Days left empty add nothing when you apply it.'} />)}
     <AlertDialog open={confirmationOpen} onOpenChange={(open, details) => {

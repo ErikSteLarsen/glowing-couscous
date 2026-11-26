@@ -48,8 +48,8 @@ export function BuiltInTrainingPlans({ plans, openSlug, onCustomize, busy }: {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 max-md:[&>a]:min-h-11">
-                  <ActionLink href={getCalendarPlacementHref(`built-in-plan:${plan.slug}`)} size="compact" tone="secondary">
-                    Apply to Calendar<span className="sr-only"> for {plan.name}</span>
+                  <ActionLink href={getCalendarPlacementHref(`built-in-plan:${plan.slug}`, { back: '/athlete/templates' })} size="compact" tone="secondary">
+                    Add to Calendar<span className="sr-only">: {plan.name}</span>
                   </ActionLink>
                   <button type="button" disabled={busy} className={`${compactSecondaryButtonClassName} max-md:min-h-11`} onClick={() => onCustomize(plan)}>
                     Customize<span className="sr-only"> {plan.name}</span>

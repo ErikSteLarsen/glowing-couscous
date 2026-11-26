@@ -98,7 +98,7 @@ test('Workouts keeps its owner-scoped list and session detail keeps its entry co
   assert.match(workoutsClientSource, /sticky bottom-0/);
 });
 
-test('Workouts has one New workout entry, and saved workouts keep Schedule and sharing like public ones', async () => {
+test('Workouts has one New workout entry, and saved workouts keep Add to Calendar and sharing like public ones', async () => {
   const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
   const myActionsSource = await read('components/library/MyWorkoutActions.tsx');
 
@@ -107,7 +107,7 @@ test('Workouts has one New workout entry, and saved workouts keep Schedule and s
   assert.match(workoutsClientSource, /Build from scratch/);
   assert.match(workoutsClientSource, /Start from public library/);
   assert.match(myActionsSource, /<ScheduleLink href=\{myWorkoutScheduleHref\(id\)\}/);
-  assert.match(myActionsSource, />Schedule\s*<\/MenuItem>/);
+  assert.match(myActionsSource, />Add to Calendar\s*<\/MenuItem>/);
   assert.match(myActionsSource, />Edit<\/MenuItem>/);
   assert.doesNotMatch(workoutsClientSource, /Plan this|Build guided workout|Create manually/);
   assert.match(myActionsSource, /<MenuItem onSelect=\{share\.createLink\}>/);
@@ -129,17 +129,22 @@ test('the workout editor replaces the list and its header, returning to the list
   assert.match(focusSource, /listIntro=\{listIntro\}/);
 });
 
-test('Library detail keeps Start workout and Schedule visible and schedules through Calendar placement', async () => {
+test('Library detail keeps Start workout and Add to Calendar visible and adds through the Calendar dialog', async () => {
   const actionsSource = await read('components/library/LibraryWorkoutActions.tsx');
   const detailSource = await read('app/(app)/athlete/library/[slug]/page.tsx');
   const layoutSource = await read('components/library/WorkoutDetail.tsx');
   const scheduleSource = await read('app/(app)/athlete/library/[slug]/schedule/page.tsx');
-  const placementSource = await read('app/(app)/athlete/calendar/CalendarPlacement.tsx');
+  const dialogSource = await read('app/(app)/athlete/calendar/AddWorkoutDialog.tsx');
 
   assert.match(actionsSource, /<WorkoutStartChooser/);
   assert.match(actionsSource, /href=\{catalogScheduleHref\(slug, from\)\}/);
   assert.doesNotMatch(actionsSource, /type="date"/);
   assert.match(actionsSource, /<LibraryWorkoutMenu/);
+  // Add to Calendar links come back to the page they were opened from on Cancel.
+  assert.match(actionsSource, /<ReturnHereLink href=\{href\}/);
+  assert.match(await read('components/library/LibraryWorkoutMenu.tsx'), /render=\{<ReturnHereLink href=\{catalogScheduleHref\(slug, from\)\}/);
+  assert.match(await read('components/library/MyWorkoutActions.tsx'), /render=\{<ReturnHereLink href=\{myWorkoutScheduleHref\(id\)\}/);
+  assert.match(scheduleSource, /parseCalendarReturn\(back\) \?\? `\/athlete\/library\//);
   const menuSource = await read('components/library/LibraryWorkoutMenu.tsx');
   assert.match(menuSource, /href=\{customizeWorkoutHref\(slug, sport\)\}/);
   assert.match(menuSource, />Customize/);
@@ -147,10 +152,10 @@ test('Library detail keeps Start workout and Schedule visible and schedules thro
   assert.match(layoutSource, /Workout details/);
   assert.ok(layoutSource.indexOf('workout-intervals') < layoutSource.indexOf('Workout details'));
   assert.match(detailSource, /label: 'Intensity factor'/);
-  assert.match(scheduleSource, /<CalendarPlacement/);
+  // The old Schedule URL opens the same Add workout dialog, on tomorrow by default.
+  assert.match(scheduleSource, /redirect\(getCalendarPlacementHref\(`catalog:\$\{workout\.slug\}`, \{\n    date: day,/);
   assert.match(scheduleSource, /addDayKeys\(todayInZone\(/);
-  assert.match(scheduleSource, /catalog=\{\{/);
-  assert.match(placementSource, /\/api\/athlete\/library\/\$\{encodeURIComponent\(catalog\.slug\)\}\/schedule/);
+  assert.match(dialogSource, /\/api\/athlete\/library\/\$\{encodeURIComponent\(id\)\}\/schedule/);
 });
 
 test('saved workouts open a detail page in the same layout as public workouts, with Edit', async () => {
@@ -170,31 +175,42 @@ test('saved workouts open a detail page in the same layout as public workouts, w
   assert.match(actionsSource, /href=\{editWorkoutHref\(id, 'detail'\)\}/);
 });
 
-test('Calendar placement only places defined sources on selected dates', async () => {
-  const plannerPageSource = await read('app/(app)/athlete/calendar/page.tsx');
+test('Calendar add dialogs only place defined sources on chosen dates', async () => {
+  const calendarPageSource = await read('app/(app)/athlete/calendar/page.tsx');
+  const optionsSource = await read('app/(app)/athlete/calendar/placement-options.ts');
   const retiredPlannerSource = await read('app/(app)/athlete/planner/page.tsx');
-  const plannerClientSource = await read('app/(app)/athlete/calendar/CalendarPlacement.tsx');
+  const workoutDialogSource = await read('app/(app)/athlete/calendar/AddWorkoutDialog.tsx');
+  const planDialogSource = await read('app/(app)/athlete/calendar/AddPlanDialog.tsx');
   const plannerDeskSource = await read('components/PlannerDesk.tsx');
-  const workoutsClientSource = await read('components/WorkoutLibraryClient.tsx');
   const templatesClientSource = await read('components/TrainingTemplatesClient.tsx');
+  const calendarSource = await read('app/(app)/athlete/calendar/AthleteCalendar.tsx');
 
-  assert.match(plannerPageSource, /loadPlacementWorkspace\(userId, day\)/);
-  assert.match(await read('app/(app)/athlete/calendar/placement-existing.ts'), /athletePlannerService\.loadWorkspace/);
-  assert.match(plannerPageSource, /workoutLibraryService\.listForOwner\('athlete', userId\)/);
-  assert.match(plannerPageSource, /resolvePlannerSourceSelection\(source/);
-  assert.match(plannerPageSource, /<CalendarPlacement/);
+  assert.doesNotMatch(calendarPageSource, /loadPlacementWorkspace/);
+  assert.match(optionsSource, /workoutLibraryService\.listForOwner\('athlete', userId\)/);
+  // Every public library workout is offered next to the saved ones.
+  assert.match(optionsSource, /createCatalogListEntries\(workoutCatalog\)/);
+  assert.match(calendarPageSource, /resolvePlannerSourceSelection\(source/);
+  assert.match(calendarPageSource, /<AddWorkoutDialog/);
+  assert.match(calendarPageSource, /<AddPlanDialog/);
   assert.match(retiredPlannerSource, /redirect\(getPlannerRedirectHref\(/);
-  assert.doesNotMatch(plannerClientSource, /WorkoutBuilder|Start from scratch|Create session/);
-  // Athlete placement is its own short flow; PlannerDesk stays the coach desk.
-  assert.doesNotMatch(plannerClientSource, /PlannerDesk/);
-  assert.match(plannerClientSource, /\/api\/athlete\/planner\/assignments/);
-  assert.match(plannerPageSource, /initialSourceKey=\{initialSource\?\.key \?\? ''\}/);
+  for (const source of [workoutDialogSource, planDialogSource]) {
+    assert.doesNotMatch(source, /WorkoutBuilder|Start from scratch|Create session|PlannerDesk/);
+  }
+  assert.match(workoutDialogSource, /\/api\/athlete\/planner\/assignments/);
+  assert.match(planDialogSource, /\/api\/athlete\/planner\/assignments/);
+  // One way in for each goal: plans are not repeated in the ⋯ menu.
+  assert.match(calendarSource, /Add training plan/);
+  assert.doesNotMatch(calendarSource, /Apply a training plan/);
+  // Calendar shortcuts (arrows, T, W, M) are off while a dialog is open, and a new URL starts a fresh draft.
+  assert.match(calendarPageSource, /shortcutsEnabled=\{!placement\}/);
+  assert.match(calendarSource, /if \(!shortcutsEnabled\) return;/);
+  assert.match(calendarPageSource, /key=\{dialogKey\}/);
   assert.match(plannerDeskSource, /templateDatesForSelection\(initialSource\.cadence \?\? 'day', initialDate\)/);
   assert.match(plannerDeskSource, /setSelectedDates\(dates\)/);
   assert.match(plannerDeskSource, /Month navigation/);
   assert.match(plannerDeskSource, /params\.set\('source', selectedSource\.key\)/);
   assert.match(await read('components/library/MyWorkoutActions.tsx'), /getCalendarPlacementHref\(`workout:\$\{id\}`\)/);
-  assert.match(templatesClientSource, /getCalendarPlacementHref\(`template:\$\{template\.id\}`\)/);
+  assert.match(templatesClientSource, /getCalendarPlacementHref\(`template:\$\{template\.id\}`, \{ back: '\/athlete\/templates' \}\)/);
   assert.doesNotMatch(templatesClientSource, /\/athlete\/calendar\?add=1&template=/);
 });
 
@@ -464,4 +480,18 @@ test('Home has no quick-access Events button; Events lives in the drawer', async
   const homeSource = await read('app/(app)/athlete/page.tsx');
   assert.doesNotMatch(homeSource, />Events<\/Link>/);
   assert.ok(getPrimaryNavigation().some((item) => item.label === 'Events' && item.href === '/athlete/events'));
+});
+
+test('Home adds workouts on a chosen day through the Calendar dialog and comes back on Cancel', async () => {
+  const homeSource = await read('app/(app)/athlete/page.tsx');
+  const calendarPageSource = await read('app/(app)/athlete/calendar/page.tsx');
+  assert.match(homeSource, /getCalendarHref\('week', day, \{ place: 'workout', back: '\/athlete' \}\)/);
+  // Every day from today on has its own Add; Plan a workout picks tomorrow once today is done.
+  assert.match(homeSource, /day\.isoDate >= dashboard\.todayKey \?/);
+  assert.match(homeSource, /aria-label=\{`Add a workout on \$\{weekday\} \$\{day\.dateLabel\}`\}/);
+  assert.match(homeSource, /doneToday\.length > 0 \? addDayKeys\(dashboard\.todayKey, 1\) : dashboard\.todayKey/);
+  assert.match(calendarPageSource, /returnHref: parseCalendarReturn\(back\)/);
+  for (const dialog of ['AddWorkoutDialog', 'AddPlanDialog']) {
+    assert.match(await read(`app/(app)/athlete/calendar/${dialog}.tsx`), /router\.replace\(returnHref \?\? getCalendarHref\(view, day\), \{ scroll: false \}\)/);
+  }
 });

@@ -28,6 +28,26 @@ export function validateTemplateDateRange(dates: string[], period: TemplatePerio
   return null;
 }
 
+/** Most workouts one placement adds, so it stays inside the transaction deadline; 12 weeks of the largest built-in week fit. */
+export const MAX_PLACEMENTS_PER_REQUEST = 150;
+
+/** Longest run of weeks a training plan can be added for in one go. */
+export const MAX_PLAN_WEEKS = 12;
+
+/** `dates` must be whole Monday-first weeks in a row, 1 to MAX_PLAN_WEEKS of them. */
+export function validateWeekRange(dates: string[]) {
+  if (!dates.length || dates.some((date) => !isAssignmentDate(date))) return 'Choose valid calendar dates.';
+  if (dates.length % 7 !== 0 || dates.length / 7 > MAX_PLAN_WEEKS) {
+    return `Choose 1 to ${MAX_PLAN_WEEKS} whole weeks.`;
+  }
+  const first = parseISO(`${dates[0]}T00:00:00`);
+  if (first.getDay() !== 1) return 'A week starts on Monday. Choose a Monday.';
+  if (dates.some((date, index) => date !== format(addDays(first, index), 'yyyy-MM-dd'))) {
+    return 'Choose weeks in a row.';
+  }
+  return null;
+}
+
 /** Strict transport validation: never silently drop malformed members. */
 export function isAssignmentDate(value: unknown): value is string {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && isValid(parseISO(`${value}T00:00:00`));

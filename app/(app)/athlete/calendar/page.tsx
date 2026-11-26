@@ -8,36 +8,32 @@ import {
   CALENDAR_TOTALS_COOKIE,
   parseCalendarDay,
   parseCalendarPlacement,
+  parseCalendarReturn,
   parseCalendarTotals,
   parseCalendarView,
   type CalendarPlacement as PlacementKind,
   type CalendarView,
 } from '@/lib/calendar-navigation';
+import { getDefaultPlanStart, parsePlacedCount } from '@/lib/calendar-placement';
 import { resolvePlannerSourceSelection } from '@/lib/planner-source-selection';
 import { getRequestTimeZone } from '@/lib/request-time-zone';
 import { todayInZone } from '@/lib/user-time';
-import { addDayKeys, weekStartOf } from '@/lib/training-load';
-import { workoutLibraryService } from '@/lib/workout-library-service';
 import { AthleteCalendar, type CalendarDay, type CalendarWeek } from './AthleteCalendar';
-import { CalendarPlacement, type PlacementRoutine } from './CalendarPlacement';
-import { parsePlacedCount } from '@/lib/calendar-placement';
-import { derivePlannerSourceDurationSec } from '@/lib/planner-source-metrics';
-import { getTemplateCadence } from '@/lib/template-cadence';
-import { builtInPlanPreviews } from '@/lib/plan-catalog';
-import { parseTemplateRoutine } from '@/lib/template-routine';
-import { loadPlacementWorkspace } from './placement-existing';
+import { AddPlanDialog } from './AddPlanDialog';
+import { AddWorkoutDialog } from './AddWorkoutDialog';
+import { loadAddablePlans, loadAddableWorkouts } from './placement-options';
 
 export const metadata: Metadata = { title: 'Calendar' };
 
 export default async function AthleteCalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ weekStart?: string; date?: string; view?: string; place?: string; source?: string; placed?: string }>;
+  searchParams: Promise<{ weekStart?: string; date?: string; view?: string; place?: string; source?: string; placed?: string; back?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user || user.role !== 'ATHLETE') redirect('/login');
 
-  const { weekStart, date, view, place, source, placed } = await searchParams;
+  const { weekStart, date, view, place, source, placed, back } = await searchParams;
   const selectedView = parseCalendarView(view);
   const timeZone = await getRequestTimeZone();
   const today = todayInZone(timeZone);
@@ -45,15 +41,11 @@ export default async function AthleteCalendarPage({
   const requestedDay = parseCalendarDay(date) ?? parseCalendarDay(weekStart);
   const day = requestedDay ?? today;
   const placement = parseCalendarPlacement(place);
-  if (placement) {
-    const planLink = builtInPlanPreviews.some(({ slug }) => source === `built-in-plan:${slug}`);
-    const startDay = !requestedDay && planLink && weekStartOf(today) !== today
-      ? addDayKeys(weekStartOf(today), 7)
-      : day;
-    return <PlacementPage userId={user.id} view={selectedView} day={startDay} placement={placement} source={source} />;
-  }
   const showTotals = parseCalendarTotals((await cookies()).get(CALENDAR_TOTALS_COOKIE)?.value);
-  const calendar = await athleteService.loadCalendarView(user.id, day, selectedView, { timeZone });
+  const [calendar, dialog] = await Promise.all([
+    athleteService.loadCalendarView(user.id, day, selectedView, { timeZone }),
+    placement ? placementDialog({ userId: user.id, view: selectedView, day, today, requestedDay, placement, source, returnHref: parseCalendarReturn(back) }) : null,
+  ]);
   if (!calendar) redirect('/athlete/find-coach');
 
   const toDay = (entry: (typeof calendar.days)[number]): CalendarDay => ({
@@ -83,55 +75,73 @@ export default async function AthleteCalendarPage({
     days: row.map(toDay),
     summary: calendar.weekSummaries.find((summary) => summary.weekStart === row[0].isoDate) ?? null,
   }));
+  const placedCount = parsePlacedCount(placed);
 
   return (
     <PageShell size="wall">
-      <AthleteCalendar key={`${selectedView}:${day}`} view={selectedView} day={day} today={today} weeks={weeks} initialShowTotals={showTotals} placedCount={parsePlacedCount(placed)} />
+      <AthleteCalendar key={`${selectedView}:${day}:${placedCount ?? ''}`} view={selectedView} day={day} today={today} weeks={weeks} initialShowTotals={showTotals} placedCount={placedCount} shortcutsEnabled={!placement} />
+      {dialog}
     </PageShell>
   );
 }
 
-/** Placement: choose a saved workout or routine and when, through the planner service. */
-async function PlacementPage({ userId, view, day, placement, source }: {
+/**
+ * The add dialog over the Calendar: `place=workout` (Add workout) or
+ * `place=template` (Add training plan), optionally with `source=` chosen.
+ */
+async function placementDialog({ userId, view, day, today, requestedDay, placement, source, returnHref }: {
   userId: number;
   view: CalendarView;
   day: string;
+  today: string;
+  requestedDay: string | null;
   placement: PlacementKind;
   source?: string;
+  returnHref: string | null;
 }) {
-  const [{ workspace, existing }, workouts] = await Promise.all([
-    loadPlacementWorkspace(userId, day),
-    workoutLibraryService.listForOwner('athlete', userId),
+  // Plans come from `place=template` or a plan source; everything else is a workout.
+  const kind: PlacementKind = source?.startsWith('template:') || source?.startsWith('built-in-plan:')
+    ? 'template'
+    : source?.startsWith('workout:') || source?.startsWith('catalog:') ? 'workout' : placement;
+  const [workouts, plans] = await Promise.all([
+    kind === 'workout' ? loadAddableWorkouts(userId) : [],
+    kind === 'template' ? loadAddablePlans(userId) : [],
   ]);
-  const initialSource = resolvePlannerSourceSelection(source, {
-    workoutIds: workouts.map((workout) => workout.id),
-    templateIds: workspace.templates.map((template) => template.id),
-    builtInSlugs: builtInPlanPreviews.map((plan) => plan.slug),
+  const keyId = (prefix: string) => (key: string) => Number(key.slice(prefix.length));
+  const selection = resolvePlannerSourceSelection(source, {
+    workoutIds: workouts.filter((entry) => entry.origin === 'mine').map((entry) => keyId('workout:')(entry.key)),
+    catalogSlugs: workouts.filter((entry) => entry.origin === 'library').map((entry) => entry.key.slice('catalog:'.length)),
+    templateIds: plans.filter((entry) => entry.origin === 'mine').map((entry) => keyId('template:')(entry.key)),
+    builtInSlugs: plans.filter((entry) => entry.origin === 'built-in').map((entry) => entry.key.slice('built-in-plan:'.length)),
   });
-  const initialMessage = source && !initialSource ? 'That workout or training plan is no longer in your library.' : '';
-  const routines: PlacementRoutine[] = workspace.templates.map((template) => ({
-    id: template.id,
-    name: template.name,
-    summary: template.summary,
-    defaultPeriod: getTemplateCadence(template.cadence) === 'month' ? 'month' : 'week',
-    entries: (parseTemplateRoutine(template.routineJson)?.entries ?? []).map((entry) => ({ weekday: entry.weekday, title: entry.title, sport: entry.sport })),
-  }));
+  const initialMessage = source && !selection ? 'That workout or training plan is no longer available. Choose another one.' : '';
+  // A new URL (another day or source) starts a fresh draft.
+  const dialogKey = `${kind}:${day}:${source ?? ''}`;
 
-  return (
-    <PageShell>
-      <CalendarPlacement
+  if (kind === 'template') {
+    return (
+      <AddPlanDialog
+        key={dialogKey}
         view={view}
-        placement={initialSource?.tab === 'template' ? 'template' : initialSource?.tab === 'workout' ? 'workout' : placement}
-        workouts={[...workouts]
-          .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-          .map((workout) => ({ id: workout.id, title: workout.title, sport: workout.sport, summary: workout.summary, durationSec: derivePlannerSourceDurationSec(workout.blocks) }))}
-        routines={routines}
-        builtInPlans={placement === 'template' || initialSource?.tab === 'template' ? builtInPlanPreviews : undefined}
-        existing={existing}
-        initialDate={day}
-        initialSourceKey={initialSource?.key ?? ''}
+        day={day}
+        today={today}
+        plans={plans}
+        initialKey={selection?.key ?? null}
+        initialStart={getDefaultPlanStart(today, requestedDay)}
         initialMessage={initialMessage}
+        returnHref={returnHref}
       />
-    </PageShell>
+    );
+  }
+  return (
+    <AddWorkoutDialog
+      key={dialogKey}
+      view={view}
+      day={day}
+      workouts={workouts}
+      initialKey={selection?.key ?? null}
+      initialMessage={initialMessage}
+      returnHref={returnHref}
+    />
   );
 }

@@ -53,7 +53,7 @@ test('planner source duration expands repetitions with the canonical session mat
 
 test('athlete and coach planners use canonical source duration instead of raw block sums', async () => {
   const athletePlanner = await readFile(
-    path.join(process.cwd(), 'app/(app)/athlete/calendar/page.tsx'),
+    path.join(process.cwd(), 'app/(app)/athlete/calendar/placement-options.ts'),
     'utf8',
   );
   const coachPlanner = await readFile(

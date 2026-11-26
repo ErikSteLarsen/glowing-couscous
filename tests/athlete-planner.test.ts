@@ -321,16 +321,20 @@ test('athlete planner rejects incomplete template ranges before any session writ
 
 test('athlete placement API and UI carry a stable retry key', async () => {
   const route = await readFile(path.join(process.cwd(), 'app/api/athlete/planner/assignments/route.ts'), 'utf8');
-  const planner = await readFile(path.join(process.cwd(), 'app/(app)/athlete/calendar/CalendarPlacement.tsx'), 'utf8');
+  const request = await readFile(path.join(process.cwd(), 'app/(app)/athlete/calendar/AddDialogFrame.tsx'), 'utf8');
+  const workoutDialog = await readFile(path.join(process.cwd(), 'app/(app)/athlete/calendar/AddWorkoutDialog.tsx'), 'utf8');
 
   assert.match(route, /requestKey: body\.value\.requestKey/);
   assert.match(route, /timeLabel: body\.value\.timeLabel/);
-  assert.match(planner, /crypto\.randomUUID\(\)/);
-  assert.match(planner, /formLabelClassName\}>Start time<\/span>/);
-  assert.match(planner, /parsePlannedTime\(startTime\.trim\(\)\)/);
-  assert.match(planner, /Already planned on/);
-  assert.match(planner, /request\.current\?\.signature !== signature/);
-  assert.match(planner, /request\.current = null;/);
+  assert.match(request, /crypto\.randomUUID\(\)/);
+  assert.match(request, /request\.current\?\.signature !== signature/);
+  assert.match(request, /request\.current = null;/);
+  // Start time is optional and tucked under More options.
+  assert.match(workoutDialog, /More options/);
+  assert.match(workoutDialog, /formLabelClassName\}>Start time<\/span>/);
+  assert.match(workoutDialog, /parsePlannedTime\(startTime\.trim\(\)\)/);
+  // The same workout may be planned more than once on a day; nothing warns about it.
+  assert.doesNotMatch(workoutDialog, /Already planned/);
 });
 
 
@@ -347,6 +351,36 @@ test('routine placement expands only selected weekdays, preserves source targets
   assert.equal((state.sessions[0].blocks as any).create[0].targetReference, 'profile-pace-zone-1');
   assert.deepEqual(await service.assignSource(7, input), result);
   assert.equal(state.sessions.length, 5);
+});
+
+test('routine placement repeats the week across several whole weeks and rejects broken ranges', async () => {
+  const routineJson = JSON.stringify({ version: 1, entries: [0, 3].map(weekday => ({ weekday, workoutId: 4, title: 'Run', sport: 'RUNNING', summary: null, sportMetricsJson: null, blocks: sourceBlocks })) });
+  const weeks = (count: number, start = '2026-10-05') => Array.from({ length: count * 7 }, (_, index) => {
+    const date = new Date(`${start}T12:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + index);
+    return date.toISOString().slice(0, 10);
+  });
+  const { service, state } = createPlacementHarness({ routineJson });
+  assert.equal((await service.assignSource(7, { sourceKind: 'template', sourceId: 9, requestKey: 'three-weeks', dates: weeks(3) })).ok, true);
+  assert.deepEqual(state.sessions.map(session => (session.date as Date).toISOString().slice(0, 10)), [
+    '2026-10-05', '2026-10-08', '2026-10-12', '2026-10-15', '2026-10-19', '2026-10-22',
+  ]);
+  for (const [requestKey, dates] of [
+    ['too-long', weeks(13)],
+    ['not-monday', weeks(2, '2026-10-06')],
+    ['gap', [...weeks(1), ...weeks(1, '2026-10-19')]],
+  ] as const) {
+    assert.equal((await service.assignSource(7, { sourceKind: 'template', sourceId: 9, requestKey, dates: [...dates] })).ok, false);
+  }
+  assert.equal(state.sessions.length, 6);
+
+  // 15 workouts a week for 12 weeks is over the per-request cap and adds nothing.
+  const busyWeek = JSON.stringify({ version: 1, entries: Array.from({ length: 15 }, (_, index) => ({ weekday: index % 7, workoutId: 4, title: `Run ${index}`, sport: 'RUNNING', summary: null, sportMetricsJson: null, blocks: sourceBlocks })) });
+  const busy = createPlacementHarness({ routineJson: busyWeek });
+  const capped = await busy.service.assignSource(7, { sourceKind: 'template', sourceId: 9, requestKey: 'busy', dates: weeks(12) });
+  assert.equal(capped.ok, false);
+  assert.match(capped.ok ? '' : capped.error, /Choose fewer weeks/);
+  assert.equal(busy.state.sessions.length, 0);
 });
 
 test('routine placement uses actual month weekdays and rolls back all sessions on failure', async () => {

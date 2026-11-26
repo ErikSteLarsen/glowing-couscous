@@ -3,42 +3,69 @@ import test from 'node:test';
 
 import {
   addPlacementDate,
-  findRepeatedPlacementDates,
-  getPlacementButtonLabel,
+  getDateRangeLabel,
+  getDefaultPlanStart,
   getPlacementReturnHref,
-  getRoutineDates,
-  getRoutineRangeLabel,
+  getPlanButtonLabel,
+  getPlanDates,
+  getWorkoutButtonLabel,
   parsePlacedCount,
   removePlacementDate,
+  splitSourceKey,
 } from '../lib/calendar-placement.ts';
+import { validateWeekRange } from '../lib/template-period.ts';
+import { validateRoutineDates } from '../lib/template-routine.ts';
 
 test('workout button names the single date, or counts several', () => {
-  assert.equal(getPlacementButtonLabel('workout', ['2026-11-24']), 'Add to Tue\u00A024\u00A0Nov');
-  assert.equal(getPlacementButtonLabel('workout', ['2026-11-24', '2026-11-26', '2026-11-28']), 'Add to 3 days');
-  assert.equal(getPlacementButtonLabel('workout', []), 'Choose a date');
+  assert.equal(getWorkoutButtonLabel(['2026-11-24']), 'Add to Tue\u00A024\u00A0Nov');
+  assert.equal(getWorkoutButtonLabel(['2026-11-24', '2026-11-26', '2026-11-28']), 'Add to 3 days');
+  assert.equal(getWorkoutButtonLabel([]), 'Choose a date');
 });
 
-test('routine button names the week or month it applies to', () => {
-  assert.equal(getPlacementButtonLabel('template', getRoutineDates('week', '2026-11-25'), 'week'), 'Apply to week of 23\u00A0Nov');
-  assert.equal(getPlacementButtonLabel('template', getRoutineDates('month', '2026-11-25'), 'month'), 'Apply to November');
+test('plan button counts the workouts it adds', () => {
+  assert.equal(getPlanButtonLabel(1), 'Add 1 workout to Calendar');
+  assert.equal(getPlanButtonLabel(20), 'Add 20 workouts to Calendar');
 });
 
-test('routine dates match the server contract: a Monday week or the whole calendar month', () => {
-  const week = getRoutineDates('week', '2026-11-25');
-  assert.equal(week.length, 7);
-  assert.equal(week[0], '2026-11-23');
-  assert.equal(week.at(-1), '2026-11-29');
-  const month = getRoutineDates('month', '2026-02-10');
-  assert.equal(month.length, 28);
-  assert.equal(month[0], '2026-02-01');
-  assert.equal(getRoutineDates('month', '2026-12-31').length, 31);
-  assert.deepEqual(getRoutineDates('week', 'nope'), []);
+test('plan dates are whole Monday-first weeks from the week of the start day', () => {
+  const one = getPlanDates('2026-11-25', 1);
+  assert.equal(one.length, 7);
+  assert.equal(one[0], '2026-11-23');
+  assert.equal(one.at(-1), '2026-11-29');
+  const four = getPlanDates('2026-11-30', 4);
+  assert.equal(four.length, 28);
+  assert.equal(four.at(-1), '2026-12-27');
+  assert.deepEqual(getPlanDates('nope', 1), []);
+  assert.deepEqual(getPlanDates('2026-11-30', 0), []);
+  assert.deepEqual(getPlanDates('2026-11-30', 13), []);
 });
 
-test('routine range labels read as plain dates', () => {
-  assert.equal(getRoutineRangeLabel(getRoutineDates('week', '2026-11-25')), 'Mon\u00A023\u00A0Nov–Sun\u00A029\u00A0Nov');
-  assert.equal(getRoutineRangeLabel(getRoutineDates('month', '2026-11-25')), 'Sun\u00A01\u00A0Nov–Mon\u00A030\u00A0Nov');
-  assert.equal(getRoutineRangeLabel([]), '');
+test('the server accepts the same whole-week ranges, and older one-month ranges for own plans', () => {
+  assert.equal(validateWeekRange(getPlanDates('2026-11-30', 1)), null);
+  assert.equal(validateWeekRange(getPlanDates('2026-11-30', 12)), null);
+  assert.match(validateWeekRange(getPlanDates('2026-11-30', 1).slice(1)) ?? '', /whole weeks/);
+  const fromTuesday = Array.from({ length: 7 }, (_, index) => `2026-12-0${index + 1}`);
+  assert.match(validateWeekRange(fromTuesday) ?? '', /Monday/);
+  const gap = [...getPlanDates('2026-11-30', 1), ...getPlanDates('2026-12-14', 1)];
+  assert.match(validateWeekRange(gap) ?? '', /in a row/);
+  assert.equal(validateRoutineDates(getPlanDates('2026-11-30', 4)), null);
+  const december = Array.from({ length: 31 }, (_, index) => `2026-12-${String(index + 1).padStart(2, '0')}`);
+  assert.equal(validateRoutineDates(december), null);
+});
+
+test('a plan starts on the week being viewed, or next week once this week has begun', () => {
+  assert.equal(getDefaultPlanStart('2026-11-26', null), '2026-11-30');
+  assert.equal(getDefaultPlanStart('2026-11-26', '2026-11-24'), '2026-11-30');
+  assert.equal(getDefaultPlanStart('2026-11-26', '2026-12-10'), '2026-12-07');
+  assert.equal(getDefaultPlanStart('2026-11-23', null), '2026-11-23');
+  assert.equal(getDefaultPlanStart('2026-11-26', '2026-10-01'), '2026-11-30');
+});
+
+test('range labels read as plain dates and source keys split once', () => {
+  assert.equal(getDateRangeLabel(getPlanDates('2026-11-25', 1)), 'Mon\u00A023\u00A0Nov–Sun\u00A029\u00A0Nov');
+  assert.equal(getDateRangeLabel([]), '');
+  assert.deepEqual(splitSourceKey('catalog:long-ride'), ['catalog', 'long-ride']);
+  assert.deepEqual(splitSourceKey('built-in-plan:triathlon-build'), ['built-in-plan', 'triathlon-build']);
 });
 
 test('adding and removing dates keeps a sorted unique list', () => {
@@ -48,18 +75,10 @@ test('adding and removing dates keeps a sorted unique list', () => {
   assert.deepEqual(removePlacementDate(['2026-11-24', '2026-11-26'], '2026-11-24'), ['2026-11-26']);
 });
 
-test('repeated placements are found by title and sport on the same date', () => {
-  const existing = { '2026-11-24': [{ title: 'Tempo run', sport: 'RUNNING' }], '2026-11-25': [{ title: 'Tempo run', sport: 'CYCLING' }] };
-  assert.deepEqual(findRepeatedPlacementDates([
-    { date: '2026-11-24', title: 'Tempo run', sport: 'RUNNING' },
-    { date: '2026-11-25', title: 'Tempo run', sport: 'RUNNING' },
-    { date: '2026-11-26', title: 'Tempo run', sport: 'RUNNING' },
-  ], existing), ['2026-11-24']);
-});
-
 test('success returns to Calendar on the first placed date with a count', () => {
   assert.equal(getPlacementReturnHref('week', ['2026-11-26', '2026-11-24'], 2), '/athlete/calendar?view=week&date=2026-11-24&placed=2');
-  assert.equal(getPlacementReturnHref('week', getRoutineDates('month', '2026-11-25'), 12, 'month'), '/athlete/calendar?view=month&date=2026-11-01&placed=12');
+  assert.equal(getPlacementReturnHref('week', getPlanDates('2026-11-30', 4), 12), '/athlete/calendar?view=month&date=2026-12-06&placed=12');
+  assert.equal(getPlacementReturnHref('week', getPlanDates('2026-11-30', 1), 5), '/athlete/calendar?view=week&date=2026-11-30&placed=5');
   assert.equal(parsePlacedCount('3'), 3);
   assert.equal(parsePlacedCount('0'), null);
   assert.equal(parsePlacedCount('x'), null);

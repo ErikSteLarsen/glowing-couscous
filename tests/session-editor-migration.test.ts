@@ -47,15 +47,17 @@ test('planner editor adapter preserves ownership modes while using canonical blo
 });
 
 test('libraries and session detail own editing while planners place sources', async () => {
-  const [coachPlannerSource, athletePlannerSource, templatesSource, composerSource] = await Promise.all([
+  const [coachPlannerSource, athletePlannerSource, athletePlanSource, templatesSource, composerSource] = await Promise.all([
     read('app/(app)/coach/planner/PlannerClient.tsx'),
-    read('app/(app)/athlete/calendar/CalendarPlacement.tsx'),
+    read('app/(app)/athlete/calendar/AddWorkoutDialog.tsx'),
+    read('app/(app)/athlete/calendar/AddPlanDialog.tsx'),
     read('components/TrainingTemplatesClient.tsx'),
     read('components/WorkoutBuilder.tsx'),
   ]);
 
   assert.doesNotMatch(coachPlannerSource, /WorkoutBuilder/);
   assert.doesNotMatch(athletePlannerSource, /WorkoutBuilder/);
+  assert.doesNotMatch(athletePlanSource, /WorkoutBuilder/);
   assert.doesNotMatch(templatesSource, /WorkoutBuilder/);
   assert.match(composerSource, /@dnd-kit/);
   assert.doesNotMatch(coachPlannerSource, /from ['"]@\/lib\/planner-draft['"]/);

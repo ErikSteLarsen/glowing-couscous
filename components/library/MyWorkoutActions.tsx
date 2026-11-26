@@ -8,6 +8,7 @@ import { ShareLinkResult, useShareLink } from '@/components/ShareLinkButton';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempobuilder/Menu';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { dangerTextClassName, iconButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { ReturnHereLink } from '@/components/ReturnHereLink';
 import { ScheduleLink, startTriggerClassName, SwimStartNote } from '@/components/library/LibraryWorkoutActions';
 import { editWorkoutHref, myWorkoutsHref } from '@/lib/athlete-workouts-navigation';
 import { getCalendarPlacementHref } from '@/lib/calendar-navigation';
@@ -51,8 +52,8 @@ export function MyWorkoutMenu({ id, name, share, disabled = false, onEdit, onDel
             : <MenuItem render={<Link href={editWorkoutHref(id)} prefetch={false} />}><Pencil aria-hidden="true" size={16} strokeWidth={1.6} />Edit</MenuItem>
         ) : null}
         {showSchedule ? (
-          <MenuItem render={<Link href={myWorkoutScheduleHref(id)} prefetch={false} />}>
-            <CalendarPlus aria-hidden="true" size={16} strokeWidth={1.6} />Schedule
+          <MenuItem render={<ReturnHereLink href={myWorkoutScheduleHref(id)} prefetch={false} />}>
+            <CalendarPlus aria-hidden="true" size={16} strokeWidth={1.6} />Add to Calendar
           </MenuItem>
         ) : null}
         <MenuItem onSelect={share.createLink}>
@@ -66,7 +67,7 @@ export function MyWorkoutMenu({ id, name, share, disabled = false, onEdit, onDel
   );
 }
 
-/** Detail page actions, laid out like `LibraryWorkoutActions`: Start workout, Schedule, Edit and ⋯. */
+/** Detail page actions, laid out like `LibraryWorkoutActions`: Start workout, Add to Calendar, Edit and ⋯. */
 export function MyWorkoutActions({ id, name, sport, durationSec, hasSteps }: { id: number; name: string; sport: string; durationSec: number; hasSteps: boolean }) {
   const workout = { title: name, durationSec, sport, status: 'planned', hasSteps };
   const router = useRouter();

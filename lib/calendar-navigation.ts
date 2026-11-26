@@ -73,16 +73,43 @@ export function parseCalendarTotals(value: unknown): boolean {
   return value === 'show';
 }
 
-export function getCalendarHref(view: CalendarView, day: DayKey, options: { place?: CalendarPlacement } = {}) {
-  const params = new URLSearchParams({ view, date: day });
-  if (options.place) params.set('place', options.place);
-  return `/athlete/calendar?${params.toString()}`;
+/**
+ * `back` is the page an add dialog returns to when it is cancelled, e.g. Home
+ * or the workout it was opened from. Only app paths outside Calendar count.
+ */
+export function parseCalendarReturn(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length > 512) return null;
+  const isAthletePage = /^\/athlete(?:[/?]|$)/.test(value);
+  const isCalendar = /^\/athlete\/calendar(?:[/?]|$)/.test(value);
+  // `//`, backslashes and whitespace could make a browser read it as another origin.
+  const isAmbiguous = /\/\/|\\|\s/.test(value);
+  return isAthletePage && !isCalendar && !isAmbiguous ? value : null;
 }
 
-/** Opens Calendar placement with a saved workout or template already chosen. */
-export function getCalendarPlacementHref(source: `${CalendarPlacement}:${number}` | `built-in-plan:${string}`) {
-  const place = source.startsWith('workout:') ? 'workout' : 'template';
-  return `/athlete/calendar?${new URLSearchParams({ place, source }).toString()}`;
+/** `href` with `back` set, so cancelling the add dialog it opens returns to `back`. */
+export function withCalendarReturn(href: string, back: string) {
+  const url = new URL(href, 'http://app.local');
+  if (parseCalendarReturn(back)) url.searchParams.set('back', back);
+  return `${url.pathname}${url.search}`;
+}
+
+export function getCalendarHref(view: CalendarView, day: DayKey, options: { place?: CalendarPlacement; back?: string } = {}) {
+  const params = new URLSearchParams({ view, date: day });
+  if (options.place) params.set('place', options.place);
+  const href = `/athlete/calendar?${params.toString()}`;
+  return options.back ? withCalendarReturn(href, options.back) : href;
+}
+
+/** Opens a Calendar add dialog with a workout or plan already chosen, on `date` when given. */
+export function getCalendarPlacementHref(
+  source: `${CalendarPlacement}:${number}` | `built-in-plan:${string}` | `catalog:${string}`,
+  options: { date?: DayKey; back?: string } = {},
+) {
+  const place = source.startsWith('workout:') || source.startsWith('catalog:') ? 'workout' : 'template';
+  const params = new URLSearchParams({ place, source });
+  if (options.date) params.set('date', options.date);
+  const href = `/athlete/calendar?${params.toString()}`;
+  return options.back ? withCalendarReturn(href, options.back) : href;
 }
 
 /**
