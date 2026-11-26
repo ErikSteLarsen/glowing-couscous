@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { complianceColors } from '@/components/wattonaut/ComplianceMark';
+import { complianceColors } from '@/components/tempobuilder/ComplianceMark';
 import { complianceLabels, type ComplianceState } from '@/lib/training-load';
 
 export type HomeWeekDay = {

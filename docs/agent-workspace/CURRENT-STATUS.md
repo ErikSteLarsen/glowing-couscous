@@ -7,9 +7,9 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
-- TempoBuilder rename (2026-11-26, branch `t3/rename-tempobuilder`, not on
-  `main`). Wattonaut becomes TempoBuilder in names, docs, identifiers, files and
-  dev env vars (`TEMPOBUILDER_URL`, `TEMPOBUILDER_TEST_DATABASE_URL`,
+- TempoBuilder rename (2026-11-26, released to `main` after the Home week day
+  picker, Start workout and Training trends work). Wattonaut becomes
+  TempoBuilder in names, docs, identifiers, files and dev env vars (`TEMPOBUILDER_URL`, `TEMPOBUILDER_TEST_DATABASE_URL`,
   `TEMPOBUILDER_SHARP_MODULE`); the download URL still reads both older names.
   The Strava OAuth cookies are renamed (10-minute lifetime). Erik picked the
   two-tone wordmark: lowercase, "tempo" 600 in the text color and "builder" 500
