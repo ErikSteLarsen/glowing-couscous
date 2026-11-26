@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { format, getISOWeek } from 'date-fns';
-import { ArrowRight, CalendarPlus, Play } from 'lucide-react';
+import { ArrowRight, CalendarPlus, Play, Plus } from 'lucide-react';
 import { PerformanceChart } from '@/components/charts/PerformanceChart';
 import { WeeklyVolumeChart, type VolumeWeek } from '@/components/charts/WeeklyVolumeChart';
 import { ComplianceMark } from '@/components/tempobuilder/ComplianceMark';
@@ -32,11 +32,12 @@ import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
 import { parsePrefsJson } from '@/lib/overview-preferences';
 import { parseTrainingSports } from '@/lib/training-setup';
 import { athleteService } from '@/lib/athlete-service';
+import { getCalendarHref } from '@/lib/calendar-navigation';
 import { signed } from '@/lib/chart-format';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
 import { trainingLoadService } from '@/lib/training-load-service';
-import { formZoneLabels, fromDayKey, type FormZone } from '@/lib/training-load';
+import { addDayKeys, formZoneLabels, fromDayKey, type FormZone } from '@/lib/training-load';
 import { getRequestTimeZone } from '@/lib/request-time-zone';
 import { hourInZone, todayInZone } from '@/lib/user-time';
 
@@ -95,6 +96,10 @@ export default async function AthletePage() {
   const doneToday = dashboard.todaySessions.filter((session) => session.status === 'completed');
   const skippedToday = dashboard.todaySessions.filter((session) => session.status === 'skipped');
   const restState = restStateFor(doneToday, skippedToday);
+  // Add workout dialogs opened from Home come back here on Cancel.
+  const addWorkoutHref = (day: string) => getCalendarHref('week', day, { place: 'workout', back: '/athlete' });
+  // Done for today, so the next workout most likely goes on tomorrow.
+  const planDay = doneToday.length > 0 ? addDayKeys(dashboard.todayKey, 1) : dashboard.todayKey;
   const upcoming = dashboard.nextDays.flatMap((day) => day.sessions.map((session) => ({ day, session }))).slice(0, 3);
   const thisWeek = load.weeks.find((week) => week.weekStart === dashboard.weekDays[0]?.isoDate);
   const fitnessChange = load.current.fitness28DaysAgo === null ? null : load.current.fitness - load.current.fitness28DaysAgo;
@@ -195,7 +200,7 @@ export default async function AthletePage() {
                 <SessionRow session={skippedToday[0]} href={`/athlete/session/${skippedToday[0].id}?from=home`} actionLabel="Details" variant="compact" />
               ) : null}
               <div className="mt-auto flex flex-wrap gap-2 pt-1">
-                <Link href="/athlete/calendar?place=workout" className={`${secondaryButtonClassName} max-md:min-h-11`}>
+                <Link href={addWorkoutHref(planDay)} className={`${secondaryButtonClassName} max-md:min-h-11`}>
                   <CalendarPlus aria-hidden="true" size={15} strokeWidth={1.8} />
                   Plan a workout
                 </Link>
@@ -326,6 +331,16 @@ export default async function AthletePage() {
                     ) : (
                       <p className="px-0.5 py-0.5 text-xs text-[var(--text-muted)]">Rest</p>
                     )}
+                    {day.isoDate >= dashboard.todayKey ? (
+                      <Link
+                        href={addWorkoutHref(day.isoDate)}
+                        aria-label={`Add a workout on ${weekday} ${day.dateLabel}`}
+                        className={`${ghostButtonClassName('compact')} w-full justify-start max-md:min-h-11`}
+                      >
+                        <Plus aria-hidden="true" size={14} strokeWidth={1.8} />
+                        Add
+                      </Link>
+                    ) : null}
                   </div>
                 </section>
               ),

@@ -1,4 +1,4 @@
-import { isAssignmentDate, validateTemplateDateRange } from './template-period.ts';
+import { isAssignmentDate, validateTemplateDateRange, validateWeekRange } from './template-period.ts';
 
 export const ROUTINE_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
 export type RoutineBlock = {
@@ -50,7 +50,8 @@ export function routineWeekday(date: string) {
 
 export function validateRoutineDates(dates: string[]) {
   if (!dates.length || dates.some(date => !isAssignmentDate(date))) return 'Choose valid calendar dates.';
-  return validateTemplateDateRange(dates, dates.length === 7 ? 'week' : 'month');
+  // Whole weeks from a Monday, or (older clients) one calendar month.
+  return dates.length % 7 === 0 && validateWeekRange(dates) === null ? null : validateTemplateDateRange(dates, dates.length === 7 ? 'week' : 'month');
 }
 
 /** Date order, then saved within-day order; empty weekdays produce no sessions. */

@@ -7,7 +7,7 @@ import { catalogLineageOf, type CatalogLineage } from './catalog-lineage.ts';
 import { catalogWorkoutToSourceEntry } from './workout-catalog/session.ts';
 import { getBuiltInPlan } from './plan-catalog/index.ts';
 import { selectPlanWorkouts } from './plan-catalog/selection.ts';
-import { isAssignmentDate, validateTemplateDateRange } from './template-period.ts';
+import { isAssignmentDate, MAX_PLACEMENTS_PER_REQUEST, validateWeekRange } from './template-period.ts';
 import { addDays, differenceInCalendarDays, endOfMonth, endOfWeek, format, formatISO, isValid, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 
 import { prisma } from './prisma.ts';
@@ -213,7 +213,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
             if (plan.version !== selection.version) {
               throw new PlacementError('This training plan has changed. Reload the page to see the latest version.', 409);
             }
-            const rangeError = validateTemplateDateRange(requestedDates, 'week');
+            const rangeError = validateWeekRange(requestedDates);
             if (rangeError) throw new PlacementError(rangeError, 400);
             for (const [slotId, optionId] of Object.entries(selection.choices)) {
               const slot = plan.slots.find((item) => item.id === slotId);
@@ -221,14 +221,16 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
                 throw new PlacementError('One of those workout options is unavailable. Choose another option.', 400);
               }
             }
-            placements = selectPlanWorkouts(plan.slots, selection.choices).flatMap(({ weekday, option }) => option.workout
+            // The plan's week repeats for every week in the range.
+            const weekOffsets = Array.from({ length: requestedDates.length / 7 }, (_, week) => week * 7);
+            placements = weekOffsets.flatMap((offset) => selectPlanWorkouts(plan.slots, selection.choices).flatMap(({ weekday, option }) => option.workout
               ? [{
-                  date: requestedDates[weekday],
+                  date: requestedDates[offset + weekday],
                   entry: catalogWorkoutToSourceEntry(option.workout),
                   source: BUILT_IN_PLAN_SOURCE,
                   lineage: { catalogWorkoutSlug: option.id, catalogPlanSlug: plan.slug, catalogPlanVersion: plan.version },
                 }]
-              : []);
+              : []));
           } else if (sourceKind === 'template' && typeof sourceId === 'number') {
             const template = await tx.template.findFirst({ where: { id: sourceId, ownerId: athleteId } });
             if (!template) throw new PlacementError('Training plan not found.', 404);
@@ -264,13 +266,21 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
             throw new PlacementError('Choose a workout or training plan.', 400);
           }
 
+          if (placements.length > MAX_PLACEMENTS_PER_REQUEST) {
+            throw new PlacementError(`That adds ${placements.length} workouts at once. Choose fewer weeks (at most ${MAX_PLACEMENTS_PER_REQUEST} workouts).`, 400);
+          }
+
           await tx.placementRequest.create({
             data: { userId: athleteId, requestKey, payloadHash, sessionIdsJson: '[]' },
           });
 
           const createdSessionIds: number[] = [];
+          // One plan row per week, looked up once per week rather than per workout.
+          const weekPlans = new Map<string, Promise<Awaited<ReturnType<typeof findOrCreatePlan>>>>();
           for (const { date, entry, source, lineage } of placements) {
-            const plan = await findOrCreatePlan(tx, athleteId, date);
+            const weekKey = format(startOfWeek(parseISO(date), { weekStartsOn: 1 }), 'yyyy-MM-dd');
+            if (!weekPlans.has(weekKey)) weekPlans.set(weekKey, findOrCreatePlan(tx, athleteId, date));
+            const plan = await weekPlans.get(weekKey)!;
             const created = await tx.session.create({
               data: createSourceCopyData({
                 athleteId,
@@ -295,7 +305,7 @@ export function createAthletePlannerService({ db = prisma }: AthletePlannerDeps 
             data: { sessionIdsJson: JSON.stringify(createdSessionIds) },
           });
           return createdSessionIds;
-        });
+        }, { timeout: 20_000 });
 
         return { ok: true as const, sessionIds };
       } catch (error) {

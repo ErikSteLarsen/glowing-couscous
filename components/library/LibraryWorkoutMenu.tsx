@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CalendarPlus, Ellipsis, Pencil } from 'lucide-react';
+import { ReturnHereLink } from '@/components/ReturnHereLink';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempobuilder/Menu';
 import { iconButtonClassName } from '@/components/ui';
 import { withBackOrigin } from '@/lib/app-navigation';
@@ -21,8 +22,8 @@ export function LibraryWorkoutMenu({ slug, sport, name, from, showSchedule = fal
           <Pencil aria-hidden="true" size={16} strokeWidth={1.6} />Customize
         </MenuItem>
         {showSchedule ? (
-          <MenuItem render={<Link href={catalogScheduleHref(slug, from)} prefetch={false} />}>
-            <CalendarPlus aria-hidden="true" size={16} strokeWidth={1.6} />Schedule
+          <MenuItem render={<ReturnHereLink href={catalogScheduleHref(slug, from)} prefetch={false} />}>
+            <CalendarPlus aria-hidden="true" size={16} strokeWidth={1.6} />Add to Calendar
           </MenuItem>
         ) : null}
       </MenuContent>

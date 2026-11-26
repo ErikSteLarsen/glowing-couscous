@@ -159,6 +159,7 @@ export function AthleteCalendar({
   weeks,
   initialShowTotals,
   placedCount = null,
+  shortcutsEnabled = true,
 }: {
   view: CalendarView;
   day: string;
@@ -167,6 +168,8 @@ export function AthleteCalendar({
   initialShowTotals: boolean;
   /** Sessions just added by the placement flow, confirmed once on arrival. */
   placedCount?: number | null;
+  /** Off while an add dialog is open, so arrow keys and T never navigate away from it. */
+  shortcutsEnabled?: boolean;
 }) {
   const router = useRouter();
   const [isRefreshing, startTransition] = useTransition();
@@ -222,6 +225,7 @@ export function AthleteCalendar({
   }, [placedCount]);
 
   useEffect(() => {
+    if (!shortcutsEnabled) return;
     function onKeyDown(event: KeyboardEvent) {
       if (dragging.current) return;
       const target = event.target instanceof HTMLElement ? event.target : null;
@@ -242,7 +246,7 @@ export function AthleteCalendar({
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [router, view, day, today]);
+  }, [router, view, day, today, shortcutsEnabled]);
 
   async function moveSession(sessionId: number, toDay: string) {
     const session = sessionsById.get(sessionId);
@@ -330,9 +334,14 @@ export function AthleteCalendar({
               </Link>
             </nav>
             <div className="flex items-center gap-2">
-              <Link href={addHref(selectedDay ?? day)} className={`${primaryButtonClassName} max-md:min-h-11 max-sm:px-3`}>
+              <Link href={addHref(selectedDay ?? day)} scroll={false} className={`${primaryButtonClassName} max-md:min-h-11 max-sm:px-3`}>
                 <Plus aria-hidden="true" size={16} strokeWidth={2} />
                 Add workout
+              </Link>
+              <Link href={getCalendarHref(view, selectedDay ?? day, { place: 'template' })} scroll={false} aria-label="Add training plan" className={`${secondaryButtonClassName} max-md:min-h-11 max-sm:px-3`}>
+                <CalendarRange aria-hidden="true" size={16} strokeWidth={1.8} />
+                <span aria-hidden="true" className="max-sm:hidden">Add training plan</span>
+                <span aria-hidden="true" className="sm:hidden">Add plan</span>
               </Link>
               <CalendarMoreMenu view={view} day={day} showTotals={showTotals} onShowTotalsChange={changeShowTotals} />
             </div>
@@ -433,10 +442,6 @@ function CalendarMoreMenu({ view, day, showTotals, onShowTotalsChange }: {
         </MenuCheckboxItem>
         <MenuSeparator />
         <MenuGroup>
-          <MenuItem render={<Link href={getCalendarHref(view, day, { place: 'template' })} />}>
-            <CalendarRange aria-hidden="true" size={16} strokeWidth={1.8} />
-            Apply a training plan
-          </MenuItem>
           <MenuItem render={<Link href="/athlete/events" />}>
             <Flag aria-hidden="true" size={16} strokeWidth={1.8} />
             Events
@@ -487,6 +492,7 @@ function DayColumn({ day, pendingIds, onMove, onSessionDeleted, addHref }: { day
         {day.sessions.length > 0 ? (
           <Link
             href={addHref(day.isoDate)}
+            scroll={false}
             aria-label={`Add a workout on ${formatDay(day.isoDate)}`}
             className={`inline-flex size-11 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--raised)] hover:text-[var(--text)] xl:size-8 ${buttonFocusClassName}`}
           >
@@ -504,6 +510,7 @@ function DayColumn({ day, pendingIds, onMove, onSessionDeleted, addHref }: { day
       {day.sessions.length === 0 && day.events.length === 0 ? (
         <Link
           href={addHref(day.isoDate)}
+          scroll={false}
           aria-label={`Add a workout on ${formatDay(day.isoDate)}`}
           className={`group flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg border border-dashed border-[var(--border)] px-2 text-[13px] text-[var(--text-muted)] transition-colors hover:border-[var(--brand)] hover:text-[var(--brand)] ${buttonFocusClassName}`}
         >
@@ -822,7 +829,7 @@ function DayDetail({ day, onClose, pendingIds, onMove, onSessionDeleted, addHref
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="calendar-day-detail" className={sectionHeadingClassName}>{format(fromDayKey(day.isoDate), 'EEEE\u00A0d\u00A0MMMM')}</h2>
         <div className="flex gap-2">
-          <Link href={addHref(day.isoDate)} className={`${compactSecondaryButtonClassName} min-h-11 sm:min-h-8`}>
+          <Link href={addHref(day.isoDate)} scroll={false} className={`${compactSecondaryButtonClassName} min-h-11 sm:min-h-8`}>
             <CalendarPlus aria-hidden="true" size={14} strokeWidth={1.8} />
             Add workout
           </Link>

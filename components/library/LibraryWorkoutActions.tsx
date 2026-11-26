@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { CalendarPlus } from 'lucide-react';
 import { LibraryWorkoutMenu, catalogScheduleHref } from '@/components/library/LibraryWorkoutMenu';
+import { ReturnHereLink } from '@/components/ReturnHereLink';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { canStartWorkout, swimStartNote } from '@/lib/workout-start';
@@ -9,12 +9,12 @@ import type { CatalogSport } from '@/lib/workout-catalog/types';
 /** On phones Start workout takes its own row, so detail actions line up the same for public and saved workouts. */
 export const startTriggerClassName = `${primaryButtonClassName} max-md:min-h-11 max-sm:basis-full`;
 
-/** Schedule is the main action of a workout that can't be started. */
+/** Add to Calendar is the main action of a workout that can't be started; Cancel comes back here. */
 export function ScheduleLink({ href, primary }: { href: string; primary: boolean }) {
   return (
-    <Link href={href} className={`${primary ? primaryButtonClassName : secondaryButtonClassName} max-md:min-h-11`}>
-      <CalendarPlus aria-hidden="true" size={16} strokeWidth={1.6} />Schedule
-    </Link>
+    <ReturnHereLink href={href} className={`${primary ? primaryButtonClassName : secondaryButtonClassName} max-md:min-h-11`}>
+      <CalendarPlus aria-hidden="true" size={16} strokeWidth={1.6} />Add to Calendar
+    </ReturnHereLink>
   );
 }
 
