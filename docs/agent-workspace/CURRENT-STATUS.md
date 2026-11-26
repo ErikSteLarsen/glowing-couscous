@@ -7,6 +7,14 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- Home week day picker (2026-11-26). On phones, This week shows seven day
+  chips with a dot per workout and only the selected day's workouts; today is
+  selected on load, so there is no sideways scrolling. From `md` up, day
+  columns are top-aligned and size to their own content. Owner:
+  `components/HomeWeekDays.tsx`. `pnpm test` (643), lint, types and build
+  passed; Chromium checked the demo athlete's Home at 390, 1024 and 1440 px,
+  including switching days.
+
 - Mobile bottom navigation removed (2026-11-26). The hamburger drawer is the
   only mobile navigation; it already lists Home, Calendar, Workouts, Training
   plans, Activity (now also active on Import) and Events. The old coach bottom

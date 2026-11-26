@@ -628,13 +628,8 @@ button.tile:where(:not(:disabled, [aria-disabled="true"], [data-disabled])):hove
   background: var(--surface);
 }
 
-.ink-week-track {
-  scrollbar-width: thin;
-}
-
 .ink-day-channel {
   position: relative;
-  min-height: 120px;
   border-color: var(--border);
 }
 
@@ -711,9 +706,9 @@ button.tile:where(:not(:disabled, [aria-disabled="true"], [data-disabled])):hove
 }
 
 @media (min-width: 1536px) {
-  .ink-day-channel:not(:last-child)::after {
+  .ink-week-track > :not(:last-child) > .ink-day-channel::after {
     position: absolute;
-    top: 50%;
+    top: 17px;
     right: -13px;
     width: 12px;
     height: 1px;
@@ -723,20 +718,6 @@ button.tile:where(:not(:disabled, [aria-disabled="true"], [data-disabled])):hove
   }
 }
 
-@media (max-width: 767px) {
-  .ink-week-track {
-    display: flex !important;
-    max-width: 100%;
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
-  }
-
-  .ink-week-track > .ink-day-channel {
-    flex: 0 0 min(62vw, 240px);
-    min-height: 96px;
-    scroll-snap-align: start;
-  }
-}
 
 /* Wattonaut visual direction previews. These are intentionally scoped so the
    authenticated product stays unchanged until a direction is selected. */

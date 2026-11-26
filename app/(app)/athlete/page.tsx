@@ -12,6 +12,7 @@ import { SessionRow } from '@/components/wattonaut/SessionRow';
 import { canStartWorkout } from '@/lib/workout-start';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { HomeSummaryDialog } from '@/components/HomeSummaryDialog';
+import { HomeWeekDays } from '@/components/HomeWeekDays';
 import { MiniBars, Sparkline, type MiniBar } from '@/components/charts/Sparklines';
 import {
   Badge,
@@ -265,36 +266,54 @@ export default async function AthletePage() {
             <div className="h-full rounded-full bg-[var(--brand)]" style={{ width: `${Math.min(100, thisWeek.completionPct ?? 0)}%` }} />
           </div>
         ) : null}
-        <div className="ink-week-track grid gap-2 md:grid-cols-4 xl:grid-cols-7">
-          {dashboard.weekDays.map((day) => (
-            <section
-              key={day.isoDate}
-              aria-labelledby={`home-day-${day.isoDate}`}
-              className={`ink-day-channel min-w-0 rounded-xl border p-2 ${day.isToday ? 'ink-day-channel--today' : 'bg-[var(--surface)]'}`}
-            >
-              <div className="flex items-baseline justify-between gap-2 px-0.5">
-                <h3 id={`home-day-${day.isoDate}`} className="text-xs text-[var(--text-muted)]">
-                  {day.label} <span className="data text-sm font-medium text-[var(--text)]">{day.dateLabel}</span>
-                </h3>
-                {day.isToday ? <span className="text-[11px] font-medium text-[var(--brand)]">Today</span> : null}
-                {!day.isToday && day.sessions.length > 0 ? (
-                  <span className="flex gap-1">
-                    {day.sessions.map((session) => (session.compliance ? <ComplianceMark key={session.id} state={session.compliance} /> : null))}
-                  </span>
-                ) : null}
-              </div>
-              <div className="mt-1.5 space-y-1.5 max-md:[&>a]:min-h-11">
-                {day.sessions.length > 0 ? (
-                  day.sessions.map((session) => (
-                    <SessionRow key={session.id} session={session} href={`/athlete/session/${session.id}?from=home`} variant="month" />
-                  ))
-                ) : (
-                  <p className="px-0.5 py-0.5 text-xs text-[var(--text-muted)]">Rest</p>
-                )}
-              </div>
-            </section>
-          ))}
-        </div>
+        <HomeWeekDays
+          days={dashboard.weekDays.map((day) => {
+            const weekday = format(fromDayKey(day.isoDate), 'EEEE');
+            const dayDurationSec = day.sessions.reduce((total, session) => total + session.durationSec, 0);
+            return {
+              isoDate: day.isoDate,
+              label: day.label,
+              dateLabel: day.dateLabel,
+              longLabel: `${weekday} ${day.dateLabel}`,
+              isToday: day.isToday,
+              marks: day.sessions.map((session) => session.compliance ?? 'planned'),
+              panel: (
+                <section
+                  aria-labelledby={`home-day-${day.isoDate}`}
+                  className={`ink-day-channel min-w-0 rounded-xl border p-2 ${day.isToday ? 'ink-day-channel--today' : 'bg-[var(--surface)]'}`}
+                >
+                  <div className="flex items-baseline justify-between gap-2 px-0.5">
+                    <h3 id={`home-day-${day.isoDate}`} className="text-xs text-[var(--text-muted)]">
+                      <span className="max-md:hidden">{day.label} </span>
+                      <span className="md:hidden">{weekday} </span>
+                      <span className="data text-sm font-medium text-[var(--text)]">{day.dateLabel}</span>
+                    </h3>
+                    {day.isToday ? <span className="text-[11px] font-medium text-[var(--brand)]">Today</span> : null}
+                    {!day.isToday && day.sessions.length > 0 ? (
+                      <span className="flex gap-1 max-md:hidden">
+                        {day.sessions.map((session) => (session.compliance ? <ComplianceMark key={session.id} state={session.compliance} /> : null))}
+                      </span>
+                    ) : null}
+                    {!day.isToday && day.sessions.length > 0 ? (
+                      <span className="data text-xs text-[var(--text-muted)] md:hidden">
+                        {day.sessions.length} {day.sessions.length === 1 ? 'workout' : 'workouts'}&nbsp;– {formatDuration(dayDurationSec)}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="mt-1.5 space-y-1.5 max-md:[&>a]:min-h-11">
+                    {day.sessions.length > 0 ? (
+                      day.sessions.map((session) => (
+                        <SessionRow key={session.id} session={session} href={`/athlete/session/${session.id}?from=home`} variant="month" />
+                      ))
+                    ) : (
+                      <p className="px-0.5 py-0.5 text-xs text-[var(--text-muted)]">Rest</p>
+                    )}
+                  </div>
+                </section>
+              ),
+            };
+          })}
+        />
       </section>
 
       {showInsights ? (
