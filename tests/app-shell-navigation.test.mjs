@@ -55,7 +55,7 @@ test('mobile uses the hamburger drawer as its only navigation, without a bottom 
 
   assert.doesNotMatch(shellSource, /aria-label="Primary navigation"|fixed inset-x-0 bottom-0/);
   assert.doesNotMatch(navSource, /getMobileNavigation/);
-  assert.doesNotMatch(cssSource, /--mobile-nav-clearance/);
+  assert.doesNotMatch(cssSource, /--mobile-nav-(clearance|height)/);
   assert.match(shellSource, /aria-label="Open menu"/);
   assert.match(shellSource, /import Link from 'next\/link'/);
   assert.doesNotMatch(shellSource, /<a\s/);

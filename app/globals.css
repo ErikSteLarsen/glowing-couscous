@@ -1607,7 +1607,6 @@ button.tile:where(:not(:disabled, [aria-disabled="true"], [data-disabled])):hove
   --page-block-padding: var(--page-gutter);
   --page-header-height: 64px;
   --page-section-gap: 24px;
-  --mobile-nav-height: calc(64px + max(0.5rem, env(safe-area-inset-bottom)));
 }
 
 .page-layout {
@@ -1661,13 +1660,14 @@ button.tile:where(:not(:disabled, [aria-disabled="true"], [data-disabled])):hove
 @container (min-width: 900px) {
   .workout-library-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-.profile-page__content { padding-bottom: 160px; }
+.profile-page__content { padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
 .profile-savebar {
   position: fixed;
   z-index: 20;
   right: 0;
-  bottom: var(--mobile-nav-height);
+  bottom: 0;
   left: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   border-top: 1px solid var(--border);
   background: var(--surface);
 }
@@ -1842,7 +1842,7 @@ body[data-workspace-theme="dark"] .profile-savebar {
   position: fixed;
   z-index: 40;
   inset-inline: var(--page-gutter);
-  bottom: calc(var(--mobile-nav-height) + 16px);
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1891,7 +1891,7 @@ body[data-workspace-theme="dark"] .profile-savebar {
 }
 
 /* Feedback clears Profile save actions as well as primary navigation. */
-.wattonaut-shell:has(.profile-savebar) .wattonaut-toast { bottom: calc(var(--mobile-nav-height) + 112px); }
+.wattonaut-shell:has(.profile-savebar) .wattonaut-toast { bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
 @media (min-width: 768px) {
   .wattonaut-shell:has(.profile-savebar) .wattonaut-toast { bottom: 112px; }
 }
