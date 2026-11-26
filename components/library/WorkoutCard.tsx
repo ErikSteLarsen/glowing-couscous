@@ -38,7 +38,7 @@ export function WorkoutCardHeader({ aside, children, level: Heading = 'h3', ...t
 }
 
 export function WorkoutCardMeta({ children, id }: { children: ReactNode; id?: string }) {
-  return <p id={id} className="mt-0.5 flex min-w-0 gap-x-3 overflow-hidden whitespace-nowrap text-[12px] text-[var(--text-muted)] [&>*]:truncate">{children}</p>;
+  return <p id={id} className="mt-1 flex min-w-0 items-center gap-x-3 overflow-hidden whitespace-nowrap text-[12px] text-[var(--text-muted)] [&>*]:truncate">{children}</p>;
 }
 
 /** Profile sits above the title in the library and below the meta line elsewhere. */

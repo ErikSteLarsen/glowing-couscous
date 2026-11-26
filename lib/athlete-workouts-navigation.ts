@@ -1,5 +1,5 @@
 import type { BackTarget } from './app-navigation.ts';
-import { EMPTY_CATALOG_QUERY, isCatalogSport, parseCatalogQuery, serializeCatalogQuery, type CatalogQuery } from './workout-catalog/query.ts';
+import { EMPTY_CATALOG_QUERY, isCatalogSport, parseCatalogQuery, serializeCatalogQuery, toWorkoutSport, type CatalogQuery } from './workout-catalog/query.ts';
 import type { CatalogSport } from './workout-catalog/types.ts';
 
 export type WorkoutTab = 'mine' | 'library';
@@ -42,8 +42,10 @@ export function myWorkoutHref(id: number) {
   return `/athlete/workouts/${id}`;
 }
 
-export function myWorkoutsHref() {
-  return athleteWorkoutsHref(new URLSearchParams({ tab: 'mine' }));
+/** My workouts; with a sport, on that sport so the workout you came from is in the list. */
+export function myWorkoutsHref(sport?: string) {
+  const filters = sport ? serializeCatalogQuery({ ...EMPTY_CATALOG_QUERY, sport: toWorkoutSport(sport) }) : '';
+  return athleteWorkoutsHref(new URLSearchParams([['tab', 'mine'], ...new URLSearchParams(filters)]));
 }
 
 /** Opens the editor; `from: 'detail'` makes its Back return to the workout's detail page. */

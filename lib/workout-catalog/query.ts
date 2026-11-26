@@ -9,6 +9,29 @@ export const CATALOG_SPORTS: readonly { id: CatalogSport; param: string; label: 
 
 export const DEFAULT_CATALOG_SPORT: CatalogSport = 'BIKING';
 
+/**
+ * The sport both Workouts tabs show: one of the library's sports, or Other for
+ * saved workouts in any other sport (strength, stretching and so on).
+ */
+export type WorkoutSport = CatalogSport | 'OTHER';
+
+export const WORKOUT_SPORTS: readonly { id: WorkoutSport; param: string; label: string }[] = [
+  ...CATALOG_SPORTS,
+  { id: 'OTHER', param: 'other', label: 'Other' },
+];
+
+export function toWorkoutSport(sport: string): WorkoutSport {
+  return isCatalogSport(sport) ? sport : 'OTHER';
+}
+
+export function emptySportCounts(): Record<WorkoutSport, number> {
+  return { BIKING: 0, RUNNING: 0, SWIMMING: 0, OTHER: 0 };
+}
+
+export function isWorkoutSport(value: unknown): value is WorkoutSport {
+  return WORKOUT_SPORTS.some((sport) => sport.id === value);
+}
+
 export const CATALOG_CATEGORIES: readonly { id: CatalogCategory; label: string }[] = [
   { id: 'recovery', label: 'Recovery' },
   { id: 'endurance', label: 'Endurance' },
@@ -51,7 +74,7 @@ export const CATALOG_SORTS: readonly { id: CatalogSort; label: string }[] = [
 ];
 
 export type CatalogQuery = {
-  sport: CatalogSport;
+  sport: WorkoutSport;
   q: string;
   categories: CatalogCategory[];
   levels: CatalogLevel[];
@@ -79,20 +102,27 @@ export function isCatalogSport(value: unknown): value is CatalogSport {
   return CATALOG_SPORTS.some((sport) => sport.id === value);
 }
 
-/** "Bike", "Run" or "Swim": the library's short sport name. */
-export function catalogSportLabel(sport: CatalogSport): string {
-  return CATALOG_SPORTS.find((entry) => entry.id === sport)?.label ?? sport;
+/** "Bike", "Run", "Swim" or "Other": the short sport name both Workouts tabs use. */
+export function catalogSportLabel(sport: WorkoutSport): string {
+  return WORKOUT_SPORTS.find((entry) => entry.id === sport)?.label ?? sport;
 }
 
 /** Workouts per sport that match the search text, ignoring every filter. */
-export function countCatalogBySport(entries: readonly CatalogEntry[], q = ''): Record<CatalogSport, number> {
-  const counts: Record<CatalogSport, number> = { BIKING: 0, RUNNING: 0, SWIMMING: 0 };
-  for (const { workout } of entries) if (matchesCatalogSearch(workout, q)) counts[workout.sport] += 1;
+export function countCatalogBySport(entries: readonly CatalogEntry[], q = ''): Record<WorkoutSport, number> {
+  return countCollectionBySport(entries, describeCatalogEntry, q);
+}
+
+export function countCollectionBySport<T>(items: readonly T[], describe: (item: T) => CollectionItem, q = ''): Record<WorkoutSport, number> {
+  const counts = emptySportCounts();
+  for (const item of items) {
+    const { sport, search } = describe(item);
+    if (sport && matchesSearch(search, q)) counts[sport] += 1;
+  }
   return counts;
 }
 
 /** The query after choosing another sport: search and sort stay, filters belong to the old sport. */
-export function switchCatalogSport(query: CatalogQuery, sport: CatalogSport): CatalogQuery {
+export function switchCatalogSport(query: CatalogQuery, sport: WorkoutSport): CatalogQuery {
   return { ...EMPTY_CATALOG_QUERY, sport, q: query.q, sort: query.sort };
 }
 
@@ -140,41 +170,86 @@ function fold(value: string): string {
   return value.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase();
 }
 
-/** Every whitespace-separated term must appear in the name, summary, tags or category. */
-export function matchesCatalogSearch(workout: CatalogWorkout, q: string): boolean {
+/** Every whitespace-separated term must appear somewhere in the fields. */
+export function matchesSearch(fields: readonly string[], q: string): boolean {
   const terms = fold(q).split(/\s+/).filter(Boolean);
   if (terms.length === 0) return true;
-  const haystack = fold([workout.name, workout.summary, workout.tags.join(' '), categoryLabel(workout.category), workout.category].join(' '));
+  const haystack = fold(fields.join(' '));
   return terms.every((term) => haystack.includes(term));
 }
 
-export function filterCatalog(entries: readonly CatalogEntry[], query: CatalogQuery): CatalogEntry[] {
-  const tags = query.tags.map(fold);
-  const filtered = entries.filter(({ workout, metrics, bucket }) =>
-    workout.sport === query.sport
-    && (query.categories.length === 0 || query.categories.includes(workout.category))
-    && (query.levels.length === 0 || query.levels.includes(workout.level))
-    && (query.durations.length === 0 || query.durations.includes(bucket))
-    && (tags.length === 0 || tags.every((tag) => workout.tags.some((candidate) => fold(candidate) === tag)))
-    && (query.tssMin === null || metrics.tss >= query.tssMin)
-    && (query.tssMax === null || metrics.tss <= query.tssMax)
-    && (query.ifMin === null || metrics.intensityFactor >= query.ifMin)
-    && (query.ifMax === null || metrics.intensityFactor <= query.ifMax)
-    && matchesCatalogSearch(workout, query.q));
-  return sortCatalog(filtered, query.sort);
+/** Searches the name, summary, tags and category. */
+export function matchesCatalogSearch(workout: CatalogWorkout, q: string): boolean {
+  return matchesSearch(catalogSearchFields(workout), q);
 }
 
-export function sortCatalog(entries: readonly CatalogEntry[], sort: CatalogSort): CatalogEntry[] {
-  const byName = (left: CatalogEntry, right: CatalogEntry) => left.workout.name.localeCompare(right.workout.name, 'en') || left.workout.slug.localeCompare(right.workout.slug);
-  const compare: Record<CatalogSort, (left: CatalogEntry, right: CatalogEntry) => number> = {
+function catalogSearchFields(workout: CatalogWorkout) {
+  return [workout.name, workout.summary, workout.tags.join(' '), categoryLabel(workout.category), workout.category];
+}
+
+/**
+ * What the shared Workouts search, filters and sort read from one workout, saved
+ * or public. A filter applies only to items that describe its field: saved
+ * workouts have no focus, level or tags, so those library filters skip them.
+ */
+export type CollectionItem = {
+  key: string;
+  name: string;
+  search: readonly string[];
+  sport?: WorkoutSport;
+  bucket?: DurationBucket;
+  durationSec: number;
+  tss: number;
+  intensityFactor?: number | null;
+  category?: CatalogCategory;
+  level?: CatalogLevel;
+  tags?: readonly string[];
+};
+
+export function describeCatalogEntry({ workout, metrics, bucket }: CatalogEntry): CollectionItem {
+  return {
+    key: workout.slug, name: workout.name, search: catalogSearchFields(workout), sport: workout.sport, bucket,
+    durationSec: metrics.durationSec, tss: metrics.tss, intensityFactor: metrics.intensityFactor,
+    category: workout.category, level: workout.level, tags: workout.tags,
+  };
+}
+
+const anyOf = <T>(selected: readonly T[], value: T | undefined) => selected.length === 0 || value === undefined || selected.includes(value);
+const within = (min: number | null, max: number | null, value: number | null | undefined) =>
+  value === undefined || value === null || ((min === null || value >= min) && (max === null || value <= max));
+
+/** Both Workouts tabs filter and sort through this one function. */
+export function filterCollection<T>(items: readonly T[], query: CatalogQuery, describe: (item: T) => CollectionItem): T[] {
+  const tags = query.tags.map(fold);
+  const described = items.map((item) => ({ item, info: describe(item) }));
+  const matches = described.filter(({ info }) =>
+    (info.sport === undefined || info.sport === query.sport)
+    && anyOf(query.categories, info.category)
+    && anyOf(query.levels, info.level)
+    && anyOf(query.durations, info.bucket)
+    && (tags.length === 0 || info.tags === undefined || tags.every((tag) => info.tags!.some((candidate) => fold(candidate) === tag)))
+    && within(query.tssMin, query.tssMax, info.tss)
+    && within(query.ifMin, query.ifMax, info.intensityFactor)
+    && matchesSearch(info.search, query.q));
+  return sortDescribed(matches, query.sort).map(({ item }) => item);
+}
+
+function sortDescribed<T extends { info: CollectionItem }>(entries: readonly T[], sort: CatalogSort): T[] {
+  const byName = (left: T, right: T) => left.info.name.localeCompare(right.info.name, 'en') || left.info.key.localeCompare(right.info.key);
+  const compare: Record<CatalogSort, (left: T, right: T) => number> = {
     name: byName,
-    'duration-asc': (left, right) => left.metrics.durationSec - right.metrics.durationSec || byName(left, right),
-    'duration-desc': (left, right) => right.metrics.durationSec - left.metrics.durationSec || byName(left, right),
-    'tss-asc': (left, right) => left.metrics.tss - right.metrics.tss || byName(left, right),
-    'tss-desc': (left, right) => right.metrics.tss - left.metrics.tss || byName(left, right),
+    'duration-asc': (left, right) => left.info.durationSec - right.info.durationSec || byName(left, right),
+    'duration-desc': (left, right) => right.info.durationSec - left.info.durationSec || byName(left, right),
+    'tss-asc': (left, right) => left.info.tss - right.info.tss || byName(left, right),
+    'tss-desc': (left, right) => right.info.tss - left.info.tss || byName(left, right),
   };
   return [...entries].sort(compare[sort]);
 }
+
+export function filterCatalog(entries: readonly CatalogEntry[], query: CatalogQuery): CatalogEntry[] {
+  return filterCollection(entries, query, describeCatalogEntry);
+}
+
 
 type ParamSource = URLSearchParams | Record<string, string | string[] | undefined>;
 
@@ -198,7 +273,7 @@ function readNumber(source: ParamSource, key: string, min: number, max: number):
 /** Reads the library filter state from URL search params; unknown values are dropped. */
 export function parseCatalogQuery(source: ParamSource): CatalogQuery {
   const sort = readParam(source, 'sort');
-  const sport = CATALOG_SPORTS.find((entry) => entry.param === readParam(source, 'sport'))?.id ?? DEFAULT_CATALOG_SPORT;
+  const sport = WORKOUT_SPORTS.find((entry) => entry.param === readParam(source, 'sport'))?.id ?? DEFAULT_CATALOG_SPORT;
   return {
     sport,
     q: readParam(source, 'q').trim().slice(0, 80),
@@ -218,7 +293,7 @@ export function parseCatalogQuery(source: ParamSource): CatalogQuery {
 /** Serializes only non-default values, so an unfiltered library has a clean URL. */
 export function serializeCatalogQuery(query: CatalogQuery): string {
   const params = new URLSearchParams();
-  if (query.sport !== DEFAULT_CATALOG_SPORT) params.set('sport', CATALOG_SPORTS.find((entry) => entry.id === query.sport)!.param);
+  if (query.sport !== DEFAULT_CATALOG_SPORT) params.set('sport', WORKOUT_SPORTS.find((entry) => entry.id === query.sport)!.param);
   if (query.q.trim()) params.set('q', query.q.trim());
   if (query.categories.length) params.set('category', query.categories.join(','));
   if (query.levels.length) params.set('level', query.levels.join(','));

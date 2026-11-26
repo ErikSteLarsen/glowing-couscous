@@ -159,6 +159,7 @@ export function TopBar({
   description,
   eyebrow,
   actions,
+  titleAside,
   back,
   align = 'left',
 }: {
@@ -166,6 +167,8 @@ export function TopBar({
   description?: string;
   eyebrow?: ReactNode;
   actions?: ReactNode;
+  /** A control that belongs with the title, such as the page's sport, set right after it. */
+  titleAside?: ReactNode;
   back?: BackTarget;
   align?: 'left' | 'center';
 }) {
@@ -173,7 +176,12 @@ export function TopBar({
   const titleBlock = (
     <div className={isCentered ? 'space-y-1.5 text-center' : 'min-w-0 space-y-1.5'}>
       {eyebrow ? <p className={`data ${eyebrowClassName}`}>{eyebrow}</p> : null}
-      <h1 className={pageHeadingClassName}>{title}</h1>
+      {titleAside ? (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <h1 className={pageHeadingClassName}>{title}</h1>
+          {titleAside}
+        </div>
+      ) : <h1 className={pageHeadingClassName}>{title}</h1>}
       {description ? (
         <p className={`text-sm leading-relaxed text-[var(--text-muted)] ${isCentered ? 'mx-auto max-w-2xl' : 'max-w-3xl'}`}>
           {description}

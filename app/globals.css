@@ -241,6 +241,12 @@
   --metric-fatigue: #C08AE8;
   --metric-form: #F0A84A;
 
+  /* Sport identity on workout cards: a tinted square behind the sport icon. */
+  --sport-bike: var(--color-trace);
+  --sport-run: #E9A35B;
+  --sport-swim: #8F9CF7;
+  --sport-other: #A3AEBB;
+
   --overlay: rgb(3 6 10 / 0.66);
   --nav-surface: var(--color-ground);
   --nav-text: var(--color-ink-1);
@@ -263,6 +269,10 @@
  * untouched; Ride mode stays on the night instrument in both themes.
  */
 :root[data-workspace-theme="light"] {
+  --sport-bike: #1C7BA2;
+  --sport-run: #B0601A;
+  --sport-swim: #4F5FD0;
+  --sport-other: #5D6978;
   color-scheme: light;
   --color-zone-1: #5B7A99;
   --color-zone-2: #2B9478;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { formLabelClassName, formSelectClassName, primaryButtonClassName, secondaryButtonClassName, dangerTextClassName } from '@/components/ui';
 import { GUIDED_DURATIONS, GUIDED_INTENSITIES, GUIDED_SPORTS, type GuidedWorkoutInput } from '@/lib/guided-workout';
@@ -20,6 +20,7 @@ export function GuidedWorkoutForm({ onGenerated, onCancel }: {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [aiStatus, setAiStatus] = useState<'available' | 'unavailable' | 'checking'>('checking');
+  const formRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -40,6 +41,7 @@ export function GuidedWorkoutForm({ onGenerated, onCancel }: {
 
   async function generate() {
     if (pending) return;
+    const form = formRef.current;
     setPending(true);
     setError('');
     try {
@@ -53,6 +55,8 @@ export function GuidedWorkoutForm({ onGenerated, onCancel }: {
         setError(result.error ?? 'Could not build a workout. Try again.');
         return;
       }
+      // Closed while waiting (Cancel, another tab, browser Back): drop the result.
+      if (!form?.isConnected) return;
       onGenerated(normalizeSessionEditorDraft(result.draft), {
         source: result.source,
         selectedPattern: result.selectedPattern,
@@ -66,7 +70,7 @@ export function GuidedWorkoutForm({ onGenerated, onCancel }: {
     }
   }
 
-  return <section aria-labelledby="guided-workout-title" className="space-y-5 border-y border-[var(--border)] bg-[var(--surface)] px-4 py-5 sm:px-6">
+  return <section ref={formRef} aria-labelledby="guided-workout-title" className="space-y-5 border-y border-[var(--border)] bg-[var(--surface)] px-4 py-5 sm:px-6">
     <div className="space-y-1">
       <h3 id="guided-workout-title" className="text-base font-semibold text-[var(--text)]">Build a guided workout</h3>
       <p className="max-w-[65ch] text-sm leading-6 text-[var(--text-secondary)]">Pick four things. TempoBuilder looks at your last four weeks of training and suggests a workout you can edit before you save it. When AI is on, TempoBuilder sends a short summary of that training to an AI service. Your notes and recorded data stay in TempoBuilder.</p>

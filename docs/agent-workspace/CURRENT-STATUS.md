@@ -7,6 +7,25 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- Workouts controls and shared filters (2026-11-26, branch
+  `t3/workouts-shared-filters`). Both tabs share one URL-backed query
+  (`useCollectionQuery`), one toolbar (`CollectionControls`) and one filter
+  function (`filterCollection`). One page sport (default Bike, plus Other for
+  saved non-library sports) sits in a ghost chooser beside the Workouts title
+  and drives both lists and tab counts. New workout is at the right end of the
+  search row on both tabs; on phones Filters and New workout are icon buttons
+  on that row. Workout cards carry a tinted sport badge. My workouts' Sport
+  filter group is gone and its Name sort now sorts by name. `pnpm test`, lint,
+  types, dead code and build passed. Chromium (local demo athlete) at 1440 and
+  390 px, dark theme: sport switching, URL, counts, reload, shared search
+  across tabs and the New workout menu worked with no overflow or page errors.
+  After review: Clear search and Clear filters touch only the active tab's
+  filters, leaving My workouts closes the guided form (late results are
+  dropped), a workout built from the library tab lands in My workouts on its
+  sport, and the saved-workout detail Back keeps its sport. The coach fallback
+  library no longer has a Sport filter (coach routes redirect today). Light
+  theme was not checked in the browser.
+
 - TempoBuilder rename (2026-11-26, released to `main` after the Home week day
   picker, Start workout and Training trends work). Wattonaut becomes
   TempoBuilder in names, docs, identifiers, files and dev env vars (`TEMPOBUILDER_URL`, `TEMPOBUILDER_TEST_DATABASE_URL`,

@@ -666,16 +666,28 @@ has saved workouts and **Public library** otherwise. The URL carries the
 explicit tab and any catalog filters. The mobile navigation drawer links to
 Training plans.
 
-Public library shows one sport at a time. Its results heading ("Bike workouts" and
-the count) states the sport and opens the menu that changes it; add no other sport
-control. Bike is the default and stays out of the URL. Changing sport keeps search
-and sort and clears the filters. Counts, the tab badge and "N of M" are for the
-chosen sport. Detail pages put the sport badge first. Run and swim workouts show
+Both tabs show one sport at a time, chosen once for the page. The sport
+control sits right after the **Workouts** title. It is a ghost control: sport
+icon, short name and a brand chevron, with no border or fill until hovered or
+open. Its menu lists Bike, Run and Swim with counts for the active tab, plus
+Other when saved workouts use another sport. Add no other sport control. Bike
+is the default and stays out of the URL. Changing sport keeps search and sort
+and clears the filters. Counts, both tab badges and "N of M" are for the chosen
+sport. An empty sport offers the other sports that have matches.
+
+Both tabs share one query (`useCollectionQuery`) and one toolbar
+(`CollectionControls`): search, Filters and New workout on one row, with New
+workout at the right end. On phones the row stays single: Filters becomes an
+icon button with a count badge and New workout a square **+** opening the same
+menu. The query lives in the URL for both tabs, so search, sport and filters
+survive Back, reload and tab switches. Library-only filters (focus, level,
+tags) skip saved workouts. Cards put a sport badge before the sport name: a
+small tinted square with the sport icon (`SportBadge`, `--sport-*` tokens). Detail pages put the sport badge first. Run and swim workouts show
 zones, never FTP, IF, normalized power or watts; swim sets show distance, with their
 times marked "est.". **Used in plans** under the block list links to Training plans.
 
-Keep **New workout** on **My workouts**. Its menu includes **Start from
-public library**. Catalog cards open a read-only detail page and offer
+Show **New workout** on both tabs. On My workouts its menu also includes
+**Start from public library**. Catalog cards open a read-only detail page and offer
 **Customize** and **Schedule** in their More options menu. On the detail
 page, keep **Start workout** and **Schedule** visible and **Customize** in
 More options. Catalog detail links opened from Workouts return to its

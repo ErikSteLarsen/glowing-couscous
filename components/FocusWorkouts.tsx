@@ -3,10 +3,12 @@
 import type { ComponentProps, KeyboardEvent, ReactNode } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { LibraryBrowser } from '@/components/library/LibraryBrowser';
+import { useCollectionQuery } from '@/components/library/useCollectionQuery';
+import { WorkoutSportChooser } from '@/components/library/WorkoutSportChooser';
 import { WorkoutLibraryClient } from '@/components/WorkoutLibraryClient';
 import { TopBar, getSwitchOptionClassName, switchTrackClassName } from '@/components/ui';
 import { athleteWorkoutsHref, myWorkoutHref, resolveWorkoutTab, type WorkoutTab } from '@/lib/athlete-workouts-navigation';
-import { countCatalogBySport, parseCatalogQuery, type CatalogEntry } from '@/lib/workout-catalog/query';
+import { countCatalogBySport, emptySportCounts, parseCatalogQuery, switchCatalogSport, toWorkoutSport, type CatalogEntry, type WorkoutSport } from '@/lib/workout-catalog/query';
 
 const labels = {
   mine: { title: 'My workouts', hint: 'Workouts you’ve saved. Open one to start, schedule or edit it.' },
@@ -20,10 +22,15 @@ type Props = Omit<ComponentProps<typeof WorkoutLibraryClient>, 'role' | 'listInt
 export function FocusWorkouts({ catalogEntries, ...libraryProps }: Props) {
   const searchParams = useSearchParams();
   const tab = resolveWorkoutTab(searchParams.get('tab'), libraryProps.workouts.length);
-  const catalogQuery = parseCatalogQuery(new URLSearchParams(searchParams));
+  const [query, updateQuery] = useCollectionQuery(parseCatalogQuery(new URLSearchParams(searchParams)), tab);
+  // One sport for the whole page: counts, the tab badges and both lists follow it.
+  const sportCounts: Record<WorkoutTab, Record<WorkoutSport, number>> = {
+    mine: countOwnedBySport(libraryProps.workouts),
+    library: catalogEntries ? countCatalogBySport(catalogEntries) : emptySportCounts(),
+  };
   const tabs = [
-    { id: 'mine', count: libraryProps.workouts.length },
-    { id: 'library', count: catalogEntries ? countCatalogBySport(catalogEntries)[catalogQuery.sport] : 0 },
+    { id: 'mine', count: sportCounts.mine[query.sport] },
+    { id: 'library', count: sportCounts.library[query.sport] },
   ] satisfies { id: WorkoutTab; count: number }[];
 
   function selectTab(next: WorkoutTab, focus = false) {
@@ -53,6 +60,14 @@ export function FocusWorkouts({ catalogEntries, ...libraryProps }: Props) {
       <div className="mb-6">
         <TopBar
           title="Workouts"
+          titleAside={catalogEntries ? (
+            <WorkoutSportChooser
+              sport={query.sport}
+              counts={sportCounts[tab]}
+              showOther={sportCounts.mine.OTHER > 0}
+              onChange={(sport) => updateQuery(switchCatalogSport(query, sport))}
+            />
+          ) : null}
           description={catalogEntries
             ? 'Your saved workouts and a library of ready-made ones.'
             : 'Workouts you can reuse. Adding one to your Calendar puts a copy there, so this version stays as it is.'}
@@ -99,12 +114,21 @@ export function FocusWorkouts({ catalogEntries, ...libraryProps }: Props) {
         collections={catalogEntries ? {
           tab,
           onBrowse: () => selectTab('library', true),
+          onShowMine: () => selectTab('mine'),
+          query,
+          onQueryChange: updateQuery,
           otherPanels: [{
             id: 'library',
-            content: <LibraryBrowser entries={catalogEntries} urlQuery={catalogQuery} />,
+            content: ({ newWorkout }) => <LibraryBrowser entries={catalogEntries} query={query} onChange={updateQuery} action={newWorkout} />,
           }],
         } : null}
       />
     </main>
   );
+}
+
+function countOwnedBySport(workouts: readonly { sport: string }[]) {
+  const counts = emptySportCounts();
+  for (const workout of workouts) counts[toWorkoutSport(workout.sport)] += 1;
+  return counts;
 }

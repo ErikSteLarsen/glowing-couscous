@@ -85,7 +85,7 @@ export function MyWorkoutActions({ id, name, sport, durationSec, hasSteps }: { i
           setError(payload.error ?? 'Could not delete this workout. Try again.');
           return;
         }
-        router.replace(myWorkoutsHref());
+        router.replace(myWorkoutsHref(sport));
         router.refresh();
       } catch {
         setError('Could not reach TempoBuilder. Check your connection and try again.');

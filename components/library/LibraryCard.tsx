@@ -3,6 +3,7 @@ import { CatalogProfile } from '@/components/library/CatalogProfile';
 import { WorkoutCard, WorkoutCardFooter, WorkoutCardHeader, WorkoutCardMeta, WorkoutCardProfile, WorkoutCardSummary } from '@/components/library/WorkoutCard';
 import { WorkoutStartChooser } from '@/components/WorkoutStartChooser';
 import { compactSecondaryButtonClassName } from '@/components/ui';
+import { SportBadge } from '@/components/tempobuilder/SportBadge';
 import { formatMeters } from '@/lib/format-distance';
 import { formatDuration } from '@/lib/format-duration';
 import { expandCatalogItems } from '@/lib/workout-catalog/metrics';
@@ -20,7 +21,7 @@ export function LibraryCard({ entry, from, headingLevel }: { entry: CatalogEntry
         <CatalogProfile steps={steps} idPrefix={`card-${workout.slug}`} label={`${workout.name} intensity profile, ${formatDuration(metrics.durationSec)}${bike ? `, peak ${Math.round(metrics.maxPct)}% FTP` : ''}`} className="h-14" />
       </WorkoutCardProfile>
       <WorkoutCardHeader level={headingLevel} href={href} aside={formatDuration(metrics.durationSec)}>{workout.name}</WorkoutCardHeader>
-      <WorkoutCardMeta><span>{categoryLabel(workout.category)}</span>{' '}<span>{levelLabel(workout.level)}</span></WorkoutCardMeta>
+      <WorkoutCardMeta><SportBadge sport={workout.sport} />{' '}<span>{categoryLabel(workout.category)}</span>{' '}<span>{levelLabel(workout.level)}</span></WorkoutCardMeta>
       <WorkoutCardSummary>{workout.summary}</WorkoutCardSummary>
       <WorkoutCardFooter
         metrics={[

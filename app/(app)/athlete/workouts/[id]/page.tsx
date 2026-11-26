@@ -45,7 +45,7 @@ export default async function MyWorkoutPage({ params }: Params) {
 
   return (
     <WorkoutDetail
-      back={{ href: myWorkoutsHref(), destination: 'Workouts', label: 'Back to Workouts' }}
+      back={{ href: myWorkoutsHref(workout.sport), destination: 'Workouts', label: 'Back to Workouts' }}
       title={workout.title}
       description={summary.lead}
       badges={[{ label: getSportLabel(workout.sport), tone: 'brand' }, ...(peakZone ? [{ label: peakZone.name }] : [])]}

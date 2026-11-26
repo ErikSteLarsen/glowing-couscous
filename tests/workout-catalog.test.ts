@@ -5,7 +5,7 @@ import { workoutCatalog } from '../lib/workout-catalog/index.ts';
 import type { CatalogWorkout } from '../lib/workout-catalog/types.ts';
 import { catalogWorkoutMetrics, computeCatalogMetrics, expandCatalogItems, zoneForPct } from '../lib/workout-catalog/metrics.ts';
 import {
-  countCatalogBySport, createCatalogEntries, durationBucketFor, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, matchesCatalogSearch, parseCatalogQuery, serializeCatalogQuery, switchCatalogSport, withCatalogQuery,
+  countCatalogBySport, countCollectionBySport, createCatalogEntries, filterCollection, toWorkoutSport, durationBucketFor, EMPTY_CATALOG_QUERY, filterCatalog, isCatalogQueryFiltered, listCatalogFilters, matchesCatalogSearch, parseCatalogQuery, serializeCatalogQuery, switchCatalogSport, withCatalogQuery,
 } from '../lib/workout-catalog/query.ts';
 import { catalogStepNote, catalogWorkoutToEditorBlocks, catalogWorkoutToSessionInput, createCatalogWorkoutDraft } from '../lib/workout-catalog/session.ts';
 import { validateCatalog, validateCatalogWorkout } from '../lib/workout-catalog/validate.ts';
@@ -203,8 +203,8 @@ test('switching sport keeps search and sort, and drops filters that belong to th
 
 test('sport counts cover the whole catalog and follow the search text', () => {
   const entries = createCatalogEntries([workout(), workout({ slug: 'r', sport: 'RUNNING', name: 'Easy jog' }), workout({ slug: 's', sport: 'SWIMMING', name: 'Easy lengths' })]);
-  assert.deepEqual(countCatalogBySport(entries), { BIKING: 1, RUNNING: 1, SWIMMING: 1 });
-  assert.deepEqual(countCatalogBySport(entries, 'lengths'), { BIKING: 0, RUNNING: 0, SWIMMING: 1 });
+  assert.deepEqual(countCatalogBySport(entries), { BIKING: 1, RUNNING: 1, SWIMMING: 1, OTHER: 0 });
+  assert.deepEqual(countCatalogBySport(entries, 'lengths'), { BIKING: 0, RUNNING: 0, SWIMMING: 1, OTHER: 0 });
 });
 
 test('swim distance counts every repeat, and run and swim zone times match the copied session', () => {
@@ -215,4 +215,30 @@ test('swim distance counts every repeat, and run and swim zone times match the c
     const draft = createEmptySessionEditorDraft(catalogWorkoutToSessionInput(entry));
     assert.deepEqual(catalogWorkoutMetrics(entry).zoneSec, deriveSessionEditorMetrics(draft).zoneDistributionSec, entry.slug);
   }
+});
+
+test('saved and public workouts share one filter: library-only filters skip saved workouts, and other sports group as Other', () => {
+  type Saved = { id: number; title: string; notes: string; sport: string; durationSec: number; tss: number };
+  const saved: Saved[] = [
+    { id: 1, title: 'Sweet spot 3x12', notes: 'Trainer', sport: 'BIKING', durationSec: 3900, tss: 70 },
+    { id: 2, title: 'Easy run', notes: 'Grass loop', sport: 'RUNNING', durationSec: 2400, tss: 30 },
+    { id: 3, title: 'Core and hips', notes: '', sport: 'STRENGTH', durationSec: 1800, tss: 0 },
+    { id: 4, title: 'Long ride', notes: 'Hills', sport: 'BIKING', durationSec: 9000, tss: 150 },
+  ];
+  const describe = (item: Saved) => ({
+    key: String(item.id), name: item.title, search: [item.title, item.notes], sport: toWorkoutSport(item.sport),
+    bucket: durationBucketFor(item.durationSec), durationSec: item.durationSec, tss: item.tss,
+  });
+  const ids = (query: Partial<typeof EMPTY_CATALOG_QUERY>) => filterCollection(saved, { ...EMPTY_CATALOG_QUERY, ...query }, describe).map((item) => item.id);
+
+  assert.deepEqual(ids({}), [4, 1], 'Bike by default, sorted by name');
+  assert.deepEqual(ids({ categories: ['threshold'], levels: ['advanced'], tags: ['climb'] }), [4, 1]);
+  assert.deepEqual(ids({ durations: ['over-120'] }), [4]);
+  assert.deepEqual(ids({ q: 'TRAINER sweet' }), [1]);
+  assert.deepEqual(ids({ sport: 'OTHER' }), [3]);
+  assert.deepEqual(ids({ sort: 'duration-asc' }), [1, 4]);
+  assert.deepEqual(countCollectionBySport(saved, describe), { BIKING: 2, RUNNING: 1, SWIMMING: 0, OTHER: 1 });
+  assert.deepEqual(countCollectionBySport(saved, describe, 'loop'), { BIKING: 0, RUNNING: 1, SWIMMING: 0, OTHER: 0 });
+  assert.equal(parseCatalogQuery({ sport: 'other' }).sport, 'OTHER');
+  assert.equal(serializeCatalogQuery({ ...EMPTY_CATALOG_QUERY, sport: 'OTHER' }), 'sport=other');
 });

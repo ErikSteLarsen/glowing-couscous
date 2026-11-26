@@ -37,6 +37,9 @@ test('library back targets open the workout’s own sport and other origins stay
 test('saved workouts have a detail page, and Edit from it returns there', () => {
   assert.equal(myWorkoutHref(7), '/athlete/workouts/7');
   assert.equal(myWorkoutsHref(), '/athlete/workouts?tab=mine');
+  assert.equal(myWorkoutsHref('BIKING'), '/athlete/workouts?tab=mine');
+  assert.equal(myWorkoutsHref('RUNNING'), '/athlete/workouts?tab=mine&sport=run');
+  assert.equal(myWorkoutsHref('STRENGTH'), '/athlete/workouts?tab=mine&sport=other');
   assert.equal(editWorkoutHref(7), '/athlete/workouts?edit=7');
   assert.equal(editWorkoutHref(7, 'detail'), '/athlete/workouts?edit=7&from=detail');
 });

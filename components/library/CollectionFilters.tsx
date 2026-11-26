@@ -8,9 +8,9 @@ import {
 } from '@/components/ui';
 
 /**
- * Filters for every workout collection (Public library and My workouts): one
- * Filters button beside search, active filters as removable chips, and a dialog
- * of chip groups with a sort select. Each tab supplies only the groups its data supports.
+ * Parts of the shared Workouts filters (see `CollectionControls`): the Filters
+ * button beside search (icon only on phones), active filters as removable chips,
+ * and a dialog of chip groups with a sort select.
  */
 export const filterChipClassName = (selected: boolean) => `inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium transition-colors max-md:min-h-11 ${buttonFocusClassName} ${
   selected
@@ -24,12 +24,12 @@ export function FiltersButton({ activeCount, onOpen }: { activeCount: number; on
       type="button"
       aria-haspopup="dialog"
       aria-label={activeCount ? `Filters, ${activeCount} active` : 'Filters'}
-      className={`${secondaryButtonClassName} shrink-0 max-md:min-h-11`}
+      className={`${secondaryButtonClassName} relative shrink-0 max-md:min-h-11 max-sm:w-11 max-sm:px-0`}
       onClick={onOpen}
     >
       <SlidersHorizontal aria-hidden="true" size={16} strokeWidth={1.6} />
-      Filters
-      {activeCount ? <span aria-hidden="true" className="data inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--brand)] px-1.5 text-[12px] font-semibold leading-5 text-[var(--signal-ink)]">{activeCount}</span> : null}
+      <span aria-hidden="true" className="max-sm:hidden">Filters</span>
+      {activeCount ? <span aria-hidden="true" className="data inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--brand)] px-1.5 text-[12px] font-semibold leading-5 text-[var(--signal-ink)] max-sm:absolute max-sm:-right-1.5 max-sm:-top-1.5">{activeCount}</span> : null}
     </button>
   );
 }
