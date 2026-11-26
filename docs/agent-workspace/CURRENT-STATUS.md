@@ -13,7 +13,7 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   columns are top-aligned and size to their own content. Owner:
   `components/HomeWeekDays.tsx`. `pnpm test` (643), lint, types and build
   passed; Chromium checked the demo athlete's Home at 390, 1024 and 1440 px,
-  including switching days.
+  including switching days, 44 px chips at 320 px and light theme.
 
 - Mobile bottom navigation removed (2026-11-26). The hamburger drawer is the
   only mobile navigation; it already lists Home, Calendar, Workouts, Training

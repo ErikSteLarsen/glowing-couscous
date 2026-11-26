@@ -267,6 +267,7 @@ export default async function AthletePage() {
           </div>
         ) : null}
         <HomeWeekDays
+          key={dashboard.todayKey}
           days={dashboard.weekDays.map((day) => {
             const weekday = format(fromDayKey(day.isoDate), 'EEEE');
             const dayDurationSec = day.sessions.reduce((total, session) => total + session.durationSec, 0);

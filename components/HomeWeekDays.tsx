@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from 'react';
 import { complianceColors } from '@/components/wattonaut/ComplianceMark';
-import type { ComplianceState } from '@/lib/training-load';
+import { complianceLabels, type ComplianceState } from '@/lib/training-load';
 
 export type HomeWeekDay = {
   isoDate: string;
@@ -15,19 +15,14 @@ export type HomeWeekDay = {
   panel: ReactNode;
 };
 
-const MAX_CHIP_DOTS = 4;
-
 function chipLabel(day: HomeWeekDay): string {
   const count = day.marks.length;
-  const workouts = count === 0 ? 'rest' : `${count} ${count === 1 ? 'workout' : 'workouts'}`;
-  return `${day.longLabel}${day.isToday ? ', today' : ''}, ${workouts}`;
-}
-
-/** Shows up to four dots; more workouts show three dots and a "+N" count. */
-function splitChipDots(marks: ComplianceState[]): { dots: ComplianceState[]; hiddenCount: number } {
-  if (marks.length <= MAX_CHIP_DOTS) return { dots: marks, hiddenCount: 0 };
-  const dots = marks.slice(0, MAX_CHIP_DOTS - 1);
-  return { dots, hiddenCount: marks.length - dots.length };
+  const today = day.isToday ? ', today' : '';
+  if (count === 0) return `${day.longLabel}${today}, rest`;
+  const byState = new Map<ComplianceState, number>();
+  for (const state of day.marks) byState.set(state, (byState.get(state) ?? 0) + 1);
+  const breakdown = [...byState].map(([state, n]) => `${n} ${complianceLabels[state].toLowerCase()}`).join(', ');
+  return `${day.longLabel}${today}, ${count} ${count === 1 ? 'workout' : 'workouts'}: ${breakdown}`;
 }
 
 /**
@@ -39,10 +34,10 @@ export function HomeWeekDays({ days }: { days: HomeWeekDay[] }) {
 
   return (
     <div className="space-y-2.5">
-      <div className="grid grid-cols-7 gap-1 md:hidden" role="group" aria-label="Choose a day">
+      {/* Below 380px the row bleeds into the page gutter so seven chips stay 44px wide. */}
+      <div className="grid grid-cols-7 gap-1 max-[379px]:-mx-5 max-[379px]:gap-0.5 md:hidden" role="group" aria-label="Choose a day">
         {days.map((day) => {
           const isSelected = day.isoDate === selected;
-          const { dots, hiddenCount } = splitChipDots(day.marks);
           return (
             <button
               key={day.isoDate}
@@ -53,21 +48,20 @@ export function HomeWeekDays({ days }: { days: HomeWeekDay[] }) {
               onClick={() => setSelected(day.isoDate)}
               className={`flex min-h-14 min-w-0 flex-col items-center justify-center rounded-[10px] border px-0 py-1.5 text-[11px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] ${
                 isSelected
-                  ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)] text-[var(--brand)]'
+                  ? 'border-[var(--field-selected-border)] bg-[var(--brand-tint)] text-[var(--field-selected-text)]'
                   : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)]'
               } ${day.isToday ? 'shadow-[inset_0_-2px_0_var(--brand)]' : ''}`}
             >
               <span>{day.label}</span>
-              <span className={`data text-[15px] font-medium leading-tight ${isSelected ? 'text-[var(--brand)]' : 'text-[var(--text)]'}`}>{day.dateLabel}</span>
-              <span aria-hidden="true" className="mt-1 flex h-1.5 items-center gap-[3px]">
-                {dots.map((state, index) => (
+              <span className={`data text-[15px] font-medium leading-tight ${isSelected ? 'text-[var(--field-selected-text)]' : 'text-[var(--text)]'}`}>{day.dateLabel}</span>
+              <span aria-hidden="true" className="mt-1 flex min-h-1.5 max-w-[33px] flex-wrap items-center justify-center gap-[3px]">
+                {day.marks.map((state, index) => (
                   <span
                     key={index}
                     className="size-1.5 rounded-full"
                     style={state === 'planned' ? { boxShadow: 'inset 0 0 0 1.25px var(--text-muted)' } : { background: complianceColors[state] }}
                   />
                 ))}
-                {hiddenCount > 0 ? <span className="text-[9px] leading-none text-[var(--text-muted)]">+{hiddenCount}</span> : null}
               </span>
             </button>
           );
