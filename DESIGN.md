@@ -402,12 +402,34 @@ Page headers do not repeat sibling destinations.
 
 Every runnable workout shows one **Start workout** button that opens the shared
 chooser (`components/WorkoutStartChooser.tsx`; options from `lib/workout-start.ts`).
-The chooser lists only the modes this workout and device support, with one
-sentence each, and asks every time. Never add a direct Live, Ride or desktop
-link beside it; completed, skipped and stepless sessions show no start. Runs offer Follow along
-only. Swims can't be started: Schedule becomes the primary action on their detail
+The chooser lists only the modes this workout and device support and asks every
+time. Each option is a row with an icon, its name and a few words; the full
+explanations sit behind **Which one should I pick?** (**How it works** for a
+single option). When a bike workout has more than one option, the best one for
+this device stands alone as **Recommended**, with the reason in place of its
+hint, above **Other ways to start**: riding in this browser when it has
+Bluetooth, otherwise the desktop app on a computer, otherwise the Block timer.
+Never add a direct Live, Ride or desktop link beside it; completed, skipped and
+stepless sessions show no start. Runs offer the Block timer only (the Live
+screen; formerly Follow along). Swims can't be started: Schedule becomes the primary action on their detail
 pages with one line saying so, Mark as done is primary on the planned workout, and
 `/athlete/live/<id>` explains this with a link back to the workout.
+
+### Block timer
+
+`/athlete/live/<id>` is full-bleed like the Ride screen: a slim header (back,
+title, Beeps toggle, ⋯ with spoken cues and Restart workout), the current block
+card, a Done/Left tile with the workout strip, and a fixed bottom bar with
+**Previous**, the round main button (**Start**, **Pause**, **Resume**, **Mark as
+done**) and **Next block**. One Start runs the whole workout: a timed block
+moves straight into the next, catching up time spent with the screen off. Open
+blocks show **No set time** and wait for Next block. Soft beeps count the last
+three seconds and mark each new block; beeps and spoken cues are both off by
+default, and nothing vibrates. A block without its own target shows its zone's
+Olympiatoppen heart-rate range from the maximum heart rate ("I-4 – 166–175
+bpm"); Olympiatoppen HRmax targets use the same I-level label. The screen stays awake while it
+runs. The countdown, spacing and bar scale with screen height so the block,
+target, clock, next block and controls fit on short phones.
 
 ### Primary and secondary actions
 

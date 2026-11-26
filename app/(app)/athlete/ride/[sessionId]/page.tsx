@@ -64,10 +64,10 @@ export default async function AthleteRidePage({
         <TopBar back={back} title={`Ride ${detail.session.title}`} />
         <EmptyState
           title="Trainer rides are for bike workouts"
-          description={canFollowAlong ? 'Follow this workout block by block.' : 'Open the workout page to check the plan.'}
+          description={canFollowAlong ? 'Time this workout block by block.' : 'Open the workout page to check the plan.'}
           action={(
             <ActionLink href={withBackOrigin(`/athlete/${canFollowAlong ? 'live' : 'session'}/${detail.session.id}`, parseBackOrigin('session-live', from))}>
-              {canFollowAlong ? 'Follow along' : 'Open workout'}
+              {canFollowAlong ? 'Use the block timer' : 'Open workout'}
             </ActionLink>
           )}
         />

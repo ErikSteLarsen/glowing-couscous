@@ -8,6 +8,7 @@ import {
   completeCurrentExecution,
   createExecutionState,
   createExecutionSteps,
+  executionElapsedSeconds,
   getExecutionTimerRemainingMs,
   idleExecutionTimer,
   isExecutionComplete,
@@ -19,7 +20,9 @@ import {
   resolveExecutionTimer,
   restartExecution,
   serializeExecutionProgress,
+  settleExecution,
   skipCurrentExecution,
+  startExecutionBlock,
   startExecutionTimer,
 } from '../lib/athlete-execution.ts';
 import { createSessionEditorBlock, createEmptySessionEditorDraft, deriveSessionEditorMetrics } from '../lib/session-editor.ts';
@@ -183,4 +186,56 @@ test('execution steps keep the bare prescription so a rider without FTP can stil
   const profile = createEmptyPerformanceProfile();
   profile.cycling.ftpWatts = 200;
   assert.equal(createExecutionSteps(blocks, 'BIKING', profile)[0].prescribedTarget, '75% FTP');
+});
+
+const timedSteps = [
+  { id: 'effort:0', label: 'Effort', durationSec: 180, targetLabel: null, prescribedTarget: null, note: '' },
+  { id: 'recovery:0', label: 'Recovery', durationSec: 120, targetLabel: null, prescribedTarget: null, note: '' },
+  { id: 'open:0', label: 'Drills', durationSec: 0, targetLabel: null, prescribedTarget: null, note: '' },
+  { id: 'cooldown:0', label: 'Cool-down', durationSec: 60, targetLabel: null, prescribedTarget: null, note: '' },
+];
+
+test('a running block timer moves straight into the next block when time runs out', () => {
+  const start = 1_000_000;
+  const state = createExecutionState(timedSteps.length);
+  const timer = startExecutionBlock(timedSteps[0], start);
+  assert.deepEqual(settleExecution(timedSteps, state, timer, start + 179_000), { state, timer });
+
+  const settled = settleExecution(timedSteps, state, timer, start + 181_000);
+  assert.equal(settled.state.currentIndex, 1);
+  assert.equal(settled.state.completed[0], true);
+  // The recovery starts when the effort ended, not when the page noticed.
+  assert.deepEqual(settled.timer, { kind: 'running', endsAt: start + 300_000, durationSec: 120 });
+  assert.equal(executionElapsedSeconds(timedSteps, settled.state, 119), 181);
+});
+
+test('time away from the page is caught up, an untimed block waits, and the last block ends the workout', () => {
+  const start = 2_000_000;
+  const away = settleExecution(timedSteps, createExecutionState(timedSteps.length), startExecutionBlock(timedSteps[0], start), start + 10 * 60_000);
+  assert.equal(away.state.currentIndex, 2);
+  assert.deepEqual(away.timer, { kind: 'open', durationSec: 0 });
+  assert.deepEqual(settleExecution(timedSteps, away.state, away.timer, start + 60 * 60_000), away);
+
+  const last = advanceExecution(away.state);
+  const finished = settleExecution(timedSteps, last, startExecutionBlock(timedSteps[3], start), start + 61_000);
+  assert.equal(isExecutionComplete(finished.state), true);
+  assert.deepEqual(finished.timer, idleExecutionTimer);
+});
+
+test('a paused or open block timer survives a reload', () => {
+  const state = { ...createExecutionState(timedSteps.length), currentIndex: 2 };
+  const open = serializeExecutionProgress(timedSteps, state, { kind: 'open', durationSec: 0 });
+  assert.deepEqual(parseExecutionTimer(open, timedSteps, state), { kind: 'open', durationSec: 0 });
+  const timedState = { ...state, currentIndex: 0 };
+  assert.deepEqual(parseExecutionTimer(serializeExecutionProgress(timedSteps, timedState, { kind: 'open', durationSec: 0 }), timedSteps, timedState), idleExecutionTimer);
+});
+
+test('blocks show Olympiatoppen heart-rate ranges from the maximum heart rate', () => {
+  const profile = { ...createEmptyPerformanceProfile(), heartRateMaxBpm: 190 };
+  const zoneOnly = createSessionEditorBlock({ kind: 'work', zone: 2, durationSec: 600, target: null });
+  const olt = createSessionEditorBlock({ kind: 'work', zone: 5, durationSec: 180, target: { metric: 'hr', mode: 'relative', reference: 'max-hr', low: 92, high: 100 } });
+  const [easy, hard] = createExecutionSteps([zoneOnly, olt], 'RUNNING', profile);
+  assert.equal(easy.targetLabel, 'I-2\u00A0– 137–155 bpm');
+  assert.equal(hard.targetLabel, 'I-5\u00A0– 175-190\u00A0bpm');
+  assert.equal(createExecutionSteps([zoneOnly], 'RUNNING', createEmptyPerformanceProfile())[0].targetLabel, null);
 });

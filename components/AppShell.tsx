@@ -182,8 +182,8 @@ export function AppShell({
     });
   };
 
-  // Riding, the Ride home and the small Send to Wattonaut window are full-bleed: no sidebar, top bar or bottom nav.
-  if (/^\/athlete\/ride(?:\/\d+|\/send)?\/?$/.test(pathname)) {
+  // Riding, the Ride home, the Send to Wattonaut window and the block timer are full-bleed: no sidebar, top bar or bottom nav.
+  if (/^\/athlete\/(?:ride(?:\/\d+|\/send)?|live\/\d+)\/?$/.test(pathname)) {
     return <div id="main" tabIndex={-1} className="ink-studio-app outline-none">{children}</div>;
   }
 

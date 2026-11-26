@@ -1,6 +1,7 @@
 import type { SessionEditorBlock } from './session-editor.ts';
 import type { PerformanceProfile } from './performance-profile.ts';
-import { getTempoZoneMeta } from './tempo-blocks.ts';
+import { getTempoZoneMeta, type TempoZone } from './tempo-blocks.ts';
+import { calculateOlympiatoppenHeartRateZones, OLYMPIATOPPEN_HEART_RATE_PERCENT_BANDS } from './profile-training-zones.ts';
 import { expandRepeatedBlocks } from './workout-blocks.ts';
 import { formatResolvedWorkoutTarget, formatWorkoutTarget } from './workout-target-resolution.ts';
 
@@ -12,25 +13,44 @@ export type ExecutionStep = {
   /** The target as written (e.g. "75% FTP"), without any profile-resolved value. */
   prescribedTarget: string | null;
   note: string;
+  /** Display parts of `label`: the zone (1–5), the block name and its repeat position. */
+  zone?: number;
+  kind?: string;
+  name?: string;
+  rep?: { index: number; count: number } | null;
 };
 
 export function hasExecutionSteps(blocks: ReadonlyArray<{ skipped?: boolean }>): boolean {
   return blocks.some((block) => !block.skipped);
 }
 
-/** The same ordered repetitions as the workout timeline, omitting skipped work. */
+/**
+ * The same ordered repetitions as the workout timeline, omitting skipped work.
+ * A block without its own target is guided by its zone; with a maximum heart
+ * rate it shows that zone's Olympiatoppen heart-rate range (I-1 to I-5).
+ */
 export function createExecutionSteps(blocks: SessionEditorBlock[], sport: string, profile?: PerformanceProfile | null): ExecutionStep[] {
+  const heartRateZones = calculateOlympiatoppenHeartRateZones(profile?.heartRateMaxBpm);
   return expandRepeatedBlocks(blocks.filter((block) => !block.skipped).map((block) => ({ ...block, repetitionCount: block.reps ?? 1 }))).map((block) => {
     const meta = getTempoZoneMeta(block.zone);
     const genericTarget = block.target ? formatWorkoutTarget(block.target) : null;
     const resolvedTarget = block.target?.mode === 'relative' ? formatResolvedWorkoutTarget(block.target, profile, sport) : null;
+    const zoneHeartRate = !block.target && block.kind !== 'pause' ? heartRateZones?.[block.zone as TempoZone] : undefined;
+    const zoneTarget = zoneHeartRate ? `I-${block.zone}\u00A0– ${zoneHeartRate.low}–${zoneHeartRate.high} bpm` : null;
+    const oltLevel = block.target?.metric === 'hr' && block.target.mode === 'relative' && block.target.reference === 'max-hr'
+      ? (Object.entries(OLYMPIATOPPEN_HEART_RATE_PERCENT_BANDS).find(([, band]) => band.low === block.target?.low && band.high === block.target?.high)?.[0] ?? null)
+      : null;
     return {
       id: `${block.clientId}:${block.occurrence}`,
       label: `${block.kind === 'warmup' ? 'Warm-up' : block.kind === 'cooldown' ? 'Cool-down' : `${meta.label} ${meta.name}`}${block.repetitionCount > 1 ? `\u00A0– Rep ${block.occurrence + 1} of ${block.repetitionCount}` : ''}`,
       durationSec: block.durationSec,
-      targetLabel: resolvedTarget ? `${genericTarget}\u00A0– ${resolvedTarget}` : genericTarget,
+      targetLabel: resolvedTarget ? `${oltLevel ? `I-${oltLevel}` : genericTarget}\u00A0– ${resolvedTarget}` : genericTarget ?? zoneTarget,
       prescribedTarget: genericTarget,
       note: block.note,
+      zone: block.zone,
+      kind: block.kind,
+      name: block.kind === 'warmup' ? 'Warm-up' : block.kind === 'cooldown' ? 'Cool-down' : block.kind === 'pause' ? 'Pause' : meta.name,
+      rep: block.repetitionCount > 1 ? { index: block.occurrence + 1, count: block.repetitionCount } : null,
     };
   });
 }
@@ -52,7 +72,9 @@ export type ExecutionTimer =
   | { kind: 'idle' }
   | { kind: 'running'; endsAt: number; durationSec: number }
   | { kind: 'paused'; remainingMs: number; durationSec: number }
-  | { kind: 'elapsed'; durationSec: number };
+  | { kind: 'elapsed'; durationSec: number }
+  /** Running through a block with no set time: it ends when the athlete moves on. */
+  | { kind: 'open'; durationSec: 0 };
 
 export const idleExecutionTimer: ExecutionTimer = { kind: 'idle' };
 
@@ -119,6 +141,7 @@ export function parseExecutionTimer(serialized: string | null, steps: ExecutionS
 
   const timer = value.timer;
   const durationSec = steps[state.currentIndex].durationSec;
+  if (timer.kind === 'open') return durationSec > 0 ? idleExecutionTimer : { kind: 'open', durationSec: 0 };
   if (!Number.isInteger(durationSec) || durationSec <= 0 || timer.durationSec !== durationSec) return idleExecutionTimer;
   if (timer.kind === 'idle') return idleExecutionTimer;
   if (timer.kind === 'running' && typeof timer.endsAt === 'number' && Number.isFinite(timer.endsAt)) {
@@ -255,4 +278,51 @@ export function advanceTimedExecution(
   }
 
   return { state: nextState, remainingSec: 0 };
+}
+
+/** Starts the current block: a countdown for a timed block, or an open block that waits for Next. */
+export function startExecutionBlock(step: ExecutionStep | undefined, now: number): ExecutionTimer {
+  if (!step) return idleExecutionTimer;
+  return step.durationSec > 0 ? startExecutionTimer(idleExecutionTimer, step.durationSec, now) : { kind: 'open', durationSec: 0 };
+}
+
+/** Whether the workout clock is going: a countdown or an open block. */
+export function isExecutionActive(timer: ExecutionTimer): boolean {
+  return timer.kind === 'running' || timer.kind === 'open';
+}
+
+/**
+ * Moves a running workout on by itself. Each block that ran out is marked done
+ * and the next one starts exactly when the last one ended, so time spent with
+ * the screen off or the tab in the background is caught up on return. Open
+ * blocks stop the chain until the athlete moves on; the last block ends idle.
+ */
+export function settleExecution(
+  steps: ExecutionStep[],
+  state: ExecutionState,
+  timer: ExecutionTimer,
+  now: number,
+): { state: ExecutionState; timer: ExecutionTimer } {
+  let nextState = state;
+  let nextTimer = timer;
+  while (nextTimer.kind === 'running' && nextTimer.endsAt <= now && !isExecutionComplete(nextState)) {
+    const endedAt = nextTimer.endsAt;
+    nextState = advanceExecution(nextState);
+    if (isExecutionComplete(nextState)) return { state: nextState, timer: idleExecutionTimer };
+    const step = steps[nextState.currentIndex];
+    nextTimer = step && step.durationSec > 0
+      ? { kind: 'running', endsAt: endedAt + step.durationSec * 1000, durationSec: step.durationSec }
+      : { kind: 'open', durationSec: 0 };
+  }
+  return { state: nextState, timer: nextTimer };
+}
+
+/** Planned seconds behind the athlete: done blocks plus the time run in the current one. */
+export function executionElapsedSeconds(steps: ExecutionStep[], state: ExecutionState, currentRemainingSec: number): number {
+  return steps.reduce((total, step, index) => {
+    if (index === state.currentIndex && !state.completed[index] && !state.skipped[index]) {
+      return total + Math.max(0, step.durationSec - Math.max(0, currentRemainingSec));
+    }
+    return state.completed[index] ? total + Math.max(0, step.durationSec) : total;
+  }, 0);
 }

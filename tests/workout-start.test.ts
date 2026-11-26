@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { hasExecutionSteps } from '../lib/athlete-execution.ts';
 import { detectRideOs } from '../lib/ride/launch.ts';
-import { getWorkoutStartOptions, type WorkoutStartRuntime } from '../lib/workout-start.ts';
+import { getWorkoutStartChoices, getWorkoutStartOptions, type WorkoutStartRuntime } from '../lib/workout-start.ts';
 
 const bike = { sport: 'BIKING', status: 'planned', hasSteps: true };
-const follow = ['live', 'Follow along'];
+const follow = ['live', 'Block timer'];
 const openApp = ['app', 'Open in Wattonaut Ride'];
 const rideInBrowser = ['ride', 'Ride in this browser'];
 const targetsOnly = ['ride', 'Ride without devices'];
@@ -15,9 +15,9 @@ function choices(workout: typeof bike, runtime: WorkoutStartRuntime) {
   return getWorkoutStartOptions(workout, runtime).map(({ mode, label }) => [mode, label]);
 }
 
-test('bike choices follow Web Bluetooth capability, desktop platform and host app', () => {
+test('bike choices put the best way to ride on this device first', () => {
   for (const os of ['windows', 'macos', 'linux'] as const) {
-    assert.deepEqual(choices(bike, { os, webBluetooth: true, inWattonautRide: false }), [openApp, rideInBrowser, follow]);
+    assert.deepEqual(choices(bike, { os, webBluetooth: true, inWattonautRide: false }), [rideInBrowser, openApp, follow]);
     assert.deepEqual(choices(bike, { os, webBluetooth: false, inWattonautRide: false }), [openApp, follow, targetsOnly]);
   }
   assert.deepEqual(choices(bike, { os: 'other', webBluetooth: true, inWattonautRide: false }), [rideInBrowser, follow]);
@@ -25,11 +25,30 @@ test('bike choices follow Web Bluetooth capability, desktop platform and host ap
   for (const webBluetooth of [true, false]) {
     const options = getWorkoutStartOptions(bike, { os: 'linux', webBluetooth, inWattonautRide: true });
     assert.deepEqual(options.map(({ mode, label }) => [mode, label]), [rideInApp, follow]);
-    assert.match(options[0].description, webBluetooth ? /over Bluetooth/ : /ride time is saved/);
+    assert.match(options[0].detail, webBluetooth ? /over Bluetooth/ : /ride time is saved/);
   }
 });
 
-test('open runs, strength and stretching follow along; swims, terminal, rest and stepless workouts have no start', () => {
+test('a bike workout recommends its first option and says why; a single option is not a recommendation', () => {
+  const bluetooth = getWorkoutStartChoices(bike, { os: 'macos', webBluetooth: true, inWattonautRide: false });
+  assert.equal(bluetooth.recommended?.label, 'Ride in this browser');
+  assert.match(bluetooth.recommended?.reason ?? '', /Bluetooth/);
+  assert.deepEqual(bluetooth.others.map(({ label }) => label), ['Open in Wattonaut Ride', 'Block timer']);
+
+  const noBluetooth = getWorkoutStartChoices(bike, { os: 'windows', webBluetooth: false, inWattonautRide: false });
+  assert.equal(noBluetooth.recommended?.label, 'Open in Wattonaut Ride');
+  assert.equal(noBluetooth.recommended?.reason, 'This browser can’t use Bluetooth');
+
+  const run = getWorkoutStartChoices({ ...bike, sport: 'RUNNING' }, { os: 'other', webBluetooth: false, inWattonautRide: false });
+  assert.equal(run.recommended, null);
+  assert.deepEqual(run.others.map(({ label }) => label), ['Block timer']);
+
+  for (const option of getWorkoutStartOptions(bike, { os: 'linux', webBluetooth: true, inWattonautRide: false })) {
+    assert.ok(option.hint.split(' ').length <= 6, `${option.label} hint stays short`);
+  }
+});
+
+test('open runs, strength and stretching use the block timer; swims, terminal, rest and stepless workouts have no start', () => {
   const runtime: WorkoutStartRuntime = { os: 'macos', webBluetooth: true, inWattonautRide: false };
   for (const sport of ['RUNNING', 'STRENGTH', 'STRETCHING']) {
     assert.deepEqual(choices({ ...bike, sport }, runtime), [follow]);

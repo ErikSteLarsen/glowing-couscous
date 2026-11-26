@@ -139,7 +139,7 @@ expansion until personal use is complete or explicitly requested.
 - Duration, training load, zones, and timelines are derived from structured blocks.
 - `Workouts` stores private reusable definitions without dates or assignments
   in **My workouts**. **Public library** offers built-in bike, run, and swim workouts
-  and opens on bike. Runs start with Follow along only. Swims can't be started yet;
+  and opens on bike. Runs start with the Block timer only. Swims can't be started yet;
   they are scheduled and marked done.
   **Customize** starts a draft that becomes an owned workout when saved.
 - Personal `Calendar` provides week/month review and rescheduling, handing selected dates to the separate `Planner` desk to schedule independent copies. Coach `Planner` places content onto athlete dates or training-plan weekdays. Workouts can target multiple dates; training plans apply their weekday schedule to a complete week or calendar month.
@@ -175,7 +175,7 @@ expansion until personal use is complete or explicitly requested.
 
 ## Capabilities and Constraints
 
-- Live execution is a local block stepper; it does not collect device or sensor telemetry.
+- The Block timer (Live) is a local workout clock: one Start, then each timed block runs into the next by itself, with optional soft beeps and spoken cues (both off by default). Blocks without their own target show the zone's Olympiatoppen heart-rate range when a maximum heart rate is set. Blocks without a set time wait for Next block. It does not collect device or sensor telemetry.
 - Activity recording imports support both user-selected files and a Strava OAuth/webhook review flow. Users choose whether to import a Strava activity and may match it to an unfinished planned session.
 - A saved activity with recorded data can be posted to Strava from its workout page or the ride summary, after an editable preview (title, one stats line, one block line, chart image). Each activity is posted at most once; the page then shows **Posted to Strava** with a **View on Strava** link. Activities that came from Strava are never posted back. Strava's API cannot attach photos, so the chart image is offered as a download, and a .tcx download covers manual upload.
 - Messaging, multi-coach collaboration, shared business accounts, custom sports, and deep analytics are not implemented.

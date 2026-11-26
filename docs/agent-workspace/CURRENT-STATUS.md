@@ -24,6 +24,29 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   Desktop installers were not built, and published downloads are still Tempo
   Ride 0.3.0. Entries below use the old name. Production deployment remains.
 
+- Start workout chooser redesign (2026-11-26, local branch
+  `start-workout-dialog`, on top of `wattonaut-everywhere`). Icon rows with short
+  hints, details in a disclosure, and a device-based **Recommended** option for
+  bikes (browser with Bluetooth, else desktop app, else Block timer). Follow
+  along is renamed **Block timer**. `pnpm test` (638 passed, 21 skipped), lint,
+  `tsc --noEmit` and build passed. Chromium at 1440, 390 and 320 px in light
+  and dark had no overflow or page errors for the Bluetooth, no-Bluetooth and
+  phone cases; keyboard focus return, the app retry help and Change workout
+  mode were checked. Bluetooth and OS were simulated in the browser.
+  The Block timer now runs the whole workout from one Start and moves into
+  the next block by itself (full-bleed page, bottom controls, beeps, optional
+  spoken cues, screen wake lock). After that change: `pnpm test` (641 passed,
+  21 skipped), lint, types and build passed; Chromium at 390×844, 375×667,
+  320×568 and 1440×900 in light and dark had no overflow or page errors, and a
+  fast-forwarded clock confirmed auto-advance, catch-up, paused reload and the
+  finish. `pnpm test:ui` fails at the Ride fixture's "Advanced options" step on
+  this branch and on its unchanged base, before reaching the Live checks, so
+  the updated Live acceptance steps are unverified there. Not checked: sound and
+  wake lock on a real phone. Follow-up: beeps are softer and off by default,
+  vibration was removed, and zone-only blocks show Olympiatoppen I-1–I-5
+  heart-rate ranges from the maximum heart rate. Demo HR targets now use
+  Olympiatoppen HRmax zones and Mara has a 190 bpm maximum heart rate.
+
 - Multi-sport public library, plan copies and lineage (2026-11-25). The library
   holds bike, run and swim workouts, opens on bike, and states and changes sport
   in its results heading. Runs offer Follow along only; swims have no start.

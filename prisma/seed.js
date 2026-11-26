@@ -455,6 +455,7 @@ async function main() {
     data: {
       email: 'mara@demo.local',
       name: 'Mara Holt',
+      performanceProfileJson: JSON.stringify({ heartRateMaxBpm: 190 }),
       role: 'ATHLETE',
       selfCoached: false,
       coachId: coachErik.id,
@@ -550,7 +551,7 @@ async function main() {
     summary: 'Long aerobic endurance session.',
     blocks: [
       { kind: 'warmup', zone: 1, durationSec: 600, note: '10 min easy spin' },
-      { kind: 'work', zone: 2, durationSec: 4200, targetType: 'hr', targetLow: 135, targetHigh: 148, note: 'Steady endurance riding' },
+      { kind: 'work', zone: 2, durationSec: 4200, targetType: 'hr', targetMode: 'relative', targetReference: 'max-hr', targetLow: 72, targetHigh: 82, note: 'Steady endurance riding' },
       { kind: 'cooldown', zone: 1, durationSec: 600, note: '10 min easy spin down' },
     ],
   });
@@ -565,12 +566,14 @@ async function main() {
     }) }),
   } });
 
-  const maraThresholdBlocks = thresholdWorkout.blocks.map(({ kind, zone, durationSec, reps, targetType, targetLow, targetHigh, note }) => ({
+  const maraThresholdBlocks = thresholdWorkout.blocks.map(({ kind, zone, durationSec, reps, targetType, targetMode, targetReference, targetLow, targetHigh, note }) => ({
     kind,
     zone,
     durationSec,
     reps,
     targetType,
+    targetMode,
+    targetReference,
     targetLow,
     targetHigh,
     note,
@@ -600,7 +603,7 @@ async function main() {
     summary: 'Flush the legs after the morning quality session.',
     source: 'coach',
     blocks: [
-      { kind: 'work', zone: 2, durationSec: 2700, targetType: 'hr', targetLow: 120, targetHigh: 138, note: 'Continuous easy spinning' },
+      { kind: 'work', zone: 2, durationSec: 2700, targetType: 'hr', targetMode: 'relative', targetReference: 'max-hr', targetLow: 72, targetHigh: 82, note: 'Continuous easy spinning' },
     ],
   });
 
@@ -616,7 +619,7 @@ async function main() {
     source: 'coach',
     blocks: [
       { kind: 'warmup', zone: 1, durationSec: 900, note: '15 min easy' },
-      { kind: 'work', zone: 5, durationSec: 180, reps: 6, targetType: 'hr', targetLow: 170, targetHigh: 178, note: '6 x 3 min hard' },
+      { kind: 'work', zone: 5, durationSec: 180, reps: 6, targetType: 'hr', targetMode: 'relative', targetReference: 'max-hr', targetLow: 92, targetHigh: 100, note: '6 x 3 min hard' },
       { kind: 'recovery', zone: 2, durationSec: 120, reps: 5, note: '2 min easy between reps' },
       { kind: 'cooldown', zone: 1, durationSec: 600, note: '10 min cool-down' },
     ],
@@ -632,12 +635,14 @@ async function main() {
     title: 'Endurance 90′',
     summary: 'Comfortable aerobic work with smooth cadence.',
     source: 'coach',
-    blocks: enduranceWorkout.blocks.map(({ kind, zone, durationSec, reps, targetType, targetLow, targetHigh, note }) => ({
+    blocks: enduranceWorkout.blocks.map(({ kind, zone, durationSec, reps, targetType, targetMode, targetReference, targetLow, targetHigh, note }) => ({
       kind,
       zone,
       durationSec,
       reps,
       targetType,
+      targetMode,
+      targetReference,
       targetLow,
       targetHigh,
       note,
