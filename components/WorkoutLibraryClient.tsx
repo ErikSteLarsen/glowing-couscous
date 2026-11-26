@@ -22,7 +22,7 @@ import {
 import { WorkoutBuilder } from '@/components/WorkoutBuilder';
 import { GuidedWorkoutForm, type GuidedWorkoutInfo } from '@/components/GuidedWorkoutForm';
 import { ShareLinkResult, useShareLink } from '@/components/ShareLinkButton';
-import { Menu, MenuContent, MenuItem, MenuTrigger, OverflowMenuTrigger } from '@/components/wattonaut/Menu';
+import { Menu, MenuContent, MenuItem, MenuTrigger, OverflowMenuTrigger } from '@/components/tempobuilder/Menu';
 import { CatalogProfile } from '@/components/library/CatalogProfile';
 import { ActiveFilterChips, FilterChipGroup, FiltersButton, FiltersDialog, SortSelect } from '@/components/library/CollectionFilters';
 import { MyWorkoutMenu } from '@/components/library/MyWorkoutActions';
@@ -40,7 +40,7 @@ import type { PerformanceProfile } from '@/lib/performance-profile';
 import { useDraftRecovery } from '@/components/useDraftRecovery';
 import { DraftRecoveryStatus } from '@/components/DraftRecoveryNotice';
 import { DraftsPopover } from '@/components/DraftsPopover';
-import { SearchField } from '@/components/wattonaut/SearchField';
+import { SearchField } from '@/components/tempobuilder/SearchField';
 import { CollectionSummary, CollectionToolbar } from '@/components/library/CollectionToolbar';
 import { WorkoutCard, WorkoutCardFooter, WorkoutCardGrid, WorkoutCardHeader, WorkoutCardMeta, WorkoutCardProfile, WorkoutCardSummary } from '@/components/library/WorkoutCard';
 import { describeWorkoutDraft, isWorkoutDraftRedundant, parseWorkoutRecovery } from '@/lib/workout-recovery';
@@ -344,7 +344,7 @@ export function WorkoutLibraryClient({
         if (!untouched) setMessage('Workout saved, but you made more changes while it was saving. Save again to keep them.');
       } catch {
         setMessageTone('danger');
-        setMessage('Could not reach Wattonaut. Check your connection and try again.');
+        setMessage('Could not reach TempoBuilder. Check your connection and try again.');
       }
     });
   }
@@ -373,7 +373,7 @@ export function WorkoutLibraryClient({
         router.refresh();
       } catch {
         setMessageTone('danger');
-        setMessage('Could not reach Wattonaut. Check your connection and try again.');
+        setMessage('Could not reach TempoBuilder. Check your connection and try again.');
       }
     });
   }
@@ -620,7 +620,7 @@ function NewWorkoutMenu({ onGuided, onScratch, onBrowse }: { onGuided: () => voi
       <MenuContent align="start" className="max-w-[min(22rem,calc(100vw-2rem))]">
         <MenuItem onSelect={onGuided} className="flex-col items-start gap-0.5 py-2">
           <span className="font-medium">Build with guidance</span>
-          <span className="text-xs text-[var(--text-secondary)]">Pick a sport, length and effort. Wattonaut suggests a workout you can edit.</span>
+          <span className="text-xs text-[var(--text-secondary)]">Pick a sport, length and effort. TempoBuilder suggests a workout you can edit.</span>
         </MenuItem>
         <MenuItem onSelect={onScratch} className="flex-col items-start gap-0.5 py-2">
           <span className="font-medium">Build from scratch</span>
@@ -688,7 +688,7 @@ function draftForWorkout(workout: WorkoutRecord | null, role: 'COACH' | 'ATHLETE
     : createNewDraft(role);
 }
 
-/** Athletes start on the bike, Wattonaut's default sport; the coach editor keeps its own default. */
+/** Athletes start on the bike, TempoBuilder's default sport; the coach editor keeps its own default. */
 function createNewDraft(role: 'COACH' | 'ATHLETE') {
   return createEmptySessionEditorDraft({
     mode: 'create',

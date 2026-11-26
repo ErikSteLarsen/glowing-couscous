@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { EmptyState, PageShell, Surface, TopBar, sectionHeadingClassName } from '@/components/ui';
-import { MetricText } from '@/components/wattonaut/MetricText';
-import { StatusBadge } from '@/components/wattonaut/StatusBadge';
+import { MetricText } from '@/components/tempobuilder/MetricText';
+import { StatusBadge } from '@/components/tempobuilder/StatusBadge';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
 import { formatDuration, formatDurationExact } from '@/lib/format-duration';
@@ -178,7 +178,7 @@ export default async function AthleteSessionPage({
             <p className="text-xs text-[var(--text-muted)]">{detail.session.metricsSource === 'fit-import' ? 'Times use the time zone saved in the FIT file.' : detail.session.metricsSource === 'gpx-import' ? 'Times and time zone come from the GPX file.' : 'Finish time is worked out from the start time and duration.'}</p>
           </div>
         ) : null}
-      {detail.session.metricsSource === 'gpx-import' && detail.session.activityDistanceMeters !== null ? <p className="text-xs text-[var(--text-muted)]">Distance comes from the GPS track. Wattonaut doesn’t keep your route.</p> : null}
+      {detail.session.metricsSource === 'gpx-import' && detail.session.activityDistanceMeters !== null ? <p className="text-xs text-[var(--text-muted)]">Distance comes from the GPS track. TempoBuilder doesn’t keep your route.</p> : null}
       {detail.session.activityNotes ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--text-secondary)]">{detail.session.activityNotes}</p> : <p className="text-sm text-[var(--text-muted)]">No notes.</p>}
       {['manual-paired', 'tcx-import', 'fit-import', 'gpx-import'].includes(detail.session.metricsSource ?? '') && detail.session.plannedDurationSec > 0 ? (
         <div className="border-t border-[var(--border)] pt-3 text-sm text-[var(--text-secondary)]">

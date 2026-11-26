@@ -1,4 +1,4 @@
-/** The Wattonaut mark: a planet with a ridge that rises to the right. Paths come from `brand/kit/build.py`. */
+/** The TempoBuilder mark: a planet with a ridge that rises to the right. Paths come from `brand/kit/build.py`. */
 export function BrandMark({ className = '' }: { className?: string }) {
   return (
     <span className={`brand-mark ${className}`} aria-hidden="true">
@@ -10,11 +10,11 @@ export function BrandMark({ className = '' }: { className?: string }) {
   );
 }
 
-/** The name as set in the logo: lowercase, with "watt" slightly bolder. Use "Wattonaut" in running text. */
+/** The name as set in the logo: lowercase, with "tempo" slightly bolder. Use "TempoBuilder" in running text. */
 export function BrandName() {
   return (
     <span className="text-[16px] tracking-[-0.025em] text-[var(--text)]">
-      <span className="font-semibold">watt</span><span className="font-medium">onaut</span>
+      <span className="font-semibold">tempo</span><span className="font-medium">builder</span>
     </span>
   );
 }

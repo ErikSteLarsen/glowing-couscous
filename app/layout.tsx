@@ -14,8 +14,8 @@ const instrumentSans = localFont({
 });
 
 export const metadata: Metadata = {
-  applicationName: 'Wattonaut',
-  title: { default: 'Wattonaut', template: '%s – Wattonaut' },
+  applicationName: 'TempoBuilder',
+  title: { default: 'TempoBuilder', template: '%s – TempoBuilder' },
   description: 'Plan, follow, and review your own endurance training.',
 };
 

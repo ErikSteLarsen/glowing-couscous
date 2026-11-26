@@ -49,8 +49,8 @@ import {
   primaryButtonClassName,
   secondaryButtonClassName,
 } from '@/components/ui';
-import { MetricText } from '@/components/wattonaut/MetricText';
-import { SessionBlockBar } from '@/components/wattonaut/SessionBlockBar';
+import { MetricText } from '@/components/tempobuilder/MetricText';
+import { SessionBlockBar } from '@/components/tempobuilder/SessionBlockBar';
 import { TEMPO_ZONE_META, type TempoZone } from '@/lib/tempo-blocks';
 
 type Direction = 'flowline' | 'workbench' | 'trail';
@@ -510,9 +510,9 @@ export function WorkoutFlowPreviews({ direction, workbenchVariant = 'classic' }:
 function PreviewTopline({ direction, workbenchVariant }: { direction: Direction; workbenchVariant: WorkbenchVariant }) {
   return (
     <div className="workout-preview__topline">
-      <Link href="/design/workout-flow/flowline" className="workout-preview__brand" aria-label="Wattonaut workout flow previews">
+      <Link href="/design/workout-flow/flowline" className="workout-preview__brand" aria-label="TempoBuilder workout flow previews">
         <span className="ink-brand-mark" aria-hidden="true"><span /><i /></span>
-        <span>Wattonaut / Workout flow</span>
+        <span>TempoBuilder / Workout flow</span>
       </Link>
        <nav aria-label="Workout flow preview directions" className="workout-preview__direction-links">
          {DIRECTION_LINKS.map((item) => <Link key={item.id} href={item.href} className={item.id === direction ? 'is-active' : ''}>{item.label}</Link>)}

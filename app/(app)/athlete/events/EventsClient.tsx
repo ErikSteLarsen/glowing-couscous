@@ -1,7 +1,7 @@
 'use client';
 
-import { SessionRowText } from '@/components/wattonaut/SessionRowText';
-import { MetricPair } from '@/components/wattonaut/MetricPair';
+import { SessionRowText } from '@/components/tempobuilder/SessionRowText';
+import { MetricPair } from '@/components/tempobuilder/MetricPair';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -9,8 +9,8 @@ import { differenceInCalendarDays, format } from 'date-fns';
 import { CalendarDays, Ellipsis, Link2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogBackdrop, DialogContent, DialogDescription, DialogTitle } from '@ui-sdk/react/dialog';
 import { AlertDialog } from '@ui-sdk/react/alert-dialog';
-import { ConfirmationDialogContent } from '@/components/wattonaut/ConfirmationDialogContent';
-import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, OverflowMenuTrigger } from '@/components/wattonaut/Menu';
+import { ConfirmationDialogContent } from '@/components/tempobuilder/ConfirmationDialogContent';
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, OverflowMenuTrigger } from '@/components/tempobuilder/Menu';
 import {
   successTextClassName,
   sectionHeadingClassName,
@@ -79,7 +79,7 @@ function DurationFields({ label, value, onChange, disabled }: { label: string; v
   </div></fieldset>;
 }
 
-/** A Wattonaut modal for one short form; pending work keeps it open. */
+/** A TempoBuilder modal for one short form; pending work keeps it open. */
 function FormDialog({ open, onOpenChange, pending, title, description, children }: { open: boolean; onOpenChange: (open: boolean) => void; pending: boolean; title: string; description?: string; children: ReactNode }) {
   return <Dialog open={open} onOpenChange={(next, details) => { if (pending) { details.cancel(); return; } onOpenChange(next); }}>
     <DialogBackdrop className="fixed inset-0 z-50 bg-black/60" />

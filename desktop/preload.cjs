@@ -24,7 +24,7 @@ if (process.isMainFrame) {
       }
     })
   } else if (location.protocol === 'file:' && location.pathname.endsWith('/start.html')) {
-    contextBridge.exposeInMainWorld('wattonautSetup', {
+    contextBridge.exposeInMainWorld('tempobuilderSetup', {
       getSetup: () => ipcRenderer.invoke('setup:get'),
       openSite: (url) => ipcRenderer.invoke('setup:open-site', url)
     })

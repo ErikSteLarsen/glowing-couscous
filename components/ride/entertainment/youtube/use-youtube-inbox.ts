@@ -5,7 +5,7 @@ import { useEffect, useEffectEvent, useState } from 'react';
 import { listenForSentVideos } from '@/lib/youtube/send-to-ride';
 import { findYouTubeLink, parseYouTubeLink } from '@/lib/youtube/youtube-url';
 
-/** A video brought into the ride from outside Wattonaut. `videoId` null: a link dropped on the panel that isn't a YouTube video. */
+/** A video brought into the ride from outside TempoBuilder. `videoId` null: a link dropped on the panel that isn't a YouTube video. */
 export type IncomingYouTubeVideo = { seq: number; videoId: string | null; startSec?: number };
 
 type Delivery = { videoId: string; startSec?: number } | null;
@@ -32,8 +32,8 @@ function carriesLink(event: DragEvent): boolean {
 }
 
 /**
- * Every way a YouTube video reaches the ride tab from outside Wattonaut: the "Send to Wattonaut" bookmark
- * (via its send window), a link sent to the Wattonaut Ride app, a link dropped anywhere on the ride
+ * Every way a YouTube video reaches the ride tab from outside TempoBuilder: the "Send to TempoBuilder" bookmark
+ * (via its send window), a link sent to the TempoBuilder Ride app, a link dropped anywhere on the ride
  * screen and Ctrl/Cmd+V outside a text field. Lives in the ride screen, not the YouTube panel, so
  * it works while entertainment is off or showing the course. Returns whether a link is being
  * dragged over the page, for the drop highlight.
@@ -49,14 +49,14 @@ export function useYouTubeInbox(enabled: boolean, onVideo: (video: Delivery) => 
     let stopDesktop: (() => void) | undefined;
     try {
       if (typeof BroadcastChannel !== 'undefined') stopChannel = listenForSentVideos((video) => deliver(video));
-    } catch { /* no Send to Wattonaut bookmark in this browser */ }
+    } catch { /* no Send to TempoBuilder bookmark in this browser */ }
     try {
       stopDesktop = window.tempoDesktop?.youtube?.onVideo(({ url, startSec }) => {
         const link = parseYouTubeLink(url);
         if (!link) return;
         deliver({ videoId: link.videoId, startSec: startSec >= 1 ? Math.floor(startSec) : link.startSec });
       });
-    } catch { /* no links sent to the Wattonaut Ride app */ }
+    } catch { /* no links sent to the TempoBuilder Ride app */ }
 
     const onPaste = (event: ClipboardEvent) => {
       if (isTextField(event.target) || dialogOpen()) return;
@@ -66,7 +66,7 @@ export function useYouTubeInbox(enabled: boolean, onVideo: (video: Delivery) => 
       deliver(link);
     };
 
-    // Drags that start on this page (such as the Send to Wattonaut bookmark on its way to the
+    // Drags that start on this page (such as the Send to TempoBuilder bookmark on its way to the
     // bookmarks bar) are not videos coming in.
     let internalDrag = false;
     let timer: number | undefined;

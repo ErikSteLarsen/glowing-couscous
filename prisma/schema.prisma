@@ -299,7 +299,7 @@ model Activity {
   distanceMeters       Float?
   elevationGainMeters  Float?
   rpe                  Int?
-  // Set when the athlete posts this activity to Strava from Wattonaut; one post per activity.
+  // Set when the athlete posts this activity to Strava from TempoBuilder; one post per activity.
   stravaPostActivityId String?
   stravaPostUploadId   String?
   stravaPostStartedAt  DateTime?

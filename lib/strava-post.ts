@@ -2,7 +2,7 @@ import type { ActivitySeriesPoint } from './activity-series.ts';
 import { normalizedPowerFrom } from './measured-power-load.ts';
 import { groupSessionStructure, type StructureBlock } from './session-structure.ts';
 
-/** Strava limits are generous; keep posts short and inside what Wattonaut can show in the preview. */
+/** Strava limits are generous; keep posts short and inside what TempoBuilder can show in the preview. */
 export const STRAVA_POST_TITLE_MAX = 120;
 export const STRAVA_POST_DESCRIPTION_MAX = 1000;
 
@@ -149,7 +149,7 @@ const isHardBlock = (block: StravaPostBlock) => block.kind !== 'pause' && block.
 
 /**
  * Average power for each hard block as ridden. Uses the recorded laps when they line up one-to-one with
- * the plan (a Wattonaut Ride recording without skips), otherwise the plan's timing when the ride lasted as
+ * the plan (a TempoBuilder Ride recording without skips), otherwise the plan's timing when the ride lasted as
  * long as the plan. Returns null when neither is trustworthy, so the post never states a made-up number.
  */
 export function effortsFromRide(input: { points: ActivitySeriesPoint[]; durationSec: number; laps?: { startSec: number; endSec: number }[]; blocks: StravaPostBlock[] }): StravaPostEffort[] | null {
@@ -234,7 +234,7 @@ export function buildStravaPostDraft(input: {
   const statsLine = formatStatsLine(input.stats);
   const blockLine = summarizeBlocksForPost(input.blocks);
   return {
-    name: input.title.trim().slice(0, STRAVA_POST_TITLE_MAX) || 'Wattonaut ride',
+    name: input.title.trim().slice(0, STRAVA_POST_TITLE_MAX) || 'TempoBuilder ride',
     description: formatCleanCard({ stats: input.stats, distanceMeters: input.distanceMeters ?? null, shape: input.shape ?? null, efforts: input.efforts ?? null, blockLine }),
     statsLine,
     blockLine,
@@ -260,7 +260,7 @@ export function hasStravaWriteScope(scopes: string | null | undefined) {
   return parseStravaScopes(scopes).includes('activity:write');
 }
 
-/** What Wattonaut asks for when connecting: read the inbox, and upload activities you choose to post. */
+/** What TempoBuilder asks for when connecting: read the inbox, and upload activities you choose to post. */
 export const STRAVA_REQUESTED_SCOPES = 'activity:read,activity:read_all,activity:write';
 
 export function stravaActivityUrl(activityId: string) {
@@ -345,7 +345,7 @@ async function readUploadResponse(response: Response): Promise<UploadRecord> {
   try { body = await response.json(); } catch { body = null; }
   if (response.ok) return body && typeof body === 'object' ? body as UploadRecord : {};
   if (response.status === 401 || response.status === 403) {
-    throw new StravaUploadError('Strava didn’t allow Wattonaut to post. Reconnect Strava and allow uploads.', response.status, true);
+    throw new StravaUploadError('Strava didn’t allow TempoBuilder to post. Reconnect Strava and allow uploads.', response.status, true);
   }
   if (response.status === 429) throw new StravaUploadError('Strava is busy. Try again in a few minutes.', 429);
   // A 400 from /uploads still carries the processing error (for example a duplicate).

@@ -53,14 +53,14 @@ check the host and port in `DATABASE_URL` with `pg_isready -h <host> -p <port>`.
 If its PostgreSQL container is stopped, start the existing container to restore
 access to the seeded accounts and their data.
 
-## Wattonaut Ride (indoor trainer)
+## TempoBuilder Ride (indoor trainer)
 
 `/athlete/ride/[sessionId]` uses Web Bluetooth, which needs Chrome or Edge
 (desktop or Android) on HTTPS or `localhost`. Safari and Firefox get a
 targets-only ride and a pointer to the desktop app. Installer links (the public
 `/download` page, linked from Settings, and the Start workout fallback) point at
 the GitHub release `desktop-v<RIDE_DESKTOP_VERSION>` from `lib/ride/launch.ts`.
-Optional `NEXT_PUBLIC_WATTONAUT_RIDE_DOWNLOAD_URL` (build-time, public; the old `NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL` still works) replaces that
+Optional `NEXT_PUBLIC_TEMPOBUILDER_RIDE_DOWNLOAD_URL` (build-time, public; the old `NEXT_PUBLIC_WATTONAUT_RIDE_DOWNLOAD_URL` and `NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL` still work) replaces that
 base: a folder that serves the five installer file names. While the repository
 is private, the GitHub links only work for signed-in collaborators. Unsaved rides are kept in browser localStorage under
 `tempo:ride:v1:<sessionId>` until the server confirms the import.
@@ -108,14 +108,14 @@ Verify the public callback challenge, create an activity in a connected Strava
 account, then visit Import and check the inbox and planned-session/standalone outcomes. No new
 storage allowance or retention deletion is implemented by this feature.
 
-Disconnecting in Wattonaut clears the connection and its imported Strava sessions,
+Disconnecting in TempoBuilder clears the connection and its imported Strava sessions,
 then attempts to revoke the provider token. If Strava does not confirm
 revocation, the page links to Strava's connected-app settings. Strava-side
 authorization changes are received through the webhook.
 
 ### Posting to Strava
 
-Wattonaut asks for `activity:read,activity:read_all,activity:write` when connecting.
+TempoBuilder asks for `activity:read,activity:read_all,activity:write` when connecting.
 For a read-only connection, **Reconnect Strava** opens Strava’s consent screen
 again and returns the athlete to the activity. Apply `20261123120000_activity_strava_post`
 (`pnpm db:migrate`) before deploying. No new production environment variables
@@ -164,10 +164,10 @@ The seed command creates these local accounts:
 ## Guided Workout Creator
 
 Athletes can build an editable workout draft from four choices in Workouts:
-sport, length, effort, and whether to use intervals. Wattonaut reads only their
+sport, length, effort, and whether to use intervals. TempoBuilder reads only their
 completed sessions from the past 28 days to summarize recent training. A
 server-side model call, when a model key is configured and its shared health
-check succeeds, designs a complete workout with its own title and blocks. Wattonaut
+check succeeds, designs a complete workout with its own title and blocks. TempoBuilder
 validates sport, exact duration, block structure, zone limits, and cautious
 limits for sparse same-sport history or a recent high-RPE session. If the model
 is unavailable or returns an invalid draft, the creator chooses a validated

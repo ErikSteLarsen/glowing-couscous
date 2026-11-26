@@ -71,7 +71,7 @@ function parseMessages(messages: FitMessages): FitParseResult {
   const activity = activities[0];
   const sport = sportMap[String(session?.sport ?? '').toLowerCase()];
   if (!sport) {
-    return unsupported(`Wattonaut can’t import this sport (“${String(session?.sport ?? 'unknown')}”). Choose a single run, ride or swim.`);
+    return unsupported(`TempoBuilder can’t import this sport (“${String(session?.sport ?? 'unknown')}”). Choose a single run, ride or swim.`);
   }
 
   const startedAt = fitDate(session.startTime);
@@ -84,7 +84,7 @@ function parseMessages(messages: FitMessages): FitParseResult {
     return unsupported('This FIT activity’s finish times don’t match.');
   }
   if (sourceTimezoneOffsetMinutes === null) {
-    return unsupported('This FIT activity has no local time, so Wattonaut can’t tell which day you did it.');
+    return unsupported('This FIT activity has no local time, so TempoBuilder can’t tell which day you did it.');
   }
   if (!isFiniteNumber(session.totalElapsedTime) || session.totalElapsedTime < 1) {
     return unsupported('This FIT activity has no valid duration.');
@@ -129,6 +129,6 @@ export function parseFitActivity(bytes: Uint8Array): FitParseResult {
     if (errors.length) return unsupported('This FIT file couldn’t be read in full. Export it again from your device or app.');
     return parseMessages(messages);
   } catch {
-    return unsupported('This file isn’t a FIT activity Wattonaut can read.');
+    return unsupported('This file isn’t a FIT activity TempoBuilder can read.');
   }
 }

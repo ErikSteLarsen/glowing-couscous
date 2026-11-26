@@ -30,7 +30,7 @@ function removeEverywhere(key: string) {
 const retiredLegacySessions = new Set<number>();
 
 /**
- * Writes the checkpoint to this browser and, inside Wattonaut Ride desktop, to its disk store.
+ * Writes the checkpoint to this browser and, inside TempoBuilder Ride desktop, to its disk store.
  * Only call it for a session the server has confirmed belongs to `userId`; a legacy copy of it is then retired.
  */
 export function saveRideCheckpoint(userId: number, recording: RideRecording): void {
@@ -120,11 +120,11 @@ export async function saveStoredRide(userId: number, recording: RideRecording, {
       body: JSON.stringify(toImportPayload(recording, { standalone })),
     });
   } catch {
-    return { ok: false, error: 'Could not reach Wattonaut.' };
+    return { ok: false, error: 'Could not reach TempoBuilder.' };
   }
   const body = (await response.json().catch(() => null)) as { sessionId?: unknown; duplicate?: unknown; error?: unknown } | null;
   if (!response.ok || typeof body?.sessionId !== 'number') {
-    return { ok: false, error: typeof body?.error === 'string' ? body.error : 'Wattonaut could not save this ride.' };
+    return { ok: false, error: typeof body?.error === 'string' ? body.error : 'TempoBuilder could not save this ride.' };
   }
   clearRideCheckpoint(userId, recording.sessionId);
   return { ok: true, sessionId: body.sessionId, duplicate: body.duplicate === true };
@@ -135,7 +135,7 @@ export function downloadRideBackup(recording: RideRecording): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `wattonaut-ride-${recording.sessionId}-${new Date(recording.startedAtMs ?? Date.now()).toISOString().slice(0, 19).replace(/:/g, '')}.json`;
+  link.download = `tempobuilder-ride-${recording.sessionId}-${new Date(recording.startedAtMs ?? Date.now()).toISOString().slice(0, 19).replace(/:/g, '')}.json`;
   document.body.appendChild(link);
   link.click();
   link.remove();

@@ -1,11 +1,11 @@
 {
   "name": "tempo-ride",
-  "productName": "Wattonaut Ride",
+  "productName": "TempoBuilder Ride",
   "version": "0.3.0",
-  "description": "Desktop companion for Wattonaut indoor bike workouts",
+  "description": "Desktop companion for TempoBuilder indoor bike workouts",
   "homepage": "https://github.com/ErikSteLarsen/glowing-couscous",
   "desktopName": "tempo-ride.desktop",
-  "wattonautDefaultSite": "https://glowing-couscous-delta.vercel.app",
+  "tempobuilderDefaultSite": "https://glowing-couscous-delta.vercel.app",
   "private": true,
   "main": "main.cjs",
   "packageManager": "pnpm@10.26.0",
@@ -33,7 +33,7 @@
     ],
     "protocols": [
       {
-        "name": "Wattonaut Ride",
+        "name": "TempoBuilder Ride",
         "schemes": [
           "tempo-ride"
         ]
@@ -66,7 +66,7 @@
       ],
       "identity": "-",
       "extendInfo": {
-        "NSBluetoothAlwaysUsageDescription": "Wattonaut Ride connects to your trainer, heart-rate strap and cadence sensor during rides."
+        "NSBluetoothAlwaysUsageDescription": "TempoBuilder Ride connects to your trainer, heart-rate strap and cadence sensor during rides."
       }
     },
     "linux": {

@@ -1,4 +1,4 @@
-import { ActivityMetricBars } from '@/components/wattonaut/ActivityMetricBars';
+import { ActivityMetricBars } from '@/components/tempobuilder/ActivityMetricBars';
 import type { ActivityMetric, ActivitySeriesPoint } from '@/lib/activity-series';
 
 export function ActivityMetricPreview({

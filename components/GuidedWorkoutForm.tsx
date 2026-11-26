@@ -60,7 +60,7 @@ export function GuidedWorkoutForm({ onGenerated, onCancel }: {
         context: result.context,
       });
     } catch {
-      setError('Could not reach Wattonaut. Check your connection and try again.');
+      setError('Could not reach TempoBuilder. Check your connection and try again.');
     } finally {
       setPending(false);
     }
@@ -69,8 +69,8 @@ export function GuidedWorkoutForm({ onGenerated, onCancel }: {
   return <section aria-labelledby="guided-workout-title" className="space-y-5 border-y border-[var(--border)] bg-[var(--surface)] px-4 py-5 sm:px-6">
     <div className="space-y-1">
       <h3 id="guided-workout-title" className="text-base font-semibold text-[var(--text)]">Build a guided workout</h3>
-      <p className="max-w-[65ch] text-sm leading-6 text-[var(--text-secondary)]">Pick four things. Wattonaut looks at your last four weeks of training and suggests a workout you can edit before you save it. When AI is on, Wattonaut sends a short summary of that training to an AI service. Your notes and recorded data stay in Wattonaut.</p>
-      <p role="status" className="text-sm font-medium text-[var(--text)]">{aiStatus === 'available' ? 'AI is on. It designs the whole workout.' : aiStatus === 'checking' ? 'Checking whether AI is on. You can build a workout either way.' : 'AI is off. Wattonaut builds the workout from its standard patterns.'}</p>
+      <p className="max-w-[65ch] text-sm leading-6 text-[var(--text-secondary)]">Pick four things. TempoBuilder looks at your last four weeks of training and suggests a workout you can edit before you save it. When AI is on, TempoBuilder sends a short summary of that training to an AI service. Your notes and recorded data stay in TempoBuilder.</p>
+      <p role="status" className="text-sm font-medium text-[var(--text)]">{aiStatus === 'available' ? 'AI is on. It designs the whole workout.' : aiStatus === 'checking' ? 'Checking whether AI is on. You can build a workout either way.' : 'AI is off. TempoBuilder builds the workout from its standard patterns.'}</p>
     </div>
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <label className="block space-y-2"><span className={formLabelClassName}>Sport</span><select className={formSelectClassName} value={sport} disabled={pending} onChange={(event) => setSport(event.target.value as GuidedWorkoutInput['sport'])}>{GUIDED_SPORTS.map((option) => <option key={option} value={option}>{getSportLabel(option)}</option>)}</select></label>

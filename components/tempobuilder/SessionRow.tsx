@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { ActivityIntensityBars } from '@/components/wattonaut/ActivityIntensityBars';
-import { ComplianceMark } from '@/components/wattonaut/ComplianceMark';
-import { MetricText } from '@/components/wattonaut/MetricText';
-import { SessionBlockBar } from '@/components/wattonaut/SessionBlockBar';
-import { SessionIntensitySwatch } from '@/components/wattonaut/SessionIntensitySwatch';
+import { ActivityIntensityBars } from '@/components/tempobuilder/ActivityIntensityBars';
+import { ComplianceMark } from '@/components/tempobuilder/ComplianceMark';
+import { MetricText } from '@/components/tempobuilder/MetricText';
+import { SessionBlockBar } from '@/components/tempobuilder/SessionBlockBar';
+import { SessionIntensitySwatch } from '@/components/tempobuilder/SessionIntensitySwatch';
 import { formatDuration } from '@/lib/format-duration';
 import { getSportLabel } from '@/lib/sport';
 import { getAverageSessionZone } from '@/lib/session-intensity';

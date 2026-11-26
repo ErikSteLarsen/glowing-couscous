@@ -1,7 +1,7 @@
 import { WorkoutFlowPreviews } from '@/components/design/WorkoutFlowPreviews';
 
 export const metadata = {
-  title: 'Wattonaut / Workout flow / Workbench / Terrain',
+  title: 'TempoBuilder / Workout flow / Workbench / Terrain',
   description: 'Workbench terrain direction preview for visualizing intensity through height.',
 };
 

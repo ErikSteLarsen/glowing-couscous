@@ -5,7 +5,7 @@ const path = require('node:path')
 const test = require('node:test')
 const { createRecordingStore } = require('../recordings.cjs')
 
-const PROD = 'https://wattonaut.example'
+const PROD = 'https://tempobuilder.example'
 const LOCAL = 'http://localhost:3000'
 const hex = (value) => Buffer.from(value).toString('hex')
 

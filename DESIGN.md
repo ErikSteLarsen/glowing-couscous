@@ -1,5 +1,5 @@
 ---
-name: Wattonaut
+name: TempoBuilder
 description: A dark, quiet night instrument for endurance training where hairline rules, tabular numbers, and one cyan trace carry the week.
 colors:
   ground: "#0B0F15"
@@ -148,13 +148,13 @@ components:
     height: "32px"
 ---
 
-# Design System: Wattonaut
+# Design System: TempoBuilder
 
 ## Overview
 
 **Creative North Star: "Night Instrument"**
 
-Wattonaut is an operational training surface organized around the Monday-to-Sunday
+TempoBuilder is an operational training surface organized around the Monday-to-Sunday
 week. The week connects personal planning, session execution, completion, and
 review. The first MVP prioritizes people managing their own training; onboarding,
 empty states, and primary actions must make sense without a coach connection.
@@ -250,7 +250,7 @@ always travels with a "Z1" to "Z5" label or accessible text.
   `tabular-nums`. Required for durations, TSS, RPE, dates, counts, and chart axes.
 
 Use `StatTile` for a standalone metric with a large tabular value, a quiet unit,
-and optional detail. Use `MetricPair` from `components/wattonaut/` inside a `dl` for
+and optional detail. Use `MetricPair` from `components/tempobuilder/` inside a `dl` for
 compact summaries. Stack the label above the value by default, or use `inline`
 for totals that read across. Use `MetricText` for a number within ordinary text.
 
@@ -279,10 +279,10 @@ columns keep `min-width: 0`. Weeks always start on Monday.
   navigation; there is no bottom nav bar.
 - **Landmarks:** a "Skip to content" link first in tab order, and
   `<main id="main">`.
-- `BrandMark` is the Wattonaut mark: a 28px planet whose ridge forms a W
+- `BrandMark` is the TempoBuilder mark: a 28px planet whose ridge forms a W
   and rises to the right, in its own two blues per theme. `BrandName` beside it is
   the lowercase logo lettering ("watt" 600, "onaut" 500); running text says
-  Wattonaut. Both come from `brand/kit`. Do not add route-local primary navigation or a second shell.
+  TempoBuilder. Both come from `brand/kit`. Do not add route-local primary navigation or a second shell.
 
 ## Elevation & Depth
 
@@ -345,7 +345,7 @@ Use the exports in `components/ui.tsx`; do not restyle buttons in a route.
 - **`Badge`:** pill, 24px minimum, tone neutral, brand, success, or warning, with
   text always present.
 - **`WorkoutCard`** (`components/library/WorkoutCard.tsx`): the card for both
-  Workouts tabs, Wattonaut Ride and Activity. Its title is the one link or button and
+  Workouts tabs, TempoBuilder Ride and Activity. Its title is the one link or button and
   covers the card; a mini profile, a meta line, an optional summary and a footer
   of metrics with tab-specific actions follow. It raises on hover and takes a
   trace border on keyboard focus. Grids are 1 column on phones, then 2–4.
@@ -375,7 +375,7 @@ Page headers do not repeat sibling destinations.
 ### Back navigation
 
 - **Top-level destinations have no back control.** These are the main nav items,
-  Profile, Settings, the coach roster, planner and workouts, and the Wattonaut Ride
+  Profile, Settings, the coach roster, planner and workouts, and the TempoBuilder Ride
   home (`/athlete/ride`).
 - **Every page below them has exactly one**, the shared `BackLink`
   (`components/ui.tsx`), passed as `TopBar`'s `back`. It sits on its own row
@@ -389,7 +389,7 @@ Page headers do not repeat sibling destinations.
   It uses the `from=` origin when the route's allowlist accepts it, otherwise
   the route's parent. Origins are allowlisted keys, never URLs. Links into a
   detail page add `from=` with `withBackOrigin`. Never rely on `router.back()`:
-  deep links, new tabs and Wattonaut Ride have no useful history.
+  deep links, new tabs and TempoBuilder Ride have no useful history.
 - **Chrome-less screens** (the ride page) use `BackLink variant="compact"`, the
   icon-only form with the same target and accessible name.
 - **In-page views** that replace a list, such as the workout editor, use
@@ -502,12 +502,12 @@ exclamation marks, filler, emoji, or decorative glyphs; use the icon set
 
 ### Voice and terms
 
-Wattonaut talks to self-coached endurance athletes. They know sport terms; they do
+TempoBuilder talks to self-coached endurance athletes. They know sport terms; they do
 not know software terms. Write short, plain, friendly sentences in the active
 voice and second person ("you"). One idea per sentence. Buttons are concrete
 verbs ("Save workout", "Mark as done", "Restore", "Discard"). Errors say what
 happened and what to do next ("Could not save this workout. Try again.");
-connection failures say "Could not reach Wattonaut. Check your connection and try
+connection failures say "Could not reach TempoBuilder. Check your connection and try
 again." Applies to every user-facing string, including service errors the UI
 shows, aria labels and confirmation dialogs.
 
@@ -526,7 +526,7 @@ never the name of a part of a workout.
 | A workout put on a date | **planned workout** (or just workout) | session, scheduled copy, assignment |
 | Your saved workouts / ready-made ones | **My workouts** / **Public library** | your library, catalog |
 | One part of a workout; a repeated group of blocks | **block**; **repeat** ("Repeat 4×", "Add repeat") | step, set, segment, interval (block kinds stay **effort**, **recovery**, **warm-up**, **cool-down**) |
-| Training you did and Wattonaut recorded | **activity** | completed session, outcome, record |
+| Training you did and TempoBuilder recorded | **activity** | completed session, outcome, record |
 | What you did vs. what was planned | **result** vs. **plan** | actual, baseline, snapshot |
 | Finishing a planned workout | **Mark as done**, status **done** | complete, log completion |
 | Undo done / undo skip | **Mark as not done** / **Plan again** | mark planned again |
@@ -612,13 +612,13 @@ padding includes the device safe area (`env(safe-area-inset-bottom)`).
 ### Ride entertainment
 
 - One header menu, **Entertainment** (popcorn icon), on the active ride only: **Data only**, **YouTube**, **Ride a course**. While a view is on, the button names it and a × beside it goes straight back to the data screen. V toggles the last view, and opens the menu when there is none. The stage has no header of its own. The open menu must end above the YouTube player. The choice is remembered per browser.
-- Leaving a video that plays (or that Wattonaut paused), or a course ridden 50 m or more since it opened, asks first: **Leave the video?** / **Leave the course?**, with **Keep watching** / **Keep riding it** focused and a button naming the result (**Back to data only**, **Switch to YouTube**, **Switch to the course**, **Play the video**). Nothing else asks. In the Wattonaut Ride app any open video asks, since its state is unknown.
+- Leaving a video that plays (or that TempoBuilder paused), or a course ridden 50 m or more since it opened, asks first: **Leave the video?** / **Leave the course?**, with **Keep watching** / **Keep riding it** focused and a button naming the result (**Back to data only**, **Switch to YouTube**, **Switch to the course**, **Play the video**). Nothing else asks. In the TempoBuilder Ride app any open video asks, since its state is unknown.
 - Desktop keeps the block row, a compact profile chart and the shortcut legend. With YouTube, the player takes all the room left: full window width, narrow rails (power left, heart rate and cadence right), and no shortcut legend below 820 px of height. With a course, the stage is full width and the stats sit over the scene at its edges, never over the rider.
 - Phone (under 640 px): no YouTube; the screen is too small for a player beside the stats. the header button (**Ride a course**) turns the course on and off, with no menu (also when YouTube was the remembered view). The stage replaces the profile chart and the block and workout averages, below the live power, heart rate and cadence. The course overlay shows only speed, distance, gradient and the loop profile.
-- YouTube is not browsed inside Wattonaut. The rider uses YouTube itself, signed in with their own recommendations, and brings one video to the ride. The empty view is a calm panel: **Pick a video on YouTube**, an **Open YouTube** button (a named browser window of its own beside the ride, so the ride tab stays visible: "YouTube opens in its own window next to your ride…"; in the Wattonaut Ride app, the system browser), then three short rows: the **Send to Wattonaut** bookmark ("Drag this to your bookmarks bar. On any YouTube video, click it."), dragging a video's thumbnail or title onto the panel (outlined with **Drop to play** while dragging), and pasting a link (Ctrl/Cmd+V anywhere on the ride screen outside a text field and while no dialog is open, or the **Paste a YouTube link** field). A link dropped anywhere else on the ride screen never navigates away. In the Wattonaut Ride app the bookmark row has **Get the bookmark**, which opens the bookmark page (`/athlete/ride/send` without a link) in the system browser. App versions that block the player (0.2.2 and earlier) show "This version of Wattonaut Ride can't play videos. Update the app…" and offer **Open on YouTube** only. **Recently played** (per account, 30-day expiry, **Clear**) sits below as thumbnails.
-- The bookmark opens a small Wattonaut window and then pauses the YouTube video (it doesn't pause when the browser blocks the window, and says "Allow pop-ups for YouTube to send videos to Wattonaut."). It sends the player's position, 0 included, and none for a live stream. The window hands the video to one open ride in the same browser (the first ride tab to answer) and closes itself: "Sent to your ride – you can close this window". Without a running ride: "No ride is open in this browser.", with **Send to the Wattonaut Ride app** (opens `tempo-ride://video`), **Send again** and **Close**. Signed-out setup returns after sign-in too. The bookmark carries a key private to this browser; a send window opened any other way shows the link with **Send to ride** and **Close** and sends only on that click. Signed out, the window returns to itself after sign-in. A video brought in while entertainment is off or on the course switches to YouTube (asking first when the course is under way).
+- YouTube is not browsed inside TempoBuilder. The rider uses YouTube itself, signed in with their own recommendations, and brings one video to the ride. The empty view is a calm panel: **Pick a video on YouTube**, an **Open YouTube** button (a named browser window of its own beside the ride, so the ride tab stays visible: "YouTube opens in its own window next to your ride…"; in the TempoBuilder Ride app, the system browser), then three short rows: the **Send to TempoBuilder** bookmark ("Drag this to your bookmarks bar. On any YouTube video, click it."), dragging a video's thumbnail or title onto the panel (outlined with **Drop to play** while dragging), and pasting a link (Ctrl/Cmd+V anywhere on the ride screen outside a text field and while no dialog is open, or the **Paste a YouTube link** field). A link dropped anywhere else on the ride screen never navigates away. In the TempoBuilder Ride app the bookmark row has **Get the bookmark**, which opens the bookmark page (`/athlete/ride/send` without a link) in the system browser. App versions that block the player (0.2.2 and earlier) show "This version of TempoBuilder Ride can't play videos. Update the app…" and offer **Open on YouTube** only. **Recently played** (per account, 30-day expiry, **Clear**) sits below as thumbnails.
+- The bookmark opens a small TempoBuilder window and then pauses the YouTube video (it doesn't pause when the browser blocks the window, and says "Allow pop-ups for YouTube to send videos to TempoBuilder."). It sends the player's position, 0 included, and none for a live stream. The window hands the video to one open ride in the same browser (the first ride tab to answer) and closes itself: "Sent to your ride – you can close this window". Without a running ride: "No ride is open in this browser.", with **Send to the TempoBuilder Ride app** (opens `tempo-ride://video`), **Send again** and **Close**. Signed-out setup returns after sign-in too. The bookmark carries a key private to this browser; a send window opened any other way shows the link with **Send to ride** and **Close** and sends only on that click. Signed out, the window returns to itself after sign-in. A video brought in while entertainment is off or on the course switches to YouTube (asking first when the course is under way).
 - First video only (per account and browser): a small block above the picker, "Videos play through YouTube. By continuing, you agree to…", with **Agree and play** and **Not now**; nothing is looked up or embedded before that. The picker ends with one quiet line: YouTube's logo (linked, 24 px, never recoloured), **YouTube Terms of Service** and **YouTube privacy notice**, which unfolds in place. Nothing is shown outside the YouTube view.
-- Watching: a slim bar (**← Change video**, title – channel, **Pause with ride**) above the player. A player that hasn't answered within 15 s gives way to **Open on YouTube**, **Try again** and **Change video**. Nothing is drawn over the player; while a link is dragged in, the player gets an outline around it, not over it. The player is never smaller than 200 × 200 px (letterboxed when 16:9 would be shorter); without room for that it offers **Open on YouTube**. YouTube's own full screen is off, so the ride's full screen (F) keeps the stats in view. Every video is checked first; videos made for kids, and any video Wattonaut can't check (no `YOUTUBE_API_KEY`, failed check), show as a card with **Open on YouTube** instead. The player starts only after the rider brings a video and only while the ride runs (or **Pause with ride** is off), the tab is visible, the player is at least half on screen and no dialog covers it. A dialog over the stage pauses and hides the player; closing it resumes only what Wattonaut paused. The view keeps its video and time when it remounts, and checks the video again before its player comes back. In the Wattonaut Ride app the rider uses YouTube's own controls: no **Pause with ride**, automatic start, pausing or kept time.
+- Watching: a slim bar (**← Change video**, title – channel, **Pause with ride**) above the player. A player that hasn't answered within 15 s gives way to **Open on YouTube**, **Try again** and **Change video**. Nothing is drawn over the player; while a link is dragged in, the player gets an outline around it, not over it. The player is never smaller than 200 × 200 px (letterboxed when 16:9 would be shorter); without room for that it offers **Open on YouTube**. YouTube's own full screen is off, so the ride's full screen (F) keeps the stats in view. Every video is checked first; videos made for kids, and any video TempoBuilder can't check (no `YOUTUBE_API_KEY`, failed check), show as a card with **Open on YouTube** instead. The player starts only after the rider brings a video and only while the ride runs (or **Pause with ride** is off), the tab is visible, the player is at least half on screen and no dialog covers it. A dialog over the stage pauses and hides the player; closing it resumes only what TempoBuilder paused. The view keeps its video and time when it remounts, and checks the video again before its player comes back. In the TempoBuilder Ride app the rider uses YouTube's own controls: no **Pause with ride**, automatic start, pausing or kept time.
 - Course: speed comes from power and gradient (constant ERG watts slow the rider on climbs). While the ride is paused the course stands still and the rider sits up. Reduced motion draws one still frame a second.
 - Workout profile blocks name their length and effort at the bottom when it fits: "5m – 300 W" on one line, else on two, else "300 W", else "300", else nothing. A ramp is "150–250 W", a block without watts its zone, a pause only its length. Blocks still to ride follow the intensity change; the current one is bold. Recorded lines stop where time was skipped. Charts under 160 px drop the legend.
 - The desktop data screen has three columns, separated by rules. **Now**: power with target and meter, then heart rate, cadence and % of FTP. **This block** (**Free ride** after the plan): time left of its length, progress, average power and heart rate, Next, and block navigation. **Workout**: time left of its length (elapsed after the plan), progress, average power and heart rate, Elapsed, **More data**. More data adds each advanced value to its own column: average cadence to the block; average cadence, Normalized, TSS, Work and Max power to the workout. Below 1024 px Now spans both columns. The profile takes the height left; from 1024 × 720 nothing scrolls with default data, and the shortcut legend hides below 820 px of height.

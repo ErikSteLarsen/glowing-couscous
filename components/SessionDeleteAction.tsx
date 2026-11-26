@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AlertDialog, AlertDialogTrigger } from '@ui-sdk/react/alert-dialog';
-import { ConfirmationDialogContent } from '@/components/wattonaut/ConfirmationDialogContent';
+import { ConfirmationDialogContent } from '@/components/tempobuilder/ConfirmationDialogContent';
 import { useRouter } from 'next/navigation';
 import { dangerButtonClassName, dangerTextClassName } from '@/components/ui';
 
@@ -54,7 +54,7 @@ export function SessionDeleteAction({
       else if (returnHref) router.replace(returnHref);
       else router.refresh();
     } catch {
-      setError('Could not reach Wattonaut. Check your connection and try again.');
+      setError('Could not reach TempoBuilder. Check your connection and try again.');
     } finally {
       setIsPending(false);
     }

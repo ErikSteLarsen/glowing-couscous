@@ -7,6 +7,17 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- TempoBuilder rename (2026-11-26, branch `t3/rename-tempobuilder`, not on
+  `main`). Wattonaut becomes TempoBuilder in names, docs, identifiers, files and
+  dev env vars (`TEMPOBUILDER_URL`, `TEMPOBUILDER_TEST_DATABASE_URL`,
+  `TEMPOBUILDER_SHARP_MODULE`); the download URL still reads both older names.
+  The Strava OAuth cookies are renamed (10-minute lifetime). The in-app name is
+  provisionally "tempo" 600 + "builder" 500; `brand/kit` assets, the share
+  image and the icons still carry the Wattonaut lettering until a wordmark is
+  chosen and `build.py` is rerun. `pnpm test` (643 passed, 23 skipped),
+  desktop tests (24), lint, types, dead code and build passed. No browser check
+  of the app was run.
+
 - Home week day picker (2026-11-26). On phones, This week shows seven day
   chips with a dot per workout and only the selected day's workouts; today is
   selected on load, so there is no sideways scrolling. From `md` up, day
@@ -21,6 +32,7 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   (643), lint, types and build passed; Chromium at 1440 and 390 px checked
   the header link reaching Workouts and the ghost Start opening the chooser
   for a planned session.
+
 - Mobile bottom navigation removed (2026-11-26). The hamburger drawer is the
   only mobile navigation; it already lists Home, Calendar, Workouts, Training
   plans, Activity (now also active on Import) and Events. The old coach bottom

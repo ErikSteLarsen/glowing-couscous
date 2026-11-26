@@ -1,6 +1,6 @@
-# Wattonaut Ride
+# TempoBuilder Ride
 
-Wattonaut Ride opens the Wattonaut indoor ride page in Electron. The website runs the
+TempoBuilder Ride opens the TempoBuilder indoor ride page in Electron. The website runs the
 workout and talks to your trainer, heart-rate strap, and cadence sensor through
 Web Bluetooth.
 
@@ -9,21 +9,21 @@ Web Bluetooth.
 1. Download the installer from the repository's GitHub Releases. On Windows,
    run `Tempo-Ride-Windows-Setup.exe` (x64). On macOS, open
    `Tempo-Ride-macOS-arm64.dmg` for Apple silicon or `Tempo-Ride-macOS-x64.dmg`
-   for Intel, then drag Wattonaut Ride to Applications. On Linux (x64), install
+   for Intel, then drag TempoBuilder Ride to Applications. On Linux (x64), install
    `Tempo-Ride-Linux.deb` using your package manager or use the AppImage
    instructions below.
-2. Open Wattonaut Ride. Enter your Wattonaut site URL, then select **Open Wattonaut** to
+2. Open TempoBuilder Ride. Enter your TempoBuilder site URL, then select **Open TempoBuilder** to
    remember that site and open it in the app.
-3. On the Wattonaut website, open a scheduled indoor ride and choose the desktop
-   launch link. Approve the browser prompt to open Wattonaut Ride. If Wattonaut Ride
-   asks **Trust <origin>?**, check that it shows your Wattonaut site before accepting.
+3. On the TempoBuilder website, open a scheduled indoor ride and choose the desktop
+   launch link. Approve the browser prompt to open TempoBuilder Ride. If TempoBuilder Ride
+   asks **Trust <origin>?**, check that it shows your TempoBuilder site before accepting.
 4. Use the controls on the ride page to connect your trainer and sensors. Pick
    each device in the Bluetooth dialog and follow any pairing prompts.
 
 The Windows installer is unsigned. If SmartScreen appears for an installer you
 trust, select **More info** and **Run anyway** when available. The macOS build
 uses an ad hoc signature and has no Apple notarization. If Gatekeeper stops an
-app you trust, right-click **Wattonaut Ride** in Finder and choose **Open** on macOS
+app you trust, right-click **TempoBuilder Ride** in Finder and choose **Open** on macOS
 versions that offer the override there. On current macOS versions, attempt to
 open it, then choose **Open Anyway** in **System Settings → Privacy & Security**.
 See [Apple's Gatekeeper instructions](https://support.apple.com/en-us/102445).
@@ -42,7 +42,7 @@ xdg-mime query default x-scheme-handler/tempo-ride
 The installer copies the executable to `~/Applications/Tempo-Ride.AppImage`,
 adds the icon and launcher under `${XDG_DATA_HOME:-$HOME/.local/share}`, and
 registers `tempo-ride.desktop` for ride links. Linux Bluetooth requires BlueZ
-running with an enabled Bluetooth adapter. Wattonaut Ride enables Chromium's Web
+running with an enabled Bluetooth adapter. TempoBuilder Ride enables Chromium's Web
 Bluetooth feature on Linux. The picker suggests device types from their names.
 
 ## Run from source
@@ -52,21 +52,21 @@ uses the desktop lockfile.
 
 ```sh
 pnpm install --frozen-lockfile
-WATTONAUT_URL=https://wattonaut.example pnpm dev
+TEMPOBUILDER_URL=https://tempobuilder.example pnpm dev
 ```
 
-In PowerShell, set `$env:WATTONAUT_URL = 'https://wattonaut.example'`, then run
-`pnpm dev`. `WATTONAUT_URL` trusts the given origin for that app process and
+In PowerShell, set `$env:TEMPOBUILDER_URL = 'https://tempobuilder.example'`, then run
+`pnpm dev`. `TEMPOBUILDER_URL` trusts the given origin for that app process and
 prefills the start page unless a site is already saved. With neither, the start
-page is prefilled with the production site from `wattonautDefaultSite` in
-`package.json`; that site is only trusted once you choose **Open Wattonaut**.
+page is prefilled with the production site from `tempobuilderDefaultSite` in
+`package.json`; that site is only trusted once you choose **Open TempoBuilder**.
 
 The last site you opened, from the start page or a ride link, is saved as the
 current site. Launching without a ride link then goes straight to that site's
 ride home; the start page appears only on first run. To switch sites, choose
-**File → Change Wattonaut site…** (press Alt to show the hidden menu on Linux and
-Windows). For a local Wattonaut instance in a source build, select
-**Use http://localhost:3000**, then **Open Wattonaut**; packaged builds hide that
+**File → Change TempoBuilder site…** (press Alt to show the hidden menu on Linux and
+Windows). For a local TempoBuilder instance in a source build, select
+**Use http://localhost:3000**, then **Open TempoBuilder**; packaged builds hide that
 option. Chromium
 requires HTTPS or a trustworthy local development origin such as localhost for
 Web Bluetooth.
@@ -130,8 +130,8 @@ this move.
 Riders browse YouTube in their own browser, signed in there. The ride page's
 **Open YouTube** button opens it, and `youtube.openBookmarkPage()` opens
 `/athlete/ride/send` on the page's own origin in the system browser, where the
-rider adds the **Send to Wattonaut** bookmark. When no ride tab in that browser
-takes a sent video, the send window offers **Send to the Wattonaut Ride app**,
+rider adds the **Send to TempoBuilder** bookmark. When no ride tab in that browser
+takes a sent video, the send window offers **Send to the TempoBuilder Ride app**,
 which opens `tempo-ride://video?v=<id>&t=<seconds>`. The app checks the link and
 calls each `youtube.onVideo(callback)` listener on a trusted page with
 `{ url, startSec }`. Once a callback returns, the preload confirms it

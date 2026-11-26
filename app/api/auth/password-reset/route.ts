@@ -5,7 +5,7 @@ import { passwordResetService } from '@/lib/password-reset-service';
 
 const genericResponse = {
   ok: true,
-  message: 'If this email has a Wattonaut password, we’ll send you a reset link shortly. Check your inbox and spam folder.',
+  message: 'If this email has a TempoBuilder password, we’ll send you a reset link shortly. Check your inbox and spam folder.',
 };
 
 export async function POST(request: NextRequest) {

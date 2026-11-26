@@ -65,7 +65,7 @@ function prepare(activity: LoadedActivity) {
   const profile = parsePerformanceProfileJson(activity.athlete.performanceProfileJson);
   const ftpWatts = profile.cycling.ftpWatts;
   const blocks = activity.session.blocks;
-  const title = activity.session.title?.trim() || activity.importTitle?.trim() || 'Wattonaut activity';
+  const title = activity.session.title?.trim() || activity.importTitle?.trim() || 'TempoBuilder activity';
   const stats = statsFromPoints(points, activity.durationSec, activity.tss);
   const postBlocks: StravaPostBlock[] = blocks.map((block) => ({ kind: block.kind, zone: block.zone, durationSec: block.durationSec, reps: block.reps, skipped: block.skipped }));
   const draft = buildStravaPostDraft({
@@ -187,7 +187,7 @@ export const stravaPostService = {
       },
       data: { stravaPostStartedAt: now },
     });
-    if (claim.count === 0) return { ok: false, status: 409, error: 'Wattonaut is already posting this activity. Wait a moment, then reload the page.' };
+    if (claim.count === 0) return { ok: false, status: 409, error: 'TempoBuilder is already posting this activity. Wait a moment, then reload the page.' };
 
     try {
       const token = await stravaService.writeTokenForUser(userId);

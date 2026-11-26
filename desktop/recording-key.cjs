@@ -7,7 +7,7 @@ function isRecordingKey(key) {
 
 function sanitizeRecordingKey(key) {
   if (!isRecordingKey(key)) {
-    throw new Error('Recording key must be a Wattonaut ride checkpoint key or contain 1 to 120 letters, digits, underscores or hyphens.')
+    throw new Error('Recording key must be a TempoBuilder ride checkpoint key or contain 1 to 120 letters, digits, underscores or hyphens.')
   }
   return key
 }

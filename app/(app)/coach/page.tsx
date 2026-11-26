@@ -1,4 +1,4 @@
-import { MetricPair } from '@/components/wattonaut/MetricPair';
+import { MetricPair } from '@/components/tempobuilder/MetricPair';
 import { redirect } from 'next/navigation';
 import { ActionLink, EmptyState, PageShell, StatTile, Surface, TopBar, Badge } from '@/components/ui';
 import { CoachRequestsPanel } from '@/components/CoachRequestsPanel';

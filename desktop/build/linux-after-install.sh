@@ -22,8 +22,8 @@ if hash update-mime-database 2>/dev/null; then
     update-mime-database /usr/share/mime || true
 fi
 
-# Wattonaut Ride: xdg-open's generic handler cannot parse the quoted Exec path that
-# electron-builder writes for "/opt/Wattonaut Ride", which breaks tempo-ride:// links.
+# TempoBuilder Ride: xdg-open's generic handler cannot parse the quoted Exec path that
+# electron-builder writes for "/opt/TempoBuilder Ride", which breaks tempo-ride:// links.
 if [ -f '/usr/share/applications/${executable}.desktop' ]; then
     sed -i 's|^Exec=.*|Exec=/usr/bin/${executable} %U|' '/usr/share/applications/${executable}.desktop' || true
 fi

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Download } from 'lucide-react';
-import { useInWattonautRide, useMacArchitecture, useRideOs } from '@/components/RideAppLaunch';
+import { useInTempoBuilderRide, useMacArchitecture, useRideOs } from '@/components/RideAppLaunch';
 import { Surface, buttonFocusClassName, primaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
 import { RIDE_DESKTOP_VERSION, configuredRideDownloadBase, rideDownloadChoices, rideInstallHints, type RideDownload, type RideOs } from '@/lib/ride/launch';
 
@@ -20,7 +20,7 @@ function HintList({ os }: { os: RideOs }) {
 
 export function RideDownloadPage() {
   const os = useRideOs();
-  const inWattonautRide = useInWattonautRide();
+  const inTempoBuilderRide = useInTempoBuilderRide();
   const architecture = useMacArchitecture(os);
   const { recommended, others } = rideDownloadChoices(os ?? 'other', configuredRideDownloadBase(), architecture);
   const detected = os && os !== 'other' ? os : null;
@@ -28,9 +28,9 @@ export function RideDownloadPage() {
 
   return (
     <div className="space-y-5">
-      {inWattonautRide ? (
+      {inTempoBuilderRide ? (
         <p role="status" className="rounded-2xl border border-[var(--border)] px-5 py-4 text-sm text-[var(--text-secondary)]">
-          You are already using Wattonaut Ride on this computer. The installers below are for your other computers.
+          You are already using TempoBuilder Ride on this computer. The installers below are for your other computers.
         </p>
       ) : null}
       <Surface>
@@ -53,7 +53,7 @@ export function RideDownloadPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            <h2 className={sectionHeadingClassName}>{os === 'other' ? 'Wattonaut Ride is for computers' : 'Choose your system'}</h2>
+            <h2 className={sectionHeadingClassName}>{os === 'other' ? 'TempoBuilder Ride is for computers' : 'Choose your system'}</h2>
             <p className="text-sm text-[var(--text-secondary)]">
               {os === 'other'
                 ? 'Open this page on a Windows, macOS or Linux computer. On this device, start a workout in your browser instead. Chrome on Android can connect to Bluetooth trainers.'
@@ -84,7 +84,7 @@ export function RideDownloadPage() {
       </Surface>
 
       <p className="text-sm text-[var(--text-muted)]">
-        Version {RIDE_DESKTOP_VERSION}. The installers aren’t signed yet, so your computer may ask you to confirm the first time you open the app. After installing, open a bike workout in Wattonaut and choose <strong className="font-medium text-[var(--text-secondary)]">Start workout → Open in Wattonaut Ride</strong>. <Link href="/" className={linkClassName}>Back to Wattonaut</Link>
+        Version {RIDE_DESKTOP_VERSION}. The installers aren’t signed yet, so your computer may ask you to confirm the first time you open the app. After installing, open a bike workout in TempoBuilder and choose <strong className="font-medium text-[var(--text-secondary)]">Start workout → Open in TempoBuilder Ride</strong>. <Link href="/" className={linkClassName}>Back to TempoBuilder</Link>
       </p>
     </div>
   );

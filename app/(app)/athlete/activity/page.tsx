@@ -1,12 +1,12 @@
 import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
-import { SearchField } from '@/components/wattonaut/SearchField';
+import { SearchField } from '@/components/tempobuilder/SearchField';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ActionLink, EmptyState, PageShell, TopBar, formLabelClassName, formSelectClassName, secondaryButtonClassName } from '@/components/ui';
 import { WorkoutCard, WorkoutCardFooter, WorkoutCardGrid, WorkoutCardHeader, WorkoutCardMeta, WorkoutCardProfile, WorkoutCardSummary } from '@/components/library/WorkoutCard';
-import { MetricPair } from '@/components/wattonaut/MetricPair';
-import { SessionBlockBar } from '@/components/wattonaut/SessionBlockBar';
+import { MetricPair } from '@/components/tempobuilder/MetricPair';
+import { SessionBlockBar } from '@/components/tempobuilder/SessionBlockBar';
 import { getCurrentUser } from '@/lib/auth-session';
 import { getRequestTimeZone } from '@/lib/request-time-zone';
 import { todayInZone } from '@/lib/user-time';

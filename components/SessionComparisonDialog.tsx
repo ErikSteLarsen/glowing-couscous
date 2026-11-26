@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { deriveSessionEditorMetrics, type SessionEditorDraft } from '@/lib/session-editor';
 import { getSportLabel } from '@/lib/sport';
 import { formatDuration } from '@/lib/format-duration';
-import { MetricText } from '@/components/wattonaut/MetricText';
+import { MetricText } from '@/components/tempobuilder/MetricText';
 import { WorkoutProfile } from '@/components/WorkoutProfile';
 import { buildWorkoutProfile } from '@/lib/workout-profile';
 import {

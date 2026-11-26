@@ -2,7 +2,7 @@
 const ACK_TIMEOUT_MS = 1500
 
 /**
- * Hands a video from a `tempo-ride://video` link to the trusted Wattonaut page as `youtube:video`
+ * Hands a video from a `tempo-ride://video` link to the trusted TempoBuilder page as `youtube:video`
  * (`{ url, startSec, id }`). Resolves true once that page confirms with `youtube:video-ack`, and
  * false when no ride takes it. A newer video supersedes one still waiting.
  */

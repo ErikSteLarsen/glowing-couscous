@@ -7,7 +7,7 @@ import { CalendarClock, CircleSlash, Download, Ellipsis, Link2, PencilLine, Squa
 import { SessionDeleteAction } from '@/components/SessionDeleteAction';
 import { SessionRescheduleAction } from '@/components/SessionRescheduleAction';
 import { ShareLinkResult, useShareLink } from '@/components/ShareLinkButton';
-import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/wattonaut/Menu';
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/tempobuilder/Menu';
 import { dangerTextClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { SessionStatusMessage, useSessionStatusAction, type SessionStatusAction } from './SessionStatusControl';
 

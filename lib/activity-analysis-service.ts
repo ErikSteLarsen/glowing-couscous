@@ -54,7 +54,7 @@ export function createActivityAnalysisService({ db = prisma, now = () => new Dat
         if (activity.analysis && ['queued', 'processing', 'retry'].includes(activity.analysis.status)) return { ok: true as const };
         if (activity.analysis && now().getTime() - activity.analysis.updatedAt.getTime() < 60_000) return fail(429, 'Wait a minute before you analyze again.');
         const active = await tx.activityAnalysis.count({ where: { activity: { athleteId: userId }, status: { in: ['queued', 'processing', 'retry'] } } });
-        if (active >= 10) return fail(429, 'Wattonaut is still analyzing other workouts. Try again when they’re done.');
+        if (active >= 10) return fail(429, 'TempoBuilder is still analyzing other workouts. Try again when they’re done.');
         const data = newActivityAnalysisJob(activity.telemetryJson, activity.durationSec, activity.athlete.performanceProfileJson ?? '{}');
         await tx.activityAnalysis.upsert({ where: { activityId }, create: { activityId, ...data },
           update: { ...data, status: 'queued', attemptCount: 0, leaseToken: null, leaseUntil: null, nextAttemptAt: now(), resultJson: null, lastError: null } });
@@ -94,7 +94,7 @@ export function createActivityAnalysisService({ db = prisma, now = () => new Dat
       try {
         const activity = row.activity;
         if (!isActivityAnalysisEligible(activity) || !activity.telemetryJson || row.version !== ACTIVITY_ANALYZER_VERSION) {
-          await db.activityAnalysis.updateMany({ where: { activityId, leaseToken: token }, data: { status: 'cancelled', leaseToken: null, leaseUntil: null, resultJson: null, lastError: row.version !== ACTIVITY_ANALYZER_VERSION ? 'Wattonaut’s analysis has been updated. Analyze again.' : 'This activity can’t be analyzed.' } });
+          await db.activityAnalysis.updateMany({ where: { activityId, leaseToken: token }, data: { status: 'cancelled', leaseToken: null, leaseUntil: null, resultJson: null, lastError: row.version !== ACTIVITY_ANALYZER_VERSION ? 'TempoBuilder’s analysis has been updated. Analyze again.' : 'This activity can’t be analyzed.' } });
           return;
         }
         const telemetry = parseActivityTelemetry(activity.telemetryJson);

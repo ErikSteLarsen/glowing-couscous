@@ -54,7 +54,7 @@ import {
 import type { PerformanceProfile } from '@/lib/performance-profile';
 import { WorkoutProfile } from '@/components/WorkoutProfile';
 import { buildWorkoutProfile } from '@/lib/workout-profile';
-import { Menu, MenuContent, MenuGroup, MenuGroupLabel, MenuItem, MenuSeparator, MenuTrigger, OverflowMenuTrigger } from '@/components/wattonaut/Menu';
+import { Menu, MenuContent, MenuGroup, MenuGroupLabel, MenuItem, MenuSeparator, MenuTrigger, OverflowMenuTrigger } from '@/components/tempobuilder/Menu';
 import {
   buttonFocusClassName,
   compactPrimaryButtonClassName,

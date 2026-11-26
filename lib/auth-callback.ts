@@ -5,7 +5,7 @@ import { parseYouTubeLink } from './youtube/youtube-url.ts';
 const RIDE_PATH = /^\/athlete\/ride(?:\/[1-9]\d*)?$/;
 const RIDE_FROM = /^[a-z][a-z-]{0,31}$/;
 
-/** The Send to Wattonaut window (bookmark setup without a link), keeping only a YouTube link `u` and whole seconds `t`. The send key never travels here. */
+/** The Send to TempoBuilder window (bookmark setup without a link), keeping only a YouTube link `u` and whole seconds `t`. The send key never travels here. */
 function sendCallbackPath(url: URL): string | null {
   const u = url.searchParams.get('u');
   if (!u) return SEND_PATH;
@@ -19,7 +19,7 @@ function sendCallbackPath(url: URL): string | null {
 
 /**
  * Local path to return to after sign-in, sign-up or setup. Share continuations,
- * ride pages and the Send to Wattonaut window are allowed, so a Wattonaut Ride deep link
+ * ride pages and the Send to TempoBuilder window are allowed, so a TempoBuilder Ride deep link
  * still opens its workout, and a sent video still reaches the ride, after the
  * visitor signs in. Anything else returns null.
  */

@@ -8,7 +8,7 @@ import {
   readAvailableMessage,
   readOfferMessage,
   readPlayMessage,
-  sendToWattonautBookmarklet,
+  sendToTempoBuilderBookmarklet,
   sendVideoToRide,
 } from '../lib/youtube/send-to-ride.ts';
 
@@ -55,58 +55,58 @@ const sendUrl = (origin: string, link: string, t?: number) =>
   `${origin}/athlete/ride/send?u=${encodeURIComponent(link)}${t === undefined ? '' : `&t=${t}`}#k=${KEY}`;
 
 test('the bookmark opens the send window with the link, position and key, then pauses the video', () => {
-  const href = sendToWattonautBookmarklet('http://localhost:3301/', KEY);
+  const href = sendToTempoBuilderBookmarklet('http://localhost:3301/', KEY);
   const link = `https://www.youtube.com/watch?v=${ID}&list=PL123`;
   const calls = runBookmarklet(href, { url: link, videos: [{ currentTime: 83.7 }] });
   assert.deepEqual(calls.alerts, []);
-  assert.deepEqual(calls.opened, [[sendUrl('http://localhost:3301', link, 83), 'wattonaut-send', 'popup,width=420,height=260']]);
+  assert.deepEqual(calls.opened, [[sendUrl('http://localhost:3301', link, 83), 'tempobuilder-send', 'popup,width=420,height=260']]);
   assert.deepEqual(calls.paused, [0]);
 });
 
 test('the bookmark sends an explicit 0 so an old t= in the page URL does not win', () => {
-  const href = sendToWattonautBookmarklet('https://wattonaut.example', KEY);
+  const href = sendToTempoBuilderBookmarklet('https://tempobuilder.example', KEY);
   const link = `https://www.youtube.com/watch?v=${ID}&t=300s`;
   const calls = runBookmarklet(href, { url: link, videos: [{ currentTime: 0.4 }] });
-  assert.equal(calls.opened[0][0], sendUrl('https://wattonaut.example', link, 0));
+  assert.equal(calls.opened[0][0], sendUrl('https://tempobuilder.example', link, 0));
 });
 
 test('the bookmark reads the playing video, else the largest visible one', () => {
-  const href = sendToWattonautBookmarklet('https://wattonaut.example', KEY);
+  const href = sendToTempoBuilderBookmarklet('https://tempobuilder.example', KEY);
   const link = `https://www.youtube.com/shorts/${ID}`;
   const playing = runBookmarklet(href, {
     url: link,
     videos: [{ currentTime: 10, rect: [0, 0, 1280, 720] }, { currentTime: 42, paused: false, rect: [0, 0, 200, 300] }],
   });
-  assert.equal(playing.opened[0][0], sendUrl('https://wattonaut.example', link, 42));
+  assert.equal(playing.opened[0][0], sendUrl('https://tempobuilder.example', link, 42));
   assert.deepEqual(playing.paused, [1]);
   const largest = runBookmarklet(href, {
     url: link,
     videos: [{ currentTime: 5, rect: [0, 0, 100, 100] }, { currentTime: 7, rect: [0, 0, 400, 700] }, { currentTime: 9, rect: [2000, 0, 900, 900] }],
   });
-  assert.equal(largest.opened[0][0], sendUrl('https://wattonaut.example', link, 7));
+  assert.equal(largest.opened[0][0], sendUrl('https://tempobuilder.example', link, 7));
 });
 
 test('the bookmark sends no position for a live stream or without a video element', () => {
-  const href = sendToWattonautBookmarklet('https://wattonaut.example', KEY);
+  const href = sendToTempoBuilderBookmarklet('https://tempobuilder.example', KEY);
   const live = `https://www.youtube.com/live/${ID}?si=x`;
-  assert.equal(runBookmarklet(href, { url: live, videos: [{ currentTime: 3600 }], live: true }).opened[0][0], sendUrl('https://wattonaut.example', live));
-  assert.equal(runBookmarklet(href, { url: live, videos: [{ currentTime: 3600, duration: Infinity }] }).opened[0][0], sendUrl('https://wattonaut.example', live));
+  assert.equal(runBookmarklet(href, { url: live, videos: [{ currentTime: 3600 }], live: true }).opened[0][0], sendUrl('https://tempobuilder.example', live));
+  assert.equal(runBookmarklet(href, { url: live, videos: [{ currentTime: 3600, duration: Infinity }] }).opened[0][0], sendUrl('https://tempobuilder.example', live));
   const short = `https://youtu.be/${ID}`;
   const calls = runBookmarklet(href, { url: short });
-  assert.equal(calls.opened[0][0], sendUrl('https://wattonaut.example', short));
+  assert.equal(calls.opened[0][0], sendUrl('https://tempobuilder.example', short));
   assert.deepEqual(calls.paused, []);
 });
 
 test('a blocked pop-up asks to allow pop-ups and leaves the video playing', () => {
-  const href = sendToWattonautBookmarklet('https://wattonaut.example', KEY);
+  const href = sendToTempoBuilderBookmarklet('https://tempobuilder.example', KEY);
   const calls = runBookmarklet(href, { url: `https://www.youtube.com/watch?v=${ID}`, videos: [{ currentTime: 12, paused: false }], blocked: true });
   assert.equal(calls.opened.length, 1);
-  assert.deepEqual(calls.alerts, ['Allow pop-ups for YouTube to send videos to Wattonaut.']);
+  assert.deepEqual(calls.alerts, ['Allow pop-ups for YouTube to send videos to TempoBuilder.']);
   assert.deepEqual(calls.paused, []);
 });
 
 test('outside a YouTube video the bookmark only asks for one', () => {
-  const href = sendToWattonautBookmarklet('https://wattonaut.example', KEY);
+  const href = sendToTempoBuilderBookmarklet('https://tempobuilder.example', KEY);
   for (const url of ['https://www.youtube.com/', 'https://www.youtube.com/results?search_query=bikes', 'https://example.com/watch?v=aqz-KE-bpKQ']) {
     const calls = runBookmarklet(href, { url, videos: [{ currentTime: 10 }] });
     assert.deepEqual(calls.alerts, ['Open a YouTube video first'], url);

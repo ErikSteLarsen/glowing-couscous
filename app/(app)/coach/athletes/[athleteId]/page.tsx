@@ -1,8 +1,8 @@
 import { format } from 'date-fns';
 import { notFound, redirect } from 'next/navigation';
-import { MetricText } from '@/components/wattonaut/MetricText';
-import { SessionBlockBar } from '@/components/wattonaut/SessionBlockBar';
-import { StatusBadge } from '@/components/wattonaut/StatusBadge';
+import { MetricText } from '@/components/tempobuilder/MetricText';
+import { SessionBlockBar } from '@/components/tempobuilder/SessionBlockBar';
+import { StatusBadge } from '@/components/tempobuilder/StatusBadge';
 import { ActionLink, EmptyState, PageShell, StatTile, Surface, TopBar } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth-session';
 import { getCoachAthleteDetail } from '@/lib/coach-service';

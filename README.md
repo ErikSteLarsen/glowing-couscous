@@ -1,6 +1,6 @@
-# Wattonaut
+# TempoBuilder
 
-Wattonaut is an app for planning and following your own endurance training. The
+TempoBuilder is an app for planning and following your own endurance training. The
 first MVP focuses on creating reusable workouts, scheduling them in a
 Monday-based calendar, following sessions, and recording and reviewing outcomes
 without needing a coach. The Athlete workspace is the personal experience.
@@ -42,7 +42,7 @@ Use this order for interface work:
 
 1. Read `DESIGN.md` for durable visual rules and reusable component patterns.
 2. Read `app/globals.css` for the implemented semantic tokens and state colors.
-3. Reuse owners in `components/ui.tsx`, `components/wattonaut/`, `AppShell`, and
+3. Reuse owners in `components/ui.tsx`, `components/tempobuilder/`, `AppShell`, and
    `WorkoutBuilder` before adding route-local styles.
 4. Treat `app/design/*` as visual experiments only. They are not production
    screens and their tokens must not be copied into authenticated routes.

@@ -91,7 +91,7 @@ export function useDraftRecovery({ userId, surface, resource, baseline, payload,
     const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
     const guard = (event: MouseEvent) => {
       const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
-      if (link && !window.confirm('Wattonaut can’t back up your changes on this device. Leave and lose them?')) { event.preventDefault(); event.stopPropagation(); }
+      if (link && !window.confirm('TempoBuilder can’t back up your changes on this device. Leave and lose them?')) { event.preventDefault(); event.stopPropagation(); }
     };
     window.addEventListener('beforeunload', warn);
     document.addEventListener('click', guard, true);

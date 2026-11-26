@@ -4,7 +4,7 @@ import { useId, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bike, Bluetooth, CalendarCheck, ChevronDown, ChevronRight, Monitor, Play, Timer, X, type LucideIcon } from 'lucide-react';
 import { Dialog, DialogBackdrop, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@ui-sdk/react/dialog';
-import { getRideOs, GetWattonautRideLink, RideAppInstallHelp, useRideAppLaunch } from '@/components/RideAppLaunch';
+import { getRideOs, GetTempoBuilderRideLink, RideAppInstallHelp, useRideAppLaunch } from '@/components/RideAppLaunch';
 import { useCatalogRide } from '@/components/library/useCatalogRide';
 import {
   dangerTextClassName,
@@ -77,7 +77,7 @@ function StartControl({ workout, source, triggerClassName, triggerAriaLabel }: P
     setRuntime({
       os: getRideOs(),
       webBluetooth: isWebBluetoothAvailable(),
-      inWattonautRide: window.tempoDesktop?.isDesktop === true,
+      inTempoBuilderRide: window.tempoDesktop?.isDesktop === true,
     });
     setOpen(true);
   }
@@ -193,7 +193,7 @@ function StartControl({ workout, source, triggerClassName, triggerAriaLabel }: P
               {catalog.preparation.kind === 'error' ? (
                 <p role="alert" className={dangerTextClassName}>{catalog.preparation.message}</p>
               ) : null}
-              {app.state === 'opening' ? <p role="status" className="text-sm text-[var(--text-secondary)]">Opening Wattonaut Ride…</p> : null}
+              {app.state === 'opening' ? <p role="status" className="text-sm text-[var(--text-secondary)]">Opening TempoBuilder Ride…</p> : null}
               {app.state === 'attempted' && sessionId !== null ? (
                 <RideAppInstallHelp os={runtime.os} onRetry={() => openApp(sessionId)} />
               ) : null}
@@ -210,7 +210,7 @@ function StartControl({ workout, source, triggerClassName, triggerAriaLabel }: P
                         <Icon aria-hidden="true" size={16} strokeWidth={1.6} className="mt-0.5 text-[var(--text-muted)]" />
                         <span>
                           <span className="font-medium text-[var(--text)]">{option.label}.</span> {option.detail}
-                          {option.mode === 'app' ? <> <GetWattonautRideLink /></> : null}
+                          {option.mode === 'app' ? <> <GetTempoBuilderRideLink /></> : null}
                         </span>
                       </li>
                     );

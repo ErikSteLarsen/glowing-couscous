@@ -1,6 +1,6 @@
 'use client';
 
-import { MetricPair } from '@/components/wattonaut/MetricPair';
+import { MetricPair } from '@/components/tempobuilder/MetricPair';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -143,7 +143,7 @@ export function ActivityImportForm() {
               [preview.sourceFormat === 'gpx' ? 'Track distance' : 'Distance', preview.activity.distanceMeters === null ? 'Not recorded' : distanceLabel(preview.activity.distanceMeters)],
             ].map(([label, value]) => <MetricPair key={label} label={label} value={value} />)}
           </dl>
-          <p className="text-sm text-[var(--text-muted)]">{preview.sourceFormat === 'fit' ? 'Finish time comes from the FIT file. Wattonaut puts the activity on the Calendar day you did it, using the local time saved in the file.' : preview.sourceFormat === 'gpx' ? 'Start, finish, time and distance come from the GPS track. Wattonaut doesn’t keep your route, and uses the track’s time zone to pick the Calendar day.' : 'Finish time is worked out from the start time and duration. Wattonaut puts the activity on the Calendar day you finished it.'}</p>
+          <p className="text-sm text-[var(--text-muted)]">{preview.sourceFormat === 'fit' ? 'Finish time comes from the FIT file. TempoBuilder puts the activity on the Calendar day you did it, using the local time saved in the file.' : preview.sourceFormat === 'gpx' ? 'Start, finish, time and distance come from the GPS track. TempoBuilder doesn’t keep your route, and uses the track’s time zone to pick the Calendar day.' : 'Finish time is worked out from the start time and duration. TempoBuilder puts the activity on the Calendar day you finished it.'}</p>
           {!preview.duplicate ? <fieldset className="space-y-2" aria-label="Match to a planned workout">
             <legend className="font-medium text-sm text-[var(--text)]">How should this activity be saved?</legend>
             <label className="flex gap-3 rounded-lg border border-[var(--border)] p-3 text-sm text-[var(--text-secondary)]">

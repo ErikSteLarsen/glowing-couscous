@@ -95,7 +95,7 @@ export function createPasswordResetService({
       const resetUrl = new URL('/reset-password', config.appOrigin);
       resetUrl.searchParams.set('token', rawToken);
       const message = [
-        'We received a request to reset the password for your Wattonaut account.',
+        'We received a request to reset the password for your TempoBuilder account.',
         `Use this link to choose a new password: ${resetUrl.toString()}`,
         'The link expires in 30 minutes and can only be used once.',
         'If you did not request this, you can ignore this email.',
@@ -104,7 +104,7 @@ export function createPasswordResetService({
       const response = await fetcher('https://api.resend.com/emails', {
         method: 'POST',
         headers: { Authorization: `Bearer ${config.apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: config.from, to: [user.email], subject: 'Reset your Wattonaut password', text: message }),
+        body: JSON.stringify({ from: config.from, to: [user.email], subject: 'Reset your TempoBuilder password', text: message }),
         signal: AbortSignal.timeout(10_000),
       });
       if (!response.ok) throw new Error('Password reset email delivery failed');

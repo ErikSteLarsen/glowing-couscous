@@ -244,7 +244,7 @@ export class RideDeviceManager {
     const server = await connection.device.gatt?.connect();
     if (signal.aborted && !this.connections[role]) connection.device.gatt?.disconnect();
     signal.throwIfAborted();
-    if (!server) throw new Error('This device can’t connect to Wattonaut.');
+    if (!server) throw new Error('This device can’t connect to TempoBuilder.');
     const protocol = await this.setup(role, server, signal);
     signal.throwIfAborted();
     this.reconnectAttempts[role] = 0;
@@ -376,9 +376,9 @@ export class RideDeviceManager {
       try {
         if (!control.granted) {
           const request = await this.procedure(control, encodeRequestControl());
-          if (request !== 'success') throw new Error('The trainer didn’t let Wattonaut control it.');
+          if (request !== 'success') throw new Error('The trainer didn’t let TempoBuilder control it.');
           const start = await this.procedure(control, encodeStartOrResume());
-          if (start === 'control-not-permitted') throw new Error('The trainer stopped letting Wattonaut control it.');
+          if (start === 'control-not-permitted') throw new Error('The trainer stopped letting TempoBuilder control it.');
           control.granted = true;
         }
         command = this.desiredCommand;

@@ -249,6 +249,6 @@ export function parseGpxActivity(xml: string, requestedSport: string): GpxParseR
     };
   } catch (error) {
     if (error instanceof GpxParseError) return { ok: false, error: error.message };
-    return { ok: false, error: 'This file isn’t a GPX activity Wattonaut can read.' };
+    return { ok: false, error: 'This file isn’t a GPX activity TempoBuilder can read.' };
   }
 }

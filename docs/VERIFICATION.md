@@ -15,7 +15,7 @@ includes operational scripts, standalone acceptance checks and the UI fixture
 so string-loaded entrypoints are not mistaken for dead code.
 
 `pnpm test:db` loads `.env` when present and enables the full default suite's
-PostgreSQL cases. It accepts `WATTONAUT_TEST_DATABASE_URL`, or derives the disposable
+PostgreSQL cases. It accepts `TEMPOBUILDER_TEST_DATABASE_URL`, or derives the disposable
 `tempo_acceptance` database from a local `DATABASE_URL`. It refuses remote hosts,
 other ports and explicit non-disposable database names before running tests;
 it never starts, resets or seeds a database. Database tests create/drop isolated

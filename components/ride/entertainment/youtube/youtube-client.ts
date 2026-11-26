@@ -10,7 +10,7 @@ export type YouTubeApiErrorCode = 'not_configured' | 'invalid_input' | 'rate_lim
 
 export type YouTubeApiResult<T> = { ok: true; data: T } | { ok: false; code: YouTubeApiErrorCode; message: string };
 
-const NETWORK_ERROR = 'Could not reach Wattonaut. Check your connection and try again.';
+const NETWORK_ERROR = 'Could not reach TempoBuilder. Check your connection and try again.';
 
 async function getJson<T>(url: string, signal?: AbortSignal): Promise<YouTubeApiResult<T>> {
   let response: Response;

@@ -10,7 +10,7 @@ import { serializeSessionSnapshot } from '../lib/session-snapshot-service.ts';
 import { disposableDatabaseSkip, withDisposableDatabase } from './disposable-postgres.ts';
 
 const gpx = `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="Wattonaut test" xmlns="http://www.topografix.com/GPX/1/1">
+<gpx version="1.1" creator="TempoBuilder test" xmlns="http://www.topografix.com/GPX/1/1">
   <metadata><name>Metadata is not the activity title</name></metadata>
   <trk><name>Evening trail</name>
     <trkseg>

@@ -1,12 +1,12 @@
 'use client';
 
 import { AlertDialog } from '@ui-sdk/react/alert-dialog';
-import { ConfirmationDialogContent } from '@/components/wattonaut/ConfirmationDialogContent';
-import { SearchField } from '@/components/wattonaut/SearchField';
+import { ConfirmationDialogContent } from '@/components/tempobuilder/ConfirmationDialogContent';
+import { SearchField } from '@/components/tempobuilder/SearchField';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowDown, ArrowUp, Copy, Plus, Trash2 } from 'lucide-react';
-import { Menu, MenuContent, MenuItem, MenuSeparator, OverflowMenuTrigger } from '@/components/wattonaut/Menu';
+import { Menu, MenuContent, MenuItem, MenuSeparator, OverflowMenuTrigger } from '@/components/tempobuilder/Menu';
 import { sectionHeadingClassName, ActionLink, buttonFocusClassName, Surface, EmptyState, primaryButtonClassName, secondaryButtonClassName, compactSecondaryButtonClassName, compactDangerButtonClassName, formFieldClassName, formLabelClassName, formSelectClassName, dangerTextClassName, successTextClassName, formTextareaClassName } from '@/components/ui';
 import { BuiltInTrainingPlans } from '@/components/BuiltInTrainingPlans';
 import { selectPlanWorkouts, type BuiltInPlanPreview } from '@/lib/plan-catalog/selection';
@@ -131,7 +131,7 @@ export function TrainingTemplatesClient({ templates, workouts, publicWorkouts, b
       setNotice({ text: method === 'DELETE' ? 'Training plan deleted. Workouts already on your Calendar stay.' : path.endsWith('/duplicate') ? 'Training plan copied.' : 'Training plan saved. Use Apply to Calendar to add it to a week or month.', error: false });
       router.refresh();
     } catch (error) {
-      setNotice({ text: error instanceof Error ? error.message : 'Could not reach Wattonaut. Your changes are still here. Try again.', error: true });
+      setNotice({ text: error instanceof Error ? error.message : 'Could not reach TempoBuilder. Your changes are still here. Try again.', error: true });
     } finally { inFlight.current = false; setBusy(false); }
   }
 

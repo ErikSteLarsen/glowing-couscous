@@ -1,7 +1,7 @@
 import { WorkoutFlowPreviews } from '@/components/design/WorkoutFlowPreviews';
 
 export const metadata = {
-  title: 'Wattonaut / Workout flow / Workbench / Ribbon',
+  title: 'TempoBuilder / Workout flow / Workbench / Ribbon',
   description: 'Workbench ribbon direction preview for a full-width selectable session.',
 };
 

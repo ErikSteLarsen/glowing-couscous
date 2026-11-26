@@ -5,7 +5,7 @@ const { createVideoHandOff } = require('../video-hand-off.cjs')
 
 const VIDEO = { url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE', startSec: 90 }
 
-function appWindow(url = 'https://wattonaut.example/athlete/ride/1') {
+function appWindow(url = 'https://tempobuilder.example/athlete/ride/1') {
   const sent = []
   return { sent, isDestroyed: () => false, webContents: { getURL: () => url, send: (channel, video) => sent.push([channel, video]) } }
 }
@@ -13,7 +13,7 @@ function appWindow(url = 'https://wattonaut.example/athlete/ride/1') {
 function handOff(window) {
   return createVideoHandOff({
     getAppWindow: () => window,
-    isTrusted: (url) => url.startsWith('https://wattonaut.example/'),
+    isTrusted: (url) => url.startsWith('https://tempobuilder.example/'),
     ackTimeoutMs: 20
   })
 }

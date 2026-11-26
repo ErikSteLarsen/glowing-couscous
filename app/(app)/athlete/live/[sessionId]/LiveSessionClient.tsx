@@ -13,8 +13,8 @@ import {
   iconButtonClassName,
   successTextClassName,
 } from '@/components/ui';
-import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/wattonaut/Menu';
-import { Stepper } from '@/components/wattonaut/Stepper';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempobuilder/Menu';
+import { Stepper } from '@/components/tempobuilder/Stepper';
 import type { BackTarget } from '@/lib/app-navigation';
 import { formatDuration } from '@/lib/format-duration';
 import { intensityColor } from '@/lib/intensity-color';
@@ -216,7 +216,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, unsaved = false, 
       setMessage('Workout marked as done. It’s in your Calendar.');
       router.refresh();
     } catch {
-      setError('Could not reach Wattonaut. Check your connection and try again.');
+      setError('Could not reach TempoBuilder. Check your connection and try again.');
     } finally {
       setPending(false);
     }

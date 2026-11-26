@@ -1,9 +1,9 @@
-/** Operating systems the Wattonaut Ride desktop app ships installers for. */
+/** Operating systems the TempoBuilder Ride desktop app ships installers for. */
 export type RideOs = 'windows' | 'macos' | 'linux' | 'other';
 
 export type RideDownload = { id: string; os: Exclude<RideOs, 'other'>; label: string; fileName: string; url: string };
 
-/** The released Wattonaut Ride version the website links to. Must match `desktop/package.json` (a test enforces it). */
+/** The released TempoBuilder Ride version the website links to. Must match `desktop/package.json` (a test enforces it). */
 export const RIDE_DESKTOP_VERSION = '0.3.0';
 
 /** Pinned to the release tag so the links never depend on which GitHub release is marked latest. */
@@ -36,9 +36,9 @@ export function rideDownloadBase(override?: string | null): string {
   return trimmed || DEFAULT_RIDE_DOWNLOAD_BASE;
 }
 
-/** The configured release asset base. The old `NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL` name is still read in case a deployment sets it. */
+/** The configured release asset base. The old `NEXT_PUBLIC_WATTONAUT_RIDE_DOWNLOAD_URL` and `NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL` names are still read in case a deployment sets them. */
 export function configuredRideDownloadBase(): string {
-  return rideDownloadBase(process.env.NEXT_PUBLIC_WATTONAUT_RIDE_DOWNLOAD_URL || process.env.NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL);
+  return rideDownloadBase(process.env.NEXT_PUBLIC_TEMPOBUILDER_RIDE_DOWNLOAD_URL || process.env.NEXT_PUBLIC_WATTONAUT_RIDE_DOWNLOAD_URL || process.env.NEXT_PUBLIC_TEMPO_RIDE_DOWNLOAD_URL);
 }
 
 export type MacArchitecture = 'arm' | 'x86';
@@ -70,21 +70,21 @@ export function rideInstallHints(os: RideOs): string[] {
     case 'windows':
       return [
         'Run the installer. If Windows warns about an unrecognized app, choose More info, then Run anyway.',
-        'After that, Wattonaut can open Wattonaut Ride for you.',
+        'After that, TempoBuilder can open TempoBuilder Ride for you.',
       ];
     case 'macos':
       return [
-        'Open the .dmg and drag Wattonaut Ride to Applications.',
+        'Open the .dmg and drag TempoBuilder Ride to Applications.',
         'The app isn’t signed yet. The first time, Control-click it in Applications, choose Open, then choose Open again.',
       ];
     case 'linux':
       return [
-        'AppImage: move it to a folder you keep (for example ~/Applications), make it executable with chmod +x Tempo-Ride-Linux.AppImage, then open it once. After that, Wattonaut can open it for you.',
+        'AppImage: move it to a folder you keep (for example ~/Applications), make it executable with chmod +x Tempo-Ride-Linux.AppImage, then open it once. After that, TempoBuilder can open it for you.',
         'Or install the .deb with sudo apt install ./Tempo-Ride-Linux.deb.',
         'Allow Bluetooth access when asked. Your Linux user may need to be in the bluetooth group.',
       ];
     default:
-      return ['Wattonaut Ride runs on Windows, macOS and Linux. On this device, ride in your browser instead.'];
+      return ['TempoBuilder Ride runs on Windows, macOS and Linux. On this device, ride in your browser instead.'];
   }
 }
 

@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Wattonaut',
-    short_name: 'Wattonaut',
+    name: 'TempoBuilder',
+    short_name: 'TempoBuilder',
     description: 'Plan, follow, and review your own endurance training.',
     start_url: '/',
     display: 'browser',

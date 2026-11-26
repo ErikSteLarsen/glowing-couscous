@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-09-14T15:00:00.000Z",
-  "title": "Design System: Wattonaut Night Instrument",
+  "title": "Design System: TempoBuilder Night Instrument",
   "extensions": {
     "colorMeta": {
       "trace": {
@@ -357,7 +357,7 @@
   ],
   "narrative": {
     "northStar": "Night Instrument",
-    "overview": "Wattonaut is a Monday-first endurance training instrument on a dark ground. Hairline rules replace heavy cards, numbers are large and tabular, and one cyan trace marks the primary action, active state, focus, and now.",
+    "overview": "TempoBuilder is a Monday-first endurance training instrument on a dark ground. Hairline rules replace heavy cards, numbers are large and tabular, and one cyan trace marks the primary action, active state, focus, and now.",
     "keyCharacteristics": [
       "Dark only",
       "Hairline rules over heavy cards",

@@ -10,12 +10,12 @@ import type { StravaConnectionSummary } from '@/lib/strava-service';
 
 const oauthNotices: ReadonlyMap<string, string> = new Map([
   ['connected', 'Strava is connected. Your recent activities are ready to review.'],
-  ['connected:sync-error', 'Strava is connected, but Wattonaut couldn’t check for activities yet. Open the Strava inbox and choose Check Strava now.'],
-  ['connected:revoke-error', 'Strava is connected. Wattonaut couldn’t confirm that your previous Strava account was unlinked.'],
-  ['connected:sync-revoke-error', 'Strava is connected, but Wattonaut couldn’t check for activities yet or confirm that your previous Strava account was unlinked. Open the Strava inbox and choose Check Strava now.'],
+  ['connected:sync-error', 'Strava is connected, but TempoBuilder couldn’t check for activities yet. Open the Strava inbox and choose Check Strava now.'],
+  ['connected:revoke-error', 'Strava is connected. TempoBuilder couldn’t confirm that your previous Strava account was unlinked.'],
+  ['connected:sync-revoke-error', 'Strava is connected, but TempoBuilder couldn’t check for activities yet or confirm that your previous Strava account was unlinked. Open the Strava inbox and choose Check Strava now.'],
   ['cancelled', 'You cancelled connecting Strava.'],
   ['error:state', 'The Strava sign-in timed out. Try connecting again.'],
-  ['error:account-linked', 'That Strava account is already linked to another Wattonaut account.'],
+  ['error:account-linked', 'That Strava account is already linked to another TempoBuilder account.'],
   ['error:connect', 'Could not connect Strava. Try again.'],
   ['error:authorization', 'Could not connect Strava. Try again.'],
 ]);
@@ -43,7 +43,7 @@ export function StravaConnectionSettings({
   const previousRevocationFailed = oauthResult === 'connected:revoke-error' || oauthResult === 'connected:sync-revoke-error';
 
   async function disconnect() {
-    if (!window.confirm('Disconnect Strava? Activities you imported from Strava are removed from Wattonaut, and planned workouts they were matched to go back to how they were.')) return;
+    if (!window.confirm('Disconnect Strava? Activities you imported from Strava are removed from TempoBuilder, and planned workouts they were matched to go back to how they were.')) return;
     setDisconnecting(true);
     setFeedback(null);
     try {
@@ -52,7 +52,7 @@ export function StravaConnectionSettings({
       if (!response.ok) throw new Error(result.error || 'Could not disconnect Strava.');
       const count = result.removedActivities ?? 0;
       setFeedback({
-        notice: `Strava disconnected. Removed ${count} Strava ${count === 1 ? 'activity' : 'activities'} from Wattonaut.`,
+        notice: `Strava disconnected. Removed ${count} Strava ${count === 1 ? 'activity' : 'activities'} from TempoBuilder.`,
         providerRevoked: result.providerRevoked !== false,
       });
       router.refresh();
@@ -86,7 +86,7 @@ export function StravaConnectionSettings({
           {feedback && 'notice' in feedback ? <p role="status" className={successTextClassName}>{feedback.notice}</p> : null}
           {previousRevocationFailed || (feedback && 'providerRevoked' in feedback && !feedback.providerRevoked) ? (
             <p className="text-sm text-[var(--text-secondary)]">
-              Wattonaut couldn’t confirm that Strava removed its access. <a href="https://www.strava.com/settings/apps" target="_blank" rel="noreferrer" className="text-[var(--brand)] underline underline-offset-2 hover:text-[var(--text)]">Remove Wattonaut in your Strava settings</a>.
+              TempoBuilder couldn’t confirm that Strava removed its access. <a href="https://www.strava.com/settings/apps" target="_blank" rel="noreferrer" className="text-[var(--brand)] underline underline-offset-2 hover:text-[var(--text)]">Remove TempoBuilder in your Strava settings</a>.
             </p>
           ) : null}
           {isConnected ? (

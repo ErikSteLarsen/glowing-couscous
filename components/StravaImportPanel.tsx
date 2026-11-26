@@ -1,6 +1,6 @@
 'use client';
 
-import { SessionRowText } from '@/components/wattonaut/SessionRowText';
+import { SessionRowText } from '@/components/tempobuilder/SessionRowText';
 import { SegmentedControl, SegmentedControlItem } from '@ui-sdk/react/segmented-control';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
@@ -9,8 +9,8 @@ import { Ellipsis } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
-import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/wattonaut/Menu';
-import { MetricPair } from '@/components/wattonaut/MetricPair';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempobuilder/Menu';
+import { MetricPair } from '@/components/tempobuilder/MetricPair';
 import { successTextClassName, sectionHeadingClassName, Badge, Surface, dangerTextClassName, formFieldClassName, formLabelClassName, getSegmentedChoiceClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName, nativeDialogClassName, formSelectClassName } from '@/components/ui';
 import type { ImportableSession } from '@/lib/activity-import-service';
 import type { ImportedActivityFile } from '@/lib/activity-file-parser';
@@ -136,7 +136,7 @@ export function StravaImportPanel({
       });
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || 'Could not import this Strava activity. Try again.');
-      setNotice(`${draft.title} was imported into Wattonaut.`);
+      setNotice(`${draft.title} was imported into TempoBuilder.`);
       setConnection((current) => ({ ...current, activities: current.activities.map((activity) => activity.id === activityId ? { ...activity, imported: true } : activity) }));
       router.refresh();
       dialogRef.current?.close();
@@ -307,11 +307,11 @@ export function StravaImportPanel({
                     {formatStravaMetadata(activeDetail.metadata).map(([label, value]) => <MetricPair key={label} label={label} value={value} />)}
                   </dl>
                   <label className="block">
-                    <span className={formLabelClassName}>Activity name in Wattonaut</span>
+                    <span className={formLabelClassName}>Activity name in TempoBuilder</span>
                     <input className={formFieldClassName} value={activeDraft?.title ?? activeDetail.title} maxLength={140} onChange={(event) => updateDraft(activeActivity.id, { title: event.target.value })} />
                   </label>
                   <label className="block">
-                    <span className={formLabelClassName}>Sport in Wattonaut</span>
+                    <span className={formLabelClassName}>Sport in TempoBuilder</span>
                     <select className={formSelectClassName} value={activeDraft?.sport ?? activeDetail.sport} onChange={(event) => updateDraft(activeActivity.id, { sport: event.target.value, plannedSessionId: null })}>
                       {sportOptions.map((sport) => <option key={sport} value={sport}>{getSportLabel(sport)}</option>)}
                     </select>

@@ -5,7 +5,7 @@ import { Cloud, FileUp, PencilLine, Plus, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/wattonaut/Menu';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempobuilder/Menu';
 import { centeredDialogClassName, iconButtonClassName, primaryButtonClassName, sectionHeadingClassName } from '@/components/ui';
 import { ManualActivityForm } from './ManualActivityForm';
 

@@ -32,7 +32,7 @@ export type CatalogMetrics = {
   tss: number;
   averagePct: number;
   maxPct: number;
-  /** Seconds in Wattonaut's five power zones (Z1–Z5), from the shared %FTP zone bands. */
+  /** Seconds in TempoBuilder's five power zones (Z1–Z5), from the shared %FTP zone bands. */
   zoneSec: [number, number, number, number, number];
   workSec: number;
   intervalCount: number;

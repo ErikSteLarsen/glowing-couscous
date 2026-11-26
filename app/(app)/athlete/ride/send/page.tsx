@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: 'Send to ride' };
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value) ?? null;
 
-/** The small window the "Send to Wattonaut" bookmark opens on a YouTube video: it hands the video to an open ride tab. */
+/** The small window the "Send to TempoBuilder" bookmark opens on a YouTube video: it hands the video to an open ride tab. */
 export default async function SendToRidePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
   const url = first(params.u);

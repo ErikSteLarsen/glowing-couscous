@@ -103,14 +103,14 @@ export function AppSidebar(props: {
         />
       ) : null}
       <aside
-        id="wattonaut-sidebar"
+        id="tempobuilder-sidebar"
         aria-label="Main menu"
         role={props.isMobileViewport && props.mobileOpen ? 'dialog' : undefined}
         aria-hidden={props.isMobileViewport && !props.mobileOpen ? true : undefined}
         aria-modal={props.isMobileViewport && props.mobileOpen ? true : undefined}
         inert={props.isMobileViewport && !props.mobileOpen ? true : undefined}
         ref={sidebarRef}
-        className={`wattonaut-sidebar app-sidebar fixed inset-y-0 left-0 z-40 w-64 overflow-y-auto overflow-x-hidden border-r border-[var(--nav-border)] bg-[var(--nav-surface)] text-[var(--nav-text)] transition-transform duration-200 md:visible md:translate-x-0 ${
+        className={`tempobuilder-sidebar app-sidebar fixed inset-y-0 left-0 z-40 w-64 overflow-y-auto overflow-x-hidden border-r border-[var(--nav-border)] bg-[var(--nav-surface)] text-[var(--nav-text)] transition-transform duration-200 md:visible md:translate-x-0 ${
           props.mobileOpen ? 'translate-x-0' : 'invisible -translate-x-full'
         }`}
       >
@@ -120,7 +120,7 @@ export function AppSidebar(props: {
               href={navItems[0]?.href ?? '/'}
               onClick={onNavigate}
               className={`flex min-w-0 items-center gap-2.5 rounded-lg hover:bg-[var(--raised)] max-md:min-h-11 ${buttonFocusClassName}`}
-              aria-label="Wattonaut home"
+              aria-label="TempoBuilder home"
             >
               <BrandMark />
               <BrandName />
@@ -139,11 +139,11 @@ export function AppSidebar(props: {
             </button>
             {props.onHide ? (
               <button
-                id="wattonaut-hide-menu"
+                id="tempobuilder-hide-menu"
                 type="button"
                 aria-label="Hide menu"
                 title="Hide menu"
-                aria-controls="wattonaut-sidebar"
+                aria-controls="tempobuilder-sidebar"
                 aria-expanded="true"
                 className={`hidden size-9 shrink-0 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--raised)] hover:text-[var(--text)] md:flex ${buttonFocusClassName}`}
                 onClick={props.onHide}

@@ -47,7 +47,7 @@ test('athlete Home uses the selected Monolith header and section scale', async (
 });
 
 test('session block bars show colored zones without a gray track', async () => {
-  const barSource = await read('components/wattonaut/SessionBlockBar.tsx');
+  const barSource = await read('components/tempobuilder/SessionBlockBar.tsx');
 
   assert.match(barSource, /bg-transparent/);
   assert.doesNotMatch(barSource, /bg-\[var\(--sunken\)\]/);
@@ -96,7 +96,7 @@ test('signed-in routes use grouped app shell while auth pages stay centered', as
   assert.match(shellSource, /useState\(false\)/);
   assert.match(shellSource, /AppSidebar/);
   const shellCss = await read('app/globals.css');
-  assert.match(shellSource, /wattonaut-shell/);
+  assert.match(shellSource, /tempobuilder-shell/);
   // The merged rail sizes the fixed sidebar and the content offset with one variable.
   assert.match(shellCss, /--sidebar: 14rem;/);
   assert.match(shellCss, /\.with-sidebar \{/);

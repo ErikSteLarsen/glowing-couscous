@@ -107,7 +107,7 @@ export function ManualActivityCorrectionForm({
         return;
       }
       if (!body || typeof body !== 'object' || !('updatedAt' in body) || typeof body.updatedAt !== 'string') {
-        setError('Your changes were saved, but Wattonaut couldn’t confirm the latest version. Reload the page before you edit again.');
+        setError('Your changes were saved, but TempoBuilder couldn’t confirm the latest version. Reload the page before you edit again.');
         setIsConflict(true);
         router.refresh();
         return;
@@ -119,7 +119,7 @@ export function ManualActivityCorrectionForm({
       setSaved(true);
       router.refresh();
     } catch {
-      setError('Could not reach Wattonaut. Your entries are still here. Try again.');
+      setError('Could not reach TempoBuilder. Your entries are still here. Try again.');
     } finally {
       setIsPending(false);
     }

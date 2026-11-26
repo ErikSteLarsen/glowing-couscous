@@ -65,7 +65,7 @@ export function parseTcxActivity(xml: string): TcxParseResult {
       if (elementCount > 150_000) throw new Error('This TCX file is too large to import.');
       const name = tag.local.toLowerCase();
       stack.push(name);
-      if (stack.length === 1 && name !== 'trainingcenterdatabase') throw new Error('This file isn’t a TCX activity Wattonaut can read.');
+      if (stack.length === 1 && name !== 'trainingcenterdatabase') throw new Error('This file isn’t a TCX activity TempoBuilder can read.');
       if (name === 'activity' && stack.length === 3 && stack[0] === 'trainingcenterdatabase' && stack[1] === 'activities') {
         activityCount += 1;
         if (activityCount > 1) throw new Error('Import one completed activity per file.');
@@ -103,7 +103,7 @@ export function parseTcxActivity(xml: string): TcxParseResult {
 
     const sport = sportMap[activity.sport.toLowerCase()];
     if (!activityCount || !sport) {
-      return { ok: false, error: `Wattonaut can’t import this sport (“${activity.sport || 'unknown'}”). Choose a run, ride or swim.` };
+      return { ok: false, error: `TempoBuilder can’t import this sport (“${activity.sport || 'unknown'}”). Choose a run, ride or swim.` };
     }
     const startedAt = parseISO(activity.startedAt);
     if (!isValid(startedAt) || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/i.test(activity.startedAt)) {
@@ -133,6 +133,6 @@ export function parseTcxActivity(xml: string): TcxParseResult {
       },
     };
   } catch {
-    return { ok: false, error: 'This file isn’t a TCX activity Wattonaut can read.' };
+    return { ok: false, error: 'This file isn’t a TCX activity TempoBuilder can read.' };
   }
 }

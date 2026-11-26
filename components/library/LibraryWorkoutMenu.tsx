@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { CalendarPlus, Ellipsis, Pencil } from 'lucide-react';
-import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/wattonaut/Menu';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempobuilder/Menu';
 import { iconButtonClassName } from '@/components/ui';
 import { withBackOrigin } from '@/lib/app-navigation';
 import { customizeWorkoutHref } from '@/lib/athlete-workouts-navigation';

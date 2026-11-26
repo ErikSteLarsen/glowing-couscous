@@ -21,7 +21,7 @@ function readPauseWithRide(): boolean {
   }
 }
 
-/** Wattonaut's own code for a player it couldn't load. */
+/** TempoBuilder's own code for a player it couldn't load. */
 const PLAYER_UNAVAILABLE = -1;
 
 /** What the rider sees for each IFrame API error code. */
@@ -45,10 +45,10 @@ const SAMPLE_MS = 3000;
 
 /**
  * The watch view: a slim bar and the privacy-enhanced YouTube player, contained at 16:9 and never
- * smaller than 200 × 200. Nothing is drawn over the player. Wattonaut starts playback only while the
+ * smaller than 200 × 200. Nothing is drawn over the player. TempoBuilder starts playback only while the
  * ride runs (or Pause with ride is off), the tab is visible, the player is at least half on screen
  * and no dialog covers it; it pauses with the ride, under a dialog, when hidden and when scrolled away.
- * In the Wattonaut Ride app the player is not controlled: the rider uses YouTube's own buttons.
+ * In the TempoBuilder Ride app the player is not controlled: the rider uses YouTube's own buttons.
  */
 export function YouTubeWatch({
   video,
@@ -67,7 +67,7 @@ export function YouTubeWatch({
   obscured: boolean;
   /** The rider just chose this video, or it was playing before the view remounted. */
   startPlaying: boolean;
-  /** Picked up after a remount: a video Wattonaut had paused (ride paused, dialog) plays again on resume. */
+  /** Picked up after a remount: a video TempoBuilder had paused (ride paused, dialog) plays again on resume. */
   restored?: boolean;
   /** A link is being dragged over the ride screen: the player lets it through and the stage is outlined. */
   dragActive?: boolean;
@@ -75,15 +75,15 @@ export function YouTubeWatch({
   checking?: boolean;
   trackActivity: TrackActivity;
   onBack: () => void;
-  /** Reports the playback position (and whether it plays or Wattonaut paused it) every few seconds and when the player goes away. */
+  /** Reports the playback position (and whether it plays or TempoBuilder paused it) every few seconds and when the player goes away. */
   onTime: (videoId: string, timeSec: number, playing: boolean) => void;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const frameBoxRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YouTubePlayer | null>(null);
-  /** Wattonaut paused the video (ride paused, dialog opened), so Wattonaut may play it again. */
-  const pausedByWattonautRef = useRef(false);
+  /** TempoBuilder paused the video (ride paused, dialog opened), so TempoBuilder may play it again. */
+  const pausedByTempoBuilderRef = useRef(false);
   const resumeAtRef = useRef(video.startSec ?? 0);
   const wantsPlayRef = useRef(startPlaying);
   const restoredRef = useRef(restored);
@@ -103,16 +103,16 @@ export function YouTubeWatch({
     onTimeRef.current = onTime;
   });
 
-  /** Whether Wattonaut may start the video now. Anything else leaves it to YouTube's own Play button. */
+  /** Whether TempoBuilder may start the video now. Anything else leaves it to YouTube's own Play button. */
   const mayPlay = useCallback(() => {
     const gate = gateRef.current;
     return (gate.rideStatus === 'running' || !gate.pauseWithRide) && !gate.obscured && gate.inView && document.visibilityState === 'visible';
   }, []);
 
-  const resumeIfPausedByWattonaut = useCallback(() => {
+  const resumeIfPausedByTempoBuilder = useCallback(() => {
     const player = playerRef.current;
-    if (!pausedByWattonautRef.current || !player || !mayPlay()) return;
-    pausedByWattonautRef.current = false;
+    if (!pausedByTempoBuilderRef.current || !player || !mayPlay()) return;
+    pausedByTempoBuilderRef.current = false;
     player.playVideo();
   }, [mayPlay]);
 
@@ -160,7 +160,7 @@ export function YouTubeWatch({
       if (!current) return;
       const time = current.getCurrentTime();
       if (time > 0) resumeAtRef.current = time;
-      wantsPlayRef.current = isPlaying(current) || pausedByWattonautRef.current;
+      wantsPlayRef.current = isPlaying(current) || pausedByTempoBuilderRef.current;
       onTimeRef.current(video.id, resumeAtRef.current, wantsPlayRef.current);
     };
     const timer = window.setInterval(sample, SAMPLE_MS);
@@ -169,7 +169,7 @@ export function YouTubeWatch({
     const pauseIfPlaying = () => {
       const current = playerRef.current;
       if (current && isPlaying(current)) current.pauseVideo();
-      pausedByWattonautRef.current = false;
+      pausedByTempoBuilderRef.current = false;
     };
     const observer = new IntersectionObserver(([entry]) => {
       gate.inView = Boolean(entry && entry.intersectionRatio >= 0.5);
@@ -187,13 +187,13 @@ export function YouTubeWatch({
         playerRef.current = target;
         // The rider chose this video (or it was playing before a remount): start it only
         // when the ride and page allow it, and otherwise leave it to YouTube's Play button.
-        // If the browser blocks playback, that button stays too and Wattonaut does not retry.
+        // If the browser blocks playback, that button stays too and TempoBuilder does not retry.
         if (!wantsPlayRef.current) return;
         if (mayPlay()) {
           target.playVideo();
         } else if (restoredRef.current && gate.inView && (gate.obscured || (gate.rideStatus === 'paused' && gate.pauseWithRide))) {
-          // Wattonaut had paused it before the remount; keep that, so resuming plays it again.
-          pausedByWattonautRef.current = true;
+          // TempoBuilder had paused it before the remount; keep that, so resuming plays it again.
+          pausedByTempoBuilderRef.current = true;
         }
       },
       onError: setErrorCode,
@@ -209,25 +209,25 @@ export function YouTubeWatch({
       observer.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
       playerRef.current = null;
-      pausedByWattonautRef.current = false;
+      pausedByTempoBuilderRef.current = false;
       player.destroy();
       iframe.remove();
     };
   }, [video.id, video.title, errorCode, attempt, fits, mayPlay, controlled]);
 
-  // Playing, about to play, or paused only by Wattonaut counts as watching. In the Wattonaut Ride app the
+  // Playing, about to play, or paused only by TempoBuilder counts as watching. In the TempoBuilder Ride app the
   // player's state is unknown, so an open video does.
   useEffect(() => {
     if (errorCode !== null || !fits) return;
     trackActivity(() => {
       const player = playerRef.current;
       if (!controlled) return true;
-      return player ? isPlaying(player) || pausedByWattonautRef.current : wantsPlayRef.current;
+      return player ? isPlaying(player) || pausedByTempoBuilderRef.current : wantsPlayRef.current;
     });
     return () => trackActivity(null);
   }, [controlled, errorCode, fits, trackActivity]);
 
-  // Pause with the ride, and play again on resume only if Wattonaut paused it.
+  // Pause with the ride, and play again on resume only if TempoBuilder paused it.
   const lastStatusRef = useRef(rideStatus);
   useEffect(() => {
     const previous = lastStatusRef.current;
@@ -236,12 +236,12 @@ export function YouTubeWatch({
     if (previous === 'running' && rideStatus === 'paused') {
       if (pauseWithRide && player && isPlaying(player)) {
         player.pauseVideo();
-        pausedByWattonautRef.current = true;
+        pausedByTempoBuilderRef.current = true;
       }
     } else if (previous === 'paused' && rideStatus === 'running') {
-      resumeIfPausedByWattonaut();
+      resumeIfPausedByTempoBuilder();
     }
-  }, [rideStatus, pauseWithRide, resumeIfPausedByWattonaut]);
+  }, [rideStatus, pauseWithRide, resumeIfPausedByTempoBuilder]);
 
   // A dialog over the stage (Connections, the phone's More sheet): pause and hide the player.
   useEffect(() => {
@@ -249,12 +249,12 @@ export function YouTubeWatch({
     if (obscured) {
       if (player && isPlaying(player)) {
         player.pauseVideo();
-        pausedByWattonautRef.current = true;
+        pausedByTempoBuilderRef.current = true;
       }
     } else {
-      resumeIfPausedByWattonaut();
+      resumeIfPausedByTempoBuilder();
     }
-  }, [obscured, resumeIfPausedByWattonaut]);
+  }, [obscured, resumeIfPausedByTempoBuilder]);
 
   // A click inside the player moves keyboard focus into YouTube, where the ride's Space/N/B/E/F
   // shortcuts can't reach. Return focus to the panel after a click; keep it there after a Tab.
@@ -285,7 +285,7 @@ export function YouTubeWatch({
   function togglePauseWithRide() {
     const next = !pauseWithRide;
     setPauseWithRide(next);
-    if (!next) pausedByWattonautRef.current = false;
+    if (!next) pausedByTempoBuilderRef.current = false;
     try { window.localStorage.setItem(PAUSE_WITH_RIDE_KEY, next ? '1' : '0'); } catch { /* preference only */ }
   }
 

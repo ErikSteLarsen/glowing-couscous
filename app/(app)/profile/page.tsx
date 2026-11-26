@@ -17,7 +17,7 @@ export default async function ProfilePage() {
     <PageShell className="profile-page__content">
       <TopBar
         title={account.name ?? 'Your profile'}
-        description="Your name and the heart-rate, power and pace values Wattonaut uses for workout targets."
+        description="Your name and the heart-rate, power and pace values TempoBuilder uses for workout targets."
         actions={controls ? <ActionLink href="#account" tone="secondary">Account</ActionLink> : undefined}
       />
       <ProfileClient account={account} />

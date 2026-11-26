@@ -6,7 +6,7 @@ import { ChevronDown, ChevronUp, Ellipsis, Maximize, Minimize, Minus, Pause, Pla
 import { BackLink, buttonFocusClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import type { BackTarget } from '@/lib/app-navigation';
 import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
-import { GetWattonautRideLink } from '@/components/RideAppLaunch';
+import { GetTempoBuilderRideLink } from '@/components/RideAppLaunch';
 import { MAX_ACTIVITY_IMPORT_DURATION_SEC } from '@/lib/activity-import-limits';
 import type { ExecutionStep } from '@/lib/athlete-execution';
 import { formatDistance } from '@/lib/format-distance';
@@ -198,9 +198,9 @@ function ProgressBar({ value, label, color = 'var(--brand)', className = 'h-2' }
 }
 
 function switchConsequence(leavingVideo: boolean): string {
-  if (!leavingVideo) return 'Wattonaut keeps your place on the loop.';
+  if (!leavingVideo) return 'TempoBuilder keeps your place on the loop.';
   if (window.tempoDesktop) return 'It starts over when you come back.';
-  return 'Wattonaut keeps your place in it for this ride.';
+  return 'TempoBuilder keeps your place in it for this ride.';
 }
 
 function switchLabel({ to, video }: PendingSwitch): string {
@@ -346,8 +346,8 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   const status = recording.status;
   const active = status === 'running' || status === 'paused';
 
-  // A YouTube video brought in from outside Wattonaut (Send to Wattonaut bookmark, a link sent to the
-  // Wattonaut Ride app, a dropped or pasted link) turns on the YouTube view and waits there until the
+  // A YouTube video brought in from outside TempoBuilder (Send to TempoBuilder bookmark, a link sent to the
+  // TempoBuilder Ride app, a dropped or pasted link) turns on the YouTube view and waits there until the
   // view takes it. Desktop only: phones have no YouTube view.
   const [incomingVideo, setIncomingVideo] = useState<IncomingYouTubeVideo | null>(null);
   const incomingSeqRef = useRef(0);
@@ -532,9 +532,9 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         }
         const retryable = !response || response.status >= 500 || response.status === 429;
         if (!retryable || attempt >= SAVE_RETRY_LIMIT) {
-          const error = response?.ok ? 'Wattonaut could not confirm that this ride was saved.'
+          const error = response?.ok ? 'TempoBuilder could not confirm that this ride was saved.'
             : typeof payload?.error === 'string' ? payload.error
-              : response ? 'Wattonaut could not save this ride.' : 'Could not reach Wattonaut.';
+              : response ? 'TempoBuilder could not save this ride.' : 'Could not reach TempoBuilder.';
           setSaveState({ kind: 'failed', error: `${error} Your ride is still on this device.` });
           return;
         }
@@ -549,7 +549,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         });
       }
     } catch {
-      setSaveState({ kind: 'failed', error: 'Wattonaut could not get this ride ready to save. Your ride is still on this device.' });
+      setSaveState({ kind: 'failed', error: 'TempoBuilder could not get this ride ready to save. Your ride is still on this device.' });
     } finally {
       pendingSaveRef.current = null;
     }
@@ -630,7 +630,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       ref={attachConnections}
       onClose={() => setConnectionsOpen(false)}
       aria-labelledby="ride-connections-title"
-      className="wattonaut-alert-dialog w-[calc(100%-2rem)] max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
+      className="tempobuilder-alert-dialog w-[calc(100%-2rem)] max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
     >
       <div className="flex items-center justify-between gap-3">
         <h2 id="ride-connections-title" className="text-base font-medium">Connections</h2>
@@ -644,7 +644,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         </ul>
       ) : (
         <p role="status" className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
-          This browser can’t connect to Bluetooth devices. You can ride without devices, or connect them in the <GetWattonautRideLink>Wattonaut Ride desktop app</GetWattonautRideLink>.
+          This browser can’t connect to Bluetooth devices. You can ride without devices, or connect them in the <GetTempoBuilderRideLink>TempoBuilder Ride desktop app</GetTempoBuilderRideLink>.
         </p>
       )}
     </dialog>
@@ -657,7 +657,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       onClose={() => setPendingSwitch(null)}
       aria-labelledby="ride-switch-title"
       aria-describedby="ride-switch-text"
-      className="wattonaut-alert-dialog w-[calc(100%-2rem)] max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
+      className="tempobuilder-alert-dialog w-[calc(100%-2rem)] max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
     >
       <h2 id="ride-switch-title" className="text-base font-medium">{leavingVideo ? 'Leave the video?' : 'Leave the course?'}</h2>
       <p id="ride-switch-text" className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
@@ -676,7 +676,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       onClose={() => setFinishOpen(false)}
       aria-labelledby="ride-finish-title"
       aria-describedby="ride-finish-text"
-      className="wattonaut-alert-dialog w-[calc(100%-2rem)] max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
+      className="tempobuilder-alert-dialog w-[calc(100%-2rem)] max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
     >
       <h2 id="ride-finish-title" className="text-base font-medium">Finish this ride?</h2>
       <p id="ride-finish-text" className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
@@ -774,7 +774,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       </>
     ) : (
       <button type="button" className={primaryButtonClassName} disabled={saveState.kind === 'saving'} onClick={() => void save()}>
-        {saveState.kind === 'saving' ? (saveState.attempt > 1 ? `Retrying (${saveState.attempt})…` : 'Saving…') : saveState.kind === 'failed' ? 'Try again' : 'Save to Wattonaut'}
+        {saveState.kind === 'saving' ? (saveState.attempt > 1 ? `Retrying (${saveState.attempt})…` : 'Saving…') : saveState.kind === 'failed' ? 'Try again' : 'Save to TempoBuilder'}
       </button>
     );
     return frame('Ride complete', null, (
@@ -786,9 +786,9 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
               {saveState.kind === 'saved' ? <p role="status" className="text-[var(--status-success)]">{notPlanned ? 'Saved and added to your Calendar.' : 'Saved. The workout is marked as done.'}{saveState.note ? ` ${saveState.note}` : ''}</p> : null}
               {saveState.kind === 'saved' && saveState.activityId !== null ? <p className="mt-1 text-[var(--text-secondary)]">Post it to Strava now, or later from the workout page.</p> : null}
               {saveState.kind === 'failed' ? <p role="alert" className="text-[var(--status-danger)]">{saveState.error}</p> : null}
-              {saveState.kind === 'saving' ? <p role="status" className="text-[var(--text-secondary)]">Saving to Wattonaut…</p> : null}
+              {saveState.kind === 'saving' ? <p role="status" className="text-[var(--text-secondary)]">Saving to TempoBuilder…</p> : null}
               {timerSec >= MAX_ACTIVITY_IMPORT_DURATION_SEC ? <p className="text-[var(--text-secondary)]">This ride reached the 36-hour recording limit.</p> : null}
-            {saveState.kind === 'idle' ? <p className="text-[var(--text-secondary)]">Your ride stays on this device until it’s saved to Wattonaut.</p> : null}
+            {saveState.kind === 'idle' ? <p className="text-[var(--text-secondary)]">Your ride stays on this device until it’s saved to TempoBuilder.</p> : null}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">

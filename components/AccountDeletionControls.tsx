@@ -77,7 +77,7 @@ export function AccountDeletionControls({ userId, email, hasPassword, hasGoogle 
     {!open ? <button ref={trigger} type="button" className={secondaryButtonClassName} onClick={prepare}>Delete account…</button> : <form onSubmit={deleteAccount} className="space-y-4" aria-label="Delete account confirmation">
       <p ref={accountIdentity} tabIndex={-1} className="break-all text-sm">Account: <strong>{email}</strong></p>
       <ul className="list-disc space-y-2 pl-5 text-sm text-[var(--text-secondary)]">
-        <li>Wattonaut deletes your profile, settings, workouts, results, sign-in details and connections to apps such as Strava. You’re signed out on all devices.</li>
+        <li>TempoBuilder deletes your profile, settings, workouts, results, sign-in details and connections to apps such as Strava. You’re signed out on all devices.</li>
         <li>Workouts you shared keep working through their links, shown as owned by <strong>[deleted]</strong>. Their names, descriptions and notes are removed. Only the blocks remain.</li>
         <li>To stop that, turn off your share links first. Copies other people already saved, and their training history, stay theirs.</li>
         <li>Unsaved changes on this device are deleted. Unsaved changes on your other devices, and existing backups, can’t be deleted from here.</li>

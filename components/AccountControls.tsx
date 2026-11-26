@@ -44,7 +44,7 @@ export function AccountControls({ userId, controls }: { userId: number; controls
     </div>
     <p className="text-sm text-[var(--text-secondary)]">Disconnecting Strava removes the activities you imported from it. Planned workouts they were matched to go back to how they were.</p>
     <div className="flex flex-wrap items-start gap-3"><SignOutButton /><button type="button" disabled={pending} onClick={endSessions} className={secondaryButtonClassName}>{pending ? 'Signing out everywhere…' : 'Sign out everywhere'}</button></div>
-    <p className="text-sm text-[var(--text-secondary)]">Signing out deletes unsaved changes on this device. Sign out everywhere also signs out your other devices the next time they open Wattonaut.</p>
+    <p className="text-sm text-[var(--text-secondary)]">Signing out deletes unsaved changes on this device. Sign out everywhere also signs out your other devices the next time they open TempoBuilder.</p>
     {error ? <p role="alert" className={dangerTextClassName}>{error}</p> : null}
     <AccountDeletionControls userId={userId} email={controls.email} hasPassword={controls.hasPassword} hasGoogle={controls.providers.includes('google')} />
   </section>;

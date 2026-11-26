@@ -2,11 +2,11 @@
 
 <!-- impeccable:product-schema 1 -->
 
-Wattonaut is a self-directed endurance training planner. It helps people
+TempoBuilder is a self-directed endurance training planner. It helps people
 create, schedule, follow, complete, and review their own training. The first MVP
 must be useful to an individual without a coach, roster, or assigned plan.
 
-The product brand is `Wattonaut` across runtime metadata, the sidebar mark,
+The product brand is `TempoBuilder` across runtime metadata, the sidebar mark,
 documentation, and the package name.
 
 ## Platform
@@ -36,7 +36,7 @@ The first MVP is used as a recurring personal training workspace:
 4. Open and follow a session, then record completion, notes, and actual outcomes.
 5. Review persisted results in Activity and session detail after refreshing or signing in again.
 
-Training weeks begin on Monday. Desktop, mobile, and keyboard workflows are all part of acceptance. The application is branded `Wattonaut` in runtime metadata while the repository and working product description use `Workout Planner`.
+Training weeks begin on Monday. Desktop, mobile, and keyboard workflows are all part of acceptance. The application is branded `TempoBuilder` in runtime metadata while the repository and working product description use `Workout Planner`.
 
 ## First MVP Priorities and Acceptance
 
@@ -47,7 +47,7 @@ Prioritize correctness, persistence, understandable empty and error states, and 
 3. Schedule personal content on selected dates and reliably review or remove planned sessions.
 4. Open and follow a session, record completion, notes, and actual outcomes.
 5. Review saved results in Activity and session detail after refreshing or signing in again.
-6. Log completed training directly in Activity, with sport, duration, and optional distance, effort, and notes, even when no Wattonaut session was planned; find it on the completion date in history and Calendar.
+6. Log completed training directly in Activity, with sport, duration, and optional distance, effort, and notes, even when no TempoBuilder session was planned; find it on the completion date in history and Calendar.
 7. Import a recorded activity file through an explicit preview, preserve its source and completion time, and prevent duplicate imports without requiring a connected account.
 8. Create personal race or event milestones, keep upcoming dates visible while planning, and review a result after the event.
 9. Explicitly pair an imported activity with an eligible self-planned session on its source-local completion date, or keep it separate, and review actual versus planned duration.
@@ -58,7 +58,7 @@ When a saved training plan opens in Planner, preselect a cadence-valid range: a
 Monday-to-Sunday week or the full calendar month. Show that range before
 assignment and let the athlete choose a different start date.
 
-The training log covers all completed work, whether it was planned in Wattonaut or
+The training log covers all completed work, whether it was planned in TempoBuilder or
 recorded manually afterward. Structured planned-versus-actual compliance
 requires a real planned baseline and actual structured outcome; unplanned
 entries never manufacture either. Imported summary metrics support duration-only
@@ -68,7 +68,7 @@ them as measured zero. This follows
 the established athlete training-log pattern ([Strava manual entry](https://support.strava.com/en-us/articles/15402188-how-do-i-upload-a-manual-activity-to-strava), [TrainingPeaks athlete features](https://www.trainingpeaks.com/athlete-features/)).
 
 Manual distance is an optional athlete-entered value stored in meters and shown
-in Activity and session review. Wattonaut never derives it from time, pace, or
+in Activity and session review. TempoBuilder never derives it from time, pace, or
 another incomplete source. This complements the current duration-first logging
 flow with the sport, time, and distance fields Strava provides in manual entry
 ([Strava manual activity entry](https://support.strava.com/en-us/articles/15402188-how-do-i-upload-a-manual-activity-to-strava)).
@@ -134,7 +134,7 @@ expansion until personal use is complete or explicitly requested.
 - A `Session` is structured content made from ordered workout blocks.
 - Blocks provide sport, targets, duration, repetitions, notes, skipped state, and zone information.
 - New effort blocks use the selected zone's target preset. Profile-backed running pace starts at the midpoint of the user's editable zone range; Olympiatoppen heart-rate targets use the user's BPM range for that zone. Numeric adjustments can move effort into another zone, and choosing a zone resets its preset. Relative profile targets remain generic in stored workouts so each user resolves them against their own profile.
-- The performance profile stores maximum heart rate for Olympiatoppen I-1–I-5 boundaries and a recent running race distance/time to seed five editable pace ranges. Pace defaults use Wattonaut's race-speed bands, not Olympiatoppen-published pace bands; profile users can set the fastest and slowest min/km for each zone.
+- The performance profile stores maximum heart rate for Olympiatoppen I-1–I-5 boundaries and a recent running race distance/time to seed five editable pace ranges. Pace defaults use TempoBuilder's race-speed bands, not Olympiatoppen-published pace bands; profile users can set the fastest and slowest min/km for each zone.
 - Short pause blocks sit between efforts or repeats. They count toward elapsed time but do not contribute training load.
 - Duration, training load, zones, and timelines are derived from structured blocks.
 - `Workouts` stores private reusable definitions without dates or assignments
@@ -185,7 +185,7 @@ expansion until personal use is complete or explicitly requested.
 
 ## Brand Commitments
 
-The product uses the `Wattonaut` runtime name and direct task language. The established identity and visual commitments live in `DESIGN.md`; product documentation must not invent a competing brand or imply that coach involvement is required.
+The product uses the `TempoBuilder` runtime name and direct task language. The established identity and visual commitments live in `DESIGN.md`; product documentation must not invent a competing brand or imply that coach involvement is required.
 
 ## Evidence on Hand
 

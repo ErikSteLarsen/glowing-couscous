@@ -1,2 +1,2 @@
 ignoredBuiltDependencies:
-  - electron-winstaller # Squirrel tooling. Wattonaut Ride builds an NSIS installer.
+  - electron-winstaller # Squirrel tooling. TempoBuilder Ride builds an NSIS installer.

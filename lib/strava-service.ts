@@ -30,7 +30,7 @@ export class StravaProviderError extends Error {
 }
 
 /**
- * Strava's v3 API base. `STRAVA_API_BASE_URL` points Wattonaut at a local stub during development;
+ * Strava's v3 API base. `STRAVA_API_BASE_URL` points TempoBuilder at a local stub during development;
  * it is ignored in production so a stray value can never redirect real tokens.
  */
 export function stravaApiBase() {
@@ -64,7 +64,7 @@ function encryptToken(value: string) {
 
 function decryptToken(value: string) {
   const [version, encodedIv, encodedTag, encodedData] = value.split('.');
-  if (version !== 'v1' || !encodedIv || !encodedTag || !encodedData) throw new Error('Wattonaut couldn’t use your Strava connection. Disconnect Strava in Settings, then connect it again.');
+  if (version !== 'v1' || !encodedIv || !encodedTag || !encodedData) throw new Error('TempoBuilder couldn’t use your Strava connection. Disconnect Strava in Settings, then connect it again.');
   const decipher = createDecipheriv('aes-256-gcm', tokenKey(), Buffer.from(encodedIv, 'base64url'));
   decipher.setAuthTag(Buffer.from(encodedTag, 'base64url'));
   return Buffer.concat([decipher.update(Buffer.from(encodedData, 'base64url')), decipher.final()]).toString('utf8');
@@ -87,7 +87,7 @@ async function readJson(response: Response): Promise<unknown> {
   try { value = await response.json(); } catch { value = null; }
   if (!response.ok) {
     const message = response.status === 401 || response.status === 403
-      ? 'Strava stopped accepting Wattonaut’s connection. Connect Strava again in Settings.'
+      ? 'Strava stopped accepting TempoBuilder’s connection. Connect Strava again in Settings.'
       : response.status === 429
         ? 'Strava is busy. Try again in a few minutes.'
         : 'Strava isn’t responding right now. Try again later.';
@@ -172,7 +172,7 @@ async function getActiveAccessToken(connection: NonNullable<Awaited<ReturnType<t
       throw error;
     }
   }
-  throw new Error('Wattonaut is reconnecting to Strava. Try again in a moment.');
+  throw new Error('TempoBuilder is reconnecting to Strava. Try again in a moment.');
 }
 
 async function apiGet(token: string, path: string) {
@@ -309,7 +309,7 @@ function canConnectStrava() {
 }
 
 export const stravaService = {
-  /** Whether Wattonaut may upload activities for this user: connected, and granted `activity:write`. */
+  /** Whether TempoBuilder may upload activities for this user: connected, and granted `activity:write`. */
   async writeAccessForUser(userId: number): Promise<StravaWriteAccess> {
     const connection = await getConnection(userId);
     if (!connection) return { state: 'not-connected', canConnect: canConnectStrava() };
@@ -379,12 +379,12 @@ export const stravaService = {
     const scopes = asString(token.scope, callbackScopes);
     const acceptedScopes = scopes.split(/[\s,]+/).filter(Boolean);
     if (!athleteId || !accessToken || !refreshToken || expiresAt === null) {
-      throw new Error('Wattonaut needs permission to see your Strava activities. Connect again and allow activity access.');
+      throw new Error('TempoBuilder needs permission to see your Strava activities. Connect again and allow activity access.');
     }
     const athleteName = [asString(athlete.firstname), asString(athlete.lastname)].filter(Boolean).join(' ') || null;
     const authorizedAt = new Date();
     if (!acceptedScopes.includes('activity:read') && !acceptedScopes.includes('activity:read_all')) {
-      throw new Error('Wattonaut needs permission to see your Strava activities. Connect again and allow activity access.');
+      throw new Error('TempoBuilder needs permission to see your Strava activities. Connect again and allow activity access.');
     }
     const existingAthlete = await prisma.stravaConnection.findUnique({ where: { athleteId: String(athleteId) }, select: { userId: true } });
     if (existingAthlete && existingAthlete.userId !== userId) {
@@ -400,7 +400,7 @@ export const stravaService = {
           authorizedAt,
         },
       });
-      throw new StravaConnectionConflictError('That Strava account is already linked to another Wattonaut account.');
+      throw new StravaConnectionConflictError('That Strava account is already linked to another TempoBuilder account.');
     }
     const existingConnection = await getConnection(userId);
     let previousProviderRevoked = true;
@@ -435,7 +435,7 @@ export const stravaService = {
       });
       return { connection, previousProviderRevoked };
     } catch (error) {
-      if (isUniqueConflict(error)) throw new StravaConnectionConflictError('That Strava account is already linked to another Wattonaut account.');
+      if (isUniqueConflict(error)) throw new StravaConnectionConflictError('That Strava account is already linked to another TempoBuilder account.');
       throw error;
     }
   },

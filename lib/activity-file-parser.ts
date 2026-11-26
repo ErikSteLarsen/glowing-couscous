@@ -172,7 +172,7 @@ function parseGpx(xml: string) {
 
 function parseFit(view: DataView) {
   if (view.byteLength < 14 || view.getUint8(8) !== 0x2e || view.getUint8(9) !== 0x46 || view.getUint8(10) !== 0x49 || view.getUint8(11) !== 0x54) {
-    throw new Error('This isn’t a FIT activity file Wattonaut can read.');
+    throw new Error('This isn’t a FIT activity file TempoBuilder can read.');
   }
 
   const headerSize = view.getUint8(0);

@@ -1,7 +1,7 @@
 import type { RideOs } from './ride/launch.ts';
 
 export type WorkoutStartEligibility = { sport: string; status: string; hasSteps: boolean };
-export type WorkoutStartRuntime = { os: RideOs; webBluetooth: boolean; inWattonautRide: boolean };
+export type WorkoutStartRuntime = { os: RideOs; webBluetooth: boolean; inTempoBuilderRide: boolean };
 
 export type WorkoutStartMode = 'live' | 'ride' | 'app';
 
@@ -34,7 +34,7 @@ const blockTimer = {
 const openApp = {
   icon: 'desktop',
   mode: 'app',
-  label: 'Open in Wattonaut Ride',
+  label: 'Open in TempoBuilder Ride',
   hint: 'Desktop app for your trainer',
   detail: 'Connect your trainer and sensors in the desktop app.',
 } as const;
@@ -52,7 +52,7 @@ const withoutDevices = {
   mode: 'ride',
   label: 'Ride without devices',
   hint: 'Targets and time, no sensors',
-  detail: 'Wattonaut times each block and shows its target. Your ride time is saved at the end.',
+  detail: 'TempoBuilder times each block and shows its target. Your ride time is saved at the end.',
 } as const;
 
 /** Swims have no guided mode: they are scheduled, read and marked done. */
@@ -74,10 +74,10 @@ export function getWorkoutStartChoices(workout: WorkoutStartEligibility, runtime
   if (!canStartWorkout(workout)) return { recommended: null, others: [] };
   if (workout.sport !== 'BIKING') return { recommended: null, others: [blockTimer] };
 
-  if (runtime.inWattonautRide) {
+  if (runtime.inTempoBuilderRide) {
     return runtime.webBluetooth
-      ? recommend([{ ...browserRide, label: 'Ride in Wattonaut Ride' }, blockTimer], 'Connect your trainer and sensors')
-      : recommend([{ ...withoutDevices, label: 'Ride in Wattonaut Ride' }, blockTimer], 'Targets and time, no sensors');
+      ? recommend([{ ...browserRide, label: 'Ride in TempoBuilder Ride' }, blockTimer], 'Connect your trainer and sensors')
+      : recommend([{ ...withoutDevices, label: 'Ride in TempoBuilder Ride' }, blockTimer], 'Targets and time, no sensors');
   }
 
   const desktop = runtime.os !== 'other';

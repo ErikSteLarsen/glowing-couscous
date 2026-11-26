@@ -62,7 +62,7 @@ test('live and ride pages return to their session and keep only a valid origin',
   assert.deepEqual(resolveBackTarget({ route: 'session-live', sessionId: 7, from: '//evil.example' }), back('/athlete/session/7', 'Workout'));
 });
 
-test('library workout returns to Ride from Wattonaut Ride, otherwise to the Workouts public tab', () => {
+test('library workout returns to Ride from TempoBuilder Ride, otherwise to the Workouts public tab', () => {
   assert.deepEqual(resolveBackTarget({ route: 'library-workout', from: 'ride' }), back('/athlete/ride', 'Ride'));
   assert.deepEqual(resolveBackTarget({ route: 'library-workout', from: 'library' }), back('/athlete/workouts?tab=library', 'Workouts'));
   assert.deepEqual(resolveBackTarget({ route: 'library-workout' }), back('/athlete/workouts?tab=library', 'Workouts'));

@@ -5,7 +5,7 @@ import { EntertainmentErrorBoundary } from './EntertainmentErrorBoundary';
 import type { EntertainmentMode, EntertainmentRide, TrackActivity } from './types';
 import type { IncomingYouTubeVideo } from './youtube/use-youtube-inbox';
 
-/** What the YouTube view gets from the ride screen besides the ride: videos brought in from outside Wattonaut. */
+/** What the YouTube view gets from the ride screen besides the ride: videos brought in from outside TempoBuilder. */
 export type YouTubeInbox = {
   incoming: IncomingYouTubeVideo | null;
   onIncomingTaken: (seq: number) => void;

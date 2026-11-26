@@ -1,4 +1,4 @@
-"""Final Wattonaut brand kit: planet with a rising ridge.
+"""Final TempoBuilder brand kit: planet with a rising ridge.
 Run: uv run --no-project --with fonttools --with brotli --with uharfbuzz --with shapely python brand/kit/build.py
 Needs rsvg-convert and magick. Also refreshes the app and desktop icons."""
 import io, subprocess
@@ -38,9 +38,9 @@ def text(s, size, w, track, x, y, fill):
         cx += p.x_advance * k + track * size
     return o, cx - x - track * size
 def word(m, x, y, size):
-    c = SCHEME[m][3]; a, aw = text('watt', size, 600, -.03, x, y, c); b, bw = text('onaut', size, 500, -.025, x + aw - .012 * size, y, c)
+    c = SCHEME[m][3]; a, aw = text('tempo', size, 600, -.03, x, y, c); b, bw = text('builder', size, 500, -.025, x + aw - .012 * size, y, c)
     return a + b, aw + bw - .012 * size
-svg = lambda w, h, body, t='Wattonaut': f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w:g} {h:g}" width="{w:g}" height="{h:g}" role="img" aria-label="{t}"><title>{t}</title>{body}</svg>\n'
+svg = lambda w, h, body, t='TempoBuilder': f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w:g} {h:g}" width="{w:g}" height="{h:g}" role="img" aria-label="{t}"><title>{t}</title>{body}</svg>\n'
 at = lambda b, x, y, k: f'<g transform="translate({x:g} {y:g}) scale({k:g})">{b}</g>'
 def put(p, s): p.parent.mkdir(parents=True, exist_ok=True); p.write_text(s)
 def png(src, dst, w): dst.parent.mkdir(parents=True, exist_ok=True); subprocess.run(['rsvg-convert', '-w', str(w), str(src), '-o', str(dst)], check=True)
@@ -51,7 +51,7 @@ for m in SCHEME:
     w, ww = word(m, 82, 47, 54); put(OUT / f'logo/logo-{m}.svg', svg(round(85 + ww, 1), 64, mark(m) + w))
     w, ww = word(m, 2, 52, 64); put(OUT / f'logo/wordmark-{m}.svg', svg(round(ww + 5, 1), 68, w))
     w, ww = word(m, 2, 130, 44); put(OUT / f'logo/stacked-{m}.svg', svg(round(ww + 5, 1), 146, at(mark(m), (ww + 5) / 2 - 40, 0, 1.25) + w))
-    mono, mw = text('WN', 52, 600, -.04, 0, 48, SCHEME[m][3]); put(OUT / f'logo/monogram-{m}.svg', svg(96, 64, at(mono, 48 - mw / 2, 0, 1), 'WN'))
+    mono, mw = text('TB', 52, 600, -.04, 0, 48, SCHEME[m][3]); put(OUT / f'logo/monogram-{m}.svg', svg(96, 64, at(mono, 48 - mw / 2, 0, 1), 'TB'))
     for n, wd in (('mark', 512), ('logo', 1200), ('wordmark', 1200), ('stacked', 800), ('monogram', 600)): png(OUT / f'logo/{n}-{m}.svg', OUT / f'png/{n}-{m}.png', wd)
 W = OUT / 'web'
 put(W / 'icon.svg', svg(64, 64, icon(64, 14, .08, RIDGE, 4))); put(W / 'icon-app.svg', svg(512, 512, icon(512, 112, .14))); put(W / 'icon-square.svg', svg(512, 512, icon(512, 0, .14))); put(W / 'icon-maskable.svg', svg(512, 512, icon(512, 0, .22))); put(W / 'favicon-16.svg', svg(64, 64, icon(64, 12, .03, SMALL, 6)))
@@ -76,7 +76,7 @@ for n in (16, 32, 48, 64, 128, 256, 512): png(W / ('favicon-16.svg' if n == 16 e
 desktop_size = int(subprocess.check_output(['magick', 'identify', '-format', '%w', str(D / 'icon.png')]))
 png(W / 'icon-app.svg', D / 'icon.png', desktop_size)
 s, g = shapes(gap=4)
-(REPO / 'components/BrandMark.tsx').write_text(f"""/** The Wattonaut mark: a planet with a ridge that rises to the right. Paths come from `brand/kit/build.py`. */
+(REPO / 'components/BrandMark.tsx').write_text(f"""/** The TempoBuilder mark: a planet with a ridge that rises to the right. Paths come from `brand/kit/build.py`. */
 export function BrandMark({{ className = '' }}: {{ className?: string }}) {{
   return (
     <span className={{`brand-mark ${{className}}`}} aria-hidden="true">
@@ -88,11 +88,11 @@ export function BrandMark({{ className = '' }}: {{ className?: string }}) {{
   );
 }}
 
-/** The name as set in the logo: lowercase, with "watt" slightly bolder. Use "Wattonaut" in running text. */
+/** The name as set in the logo: lowercase, with "tempo" slightly bolder. Use "TempoBuilder" in running text. */
 export function BrandName() {{
   return (
     <span className="text-[16px] tracking-[-0.025em] text-[var(--text)]">
-      <span className="font-semibold">watt</span><span className="font-medium">onaut</span>
+      <span className="font-semibold">tempo</span><span className="font-medium">builder</span>
     </span>
   );
 }}

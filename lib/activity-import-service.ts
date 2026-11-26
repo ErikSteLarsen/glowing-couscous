@@ -118,7 +118,7 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
   const cleanPoints: ActivitySeriesPoint[] = [];
   let previousElapsed = -1;
   for (const point of points) {
-    if (!point || typeof point !== 'object') return { ok: false, error: 'This activity has recorded data Wattonaut can’t read.' };
+    if (!point || typeof point !== 'object') return { ok: false, error: 'This activity has recorded data TempoBuilder can’t read.' };
     const sample = point as Record<string, unknown>;
     const elapsedSec = sample.elapsedSec;
     if (!Number.isInteger(elapsedSec) || (elapsedSec as number) < 0 || (elapsedSec as number) > MAX_ACTIVITY_IMPORT_DURATION_SEC || (elapsedSec as number) < previousElapsed) {

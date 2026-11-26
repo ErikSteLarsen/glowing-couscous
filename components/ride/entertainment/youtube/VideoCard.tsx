@@ -11,7 +11,7 @@ const stretchedClassName =
 
 /**
  * One Recently played video: the title button plays it again (after the usual check) and covers
- * the card. When Wattonaut can't check videos (`opensOnYouTube`) it links out to YouTube instead.
+ * the card. When TempoBuilder can't check videos (`opensOnYouTube`) it links out to YouTube instead.
  */
 export function VideoCard({
   video,

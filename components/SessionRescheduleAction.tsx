@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { CalendarDays, Ellipsis } from 'lucide-react';
-import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/wattonaut/Menu';
+import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/tempobuilder/Menu';
 import {
   overlayPanelClassName, dialogActionsClassName,
   compactSecondaryButtonClassName,
@@ -50,7 +50,7 @@ async function moveSession(sessionId: number, date: string): Promise<MoveResult>
       : 'Could not move this workout.';
     return { ok: false, error };
   } catch {
-    return { ok: false, error: 'Could not reach Wattonaut. Check your connection and try again.' };
+    return { ok: false, error: 'Could not reach TempoBuilder. Check your connection and try again.' };
   }
 }
 

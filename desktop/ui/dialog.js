@@ -68,7 +68,7 @@ function updateDevices(list) {
   if (restoreFocus) (selectedDevice() ?? devices.querySelector('input') ?? cancel).focus()
 }
 
-window.wattonautDialog.onUpdate((state) => {
+window.tempobuilderDialog.onUpdate((state) => {
   const initial = mode === undefined
   mode = state.mode
   picker.hidden = mode !== 'devices'
@@ -85,7 +85,7 @@ window.wattonautDialog.onUpdate((state) => {
     updateDevices(state.devices)
     submit.textContent = 'Connect'
   } else if (mode === 'trust') {
-    title.textContent = 'Trust this Wattonaut site?'
+    title.textContent = 'Trust this TempoBuilder site?'
     origin.textContent = state.origin
     status.textContent = 'This site can ask to connect to Bluetooth devices and access your local ride backups. Continue if you recognize the address.'
     submit.textContent = 'Trust and open'
@@ -106,15 +106,15 @@ window.wattonautDialog.onUpdate((state) => {
 
 devices.addEventListener('change', updateSubmit)
 pin.addEventListener('input', updateSubmit)
-cancel.addEventListener('click', () => window.wattonautDialog.submit(''))
+cancel.addEventListener('click', () => window.tempobuilderDialog.submit(''))
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') window.wattonautDialog.submit('')
+  if (event.key === 'Escape') window.tempobuilderDialog.submit('')
 })
 document.querySelector('form').addEventListener('submit', (event) => {
   event.preventDefault()
   if (submit.disabled) return
   const value = { devices: selectedDevice()?.value, providePin: pin.value }[mode] ?? 'confirm'
-  window.wattonautDialog.submit(value)
+  window.tempobuilderDialog.submit(value)
 })
 
-window.wattonautDialog.ready()
+window.tempobuilderDialog.ready()

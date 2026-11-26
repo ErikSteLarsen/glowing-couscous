@@ -1,7 +1,7 @@
 import { WorkoutFlowPreviews } from '@/components/design/WorkoutFlowPreviews';
 
 export const metadata = {
-  title: 'Wattonaut / Workout flow / Trail',
+  title: 'TempoBuilder / Workout flow / Trail',
   description: 'Trail direction preview for a guided workout creation flow.',
 };
 

@@ -1,13 +1,13 @@
 'use client';
 
-import { SessionRowText } from '@/components/wattonaut/SessionRowText';
+import { SessionRowText } from '@/components/tempobuilder/SessionRowText';
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ActivityMetricPreview } from '@/components/ActivityMetricPreview';
 import { formatStravaMetadata, StravaImportPanel } from '@/components/StravaImportPanel';
-import { MetricPair } from '@/components/wattonaut/MetricPair';
+import { MetricPair } from '@/components/tempobuilder/MetricPair';
 import { successTextClassName, sectionHeadingClassName, EmptyState, Surface, buttonFocusClassName, dangerButtonClassName, dangerTextClassName, formFieldClassName, formLabelClassName, ghostButtonClassName, primaryButtonClassName, secondaryButtonClassName, formSelectClassName } from '@/components/ui';
 import { parseActivityFile, type ImportedActivityFile } from '@/lib/activity-file-parser';
 import type { ImportableSession, ImportedActivityHistory } from '@/lib/activity-import-service';
@@ -184,7 +184,7 @@ export function ActivityImportClient({
         {fileError ? <p role="alert" className={dangerTextClassName}>{fileError}</p> : null}
         {notice ? <p role="status" className={successTextClassName}>{notice}</p> : null}
         <p className="text-[12px] leading-[1.5] text-[var(--text-muted)]">
-          Your file is read on this device and never uploaded. Wattonaut saves the activity’s totals and recorded data, such as heart rate and power, until you delete it.
+          Your file is read on this device and never uploaded. TempoBuilder saves the activity’s totals and recorded data, such as heart rate and power, until you delete it.
         </p>
       </Surface>
 
