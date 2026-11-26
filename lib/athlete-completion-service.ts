@@ -109,7 +109,8 @@ function claimValidatedSession(tx: CompletionTransaction, session: OutcomeSessio
 }
 
 /** `localDay` is the athlete's day, for a started workout that gets its date from this result. */
-export type CompletionInput = { notes?: string; localDay?: string };
+/** `via: 'live'` when the athlete finished it in the guided player, so it counts as recorded here. */
+export type CompletionInput = { notes?: string; localDay?: string; via?: 'live' };
 export type ActualActor = { role: 'ATHLETE' | 'COACH'; userId: number };
 
 export type CompletionResult =
@@ -152,6 +153,7 @@ export function createAthleteCompletionService({
     actor: ActualActor,
     session: OutcomeSession,
     draft: SessionEditorDraft,
+    recordedWith?: 'live',
   ): Promise<ActualOutcomeResult> {
     if (draft.mode !== 'actual') {
       return { ok: false, status: 400, error: 'Could not save your result. Reload the page and try again.' };
@@ -218,6 +220,7 @@ export function createAthleteCompletionService({
           notes: serialized.athleteNotes,
           actualSnapshotJson,
           rpe: serialized.rpe,
+          ...(recordedWith ? { recordedWith } : {}),
         },
         create: {
           sessionId: session.id,
@@ -232,6 +235,7 @@ export function createAthleteCompletionService({
           notes: serialized.athleteNotes,
           actualSnapshotJson,
           rpe: serialized.rpe,
+          ...(recordedWith ? { recordedWith } : {}),
         },
       });
       return true;
@@ -293,7 +297,7 @@ export function createAthleteCompletionService({
         athleteNotes: retainedNotes,
         blocks: session.blocks,
       });
-      const result = await saveActualForSession({ role: 'ATHLETE', userId: athleteId }, session, draft);
+      const result = await saveActualForSession({ role: 'ATHLETE', userId: athleteId }, session, draft, input.via);
       if (!result.ok) return { ok: false, status: result.status, error: result.error };
       return { ok: true, sessionId: result.sessionId, isDone: true, notes: retainedNotes ?? '', completedAt: result.completedAt };
     },

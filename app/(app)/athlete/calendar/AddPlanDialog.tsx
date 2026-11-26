@@ -32,8 +32,8 @@ import { selectPlanWorkouts } from '@/lib/plan-catalog/selection';
 import { ROUTINE_DAYS } from '@/lib/template-routine';
 import { MAX_PLACEMENTS_PER_REQUEST } from '@/lib/template-period';
 import { addDayKeys, weekStartOf } from '@/lib/training-load';
-import { AddDialogFrame, usePlacementRequest } from './AddDialogFrame';
-import type { AddablePlan } from './placement-options';
+import { AddDialogFrame, usePlacementRequest } from '@/components/AddDialogFrame';
+import type { AddablePlan } from '@/lib/placement-options';
 
 type Step = 'plan' | 'dates' | 'review';
 const STEP_LABELS: { id: Step; label: string }[] = [

@@ -37,6 +37,8 @@ export type ActivityImportInput = {
   localDay?: string;
   laps?: ActivityLap[];
   analyzeWorkout?: boolean;
+  /** `ride` when TempoBuilder's Ride recorder made this activity, not a file or Strava. */
+  recorder?: 'ride';
 };
 
 export type ImportedActivityHistory = {
@@ -161,6 +163,7 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
   const laps = validateActivityLaps(value.laps, durationSec as number);
   if (!laps) return { ok: false, error: 'This activity’s laps can’t be read.' };
   if (value.analyzeWorkout !== undefined && typeof value.analyzeWorkout !== 'boolean') return { ok: false, error: 'Choose whether to analyze this workout.' };
+  if (value.recorder !== undefined && value.recorder !== 'ride') return { ok: false, error: 'This activity can’t be read.' };
   return {
     ok: true,
     value: {
@@ -171,6 +174,7 @@ export function validateActivityImport(input: unknown): { ok: true; value: Activ
       durationSec: durationSec as number,
       laps,
       analyzeWorkout: value.analyzeWorkout === true,
+      ...(value.recorder === 'ride' ? { recorder: 'ride' as const } : {}),
       distanceMeters,
       elevationGainMeters,
       points: cleanPoints,
@@ -314,6 +318,7 @@ export function createActivityImportService({ db = prisma as unknown as ImportDa
         externalSource: provenance.sourceProvider ?? null,
         externalActivityId: provenance.sourceProvider === 'STRAVA' ? provenance.externalActivityId ?? null : null,
         sourceMetadataJson: provenance.sourceProvider === 'STRAVA' ? JSON.stringify(sanitizeSourceMetadata(provenance.metadata)) : null,
+        recordedWith: !provenance.sourceProvider && value.recorder === 'ride' ? 'ride' : null,
       };
       if (value.analyzeWorkout && provenance.sourceProvider !== 'STRAVA' && value.sport === 'RUNNING') {
         Object.assign(activityData, { analysis: { create: newActivityAnalysisJob(activityData.telemetryJson, value.durationSec, user.performanceProfileJson ?? '{}') } });

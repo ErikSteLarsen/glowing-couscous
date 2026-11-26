@@ -28,7 +28,7 @@ export function getPrimaryNavigation(): NavItem[] {
     { label: 'Calendar', description: 'Your planned workouts', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
     { label: 'Workouts', description: 'Yours & public library', href: '/athlete/workouts', matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/library'] },
     { label: 'Training plans', description: 'Weekly training patterns', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
-    { label: 'Activity', description: 'Everything you’ve done', href: '/athlete/activity', matchPrefix: '/athlete/activity', activeMatchPrefixes: ['/athlete/import'] },
+    { label: 'My activities', description: 'Recorded, imported and logged', href: '/athlete/activity', matchPrefix: '/athlete/activity', activeMatchPrefixes: ['/athlete/import'] },
     { label: 'Events', description: 'Goals and results', href: '/athlete/events', matchPrefix: '/athlete/events' },
   ];
 }
@@ -69,7 +69,7 @@ const backDestinations = {
   calendar: { href: '/athlete/calendar', destination: 'Calendar' },
   // Planner merged into Calendar; links that still say from=planner return there.
   planner: { href: '/athlete/calendar', destination: 'Calendar' },
-  activity: { href: '/athlete/activity', destination: 'Activity' },
+  activity: { href: '/athlete/activity', destination: 'My activities' },
   imports: { href: '/athlete/import', destination: 'Import' },
   library: { href: '/athlete/workouts?tab=library', destination: 'Workouts' },
   ride: { href: '/athlete/ride', destination: 'Ride' },

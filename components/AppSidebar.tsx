@@ -29,6 +29,7 @@ import { Badge, buttonFocusClassName } from '@/components/ui';
 const navIcons: Record<string, LucideIcon> = {
   Athletes: UsersRound,
   Activity,
+  'My activities': Activity,
   Calendar: CalendarDays,
   Events: Flag,
   Coach: Search,

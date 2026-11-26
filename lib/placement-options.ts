@@ -1,16 +1,16 @@
-import { accountService } from '@/lib/account-service';
-import { summarizeOwnedWorkout } from '@/lib/owned-workout-summary';
-import { builtInPlanPreviews } from '@/lib/plan-catalog';
-import type { PlanSlot } from '@/lib/plan-catalog/selection';
-import { derivePlannerSourceDurationSec } from '@/lib/planner-source-metrics';
-import { getTempoZoneMeta, type TempoZone } from '@/lib/tempo-blocks';
-import { templateService } from '@/lib/template-service';
-import { getTemplateCadence } from '@/lib/template-cadence';
-import { parseTemplateRoutine } from '@/lib/template-routine';
-import { workoutCatalog } from '@/lib/workout-catalog';
-import { expandCatalogItems } from '@/lib/workout-catalog/metrics';
-import { categoryLabel, createCatalogListEntries, levelLabel } from '@/lib/workout-catalog/query';
-import { workoutLibraryService } from '@/lib/workout-library-service';
+import { accountService } from './account-service.ts';
+import { summarizeOwnedWorkout } from './owned-workout-summary.ts';
+import { builtInPlanPreviews } from './plan-catalog/index.ts';
+import type { PlanSlot } from './plan-catalog/selection.ts';
+import { derivePlannerSourceDurationSec } from './planner-source-metrics.ts';
+import { getTempoZoneMeta, type TempoZone } from './tempo-blocks.ts';
+import { templateService } from './template-service.ts';
+import { getTemplateCadence } from './template-cadence.ts';
+import { parseTemplateRoutine } from './template-routine.ts';
+import { workoutCatalog } from './workout-catalog/index.ts';
+import { expandCatalogItems } from './workout-catalog/metrics.ts';
+import { categoryLabel, createCatalogListEntries, levelLabel } from './workout-catalog/query.ts';
+import { workoutLibraryService } from './workout-library-service.ts';
 
 /** One step of a workout's intensity shape, in %FTP or zone-equivalent height. */
 export type AddableProfileStep = { startSec: number; durationSec: number; startPct: number; endPct: number; kind: string };

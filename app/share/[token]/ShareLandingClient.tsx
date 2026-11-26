@@ -34,10 +34,13 @@ import {
 import type { AppRole } from '@/lib/app-navigation';
 import { getSportLabel } from '@/lib/sport';
 import type { PerformanceProfile } from '@/lib/performance-profile';
+import { getCalendarPlacementHref } from '@/lib/calendar-navigation';
 
-// Recipients can copy a shared workout to their Planner or save it as a private
-// template. Only Planner is a continuable sign-in action (see lib/share-link.ts).
-type ShareCopyAction = ShareLinkAction | 'template';
+// Athletes add a shared workout to their Calendar (a copy in My workouts, placed
+// with the Calendar's Add workout dialog), save it to My workouts after editing,
+// or save it as a training plan. Coaches save it to Workouts (`planner`). Only
+// `planner` is a continuable sign-in action (see lib/share-link.ts).
+type ShareCopyAction = ShareLinkAction | 'library' | 'template';
 
 export function ShareLandingClient({
   token,
@@ -57,7 +60,8 @@ export function ShareLandingClient({
   ownerDeleted?: boolean;
 }) {
   const router = useRouter();
-  const availableInitialAction: ShareCopyAction | null = initialAction && isSignedIn && userRole ? initialAction : null;
+  // Athletes come back from sign-in to the preview and choose Add to Calendar there.
+  const availableInitialAction: ShareCopyAction | null = initialAction && isSignedIn && userRole === 'COACH' ? initialAction : null;
   const [action, setAction] = useState<ShareCopyAction | null>(availableInitialAction);
   const [draft, setDraft] = useState<SessionEditorDraft>(() => createInitialDraft(projection, userRole, availableInitialAction));
   const [message, setMessage] = useState('');
@@ -67,17 +71,52 @@ export function ShareLandingClient({
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const plannerDestination = userRole === 'COACH' ? 'Workouts' : 'Calendar';
 
-  function beginAction(nextAction: ShareCopyAction) {
-    if (isPending) return;
-    const callbackPath = createSharePath(token, nextAction === 'template' ? undefined : nextAction);
+  /** Sends a signed-out or unfinished account to sign in first; true when it can go on. */
+  function ensureAccount(nextAction: ShareCopyAction) {
+    const callbackPath = createSharePath(token, nextAction === 'planner' ? nextAction : undefined);
     if (!isSignedIn) {
       router.push(`/login?callbackUrl=${encodeURIComponent(callbackPath)}`);
-      return;
+      return false;
     }
     if (!userRole) {
       router.push(`/setup?callbackUrl=${encodeURIComponent(callbackPath)}`);
-      return;
+      return false;
     }
+    return true;
+  }
+
+  /**
+   * Athletes: save the shared workout as it is to My workouts, then open the
+   * Calendar's Add workout dialog on it. Cancel there comes back here.
+   */
+  function addToCalendar() {
+    if (isPending || !ensureAccount('planner')) return;
+    if (userRole === 'COACH') { beginAction('planner'); return; }
+    startTransition(async () => {
+      try {
+        setMessage('');
+        const response = await fetch('/api/share-links/intake', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, action: 'library', draft: serializeSessionEditorDraft(createSessionEditorDraftFromSharedProjection(projection)) }),
+        });
+        const payload = await response.json().catch(() => ({})) as { error?: string; sessionIds?: number[] };
+        const workoutId = payload.sessionIds?.[0];
+        if (!response.ok || !workoutId) {
+          setMessageTone('danger');
+          setMessage(payload.error ?? 'Could not add this workout. Try again.');
+          return;
+        }
+        router.push(getCalendarPlacementHref(`workout:${workoutId}`, { back: createSharePath(token) }));
+      } catch {
+        setMessageTone('danger');
+        setMessage('Could not reach TempoBuilder. Check your connection and try again.');
+      }
+    });
+  }
+
+  function beginAction(nextAction: ShareCopyAction) {
+    if (isPending || !ensureAccount(nextAction)) return;
 
     setAction(nextAction);
     setDraft(createInitialDraft(projection, userRole, nextAction));
@@ -121,10 +160,8 @@ export function ShareLandingClient({
         }
 
         setMessageTone('success');
-        setMessage(action === 'template' ? 'Saved to My workouts and as a new training plan.' : `Workout saved to your ${plannerDestination}.`);
-        router.push(action === 'template'
-          ? userRole === 'COACH' ? '/coach/templates' : '/athlete/templates'
-          : userRole === 'COACH' ? '/coach/workouts' : '/athlete/calendar');
+        setMessage(savedMessage(action, plannerDestination));
+        router.push(savedDestination(action, userRole));
         router.refresh();
       } catch {
         setMessageTone('danger');
@@ -182,18 +219,25 @@ export function ShareLandingClient({
                 <div>
                   <h2 className="text-base font-medium text-[var(--text)]">Save your own copy</h2>
                   <p className="mt-2 text-sm leading-[1.55] text-[var(--text-secondary)]">
-                    Pick one. You can edit the workout before anything is saved.
+                    {userRole === 'COACH' ? 'Pick one. You can edit the workout before anything is saved.' : 'Put it on a day in your Calendar, or edit your own copy first.'}
                   </p>
                 </div>
                 <div className="grid gap-3">
-                  <button type="button" className={primaryButtonClassName} onClick={() => beginAction('planner')}>
-                    Add to {plannerDestination}
+                  <button type="button" className={primaryButtonClassName} disabled={isPending} onClick={addToCalendar}>
+                    {isPending ? 'Adding…' : `Add to ${plannerDestination}`}
                   </button>
+                  {userRole !== 'COACH' ? <p className="-mt-1 text-[13px] text-[var(--text-muted)]">Saves a copy to My workouts and lets you pick the day.</p> : null}
                   {userRole === 'ATHLETE' ? (
-                    <button type="button" className={compactSecondaryButtonClassName} onClick={() => beginAction('template')}>
-                      Save as a training plan
-                    </button>
+                    <>
+                      <button type="button" className={compactSecondaryButtonClassName} disabled={isPending} onClick={() => beginAction('library')}>
+                        Edit and save to My workouts
+                      </button>
+                      <button type="button" className={compactSecondaryButtonClassName} disabled={isPending} onClick={() => beginAction('template')}>
+                        Save as a training plan
+                      </button>
+                    </>
                   ) : null}
+                  {message && messageTone === 'danger' ? <p role="alert" className={dangerTextClassName}>{message}</p> : null}
                 </div>
               </Surface>
             </div>
@@ -203,7 +247,7 @@ export function ShareLandingClient({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-lg font-medium text-[var(--text)]">
-                  {action === 'planner' ? `Edit before saving to ${plannerDestination}` : 'Edit before saving as a training plan'}
+                  {editorTitle(action, plannerDestination)}
                 </h2>
               </div>
               <button type="button" className={compactSecondaryButtonClassName} onClick={closeEditor} disabled={isPending}>
@@ -236,7 +280,7 @@ export function ShareLandingClient({
             ) : null}
             <div className="sticky bottom-0 z-10 -mx-5 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--surface)] px-5 py-3">
               <button type="button" className={primaryButtonClassName} onClick={save} disabled={isPending || confirmDiscard}>
-                {isPending ? 'Saving…' : action === 'planner' ? `Save to ${plannerDestination}` : 'Save as a training plan'}
+                {isPending ? 'Saving…' : saveLabel(action, plannerDestination)}
               </button>
               {message ? <p role={messageTone === 'success' ? 'status' : 'alert'} className={messageTone === 'success' ? successTextClassName : dangerTextClassName}>{message}</p> : null}
             </div>
@@ -251,12 +295,37 @@ export function ShareLandingClient({
   );
 }
 
+function editorTitle(action: ShareCopyAction, plannerDestination: string) {
+  if (action === 'planner') return `Edit before saving to ${plannerDestination}`;
+  if (action === 'library') return 'Edit before saving to My workouts';
+  return 'Edit before saving as a training plan';
+}
+
+function saveLabel(action: ShareCopyAction, plannerDestination: string) {
+  if (action === 'planner') return `Save to ${plannerDestination}`;
+  if (action === 'library') return 'Save to My workouts';
+  return 'Save as a training plan';
+}
+
+function savedMessage(action: ShareCopyAction, plannerDestination: string) {
+  if (action === 'template') return 'Saved to My workouts and as a new training plan.';
+  if (action === 'library') return 'Workout saved to My workouts.';
+  return `Workout saved to your ${plannerDestination}.`;
+}
+
+function savedDestination(action: ShareCopyAction, userRole: AppRole | null) {
+  const coach = userRole === 'COACH';
+  if (action === 'template') return coach ? '/coach/templates' : '/athlete/templates';
+  if (action === 'library') return '/athlete/workouts';
+  return coach ? '/coach/workouts' : '/athlete/calendar';
+}
+
 function createInitialDraft(
   projection: SharedWorkoutProjection,
   userRole: AppRole | null,
   action: ShareCopyAction | null,
 ) {
-  if (action === 'template') return createSessionEditorDraftFromSharedProjection(projection);
+  if (action === 'template' || action === 'library') return createSessionEditorDraftFromSharedProjection(projection);
   return createPlannerEditorDraftFromSharedProjection(projection, {
     ownershipMode: userRole === 'COACH' ? 'coach-library' : 'athlete',
   });

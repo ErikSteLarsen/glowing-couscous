@@ -205,7 +205,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, unsaved = false, 
       const response = await fetch(`/api/athlete/sessions/${sessionId}/completion`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isDone: true, localDay: toDayKey(new Date()) }),
+        body: JSON.stringify({ isDone: true, localDay: toDayKey(new Date()), via: 'live' }),
       });
       const payload = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) {

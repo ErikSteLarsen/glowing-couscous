@@ -135,6 +135,21 @@ export function createShareLinkService({
       return { ok: true as const };
     },
 
+    /** An athlete's own copy in My workouts, e.g. to place it with the Calendar's Add workout. */
+    async saveLibraryCopy(userId: number, token: string, input: unknown) {
+      const snapshot = await loadSnapshot(token);
+      if (!snapshot) return { ok: false as const, error: NOT_FOUND, status: 404 };
+      const draftResult = createImportedDraft(snapshot.projection, input, null);
+      if (!draftResult.ok) return draftResult;
+      const result = await workoutLibraryPersistence.saveForOwner('athlete', userId, {
+        ...serializeSessionEditorDraft(draftResult.draft),
+        scheduledDate: null,
+        templateId: null,
+      }, undefined, snapshot.lineage);
+      if (!result.ok) return result;
+      return { ok: true as const, sessionIds: [result.sessionId] };
+    },
+
     async savePlannerCopy(userId: number, role: ShareLinkRole, token: string, input: unknown) {
       const snapshot = await loadSnapshot(token);
       if (!snapshot) return { ok: false as const, error: NOT_FOUND, status: 404 };

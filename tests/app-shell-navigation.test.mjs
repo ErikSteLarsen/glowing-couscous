@@ -66,7 +66,7 @@ test('the drawer reaches every personal training destination the bottom bar had'
   for (const href of ['/athlete', '/athlete/calendar', '/athlete/workouts', '/athlete/activity']) {
     assert.ok(items.some((item) => item.href === href), href);
   }
-  const activity = items.find((item) => item.label === 'Activity');
+  const activity = items.find((item) => item.label === 'My activities');
   assert.equal(isNavigationItemActive('/athlete/import', activity, items), true);
   assert.equal(items.some((item) => item.href.startsWith('/coach')), false);
 });
@@ -177,7 +177,7 @@ test('saved workouts open a detail page in the same layout as public workouts, w
 
 test('Calendar add dialogs only place defined sources on chosen dates', async () => {
   const calendarPageSource = await read('app/(app)/athlete/calendar/page.tsx');
-  const optionsSource = await read('app/(app)/athlete/calendar/placement-options.ts');
+  const optionsSource = await read('lib/placement-options.ts');
   const retiredPlannerSource = await read('app/(app)/athlete/planner/page.tsx');
   const workoutDialogSource = await read('app/(app)/athlete/calendar/AddWorkoutDialog.tsx');
   const planDialogSource = await read('app/(app)/athlete/calendar/AddPlanDialog.tsx');
@@ -494,4 +494,48 @@ test('Home adds workouts on a chosen day through the Calendar dialog and comes b
   for (const dialog of ['AddWorkoutDialog', 'AddPlanDialog']) {
     assert.match(await read(`app/(app)/athlete/calendar/${dialog}.tsx`), /router\.replace\(returnHref \?\? getCalendarHref\(view, day\), \{ scroll: false \}\)/);
   }
+});
+
+test('training plan editor picks workouts with the Calendar workout browser', async () => {
+  const templatesClient = await read('components/TrainingTemplatesClient.tsx');
+  const planDialog = await read('components/PlanWorkoutDialog.tsx');
+  const templatesPage = await read('app/(app)/athlete/templates/page.tsx');
+  const addWorkoutDialog = await read('app/(app)/athlete/calendar/AddWorkoutDialog.tsx');
+  assert.match(templatesPage, /loadAddableWorkouts\(user\.id\)/);
+  assert.match(templatesClient, /<PlanWorkoutDialog/);
+  assert.match(templatesClient, /setPicker\(\{ kind: 'add', weekdays: \[weekday\] \}\)/);
+  assert.match(templatesClient, /setPicker\(\{ kind: 'replace', weekday, currentKey: entry\.workoutValue, entryKey: entry\.key \}\)/);
+  assert.doesNotMatch(templatesClient, /<optgroup|Days for this workout/);
+  for (const source of [planDialog, addWorkoutDialog]) assert.match(source, /<WorkoutBrowser/);
+  assert.match(planDialog, /Which days of the week\?/);
+});
+
+test('a newly saved workout offers Add to Calendar right away', async () => {
+  const workoutsClient = await read('components/WorkoutLibraryClient.tsx');
+  assert.match(workoutsClient, /const NEW_WORKOUT_SAVED = 'Workout saved to My workouts\.'/);
+  assert.match(workoutsClient, /scheduleId=\{role === 'ATHLETE' && newlySaved\?\.message === message \? newlySaved\.id : null\}/);
+  assert.match(workoutsClient, /<ReturnHereLink href=\{myWorkoutScheduleHref\(scheduleId\)\}/);
+});
+
+test('Move workout uses the shared sheet dialog with quick days', async () => {
+  const move = await read('components/SessionRescheduleAction.tsx');
+  assert.match(move, /<AddDialogFrame\s+size="compact"\s+title="Move workout"/);
+  assert.match(move, /\{ day: today, label: 'Today' \},\s+\{ day: tomorrow, label: 'Tomorrow' \}/);
+  assert.match(move, /`Move to \$\{formatDay\(date\)\}`/);
+  assert.doesNotMatch(move, /<dialog/);
+});
+
+test('My activities marks what was recorded in TempoBuilder', async () => {
+  const page = await read('app/(app)/athlete/activity/page.tsx');
+  const live = await read('app/(app)/athlete/live/[sessionId]/LiveSessionClient.tsx');
+  const completionRoute = await read('app/api/athlete/sessions/[sessionId]/completion/route.ts');
+  const importService = await read('lib/activity-import-service.ts');
+  assert.match(page, /title="My activities"/);
+  assert.match(page, /ACTIVITY_SOURCE_GROUPS\.map/);
+  assert.match(page, /<SourceBadge source=\{activity\.source\} \/>/);
+  assert.match(page, /<ActivityFilterBar filters=\{filters\} \/>/);
+  assert.doesNotMatch(page, /Apply filters/);
+  assert.match(live, /via: 'live'/);
+  assert.match(completionRoute, /via: body\.via === 'live' \? 'live' : undefined/);
+  assert.match(importService, /recordedWith: !provenance\.sourceProvider && value\.recorder === 'ride' \? 'ride' : null/);
 });

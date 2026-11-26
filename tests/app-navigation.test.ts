@@ -11,8 +11,8 @@ import {
 test('activity navigation also covers activity imports', () => {
   const history = getPrimaryNavigation().find((item) => item.href === '/athlete/activity');
   assert.deepEqual(history, {
-    label: 'Activity',
-    description: 'Everything you’ve done',
+    label: 'My activities',
+    description: 'Recorded, imported and logged',
     href: '/athlete/activity',
     matchPrefix: '/athlete/activity',
     activeMatchPrefixes: ['/athlete/import'],
@@ -38,7 +38,7 @@ test('session detail returns to every allowed origin', () => {
     home: back('/athlete', 'Home'),
     calendar: back('/athlete/calendar', 'Calendar'),
     planner: back('/athlete/calendar', 'Calendar'),
-    activity: back('/athlete/activity', 'Activity'),
+    activity: back('/athlete/activity', 'My activities'),
     imports: back('/athlete/import', 'Import'),
     library: back('/athlete/workouts?tab=library', 'Workouts'),
     ride: back('/athlete/ride', 'Ride'),
@@ -72,9 +72,9 @@ test('library workout returns to Ride from TempoBuilder Ride, otherwise to the W
 test('import returns to Settings, Profile or Activity', () => {
   assert.deepEqual(resolveBackTarget({ route: 'import', from: 'profile' }), back('/profile', 'Profile'));
   assert.deepEqual(resolveBackTarget({ route: 'import', from: 'settings' }), back('/settings#connections', 'Settings'));
-  assert.deepEqual(resolveBackTarget({ route: 'import', from: 'activity' }), back('/athlete/activity', 'Activity'));
-  assert.deepEqual(resolveBackTarget({ route: 'import' }), back('/athlete/activity', 'Activity'));
-  assert.deepEqual(resolveBackTarget({ route: 'import', from: 'ride' }), back('/athlete/activity', 'Activity'));
+  assert.deepEqual(resolveBackTarget({ route: 'import', from: 'activity' }), back('/athlete/activity', 'My activities'));
+  assert.deepEqual(resolveBackTarget({ route: 'import' }), back('/athlete/activity', 'My activities'));
+  assert.deepEqual(resolveBackTarget({ route: 'import', from: 'ride' }), back('/athlete/activity', 'My activities'));
 });
 
 test('coach athlete detail restores the planner selection and falls back to the roster', () => {

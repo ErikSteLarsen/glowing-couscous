@@ -21,7 +21,7 @@ import { todayInZone } from '@/lib/user-time';
 import { AthleteCalendar, type CalendarDay, type CalendarWeek } from './AthleteCalendar';
 import { AddPlanDialog } from './AddPlanDialog';
 import { AddWorkoutDialog } from './AddWorkoutDialog';
-import { loadAddablePlans, loadAddableWorkouts } from './placement-options';
+import { loadAddablePlans, loadAddableWorkouts } from '@/lib/placement-options';
 
 export const metadata: Metadata = { title: 'Calendar' };
 
