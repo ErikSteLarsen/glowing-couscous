@@ -38,13 +38,15 @@ type Props = {
   workout: WorkoutStartEligibility & { title: string; durationSec: number };
   source: WorkoutSource;
   triggerClassName?: string;
+  /** Accessible name when the page has another control with the same visible label. */
+  triggerAriaLabel?: string;
 };
 
 export function WorkoutStartChooser(props: Props) {
   return canStartWorkout(props.workout) ? <StartControl {...props} /> : null;
 }
 
-function StartControl({ workout, source, triggerClassName }: Props) {
+function StartControl({ workout, source, triggerClassName, triggerAriaLabel }: Props) {
   const router = useRouter();
   const app = useRideAppLaunch();
   const catalog = useCatalogRide();
@@ -120,6 +122,7 @@ function StartControl({ workout, source, triggerClassName }: Props) {
         ref={triggerRef}
         type="button"
         className={triggerClassName ?? `${primaryButtonClassName} max-md:min-h-11`}
+        aria-label={triggerAriaLabel}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? dialogId : undefined}

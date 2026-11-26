@@ -825,6 +825,12 @@ one stats line (time, sport, duration, TSS); today is
 selected on load. Wider screens show every day as a top-aligned column that is
 only as tall as its own workouts.
 
+The page header carries Home's one primary action, Start workout, which opens
+Workouts to pick something to do (full width under the greeting on phones).
+Today's own Start workout and Details are ghost buttons, so a planned session
+starts straight from the card without competing with the header. A session
+that can't be started there keeps a secondary Details button.
+
 ### Home training setup
 
 Show incomplete training targets in a compact link directly below Today. Name

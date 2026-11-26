@@ -14,7 +14,13 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   `components/HomeWeekDays.tsx`. `pnpm test` (643), lint, types and build
   passed; Chromium checked the demo athlete's Home at 390, 1024 and 1440 px,
   including switching days, 44 px chips at 320 px and light theme.
-
+- Home Start workout (2026-11-26). The Home header has a primary Start
+  workout link to Workouts (full width on phones); Today's Start workout
+  chooser (named "Start workout: <title>") and Details are ghost buttons;
+  Details stays secondary when the session can't be started. `pnpm test`
+  (643), lint, types and build passed; Chromium at 1440 and 390 px checked
+  the header link reaching Workouts and the ghost Start opening the chooser
+  for a planned session.
 - Mobile bottom navigation removed (2026-11-26). The hamburger drawer is the
   only mobile navigation; it already lists Home, Calendar, Workouts, Training
   plans, Activity (now also active on Import) and Events. The old coach bottom

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { format, getISOWeek } from 'date-fns';
-import { ArrowRight, CalendarPlus } from 'lucide-react';
+import { ArrowRight, CalendarPlus, Play } from 'lucide-react';
 import { PerformanceChart } from '@/components/charts/PerformanceChart';
 import { WeeklyVolumeChart, type VolumeWeek } from '@/components/charts/WeeklyVolumeChart';
 import { ComplianceMark } from '@/components/wattonaut/ComplianceMark';
@@ -91,6 +91,7 @@ export default async function AthletePage() {
   const today = fromDayKey(dashboard.todayKey);
   const firstName = dashboard.athlete.name.split(' ')[0] || dashboard.athlete.name;
   const nextAction = dashboard.todaySessions.find((session) => session.status !== 'completed' && session.status !== 'skipped') ?? null;
+  const canStartToday = nextAction !== null && canStartWorkout(nextAction);
   const doneToday = dashboard.todaySessions.filter((session) => session.status === 'completed');
   const skippedToday = dashboard.todaySessions.filter((session) => session.status === 'skipped');
   const restState = restStateFor(doneToday, skippedToday);
@@ -128,6 +129,12 @@ export default async function AthletePage() {
       <TopBar
         eyebrow={`${format(today, 'EEEE\u00A0d\u00A0MMMM')}\u00A0– Week\u00A0${getISOWeek(today)}`}
         title={`${greetingFor(hourInZone(timeZone))}, ${firstName}`}
+        actions={
+          <Link href="/athlete/workouts" className={`${primaryButtonClassName} max-sm:w-full max-md:min-h-11`}>
+            <Play aria-hidden="true" size={15} strokeWidth={1.8} fill="currentColor" />
+            Start workout
+          </Link>
+        }
       />
       <div className={`grid gap-4 ${upcoming.length > 0 ? 'lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]' : ''}`}>
         <Surface aria-labelledby="today-heading" className="flex min-w-0 flex-col gap-3">
@@ -160,12 +167,14 @@ export default async function AthletePage() {
                   <span className="text-[var(--text)]">{dashboard.coach?.name ?? 'Coach'}:</span> {dashboard.coachNote.text}
                 </blockquote>
               ) : null}
-              <div className="mt-auto flex flex-wrap gap-2 pt-1">
+              <div className={`mt-auto flex flex-wrap pt-1 ${canStartToday ? '-ml-2.5 gap-1' : 'gap-2'}`}>
                 <WorkoutStartChooser
                   workout={{ title: nextAction.title, sport: nextAction.sport, status: nextAction.status, durationSec: nextAction.durationSec, hasSteps: nextAction.hasSteps }}
                   source={{ kind: 'session', id: nextAction.id, from: 'home' }}
+                  triggerClassName={`${ghostButtonClassName('default')} max-md:min-h-11`}
+                  triggerAriaLabel={`Start workout: ${nextAction.title}`}
                 />
-                <Link href={`/athlete/session/${nextAction.id}?from=home`} className={`${canStartWorkout(nextAction) ? secondaryButtonClassName : primaryButtonClassName} max-md:min-h-11`}>
+                <Link href={`/athlete/session/${nextAction.id}?from=home`} className={`${canStartToday ? ghostButtonClassName('default') : secondaryButtonClassName} max-md:min-h-11`}>
                   Details
                 </Link>
               </div>
