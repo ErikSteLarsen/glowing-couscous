@@ -183,7 +183,6 @@
 }
 
 :root {
-  --mobile-nav-clearance: calc(4rem + env(safe-area-inset-bottom, 0px));
   --background: var(--color-ground);
   --raised: var(--color-raised);
   --surface: color-mix(in srgb, var(--color-raised) 55%, var(--color-ground));

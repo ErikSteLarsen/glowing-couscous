@@ -275,8 +275,8 @@ columns keep `min-width: 0`. Weeks always start on Monday.
   on items. In rail mode icons keep accessible names and titles.
 - **Mobile (below `md`):** sticky top bar with brand mark and a menu button
   (44px), opening a drawer with overlay, Escape-to-close, focus return to the
-  menu button, and body scroll lock. A fixed bottom nav shows five icon items
-  with labels and a safe-area inset.
+  menu button, and body scroll lock. The drawer is the only mobile
+  navigation; there is no bottom nav bar.
 - **Landmarks:** a "Skip to content" link first in tab order, and
   `<main id="main">`.
 - `BrandMark` is the Wattonaut mark: a 28px planet whose ridge forms a W
@@ -559,8 +559,8 @@ Put a non-breaking space before the separator dash when it must not start a line
 - Focus: `:focus-visible` is a 2px trace outline with 2px offset; buttons use a
   2px trace ring with ground offset. Never remove it.
 - Targets: 40px for ordinary controls, 44px for touch on mobile (menu button,
-  nav rows, bottom nav items at 48px). 32px compact controls only where the
-  surrounding context gives room.
+  drawer nav rows). 32px compact controls only where the surrounding context
+  gives room.
 - Labels: every control has a visible or accessible name; icon-only controls
   need `aria-label`.
 - State is text, shape, or position plus color, never color alone.
@@ -606,10 +606,8 @@ persistence before claiming a save.
 
 ### Mobile action clearance
 
-`--mobile-nav-clearance` reserves the bottom navigation and device safe area.
-Mobile sticky editor actions sit above that clearance. The shell reserves one
-additional rem of content padding, so the final field remains reachable.
-Desktop sticky actions use the viewport bottom.
+Sticky editor actions sit at the viewport bottom. On mobile their bottom
+padding includes the device safe area (`env(safe-area-inset-bottom)`).
 
 ### Ride entertainment
 
@@ -787,7 +785,7 @@ are independently actionable. Export omissions must be visible before download.
 Shell feedback uses a content-sized frame capped at 480px, centered within the
 available content column. Use 12px inline / 8px block padding, a 12px gap,
 and an icon-only dismiss control with a 44px mobile target. Feedback clears
-bottom navigation and Profile save actions; sync errors do not overlap notices.
+Profile save actions; sync errors do not overlap notices.
 
 ### Session detail
 

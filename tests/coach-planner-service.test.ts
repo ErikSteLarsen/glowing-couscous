@@ -415,12 +415,7 @@ test('planner API routes and navigation use the coach planner service', async ()
   assert.match(sessionRoute, /coachPlannerService\.saveSession/);
   assert.match(sessionRoute, /coachPlannerService\.deleteSession/);
   assert.match(navigation, /label: 'Calendar'/);
-  const desktopNavigation = navigation.slice(
-    navigation.indexOf('export function getPrimaryNavigation'),
-    navigation.indexOf('export function getMobileNavigation'),
-  );
-  assert.doesNotMatch(desktopNavigation, /href: '\/coach\/planner'/);
-  assert.match(navigation, /label: 'Plan', description: 'Assign training', href: '\/coach\/planner'/);
+  assert.doesNotMatch(navigation, /href: '\/coach\/planner'/);
   assert.match(oldBuilderPage, /redirect\('\/coach\/planner/);
   assert.match(templatesClient, /getCalendarPlacementHref\(`template:\$\{template\.id\}`\)/);
   assert.doesNotMatch(templatesClient, /\$\{plannerHref\}\?templateId=/);

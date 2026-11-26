@@ -7,6 +7,15 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
 
 ## Verification
 
+- Mobile bottom navigation removed (2026-11-26). The hamburger drawer is the
+  only mobile navigation; it already lists Home, Calendar, Workouts, Training
+  plans, Activity (now also active on Import) and Events. The old coach bottom
+  links were dead because `proxy.ts` redirects `/coach` to `/athlete`.
+  `getMobileNavigation` and `--mobile-nav-clearance` are gone, Workouts' sticky
+  editor actions sit at the viewport bottom with safe-area padding, and Home no
+  longer has a header Events button. `pnpm test` (643), lint, types, dead code
+  and build passed; Chromium at 390 px checked Home, the drawer and Events.
+
 - Wattonaut rename, second pass (2026-11-26). d75739f is in production. This
   pass renames internal names: `components/wattonaut/`, CSS classes and DOM
   IDs, design preview routes, TypeScript and desktop identifiers, the package

@@ -127,7 +127,6 @@ export default async function AthletePage() {
       <TopBar
         eyebrow={`${format(today, 'EEEE\u00A0d\u00A0MMMM')}\u00A0– Week\u00A0${getISOWeek(today)}`}
         title={`${greetingFor(hourInZone(timeZone))}, ${firstName}`}
-        actions={<Link href="/athlete/events" className={`${ghostButtonClassName('default')} max-md:min-h-11`}>Events</Link>}
       />
       <div className={`grid gap-4 ${upcoming.length > 0 ? 'lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]' : ''}`}>
         <Surface aria-labelledby="today-heading" className="flex min-w-0 flex-col gap-3">

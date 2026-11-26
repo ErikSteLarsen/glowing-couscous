@@ -4,10 +4,9 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { Menu, PanelLeftOpen } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { AppSidebar, navIconFor } from '@/components/AppSidebar';
+import { AppSidebar } from '@/components/AppSidebar';
 import { BrandMark, BrandName } from '@/components/BrandMark';
 import { buttonFocusClassName, iconButtonClassName } from '@/components/ui';
-import { getMobileNavigation, isNavigationItemActive } from '@/lib/app-navigation';
 import type { SessionUser } from '@/lib/auth-session';
 
 type ColorTheme = 'dark' | 'light';
@@ -62,7 +61,6 @@ export function AppShell({
   const theme = useSyncExternalStore(subscribeToTheme, getClientTheme, getServerTheme);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const desktopMenuButtonRef = useRef<HTMLButtonElement>(null);
-  const navItems = getMobileNavigation(user.role);
 
   // A browser history change also dismisses the drawer, without reopening it
   // when the user returns to the route on which it was originally opened.
@@ -182,7 +180,7 @@ export function AppShell({
     });
   };
 
-  // Riding, the Ride home, the Send to Wattonaut window and the block timer are full-bleed: no sidebar, top bar or bottom nav.
+  // Riding, the Ride home, the Send to Wattonaut window and the block timer are full-bleed: no sidebar or top bar.
   if (/^\/athlete\/(?:ride(?:\/\d+|\/send)?|live\/\d+)\/?$/.test(pathname)) {
     return <div id="main" tabIndex={-1} className="ink-studio-app outline-none">{children}</div>;
   }
@@ -211,12 +209,12 @@ export function AppShell({
         onToggleTheme={toggleTheme}
       />
       <div
-        className="relative z-10 with-sidebar min-w-0 pb-[calc(var(--mobile-nav-clearance)+1rem)] md:pb-0"
+        className="relative z-10 with-sidebar min-w-0"
         aria-hidden={mobileOpen && isMobileViewport ? true : undefined}
         inert={mobileOpen && isMobileViewport ? true : undefined}
       >
         <header className="sticky top-0 z-20 flex min-h-14 items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/90 px-4 backdrop-blur-md md:hidden">
-          <Link href={navItems[0]?.href ?? '/'} aria-label="Wattonaut home" className={`flex min-h-11 items-center gap-2.5 rounded-lg hover:bg-[var(--raised)] ${buttonFocusClassName}`}>
+          <Link href="/athlete" aria-label="Wattonaut home" className={`flex min-h-11 items-center gap-2.5 rounded-lg hover:bg-[var(--raised)] ${buttonFocusClassName}`}>
             <BrandMark />
             <BrandName />
           </Link>
@@ -251,35 +249,6 @@ export function AppShell({
           {children}
         </div>
       </div>
-      <nav
-        aria-label="Primary navigation"
-        aria-hidden={mobileOpen && isMobileViewport ? true : undefined}
-        inert={mobileOpen && isMobileViewport ? true : undefined}
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--nav-border)] bg-[var(--background)]/95 pb-[max(0.375rem,env(safe-area-inset-bottom))] backdrop-blur-md md:hidden"
-      >
-        <div className="grid px-2 pt-1.5" style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}>
-          {navItems.map((item) => {
-            const isActive = isNavigationItemActive(navigationPathname, item, navItems);
-            const Icon = navIconFor(item.label);
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? 'page' : undefined}
-                className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-medium transition-colors ${buttonFocusClassName} ${
-                  isActive
-                    ? 'bg-[var(--nav-active)] text-[var(--text)] hover:bg-[var(--selection)]'
-                    : 'text-[var(--nav-muted)] hover:bg-[var(--nav-active)] hover:text-[var(--text)]'
-                }`}
-              >
-                <Icon aria-hidden="true" size={18} strokeWidth={1.5} className={isActive ? 'text-[var(--brand)]' : ''} />
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
     </div>
   );
 }

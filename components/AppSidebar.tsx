@@ -40,7 +40,7 @@ const navIcons: Record<string, LucideIcon> = {
   Workouts: Dumbbell,
 };
 
-export function navIconFor(label: string) {
+function navIconFor(label: string) {
   return navIcons[label] ?? Circle;
 }
 

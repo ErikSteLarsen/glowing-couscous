@@ -28,25 +28,8 @@ export function getPrimaryNavigation(): NavItem[] {
     { label: 'Calendar', description: 'Your planned workouts', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
     { label: 'Workouts', description: 'Yours & public library', href: '/athlete/workouts', matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/library'] },
     { label: 'Training plans', description: 'Weekly training patterns', href: '/athlete/templates', matchPrefix: '/athlete/templates' },
-    { label: 'Activity', description: 'Everything you’ve done', href: '/athlete/activity', matchPrefix: '/athlete/activity' },
-    { label: 'Events', description: 'Goals and results', href: '/athlete/events', matchPrefix: '/athlete/events' },
-  ];
-}
-
-export function getMobileNavigation(role: AppRole): NavItem[] {
-  if (role === 'COACH') {
-    return [
-      { label: 'Home', description: 'Coach overview', href: '/coach', matchPrefix: '/coach' },
-      { label: 'Plan', description: 'Assign training', href: '/coach/planner', matchPrefix: '/coach/planner' },
-      { label: 'Workouts', description: 'Manage workouts', href: '/coach/workouts', matchPrefix: '/coach/workouts' },
-    ];
-  }
-
-  return [
-    { label: 'Home', description: "Today's overview", href: '/athlete', matchPrefix: '/athlete', exact: true },
-    { label: 'Calendar', description: 'Plan and see your training', href: '/athlete/calendar', matchPrefix: '/athlete/calendar' },
-    { label: 'Workouts', description: 'Yours & public library', href: '/athlete/workouts', matchPrefix: '/athlete/workouts', activeMatchPrefixes: ['/athlete/templates', '/athlete/library'] },
     { label: 'Activity', description: 'Everything you’ve done', href: '/athlete/activity', matchPrefix: '/athlete/activity', activeMatchPrefixes: ['/athlete/import'] },
+    { label: 'Events', description: 'Goals and results', href: '/athlete/events', matchPrefix: '/athlete/events' },
   ];
 }
 

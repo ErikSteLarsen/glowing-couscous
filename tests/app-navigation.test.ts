@@ -2,35 +2,32 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   getPrimaryNavigation,
-  getMobileNavigation,
   isNavigationItemActive,
   parseBackOrigin,
   resolveBackTarget,
   withBackOrigin,
 } from '../lib/app-navigation.ts';
 
-test('desktop activity navigation uses the same label as the mobile destination', () => {
+test('activity navigation also covers activity imports', () => {
   const history = getPrimaryNavigation().find((item) => item.href === '/athlete/activity');
   assert.deepEqual(history, {
     label: 'Activity',
     description: 'Everything you’ve done',
     href: '/athlete/activity',
     matchPrefix: '/athlete/activity',
+    activeMatchPrefixes: ['/athlete/import'],
   });
 });
 
-test('catalog detail and schedule belong to Workouts in desktop and mobile navigation', () => {
-  const desktop = getPrimaryNavigation();
-  const mobile = getMobileNavigation('ATHLETE');
-  assert.ok(desktop.some((item) => item.href === '/athlete/templates'));
-  for (const items of [desktop, mobile]) {
-    assert.equal(items.some((item) => item.href === '/athlete/library'), false);
-    const workouts = items.find((item) => item.label === 'Workouts');
-    assert.ok(workouts);
-    assert.equal(workouts.description, 'Yours & public library');
-    for (const path of ['/athlete/workouts', '/athlete/library/gentle-spin-30', '/athlete/library/gentle-spin-30/schedule']) {
-      assert.deepEqual(items.filter((item) => isNavigationItemActive(path, item, items)), [workouts]);
-    }
+test('catalog detail and schedule belong to Workouts in the navigation', () => {
+  const items = getPrimaryNavigation();
+  assert.ok(items.some((item) => item.href === '/athlete/templates'));
+  assert.equal(items.some((item) => item.href === '/athlete/library'), false);
+  const workouts = items.find((item) => item.label === 'Workouts');
+  assert.ok(workouts);
+  assert.equal(workouts.description, 'Yours & public library');
+  for (const path of ['/athlete/workouts', '/athlete/library/gentle-spin-30', '/athlete/library/gentle-spin-30/schedule']) {
+    assert.deepEqual(items.filter((item) => isNavigationItemActive(path, item, items)), [workouts]);
   }
 });
 

@@ -9,7 +9,6 @@ import {
   parseCalendarTotals,
 } from '../lib/calendar-navigation.ts';
 import {
-  getMobileNavigation,
   getPrimaryNavigation,
   isNavigationItemActive,
   resolveBackTarget,
@@ -48,12 +47,11 @@ test('calendar hrefs carry placement state and placement params parse strictly',
 });
 
 test('Planner is no longer a separate destination and old planner links resolve to Calendar', () => {
-  for (const items of [getPrimaryNavigation(), getMobileNavigation('ATHLETE')]) {
-    assert.equal(items.some((item) => item.label === 'Planner' || item.href.startsWith('/athlete/planner')), false);
-    const calendar = items.find((item) => item.label === 'Calendar');
-    assert.ok(calendar);
-    assert.equal(isNavigationItemActive('/athlete/calendar', calendar, items), true);
-  }
+  const items = getPrimaryNavigation();
+  assert.equal(items.some((item) => item.label === 'Planner' || item.href.startsWith('/athlete/planner')), false);
+  const calendar = items.find((item) => item.label === 'Calendar');
+  assert.ok(calendar);
+  assert.equal(isNavigationItemActive('/athlete/calendar', calendar, items), true);
   assert.deepEqual(resolveBackTarget({ route: 'session', from: 'planner' }), {
     href: '/athlete/calendar',
     destination: 'Calendar',

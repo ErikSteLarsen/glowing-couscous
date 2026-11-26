@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { getMobileNavigation, isNavigationItemActive } from '../lib/app-navigation.ts';
+import { getPrimaryNavigation, isNavigationItemActive } from '../lib/app-navigation.ts';
 
 const root = process.cwd();
 const read = (relativePath) => readFile(path.join(root, relativePath), 'utf8');
@@ -48,28 +48,27 @@ test('navigation matching prefers the most specific active destination', async (
   assert.match(sidebarSource, /isNavigationItemActive\(props\.pathname, item, navItems\)/);
 });
 
-test('mobile navigation keeps the main personal training jobs directly reachable', async () => {
-  const navSource = await read('lib/app-navigation.ts');
+test('mobile uses the hamburger drawer as its only navigation, without a bottom bar', async () => {
   const shellSource = await read('components/AppShell.tsx');
+  const navSource = await read('lib/app-navigation.ts');
+  const cssSource = await read('app/globals.css');
 
-  assert.match(navSource, /label: 'Calendar'.*href: '\/athlete\/calendar'/s);
-  assert.match(navSource, /label: 'Activity'.*href: '\/athlete\/activity'/s);
-  assert.match(shellSource, /getMobileNavigation\(user\.role\)/);
+  assert.doesNotMatch(shellSource, /aria-label="Primary navigation"|fixed inset-x-0 bottom-0/);
+  assert.doesNotMatch(navSource, /getMobileNavigation/);
+  assert.doesNotMatch(cssSource, /--mobile-nav-clearance/);
+  assert.match(shellSource, /aria-label="Open menu"/);
   assert.match(shellSource, /import Link from 'next\/link'/);
-  assert.match(shellSource, /<Link/);
   assert.doesNotMatch(shellSource, /<a\s/);
 });
 
-test('mobile navigation maps task routes by role without leaking athlete destinations to coaches', () => {
-  const athleteItems = getMobileNavigation('ATHLETE');
-  assert.deepEqual(athleteItems.map((item) => item.label), ['Home', 'Calendar', 'Workouts', 'Activity']);
-  assert.equal(isNavigationItemActive('/athlete/templates', athleteItems[2], athleteItems), true);
-  assert.equal(isNavigationItemActive('/athlete/import', athleteItems[3], athleteItems), true);
-  assert.equal(isNavigationItemActive('/athlete/workouts', athleteItems[0], athleteItems), false);
-
-  const coachItems = getMobileNavigation('COACH');
-  assert.deepEqual(coachItems.map((item) => item.href), ['/coach', '/coach/planner', '/coach/workouts']);
-  assert.equal(coachItems.some((item) => item.href.startsWith('/athlete')), false);
+test('the drawer reaches every personal training destination the bottom bar had', () => {
+  const items = getPrimaryNavigation();
+  for (const href of ['/athlete', '/athlete/calendar', '/athlete/workouts', '/athlete/activity']) {
+    assert.ok(items.some((item) => item.href === href), href);
+  }
+  const activity = items.find((item) => item.label === 'Activity');
+  assert.equal(isNavigationItemActive('/athlete/import', activity, items), true);
+  assert.equal(items.some((item) => item.href.startsWith('/coach')), false);
 });
 
 test('Workouts keeps its owner-scoped list and session detail keeps its entry context', async () => {
@@ -96,8 +95,7 @@ test('Workouts keeps its owner-scoped list and session detail keeps its entry co
   assert.match(workoutsClientSource, /Discard unsaved changes\?/);
   assert.match(workoutsClientSource, /Keep editing/);
   assert.match(workoutsClientSource, /Discard changes/);
-  assert.match(workoutsClientSource, /sticky bottom-\[var\(--mobile-nav-clearance\)\]/);
-  assert.match(workoutsClientSource, /md:bottom-0/);
+  assert.match(workoutsClientSource, /sticky bottom-0/);
 });
 
 test('Workouts has one New workout entry, and saved workouts keep Schedule and sharing like public ones', async () => {
@@ -460,4 +458,10 @@ test('session detail leads with the work or the outcome and keeps secondary acti
     assert.ok(actions.includes(label), label);
   }
   assert.match(actions, /statusAction === 'plan-again'/);
+});
+
+test('Home has no quick-access Events button; Events lives in the drawer', async () => {
+  const homeSource = await read('app/(app)/athlete/page.tsx');
+  assert.doesNotMatch(homeSource, />Events<\/Link>/);
+  assert.ok(getPrimaryNavigation().some((item) => item.label === 'Events' && item.href === '/athlete/events'));
 });
