@@ -521,6 +521,8 @@ body {
 .brand-mark-ground { fill: #5EB6D8; }
 :root[data-workspace-theme="light"] .brand-mark-sky { fill: #0F4A64; }
 :root[data-workspace-theme="light"] .brand-mark-ground { fill: #1C7BA2; }
+.brand-name-accent { color: #5EB6D8; }
+:root[data-workspace-theme="light"] .brand-name-accent { color: #1C7BA2; }
 
 /* Tiles: squares of reading instead of heavy cards. */
 

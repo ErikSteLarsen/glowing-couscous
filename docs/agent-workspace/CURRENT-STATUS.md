@@ -11,12 +11,13 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   `main`). Wattonaut becomes TempoBuilder in names, docs, identifiers, files and
   dev env vars (`TEMPOBUILDER_URL`, `TEMPOBUILDER_TEST_DATABASE_URL`,
   `TEMPOBUILDER_SHARP_MODULE`); the download URL still reads both older names.
-  The Strava OAuth cookies are renamed (10-minute lifetime). The in-app name is
-  provisionally "tempo" 600 + "builder" 500; `brand/kit` assets, the share
-  image and the icons still carry the Wattonaut lettering until a wordmark is
-  chosen and `build.py` is rerun. `pnpm test` (643 passed, 23 skipped),
-  desktop tests (24), lint, types, dead code and build passed. No browser check
-  of the app was run.
+  The Strava OAuth cookies are renamed (10-minute lifetime). Erik picked the
+  two-tone wordmark: lowercase, "tempo" 600 in the text color and "builder" 500
+  in the mark's ground blue (`.brand-name-accent`), monogram "tb"; `build.py`
+  regenerated the brand kit, share image and icons. `pnpm test` (643 passed,
+  23 skipped), desktop tests (24), lint, types, dead code and build passed;
+  Chromium at 1440 and 390 px in light and dark showed the sign-in header
+  with no page errors.
 
 - Home week day picker (2026-11-26). On phones, This week shows seven day
   chips with a dot per workout and only the selected day's workouts; today is

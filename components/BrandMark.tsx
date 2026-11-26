@@ -10,11 +10,11 @@ export function BrandMark({ className = '' }: { className?: string }) {
   );
 }
 
-/** The name as set in the logo: lowercase, with "tempo" slightly bolder. Use "TempoBuilder" in running text. */
+/** The name as set in the logo: lowercase, "tempo" slightly bolder and "builder" in the ground blue. Use "TempoBuilder" in running text. */
 export function BrandName() {
   return (
     <span className="text-[16px] tracking-[-0.025em] text-[var(--text)]">
-      <span className="font-semibold">tempo</span><span className="font-medium">builder</span>
+      <span className="font-semibold">tempo</span><span className="brand-name-accent font-medium">builder</span>
     </span>
   );
 }
