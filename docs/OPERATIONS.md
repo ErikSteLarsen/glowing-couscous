@@ -132,6 +132,9 @@ should not use Neon’s `-pooler` hostname.
 
 ## Neon and Vercel
 
+Only `main` deploys. `vercel.json` turns off Vercel deployments for every
+other branch, so pushing a feature or release branch makes no preview build.
+
 1. Create a Neon project and copy both connection strings from the branch
    connection dialog.
 2. Add `DATABASE_URL` (pooled) and `DIRECT_URL` (direct) to the
