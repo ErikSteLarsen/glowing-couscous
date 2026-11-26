@@ -2,12 +2,13 @@
 
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { CalendarClock, CircleSlash, Download, Ellipsis, Link2, PencilLine, SquarePen, Trash2 } from 'lucide-react';
 import { SessionDeleteAction } from '@/components/SessionDeleteAction';
 import { SessionRescheduleAction } from '@/components/SessionRescheduleAction';
 import { ShareLinkResult, useShareLink } from '@/components/ShareLinkButton';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/wattonaut/Menu';
-import { iconButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
+import { dangerTextClassName, iconButtonClassName, primaryButtonClassName, secondaryButtonClassName } from '@/components/ui';
 import { SessionStatusMessage, useSessionStatusAction, type SessionStatusAction } from './SessionStatusControl';
 
 const AdjustRequestContext = createContext<{ request: number; requestAdjust: () => void }>({ request: 0, requestAdjust: () => undefined });
@@ -72,6 +73,7 @@ export function SessionHeaderActions({
   canDelete,
   returnHref,
   downloadTcxHref = null,
+  deleteActivityId = null,
 }: {
   sessionId: number;
   title: string;
@@ -85,6 +87,8 @@ export function SessionHeaderActions({
   returnHref: string;
   /** The recorded data as a .tcx file, for uploading to Strava or another app by hand. */
   downloadTcxHref?: string | null;
+  /** An unplanned recorded ride, which deleting removes from the Calendar too. */
+  deleteActivityId?: number | null;
 }) {
   const { requestAdjust } = useContext(AdjustRequestContext);
   const share = useShareLink('session', sessionId);
@@ -92,7 +96,21 @@ export function SessionHeaderActions({
   const [moveOpen, setMoveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const canSkip = statusAction === 'skip';
-  const hasMenu = canAdjust || Boolean(move) || canSkip || sourceWorkoutId !== null || shareable || canDelete || Boolean(downloadTcxHref);
+  const hasMenu = canAdjust || Boolean(move) || canSkip || sourceWorkoutId !== null || shareable || canDelete || Boolean(downloadTcxHref) || deleteActivityId !== null;
+  const router = useRouter();
+  const [deleteError, setDeleteError] = useState('');
+
+  async function deleteRide() {
+    if (!window.confirm('Delete this ride? It’s removed from your Calendar and activities. This cannot be undone.')) return;
+    setDeleteError('');
+    const response = await fetch(`/api/activity-imports/${deleteActivityId}`, { method: 'DELETE' }).catch(() => null);
+    if (!response?.ok) {
+      setDeleteError('Could not delete this ride. Try again.');
+      return;
+    }
+    router.replace(returnHref);
+    router.refresh();
+  }
 
   function adjust() {
     requestAdjust();
@@ -144,6 +162,14 @@ export function SessionHeaderActions({
                   <Download aria-hidden="true" size={16} strokeWidth={1.6} />Download .tcx file
                 </MenuItem>
               ) : null}
+              {deleteActivityId !== null ? (
+                <>
+                  <MenuSeparator />
+                  <MenuItem destructive onSelect={() => void deleteRide()}>
+                    <Trash2 aria-hidden="true" size={16} strokeWidth={1.6} />Delete ride
+                  </MenuItem>
+                </>
+              ) : null}
               {canDelete ? (
                 <>
                   <MenuSeparator />
@@ -158,6 +184,7 @@ export function SessionHeaderActions({
       </div>
       <div aria-live="polite" className="flex max-w-md flex-col gap-2 empty:hidden sm:items-end sm:text-right">
         <SessionStatusMessage status={status} />
+        {deleteError ? <p role="alert" className={dangerTextClassName}>{deleteError}</p> : null}
         <ShareLinkResult share={share} showAudience />
         {move ? (
           <SessionRescheduleAction mode="dialog" sessionId={sessionId} title={title} currentDay={move.currentDay} today={move.today} open={moveOpen} onOpenChange={setMoveOpen} />

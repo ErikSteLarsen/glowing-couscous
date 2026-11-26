@@ -8,7 +8,7 @@ import { rideSessionPath } from '@/lib/ride/launch';
 import { athleteService } from '@/lib/athlete-service';
 import { accountService } from '@/lib/account-service';
 import { createExecutionSteps } from '@/lib/athlete-execution';
-import { parseBackOrigin, resolveBackTarget, withBackOrigin } from '@/lib/app-navigation';
+import { parseBackOrigin, resolveBackTarget, resolveStartedBackTarget, withBackOrigin } from '@/lib/app-navigation';
 import { createRidePlan } from '@/lib/ride/ride-plan';
 import { canStartWorkout } from '@/lib/workout-start';
 import { RideClient } from './RideClient';
@@ -30,7 +30,7 @@ export default async function AthleteRidePage({
   const parsedSessionId = Number(sessionId);
   if (!Number.isInteger(parsedSessionId) || parsedSessionId <= 0) notFound();
 
-  const [detail, account] = await Promise.all([athleteService.loadSessionDetail(user.id, parsedSessionId), accountService.getAccount(user.id)]);
+  const [detail, account] = await Promise.all([athleteService.loadSessionDetail(user.id, parsedSessionId, { includeUnsaved: true }), accountService.getAccount(user.id)]);
   if (!detail) {
     return (
       <PageShell size="wide">
@@ -42,7 +42,7 @@ export default async function AthleteRidePage({
     );
   }
 
-  const back = resolveBackTarget({ route: 'session-ride', sessionId: detail.session.id, from });
+  const back = detail.session.unsaved ? resolveStartedBackTarget(from) : resolveBackTarget({ route: 'session-ride', sessionId: detail.session.id, from });
 
   if (detail.session.status === 'skipped' || detail.session.status === 'completed') {
     return (
@@ -85,9 +85,11 @@ export default async function AthleteRidePage({
       sessionId={detail.session.id}
       sessionTitle={detail.session.title}
       plan={plan}
-      plannedTss={detail.session.plannedTss}
+      plannedTss={detail.session.unsaved ? detail.session.tss ?? 0 : detail.session.plannedTss}
       steps={steps}
       back={back}
+      sessionHref={withBackOrigin(`/athlete/session/${detail.session.id}`, parseBackOrigin('session', from))}
+      notPlanned={detail.session.unsaved}
       heartRateMaxBpm={profile?.heartRateMaxBpm ?? null}
     />
   );

@@ -41,6 +41,6 @@ if (root) createRoot(root).render(params.has('ride') ? (
     plannedTss={0}
     steps={[]}
     back={resolveBackTarget({ route: 'session-ride', sessionId: 1 })}
-    heartRateMaxBpm={null}
+    sessionHref="/athlete/session/1" notPlanned={false} heartRateMaxBpm={null}
   />
 ) : params.has('live') ? <LiveSessionClient sessionId={2} blocks={liveSteps} isDone={false} title="Live ride" back={resolveBackTarget({ route: 'session-live', sessionId: 2 })} workoutHref="/athlete/session/2" /> : <Fixture />);

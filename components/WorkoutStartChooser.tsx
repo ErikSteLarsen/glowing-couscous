@@ -1,16 +1,15 @@
 'use client';
 
 import { useId, useRef, useState, useSyncExternalStore } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Bike, Bluetooth, CalendarPlus, ChevronDown, ChevronRight, Monitor, Play, Timer, X, type LucideIcon } from 'lucide-react';
+import { Bike, Bluetooth, CalendarCheck, ChevronDown, ChevronRight, Monitor, Play, Timer, X, type LucideIcon } from 'lucide-react';
 import { Dialog, DialogBackdrop, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@ui-sdk/react/dialog';
 import { getRideOs, GetWattonautRideLink, RideAppInstallHelp, useRideAppLaunch } from '@/components/RideAppLaunch';
 import { useCatalogRide } from '@/components/library/useCatalogRide';
 import {
   dangerTextClassName,
   sheetDialogClassName,
-  buttonFocusClassName, ghostButtonClassName, iconButtonClassName,
+  buttonFocusClassName, iconButtonClassName,
   primaryButtonClassName, secondaryButtonClassName, sectionHeadingClassName,
 } from '@/components/ui';
 import { withBackOrigin, type BackOrigin } from '@/lib/app-navigation';
@@ -32,7 +31,7 @@ const optionRowClassName =
 type WorkoutSource =
   | { kind: 'session'; id: number; from: BackOrigin | null; liveSteps?: ExecutionStep[] }
   | { kind: 'catalog'; slug: string; from: 'library' | 'ride' }
-  /** A saved workout from My workouts: like a catalog workout, a copy is added to today first. */
+  /** A saved workout from My workouts. Like a catalog workout, it isn't in the Calendar. */
   | { kind: 'workout'; id: number; from: BackOrigin | null };
 
 type Props = {
@@ -149,7 +148,7 @@ function StartControl({ workout, source, triggerClassName }: Props) {
                   {workout.title} <span className="data whitespace-nowrap">– {formatDuration(workout.durationSec)}</span>
                   {source.kind !== 'session' ? (
                     <span className="mt-1.5 flex items-center gap-1.5 text-[13px] text-[var(--text-muted)]">
-                      <CalendarPlus aria-hidden="true" size={14} strokeWidth={1.6} />Adds a copy to today
+                      <CalendarCheck aria-hidden="true" size={14} strokeWidth={1.6} />Added to your Calendar when you finish
                     </span>
                   ) : null}
                 </DialogDescription>
@@ -187,15 +186,9 @@ function StartControl({ workout, source, triggerClassName }: Props) {
                   </ul>
                 </div>
               ) : null}
-              {busy ? <p role="status" className="text-sm text-[var(--text-secondary)]">Adding workout to today…</p> : null}
+              {busy ? <p role="status" className="text-sm text-[var(--text-secondary)]">Opening workout…</p> : null}
               {catalog.preparation.kind === 'error' ? (
                 <p role="alert" className={dangerTextClassName}>{catalog.preparation.message}</p>
-              ) : null}
-              {preparedId !== null ? (
-                <p role="status" className="flex flex-wrap items-center gap-x-1.5 text-sm text-[var(--text-secondary)]">
-                  Added to today.
-                  <Link href={withBackOrigin(`/athlete/session/${preparedId}`, source.from)} className={ghostButtonClassName('compact')}>Open workout</Link>
-                </p>
               ) : null}
               {app.state === 'opening' ? <p role="status" className="text-sm text-[var(--text-secondary)]">Opening Wattonaut Ride…</p> : null}
               {app.state === 'attempted' && sessionId !== null ? (

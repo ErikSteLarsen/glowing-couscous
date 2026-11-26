@@ -667,6 +667,7 @@ function WeekSummaryPanel({ summary, className = '', compact = false }: { summar
   const planned = summary?.planned ?? { durationSec: 0, tss: 0, sessions: 0 };
   const completed = summary?.completed ?? { durationSec: 0, tss: 0, sessions: 0, unknownLoadSessions: 0 };
   const pct = summary?.completionPct ?? null;
+  const extra = summary?.extra ?? { durationSec: 0, tss: 0, sessions: 0 };
   const missed = summary?.missed ?? 0;
   const barWidth = pct === null ? 0 : Math.min(100, pct);
 
@@ -676,13 +677,13 @@ function WeekSummaryPanel({ summary, className = '', compact = false }: { summar
         <dl className={compact ? 'contents' : 'grid grid-cols-2 gap-3 xl:grid-cols-1'}>
           <MetricPair inline={compact} label="Duration" value={
             <>
-              {formatDuration(completed.durationSec)}
+              {formatDuration(completed.durationSec - extra.durationSec)}
               <span className="text-[var(--text-muted)]"> / {formatDuration(planned.durationSec)}</span>
             </>
           } />
           <MetricPair inline={compact} label="TSS" value={
             <>
-              {completed.unknownLoadSessions ? '—' : Math.round(completed.tss)}
+              {completed.unknownLoadSessions ? '—' : Math.round(completed.tss - extra.tss)}
               <span className="text-[var(--text-muted)]"> / {Math.round(planned.tss)}</span>
             </>
           } />
@@ -694,6 +695,7 @@ function WeekSummaryPanel({ summary, className = '', compact = false }: { summar
           </div>
           <p className="data flex flex-wrap gap-x-3 text-xs text-[var(--text-secondary)]">
             <span>{pct === null ? 'Nothing planned' : `${pct}% of planned time done`}</span>
+            {extra.sessions > 0 ? <span>plus {formatDuration(extra.durationSec)} unplanned</span> : null}
             {missed > 0 ? <span className="inline-flex items-center gap-1"><ComplianceMark state="missed" /> {missed} missed</span> : null}
           </p>
         </div>

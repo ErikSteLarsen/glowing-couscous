@@ -13,6 +13,7 @@ import { formatResolvedWorkoutTarget, formatWorkoutTarget } from './workout-targ
 import { normalizeWorkoutTarget, type WorkoutTarget, type WorkoutTargetReference } from './workout-targets.ts';
 import { homeActivityLoadAvailable, homeActivityReadout, summarizeHomeActivities } from './home-summary.ts';
 import { createSessionEditorDraftFromPersisted } from './session-editor.ts';
+import { isStartedWorkout, isUnsavedStartedWorkout, STARTED_WORKOUT_SOURCE } from './started-workout.ts';
 import { plannedMetrics } from './training-load-service.ts';
 import { addDayKeys, classifyCompliance, fromDayKey, summarizeWeeks, toDayKey, type WeekSession } from './training-load.ts';
 import { endOfDayInZone, startOfDayInZone, todayInZone } from './user-time.ts';
@@ -122,6 +123,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
     date: Date;
     timeLabel: string | null;
     status: string;
+    source?: string | null;
     adjusted: boolean;
     coachOwnerId?: number | null;
     assignedById?: number | null;
@@ -386,7 +388,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       // Scheduled structure stays independent from saved outcome values and
       // standalone imports, whose sessions exist only to host their outcomes.
       // Skipped sessions stay on the week wall but add no planned load.
-      const scheduledSessions = athlete.sessions.filter((session) => session.date !== null && session.source !== 'activity-import' && session.status !== SKIPPED_SESSION_STATUS);
+      const scheduledSessions = athlete.sessions.filter((session) => session.date !== null && session.source !== 'activity-import' && !isStartedWorkout(session) && session.status !== SKIPPED_SESSION_STATUS);
       const scheduledTotals = scheduledSessions.reduce(
         (accumulator, session) => {
           const planned = mapSessionSummary({ ...session, activity: null, date: session.date! }, { today, ftpWatts });
@@ -686,17 +688,18 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
       });
     },
 
-    /** Statuses of the given sessions that are the athlete's own scheduled sessions; others are omitted. */
-    async listRideSessionStates(userId: number, sessionIds: number[]): Promise<Array<{ id: number; status: 'planned' | 'skipped' | 'completed' }>> {
+    /** The given sessions that are the athlete's own scheduled or started sessions; others are omitted. */
+    async listRideSessionStates(userId: number, sessionIds: number[]): Promise<Array<{ id: number; title: string; status: 'planned' | 'skipped' | 'completed' }>> {
       if (sessionIds.length === 0) return [];
       const sessions = await db.session.findMany({
-        where: { id: { in: sessionIds }, athleteId: userId, date: { not: null } },
-        select: { id: true, status: true, activity: { select: { id: true } } },
+        where: { id: { in: sessionIds }, athleteId: userId, OR: [{ date: { not: null } }, { source: STARTED_WORKOUT_SOURCE }] },
+        select: { id: true, title: true, status: true, activity: { select: { id: true } } },
       });
-      return sessions.map((session) => ({ id: session.id, status: rideSessionState(session) }));
+      return sessions.map((session) => ({ id: session.id, title: session.title, status: rideSessionState(session) }));
     },
 
-    async loadSessionDetail(userId: number, sessionId: number, { timeZone }: { timeZone?: string } = {}) {
+    /** `includeUnsaved` also opens a started workout that has no result yet, shown as today's. */
+    async loadSessionDetail(userId: number, sessionId: number, { timeZone, includeUnsaved = false }: { timeZone?: string; includeUnsaved?: boolean } = {}) {
       if (!Number.isInteger(sessionId) || sessionId <= 0) {
         return null;
       }
@@ -743,12 +746,17 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         },
       });
 
-      if (!session || session.athleteId !== userId || !session.date || !session.athlete) {
+      if (!session || session.athleteId !== userId || !session.athlete) {
         return null;
       }
 
+      const unsaved = isUnsavedStartedWorkout(session);
+      const today = fromDayKey(currentDayKey(timeZone));
+      const date = session.date ?? (unsaved && includeUnsaved ? today : null);
+      if (!date) return null;
+
       const profile = parsePerformanceProfileJson(athlete.performanceProfileJson);
-      const summary = mapSessionSummary({ ...session, date: session.date }, { ftpWatts: profile.cycling.ftpWatts, today: fromDayKey(currentDayKey(timeZone)) });
+      const summary = mapSessionSummary({ ...session, date }, { ftpWatts: profile.cycling.ftpWatts, today });
       const sourceWorkout = session.assignments[0]?.sourceSession;
       const editableSourceWorkout = sourceWorkout
         && sourceWorkout.athleteId === userId
@@ -761,7 +769,7 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         : null;
       const editor = createSessionEditorDraftFromPersisted(session.activity ? 'actual' : 'planned', {
         ...session,
-        scheduledDate: session.date,
+        scheduledDate: date,
         blocks: session.blocks,
       });
 
@@ -774,6 +782,8 @@ export function createAthleteService({ db = prisma, now = () => new Date() }: At
         session: {
           ...summary,
           source: session.source,
+          /** Started without planning it, and nothing is saved yet. */
+          unsaved,
           canDelete: isSelfPlanned(session) && !session.activity && session.status !== 'completed',
           canReschedule: isSelfPlanned(session) && !session.activity && session.status !== 'completed',
           statusAction: getSessionStatusAction(session, userId),

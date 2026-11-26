@@ -18,6 +18,7 @@ import { Stepper } from '@/components/wattonaut/Stepper';
 import type { BackTarget } from '@/lib/app-navigation';
 import { formatDuration } from '@/lib/format-duration';
 import { intensityColor } from '@/lib/intensity-color';
+import { toDayKey } from '@/lib/training-load';
 import {
   advanceExecution,
   createExecutionState,
@@ -84,10 +85,12 @@ const dockSideButtonClassName =
 const dockMainButtonClassName =
   `grid size-[4.5rem] place-items-center rounded-full bg-[var(--brand)] text-[var(--signal-ink)] transition-[background-color,transform] control-hover:bg-[var(--signal-hover)] active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 [@media(max-height:700px)]:size-16 ${buttonFocusClassName}`;
 
-export function LiveSessionClient({ sessionId, blocks, isDone, title, back, workoutHref, actions }: {
+export function LiveSessionClient({ sessionId, blocks, isDone, unsaved = false, title, back, workoutHref, actions }: {
   sessionId: number;
   blocks: ExecutionStep[];
   isDone: boolean;
+  /** Started without planning: it reaches the Calendar only when marked as done. */
+  unsaved?: boolean;
   title: string;
   back: BackTarget;
   workoutHref: string;
@@ -202,7 +205,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, title, back, work
       const response = await fetch(`/api/athlete/sessions/${sessionId}/completion`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isDone: true }),
+        body: JSON.stringify({ isDone: true, localDay: toDayKey(new Date()) }),
       });
       const payload = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) {
@@ -210,7 +213,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, title, back, work
         return;
       }
       clearExecutionProgress(progressKey);
-      setMessage('Workout marked as done.');
+      setMessage('Workout marked as done. It’s in your Calendar.');
       router.refresh();
     } catch {
       setError('Could not reach Wattonaut. Check your connection and try again.');
@@ -285,7 +288,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, title, back, work
           ) : complete ? (
             <div className="space-y-2 py-[clamp(1rem,6dvh,4rem)] text-center">
               <h2 id="live-current-step" className="text-2xl font-medium">All blocks done</h2>
-              <p className="text-sm text-[var(--text-secondary)]">Mark the workout as done to save it.</p>
+              <p className="text-sm text-[var(--text-secondary)]">{unsaved ? 'Mark it as done to add it to your Calendar.' : 'Mark the workout as done to save it.'}</p>
               <p className="data text-sm text-[var(--text-secondary)]">{formatDuration(elapsedSec)} done</p>
             </div>
           ) : currentStep ? (
@@ -407,6 +410,7 @@ export function LiveSessionClient({ sessionId, blocks, isDone, title, back, work
                 />
               </div>
             </details>
+            {unsaved ? <p className="px-1 text-[13px] text-[var(--text-muted)]">Not in your Calendar yet. It’s added when you mark it as done.</p> : null}
             {actions ? <div className="flex justify-start">{actions}</div> : null}
           </div>
         ) : null}

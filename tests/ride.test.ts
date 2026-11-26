@@ -644,16 +644,16 @@ test('ride session states only include sessions owned by the signed-in athlete',
   const db = { session: { findMany: async (args: { where: unknown }) => {
     where = args.where;
     return [
-      { id: 3, status: 'planned', activity: null },
-      { id: 4, status: 'skipped', activity: null },
-      { id: 5, status: 'planned', activity: { id: 1 } },
+      { id: 3, title: 'Ride', status: 'planned', activity: null },
+      { id: 4, title: 'Ride', status: 'skipped', activity: null },
+      { id: 5, title: 'Ride', status: 'planned', activity: { id: 1 } },
     ];
   } } };
   const service = createAthleteService({ db: db as never });
   assert.deepEqual(await service.listRideSessionStates(1, [3, 4, 5, 6]), [
-    { id: 3, status: 'planned' }, { id: 4, status: 'skipped' }, { id: 5, status: 'completed' },
+    { id: 3, title: 'Ride', status: 'planned' }, { id: 4, title: 'Ride', status: 'skipped' }, { id: 5, title: 'Ride', status: 'completed' },
   ]);
-  assert.deepEqual(where, { id: { in: [3, 4, 5, 6] }, athleteId: 1, date: { not: null } });
+  assert.deepEqual(where, { id: { in: [3, 4, 5, 6] }, athleteId: 1, OR: [{ date: { not: null } }, { source: 'athlete-started' }] });
   assert.deepEqual(await service.listRideSessionStates(1, []), []);
 });
 

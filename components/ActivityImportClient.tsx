@@ -132,7 +132,7 @@ export function ActivityImportClient({
 
   async function deleteImportedActivity(activity: ImportedActivityHistory) {
     const message = activity.standalone
-      ? 'Delete this imported activity? It will be removed from your activities.'
+      ? 'Delete this activity? It’s removed from your activities and Calendar.'
       : 'Delete this imported activity? Its recorded data is removed, and the planned workout it was matched to goes back to how it was.';
     if (!window.confirm(message)) return;
     setDeletingActivityId(activity.id);

@@ -6,6 +6,7 @@ import {
   MAX_ACTIVITY_IMPORT_SPAN_SEC,
 } from '../activity-import-limits.ts';
 import { measuredPowerTss, normalizedPowerFrom } from '../measured-power-load.ts';
+import { toDayKey } from '../training-load.ts';
 import { targetWattsAt, type RidePlan } from './ride-plan.ts';
 
 /** The latest value each sensor reported; null when absent or stale. */
@@ -365,6 +366,7 @@ export type RideImportPayload = {
   distanceMeters: number | null;
   elevationGainMeters: null;
   plannedSessionId?: number;
+  localDay: string;
   points: RideImportPoint[];
   laps: Array<{ startSec: number; endSec: number; timerSec: number; origin: 'device' }>;
 };
@@ -421,6 +423,7 @@ export function toImportPayload(recording: RideRecording, { standalone = false }
     title: recording.sessionTitle.trim().slice(0, 140) || 'Indoor ride',
     sport: 'BIKING',
     startedAt: new Date(startedAtMs).toISOString(),
+    localDay: toDayKey(new Date(startedAtMs)),
     ...(finishedAt ? { finishedAt } : {}),
     durationSec,
     distanceMeters: inRange(Math.round(recording.distanceMeters), 1, MAX_ACTIVITY_IMPORT_DISTANCE_METERS) ?? null,

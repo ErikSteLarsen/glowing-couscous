@@ -153,6 +153,13 @@ export function resolveBackTarget(input: BackRouteInput): BackTarget {
   return target(href, destination);
 }
 
+/** Back from a started workout that isn't in the Calendar yet, so it has no page of its own. */
+export function resolveStartedBackTarget(from: string | undefined): BackTarget {
+  const origin = parseBackOrigin('session', from);
+  const { href, destination } = origin ? backDestinations[origin] : { href: '/athlete/workouts', destination: 'Workouts' };
+  return target(href, destination);
+}
+
 function isCalendarDate(value?: string) {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
 

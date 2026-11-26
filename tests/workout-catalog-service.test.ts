@@ -45,33 +45,8 @@ function setup(existing: { id: number } | null = null) {
   return { service, calls };
 }
 
-test('ride now plans the workout on the rider-provided local day', async () => {
-  const { service, calls } = setup();
-  const result = await service.rideNow(3, 'fixture-sweet-spot', { date: '2026-11-20' });
-  assert.deepEqual(result, { ok: true, sessionId: 41, reused: false });
-  const call = calls.planner[0] as { athleteId: number; input: { scheduledDate: string; sport: string; title: string; summary: string; blocks: unknown[] } };
-  assert.equal(call.athleteId, 3);
-  assert.equal(call.input.scheduledDate, '2026-11-20');
-  assert.equal(call.input.sport, 'BIKING');
-  assert.equal(call.input.title, 'Fixture sweet spot');
-  assert.equal(call.input.summary, 'Three blocks just under threshold.\n\nHold it steady.');
-  assert.equal(call.input.blocks.length, 7);
-});
-
-test('ride now reuses an unridden copy from the same day', async () => {
-  const { service, calls } = setup({ id: 99 });
-  assert.deepEqual(await service.rideNow(3, 'fixture-sweet-spot', { date: '2026-11-20' }), { ok: true, sessionId: 99, reused: true });
-  assert.equal(calls.planner.length, 0);
-  const where = (calls.lookups[0] as { where: Record<string, unknown> }).where;
-  assert.equal(where.athleteId, 3);
-  assert.deepEqual(where.activity, { is: null });
-  assert.equal(calls.locks.length, 1);
-});
-
 test('catalog actions reject unknown workouts and invalid dates', async () => {
   const { service, calls } = setup();
-  assert.equal((await service.rideNow(3, 'missing', { date: '2026-11-20' })).ok, false);
-  assert.deepEqual(await service.rideNow(3, 'fixture-sweet-spot', { date: '2026-02-30' }), { ok: false, error: 'Choose a date.', status: 400 });
   assert.equal((await service.schedule(3, 'fixture-sweet-spot', { dates: ['2026-11-21', 'tomorrow'] })).ok, false);
   assert.equal((await service.schedule(3, 'fixture-sweet-spot', {})).ok, false);
   assert.equal((await service.schedule(3, 'fixture-sweet-spot', { dates: ['2026-11-21'] })).ok, false, 'a request key is required');
@@ -88,7 +63,7 @@ test('schedule delegates to the athlete planner', async () => {
 });
 
 
-test('scheduled and Ride now copies carry catalog load through athlete reads', { skip: disposableDatabaseSkip }, async () => {
+test('scheduled copies carry catalog load through athlete reads', { skip: disposableDatabaseSkip }, async () => {
   await withDisposableDatabase(async (db) => {
     const athlete = await db.user.create({ data: { email: 'catalog-load@example.test', role: 'ATHLETE' } });
     const day = '2026-11-19';
@@ -99,13 +74,13 @@ test('scheduled and Ride now copies carry catalog load through athlete reads', {
     const workout = catalogService.find('falling-ridgeline');
     assert.ok(workout);
     const expected = catalogWorkoutMetrics(workout).tss;
-    const ride = await catalogService.rideNow(athlete.id, workout.slug, { date: day });
-    const scheduled = await catalogService.schedule(athlete.id, workout.slug, { dates: [tomorrow], requestKey: REQUEST_KEY });
-    assert.ok(ride.ok && scheduled.ok);
+    const scheduled = await catalogService.schedule(athlete.id, workout.slug, { dates: [day, tomorrow], requestKey: REQUEST_KEY });
+    assert.ok(scheduled.ok);
+    const todayId = scheduled.sessionIds[0];
 
     const athleteService = createAthleteService({ db, now });
     const [detail, calendar, workspace, hub, home, training] = await Promise.all([
-      athleteService.loadSessionDetail(athlete.id, ride.sessionId),
+      athleteService.loadSessionDetail(athlete.id, todayId),
       athleteService.loadCalendarView(athlete.id, day),
       planner.loadWorkspace(athlete.id, day),
       createRideHubService({ db, now }).load(athlete.id),
@@ -117,32 +92,10 @@ test('scheduled and Ride now copies carry catalog load through athlete reads', {
     assert.equal(detail?.session.plannedTss, expected);
     assert.equal(calendar?.days.flatMap((entry) => entry.sessions).find((session) => session.id === scheduled.sessionIds[0])?.tss, expected);
     assert.equal(workspace.days.flatMap((entry) => entry.sessions).find((session) => session.id === scheduled.sessionIds[0])?.tss, expected);
-    assert.equal(hub.todaySessions.find((session) => session.id === ride.sessionId)?.tss, expected);
+    assert.equal(hub.todaySessions.find((session) => session.id === todayId)?.tss, expected);
     assert.equal(home?.scheduledTotals.tss, expected * 2);
     assert.equal(training.series.find((point) => point.day === tomorrow)?.plannedTss, expected);
     assert.equal(training.weeks.find((week) => week.weekStart === '2026-11-16')?.planned.tss, expected * 2);
-  });
-});
-
-test('concurrent Ride now requests for the same day create one session', { skip: disposableDatabaseSkip }, async () => {
-  await withDisposableDatabase(async (db) => {
-    const athlete = await db.user.create({ data: { email: 'catalog-race@example.test', role: 'ATHLETE' } });
-    const catalogService = createWorkoutCatalogService({ db });
-    const workout = catalogService.find('falling-ridgeline');
-    assert.ok(workout);
-
-    const results = await Promise.all(Array.from({ length: 4 }, () => catalogService.rideNow(athlete.id, workout.slug, { date: '2026-11-19' })));
-    assert.ok(results.every((result) => result.ok));
-    const ids = new Set(results.map((result) => (result.ok ? result.sessionId : 0)));
-    assert.equal(ids.size, 1);
-    assert.equal(results.filter((result) => result.ok && !result.reused).length, 1);
-    assert.equal(await db.session.count({ where: { athleteId: athlete.id } }), 1);
-
-    // A ridden copy is no longer reused, so the next Ride now plans a fresh one.
-    const [sessionId] = ids;
-    await db.session.update({ where: { id: sessionId }, data: { status: 'completed' } });
-    const next = await catalogService.rideNow(athlete.id, workout.slug, { date: '2026-11-19' });
-    assert.ok(next.ok && !next.reused && next.sessionId !== sessionId);
   });
 });
 

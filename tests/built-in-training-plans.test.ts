@@ -6,6 +6,7 @@ import { createRideHubService } from '../lib/ride-hub-service.ts';
 import { createShareLinkService, hashShareToken } from '../lib/share-link-service.ts';
 import { parseTemplateRoutine } from '../lib/template-routine.ts';
 import { createTemplateService } from '../lib/template-service.ts';
+import { createStartedWorkoutService } from '../lib/started-workout-service.ts';
 import { createWorkoutCatalogService } from '../lib/workout-catalog-service.ts';
 import { createWorkoutLibraryService } from '../lib/workout-library-service.ts';
 import { createAthletePlannerService } from '../lib/athlete-planner-service.ts';
@@ -167,13 +168,14 @@ test('catalog starts and schedules persist workout lineage, and swims can only b
   await withDisposableDatabase(async (db) => {
     const owner = await db.user.create({ data: { email: 'catalog-start@example.test', role: 'ATHLETE' } });
     const catalog = createWorkoutCatalogService({ db });
+    const starts = createStartedWorkoutService({ db });
 
-    assert.deepEqual(await catalog.rideNow(owner.id, 'swim-technique', { date: week[0] }), {
+    assert.deepEqual(await starts.start(owner.id, { kind: 'catalog', slug: 'swim-technique' }, { date: week[0] }), {
       ok: false, status: 400, error: 'Swim workouts can’t be started yet.',
     });
     assert.equal(await db.session.count(), 0);
 
-    const run = await catalog.rideNow(owner.id, 'easy-run', { date: week[0] });
+    const run = await starts.start(owner.id, { kind: 'catalog', slug: 'easy-run' }, { date: week[0] });
     assert.ok(run.ok);
     const scheduled = await catalog.schedule(owner.id, 'swim-technique', {
       dates: [week[0]], requestKey: 'schedule-public-swim',
@@ -183,26 +185,27 @@ test('catalog starts and schedules persist workout lineage, and swims can only b
       (await db.session.findMany({ orderBy: { id: 'asc' } })).map(({ sport, catalogWorkoutSlug }) => [sport, catalogWorkoutSlug]),
       [['RUNNING', 'easy-run'], ['SWIMMING', 'swim-technique']],
     );
-    await db.session.update({ where: { id: run.sessionId }, data: { title: 'Renamed run', summary: null } });
-    assert.deepEqual(await catalog.rideNow(owner.id, 'easy-run', { date: week[0] }), {
-      ok: true, sessionId: run.sessionId, reused: true,
+    assert.deepEqual(await starts.start(owner.id, { kind: 'catalog', slug: 'easy-run' }, { date: week[0] }), {
+      ok: true, sessionId: run.sessionId, planned: false,
     });
 
-    const bike = await catalog.rideNow(owner.id, 'long-ride', { date: week[0] });
+    // A renamed copy of a public workout planned for today is the one that starts.
+    const planned = await catalog.schedule(owner.id, 'long-ride', { dates: [week[0]], requestKey: 'schedule-long-ride' });
+    assert.ok(planned.ok);
+    const [plannedId] = planned.sessionIds;
+    await db.session.update({ where: { id: plannedId }, data: { title: 'Renamed ride' } });
+    assert.deepEqual(await starts.start(owner.id, { kind: 'catalog', slug: 'long-ride' }, { date: week[0] }), {
+      ok: true, sessionId: plannedId, planned: true,
+    });
+
+    const bike = await starts.start(owner.id, { kind: 'catalog', slug: 'easy-ride' }, { date: week[0] });
     assert.ok(bike.ok);
-    const legacy = await catalog.rideNow(owner.id, 'easy-ride', { date: week[0] });
-    assert.ok(legacy.ok);
-    await db.session.update({ where: { id: legacy.sessionId }, data: { catalogWorkoutSlug: null } });
-    assert.deepEqual(await catalog.rideNow(owner.id, 'easy-ride', { date: week[0] }), {
-      ok: true, sessionId: legacy.sessionId, reused: true,
-    });
-
-    for (const id of [bike.sessionId, legacy.sessionId]) {
+    for (const id of [plannedId, bike.sessionId]) {
       await db.session.update({
         where: { id },
         data: {
           status: 'completed',
-          ...(id === bike.sessionId ? { title: 'Renamed ride' } : {}),
+          date: new Date(`${week[0]}T00:00:00.000Z`),
           activity: { create: {
             athleteId: owner.id, completedAt: new Date(week[0]), durationSec: 1800, zoneDistributionJson: '{}', segmentsJson: '[]',
           } },
@@ -211,7 +214,7 @@ test('catalog starts and schedules persist workout lineage, and swims can only b
     }
     const hub = await createRideHubService({ db }).load(owner.id);
     assert.deepEqual(new Map(hub.recent.map(ride => [ride.sessionId, ride.catalogSlug])), new Map([
-      [bike.sessionId, 'long-ride'], [legacy.sessionId, 'easy-ride'],
+      [plannedId, 'long-ride'], [bike.sessionId, 'easy-ride'],
     ]));
   });
 });

@@ -1,3 +1,4 @@
+import { UnsavedRidesNotice } from '@/components/UnsavedRidesNotice';
 import { SearchField } from '@/components/wattonaut/SearchField';
 import { format } from 'date-fns';
 import Link from 'next/link';
@@ -41,6 +42,7 @@ export default async function AthleteActivityPage({ searchParams }: {
         description="Everything you’ve done. Log or import training you did outside your plan."
         actions={<AddActivity today={todayInZone(await getRequestTimeZone())} />}
       />
+      <UnsavedRidesNotice userId={user.id} />
 
       <form action="/athlete/activity" className="flex flex-col gap-3 sm:flex-row sm:items-end max-md:[&_:is(input,select,button,a)]:min-h-11">
         <SearchField key={filters.query} name="q" defaultValue={filters.query} maxLength={100} placeholder="Search by name" label="Search activities" visibleLabel labelClassName="min-w-0 flex-1 space-y-2" />

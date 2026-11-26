@@ -1,6 +1,8 @@
 import { sessionEditorInput } from './session-write-input.ts';
 import { isValid, parseISO } from 'date-fns';
 
+import { parseCalendarDay } from './calendar-navigation.ts';
+import { isStartedWorkout, isUnsavedStartedWorkout } from './started-workout.ts';
 import { prisma } from './prisma.ts';
 import { SESSION_CHANGED_ERROR, SKIPPED_SESSION_STATUS } from './athlete-session-status-service.ts';
 import { createSessionEditorBlockData, createSessionEditorDraftFromPersisted, serializeSessionEditorDraft, type SessionEditorDraft } from './session-editor.ts';
@@ -106,7 +108,8 @@ function claimValidatedSession(tx: CompletionTransaction, session: OutcomeSessio
   });
 }
 
-export type CompletionInput = { notes?: string };
+/** `localDay` is the athlete's day, for a started workout that gets its date from this result. */
+export type CompletionInput = { notes?: string; localDay?: string };
 export type ActualActor = { role: 'ATHLETE' | 'COACH'; userId: number };
 
 export type CompletionResult =
@@ -263,6 +266,9 @@ export function createAthleteCompletionService({
       const session = await loadSessionForAthlete(athleteId, sessionId);
       if (!session) return { ok: false, status: 404, error: 'Workout not found.' };
       if (session.status === SKIPPED_SESSION_STATUS) return { ok: false, status: 409, error: SKIPPED_OUTCOME_ERROR };
+      const unsaved = isUnsavedStartedWorkout(session);
+      const localDay = unsaved ? parseCalendarDay(input.localDay) : null;
+      if (unsaved && !localDay) return { ok: false, status: 400, error: 'Something went wrong. Reload the page and try again.' };
 
       const retainedNotes = notes ?? session.activity?.notes ?? session.athleteNotes ?? null;
       if (session.activity && isRecordedOutcome(session.activity)) {
@@ -283,7 +289,7 @@ export function createAthleteCompletionService({
       const draft = createSessionEditorDraftFromPersisted('actual', {
         ...session,
         status: 'completed',
-        scheduledDate: session.date,
+        scheduledDate: session.date ?? localDay,
         athleteNotes: retainedNotes,
         blocks: session.blocks,
       });
@@ -303,7 +309,12 @@ export function createAthleteCompletionService({
 
       const retainedNotes = notes ?? session.activity?.notes ?? session.athleteNotes ?? null;
       const claimed = await db.$transaction(async (tx) => {
-        const claim = await claimValidatedSession(tx, session, { status: 'planned', athleteNotes: retainedNotes });
+        const claim = await claimValidatedSession(tx, session, {
+          status: 'planned',
+          athleteNotes: retainedNotes,
+          // Never planned, so without its result it leaves the Calendar again.
+          ...(isStartedWorkout(session) ? { date: null } : {}),
+        });
         if (claim.count !== 1) return false;
         if (session.activity) await tx.activity.delete({ where: { sessionId: session.id } });
         return true;

@@ -24,6 +24,16 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   Desktop installers were not built, and published downloads are still Tempo
   Ride 0.3.0. Entries below use the old name. Production deployment remains.
 
+- Combined release branch `release/2026-11-26` (2026-11-26): `main` (d75739f)
+  + Wattonaut rename (695721a) + Start workout chooser and Block timer
+  + started-workout flow from `ride-entertainment` (96d547c). The merge keeps
+  the redesigned chooser and timer, moves the started-workout service to
+  catalog lineage and the swim start refusal from `rideNow`, and ports that
+  database test. `pnpm test:db` (700 passed), lint, types, dead code and build
+  passed; Chromium at 390 and 1440 px started a library workout, finished it
+  in the Block timer and found it in the Calendar as Unplanned, and opened the
+  ride screen, with no page or server errors. No new migrations.
+
 - Start workout chooser redesign (2026-11-26, local branch
   `start-workout-dialog`, on top of `wattonaut-everywhere`). Icon rows with short
   hints, details in a disclosure, and a device-based **Recommended** option for
@@ -128,6 +138,11 @@ contracts in [ARCHITECTURE.md](../../ARCHITECTURE.md), and repeatable checks in
   the space left; profile blocks show their effort when it fits. 23 headless
   Chromium checks passed (real player, stubbed Data API, simulated trainer),
   with the menu clear of the player at eight window sizes.
+  Starting unplanned workouts (same day, local, not deployed): nothing enters
+  the Calendar until a result is saved; unsaved work is recoverable from Home,
+  Ride and Activity; Finish offers Keep riding, Discard and Finish and save;
+  week totals keep unplanned work apart. A persona test plus 11 headless
+  Chromium checks with a simulated trainer.
   Data screen (same day): Now, This block and Workout columns with More data
   inside them, profile filling the window, block lengths on the profile, and
   recorded lines that stop at skipped time. Max HR, IF and distance are no

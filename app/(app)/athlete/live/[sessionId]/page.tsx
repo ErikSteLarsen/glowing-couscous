@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { ActionLink, EmptyState, PageShell, secondaryButtonClassName, TopBar } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth-session';
 import { athleteService } from '@/lib/athlete-service';
-import { parseBackOrigin, resolveBackTarget, withBackOrigin } from '@/lib/app-navigation';
+import { parseBackOrigin, resolveBackTarget, resolveStartedBackTarget, withBackOrigin } from '@/lib/app-navigation';
 import { accountService } from '@/lib/account-service';
 import { createExecutionSteps } from '@/lib/athlete-execution';
 import { LiveSessionClient } from './LiveSessionClient';
@@ -26,7 +26,7 @@ export default async function AthleteLivePage({
     notFound();
   }
 
-  const [detail, account] = await Promise.all([athleteService.loadSessionDetail(user.id, parsedSessionId), accountService.getAccount(user.id)]);
+  const [detail, account] = await Promise.all([athleteService.loadSessionDetail(user.id, parsedSessionId, { includeUnsaved: true }), accountService.getAccount(user.id)]);
   if (!detail) {
     return (
       <PageShell size="wide">
@@ -36,7 +36,7 @@ export default async function AthleteLivePage({
   }
 
   const sessionOrigin = parseBackOrigin('session-live', from);
-  const back = resolveBackTarget({ route: 'session-live', sessionId: detail.session.id, from });
+  const back = detail.session.unsaved ? resolveStartedBackTarget(from) : resolveBackTarget({ route: 'session-live', sessionId: detail.session.id, from });
   if (detail.session.status === 'skipped') {
     return (
       <PageShell size="wide">
@@ -77,6 +77,7 @@ export default async function AthleteLivePage({
       sessionId={id}
       blocks={steps}
       isDone={status === 'completed'}
+      unsaved={detail.session.unsaved}
       title={title}
       back={back}
       workoutHref={withBackOrigin(`/athlete/session/${id}`, sessionOrigin)}

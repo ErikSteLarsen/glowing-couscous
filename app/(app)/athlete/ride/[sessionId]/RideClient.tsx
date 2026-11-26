@@ -209,7 +209,7 @@ function switchLabel({ to, video }: PendingSwitch): string {
   return to === 'course' ? 'Switch to the course' : 'Back to data only';
 }
 
-export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, steps, back, heartRateMaxBpm }: {
+export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, steps, back, sessionHref, notPlanned, heartRateMaxBpm }: {
   userId: number;
   sessionId: number;
   sessionTitle: string;
@@ -217,6 +217,9 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   plannedTss: number;
   steps: ExecutionStep[];
   back: BackTarget;
+  sessionHref: string;
+  /** Started without planning it: in the Calendar only once this ride is saved. */
+  notPlanned: boolean;
   heartRateMaxBpm: number | null;
 }) {
   const [manager] = useState(() => new RideDeviceManager());
@@ -241,6 +244,16 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   const openConnections = useCallback(() => {
     connectionsRef.current?.showModal();
     setConnectionsOpen(true);
+  }, []);
+  const finishDialogRef = useRef<HTMLDialogElement>(null);
+  const [finishOpen, setFinishOpen] = useState(false);
+  const openFinish = useCallback(() => {
+    finishDialogRef.current?.showModal();
+    setFinishOpen(true);
+  }, []);
+  const attachFinishDialog = useCallback((node: HTMLDialogElement | null) => {
+    finishDialogRef.current = node;
+    if (!node) setFinishOpen(false);
   }, []);
   const openSheet = useCallback(() => {
     phoneSheetRef.current?.showModal();
@@ -563,7 +576,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
-      if (connectionsRef.current?.open || switchDialogRef.current?.open || phoneSheetRef.current?.open || event.metaKey || event.ctrlKey || event.altKey || target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      if (connectionsRef.current?.open || switchDialogRef.current?.open || finishDialogRef.current?.open || phoneSheetRef.current?.open || event.metaKey || event.ctrlKey || event.altKey || target?.closest('input, textarea, select, [contenteditable="true"]')) return;
       // A focused control keeps its native Space activation; letter shortcuts still work after a click.
       if (event.key === ' ' && target?.closest('button, a, summary')) return;
       if ((event.key === 'f' || event.key === 'F') && document.fullscreenEnabled) { toggleFullscreen(); return; }
@@ -657,6 +670,26 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     </dialog>
   );
 
+  const finishDialog = (
+    <dialog
+      ref={attachFinishDialog}
+      onClose={() => setFinishOpen(false)}
+      aria-labelledby="ride-finish-title"
+      aria-describedby="ride-finish-text"
+      className="wattonaut-alert-dialog w-[calc(100%-2rem)] max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-overlay)]"
+    >
+      <h2 id="ride-finish-title" className="text-base font-medium">Finish this ride?</h2>
+      <p id="ride-finish-text" className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+        {notPlanned ? 'Saving adds it to your Calendar.' : 'Saving marks the planned workout as done.'} Discarding deletes this ride{notPlanned ? '' : ' and keeps the workout planned'}.
+      </p>
+      <div className="mt-5 flex flex-wrap justify-end gap-2">
+        <button type="button" className={`${secondaryButtonClassName} sm:mr-auto`} onClick={() => finishDialogRef.current?.close()}>Keep riding</button>
+        <button type="button" className={secondaryButtonClassName} onClick={() => { if (window.confirm('Discard this ride? This cannot be undone.')) { finishDialogRef.current?.close(); discard(); } }}>Discard</button>
+        <button type="button" className={primaryButtonClassName} onClick={() => { finishDialogRef.current?.close(); finish(); }}>Finish and save</button>
+      </div>
+    </dialog>
+  );
+
   const shortcutLegend = (
     <dl aria-label="Keyboard shortcuts" className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-[var(--text-muted)] [@media(pointer:coarse)]:hidden">
       <div className="flex items-center gap-1.5"><dt><Kbd>Space</Kbd></dt><dd>Pause</dd></div>
@@ -689,6 +722,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
       <main id="ride" aria-label={label} className="flex min-h-0 flex-1 flex-col">{body}</main>
       {connectionsDialog}
       {active ? switchDialog : null}
+      {active ? finishDialog : null}
     </div>
   );
 
@@ -732,7 +766,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     const lapRows = summarizeLaps(recording).filter((entry) => entry.durationSec > 0);
     const saveButton = saveState.kind === 'saved' ? (
       <>
-        <Link href={back.href} className={primaryButtonClassName}>Open workout</Link>
+        <Link href={sessionHref} className={primaryButtonClassName}>Open workout</Link>
         {/* Optional: the workout page keeps the same Post to Strava action for later. */}
         {saveState.activityId !== null ? (
           <StravaPostAction activityId={saveState.activityId} returnPath={`/athlete/session/${sessionId}?post=strava`} />
@@ -749,7 +783,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
           <div>
             <h2 className="text-[clamp(1.75rem,1.4rem+1.2vw,2.5rem)] font-medium tracking-[-0.02em] text-[var(--text)]">Ride complete</h2>
             <div className="mt-2 min-h-5 text-[14px]">
-              {saveState.kind === 'saved' ? <p role="status" className="text-[var(--status-success)]">Saved. The workout is marked as done.{saveState.note ? ` ${saveState.note}` : ''}</p> : null}
+              {saveState.kind === 'saved' ? <p role="status" className="text-[var(--status-success)]">{notPlanned ? 'Saved and added to your Calendar.' : 'Saved. The workout is marked as done.'}{saveState.note ? ` ${saveState.note}` : ''}</p> : null}
               {saveState.kind === 'saved' && saveState.activityId !== null ? <p className="mt-1 text-[var(--text-secondary)]">Post it to Strava now, or later from the workout page.</p> : null}
               {saveState.kind === 'failed' ? <p role="alert" className="text-[var(--status-danger)]">{saveState.error}</p> : null}
               {saveState.kind === 'saving' ? <p role="status" className="text-[var(--text-secondary)]">Saving to Wattonaut…</p> : null}
@@ -843,7 +877,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
               <Stat label="Duration" value={formatClock(plan.totalSec)} />
               <Stat label="Blocks" value={String(blockCount)} />
               <Stat label="FTP" value={display(plan.ftpWatts)} unit={plan.ftpWatts ? 'W' : undefined} />
-              <Stat label="Planned TSS" value={display(plannedTss)} />
+              <Stat label={notPlanned ? 'TSS' : 'Planned TSS'} value={display(plannedTss)} />
             </div>
           </div>
           <div className="flex flex-col gap-3">
@@ -852,6 +886,9 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
               {anyDevice ? 'Start ride' : 'Start without devices'}
             </button>
             {connectionsRow}
+            <p className="max-w-xs text-[13px] text-[var(--text-secondary)]">
+              {notPlanned ? 'Not in your plan. It’s added to your Calendar only when you finish and save the ride.' : 'In your plan. Saving the ride marks it as done.'}
+            </p>
           </div>
         </div>
         <UnsavedRidesNotice userId={userId} excludeSessionId={sessionId} />
@@ -925,7 +962,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
           {status === 'paused' ? <Play aria-hidden="true" size={16} strokeWidth={1.8} /> : <Pause aria-hidden="true" size={16} strokeWidth={1.8} />}
           {status === 'paused' ? 'Resume' : 'Pause'}
         </button>
-        <button type="button" className={`${secondaryButtonClassName} !h-10 gap-2`} onClick={() => { if (window.confirm('Finish this ride?')) finish(); }}>
+        <button type="button" className={`${secondaryButtonClassName} !h-10 gap-2`} aria-haspopup="dialog" onClick={openFinish}>
           <Square aria-hidden="true" size={14} strokeWidth={1.8} />Finish
         </button>
       </div>
@@ -960,7 +997,7 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
     sessionId,
     userId,
     status: status === 'paused' ? 'paused' : 'running',
-    obscured: connectionsOpen || sheetOpen || pendingSwitch !== null,
+    obscured: connectionsOpen || sheetOpen || finishOpen || pendingSwitch !== null,
     reading: live,
     threeSecondPowerWatts: threeSecond,
     targetWatts,
@@ -1144,14 +1181,20 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
         </main>
 
         <footer className="flex shrink-0 items-center gap-2 border-t border-[var(--border)] px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
-          <div role="group" aria-label="Block navigation" className="flex gap-2">
-            <button type="button" className={`${secondaryButtonClassName} !h-12 gap-1.5 !px-3`} onClick={goBack} disabled={!canGoBack} aria-label="Previous block">
-              <SkipBack aria-hidden="true" size={16} strokeWidth={1.7} />Back
+          {status === 'paused' ? (
+            <button type="button" className={`${secondaryButtonClassName} !h-12 gap-2`} aria-haspopup="dialog" onClick={openFinish}>
+              <Square aria-hidden="true" size={14} strokeWidth={1.8} />Finish ride
             </button>
-            <button type="button" className={`${secondaryButtonClassName} !h-12 gap-1.5 !px-3`} onClick={skip} disabled={!currentStep} aria-label="Next block">
-              Next<SkipForward aria-hidden="true" size={16} strokeWidth={1.7} />
-            </button>
-          </div>
+          ) : (
+            <div role="group" aria-label="Block navigation" className="flex gap-2">
+              <button type="button" className={`${secondaryButtonClassName} !h-12 gap-1.5 !px-3`} onClick={goBack} disabled={!canGoBack} aria-label="Previous block">
+                <SkipBack aria-hidden="true" size={16} strokeWidth={1.7} />Back
+              </button>
+              <button type="button" className={`${secondaryButtonClassName} !h-12 gap-1.5 !px-3`} onClick={skip} disabled={!currentStep} aria-label="Next block">
+                Next<SkipForward aria-hidden="true" size={16} strokeWidth={1.7} />
+              </button>
+            </div>
+          )}
           <button type="button" className={`${status === 'paused' ? primaryButtonClassName : secondaryButtonClassName} ml-auto !h-12 min-w-32 gap-2`} onClick={togglePause}>
             {status === 'paused' ? <Play aria-hidden="true" size={18} strokeWidth={1.8} /> : <Pause aria-hidden="true" size={18} strokeWidth={1.8} />}
             {status === 'paused' ? 'Resume' : 'Pause'}
@@ -1203,13 +1246,14 @@ export function RideClient({ userId, sessionId, sessionTitle, plan, plannedTss, 
               Connections – {connectedCount === 0 ? 'none connected' : `${connectedCount} connected`}
             </button>
             {fullscreenSupported ? <button type="button" className={`${secondaryButtonClassName} !h-12 w-full`} onClick={() => { closeSheet(); toggleFullscreen(); }}>{fullscreen ? 'Exit full screen' : 'Full screen'}</button> : null}
-            <button type="button" className={`${secondaryButtonClassName} !h-12 w-full gap-2`} onClick={() => { if (window.confirm('Finish this ride?')) { closeSheet(); finish(); } }}>
+            <button type="button" className={`${secondaryButtonClassName} !h-12 w-full gap-2`} aria-haspopup="dialog" onClick={() => { closeSheet(); openFinish(); }}>
               <Square aria-hidden="true" size={14} strokeWidth={1.8} />Finish ride
             </button>
           </div>
         </dialog>
         {connectionsDialog}
         {switchDialog}
+        {finishDialog}
       </div>
     );
   }
